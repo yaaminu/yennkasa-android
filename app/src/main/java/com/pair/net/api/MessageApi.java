@@ -9,6 +9,7 @@ import retrofit.http.Body;
 import retrofit.http.Headers;
 import retrofit.http.POST;
 
+
 /**
  * Created by Null-Pointer on 5/26/2015.
  */
@@ -27,6 +28,5 @@ public interface MessageApi {
             "Content-Type:application/json",
             "Authorization:kiiboda+=s3cr3te"
     })
-    void sendMessage(@Body JsonArray message, Callback<HttpResponse> responseCallback);
-
+    void sendMessage(@Body JsonArray messages, Callback<HttpResponse> responseCallback);
 }
