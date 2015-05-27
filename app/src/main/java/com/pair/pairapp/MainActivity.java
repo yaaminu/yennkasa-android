@@ -7,15 +7,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.pair.adapter.BaseJsonAdapter;
+import com.pair.adapter.MessageJsonAdapter;
+import com.pair.adapter.UserJsonAdapter;
 import com.pair.data.Message;
+import com.pair.data.User;
 import com.pair.messenger.MessageDispatcher;
 import com.pair.net.Dispatcher;
-
-import java.util.Collection;
+import com.pair.util.UserManager;
 
 import io.realm.Realm;
 
@@ -23,74 +24,49 @@ import io.realm.Realm;
 public class MainActivity extends ActionBarActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
+    private BaseJsonAdapter<Message> adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         final TextView tv = (TextView) findViewById(R.id.textView1);
+
+        cleanUpRealm();
+
+        User user = new User();
+        user.setName("android user");
+        user.setPassword("password");
+        user.set_id("0266349205");
+        user.setGcmRegId("gcmregidlakaal");
+
+
+        UserManager.getInstance(getApplication()).signUp(user, new UserJsonAdapter(), new UserManager.signUpCallback() {
+            @Override
+            public void done(Exception e) {
+                if (e == null) {
+                    Toast.makeText(MainActivity.this, "scucess", Toast.LENGTH_SHORT).show();
+                } else {
+                    Log.e(TAG, "failed to sign up: error" + e.getMessage());
+                    Toast.makeText(MainActivity.this, "failed", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        adapter = new MessageJsonAdapter();
+        findViewById(R.id.sendButton).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                simulateDispatch(adapter, new Monitor(tv));
+            }
+        });
+    }
+
+    private void cleanUpRealm() {
         Realm realm = Realm.getInstance(this);
         realm.beginTransaction();
         realm.clear(Message.class);
         realm.commitTransaction();
         realm.close();
-        final BaseJsonAdapter<Message> adapter = new BaseJsonAdapter<Message>() {
-            @Override
-            public JsonObject toJson(Message message) {
-                JsonObject obj = new JsonObject();
-
-                obj.addProperty("from", message.getFrom());
-                obj.addProperty("to", message.getTo());
-                obj.addProperty("state", message.getState());
-                obj.addProperty("id", message.getId());
-                obj.addProperty("messageBody", message.getMessageBody());
-                obj.addProperty("dateComposed", message.getDateComposed().toString());
-                return obj;
-            }
-
-            @Override
-            public JsonArray toJson(Collection<Message> messages) {
-                JsonArray array = new JsonArray();
-                for (Message message : messages) {
-                    array.add(toJson(message));
-                }
-                return array;
-            }
-        };
-
-        final Dispatcher.DispatcherMonitor monitor = new Dispatcher.DispatcherMonitor() {
-            @Override
-            public void onSendFailed(String reason, long messageId) {
-                Log.w(TAG, reason);
-                Realm realm = Realm.getInstance(MainActivity.this);
-                realm.beginTransaction();
-                Message message = realm.where(Message.class).equalTo("id", messageId).findFirst();
-                message.setState(Message.SEND_FAILED);
-                realm.commitTransaction();
-                realm.close();
-
-                tv.append(message.getMessageBody() + " : " + message.getState() + "\n");
-
-            }
-
-            @Override
-            public void onSendSucceeded(long messageId) {
-                Realm realm = Realm.getInstance(MainActivity.this);
-                realm.beginTransaction();
-                Message message = realm.where(Message.class).equalTo("id", messageId).findFirst();
-                message.setState(Message.SENT);
-                realm.commitTransaction();
-                realm.close();
-                tv.append(message.getMessageBody() + " : " + message.getState() + "\n");
-
-            }
-        };
-        findViewById(R.id.sendButton).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                simulateDispatch(adapter, monitor);
-            }
-        });
     }
 
     private void simulateDispatch(BaseJsonAdapter<Message> adapter, Dispatcher.DispatcherMonitor monitor) {
@@ -129,5 +105,40 @@ public class MainActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    class Monitor implements Dispatcher.DispatcherMonitor {
+
+        TextView tv;
+
+        public Monitor(TextView tv) {
+            this.tv = tv;
+        }
+
+        @Override
+        public void onSendFailed(String reason, long messageId) {
+            Log.w(TAG, reason);
+            Realm realm = Realm.getInstance(MainActivity.this);
+            realm.beginTransaction();
+            Message message = realm.where(Message.class).equalTo("id", messageId).findFirst();
+            message.setState(Message.SEND_FAILED);
+            realm.commitTransaction();
+            realm.close();
+
+            tv.append(message.getMessageBody() + " : " + message.getState() + "\n");
+
+        }
+
+        @Override
+        public void onSendSucceeded(long messageId) {
+            Realm realm = Realm.getInstance(MainActivity.this);
+            realm.beginTransaction();
+            Message message = realm.where(Message.class).equalTo("id", messageId).findFirst();
+            message.setState(Message.SENT);
+            realm.commitTransaction();
+            realm.close();
+            tv.append(message.getMessageBody() + " : " + message.getState() + "\n");
+
+        }
     }
 }

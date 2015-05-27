@@ -3,6 +3,7 @@
     package="com.pair.pairapp">
 
     <uses-permission android:name="android.permission.internet" />
+    <uses-permission android:name="android.permission.read_phone_state" />
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"

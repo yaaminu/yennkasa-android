@@ -3,8 +3,10 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/app/build.gradle" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/pair/messenger/MessageDispatcher.java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/app/src/main/java/com/pair/net/api/MessageApi.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/pair/pairapp/MainActivity.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/app/src/main/java/com/pair/util/Serializers.java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/build.gradle" charset="UTF-8" />
+    <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>
