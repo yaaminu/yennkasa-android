@@ -1,21 +1,18 @@
 package com.pair.pairapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.pair.adapter.BaseJsonAdapter;
-import com.pair.adapter.MessageJsonAdapter;
-import com.pair.adapter.UserJsonAdapter;
 import com.pair.data.Message;
 import com.pair.data.User;
-import com.pair.messenger.MessageDispatcher;
 import com.pair.net.Dispatcher;
+import com.pair.util.GcmHelper;
 import com.pair.util.UserManager;
 
 import io.realm.Realm;
@@ -25,64 +22,36 @@ public class MainActivity extends ActionBarActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private BaseJsonAdapter<Message> adapter;
+    private UserManager userManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        final TextView tv = (TextView) findViewById(R.id.textView1);
+        if (GcmHelper.checkPlayServices(this)) {
+            //available
+            userManager = UserManager.getInstance(this.getApplication());
+            User user = userManager.getCurrentUser();
 
-        cleanUpRealm();
-
-        User user = new User();
-        user.setName("android user");
-        user.setPassword("password");
-        user.set_id("0266349205");
-        user.setGcmRegId("gcmregidlakaal");
-
-
-        UserManager.getInstance(getApplication()).signUp(user, new UserJsonAdapter(), new UserManager.signUpCallback() {
-            @Override
-            public void done(Exception e) {
-                if (e == null) {
-                    Toast.makeText(MainActivity.this, "scucess", Toast.LENGTH_SHORT).show();
-                } else {
-                    Log.e(TAG, "failed to sign up: error" + e.getMessage());
-                    Toast.makeText(MainActivity.this, "failed", Toast.LENGTH_SHORT).show();
-                }
+            if (user == null) {
+                Intent intent = new Intent(this, SetUpActivity.class);
+                startActivity(intent);
+                finish();
+            } else {
+                getSupportFragmentManager().beginTransaction().replace(R.id.container,new InboxFragment()).commit();
             }
-        });
-        adapter = new MessageJsonAdapter();
-        findViewById(R.id.sendButton).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                simulateDispatch(adapter, new Monitor(tv));
-            }
-        });
+        } else {
+            Log.e(TAG, "no google cloud services available on this device");
+        }
+
     }
 
-    private void cleanUpRealm() {
-        Realm realm = Realm.getInstance(this);
-        realm.beginTransaction();
-        realm.clear(Message.class);
-        realm.commitTransaction();
-        realm.close();
-    }
 
-    private void simulateDispatch(BaseJsonAdapter<Message> adapter, Dispatcher.DispatcherMonitor monitor) {
-        MessageDispatcher dispatcher = MessageDispatcher.getInstance(adapter, monitor, 10);
-        Realm realm = Realm.getInstance(this);
-        realm.beginTransaction();
-        long id = realm.allObjects(Message.class).size();
-        Message message = realm.createObject(Message.class);
-        message.setDateComposed(new java.util.Date());
-        message.setId(id + 1);
-        message.setMessageBody("this is the message body");
-        message.setFrom("sender of message");
-        message.setTo("new user id");
-        message.setState(Message.PENDING);
-        realm.commitTransaction();
-        dispatcher.dispatch(message);
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        GcmHelper.checkPlayServices(this);
     }
 
     @Override
