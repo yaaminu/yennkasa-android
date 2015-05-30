@@ -15,7 +15,8 @@ public class Message extends RealmObject {
     public static final int PENDING = 1001,
             SENT = 1002,
             RECEIVED = 1003,
-            SEND_FAILED = 1004;
+            SEEN = 1004,
+            SEND_FAILED = 1005;
 
     @PrimaryKey
     private long id;

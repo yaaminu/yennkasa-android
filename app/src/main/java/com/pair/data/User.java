@@ -1,5 +1,6 @@
 package com.pair.data;
 
+import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.RealmClass;
@@ -17,14 +18,17 @@ public class User extends RealmObject {
     private String password;
     private String status, DP;
     private long lastActivity, accountCreated;
+    private RealmList<User> peers; //a gropu will be a user with its members represented by this field.
 
     //required no-arg c'tor
-    public User(){}
+    public User() {
+    }
 
-    public User(User other){
+    //copy constructor -= lol(c++ things).
+    public User(User other) {
         //realm forces us to use setters and getters everywhere for predictable results
         //null check because is good not to throw in constructors
-        if(other != null){
+        if (other != null) {
             this.set_id(other.get_id());
             this.setAccountCreated(other.getAccountCreated());
             this.setGcmRegId(other.getGcmRegId());
@@ -35,6 +39,7 @@ public class User extends RealmObject {
             this.setName(other.getName());
         }
     }
+
     public String get_id() {
         return _id;
     }
@@ -97,5 +102,13 @@ public class User extends RealmObject {
 
     public void setGcmRegId(String gcmRegId) {
         this.gcmRegId = gcmRegId;
+    }
+
+    public RealmList<User> getPeers() {
+        return peers;
+    }
+
+    public void setPeers(RealmList<User> peers) {
+        this.peers = peers;
     }
 }

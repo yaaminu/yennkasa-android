@@ -11,6 +11,7 @@ public class Config {
     private static final String LOCAL_HOST_GENYMOTION = "http://10.0.3.2:3000";
     private static final String ENV_PROD = "prod";
     private static final String ENV_DEV = "dev";
+    public static final String APP_PREFS = "prefs";
 
     public static final String PAIRAPP_ENV = getEnvironment();
     public static final String PAIRAPP_ENDPOINT = getEndPoint();

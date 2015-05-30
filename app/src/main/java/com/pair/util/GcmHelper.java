@@ -9,7 +9,6 @@ import android.util.Log;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.pair.data.User;
 
 import java.io.IOException;
 
@@ -19,12 +18,11 @@ import java.io.IOException;
 public class GcmHelper {
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     private static final String TAG = GcmHelper.class.getSimpleName();
-    public static final String GCM = "gcm";
     public static final String GCM_REG_ID = "gcmRegId";
     private static Dialog errorDialog;
 
     public static void register(Activity context, GCMRegCallback callback) {
-        String gcmRegId = context.getSharedPreferences(GCM, Context.MODE_PRIVATE).getString(GCM_REG_ID, null);
+        String gcmRegId = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE).getString(GCM_REG_ID, null);
         if (gcmRegId == null) {
             new RegisterTask(context, callback).execute();
         } else {
@@ -66,15 +64,14 @@ public class GcmHelper {
             GcmRegResults results = new GcmRegResults();
             try {
                 String registrationId = gcm.register("554068366623");
-                context.getSharedPreferences(GCM, Context.MODE_PRIVATE).edit().putString(GCM_REG_ID, registrationId).commit();
+                context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE).edit().putString(GCM_REG_ID, registrationId).commit();
                 results.errorMessage = null;
                 results.regId = registrationId;
                 return results;
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e.getCause());
-                //FIXME change back to{@code null}
-                results.errorMessage = null;
-                results.regId = "fake regId";
+                results.errorMessage = e.getMessage();
+                results.regId = null;
                 return results;
             }
         }

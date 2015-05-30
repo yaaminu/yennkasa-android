@@ -1,6 +1,5 @@
 package com.pair.pairapp;
 
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -9,7 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.pair.data.User;
@@ -40,6 +39,8 @@ public class SignupFragment extends Fragment {
         //validator = new FormValidator();
         //validator.addField(passWordEt,null);
 
+        final TextView tv = (TextView) view.findViewById(R.id.tv_login);
+        tv.setOnClickListener(gotoLogin);
         view.findViewById(R.id.signupButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -47,29 +48,27 @@ public class SignupFragment extends Fragment {
                 attemptSignUp();
             }
         });
-
-        view.findViewById(R.id.tv_login).setOnClickListener(gotoLogin);
-
         return view;
     }
 
     private View.OnClickListener gotoLogin = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
+            if (busy) //trying to login, see {code attemptSignUp}
+                return;
             getFragmentManager().popBackStackImmediate();
         }
     };
 
     private void attemptSignUp() {
-
+        if (busy) {
+            return;
+        }
+        busy = true;
         GcmHelper.register(getActivity(), new GcmHelper.GCMRegCallback() {
             @Override
             public void done(Exception e, String regId) {
                 if (e == null) {
-                    if (busy) {
-                        return;
-                    }
-                    busy = true;
                     User user = new User();
                     user.set_id(UiHelpers.getFieldContent(phoneNumberEt));
                     user.setPassword(UiHelpers.getFieldContent(passWordEt));
@@ -78,7 +77,8 @@ public class SignupFragment extends Fragment {
                     progressView.setVisibility(View.VISIBLE);
                     UserManager.getInstance(getActivity().getApplication()).signUp(user, signUpCallback);
                 } else {
-                   UiHelpers.showErrorDialog(getActivity(),e.getMessage());
+                    busy = false;
+                    UiHelpers.showErrorDialog(getActivity(), e.getMessage());
                 }
             }
         });

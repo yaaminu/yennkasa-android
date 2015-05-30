@@ -1,6 +1,5 @@
 package com.pair.pairapp;
 
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -40,6 +39,8 @@ public class LoginFragment extends Fragment {
         tv.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (busy)
+                    return;
                 getFragmentManager().beginTransaction().replace(R.id.container, new SignupFragment()).addToBackStack(null).commit();
             }
         });
@@ -54,14 +55,14 @@ public class LoginFragment extends Fragment {
     }
 
     private void attemptLogin() {
+        if (busy) {
+            return;
+        }
+        busy = true;
         GcmHelper.register(getActivity(), new GcmHelper.GCMRegCallback() {
             @Override
             public void done(Exception e, String regId) {
                 if (e == null) {
-                    if (busy) {
-                        return;
-                    }
-                    busy = true;
                     User user = new User();
                     user.set_id(UiHelpers.getFieldContent(phoneNumberEt));
                     user.setPassword(UiHelpers.getFieldContent(passwordEt));
@@ -69,6 +70,7 @@ public class LoginFragment extends Fragment {
                     progressView.setVisibility(View.VISIBLE);
                     UserManager.getInstance(getActivity().getApplication()).logIn(user, loginCallback);
                 } else {
+                    busy = false;
                     UiHelpers.showErrorDialog(getActivity(), e.getMessage());
                 }
             }
@@ -80,7 +82,7 @@ public class LoginFragment extends Fragment {
             progressView.setVisibility(View.GONE);
             busy = false;
             if (e == null) {
-                startActivity(new Intent(getActivity(),MainActivity.class));
+                startActivity(new Intent(getActivity(), MainActivity.class));
                 getActivity().finish();
             } else {
                 String message = e.getMessage();

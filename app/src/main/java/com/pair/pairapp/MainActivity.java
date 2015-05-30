@@ -28,24 +28,23 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         if (GcmHelper.checkPlayServices(this)) {
             //available
             userManager = UserManager.getInstance(this.getApplication());
             User user = userManager.getCurrentUser();
-
             if (user == null) {
                 Intent intent = new Intent(this, SetUpActivity.class);
                 startActivity(intent);
                 finish();
             } else {
-                getSupportFragmentManager().beginTransaction().replace(R.id.container,new InboxFragment()).commit();
+                getSupportFragmentManager().beginTransaction().replace(R.id.container, new InboxFragment()).commit();
             }
         } else {
             Log.e(TAG, "no google cloud services available on this device");
         }
 
     }
-
 
 
     @Override

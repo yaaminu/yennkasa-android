@@ -14,7 +14,7 @@ import android.widget.ArrayAdapter;
 public class InboxFragment extends ListFragment {
 
     private static final String [] days = {
-            "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"
+          //  "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"
     };
     @Nullable
     @Override
