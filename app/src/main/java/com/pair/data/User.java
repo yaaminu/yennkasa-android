@@ -13,7 +13,6 @@ public class User extends RealmObject {
     private String _id;
 
     private String gcmRegId;
-
     private String name;
     private String password;
     private String status, DP;

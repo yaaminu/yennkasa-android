@@ -34,10 +34,6 @@ public class GcmHelper {
 
 
     public static boolean checkPlayServices(Activity context) {
-        //FI
-        if(true) {
-            return true;
-        }
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
         if (resultCode != ConnectionResult.SUCCESS) {
             if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
@@ -97,6 +93,7 @@ public class GcmHelper {
             String regId;
         }
     }
+
     public interface GCMRegCallback {
         void done(Exception e, String regId);
     }
