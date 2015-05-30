@@ -2,40 +2,68 @@ package com.pair.util;
 
 import android.widget.EditText;
 
+import com.google.android.gms.nearby.messages.Strategy;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Null-Pointer on 5/29/2015.
  */
 public class FormValidator {
-    Map<EditText, ValidationStrategy> fields;
+    Map<ValidationStrategy,Runnable> fields;
 
 
     public FormValidator() {
         this.fields = new HashMap<>();
     }
 
-    public void addField(EditText et, ValidationStrategy strategy) {
-        this.fields.put(et, strategy);
+    public void addStrategy(ValidationStrategy strategy, Runnable action) {
+        this.fields.put(strategy,action);
     }
 
-    public void removeField(EditText et) {
-        this.fields.remove(et);
+    public void dismissStrategy(Strategy strategy) {
+        this.fields.remove(strategy);
     }
 
     public boolean runValidation() {
-        Set<EditText> editTexts = this.fields.keySet();
-        for (EditText field : editTexts) {
-            ValidationStrategy strategy = this.fields.get(field);
-            if ((strategy != null) && !strategy.validate(field))
+        Set<ValidationStrategy> strategies = this.fields.keySet();
+        for (ValidationStrategy strategy : strategies) {
+            if (!strategy.validate()){
+                // On Android callers must make sure they run validation on main thread
+                //if they want to tamper with the views
+                Runnable action = this.fields.get(strategy);
+                if(action != null){
+                    action.run();
+                }
                 return false;
+            }
         }
         return true;
     }
 
-    public static interface ValidationStrategy {
-        boolean validate(EditText field);
+    public  interface ValidationStrategy {
+        boolean validate();
     }
+
+    public  final class EditTextValidationStrategy  implements ValidationStrategy{
+        private final EditText textField;
+        private final Pattern pattern;
+        public EditTextValidationStrategy(EditText editText,Pattern regExp){
+            this.textField = editText;
+            this.pattern = regExp;
+        }
+        @Override
+        public boolean validate() {
+            //TODO make use of the passed pattern
+            String fieldContent = UiHelpers.getFieldContent(textField);
+            Matcher matcher = pattern.matcher(fieldContent);
+            return matcher.matches();
+        }
+    }
+
+    //TEXT_FIELD_NOT_EMPTY
 }

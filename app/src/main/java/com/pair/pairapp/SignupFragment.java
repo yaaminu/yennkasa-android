@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,7 +23,8 @@ import com.pair.util.UserManager;
  */
 public class SignupFragment extends Fragment {
 
-    private EditText passWordEt, phoneNumberEt, userNameEt;
+    private EditText passWordEt,userNameEt;
+    private AutoCompleteTextView phoneNumberEt;
     private FormValidator validator;
     private boolean busy;
     private View progressView;
@@ -32,12 +34,10 @@ public class SignupFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.signup_fragment, container, false);
         passWordEt = (EditText) view.findViewById(R.id.passwordField);
-        phoneNumberEt = (EditText) view.findViewById(R.id.phone_number_field);
+        phoneNumberEt = (AutoCompleteTextView) view.findViewById(R.id.phone_number_field);
+        new UiHelpers.AutoCompleter(getActivity(),phoneNumberEt).execute(); //enable autocompletion
         userNameEt = (EditText) view.findViewById(R.id.usernameField);
         progressView = view.findViewById(R.id.progressView);
-
-        //validator = new FormValidator();
-        //validator.addField(passWordEt,null);
 
         final TextView tv = (TextView) view.findViewById(R.id.tv_login);
         tv.setOnClickListener(gotoLogin);

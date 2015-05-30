@@ -7,7 +7,7 @@ import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.RealmClass;
 
 /**
- * Created by Null-Pointer on 5/26/2015.
+ * @author Null-Pointer on 5/26/2015.
  */
 @RealmClass
 public class Message extends RealmObject {

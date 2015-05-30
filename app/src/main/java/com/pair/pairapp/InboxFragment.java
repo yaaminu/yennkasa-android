@@ -6,7 +6,12 @@ import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+
+import com.pair.adapter.InboxAdapter;
+import com.pair.data.Chat;
+
+import io.realm.Realm;
+import io.realm.RealmResults;
 
 /**
  * Created by Null-Pointer on 5/29/2015.
@@ -20,7 +25,8 @@ public class InboxFragment extends ListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_inbox, container, false);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(),android.R.layout.simple_list_item_1,days);
+        RealmResults<Chat> chats = Realm.getInstance(getActivity()).allObjects(Chat.class);
+        InboxAdapter adapter = new InboxAdapter(getActivity(),chats,true);
         setListAdapter(adapter);
         return view;
     }

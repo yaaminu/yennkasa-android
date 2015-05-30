@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.util.Log;
-import android.widget.Adapter;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
@@ -24,14 +23,14 @@ public class UiHelpers {
      * Use an AsyncTask to fetch the user's email addresses on a background thread, and update
      * the email text field with results on the main UI thread.
      */
-   public static class EmailAutoCompleteTask extends AsyncTask<Void, Void, List<String>> {
+   public static class AutoCompleter extends AsyncTask<Void, Void, List<String>> {
 
 
-        public static final String TAG = EmailAutoCompleteTask.class.getSimpleName();
+        public static final String TAG = AutoCompleter.class.getSimpleName();
         private final AutoCompleteTextView autoCompleteTextView;
         private final Context context;
 
-        public EmailAutoCompleteTask(Context context, AutoCompleteTextView editText) {
+        public AutoCompleter(Context context, AutoCompleteTextView editText) {
             this.context = context;
             this.autoCompleteTextView = editText;
         }
@@ -40,13 +39,15 @@ public class UiHelpers {
         protected List<String> doInBackground(Void... voids) {
             ArrayList<String> phoneNumberCollection = new ArrayList<String>();
 
-            // Get all emails from the user's contacts and copy them to a list.
+            // Get all phone numbers from the user's contacts and copy them to a list.
             ContentResolver cr = this.context.getContentResolver();
             Cursor phoneCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
                     null, null, null);
             while (phoneCur.moveToNext()) {
                 String phoneNumber = phoneCur.getString(phoneCur.getColumnIndex(ContactsContract
-                        .CommonDataKinds.Phone.DATA));
+                        .CommonDataKinds.Phone.NUMBER));
+                //TODO do this with regexp
+                phoneNumber = phoneNumber.replace("(","").replace(")","");
                 Log.d(TAG,phoneNumber);
                 phoneNumberCollection.add(phoneNumber);
             }

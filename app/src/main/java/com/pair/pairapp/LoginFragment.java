@@ -7,6 +7,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -21,16 +22,19 @@ import com.pair.util.UserManager;
  * Created by Null-Pointer on 5/28/2015.
  */
 public class LoginFragment extends Fragment {
-    private EditText phoneNumberEt, passwordEt;
+    private EditText passwordEt;
+    private AutoCompleteTextView phoneNumberEt;
     private Button loginButton;
     private boolean busy = false;
     private View progressView;
+
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.login_fragment, container, false);
-        phoneNumberEt = (EditText) view.findViewById(R.id.phone_number_field);
+        phoneNumberEt = (AutoCompleteTextView) view.findViewById(R.id.phone_number_field);
+        new UiHelpers.AutoCompleter(getActivity(),phoneNumberEt).execute();//enable autocompletion
         passwordEt = (EditText) view.findViewById(R.id.passwordField);
         loginButton = (Button) view.findViewById(R.id.loginButton);
         progressView = view.findViewById(R.id.progressView);

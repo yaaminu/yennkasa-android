@@ -41,7 +41,7 @@ public class MainActivity extends ActionBarActivity {
                 getSupportFragmentManager().beginTransaction().replace(R.id.container, new InboxFragment()).commit();
             }
         } else {
-            Log.e(TAG, "no google cloud services available on this device");
+            Log.e(TAG, "error: no google cloud services available on this device");
         }
 
     }
@@ -106,7 +106,6 @@ public class MainActivity extends ActionBarActivity {
             realm.commitTransaction();
             realm.close();
             tv.append(message.getMessageBody() + " : " + message.getState() + "\n");
-
         }
     }
 }

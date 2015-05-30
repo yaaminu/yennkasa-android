@@ -3,6 +3,7 @@ package com.pair.util;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -33,6 +34,7 @@ public class GcmHelper {
 
     public static boolean checkPlayServices(Activity context) {
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
+        Log.i(TAG, "resutlt code: " + resultCode);
         if (resultCode != ConnectionResult.SUCCESS) {
             if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
                 errorDialog = GooglePlayServicesUtil.getErrorDialog(resultCode, context,
@@ -51,7 +53,6 @@ public class GcmHelper {
         Context context;
         GCMRegCallback callback;
 
-
         RegisterTask(Context context, GCMRegCallback callback) {
             this.context = context;
             this.callback = callback;
@@ -60,33 +61,35 @@ public class GcmHelper {
         @Override
         protected GcmRegResults doInBackground(Void... params) {
 
-            GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(context);
-            GcmRegResults results = new GcmRegResults();
+            SharedPreferences sharedPreferences = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
+            String regId = sharedPreferences.getString(GCM_REG_ID, null);
+            if (regId != null) {
+                return new GcmRegResults(regId, null);
+            }
+            //else
             try {
+                GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(context);
                 String registrationId = gcm.register("554068366623");
-                context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE).edit().putString(GCM_REG_ID, registrationId).commit();
-                results.errorMessage = null;
-                results.regId = registrationId;
-                return results;
+                sharedPreferences.edit().putString(GCM_REG_ID, registrationId).commit();
+                return new GcmRegResults(registrationId, null);
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e.getCause());
-                results.errorMessage = e.getMessage();
-                results.regId = null;
-                return results;
+                return new GcmRegResults(null, e);
             }
         }
 
         @Override
         protected void onPostExecute(GcmRegResults results) {
-            if (results.errorMessage != null) {
-                callback.done(new Exception(results.errorMessage), null);
-                return;
-            }
-            callback.done(null, results.regId);
+            callback.done(results.error, results.regId);
         }
 
         class GcmRegResults {
-            String errorMessage;
+            GcmRegResults(String regId, Exception error) {
+                this.regId = regId;
+                this.error = error;
+            }
+
+            Exception error;
             String regId;
         }
     }
