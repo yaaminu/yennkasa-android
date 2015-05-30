@@ -23,6 +23,7 @@ public class User extends RealmObject {
 
     public User(User other){
         //realm forces us to use setters and getters everywhere for predictable results
+        //null check because is good not to throw in constructors
         if(other != null){
             this.set_id(other.get_id());
             this.setAccountCreated(other.getAccountCreated());

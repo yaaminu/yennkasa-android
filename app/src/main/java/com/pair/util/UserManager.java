@@ -3,7 +3,6 @@ package com.pair.util;
 import android.app.Application;
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.google.gson.JsonObject;
 import com.pair.adapter.BaseJsonAdapter;
@@ -11,9 +10,8 @@ import com.pair.adapter.UserJsonAdapter;
 import com.pair.data.User;
 import com.pair.net.api.UserApi;
 
-import java.io.EOFException;
-
 import io.realm.Realm;
+import io.realm.RealmResults;
 import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
@@ -67,15 +65,19 @@ public class UserManager {
 
     public User getCurrentUser() {
         Realm realm = Realm.getInstance(context);
-        User user = realm.where(User.class).findFirst();
+        RealmResults<User> results =  realm.where(User.class).findAll();
+        if(results.size() > 1){
+            throw new IllegalStateException("Multiple users cannot exist");
+        }else if(results.size() < 1){
+            return null;
+        }
+        User user =results.first();
         //returning {@code RealmObject} from methods leaks resources as
         // that will prevent us from closing realm hence we do a shallow copy.
         // downside is changes to this object will not be saved which is just what we want
         User copy = new User(user);
         realm.close();
-        if (copy.getGcmRegId() != null)
-            return copy;
-        return null;
+        return copy;
     }
 
     public void logIn(User user, final LoginCallback callback) {
