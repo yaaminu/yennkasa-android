@@ -13,12 +13,27 @@ public class User extends RealmObject {
     private String _id;
 
     private String gcmRegId;
-
     private String name;
     private String password;
     private String status, DP;
     private long lastActivity, accountCreated;
 
+    //required no-arg c'tor
+    public User(){}
+
+    public User(User other){
+        //realm forces us to use setters and getters everywhere for predictable results
+        if(other != null){
+            this.set_id(other.get_id());
+            this.setAccountCreated(other.getAccountCreated());
+            this.setGcmRegId(other.getGcmRegId());
+            this.setPassword(other.getPassword());
+            this.setStatus(other.getStatus());
+            this.setLastActivity(other.getLastActivity());
+            this.setDP(other.getDP());
+            this.setName(other.getName());
+        }
+    }
     public String get_id() {
         return _id;
     }

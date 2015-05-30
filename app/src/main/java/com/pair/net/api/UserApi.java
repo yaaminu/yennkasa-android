@@ -1,6 +1,7 @@
 package com.pair.net.api;
 
 import com.google.gson.JsonObject;
+import com.pair.data.User;
 import com.pair.net.HttpResponse;
 
 import retrofit.Callback;
@@ -15,6 +16,9 @@ public interface UserApi {
 
     @POST("/api/v1/users/register")
     @Headers("Authorization:kiiboda+=s3cr3te")
-    void registerUser(@Body JsonObject user, Callback<HttpResponse> callback);
+    void registerUser(@Body JsonObject user, Callback<User> callback);
 
+    @POST("/api/v1/users/login")
+    @Headers("Authorization:kiiboda+=s3cr3te")
+    void logIn(@Body JsonObject object,Callback<User> callback);
 }
