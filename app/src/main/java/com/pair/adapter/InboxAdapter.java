@@ -19,7 +19,7 @@ import io.realm.RealmResults;
 /**
  * @author Null-Pointer on 5/30/2015.
  */
-public class InboxAdapter extends RealmBaseAdapter<Chat> {
+public class InboxAdapter extends RealmBaseAdapter<Chat>  {
     private static final String TAG = InboxAdapter.class.getSimpleName();
     public InboxAdapter(Context context, RealmResults<Chat> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
@@ -44,11 +44,15 @@ public class InboxAdapter extends RealmBaseAdapter<Chat> {
         holder.chatSummary.setText(chat.getSummary());
         holder.peerName.setText(chat.getPeer().getName());
         holder.dateLastActive.setText(DateUtils.formatDateRange(context,new Date().getTime(),chat.getLastActiveTime().getTime(),DateUtils.FORMAT_NO_YEAR));
+        holder.currentChat = chat;
         return convertView;
     }
 
-    private class ViewHolder {
+    public class ViewHolder {
         TextView chatSummary,dateLastActive,peerName;
         ImageView senderAvatar;
+        public Chat currentChat; //holds current item to be used by callers outside this adapter.
     }
+
+
 }

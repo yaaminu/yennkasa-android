@@ -24,8 +24,6 @@ public class UiHelpers {
      * the email text field with results on the main UI thread.
      */
    public static class AutoCompleter extends AsyncTask<Void, Void, List<String>> {
-
-
         public static final String TAG = AutoCompleter.class.getSimpleName();
         private final AutoCompleteTextView autoCompleteTextView;
         private final Context context;
@@ -52,7 +50,6 @@ public class UiHelpers {
                 phoneNumberCollection.add(phoneNumber);
             }
             phoneCur.close();
-
             return phoneNumberCollection;
         }
 
@@ -62,6 +59,7 @@ public class UiHelpers {
                     new ArrayAdapter<String>(context,
                             android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
             autoCompleteTextView.setAdapter(arrayAdapter);
+            System.out.println("AutoCompleter.onPostExecute");
         }
     }
 
@@ -77,4 +75,5 @@ public class UiHelpers {
                 .create()
                 .show();
     }
+
 }

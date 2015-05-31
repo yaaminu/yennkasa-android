@@ -84,8 +84,12 @@ public class GcmHelper {
         @Override
         protected void onPostExecute(GcmRegResults results) {
             callback.done(results.error, results.regId);
+
         }
 
+        boolean foo() throws Exception{
+            return  true;
+        }
         class GcmRegResults {
             GcmRegResults(String regId, Exception error) {
                 this.regId = regId;

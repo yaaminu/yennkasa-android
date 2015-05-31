@@ -9,4 +9,8 @@
     <string name="phone_hint">Phone No.</string>
     <string name="log_in_button_label">Log In</string>
     <string name="error">Error</string>
+    <string name="title_activity_chat">Chat</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
 </resources>
