@@ -9,11 +9,14 @@ import android.view.MenuItem;
 import android.widget.TextView;
 
 import com.pair.adapter.BaseJsonAdapter;
+import com.pair.data.Chat;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.net.Dispatcher;
 import com.pair.util.GcmHelper;
 import com.pair.util.UserManager;
+
+import java.util.Date;
 
 import io.realm.Realm;
 
@@ -21,6 +24,7 @@ import io.realm.Realm;
 public class MainActivity extends ActionBarActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
+    public static final String INBOX = "inbox";
     private BaseJsonAdapter<Message> adapter;
     private UserManager userManager;
 
@@ -28,22 +32,26 @@ public class MainActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        addChatsInBackGround();
         if (GcmHelper.checkPlayServices(this)) {
             //available
             userManager = UserManager.getInstance(this.getApplication());
             User user = userManager.getCurrentUser();
             if (user == null) {
-                Intent intent = new Intent(this, SetUpActivity.class);
-                startActivity(intent);
-                finish();
+                goToSetup();
             } else {
-                getSupportFragmentManager().beginTransaction().replace(R.id.container, new InboxFragment()).commit();
+                getSupportFragmentManager().beginTransaction().replace(R.id.container, new InboxFragment(), INBOX).commit();
             }
         } else {
             Log.e(TAG, "error: no google cloud services available on this device");
         }
 
+    }
+
+    private void goToSetup() {
+        Intent intent = new Intent(this, SetUpActivity.class);
+        startActivity(intent);
+        finish(); //remove this activity from the stack
     }
 
 
@@ -68,7 +76,9 @@ public class MainActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_logout) {
+            userManager.LogOut(this);
+            goToSetup();
             return true;
         }
 
@@ -107,5 +117,31 @@ public class MainActivity extends ActionBarActivity {
             realm.close();
             tv.append(message.getMessageBody() + " : " + message.getState() + "\n");
         }
+    }
+
+    private void addChatsInBackGround(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Realm realm = Realm.getInstance(getApplicationContext());
+                if(realm.allObjects(Chat.class).size() > 0) {
+                    realm.close();
+                    return;
+                }
+                realm.beginTransaction();
+                User user = realm.createObject(User.class);
+                user.set_id("dummy id");
+                user.setName("Amin");
+
+                for(int i=0; i<15; i++){
+                    Chat chat = realm.createObject(Chat.class);
+                    chat.setLastActiveTime(new Date());
+                    chat.setSummary("test chat " + i);
+                    chat.setPeer(user);
+                }
+                realm.commitTransaction();
+                realm.close();
+            }
+        }).start();
     }
 }

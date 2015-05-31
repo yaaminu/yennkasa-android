@@ -8,6 +8,8 @@ import android.support.annotation.NonNull;
 import com.google.gson.JsonObject;
 import com.pair.adapter.BaseJsonAdapter;
 import com.pair.adapter.UserJsonAdapter;
+import com.pair.data.Chat;
+import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.net.api.UserApi;
 import com.pair.pairapp.BuildConfig;
@@ -78,7 +80,7 @@ public class UserManager {
             User user = realm.where(User.class).equalTo("_id", currUserId).findFirst();
             if (user != null) {
                 //returning {@code RealmObject} from methods leaks resources since
-                // that will prevent us from closing realm. hence we do a shallow copy.
+                // that will prevent us from closing the realm instance. hence we do a shallow copy.
                 // downside is changes to this object will not be persisted which is just what we want
                 copy = new User(user);
             }
@@ -143,8 +145,13 @@ public class UserManager {
         //TODO logout user from backend
         SharedPreferences sharedPreferences = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
         String userId = sharedPreferences.getString(KEY_SESSION_ID, null);
-        if ((userId == null) && BuildConfig.DEBUG) { //crash early
-            throw new IllegalStateException("calling logout when no user is logged in");
+        if ((userId == null)) {
+            if (BuildConfig.DEBUG) { //crash early
+                throw new IllegalStateException("calling logout when no user is logged in");
+            }
+            //clean up
+            cleanUpRealm();
+            return;
         }
         sharedPreferences
                 .edit()
@@ -152,11 +159,22 @@ public class UserManager {
                 .commit();
         Realm realm = Realm.getInstance(context);
         User user = realm.where(User.class).equalTo("_id", userId).findFirst();
-        if ((user == null) && BuildConfig.DEBUG) {
-            throw new IllegalStateException("existing session id with now corresponding User in the database");
+        if (user == null) {
+            if (BuildConfig.DEBUG) {
+                throw new IllegalStateException("existing session id with no corresponding User in the database");
+            }
         }
-        user.removeFromRealm();
         realm.close();
+        cleanUpRealm();
+    }
+
+    private void cleanUpRealm() {
+        Realm realm = Realm.getInstance(context);
+        realm.beginTransaction();
+        realm.clear(User.class);
+        realm.clear(Message.class);
+        realm.clear(Chat.class);
+        realm.commitTransaction();
     }
 
     public interface LoginCallback {

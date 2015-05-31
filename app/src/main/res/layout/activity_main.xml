@@ -9,21 +9,4 @@
     android:id="@+id/container"
     tools:context=".PairApp">
 
-
-    <!--<Button-->
-        <!--android:id="@+id/sendButton"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_centerInParent="true"-->
-        <!--android:text="send message" />-->
-
-    <!--<TextView-->
-        <!--android:id="@+id/textView1"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_below="@+id/sendButton"-->
-        <!--android:layout_centerHorizontal="true"-->
-        <!--android:layout_margin="12dp" />-->
-
-
 </RelativeLayout>
