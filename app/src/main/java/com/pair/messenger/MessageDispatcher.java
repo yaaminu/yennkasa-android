@@ -27,7 +27,6 @@ import retrofit.client.Response;
 
 /**
  * Created by Null-Pointer on 5/26/2015.
- *
  */
 public class MessageDispatcher implements Dispatcher<Message> {
 
@@ -91,7 +90,7 @@ public class MessageDispatcher implements Dispatcher<Message> {
     }
 
     private void doDispatch(JsonObject data, String id) {
-        SenderJob job = new SenderJob(id,data,0);
+        SenderJob job = new SenderJob(id, data, 0);
         sender.enqueue(job);
     }
 
@@ -113,7 +112,7 @@ public class MessageDispatcher implements Dispatcher<Message> {
         JsonObject data;
         String id;
 
-        SenderJob(String id,JsonObject data,int retryTimes) {
+        SenderJob(String id, JsonObject data, int retryTimes) {
             this.retryTimes = retryTimes;
             this.data = data;
             this.id = id;
@@ -142,30 +141,20 @@ public class MessageDispatcher implements Dispatcher<Message> {
                 public void failure(RetrofitError retrofitError) {
                     //retry if network available
                     if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
-                        if (job.retryTimes < MAX_RETRY_TIMES) {
-                            job.retryTimes++;
-                            tryAgain(job);
-                        } else {
-                            if (dispatcherMonitor != null)
-                                dispatcherMonitor.onSendFailed("an unknown error occurred", job.id);
-                        }
+                        tryAgain(job);
                     } else if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)) {
                         int statusCode = retrofitError.getResponse().getStatus();
-                        if ((statusCode == HttpStatus.SC_NOT_FOUND)
-                                || (statusCode == HttpStatus.SC_BAD_REQUEST)
-                                || (statusCode == HttpStatus.SC_UNAUTHORIZED)
-                                ) {
-                            //bubble up error
-                            String reason = "an error occured"; //= getHttpErrorResponse(retrofitError, "an error occurred");
-                            if (dispatcherMonitor != null)
-                                dispatcherMonitor.onSendFailed(reason, job.id);
+                        if (statusCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
+                            //TODO use  a correct exponential backoff algorithm to avoid overwhelming the server with bunch of requests
+                            // while it attempts to come back alive.
+                            tryAgain(job);
                         } else { //crash early
                             throw new RuntimeException("An unknown internal error occurred");
                         }
                     } else if (retrofitError.getKind().equals(RetrofitError.Kind.CONVERSION)) { //crash early
                         throw new RuntimeException("poorly encoded json data");
                     } else if (retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)) {
-                        //TODO handle the EOF error retrofit causes every first time we try to make a network request
+                        //TODO handle the EOF error that retrofit causes every first time we try to make a network request
                         //bubble up error and empty send queue let callers re-dispatch messages again;
                         if (dispatcherMonitor != null)
                             dispatcherMonitor.onSendFailed("Error in network connection", job.id);
@@ -176,7 +165,7 @@ public class MessageDispatcher implements Dispatcher<Message> {
         }
 
         private String getHttpErrorResponse(RetrofitError error, String defaultMessage) {
-            String reason = (defaultMessage != null) ? defaultMessage : "an unknow error occured";
+            String reason = (defaultMessage != null) ? defaultMessage : "an unknown error occurred";
             try {
                 InputStream in = error.getResponse().getBody().in();
                 String response = IOUtils.toString(in);
@@ -191,7 +180,14 @@ public class MessageDispatcher implements Dispatcher<Message> {
         }
 
         private void tryAgain(SenderJob job) {
-            doSend(job);
+            if (job.retryTimes < MAX_RETRY_TIMES) {
+                job.retryTimes++;
+                doSend(job); //async
+                return;
+            }
+            if (dispatcherMonitor != null)
+                dispatcherMonitor.onSendFailed("an unknown error occurred", job.id);
+
         }
 
     }
