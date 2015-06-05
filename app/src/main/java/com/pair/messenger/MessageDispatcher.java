@@ -27,10 +27,13 @@ import retrofit.client.Response;
 
 /**
  * Created by Null-Pointer on 5/26/2015.
+ *
  */
 public class MessageDispatcher implements Dispatcher<Message> {
 
     private static final String TAG = MessageDispatcher.class.getSimpleName();
+
+
     private static volatile MessageDispatcher INSTANCE;
     private final int MAX_RETRY_TIMES;
     private final MessageApi MESSAGE_API;
@@ -75,7 +78,7 @@ public class MessageDispatcher implements Dispatcher<Message> {
 
     @Override
     public void dispatch(Collection<Message> messages) {
-        //FIXME spawn a background daemon to send messages in the collection instead of looping over it
+        //FIXME spawn a background daemons to send messages in the collection instead of looping over it
         for (Message message : messages) {
             dispatch(message);
         }
@@ -87,8 +90,8 @@ public class MessageDispatcher implements Dispatcher<Message> {
         }
     }
 
-    private void doDispatch(JsonObject data, long id) {
-        SenderJob job = new SenderJob(id, 1, data);
+    private void doDispatch(JsonObject data, String id) {
+        SenderJob job = new SenderJob(id,data,0);
         sender.enqueue(job);
     }
 
@@ -108,9 +111,9 @@ public class MessageDispatcher implements Dispatcher<Message> {
     private static class SenderJob {
         int retryTimes;
         JsonObject data;
-        long id;
+        String id;
 
-        SenderJob(long id, int retryTimes, JsonObject data) {
+        SenderJob(String id,JsonObject data,int retryTimes) {
             this.retryTimes = retryTimes;
             this.data = data;
             this.id = id;
@@ -129,7 +132,10 @@ public class MessageDispatcher implements Dispatcher<Message> {
             MESSAGE_API.sendMessage(job.data, new Callback<HttpResponse>() {
                 @Override
                 public void success(HttpResponse httpResponse, Response response) {
-                    dispatcherMonitor.onSendSucceeded(job.id);
+
+                    if (dispatcherMonitor != null) {
+                        dispatcherMonitor.onSendSucceeded(job.id);
+                    }
                 }
 
                 @Override
@@ -140,7 +146,8 @@ public class MessageDispatcher implements Dispatcher<Message> {
                             job.retryTimes++;
                             tryAgain(job);
                         } else {
-                            dispatcherMonitor.onSendFailed("an unknown error occurred", job.id);
+                            if (dispatcherMonitor != null)
+                                dispatcherMonitor.onSendFailed("an unknown error occurred", job.id);
                         }
                     } else if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)) {
                         int statusCode = retrofitError.getResponse().getStatus();
@@ -150,15 +157,18 @@ public class MessageDispatcher implements Dispatcher<Message> {
                                 ) {
                             //bubble up error
                             String reason = "an error occured"; //= getHttpErrorResponse(retrofitError, "an error occurred");
-                            dispatcherMonitor.onSendFailed(reason, job.id);
+                            if (dispatcherMonitor != null)
+                                dispatcherMonitor.onSendFailed(reason, job.id);
                         } else { //crash early
                             throw new RuntimeException("An unknown internal error occurred");
                         }
                     } else if (retrofitError.getKind().equals(RetrofitError.Kind.CONVERSION)) { //crash early
                         throw new RuntimeException("poorly encoded json data");
-                    } else if (retrofitError.getKind().equals(retrofitError.getKind().equals(RetrofitError.Kind.NETWORK))) {
+                    } else if (retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)) {
+                        //TODO handle the EOF error retrofit causes every first time we try to make a network request
                         //bubble up error and empty send queue let callers re-dispatch messages again;
-                        dispatcherMonitor.onSendFailed("Error in network connection", job.id);
+                        if (dispatcherMonitor != null)
+                            dispatcherMonitor.onSendFailed("Error in network connection", job.id);
                     }
 
                 }
@@ -184,13 +194,5 @@ public class MessageDispatcher implements Dispatcher<Message> {
             doSend(job);
         }
 
-//        private void sendNextIfavailable() {
-//            //TODO make sure this piece of code is synchronized
-//            if (sendQueue.peek() != null) {
-//                doSend(sendQueue.poll()); //recursive call
-//            } else {
-//                busy.set(false);
-//            }
-//        }
     }
 }

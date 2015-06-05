@@ -60,10 +60,6 @@ public class GcmHelper {
 
         @Override
         protected GcmRegResults doInBackground(Void... params) {
-            //FIXME
-            if(true){
-                return new GcmRegResults("fakeId",null);
-            }
             SharedPreferences sharedPreferences = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
             String regId = sharedPreferences.getString(GCM_REG_ID, null);
             if (regId != null) {
@@ -87,9 +83,6 @@ public class GcmHelper {
 
         }
 
-        boolean foo() throws Exception{
-            return  true;
-        }
         class GcmRegResults {
             GcmRegResults(String regId, Exception error) {
                 this.regId = regId;

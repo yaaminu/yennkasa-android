@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.pair.data.Chat;
+import com.pair.data.Conversation;
 import com.pair.pairapp.R;
 
 import java.util.Date;
@@ -19,9 +19,9 @@ import io.realm.RealmResults;
 /**
  * @author Null-Pointer on 5/30/2015.
  */
-public class InboxAdapter extends RealmBaseAdapter<Chat>  {
+public class InboxAdapter extends RealmBaseAdapter<Conversation>  {
     private static final String TAG = InboxAdapter.class.getSimpleName();
-    public InboxAdapter(Context context, RealmResults<Chat> realmResults, boolean automaticUpdate) {
+    public InboxAdapter(Context context, RealmResults<Conversation> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
     }
 
@@ -40,19 +40,17 @@ public class InboxAdapter extends RealmBaseAdapter<Chat>  {
         }else{
             holder =(ViewHolder) convertView.getTag();
         }
-        Chat chat = getItem(position);
-        holder.chatSummary.setText(chat.getSummary());
-        holder.peerName.setText(chat.getPeer().getName());
-        holder.dateLastActive.setText(DateUtils.formatDateRange(context,new Date().getTime(),chat.getLastActiveTime().getTime(),DateUtils.FORMAT_NO_YEAR));
-        holder.currentChat = chat;
+        Conversation conversation = getItem(position);
+        holder.chatSummary.setText(conversation.getSummary());
+        holder.dateLastActive.setText(DateUtils.formatDateRange(context,new Date().getTime(), conversation.getLastActiveTime().getTime(),DateUtils.FORMAT_NO_YEAR));
+        holder.currentConversation = conversation;
         return convertView;
     }
 
     public class ViewHolder {
         TextView chatSummary,dateLastActive,peerName;
         ImageView senderAvatar;
-        public Chat currentChat; //holds current item to be used by callers outside this adapter.
+        public Conversation currentConversation; //holds current item to be used by callers outside this adapter.
     }
-
 
 }

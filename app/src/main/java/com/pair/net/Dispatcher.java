@@ -18,8 +18,8 @@ public interface Dispatcher<T> {
      * Created by Null-Pointer on 5/26/2015.
      */
     interface DispatcherMonitor {
-        void onSendFailed(String reason, long messageId);
+        void onSendFailed(String reason, String messageId);
 
-        void onSendSucceeded(long messageId);
+        void onSendSucceeded(String messageId);
     }
 }

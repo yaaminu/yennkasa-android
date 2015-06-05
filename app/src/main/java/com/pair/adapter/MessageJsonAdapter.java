@@ -19,7 +19,7 @@ public class MessageJsonAdapter implements BaseJsonAdapter<Message> {
         obj.addProperty("state", message.getState());
         obj.addProperty("id", message.getId());
         obj.addProperty("messageBody", message.getMessageBody());
-        obj.addProperty("dateComposed", message.getDateComposed().toString());
+        obj.addProperty("dateComposed", message.getDateComposed().getTime());
         return obj;
     }
 

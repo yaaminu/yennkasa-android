@@ -33,7 +33,7 @@
         android:layout_toRightOf="@+id/iv_user_avatar"
         android:ellipsize="middle"
         android:singleLine="true"
-        android:text="Summary of chat" />
+        android:text="Summary of conversation" />
 
     <TextView
         android:layout_width="wrap_content"

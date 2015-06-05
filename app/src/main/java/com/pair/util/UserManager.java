@@ -8,7 +8,7 @@ import android.support.annotation.NonNull;
 import com.google.gson.JsonObject;
 import com.pair.adapter.BaseJsonAdapter;
 import com.pair.adapter.UserJsonAdapter;
-import com.pair.data.Chat;
+import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.net.api.UserApi;
@@ -173,7 +173,7 @@ public class UserManager {
         realm.beginTransaction();
         realm.clear(User.class);
         realm.clear(Message.class);
-        realm.clear(Chat.class);
+        realm.clear(Conversation.class);
         realm.commitTransaction();
     }
 

@@ -3,14 +3,16 @@ package com.pair.data;
 import java.util.Date;
 
 import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.RealmClass;
 
 /**
  * Created by Null-Pointer on 5/30/2015.
  */
 @RealmClass
-public class Chat extends RealmObject {
-    private User peer; //other peer in chat
+public class Conversation extends RealmObject {
+    @PrimaryKey
+    private String peerId; //other peer in chat
     private String summary;
     private Date lastActiveTime;
     private Message lastMessage;
@@ -23,12 +25,12 @@ public class Chat extends RealmObject {
         this.lastMessage = lastMessage;
     }
 
-    public User getPeer() {
-        return peer;
+    public String getPeerId() {
+        return peerId;
     }
 
-    public void setPeer(User peer) {
-        this.peer = peer;
+    public void setPeerId(String peer) {
+        this.peerId = peer;
     }
 
     public Date getLastActiveTime() {
