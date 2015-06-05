@@ -65,6 +65,7 @@ public class SignupFragment extends Fragment {
             return;
         }
         busy = true;
+        progressView.setVisibility(View.VISIBLE);
         GcmHelper.register(getActivity(), new GcmHelper.GCMRegCallback() {
             @Override
             public void done(Exception e, String regId) {
@@ -74,9 +75,9 @@ public class SignupFragment extends Fragment {
                     user.setPassword(UiHelpers.getFieldContent(passWordEt));
                     user.setName(UiHelpers.getFieldContent(userNameEt));
                     user.setGcmRegId(regId);
-                    progressView.setVisibility(View.VISIBLE);
                     UserManager.getInstance(getActivity().getApplication()).signUp(user, signUpCallback);
                 } else {
+                    progressView.setVisibility(View.GONE);
                     busy = false;
                     UiHelpers.showErrorDialog(getActivity(), e.getMessage());
                 }

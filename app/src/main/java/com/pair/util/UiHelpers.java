@@ -45,7 +45,11 @@ public class UiHelpers {
                 String phoneNumber = phoneCur.getString(phoneCur.getColumnIndex(ContactsContract
                         .CommonDataKinds.Phone.NUMBER));
                 //TODO do this with regexp
-                phoneNumber = phoneNumber.replace("(","").replace(")","");
+                if(phoneNumber == null){
+                    Log.i(TAG,"no phone number for this contact, continuing");
+                    continue;
+                }
+                phoneNumber = phoneNumber.replace("(","").replace(")","").replace("-","");
                 Log.d(TAG,phoneNumber);
                 phoneNumberCollection.add(phoneNumber);
             }

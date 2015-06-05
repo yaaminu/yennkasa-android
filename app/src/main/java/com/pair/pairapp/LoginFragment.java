@@ -34,7 +34,7 @@ public class LoginFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.login_fragment, container, false);
         phoneNumberEt = (AutoCompleteTextView) view.findViewById(R.id.phone_number_field);
-        new UiHelpers.AutoCompleter(getActivity(),phoneNumberEt).execute();//enable autocompletion
+        new UiHelpers.AutoCompleter(getActivity(), phoneNumberEt).execute();//enable autocompletion
         passwordEt = (EditText) view.findViewById(R.id.passwordField);
         loginButton = (Button) view.findViewById(R.id.loginButton);
         progressView = view.findViewById(R.id.progressView);
@@ -63,6 +63,7 @@ public class LoginFragment extends Fragment {
             return;
         }
         busy = true;
+        progressView.setVisibility(View.VISIBLE);
         GcmHelper.register(getActivity(), new GcmHelper.GCMRegCallback() {
             @Override
             public void done(Exception e, String regId) {
@@ -71,9 +72,9 @@ public class LoginFragment extends Fragment {
                     user.set_id(UiHelpers.getFieldContent(phoneNumberEt));
                     user.setPassword(UiHelpers.getFieldContent(passwordEt));
                     user.setGcmRegId(regId);
-                    progressView.setVisibility(View.VISIBLE);
                     UserManager.getInstance(getActivity().getApplication()).logIn(user, loginCallback);
                 } else {
+                    progressView.setVisibility(View.GONE);
                     busy = false;
                     UiHelpers.showErrorDialog(getActivity(), e.getMessage());
                 }

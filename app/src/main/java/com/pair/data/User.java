@@ -18,13 +18,13 @@ public class User extends RealmObject {
     private String password;
     private String status, DP;
     private long lastActivity, accountCreated;
-    private RealmList<User> peers; //a gropu will be a user with its members represented by this field.
+    private RealmList<User> peers; //a group will be a user with its members represented by this field.
 
     //required no-arg c'tor
     public User() {
     }
 
-    //copy constructor -= lol(c++ things).
+    //copy constructor-lol,(c++ things).
     public User(User other) {
         //realm forces us to use setters and getters everywhere for predictable results
         //null check because is good not to throw in constructors
