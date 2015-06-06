@@ -17,6 +17,8 @@ import com.pair.adapter.InboxAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.User;
 
+import java.util.Date;
+
 import io.realm.Realm;
 import io.realm.RealmResults;
 
@@ -83,6 +85,7 @@ public class InboxFragment extends ListFragment {
                 user.setStatus("amin\'s status");
             }
             conversation.setPeerId(user.get_id());
+            conversation.setLastActiveTime(new Date());
             realm.commitTransaction();
             enterChatRoom(user.get_id(), user.getName());
 

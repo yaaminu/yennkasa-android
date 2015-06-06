@@ -11,6 +11,7 @@ import android.widget.ListView;
 
 import com.pair.adapter.MessageJsonAdapter;
 import com.pair.adapter.MessagesAdapter;
+import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.messenger.MessageDispatcher;
@@ -27,12 +28,13 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     public static final String TAG = ChatActivity.class.getSimpleName();
     public static final String PEER_NAME = "peer name";
     public static final String PEER_ID = "peer id";
-    User peer;
-    Realm realm;
-    ListView messagesListView;
-    EditText editText;
-    Button sendButton;
-    MessageDispatcher dispatcher;
+    private User peer;
+    private Conversation currConversation;
+    private Realm realm;
+    private ListView messagesListView;
+    private EditText editText;
+    private Button sendButton;
+    private MessageDispatcher dispatcher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +50,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         getSupportActionBar().setTitle(peerName);
         String peerId = bundle.getString(PEER_ID);
         peer = realm.where(User.class).equalTo("_id", peerId).findFirst();
+        currConversation = realm.where(Conversation.class).equalTo("peerId",peerId).findFirst();
         RealmResults<Message> messages = realm.where(Message.class).equalTo("from", peer.get_id()).or().equalTo("to", peer.get_id()).findAllSorted("dateComposed", true);
         MessagesAdapter adapter = new MessagesAdapter(this, messages, true);
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
@@ -98,6 +101,8 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             long messageCount = realm.where(Message.class).count() + 1;
             message.setId(messageCount+ "@" + getCurrentUser().get_id() + "@" +System.currentTimeMillis());
             message.setState(Message.PENDING);
+            currConversation.setLastMessage(message);
+            currConversation.setLastActiveTime(message.getDateComposed());
             realm.commitTransaction();
             dispatcher.dispatch(message);
         }

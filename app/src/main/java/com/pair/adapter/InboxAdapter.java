@@ -1,7 +1,6 @@
 package com.pair.adapter;
 
 import android.content.Context;
-import android.text.format.DateUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,11 +11,12 @@ import com.pair.data.Conversation;
 import com.pair.data.User;
 import com.pair.pairapp.R;
 
-import java.util.Date;
-
 import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
+
+import static android.text.format.DateUtils.FORMAT_NO_YEAR;
+import static android.text.format.DateUtils.formatDateTime;
 
 /**
  * @author Null-Pointer on 5/30/2015.
@@ -44,10 +44,13 @@ public class InboxAdapter extends RealmBaseAdapter<Conversation>  {
         }
         Conversation conversation = getItem(position);
         holder.chatSummary.setText(conversation.getSummary());
+        //TODO find a better way to handle this peer name thing
         Realm realm = Realm.getInstance(convertView.getContext());
         String peerName = realm.where(User.class).equalTo("_id",conversation.getPeerId()).findFirst().getName();
+        realm.close();
         holder.peerName.setText(peerName);
-        holder.dateLastActive.setText(DateUtils.formatDateRange(context,new Date().getTime(), conversation.getLastActiveTime().getTime(),DateUtils.FORMAT_NO_YEAR));
+
+        holder.dateLastActive.setText(formatDateTime(context,conversation.getLastActiveTime().getTime(), FORMAT_NO_YEAR));
         holder.currentConversation = conversation;
         return convertView;
     }
