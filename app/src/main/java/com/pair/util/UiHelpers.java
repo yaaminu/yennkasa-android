@@ -35,7 +35,7 @@ public class UiHelpers {
 
         @Override
         protected List<String> doInBackground(Void... voids) {
-            ArrayList<String> phoneNumberCollection = new ArrayList<String>();
+            List<String> phoneNumberCollection = new ArrayList<>();
 
             // Get all phone numbers from the user's contacts and copy them to a list.
             ContentResolver cr = this.context.getContentResolver();
@@ -44,13 +44,14 @@ public class UiHelpers {
             while (phoneCur.moveToNext()) {
                 String phoneNumber = phoneCur.getString(phoneCur.getColumnIndex(ContactsContract
                         .CommonDataKinds.Phone.NUMBER));
+                String name = phoneCur.getString(phoneCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
                 //TODO do this with regexp
-                if(phoneNumber == null){
+                if(phoneNumber == null ){
                     Log.i(TAG,"no phone number for this contact, continuing");
                     continue;
                 }
                 phoneNumber = phoneNumber.replace("(","").replace(")","").replace("-","");
-                Log.d(TAG,phoneNumber);
+                Log.d(TAG,name + ":" + phoneNumber);
                 phoneNumberCollection.add(phoneNumber);
             }
             phoneCur.close();
@@ -60,7 +61,7 @@ public class UiHelpers {
         @Override
         protected void onPostExecute(List<String> emailAddressCollection) {
             ArrayAdapter<String> arrayAdapter =
-                    new ArrayAdapter<String>(context,
+                    new ArrayAdapter<>(context,
                             android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
             autoCompleteTextView.setAdapter(arrayAdapter);
             System.out.println("AutoCompleter.onPostExecute");

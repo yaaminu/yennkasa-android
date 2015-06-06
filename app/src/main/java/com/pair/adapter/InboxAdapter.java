@@ -9,10 +9,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.pair.data.Conversation;
+import com.pair.data.User;
 import com.pair.pairapp.R;
 
 import java.util.Date;
 
+import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
 
@@ -42,6 +44,9 @@ public class InboxAdapter extends RealmBaseAdapter<Conversation>  {
         }
         Conversation conversation = getItem(position);
         holder.chatSummary.setText(conversation.getSummary());
+        Realm realm = Realm.getInstance(convertView.getContext());
+        String peerName = realm.where(User.class).equalTo("_id",conversation.getPeerId()).findFirst().getName();
+        holder.peerName.setText(peerName);
         holder.dateLastActive.setText(DateUtils.formatDateRange(context,new Date().getTime(), conversation.getLastActiveTime().getTime(),DateUtils.FORMAT_NO_YEAR));
         holder.currentConversation = conversation;
         return convertView;

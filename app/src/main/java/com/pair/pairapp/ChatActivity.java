@@ -52,7 +52,6 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         MessagesAdapter adapter = new MessagesAdapter(this, messages, true);
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
         messagesListView.setAdapter(adapter);
-
     }
 
     @Override
@@ -86,7 +85,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         String content = UiHelpers.getFieldContent(editText);
-        editText.setText("");
+        editText.setText(""); //clear the text field
         //TODO use a regular expression to validate the message body
         if (!content.isEmpty()) {
             realm.beginTransaction();
