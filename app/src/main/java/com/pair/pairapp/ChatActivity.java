@@ -15,6 +15,7 @@ import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.messenger.MessageDispatcher;
+import com.pair.net.Dispatcher;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
@@ -43,14 +44,14 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         setContentView(R.layout.activity_chat);
         editText = ((EditText) findViewById(R.id.et_inputMsg));
         sendButton = ((Button) findViewById(R.id.btn_send));
-        dispatcher = MessageDispatcher.getInstance(new MessageJsonAdapter(), null, 10);
+        dispatcher = MessageDispatcher.getInstance(new MessageJsonAdapter(), monitor, 10);
         sendButton.setOnClickListener(this);
         Bundle bundle = getIntent().getExtras();
         String peerName = bundle.getString(PEER_NAME);
         getSupportActionBar().setTitle(peerName);
         String peerId = bundle.getString(PEER_ID);
         peer = realm.where(User.class).equalTo("_id", peerId).findFirst();
-        currConversation = realm.where(Conversation.class).equalTo("peerId",peerId).findFirst();
+        currConversation = realm.where(Conversation.class).equalTo("peerId", peerId).findFirst();
         RealmResults<Message> messages = realm.where(Message.class).equalTo("from", peer.get_id()).or().equalTo("to", peer.get_id()).findAllSorted("dateComposed", true);
         MessagesAdapter adapter = new MessagesAdapter(this, messages, true);
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
@@ -99,7 +100,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             message.setDateComposed(new Date());
             //generate a unique id
             long messageCount = realm.where(Message.class).count() + 1;
-            message.setId(messageCount+ "@" + getCurrentUser().get_id() + "@" +System.currentTimeMillis());
+            message.setId(messageCount + "@" + getCurrentUser().get_id() + "@" + System.currentTimeMillis());
             message.setState(Message.PENDING);
             currConversation.setLastMessage(message);
             currConversation.setLastActiveTime(message.getDateComposed());
@@ -111,4 +112,29 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private User getCurrentUser() {
         return UserManager.getInstance(getApplication()).getCurrentUser();
     }
+
+    private Dispatcher.DispatcherMonitor monitor = new Dispatcher.DispatcherMonitor() {
+        @Override
+        public void onSendFailed(String reason, String messageId) {
+          //TODO handle this callback
+        }
+
+        @Override
+        public void onSendSucceeded(final String messageId) {
+            //if dispatcher calls this method on a background thread we are doomed :-)
+            //that's why we are not using the realm of chatactivity  here...
+            Realm realm = Realm.getInstance(ChatActivity.this);
+            realm.executeTransaction(new Realm.Transaction() {
+                //this code is not asynchronous so its safe to close realm and be sure we are not closing a realm instance which is in use
+                @Override
+                public void execute(Realm realm) {
+                    Message message = realm.where(Message.class).equalTo("id", messageId).findFirst();
+                    if (message != null) {
+                        message.setState(Message.SENT);
+                    }
+                }
+            });
+            realm.close();
+        }
+    };
 }

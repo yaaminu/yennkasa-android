@@ -142,16 +142,17 @@ public class MessageDispatcher implements Dispatcher<Message> {
                 public void failure(RetrofitError retrofitError) {
                     //retry if network available
                     if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
-                        Log.i(TAG,"unexpected error trying again");
+                        Log.i(TAG,"unexpected error, trying to send message again");
                         tryAgain(job);
                     } else if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)) {
                         int statusCode = retrofitError.getResponse().getStatus();
                         if (statusCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
                             //TODO use  a correct exponential backoff algorithm to avoid overwhelming the server with bunch of requests
                             // while it attempts to come back alive.
-                            Log.i(TAG,"internal server error, trying again");
+                            Log.i(TAG,"internal server error, trying to send again");
                             tryAgain(job);
-                        } else { //crash early
+                        } else {//crash early
+                            // as far as we know, our backend will only return other status code if its is our fault and that normally should no happen
                             throw new RuntimeException("An unknown internal error occurred");
                         }
                     } else if (retrofitError.getKind().equals(RetrofitError.Kind.CONVERSION)) { //crash early
