@@ -13,8 +13,6 @@ import com.pair.data.User;
 import com.pair.pairapp.R;
 import com.pair.util.UserManager;
 
-import java.util.Date;
-
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
 
@@ -48,7 +46,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         content = ((TextView) view.findViewById(R.id.tv_message_content));
         dateComposed = ((TextView) view.findViewById(R.id.tv_message_date));
         content.setText(message.getMessageBody());
-        DateUtils.formatElapsedTime(new Date().getTime() - message.getDateComposed().getTime());
+        DateUtils.formatDateTime(context,message.getDateComposed().getTime(),DateUtils.FORMAT_ABBREV_RELATIVE);
         dateComposed.setText(message.getDateComposed().toString());
         Log.d(TAG,message.toString());
         return view;

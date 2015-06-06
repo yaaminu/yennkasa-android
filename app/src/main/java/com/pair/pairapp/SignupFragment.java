@@ -29,6 +29,8 @@ public class SignupFragment extends Fragment {
     private boolean busy;
     private View progressView;
 
+    public SignupFragment(){}
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

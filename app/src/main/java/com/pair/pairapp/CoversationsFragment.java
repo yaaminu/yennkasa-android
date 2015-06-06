@@ -25,12 +25,14 @@ import io.realm.RealmResults;
 /**
  * Created by Null-Pointer on 5/29/2015.
  */
-public class InboxFragment extends ListFragment {
+public class CoversationsFragment extends ListFragment {
 
     private static final String[] days = {
             //  "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"
     };
     private Realm realm;
+
+    public CoversationsFragment(){} //required no-arg constructor
 
     @Override
     public void onAttach(Activity activity) {

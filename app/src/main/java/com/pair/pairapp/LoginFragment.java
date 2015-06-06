@@ -28,6 +28,7 @@ public class LoginFragment extends Fragment {
     private boolean busy = false;
     private View progressView;
 
+    public LoginFragment(){}
 
     @Nullable
     @Override
