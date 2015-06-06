@@ -11,6 +11,7 @@ import com.pair.net.Dispatcher;
 import com.pair.net.HttpResponse;
 import com.pair.net.api.MessageApi;
 import com.pair.util.Config;
+import com.pair.util.ConnectionHelper;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
@@ -158,10 +159,14 @@ public class MessageDispatcher implements Dispatcher<Message> {
                     } else if (retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)) {
                         //TODO handle the EOF error that retrofit causes every first time we try to make a network request
                         //bubble up error and empty send queue let callers re-dispatch messages again;
-                        if (dispatcherMonitor != null)
+                        if(ConnectionHelper.isConnectedOrConnecting(Config.getApplicationContext())){
+                            Log.i(TAG,"failed to send message retrying");
+                            tryAgain(job);
+                        }
+                        else if(dispatcherMonitor != null) {
                             dispatcherMonitor.onSendFailed("Error in network connection", job.id);
+                        }
                     }
-
                 }
             });
         }
