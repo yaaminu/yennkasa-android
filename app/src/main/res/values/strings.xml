@@ -17,4 +17,8 @@
 
 <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="str_drawer_open">drawer open</string>
+    <string name="str_drawer_closed">drawer closed</string>
+    <string name="content_desc_user_avatar">user dp thumbnail</string>
+    <string name="action_seed_users">seed users</string>
 </resources>

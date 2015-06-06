@@ -1,17 +1,10 @@
 package com.pair.pairapp;
 
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.support.v7.app.ActionBarActivity;
 
 
 public class SetUpActivity extends ActionBarActivity {
-
-    public static final String ACTION = "action";
-    public static final String ACTION_LOGIN = "login",
-            ACTION_SIGNUP = "signup";
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

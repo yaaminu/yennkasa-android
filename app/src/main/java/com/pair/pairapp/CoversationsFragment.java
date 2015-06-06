@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
+import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -48,6 +49,9 @@ public class CoversationsFragment extends ListFragment {
         RealmResults<Conversation> conversations = realm.allObjectsSorted(Conversation.class, "lastActiveTime", false);
         InboxAdapter adapter = new InboxAdapter(getActivity(), conversations, true);
         setListAdapter(adapter);
+        String title = getArguments().getString(MainActivity.ARG_TITLE);
+        ActionBarActivity activity = (ActionBarActivity) getActivity();
+        activity.getSupportActionBar().setTitle(title);
         return view;
     }
 
