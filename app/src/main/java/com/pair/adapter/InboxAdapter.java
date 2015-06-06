@@ -45,14 +45,19 @@ public class InboxAdapter extends RealmBaseAdapter<Conversation>  {
         Conversation conversation = getItem(position);
         holder.chatSummary.setText(conversation.getSummary());
         //TODO find a better way to handle this peer name thing
-        Realm realm = Realm.getInstance(convertView.getContext());
-        String peerName = realm.where(User.class).equalTo("_id",conversation.getPeerId()).findFirst().getName();
-        realm.close();
-        holder.peerName.setText(peerName);
+        String peerName = getPeerName(conversation.getPeerId());
 
-        holder.dateLastActive.setText(formatDateTime(context,conversation.getLastActiveTime().getTime(), FORMAT_NO_YEAR));
+        holder.peerName.setText(peerName);
+        holder.dateLastActive.setText(formatDateTime(context, conversation.getLastActiveTime().getTime(), FORMAT_NO_YEAR));
         holder.currentConversation = conversation;
         return convertView;
+    }
+
+    private String getPeerName(String peerId) {
+        Realm realm = Realm.getInstance(context);
+        String peerName = realm.where(User.class).equalTo("_id",peerId).findFirst().getName();
+        realm.close();
+        return peerName;
     }
 
     public class ViewHolder {
