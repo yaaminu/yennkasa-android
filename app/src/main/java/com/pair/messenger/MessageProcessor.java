@@ -4,10 +4,11 @@ package com.pair.messenger;
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 
-import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.pair.data.Conversation;
 import com.pair.data.Message;
+
+import java.util.Date;
 
 import io.realm.Realm;
 
@@ -22,38 +23,25 @@ public class MessageProcessor extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if(true){
-            throw new RuntimeException("better");
+
+        Bundle bundle = intent.getExtras();
+        String messageJson = bundle.getString("message");
+        Realm realm = Realm.getInstance(this);
+        realm.beginTransaction();
+        Message message = realm.createObjectFromJson(Message.class, messageJson);
+        message.setState(Message.RECEIVED);
+
+        Conversation conversation = realm.where(Conversation.class).equalTo("peerId", message.getFrom()).findFirst();
+        if (conversation == null) { //create a new one
+            conversation = realm.createObject(Conversation.class);
+            conversation.setPeerId(message.getFrom());
         }
-        Bundle extras = intent.getExtras();
-        GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(this);
+        conversation.setLastActiveTime(new Date());//now
+        conversation.setLastMessage(message);
+        realm.commitTransaction();
+        realm.close();
 
-        String messageType = gcm.getMessageType(intent);
-
-        if (!extras.isEmpty()) {
-
-            if (GoogleCloudMessaging.
-                    MESSAGE_TYPE_SEND_ERROR.equals(messageType)) {
-                Log.e(TAG, "Error: failed to send message");
-
-            } else if (GoogleCloudMessaging.
-                    MESSAGE_TYPE_DELETED.equals(messageType)) {
-                Log.e(TAG, "Error: message deleted");
-
-            } else if (GoogleCloudMessaging.
-                    MESSAGE_TYPE_MESSAGE.equals(messageType)) {
-                String message = extras.getString("message");
-                if (message == null) {
-                    throw new RuntimeException("empty message received");
-                }
-                Log.i("TAG", "Received: " + message);
-                Realm realm = Realm.getInstance(this);
-                realm.beginTransaction();
-                Message message1 = realm.createObjectFromJson(Message.class, message);
-                message1.setState(Message.RECEIVED);
-                realm.commitTransaction();
-            }
-        }
+        //TODO notify user
         MessageCenter.completeWakefulIntent(intent);
     }
 }

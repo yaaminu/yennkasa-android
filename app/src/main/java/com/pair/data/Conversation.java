@@ -16,6 +16,7 @@ public class Conversation extends RealmObject {
     private String summary;
     private Date lastActiveTime;
     private Message lastMessage;
+    private boolean active;
 
     public Message getLastMessage() {
         return lastMessage;
@@ -49,4 +50,11 @@ public class Conversation extends RealmObject {
         this.summary = summary;
     }
 
+    public boolean isActive(){
+        return this.active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }
