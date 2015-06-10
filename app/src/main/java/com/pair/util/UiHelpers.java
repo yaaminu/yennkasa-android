@@ -3,6 +3,7 @@ package com.pair.util;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.provider.ContactsContract;
@@ -10,6 +11,8 @@ import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+
+import com.pair.pairapp.ChatActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +26,7 @@ public class UiHelpers {
      * Use an AsyncTask to fetch the user's email addresses on a background thread, and update
      * the email text field with results on the main UI thread.
      */
-   public static class AutoCompleter extends AsyncTask<Void, Void, List<String>> {
+    public static class AutoCompleter extends AsyncTask<Void, Void, List<String>> {
         public static final String TAG = AutoCompleter.class.getSimpleName();
         private final AutoCompleteTextView autoCompleteTextView;
         private final Context context;
@@ -35,23 +38,26 @@ public class UiHelpers {
 
         @Override
         protected List<String> doInBackground(Void... voids) {
+
             List<String> phoneNumberCollection = new ArrayList<>();
 
             // Get all phone numbers from the user's contacts and copy them to a list.
             ContentResolver cr = this.context.getContentResolver();
-            Cursor phoneCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
+            Cursor phoneCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
+                            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME},
                     null, null, null);
             while (phoneCur.moveToNext()) {
                 String phoneNumber = phoneCur.getString(phoneCur.getColumnIndex(ContactsContract
                         .CommonDataKinds.Phone.NUMBER));
                 String name = phoneCur.getString(phoneCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
                 //TODO do this with regexp
-                if(phoneNumber == null ){
-                    Log.i(TAG,"no phone number for this contact, continuing");
+                if (phoneNumber == null) {
+                    Log.i(TAG, "no phone number for this contact, continuing");
                     continue;
                 }
-                phoneNumber = phoneNumber.replace("(","").replace(")","").replace("-","");
-                Log.d(TAG,name + ":" + phoneNumber);
+                phoneNumber = phoneNumber.replace("(", "").replace(")", "").replace("-", "");
+                Log.d(TAG, name + ":" + phoneNumber);
                 phoneNumberCollection.add(phoneNumber);
             }
             phoneCur.close();
@@ -60,6 +66,7 @@ public class UiHelpers {
 
         @Override
         protected void onPostExecute(List<String> emailAddressCollection) {
+            //FIXME implement a cursor adapter for scalability..
             ArrayAdapter<String> arrayAdapter =
                     new ArrayAdapter<>(context,
                             android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
@@ -68,17 +75,25 @@ public class UiHelpers {
         }
     }
 
-    public static String  getFieldContent(EditText field) {
+    public static String getFieldContent(EditText field) {
         String content = field.getText().toString();
         return content.trim();
     }
-    public static void showErrorDialog(Context context,String message){
+
+    public static void showErrorDialog(Context context, String message) {
         new AlertDialog.Builder(context)
                 .setTitle("Error")
                 .setMessage(message)
                 .setPositiveButton("OK", null)
                 .create()
                 .show();
+    }
+
+    public static void enterChatRoom(Context context,String peerId, String peerName) {
+        Intent intent = new Intent(context, ChatActivity.class);
+        intent.putExtra(ChatActivity.PEER_NAME, peerName);
+        intent.putExtra(ChatActivity.PEER_ID, peerId);
+        context.startActivity(intent);
     }
 
 }

@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.google.gson.JsonObject;
 import com.pair.adapter.BaseJsonAdapter;
@@ -14,7 +15,10 @@ import com.pair.data.User;
 import com.pair.net.api.UserApi;
 import com.pair.pairapp.BuildConfig;
 
+import java.util.List;
+
 import io.realm.Realm;
+import io.realm.exceptions.RealmException;
 import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
@@ -168,6 +172,37 @@ public class UserManager {
         cleanUpRealm();
     }
 
+    public void fetchFriends(final List<String> array,final FriendsFetchCallback callback){
+        userApi.fetchFriends(array, new Callback<List<User>>() {
+            @Override
+            public void success(List<User> users, Response response) {
+                Realm realm = Realm.getInstance(context);
+                realm.beginTransaction();
+                try {
+                    realm.copyToRealm(users);
+                    realm.commitTransaction();
+                }catch (RealmException e){ //primary keys violation
+                    //never mind
+                }
+                realm.close();
+                callback.done(null);
+            }
+
+            @Override
+            public void failure(RetrofitError retrofitError) {
+                if(retrofitError.getKind().equals(RetrofitError.Kind.HTTP)){
+                    Log.e(TAG, retrofitError.getMessage());
+                    callback.done(retrofitError);
+                }else if(ConnectionHelper.isConnectedOrConnecting(context)){
+                    //try again
+                    fetchFriends(array,callback);
+                }else{
+                    callback.done(retrofitError);
+                }
+            }
+        });
+    }
+
     private void cleanUpRealm() {
         Realm realm = Realm.getInstance(context);
         realm.beginTransaction();
@@ -182,6 +217,10 @@ public class UserManager {
     }
 
     public interface SignUpCallback {
+        void done(Exception e);
+    }
+
+    public interface FriendsFetchCallback{
         void done(Exception e);
     }
 }

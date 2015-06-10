@@ -32,13 +32,14 @@ public class FriendsAdapter extends RealmBaseAdapter<User> {
             convertView.setTag(holder);
         }
         ViewHolder holder = (ViewHolder) convertView.getTag();
+        holder.user = getItem(position);
         holder.tv.setText(getItem(position).getName());
-
         return convertView;
     }
 
-    private class ViewHolder {
+    public class ViewHolder {
         ImageView iv;
         TextView tv;
+        public User user;
     }
 }

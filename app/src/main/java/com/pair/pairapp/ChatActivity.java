@@ -46,16 +46,31 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         sendButton = ((Button) findViewById(R.id.btn_send));
         dispatcher = MessageDispatcher.getInstance(new MessageJsonAdapter(), monitor, 10);
         sendButton.setOnClickListener(this);
+
         Bundle bundle = getIntent().getExtras();
-        String peerName = bundle.getString(PEER_NAME);
-        getSupportActionBar().setTitle(peerName);
         String peerId = bundle.getString(PEER_ID);
         peer = realm.where(User.class).equalTo("_id", peerId).findFirst();
-        currConversation = realm.where(Conversation.class).equalTo("peerId", peerId).findFirst();
+        String peerName = peer.getName();
+
+        getSupportActionBar().setTitle(peerName);
+        getConversation(peerId);
+
+        //TODO change this query a more general one than will work even when we add group chat
         RealmResults<Message> messages = realm.where(Message.class).equalTo("from", peer.get_id()).or().equalTo("to", peer.get_id()).findAllSorted("dateComposed", true);
         MessagesAdapter adapter = new MessagesAdapter(this, messages, true);
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
         messagesListView.setAdapter(adapter);
+    }
+
+    private void getConversation(String peerId) {
+        currConversation = realm.where(Conversation.class).equalTo("peerId", peerId).findFirst();
+        if(currConversation == null){ //first time
+            realm.beginTransaction();
+            currConversation = realm.createObject(Conversation.class);
+            currConversation.setPeerId(peerId);
+            currConversation.setLastActiveTime(new Date());
+            realm.commitTransaction();
+        }
     }
 
     @Override

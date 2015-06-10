@@ -13,8 +13,8 @@ import android.view.MenuItem;
 import com.pair.data.User;
 import com.pair.util.GcmHelper;
 import com.pair.util.UserManager;
-
-import io.realm.Realm;
+import com.pair.workers.RealmHelper;
+import com.pair.workers.UserServices;
 
 /**
  * @author Null-Pointer on 6/6/2015.
@@ -36,12 +36,18 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
             if (user == null) {
                 gotoSetUpActivity();
             } else {
+                //attempt to update user friends at startup
+                Intent intent = new Intent(this, UserServices.class);
+                intent.putExtra(UserServices.ACTION,UserServices.ACTION_FETCH_FRIENDS);
+                startService(intent);
+
                 drawer = (DrawerLayout) findViewById(R.id.drawer);
                 Fragment fragment = new CoversationsFragment();
                 Bundle bundle = new Bundle();
                 bundle.putString(ARG_TITLE, "Conversations");
                 fragment.setArguments(bundle);
                 addFragment(fragment);
+                RealmHelper.runRealmOperation(this);
             }
         } else {
             Log.e(TAG, "Google cloud messaging not available on this device");
@@ -63,13 +69,8 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
             gotoSetUpActivity();
             finish();
             return true;
-        }else if(item.getItemId() == R.id.action_seed_users){
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    seedUsers();
-                }
-            }).start();
+        } else if (item.getItemId() == R.id.action_seed_users) {
+
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -111,18 +112,6 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
         bundle.putString(ARG_TITLE, recommendedTitle);
         fragment.setArguments(bundle);
         addFragment(fragment);
-    }
-
-    private void seedUsers() {
-        Realm realm = Realm.getInstance(this);
-        realm.beginTransaction();
-        for (int i = 0; i < 20; i++) {
-            User user = realm.createObject(User.class);
-            user.set_id("User " + i);
-            user.setName("user " + i);
-        }
-        realm.commitTransaction();
-        realm.close();
     }
 
 }

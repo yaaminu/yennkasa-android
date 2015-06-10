@@ -1,7 +1,6 @@
 package com.pair.pairapp;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
@@ -17,6 +16,7 @@ import android.widget.ListView;
 import com.pair.adapter.InboxAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.User;
+import com.pair.util.UiHelpers;
 
 import java.util.Date;
 
@@ -60,16 +60,10 @@ public class CoversationsFragment extends ListFragment {
         Conversation conversation = ((InboxAdapter.ViewHolder) v.getTag()).currentConversation;
         String peerId = conversation.getPeerId();
         String peerName = conversation.getPeerId();
-        enterChatRoom(peerId, peerName);
+        UiHelpers.enterChatRoom(getActivity(), peerId, peerName);
 
     }
 
-    private void enterChatRoom(String peerId, String peerName) {
-        Intent intent = new Intent(getActivity(), ChatActivity.class);
-        intent.putExtra(ChatActivity.PEER_NAME, peerName);
-        intent.putExtra(ChatActivity.PEER_ID, peerId);
-        startActivity(intent);
-    }
 
 
     @Override
@@ -93,7 +87,7 @@ public class CoversationsFragment extends ListFragment {
             conversation.setPeerId(user.get_id());
             conversation.setLastActiveTime(new Date());
             realm.commitTransaction();
-            enterChatRoom(user.get_id(), user.getName());
+            UiHelpers.enterChatRoom(getActivity(),user.get_id(), user.getName());
 
         }
         return super.onOptionsItemSelected(item);
