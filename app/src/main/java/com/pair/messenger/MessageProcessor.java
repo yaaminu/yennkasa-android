@@ -4,6 +4,7 @@ package com.pair.messenger;
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import com.pair.data.Conversation;
 import com.pair.data.Message;
@@ -34,11 +35,17 @@ public class MessageProcessor extends IntentService {
         Conversation conversation = realm.where(Conversation.class).equalTo("peerId", message.getFrom()).findFirst();
         if (conversation == null) { //create a new one
             conversation = realm.createObject(Conversation.class);
+            conversation.setActive(false);
             conversation.setPeerId(message.getFrom());
         }
         conversation.setLastActiveTime(new Date());//now
         conversation.setLastMessage(message);
         realm.commitTransaction();
+        if (!conversation.isActive()) {
+            //notify user, for now we are showing a toast message
+            Toast toast = Toast.makeText(this, message.getFrom() +":\n" + message.getMessageBody(), Toast.LENGTH_LONG);
+            toast.show();
+        }
         realm.close();
 
         //TODO notify user

@@ -71,6 +71,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             currConversation.setLastActiveTime(new Date());
             realm.commitTransaction();
         }
+        currConversation.setActive(true);
     }
 
     @Override
@@ -91,8 +92,15 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         if (id == R.id.action_settings) {
             return true;
         }
-
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onPause() {
+        realm.beginTransaction();
+        currConversation.setActive(false);
+        realm.commitTransaction();
+        super.onPause();
     }
 
     @Override
