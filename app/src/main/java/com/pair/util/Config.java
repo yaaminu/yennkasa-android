@@ -11,35 +11,41 @@ import android.util.Log;
 public class Config {
 
     public static final String TAG = Config.class.getSimpleName();
+    public static final String APP_PREFS = "prefs";
     private static final String HOST_REAL_SERVER = "http://192.168.43.42:3000";
     private static final String LOCAL_HOST_GENYMOTION = "http://10.0.3.2:3000";
     private static final String ENV_PROD = "prod";
-    private static Application application;
     private static final String ENV_DEV = "dev";
-    public static final String APP_PREFS = "prefs";
-
     public static final String PAIRAPP_ENV = getEnvironment();
     public static final String PAIRAPP_ENDPOINT = getEndPoint();
+    private static final String logMessage = "calling getApplication when init has not be called";
+    private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
     public static String auth = "kiiboda+=s3cr3t3";
+    private static Application application;
 
-    public static void init(Application pairApp){
+    public static void init(Application pairApp) {
         Config.application = pairApp;
     }
-    public static Context getApplicationContext(){
+
+    public static Context getApplicationContext() {
         if (application == null) {
-            Log.w(TAG,"calling getApplicationContext when init has not be called");
-            throw new IllegalStateException("applicationContext is null. Did you forget to call Config.init()?");
+            warnAndThrow(logMessage, detailMessage);
         }
         return application.getApplicationContext();
     }
 
-    public static Application getApplication(){
+    public static Application getApplication() {
         if (application == null) {
-            Log.w(TAG,"calling getApplication when init has not be called");
-            throw new IllegalStateException("application is null. Did you forget to call Config.init()?");
+            return warnAndThrow(logMessage, detailMessage);
         }
-        return  Config.application;
+        return Config.application;
     }
+
+    private static Application warnAndThrow(String msg, String detailMessage) {
+        Log.w(TAG, msg);
+        throw new IllegalStateException(detailMessage);
+    }
+
     private static String getEnvironment() {
         if (isEmulator()) {
             return ENV_DEV;
