@@ -22,55 +22,6 @@ import java.util.List;
  */
 public class UiHelpers {
 
-    /**
-     * Use an AsyncTask to fetch the user's email addresses on a background thread, and update
-     * the email text field with results on the main UI thread.
-     */
-    public static class AutoCompleter extends AsyncTask<Void, Void, List<String>> {
-        public static final String TAG = AutoCompleter.class.getSimpleName();
-        private final AutoCompleteTextView autoCompleteTextView;
-        private final Context context;
-
-        public AutoCompleter(Context context, AutoCompleteTextView editText) {
-            this.context = context;
-            this.autoCompleteTextView = editText;
-        }
-
-        @Override
-        protected List<String> doInBackground(Void... voids) {
-
-            List<String> phoneNumberCollection = new ArrayList<>();
-
-            // Get all phone numbers from the user's contacts and copy them to a list.
-            Cursor phoneCur = ContactsManager.INSTANCE.findAllSync(context);
-            while (phoneCur.moveToNext()) {
-                String phoneNumber = phoneCur.getString(phoneCur.getColumnIndex(ContactsContract
-                        .CommonDataKinds.Phone.NUMBER));
-                String name = phoneCur.getString(phoneCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                //TODO do this with regexp
-                if (phoneNumber == null) {
-                    Log.i(TAG, "no phone number for this contact, continuing");
-                    continue;
-                }
-                phoneNumber = phoneNumber.replace("(", "").replace(")", "").replace("-", "");
-                Log.d(TAG, name + ":" + phoneNumber);
-                phoneNumberCollection.add(phoneNumber);
-            }
-            phoneCur.close();
-            return phoneNumberCollection;
-        }
-
-        @Override
-        protected void onPostExecute(List<String> emailAddressCollection) {
-            //FIXME implement a cursor adapter for scalability..
-            ArrayAdapter<String> arrayAdapter =
-                    new ArrayAdapter<>(context,
-                            android.R.layout.simple_dropdown_item_1line, emailAddressCollection);
-            autoCompleteTextView.setAdapter(arrayAdapter);
-            System.out.println("AutoCompleter.onPostExecute");
-        }
-    }
-
     public static String getFieldContent(EditText field) {
         String content = field.getText().toString();
         return content.trim();
@@ -90,6 +41,56 @@ public class UiHelpers {
         intent.putExtra(ChatActivity.PEER_NAME, peerName);
         intent.putExtra(ChatActivity.PEER_ID, peerId);
         context.startActivity(intent);
+    }
+
+    /**
+     * Use an AsyncTask to fetch the user's email addresses on a background thread, and update
+     * the email text field with results on the main UI thread.
+     */
+    public static class AutoCompleter extends AsyncTask<Void, Void, List<ContactsManager.Contact>> {
+        public static final String TAG = AutoCompleter.class.getSimpleName();
+        private final AutoCompleteTextView autoCompleteTextView;
+        private final Context context;
+
+        public AutoCompleter(Context context, AutoCompleteTextView editText) {
+            this.context = context;
+            this.autoCompleteTextView = editText;
+        }
+
+        @Override
+        protected List<ContactsManager.Contact> doInBackground(Void... voids) {
+
+            List<ContactsManager.Contact> phoneNumberCollection = new ArrayList<>();
+
+            // Get all phone numbers from the user's contacts and copy them to a list.
+            Cursor phoneCur = ContactsManager.INSTANCE.findAllContactsCursor(context);
+            while (phoneCur.moveToNext()) {
+                String phoneNumber = phoneCur.getString(phoneCur.getColumnIndex(ContactsContract
+                        .CommonDataKinds.Phone.NUMBER));
+                String name = phoneCur.getString(phoneCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                //TODO do this with regexp
+                if (phoneNumber == null) {
+                    Log.i(TAG, "no phone number for this contact, continuing");
+                    continue;
+                }
+                phoneNumber = phoneNumber.replace("(", "").replace(")", "").replace("-", "");
+                ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, false);
+                Log.d(TAG, name + ":" + phoneNumber);
+                phoneNumberCollection.add(contact);
+            }
+            phoneCur.close();
+            return phoneNumberCollection;
+        }
+
+        @Override
+        protected void onPostExecute(List<ContactsManager.Contact> contacts) {
+            //FIXME implement a cursor adapter for scalability..
+            ArrayAdapter<ContactsManager.Contact> arrayAdapter =
+                    new ArrayAdapter<>(context,
+                            android.R.layout.simple_dropdown_item_1line, contacts);
+            autoCompleteTextView.setAdapter(arrayAdapter);
+            System.out.println("AutoCompleter.onPostExecute");
+        }
     }
 
 }

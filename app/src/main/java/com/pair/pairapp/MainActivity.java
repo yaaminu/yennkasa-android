@@ -32,10 +32,10 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ContactsManager.INSTANCE.findAll(this, new ContactsManager.FindCallback() {
+        ContactsManager.INSTANCE.findAllContacts(this, new ContactsManager.FindCallback() {
             @Override
             public void done(Cursor cursor) {
-                Log.i(TAG,"done");
+                Log.i(TAG, "done");
             }
         });
         if (GcmHelper.checkPlayServices(this)) {
