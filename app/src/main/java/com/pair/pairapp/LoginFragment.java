@@ -27,6 +27,23 @@ public class LoginFragment extends Fragment {
     private Button loginButton;
     private boolean busy = false;
     private View progressView;
+    private UserManager.LoginCallback loginCallback = new UserManager.LoginCallback() {
+        public void done(Exception e) {
+            progressView.setVisibility(View.GONE);
+            busy = false;
+            if (e == null) {
+                startActivity(new Intent(getActivity(), MainActivity.class));
+                getActivity().finish();
+            } else {
+                String message = e.getMessage();
+                //this is necessary because retrofit sometime throw exceptions with no message
+                if ((message == null) || (message.isEmpty())) {
+                    message = "an unknown error occurred";
+                }
+                Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
+            }
+        }
+    };
 
     public LoginFragment(){}
 
@@ -34,10 +51,10 @@ public class LoginFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.login_fragment, container, false);
-        phoneNumberEt = (AutoCompleteTextView) view.findViewById(R.id.phone_number_field);
+        phoneNumberEt = (AutoCompleteTextView) view.findViewById(R.id.et_phone_number_field);
         new UiHelpers.AutoCompleter(getActivity(), phoneNumberEt).execute();//enable autocompletion
-        passwordEt = (EditText) view.findViewById(R.id.passwordField);
-        loginButton = (Button) view.findViewById(R.id.loginButton);
+        passwordEt = (EditText) view.findViewById(R.id.et_passwordField);
+        loginButton = (Button) view.findViewById(R.id.bt_loginButton);
         progressView = view.findViewById(R.id.progressView);
         TextView tv = (TextView) view.findViewById(R.id.tv_signup);
 
@@ -82,22 +99,4 @@ public class LoginFragment extends Fragment {
             }
         });
     }
-
-    private UserManager.LoginCallback loginCallback = new UserManager.LoginCallback() {
-        public void done(Exception e) {
-            progressView.setVisibility(View.GONE);
-            busy = false;
-            if (e == null) {
-                startActivity(new Intent(getActivity(), MainActivity.class));
-                getActivity().finish();
-            } else {
-                String message = e.getMessage();
-                //this is necessary because retrofit sometime throw exceptions with no message
-                if ((message == null) || (message.isEmpty())) {
-                    message = "an unknown error occurred";
-                }
-                Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
-            }
-        }
-    };
 }

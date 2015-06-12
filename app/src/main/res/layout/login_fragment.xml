@@ -8,20 +8,20 @@
     android:paddingTop="@dimen/activity_vertical_margin">
 
     <EditText
-        android:id="@+id/passwordField"
+        android:id="@+id/et_passwordField"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/usernameField"
-        android:layout_below="@+id/phone_number_field"
+        android:layout_below="@+id/et_phone_number_field"
         android:ems="10"
         android:hint="@string/password_hint"
         android:inputType="textPassword" />
 
     <AutoCompleteTextView
-        android:id="@+id/phone_number_field"
+        android:id="@+id/et_phone_number_field"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/passwordField"
+        android:layout_alignLeft="@+id/et_passwordField"
         android:layout_below="@+id/usernameField"
         android:ems="10"
         android:hint="@string/phone_hint"
@@ -31,18 +31,18 @@
     </AutoCompleteTextView>
 
     <Button
-        android:id="@+id/loginButton"
+        android:id="@+id/bt_loginButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/phone_number_field"
-        android:layout_below="@+id/passwordField"
+        android:layout_alignLeft="@+id/et_phone_number_field"
+        android:layout_below="@+id/et_passwordField"
         android:text="@string/log_in_button_label" />
 
     <TextView
         android:id="@+id/tv_signup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/loginButton"
+        android:layout_below="@+id/bt_loginButton"
         android:layout_centerHorizontal="true"
         android:clickable="true"
         android:padding="5dp"

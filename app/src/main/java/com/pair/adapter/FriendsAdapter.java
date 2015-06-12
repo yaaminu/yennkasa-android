@@ -28,7 +28,7 @@ public class FriendsAdapter extends RealmBaseAdapter<User> {
             convertView = LayoutInflater.from(context).inflate(R.layout.user_item, parent, false);
             ViewHolder holder = new ViewHolder();
             holder.iv = ((ImageView) convertView.findViewById(R.id.iv_userImageView));
-            holder.tv = ((TextView) convertView.findViewById(R.id.tv_nameLabel));
+            holder.tv = ((TextView) convertView.findViewById(R.id.tv_user_name));
             convertView.setTag(holder);
         }
         ViewHolder holder = (ViewHolder) convertView.getTag();
@@ -38,8 +38,8 @@ public class FriendsAdapter extends RealmBaseAdapter<User> {
     }
 
     public class ViewHolder {
+        public User user;
         ImageView iv;
         TextView tv;
-        public User user;
     }
 }

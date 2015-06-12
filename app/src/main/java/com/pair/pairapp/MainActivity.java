@@ -1,7 +1,6 @@
 package com.pair.pairapp;
 
 import android.content.Intent;
-import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.DrawerLayout;
@@ -11,7 +10,6 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.pair.data.ContactsManager;
 import com.pair.data.User;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
@@ -32,12 +30,6 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ContactsManager.INSTANCE.findAllContacts(this, new ContactsManager.FindCallback() {
-            @Override
-            public void done(Cursor cursor) {
-                Log.i(TAG, "done");
-            }
-        });
         if (GcmHelper.checkPlayServices(this)) {
             userManager = UserManager.getInstance(getApplication());
             User user = userManager.getCurrentUser();
@@ -109,7 +101,7 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
     public void onItemSelected(int position, String recommendedTitle) {
         drawer.closeDrawer(Gravity.LEFT);
         Log.i(TAG, "clicked " + recommendedTitle + " @ position: " + position);
-        Fragment fragment = null;
+        Fragment fragment;
         switch (position) {
             case 0:
                 fragment = new CoversationsFragment();
@@ -117,12 +109,14 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
             case 1:
                 fragment = new FriendsFragment();
                 break;
-            case 2://fall through
-            case 3:
+            case 2:
+                fragment = new ContactFragment();
+                break;
+            case 3://fall through
             case 5:
             default:
                 fragment = new CoversationsFragment();
-                break;
+                break; //redundant but safe
         }
         Bundle bundle = new Bundle();
         bundle.putString(ARG_TITLE, recommendedTitle);

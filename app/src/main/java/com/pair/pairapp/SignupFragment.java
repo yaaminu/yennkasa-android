@@ -28,6 +28,30 @@ public class SignupFragment extends Fragment {
     private FormValidator validator;
     private boolean busy;
     private View progressView;
+    private View.OnClickListener gotoLogin = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (busy) //trying to login, see {code attemptSignUp}
+                return;
+            getFragmentManager().popBackStackImmediate();
+        }
+    };
+    private UserManager.SignUpCallback signUpCallback = new UserManager.SignUpCallback() {
+        public void done(Exception e) {
+            progressView.setVisibility(View.GONE);
+            busy = false;
+            if (e == null) {
+                startActivity(new Intent(getActivity(), MainActivity.class));
+                getActivity().finish();
+            } else {
+                String message = e.getMessage();
+                if ((message == null) || (message.isEmpty())) {
+                    message = "an unknown error occurred";
+                }
+                Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
+            }
+        }
+    };
 
     public SignupFragment(){}
 
@@ -35,8 +59,8 @@ public class SignupFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.signup_fragment, container, false);
-        passWordEt = (EditText) view.findViewById(R.id.passwordField);
-        phoneNumberEt = (AutoCompleteTextView) view.findViewById(R.id.phone_number_field);
+        passWordEt = (EditText) view.findViewById(R.id.et_passwordField);
+        phoneNumberEt = (AutoCompleteTextView) view.findViewById(R.id.et_phone_number_field);
         new UiHelpers.AutoCompleter(getActivity(),phoneNumberEt).execute(); //enable autocompletion
         userNameEt = (EditText) view.findViewById(R.id.usernameField);
         progressView = view.findViewById(R.id.progressView);
@@ -52,15 +76,6 @@ public class SignupFragment extends Fragment {
         });
         return view;
     }
-
-    private View.OnClickListener gotoLogin = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            if (busy) //trying to login, see {code attemptSignUp}
-                return;
-            getFragmentManager().popBackStackImmediate();
-        }
-    };
 
     private void attemptSignUp() {
         if (busy) {
@@ -86,22 +101,4 @@ public class SignupFragment extends Fragment {
             }
         });
     }
-
-
-    private UserManager.SignUpCallback signUpCallback = new UserManager.SignUpCallback() {
-        public void done(Exception e) {
-            progressView.setVisibility(View.GONE);
-            busy = false;
-            if (e == null) {
-                startActivity(new Intent(getActivity(), MainActivity.class));
-                getActivity().finish();
-            } else {
-                String message = e.getMessage();
-                if ((message == null) || (message.isEmpty())) {
-                    message = "an unknown error occurred";
-                }
-                Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
-            }
-        }
-    };
 }

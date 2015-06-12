@@ -1,0 +1,43 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@android:color/white">
+
+    <ImageView
+        android:id="@+id/iv_userImageView"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:adjustViewBounds="true"
+        android:contentDescription="@string/content_desc_user_avatar"
+        android:scaleType="fitXY"
+        android:src="@drawable/avatar_empty" />
+
+    <TextView
+        android:id="@+id/tv_user_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/iv_userImageView"
+        android:paddingLeft="10dp"
+        android:paddingTop="5dp"
+        android:singleLine="true"
+        android:text="name"
+        android:textSize="18sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_user_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/iv_userImageView"
+        android:layout_centerHorizontal="true"
+        android:ellipsize="end"
+        android:padding="5dp"
+        android:paddingTop="5dp"
+        android:singleLine="true"
+        android:text="What a blessed day"
+        android:textSize="18sp"
+        android:textStyle="italic" />
+
+</RelativeLayout>

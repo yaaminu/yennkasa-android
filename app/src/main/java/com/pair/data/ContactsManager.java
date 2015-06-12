@@ -3,6 +3,7 @@ package com.pair.data;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
+import android.os.Handler;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.util.Log;
@@ -10,6 +11,8 @@ import android.util.Log;
 import com.pair.util.Config;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import io.realm.Realm;
@@ -19,9 +22,8 @@ import io.realm.RealmResults;
  * @author Null-Pointer on 6/11/2015.
  */
 public class ContactsManager {
-    public static final String TAG = ContactsManager.class.getSimpleName();
-
     public static final ContactsManager INSTANCE = new ContactsManager();
+    private static final String TAG = ContactsManager.class.getSimpleName();
 
     private ContactsManager() {
 
@@ -32,13 +34,25 @@ public class ContactsManager {
         return getCursor(context);
     }
 
-    public List<Contact> findAllContactsSync() {
-        return doFindAllContacts(getCursor(Config.getApplicationContext()));
+    public List<Contact> findAllContactsSync(Comparator<Contact> comparator) {
+        return doFindAllContacts(comparator, getCursor(Config.getApplicationContext()));
     }
 
-    public void findAllContacts(FindCallback<List<Contact>> callback) {
-        List<Contact> contacts = findAllContactsSync();
-        callback.done(contacts);
+    public void findAllContacts(final Comparator<Contact> comparator, final FindCallback<List<Contact>> callback) {
+        final Handler handler = new Handler();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final List<Contact> contacts = findAllContactsSync(comparator);
+                //run on the thread on which clients originally called us
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        callback.done(contacts);
+                    }
+                });
+            }
+        }).start();
     }
 
     private Cursor getCursor(Context context) {
@@ -49,7 +63,7 @@ public class ContactsManager {
                 null, null, null);
     }
 
-    private List<Contact> doFindAllContacts(Cursor cursor) {
+    private List<Contact> doFindAllContacts(Comparator<Contact> comparator, Cursor cursor) {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         RealmResults<User> users = realm.where(User.class).findAll();
         List<Contact> contacts = new ArrayList<>();
@@ -69,34 +83,49 @@ public class ContactsManager {
                 name = "No name";
             }
             User user = realm.where(User.class).equalTo("_id", phoneNumber).findFirst();
-            boolean isRegistered = (user != null);
-            ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, isRegistered);
+            boolean isRegistered = false;
+            String status = "";
+            if (user != null) {
+                isRegistered = true;
+                status = user.getStatus();
+            }
+            ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, status, isRegistered);
             Log.d(TAG, contact.name + ":" + contact.phoneNumber);
             contacts.add(contact);
         }
         realm.close();
+        if (comparator != null) {
+            Collections.sort(contacts, comparator);
+        }
         return contacts;
     }
 
+    public void sort(List<Contact> contacts, Comparator<Contact> comparator) {
+        Collections.sort(contacts, comparator);
+    }
     public interface FindCallback<T> {
         void done(T t);
     }
 
     public static final class Contact {
-        public final String name, phoneNumber;
+        public final String name, phoneNumber, status;
         public final boolean isRegisteredUser;
 
-        public Contact(String name, String phoneNumber, boolean isRegisteredUser) {
-            if (name == null) {
+        public Contact(String name, String phoneNumber, String status, boolean isRegisteredUser) {
+            if (TextUtils.isEmpty(name)) {
                 name = "unknown";
             }
-            if (phoneNumber == null) {
+            if (TextUtils.isEmpty(phoneNumber)) {
                 phoneNumber = "unknown number";
             }
 
+            if (TextUtils.isEmpty(status)) {
+                status = "No status set";
+            }
             this.name = name;
             this.phoneNumber = phoneNumber;
             this.isRegisteredUser = isRegisteredUser;
+            this.status = status;
         }
 
         @Override
@@ -106,6 +135,7 @@ public class ContactsManager {
 
             Contact contact = (Contact) o;
 
+            if (isRegisteredUser != contact.isRegisteredUser) return false;
             if (!name.equals(contact.name)) return false;
             return phoneNumber.equals(contact.phoneNumber);
 

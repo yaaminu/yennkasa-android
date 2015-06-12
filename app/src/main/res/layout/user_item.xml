@@ -1,7 +1,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="@android:color/white" >
+    android:background="@android:color/white">
 
     <ImageView
         android:id="@+id/iv_userImageView"
@@ -9,18 +9,18 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:src="@drawable/avatar_empty"
+        android:adjustViewBounds="true"
         android:contentDescription="@string/content_desc_user_avatar"
         android:scaleType="fitXY"
-        android:adjustViewBounds="true" />
-    
+        android:src="@drawable/avatar_empty" />
+
     <TextView
-        android:id="@+id/tv_nameLabel"
+        android:id="@+id/tv_user_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:maxLines="2"
-        android:padding="5dp"
         android:layout_alignParentLeft="true"
-        android:layout_below="@id/iv_userImageView" />
+        android:layout_below="@id/iv_userImageView"
+        android:padding="5dp"
+        android:singleLine="true" />
 
 </RelativeLayout>
