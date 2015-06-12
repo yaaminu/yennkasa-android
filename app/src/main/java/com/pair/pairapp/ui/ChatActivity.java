@@ -28,8 +28,8 @@ import io.realm.RealmResults;
 
 public class ChatActivity extends ActionBarActivity implements View.OnClickListener {
     public static final String TAG = ChatActivity.class.getSimpleName();
-    public static final String PEER_NAME = "peer name";
     public static final String PEER_ID = "peer id";
+    RealmResults<Message> messages;
     private User peer;
     private Conversation currConversation;
     private Realm realm;
@@ -49,13 +49,14 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             //that's why we are not using the realm of chatactivity  here...
             Realm realm = Realm.getInstance(ChatActivity.this);
             realm.executeTransaction(new Realm.Transaction() {
-                //this code is not asynchronous so its safe to close realm and be sure we are not closing a realm instance which is in use
+                //this code is not asynchronous so we can close() realm and be sure we are not closing a realm instance which is in use
                 @Override
                 public void execute(Realm realm) {
                     Message message = realm.where(Message.class).equalTo("id", messageId).findFirst();
                     if (message != null) {
                         message.setState(Message.SENT);
                     }
+                    realm.close();
                 }
             });
             realm.close();
@@ -78,10 +79,10 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         String peerName = peer.getName();
 
         getSupportActionBar().setTitle(peerName);
-        getConversation(peerId);
 
         //TODO change this query to a more general one than will work even when we add group chat
-        RealmResults<Message> messages = realm.where(Message.class).equalTo("from", peer.get_id()).or().equalTo("to", peer.get_id()).findAllSorted("dateComposed", true);
+        messages = realm.where(Message.class).equalTo("from", peer.get_id()).or().equalTo("to", peer.get_id()).findAllSorted("dateComposed", true);
+        getConversation(peerId);
         MessagesAdapter adapter = new MessagesAdapter(this, messages, true);
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
         messagesListView.setAdapter(adapter);
@@ -94,6 +95,13 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             currConversation = realm.createObject(Conversation.class);
             currConversation.setPeerId(peerId);
             currConversation.setLastActiveTime(new Date());
+            //re-construct the conversation
+            Message message = messages.last();
+            if (message == null) {
+                currConversation.setSummary("touch to start chatting with " + peer.getName());
+            } else {
+                currConversation.setLastMessage(message);
+            }
         }
         currConversation.setActive(true);
         realm.commitTransaction();

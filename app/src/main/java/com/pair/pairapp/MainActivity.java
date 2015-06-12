@@ -19,7 +19,6 @@ import com.pair.pairapp.ui.SideBarFragment;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
-import com.pair.workers.RealmHelper;
 import com.pair.workers.UserServices;
 
 /**
@@ -41,23 +40,20 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
             if (user == null) {
                 gotoSetUpActivity();
             } else {
-                //attempt to update user friends at startup
+                //attempt to update user's friends at startup
                 Intent intent = new Intent(this, UserServices.class);
                 intent.putExtra(UserServices.ACTION,UserServices.ACTION_FETCH_FRIENDS);
                 startService(intent);
-
                 drawer = (DrawerLayout) findViewById(R.id.drawer);
                 Fragment fragment = new CoversationsFragment();
                 Bundle bundle = new Bundle();
                 bundle.putString(ARG_TITLE, "Conversations");
                 fragment.setArguments(bundle);
                 addFragment(fragment);
-                RealmHelper.runRealmOperation(this);
             }
         } else {
             Log.e(TAG, "Google cloud messaging not available on this device");
         }
-
     }
 
 

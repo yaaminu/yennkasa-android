@@ -3,6 +3,7 @@ package com.pair.pairapp.ui;
 
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +12,7 @@ import android.widget.ListView;
 import com.pair.adapter.ContactsAdapter;
 import com.pair.data.ContactsManager;
 import com.pair.data.ContactsManager.Contact;
+import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
 
@@ -57,6 +59,10 @@ public class ContactFragment extends ListFragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_contact, container, false);
+        String title = getArguments().getString(MainActivity.ARG_TITLE);
+        ActionBarActivity activity = (ActionBarActivity) getActivity();
+        activity.getSupportActionBar().setTitle(title);
+
         List<Contact> contacts = new ArrayList<>();
         final ContactsAdapter adapter = new ContactsAdapter(contacts);
         ContactsManager.INSTANCE.findAllContacts(comparator, new ContactsManager.FindCallback<List<Contact>>() {
