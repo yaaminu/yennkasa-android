@@ -64,14 +64,14 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     private void getConversation(String peerId) {
         currConversation = realm.where(Conversation.class).equalTo("peerId", peerId).findFirst();
+        realm.beginTransaction();
         if(currConversation == null){ //first time
-            realm.beginTransaction();
             currConversation = realm.createObject(Conversation.class);
             currConversation.setPeerId(peerId);
             currConversation.setLastActiveTime(new Date());
-            realm.commitTransaction();
         }
         currConversation.setActive(true);
+        realm.commitTransaction();
     }
 
     @Override

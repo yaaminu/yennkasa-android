@@ -16,6 +16,7 @@ public class RealmHelper {
                 Realm realm = Realm.getInstance(context);
                 realm.beginTransaction();
                 realm.commitTransaction();
+                realm.close();
             }
         }).start();
     }

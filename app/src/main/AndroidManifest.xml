@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
-    <uses-permission android:name="android.permission.write_contacts" />
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="com.pair.pairapp.permission.C2D_MESSAGE" />
@@ -20,7 +20,6 @@
     <permission
         android:name="com.pair.pairapp.permission.C2D_MESSAGE"
         android:protectionLevel="signature" />
-
 
     <application
         android:name=".PairApp"
@@ -37,7 +36,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
 
         <activity
             android:name=".SetUpActivity"
@@ -56,11 +54,16 @@
             android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-
                 <category android:name="com.pair.pairapp" />
             </intent-filter>
         </receiver>
-        <service android:name="com.pair.workers.UserServices"/>
+
+        <service
+            android:name="com.pair.workers.UserServices"
+            android:exported="false" />
+        <service
+            android:name="com.pair.messenger.MessageProcessor"
+            android:exported="false" />
     </application>
 
 </manifest>

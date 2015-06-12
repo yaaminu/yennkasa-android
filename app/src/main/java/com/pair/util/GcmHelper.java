@@ -10,6 +10,7 @@ import android.util.Log;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.pair.pairapp.BuildConfig;
 
 import java.io.IOException;
 
@@ -92,6 +93,41 @@ public class GcmHelper {
             Exception error;
             String regId;
         }
+    }
+
+    public static void unRegister(final Context context,final  UnregisterCallback callBack) {
+
+        new AsyncTask<Void, Void, Exception>() {
+
+            @Override
+            protected Exception doInBackground(Void... params) {
+                GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(context);
+                try {
+                    gcm.unregister();
+                    SharedPreferences sharedPreferences = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
+                    sharedPreferences.edit().remove(GCM_REG_ID).commit();
+                    return null;
+                } catch (IOException e){
+                    if (BuildConfig.DEBUG) {
+                        Log.e(TAG, e.getMessage(), e.getCause());
+                    } else {
+                        Log.e(TAG, e.getMessage());
+                    }
+                    return e;
+                }
+            }
+
+            @Override
+            protected void onPostExecute(Exception e) {
+                callBack.done(e);
+
+            }
+        }.execute();
+
+    }
+
+    public interface UnregisterCallback {
+        public void done(Exception e);
     }
 
     public interface GCMRegCallback {

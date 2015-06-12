@@ -1,6 +1,7 @@
 package com.pair.pairapp;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.DrawerLayout;
@@ -10,8 +11,10 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.pair.data.ContactsManager;
 import com.pair.data.User;
 import com.pair.util.GcmHelper;
+import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 import com.pair.workers.RealmHelper;
 import com.pair.workers.UserServices;
@@ -29,7 +32,12 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        ContactsManager.INSTANCE.findAll(this, new ContactsManager.FindCallback() {
+            @Override
+            public void done(Cursor cursor) {
+                Log.i(TAG,"done");
+            }
+        });
         if (GcmHelper.checkPlayServices(this)) {
             userManager = UserManager.getInstance(getApplication());
             User user = userManager.getCurrentUser();
@@ -65,9 +73,17 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_logout) {
-            userManager.LogOut(this);
-            gotoSetUpActivity();
-            finish();
+            userManager.LogOut(this, new UserManager.LogOutCallback() {
+                @Override
+                public void done(Exception e) {
+                    if(e == null) {
+                        gotoSetUpActivity();
+                        finish();
+                    }else{
+                        UiHelpers.showErrorDialog(MainActivity.this,e.getMessage());
+                    }
+                }
+            });
             return true;
         } else if (item.getItemId() == R.id.action_seed_users) {
 

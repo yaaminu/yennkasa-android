@@ -152,7 +152,7 @@ public class MessageDispatcher implements Dispatcher<Message> {
                             Log.i(TAG,"internal server error, trying to send again");
                             tryAgain(job);
                         } else {//crash early
-                            // as far as we know, our backend will only return other status code if its is our fault and that normally should no happen
+                            // as far as we know, our backend will only return other status code if its is our fault and that normally should not happen
                             throw new RuntimeException("An unknown internal error occurred");
                         }
                     } else if (retrofitError.getKind().equals(RetrofitError.Kind.CONVERSION)) { //crash early

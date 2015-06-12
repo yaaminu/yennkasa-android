@@ -10,13 +10,15 @@ android {
         targetSdkVersion 21
         versionCode 1
         versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    sourceSets { main { java.srcDirs = ['src/main/java']} }
 }
 
 dependencies {
@@ -29,4 +31,7 @@ dependencies {
     compile 'com.google.android.gms:play-services-gcm:7.3.0'
     compile 'com.google.android.gms:play-services:7.3.0'
     compile 'com.android.support:support-v4:22.1.1'
+
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.hamcrest:hamcrest-library:1.3'
 }

@@ -1,7 +1,6 @@
 package com.pair.util;
 
 import android.app.AlertDialog;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -12,6 +11,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 
+import com.pair.data.ContactsManager;
 import com.pair.pairapp.ChatActivity;
 
 import java.util.ArrayList;
@@ -42,11 +42,7 @@ public class UiHelpers {
             List<String> phoneNumberCollection = new ArrayList<>();
 
             // Get all phone numbers from the user's contacts and copy them to a list.
-            ContentResolver cr = this.context.getContentResolver();
-            Cursor phoneCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                    new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
-                            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME},
-                    null, null, null);
+            Cursor phoneCur = ContactsManager.INSTANCE.findAllSync(context);
             while (phoneCur.moveToNext()) {
                 String phoneNumber = phoneCur.getString(phoneCur.getColumnIndex(ContactsContract
                         .CommonDataKinds.Phone.NUMBER));

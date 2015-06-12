@@ -145,7 +145,7 @@ public class UserManager {
 
     }
 
-    public void LogOut(Context context) {
+    public void LogOut(Context context,final LogOutCallback logOutCallback) {
         //TODO logout user from backend
         SharedPreferences sharedPreferences = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
         String userId = sharedPreferences.getString(KEY_SESSION_ID, null);
@@ -170,6 +170,12 @@ public class UserManager {
         }
         realm.close();
         cleanUpRealm();
+        GcmHelper.unRegister(context, new GcmHelper.UnregisterCallback() {
+            @Override
+            public void done(Exception e) {
+                logOutCallback.done(e);
+            }
+        });
     }
 
     public void fetchFriends(final List<String> array,final FriendsFetchCallback callback){
@@ -216,6 +222,9 @@ public class UserManager {
         void done(Exception e);
     }
 
+    public interface LogOutCallback{
+        void done(Exception e);
+    }
     public interface SignUpCallback {
         void done(Exception e);
     }
