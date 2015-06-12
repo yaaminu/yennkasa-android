@@ -26,6 +26,14 @@ public class ContactsManager {
         return getCursor(context);
     }
 
+    private Cursor getCursor(Context context) {
+        ContentResolver cr = context.getContentResolver();
+        return cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
+                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME},
+                null, null, null);
+    }
+
     public interface FindCallback {
         void done(Cursor cursor);
     }
@@ -50,11 +58,40 @@ public class ContactsManager {
         }
     }
 
-    private Cursor getCursor(Context context) {
-        ContentResolver cr = context.getContentResolver();
-        return cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
-                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME},
-                null, null, null);
+    public final class Contact {
+        public final String name, phoneNumber;
+        public final boolean isRegisteredUser;
+
+        public Contact(String name, String phoneNumber, boolean isRegisteredUser) {
+            if (name == null) {
+                name = "unknown";
+            }
+            if (phoneNumber == null) {
+                phoneNumber = "unknown number";
+            }
+
+            this.name = name;
+            this.phoneNumber = phoneNumber;
+            this.isRegisteredUser = isRegisteredUser;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Contact contact = (Contact) o;
+
+            if (!name.equals(contact.name)) return false;
+            return phoneNumber.equals(contact.phoneNumber);
+
+        }
+
+        @Override
+        public int hashCode() {
+            int result = name.hashCode();
+            result = 31 * result + phoneNumber.hashCode();
+            return result;
+        }
     }
 }

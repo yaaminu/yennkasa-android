@@ -1,6 +1,8 @@
 package com.pair.adapter;
 
 import android.content.Context;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,13 +11,14 @@ import android.widget.TextView;
 
 import com.pair.data.Conversation;
 import com.pair.data.User;
+import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 
 import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
 
-import static android.text.format.DateUtils.FORMAT_NO_YEAR;
+import static android.text.format.DateUtils.FORMAT_NUMERIC_DATE;
 import static android.text.format.DateUtils.formatDateTime;
 
 /**
@@ -48,7 +51,22 @@ public class InboxAdapter extends RealmBaseAdapter<Conversation>  {
         String peerName = getPeerName(conversation.getPeerId());
 
         holder.peerName.setText(peerName);
-        holder.dateLastActive.setText(formatDateTime(context, conversation.getLastActiveTime().getTime(), FORMAT_NO_YEAR));
+        holder.dateLastActive.setText(formatDateTime(context, conversation.getLastActiveTime().getTime(), FORMAT_NUMERIC_DATE));
+
+        String summary = conversation.getSummary();
+        Log.i(TAG, "summary is : " + summary);
+        Log.i(TAG, "last message is : " + conversation.getLastMessage().getMessageBody());
+
+        if (TextUtils.isEmpty(summary)) {
+            summary = conversation.getLastMessage().getMessageBody();
+            if (TextUtils.isEmpty(summary)) {
+                if (BuildConfig.DEBUG) {
+                    throw new RuntimeException("conversation with no description");
+                }
+                summary = "Conversation with " + peerName;
+            }
+        }
+        holder.chatSummary.setText(summary);
         holder.currentConversation = conversation;
         return convertView;
     }
@@ -61,9 +79,9 @@ public class InboxAdapter extends RealmBaseAdapter<Conversation>  {
     }
 
     public class ViewHolder {
+        public Conversation currentConversation; //holds current item to be used by callers outside this adapter.
         TextView chatSummary,dateLastActive,peerName;
         ImageView senderAvatar;
-        public Conversation currentConversation; //holds current item to be used by callers outside this adapter.
     }
 
 }

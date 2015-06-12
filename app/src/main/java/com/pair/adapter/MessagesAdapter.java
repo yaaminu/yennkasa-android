@@ -46,8 +46,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         content = ((TextView) view.findViewById(R.id.tv_message_content));
         dateComposed = ((TextView) view.findViewById(R.id.tv_message_date));
         content.setText(message.getMessageBody());
-        DateUtils.formatDateTime(context,message.getDateComposed().getTime(),DateUtils.FORMAT_SHOW_TIME);
-        dateComposed.setText(message.getDateComposed().toString());
+        String formattedDate = DateUtils.formatDateTime(context, message.getDateComposed().getTime(), DateUtils.FORMAT_SHOW_TIME);
+        dateComposed.setText(formattedDate);
         Log.d(TAG,message.toString());
         return view;
     }
