@@ -36,6 +36,30 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private EditText editText;
     private Button sendButton;
     private MessageDispatcher dispatcher;
+    private Dispatcher.DispatcherMonitor monitor = new Dispatcher.DispatcherMonitor() {
+        @Override
+        public void onSendFailed(String reason, String messageId) {
+            //TODO handle this callback
+        }
+
+        @Override
+        public void onSendSucceeded(final String messageId) {
+            //if dispatcher calls this method on a background thread we are doomed :-)
+            //that's why we are not using the realm of chatactivity  here...
+            Realm realm = Realm.getInstance(ChatActivity.this);
+            realm.executeTransaction(new Realm.Transaction() {
+                //this code is not asynchronous so its safe to close realm and be sure we are not closing a realm instance which is in use
+                @Override
+                public void execute(Realm realm) {
+                    Message message = realm.where(Message.class).equalTo("id", messageId).findFirst();
+                    if (message != null) {
+                        message.setState(Message.SENT);
+                    }
+                }
+            });
+            realm.close();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +79,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         getSupportActionBar().setTitle(peerName);
         getConversation(peerId);
 
-        //TODO change this query a more general one than will work even when we add group chat
+        //TODO change this query to a more general one than will work even when we add group chat
         RealmResults<Message> messages = realm.where(Message.class).equalTo("from", peer.get_id()).or().equalTo("to", peer.get_id()).findAllSorted("dateComposed", true);
         MessagesAdapter adapter = new MessagesAdapter(this, messages, true);
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
@@ -135,29 +159,4 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private User getCurrentUser() {
         return UserManager.getInstance(getApplication()).getCurrentUser();
     }
-
-    private Dispatcher.DispatcherMonitor monitor = new Dispatcher.DispatcherMonitor() {
-        @Override
-        public void onSendFailed(String reason, String messageId) {
-          //TODO handle this callback
-        }
-
-        @Override
-        public void onSendSucceeded(final String messageId) {
-            //if dispatcher calls this method on a background thread we are doomed :-)
-            //that's why we are not using the realm of chatactivity  here...
-            Realm realm = Realm.getInstance(ChatActivity.this);
-            realm.executeTransaction(new Realm.Transaction() {
-                //this code is not asynchronous so its safe to close realm and be sure we are not closing a realm instance which is in use
-                @Override
-                public void execute(Realm realm) {
-                    Message message = realm.where(Message.class).equalTo("id", messageId).findFirst();
-                    if (message != null) {
-                        message.setState(Message.SENT);
-                    }
-                }
-            });
-            realm.close();
-        }
-    };
 }

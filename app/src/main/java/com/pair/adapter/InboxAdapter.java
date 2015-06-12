@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.pair.data.Conversation;
+import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
@@ -24,8 +25,9 @@ import static android.text.format.DateUtils.formatDateTime;
 /**
  * @author Null-Pointer on 5/30/2015.
  */
-public class InboxAdapter extends RealmBaseAdapter<Conversation>  {
+public class InboxAdapter extends RealmBaseAdapter<Conversation> {
     private static final String TAG = InboxAdapter.class.getSimpleName();
+
     public InboxAdapter(Context context, RealmResults<Conversation> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
     }
@@ -33,7 +35,7 @@ public class InboxAdapter extends RealmBaseAdapter<Conversation>  {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         ViewHolder holder = null;
-        if(convertView ==null) {
+        if (convertView == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(R.layout.inbox_list_item_row, parent, false);
             holder = new ViewHolder();
@@ -42,8 +44,8 @@ public class InboxAdapter extends RealmBaseAdapter<Conversation>  {
             holder.peerName = (TextView) convertView.findViewById(R.id.tv_sender);
             holder.senderAvatar = (ImageView) convertView.findViewById(R.id.iv_user_avatar);
             convertView.setTag(holder);
-        }else{
-            holder =(ViewHolder) convertView.getTag();
+        } else {
+            holder = (ViewHolder) convertView.getTag();
         }
         Conversation conversation = getItem(position);
         holder.chatSummary.setText(conversation.getSummary());
@@ -54,13 +56,14 @@ public class InboxAdapter extends RealmBaseAdapter<Conversation>  {
         holder.dateLastActive.setText(formatDateTime(context, conversation.getLastActiveTime().getTime(), FORMAT_NUMERIC_DATE));
 
         String summary = conversation.getSummary();
-        Log.i(TAG, "summary is : " + summary);
-        Log.i(TAG, "last message is : " + conversation.getLastMessage().getMessageBody());
+        Log.d(TAG, "summary is : " + summary);
+        Log.d(TAG, "last message is : " + conversation.getLastMessage());
 
         if (TextUtils.isEmpty(summary)) {
-            summary = conversation.getLastMessage().getMessageBody();
+            Message message = conversation.getLastMessage();
+            summary = message.getMessageBody();
             if (TextUtils.isEmpty(summary)) {
-                if (BuildConfig.DEBUG) {
+                if (BuildConfig.DEBUG) { //development environment, crash and burn!
                     throw new RuntimeException("conversation with no description");
                 }
                 summary = "Conversation with " + peerName;
@@ -73,14 +76,14 @@ public class InboxAdapter extends RealmBaseAdapter<Conversation>  {
 
     private String getPeerName(String peerId) {
         Realm realm = Realm.getInstance(context);
-        String peerName = realm.where(User.class).equalTo("_id",peerId).findFirst().getName();
+        String peerName = realm.where(User.class).equalTo("_id", peerId).findFirst().getName();
         realm.close();
         return peerName;
     }
 
     public class ViewHolder {
         public Conversation currentConversation; //holds current item to be used by callers outside this adapter.
-        TextView chatSummary,dateLastActive,peerName;
+        TextView chatSummary, dateLastActive, peerName;
         ImageView senderAvatar;
     }
 

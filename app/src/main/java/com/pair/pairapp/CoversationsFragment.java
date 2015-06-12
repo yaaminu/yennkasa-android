@@ -28,9 +28,6 @@ import io.realm.RealmResults;
  */
 public class CoversationsFragment extends ListFragment {
 
-    private static final String[] days = {
-            //  "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"
-    };
     private Realm realm;
 
     public CoversationsFragment(){} //required no-arg constructor
