@@ -66,7 +66,7 @@ public class Config {
         if (PAIRAPP_ENV.equals(ENV_DEV)) {
             return LOCAL_HOST_GENYMOTION;
         } else {
-            // FIXME replace this with real url
+            // TODO replace this with real url
             return HOST_REAL_SERVER;
         }
     }

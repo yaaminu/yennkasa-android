@@ -1,4 +1,4 @@
-package com.pair.pairapp;
+package com.pair.pairapp.ui;
 
 
 import android.os.Bundle;
@@ -11,6 +11,7 @@ import android.widget.ListView;
 import com.pair.adapter.ContactsAdapter;
 import com.pair.data.ContactsManager;
 import com.pair.data.ContactsManager.Contact;
+import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
 
 import java.util.ArrayList;

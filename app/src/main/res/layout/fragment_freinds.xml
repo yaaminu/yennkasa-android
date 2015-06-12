@@ -2,17 +2,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.pair.pairapp.FriendsFragment">
+    tools:context="com.pair.pairapp.ui.FriendsFragment">
 
     <GridView
         android:id="@+id/gv_friends"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:horizontalSpacing="5dp"
-        android:verticalSpacing="15dp"
-        android:numColumns="3"
         android:columnWidth="100dp"
-        android:stretchMode="spacingWidthUniform" />
+        android:horizontalSpacing="5dp"
+        android:numColumns="3"
+        android:stretchMode="spacingWidthUniform"
+        android:verticalSpacing="15dp" />
 
 </FrameLayout>

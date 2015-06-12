@@ -1,4 +1,4 @@
-package com.pair.pairapp;
+package com.pair.pairapp.ui;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -8,6 +8,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+
+import com.pair.pairapp.R;
 
 /**
  * @author Null-Pointer on 6/6/2015.

@@ -1,4 +1,4 @@
-package com.pair.pairapp;
+package com.pair.pairapp.ui;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
@@ -16,6 +16,7 @@ import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.messenger.MessageDispatcher;
 import com.pair.net.Dispatcher;
+import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 

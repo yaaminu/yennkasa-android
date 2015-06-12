@@ -11,6 +11,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.pair.data.User;
+import com.pair.pairapp.ui.ContactFragment;
+import com.pair.pairapp.ui.CoversationsFragment;
+import com.pair.pairapp.ui.FriendsFragment;
+import com.pair.pairapp.ui.SetUpActivity;
+import com.pair.pairapp.ui.SideBarFragment;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;

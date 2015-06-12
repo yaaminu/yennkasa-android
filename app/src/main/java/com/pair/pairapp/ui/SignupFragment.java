@@ -1,4 +1,4 @@
-package com.pair.pairapp;
+package com.pair.pairapp.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,12 +8,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AutoCompleteTextView;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.pair.data.User;
+import com.pair.pairapp.MainActivity;
+import com.pair.pairapp.R;
+import com.pair.util.FormValidator;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
@@ -21,13 +23,22 @@ import com.pair.util.UserManager;
 /**
  * Created by Null-Pointer on 5/28/2015.
  */
-public class LoginFragment extends Fragment {
-    private EditText passwordEt;
+public class SignupFragment extends Fragment {
+
+    private EditText passWordEt,userNameEt;
     private AutoCompleteTextView phoneNumberEt;
-    private Button loginButton;
-    private boolean busy = false;
+    private FormValidator validator;
+    private boolean busy;
     private View progressView;
-    private UserManager.LoginCallback loginCallback = new UserManager.LoginCallback() {
+    private View.OnClickListener gotoLogin = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (busy) //trying to login, see {code attemptSignUp}
+                return;
+            getFragmentManager().popBackStackImmediate();
+        }
+    };
+    private UserManager.SignUpCallback signUpCallback = new UserManager.SignUpCallback() {
         public void done(Exception e) {
             progressView.setVisibility(View.GONE);
             busy = false;
@@ -36,7 +47,6 @@ public class LoginFragment extends Fragment {
                 getActivity().finish();
             } else {
                 String message = e.getMessage();
-                //this is necessary because retrofit sometime throw exceptions with no message
                 if ((message == null) || (message.isEmpty())) {
                     message = "an unknown error occurred";
                 }
@@ -45,38 +55,31 @@ public class LoginFragment extends Fragment {
         }
     };
 
-    public LoginFragment(){}
+    public SignupFragment(){}
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.login_fragment, container, false);
+        View view = inflater.inflate(R.layout.signup_fragment, container, false);
+        passWordEt = (EditText) view.findViewById(R.id.et_passwordField);
         phoneNumberEt = (AutoCompleteTextView) view.findViewById(R.id.et_phone_number_field);
-        new UiHelpers.AutoCompleter(getActivity(), phoneNumberEt).execute();//enable autocompletion
-        passwordEt = (EditText) view.findViewById(R.id.et_passwordField);
-        loginButton = (Button) view.findViewById(R.id.bt_loginButton);
+        new UiHelpers.AutoCompleter(getActivity(),phoneNumberEt).execute(); //enable autocompletion
+        userNameEt = (EditText) view.findViewById(R.id.usernameField);
         progressView = view.findViewById(R.id.progressView);
-        TextView tv = (TextView) view.findViewById(R.id.tv_signup);
 
-        tv.setOnClickListener(new View.OnClickListener() {
+        final TextView tv = (TextView) view.findViewById(R.id.tv_login);
+        tv.setOnClickListener(gotoLogin);
+        view.findViewById(R.id.signupButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (busy)
-                    return;
-                getFragmentManager().beginTransaction().replace(R.id.container, new SignupFragment()).addToBackStack(null).commit();
-            }
-        });
-
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                attemptLogin();
+                //TODO validate all fields before proceeding
+                attemptSignUp();
             }
         });
         return view;
     }
 
-    private void attemptLogin() {
+    private void attemptSignUp() {
         if (busy) {
             return;
         }
@@ -88,9 +91,10 @@ public class LoginFragment extends Fragment {
                 if (e == null) {
                     User user = new User();
                     user.set_id(UiHelpers.getFieldContent(phoneNumberEt));
-                    user.setPassword(UiHelpers.getFieldContent(passwordEt));
+                    user.setPassword(UiHelpers.getFieldContent(passWordEt));
+                    user.setName(UiHelpers.getFieldContent(userNameEt));
                     user.setGcmRegId(regId);
-                    UserManager.getInstance(getActivity().getApplication()).logIn(user, loginCallback);
+                    UserManager.getInstance(getActivity().getApplication()).signUp(user, signUpCallback);
                 } else {
                     progressView.setVisibility(View.GONE);
                     busy = false;

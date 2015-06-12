@@ -12,7 +12,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 
 import com.pair.data.ContactsManager;
-import com.pair.pairapp.ChatActivity;
+import com.pair.pairapp.ui.ChatActivity;
 
 import java.util.ArrayList;
 import java.util.List;

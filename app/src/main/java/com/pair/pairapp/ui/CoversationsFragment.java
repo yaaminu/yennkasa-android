@@ -1,4 +1,4 @@
-package com.pair.pairapp;
+package com.pair.pairapp.ui;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -15,10 +15,9 @@ import android.widget.ListView;
 
 import com.pair.adapter.InboxAdapter;
 import com.pair.data.Conversation;
-import com.pair.data.User;
+import com.pair.pairapp.MainActivity;
+import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
-
-import java.util.Date;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -71,20 +70,8 @@ public class CoversationsFragment extends ListFragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.new_message) {
-            realm.beginTransaction();
-            Conversation conversation = realm.createObject(Conversation.class);
-            User user = realm.where(User.class).equalTo("_id","0").findFirst();
-            if(user == null){
-                user = realm.createObject(User.class);
-                user.set_id("0");
-                user.setName("Amin");
-                user.setStatus("amin\'s status");
-            }
-            conversation.setPeerId(user.get_id());
-            conversation.setLastActiveTime(new Date());
-            realm.commitTransaction();
-            UiHelpers.enterChatRoom(getActivity(), user.get_id());
 
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
