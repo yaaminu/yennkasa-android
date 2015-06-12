@@ -36,16 +36,15 @@ public class UiHelpers {
                 .show();
     }
 
-    public static void enterChatRoom(Context context,String peerId, String peerName) {
+    public static void enterChatRoom(Context context, String peerId) {
         Intent intent = new Intent(context, ChatActivity.class);
-        intent.putExtra(ChatActivity.PEER_NAME, peerName);
         intent.putExtra(ChatActivity.PEER_ID, peerId);
         context.startActivity(intent);
     }
 
     /**
      * Use an AsyncTask to fetch the user's email addresses on a background thread, and update
-     * the email text field with results on the main UI thread.
+     * the phone text field with results on the main UI thread.
      */
     public static class AutoCompleter extends AsyncTask<Void, Void, List<ContactsManager.Contact>> {
         public static final String TAG = AutoCompleter.class.getSimpleName();

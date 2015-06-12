@@ -11,6 +11,7 @@ import android.widget.ListView;
 import com.pair.adapter.ContactsAdapter;
 import com.pair.data.ContactsManager;
 import com.pair.data.ContactsManager.Contact;
+import com.pair.util.UiHelpers;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,7 +19,7 @@ import java.util.List;
 
 
 /**
- * A simple {@link Fragment} subclass.
+ * A simple {@link ListFragment} subclass.
  */
 public class ContactFragment extends ListFragment {
 
@@ -69,9 +70,10 @@ public class ContactFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        //we know that only rows with registered contacts are clickable so we can confidently
-        //ignore rows with unregistered users
-
-        super.onListItemClick(l, v, position, id);
+        /**we know that only rows with registered contacts are clickable see {@link ContactsAdapter.getView}.
+         So we can confidently ignore rows with unregistered users
+         */
+        Contact contact = ((Contact) v.getTag()); //very safe
+        UiHelpers.enterChatRoom(getActivity(), contact.phoneNumber);
     }
 }

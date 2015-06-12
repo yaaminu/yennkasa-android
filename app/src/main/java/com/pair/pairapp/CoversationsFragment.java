@@ -56,8 +56,7 @@ public class CoversationsFragment extends ListFragment {
     public void onListItemClick(ListView l, View v, int position, long id) {
         Conversation conversation = ((InboxAdapter.ViewHolder) v.getTag()).currentConversation;
         String peerId = conversation.getPeerId();
-        String peerName = conversation.getPeerId();
-        UiHelpers.enterChatRoom(getActivity(), peerId, peerName);
+        UiHelpers.enterChatRoom(getActivity(), peerId);
 
     }
 
@@ -84,7 +83,7 @@ public class CoversationsFragment extends ListFragment {
             conversation.setPeerId(user.get_id());
             conversation.setLastActiveTime(new Date());
             realm.commitTransaction();
-            UiHelpers.enterChatRoom(getActivity(),user.get_id(), user.getName());
+            UiHelpers.enterChatRoom(getActivity(), user.get_id());
 
         }
         return super.onOptionsItemSelected(item);

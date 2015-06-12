@@ -11,8 +11,6 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 
 import com.pair.adapter.FriendsAdapter;
-import com.pair.adapter.InboxAdapter;
-import com.pair.data.Conversation;
 import com.pair.data.User;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
@@ -59,8 +57,7 @@ public class FriendsFragment extends Fragment implements AdapterView.OnItemClick
         //navigate to chat activity
         User user = ((FriendsAdapter.ViewHolder) view.getTag()).user;
         String peerId = user.get_id();
-        String peerName = user.getName();
-        UiHelpers.enterChatRoom(getActivity(), peerId, peerName);
+        UiHelpers.enterChatRoom(getActivity(), peerId);
 
     }
 }

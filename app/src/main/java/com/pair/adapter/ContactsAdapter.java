@@ -54,6 +54,7 @@ public class ContactsAdapter extends BaseAdapter {
                     userStatus = ((TextView) convertView.findViewById(R.id.tv_user_status));
             userName.setText(contact.name);
             userStatus.setText(contact.status);
+            convertView.setTag(contact);
         } else {
             convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.unregistered_contact_item, parent, false);
             TextView userName = ((TextView) convertView.findViewById(R.id.tv_user_name)),
