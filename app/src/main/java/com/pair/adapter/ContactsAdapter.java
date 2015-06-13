@@ -63,7 +63,6 @@ public class ContactsAdapter extends BaseAdapter {
             button.setOnClickListener(new InviteContact(contact));
             userName.setText(contact.name);
             userStatus.setText(contact.phoneNumber);
-            convertView.setClickable(false); //disable click
         }
 
         return convertView;

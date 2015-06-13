@@ -19,8 +19,8 @@ import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
 
-import static android.text.format.DateUtils.FORMAT_NUMERIC_DATE;
-import static android.text.format.DateUtils.formatDateTime;
+import static android.text.format.DateUtils.SECOND_IN_MILLIS;
+import static android.text.format.DateUtils.getRelativeTimeSpanString;
 
 /**
  * @author Null-Pointer on 5/30/2015.
@@ -53,7 +53,9 @@ public class InboxAdapter extends RealmBaseAdapter<Conversation> {
         String peerName = getPeerName(conversation.getPeerId());
 
         holder.peerName.setText(peerName);
-        holder.dateLastActive.setText(formatDateTime(context, conversation.getLastActiveTime().getTime(), FORMAT_NUMERIC_DATE));
+        long now = System.currentTimeMillis();
+        CharSequence formattedDate = getRelativeTimeSpanString(conversation.getLastActiveTime().getTime(), now, SECOND_IN_MILLIS);
+        holder.dateLastActive.setText(formattedDate);
 
         String summary = conversation.getSummary();
         Log.d(TAG, "summary is : " + summary);

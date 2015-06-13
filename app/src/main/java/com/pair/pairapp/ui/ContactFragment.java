@@ -4,6 +4,7 @@ package com.pair.pairapp.ui;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +28,7 @@ import java.util.List;
 public class ContactFragment extends ListFragment {
 
 
+    private static final String TAG = ContactFragment.class.getSimpleName();
     private final Comparator<Contact> comparator = new Comparator<Contact>() {
         @Override
         public int compare(Contact lhs, Contact rhs) {
@@ -77,10 +79,11 @@ public class ContactFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        /**we know that only rows with registered contacts are clickable see {@link ContactsAdapter.getView}.
-         So we can confidently ignore rows with unregistered users
-         */
         Contact contact = ((Contact) v.getTag()); //very safe
-        UiHelpers.enterChatRoom(getActivity(), contact.phoneNumber);
+        if (contact.isRegisteredUser) {
+            UiHelpers.enterChatRoom(getActivity(), contact.phoneNumber);
+        } else {
+            Log.d(TAG, "clicked an unregistered user");
+        }
     }
 }
