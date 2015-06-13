@@ -40,7 +40,7 @@ public class MessageService extends IntentService {
     private void attemptToSendAllUnsentMessages() {
         //TODO make sure this does not conflict with message dispatcher's backoff mechanism
         Realm realm = Realm.getInstance(this);
-        RealmResults<Message> messages = realm.where(Message.class).equalTo("state", Message.PENDING).findAll();
+        RealmResults<Message> messages = realm.where(Message.class).equalTo("state", Message.STATE_PENDING).findAll();
         MessageDispatcher dispatcher = MessageDispatcher.getInstance(MessageJsonAdapter.INSTANCE, null, 10);
         for (Message message : messages) {
             dispatcher.dispatch(message);

@@ -12,11 +12,18 @@ import io.realm.annotations.RealmClass;
 @RealmClass
 public class Message extends RealmObject {
 
-    public static final int PENDING = 1001,
-            SENT = 1002,
-            RECEIVED = 1003,
-            SEEN = 1004,
-            SEND_FAILED = 1005;
+    public static final int STATE_PENDING = 0x3e9,
+            STATE_SENT = 0x3ea,
+            STATE_RECEIVED = 0x3eb,
+            STATE_SEEN = 0x3ec,
+            STATE_SEND_FAILED = 0x3ed;
+
+    public static final int TYPE_TEXT_MESSAGE = 0x3ee,
+            TYPE_BIN_MESSAGE = 0x3ef,
+            TYPE_PICTURE_MESSAGE = 0x3f0,
+            TYPE_VIDEO_MESSAGE = 0x3f1,
+            TYPE_DATE_MESSAGE = 0x3f2,
+            TYPE_TYPING_MESSAGE = 0x3f3;
 
     @PrimaryKey
     private String id;
@@ -26,6 +33,15 @@ public class Message extends RealmObject {
     private String messageBody;
     private Date dateComposed;
     private int state;
+    private int type;
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public int getType() {
+        return type;
+    }
 
     public String getId() {
         return id;
@@ -77,8 +93,8 @@ public class Message extends RealmObject {
 }
 
 //class MessageConstants {
-//    int PENDING = 1001,
-//            SENT = 1002,
-//            RECEIVED = 1003,
-//            SEND_FAILED = 1004;
+//    int STATE_PENDING = 1001,
+//            STATE_SENT = 1002,
+//            STATE_RECEIVED = 1003,
+//            STATE_SEND_FAILED = 1004;
 //}

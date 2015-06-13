@@ -30,7 +30,7 @@ public class MessageProcessor extends IntentService {
         Realm realm = Realm.getInstance(this);
         realm.beginTransaction();
         Message message = realm.createObjectFromJson(Message.class, messageJson);
-        message.setState(Message.RECEIVED);
+        message.setState(Message.STATE_RECEIVED);
 
         Conversation conversation = realm.where(Conversation.class).equalTo("peerId", message.getFrom()).findFirst();
         if (conversation == null) { //create a new one

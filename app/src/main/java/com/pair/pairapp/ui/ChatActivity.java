@@ -2,6 +2,7 @@ package com.pair.pairapp.ui;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
+import android.text.format.DateUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,7 +30,7 @@ import io.realm.RealmResults;
 public class ChatActivity extends ActionBarActivity implements View.OnClickListener {
     public static final String TAG = ChatActivity.class.getSimpleName();
     public static final String PEER_ID = "peer id";
-    RealmResults<Message> messages;
+    private RealmResults<Message> messages;
     private User peer;
     private Conversation currConversation;
     private Realm realm;
@@ -54,7 +55,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
                 public void execute(Realm realm) {
                     Message message = realm.where(Message.class).equalTo("id", messageId).findFirst();
                     if (message != null) {
-                        message.setState(Message.SENT);
+                        message.setState(Message.STATE_SENT);
                     }
                     realm.close();
                 }
@@ -77,7 +78,6 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         String peerId = bundle.getString(PEER_ID);
         peer = realm.where(User.class).equalTo("_id", peerId).findFirst();
         String peerName = peer.getName();
-
         getSupportActionBar().setTitle(peerName);
 
         //TODO change this query to a more general one than will work even when we add group chat
@@ -91,17 +91,32 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private void getConversation(String peerId) {
         currConversation = realm.where(Conversation.class).equalTo("peerId", peerId).findFirst();
         realm.beginTransaction();
-        if(currConversation == null){ //first time
+        if (currConversation == null) { //first time
             currConversation = realm.createObject(Conversation.class);
             currConversation.setPeerId(peerId);
             currConversation.setLastActiveTime(new Date());
+            Message message = null;
             //re-construct the conversation
-            Message message = messages.last();
+            if (messages.size() > 0) { // i don't no why , but realm throws some exception when i attempt to read from an empty realm results
+                message = messages.last();
+            }
             if (message == null) {
                 currConversation.setSummary("touch to start chatting with " + peer.getName());
             } else {
                 currConversation.setLastMessage(message);
+                currConversation.setSummary(message.getMessageBody());
             }
+        }
+        //set up session
+        String formatted = DateUtils.formatDateTime(this, new Date().getTime(), DateUtils.FORMAT_NUMERIC_DATE);
+        Message message = realm.where(Message.class).equalTo("type", Message.TYPE_DATE_MESSAGE).equalTo("id", formatted + "@" + peer.get_id()).findFirst();
+        if (message == null) {
+            message = realm.createObject(Message.class);
+            message.setId(formatted + "@" + peer.get_id());
+            message.setMessageBody(formatted);
+            message.setTo(peer.get_id());
+            message.setDateComposed(new Date());
+            message.setType(Message.TYPE_DATE_MESSAGE);
         }
         currConversation.setActive(true);
         realm.commitTransaction();
@@ -157,9 +172,10 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             //generate a unique id
             long messageCount = realm.where(Message.class).count() + 1;
             message.setId(messageCount + "@" + getCurrentUser().get_id() + "@" + System.currentTimeMillis());
-            message.setState(Message.PENDING);
+            message.setState(Message.STATE_PENDING);
             currConversation.setLastMessage(message);
             currConversation.setLastActiveTime(message.getDateComposed());
+            currConversation.setSummary(message.getMessageBody());
             realm.commitTransaction();
             dispatcher.dispatch(message);
         }

@@ -25,10 +25,10 @@ import static android.text.format.DateUtils.getRelativeTimeSpanString;
 /**
  * @author Null-Pointer on 5/30/2015.
  */
-public class InboxAdapter extends RealmBaseAdapter<Conversation> {
-    private static final String TAG = InboxAdapter.class.getSimpleName();
+public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
+    private static final String TAG = ConversationAdapter.class.getSimpleName();
 
-    public InboxAdapter(Context context, RealmResults<Conversation> realmResults, boolean automaticUpdate) {
+    public ConversationAdapter(Context context, RealmResults<Conversation> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
     }
 

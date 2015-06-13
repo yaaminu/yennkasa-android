@@ -43,7 +43,6 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
                 gotoSetUpActivity();
             } else {
                 syncContacts();
-
                 drawer = (DrawerLayout) findViewById(R.id.drawer);
                 Fragment fragment = new CoversationsFragment();
                 Bundle bundle = new Bundle();
