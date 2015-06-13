@@ -43,6 +43,7 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
                 gotoSetUpActivity();
             } else {
                 syncContacts();
+
                 drawer = (DrawerLayout) findViewById(R.id.drawer);
                 Fragment fragment = new CoversationsFragment();
                 Bundle bundle = new Bundle();
@@ -64,7 +65,6 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
         long now = 1;
         manager.setRepeating(AlarmManager.ELAPSED_REALTIME, now, AlarmManager.INTERVAL_HOUR, operation); //start now
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

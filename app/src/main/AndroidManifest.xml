@@ -36,10 +36,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".ui.SetUpActivity"
-            android:label="@string/title_activity_set_up"></activity>
+            android:label="@string/title_activity_set_up" />
         <activity
             android:name=".ui.ChatActivity"
             android:label="@string/title_activity_chat"
@@ -54,6 +53,7 @@
             android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+
                 <category android:name="com.pair.pairapp" />
             </intent-filter>
         </receiver>
@@ -64,6 +64,9 @@
         <service
             android:name="com.pair.messenger.MessageProcessor"
             android:exported="false" />
+        <service
+            android:name="com.pair.messenger.MessageService"
+            android:exported="false"></service>
     </application>
 
 </manifest>

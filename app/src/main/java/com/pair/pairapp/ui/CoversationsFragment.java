@@ -82,5 +82,4 @@ public class CoversationsFragment extends ListFragment {
         super.onDestroy();
     }
 
-
 }

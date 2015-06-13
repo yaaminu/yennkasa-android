@@ -31,4 +31,6 @@ public class MessageJsonAdapter implements BaseJsonAdapter<Message> {
         }
         return array;
     }
+
+    public static final MessageJsonAdapter INSTANCE = new MessageJsonAdapter();
 }

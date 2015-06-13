@@ -70,7 +70,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         setContentView(R.layout.activity_chat);
         editText = ((EditText) findViewById(R.id.et_inputMsg));
         sendButton = ((Button) findViewById(R.id.btn_send));
-        dispatcher = MessageDispatcher.getInstance(new MessageJsonAdapter(), monitor, 10);
+        dispatcher = MessageDispatcher.getInstance(MessageJsonAdapter.INSTANCE, monitor, 10);
         sendButton.setOnClickListener(this);
 
         Bundle bundle = getIntent().getExtras();

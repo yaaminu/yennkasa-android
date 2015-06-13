@@ -27,9 +27,8 @@ import retrofit.client.Response;
  * Created by Null-Pointer on 5/26/2015.
  */
 public class MessageDispatcher implements Dispatcher<Message> {
-
+    //TODO implement messageDispatcher as a service
     private static final String TAG = MessageDispatcher.class.getSimpleName();
-
 
     private static volatile MessageDispatcher INSTANCE;
     private final int MAX_RETRY_TIMES;
@@ -162,7 +161,6 @@ public class MessageDispatcher implements Dispatcher<Message> {
                         //TODO handle the EOF error that retrofit causes every first time we try to make a network request
                         //bubble up error and empty send queue let callers re-dispatch messages again;
                         if (ConnectionHelper.isConnectedOrConnecting(Config.getApplicationContext())) {
-                            Log.i(TAG, "failed to send message retrying");
                             tryAgain(job);
                         } else if (dispatcherMonitor != null) {
                             dispatcherMonitor.onSendFailed("Error in network connection", job.id);
@@ -175,10 +173,11 @@ public class MessageDispatcher implements Dispatcher<Message> {
         private void tryAgain(final SenderJob job) {
             if (job.retryTimes < MAX_RETRY_TIMES) {
                 job.retryTimes++;
-                job.backOff *= 2; //backoff exponentially
+                job.backOff *= job.retryTimes; //backoff exponentially
                 if (job.backOff > SenderJob.MAX_DELAY) {
                     job.backOff = SenderJob.MAX_DELAY;
                 }
+                Log.i(TAG, "retrying in: " + job.backOff);
                 RETRY_HANDLER.postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -188,6 +187,7 @@ public class MessageDispatcher implements Dispatcher<Message> {
                 return;
             }
             if (dispatcherMonitor != null)
+                Log.i(TAG, "unable to send message after: " + job.backOff + "seconds");
                 dispatcherMonitor.onSendFailed("an unknown error occurred", job.id);
 
         }
