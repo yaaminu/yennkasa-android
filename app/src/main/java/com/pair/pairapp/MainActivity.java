@@ -87,9 +87,6 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
                 }
             });
             return true;
-        } else if (item.getItemId() == R.id.action_seed_users) {
-
-            return true;
         }
         return super.onOptionsItemSelected(item);
     }

@@ -24,7 +24,7 @@ import io.realm.RealmResults;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class FriendsFragment extends Fragment implements AdapterView.OnItemClickListener {
+public class FriendsFragment extends Fragment implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
 
 
     public FriendsFragment() {
@@ -61,5 +61,12 @@ public class FriendsFragment extends Fragment implements AdapterView.OnItemClick
         String peerId = user.get_id();
         UiHelpers.enterChatRoom(getActivity(), peerId);
 
+    }
+
+
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+
+        return true;
     }
 }

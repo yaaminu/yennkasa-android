@@ -17,7 +17,7 @@ import io.realm.RealmResults;
  * helper methods.
  */
 public class MessageService extends IntentService {
-
+    public static final String TAG = MessageService.class.getSimpleName();
     public static final String ACTION_SEND_ALL_UNSENT = "send unsent messages";
 
     /**
@@ -27,7 +27,7 @@ public class MessageService extends IntentService {
      * @see IntentService
      */
     public MessageService() {
-        super("MessageService");
+        super(TAG);
     }
 
     @Override
@@ -38,6 +38,7 @@ public class MessageService extends IntentService {
     }
 
     private void attemptToSendAllUnsentMessages() {
+        //TODO make sure this does not conflict with message dispatcher's backoff mechanism
         Realm realm = Realm.getInstance(this);
         RealmResults<Message> messages = realm.where(Message.class).equalTo("state", Message.PENDING).findAll();
         MessageDispatcher dispatcher = MessageDispatcher.getInstance(MessageJsonAdapter.INSTANCE, null, 10);

@@ -86,4 +86,6 @@ public class ContactFragment extends ListFragment {
             Log.d(TAG, "clicked an unregistered user");
         }
     }
+
+    public static final ContactFragment INSTANCE = new ContactFragment();
 }

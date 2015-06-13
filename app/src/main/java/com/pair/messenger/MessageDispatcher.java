@@ -74,7 +74,7 @@ public class MessageDispatcher implements Dispatcher<Message> {
 
     @Override
     public void dispatch(Collection<Message> messages) {
-        //FIXME spawn a background daemons to send messages in the collection instead of looping over it
+        //FIXME spawn background daemons to send messages in the collection instead of looping over it
         for (Message message : messages) {
             dispatch(message);
         }

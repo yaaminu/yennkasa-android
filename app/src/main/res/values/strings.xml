@@ -22,4 +22,7 @@
     <string name="content_desc_user_avatar">user dp thumbnail</string>
     <string name="action_seed_users">seed users</string>
     <string name="st_empty_contacts">Its Lonely Here :-) No Contact To Display</string>
+    <string name="action_call_sender">call sender</string>
+    <string name="action_delete_conversation">delete</string>
+    <string name="title_pick_contact">Pick a contact</string>
 </resources>
