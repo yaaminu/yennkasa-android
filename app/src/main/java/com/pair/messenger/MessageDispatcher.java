@@ -1,9 +1,9 @@
 package com.pair.messenger;
 
+import android.app.AlarmManager;
+import android.os.Handler;
 import android.util.Log;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.pair.adapter.BaseJsonAdapter;
 import com.pair.data.Message;
@@ -13,11 +13,8 @@ import com.pair.net.api.MessageApi;
 import com.pair.util.Config;
 import com.pair.util.ConnectionHelper;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
 
 import retrofit.Callback;
@@ -109,14 +106,18 @@ public class MessageDispatcher implements Dispatcher<Message> {
 
 
     private static class SenderJob {
+        final static long MIN_DELAY = 5000; // 5 seconds
+        public static final long MAX_DELAY = AlarmManager.INTERVAL_HOUR;
         int retryTimes;
         JsonObject data;
         String id;
+        long backOff;
 
         SenderJob(String id, JsonObject data, int retryTimes) {
             this.retryTimes = retryTimes;
             this.data = data;
             this.id = id;
+            this.backOff = MIN_DELAY;
         }
     }
 
@@ -142,14 +143,14 @@ public class MessageDispatcher implements Dispatcher<Message> {
                 public void failure(RetrofitError retrofitError) {
                     //retry if network available
                     if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
-                        Log.i(TAG,"unexpected error, trying to send message again");
+                        Log.i(TAG, "unexpected error, trying to send message again");
                         tryAgain(job);
                     } else if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)) {
                         int statusCode = retrofitError.getResponse().getStatus();
                         if (statusCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
                             //TODO use  a correct exponential backoff algorithm to avoid overwhelming the server with bunch of requests
                             // while it attempts to come back alive.
-                            Log.i(TAG,"internal server error, trying to send again");
+                            Log.i(TAG, "internal server error, trying to send again");
                             tryAgain(job);
                         } else {//crash early
                             // as far as we know, our backend will only return other status code if its is our fault and that normally should not happen
@@ -160,11 +161,10 @@ public class MessageDispatcher implements Dispatcher<Message> {
                     } else if (retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)) {
                         //TODO handle the EOF error that retrofit causes every first time we try to make a network request
                         //bubble up error and empty send queue let callers re-dispatch messages again;
-                        if(ConnectionHelper.isConnectedOrConnecting(Config.getApplicationContext())){
-                            Log.i(TAG,"failed to send message retrying");
+                        if (ConnectionHelper.isConnectedOrConnecting(Config.getApplicationContext())) {
+                            Log.i(TAG, "failed to send message retrying");
                             tryAgain(job);
-                        }
-                        else if(dispatcherMonitor != null) {
+                        } else if (dispatcherMonitor != null) {
                             dispatcherMonitor.onSendFailed("Error in network connection", job.id);
                         }
                     }
@@ -172,25 +172,19 @@ public class MessageDispatcher implements Dispatcher<Message> {
             });
         }
 
-        private String getHttpErrorResponse(RetrofitError error, String defaultMessage) {
-            String reason = (defaultMessage != null) ? defaultMessage : "an unknown error occurred";
-            try {
-                InputStream in = error.getResponse().getBody().in();
-                String response = IOUtils.toString(in);
-                Gson gson = new GsonBuilder().create();
-                return gson.fromJson(response, HttpResponse.class).getMessage();
-            } catch (IOException e) {
-                Log.e(TAG, "error while retrieving reason for send error");
-            } catch (IllegalStateException e) {
-                Log.e(TAG, e.getMessage(), e.getCause());
-            }
-            return reason;
-        }
-
-        private void tryAgain(SenderJob job) {
+        private void tryAgain(final SenderJob job) {
             if (job.retryTimes < MAX_RETRY_TIMES) {
                 job.retryTimes++;
-                doSend(job); //async
+                job.backOff *= 2; //backoff exponentially
+                if (job.backOff > SenderJob.MAX_DELAY) {
+                    job.backOff = SenderJob.MAX_DELAY;
+                }
+                RETRY_HANDLER.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        doSend(job); //async
+                    }
+                }, job.backOff);
                 return;
             }
             if (dispatcherMonitor != null)
@@ -199,4 +193,6 @@ public class MessageDispatcher implements Dispatcher<Message> {
         }
 
     }
+
+    private final Handler RETRY_HANDLER = new Handler();
 }
