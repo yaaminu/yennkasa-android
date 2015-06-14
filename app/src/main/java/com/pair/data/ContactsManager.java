@@ -16,7 +16,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import io.realm.Realm;
-import io.realm.RealmResults;
 
 /**
  * @author Null-Pointer on 6/11/2015.
@@ -34,16 +33,16 @@ public class ContactsManager {
         return getCursor(context);
     }
 
-    public List<Contact> findAllContactsSync(Comparator<Contact> comparator) {
-        return doFindAllContacts(comparator, getCursor(Config.getApplicationContext()));
+    public List<Contact> findAllContactsSync(Filter<Contact> filter, Comparator<Contact> comparator) {
+        return doFindAllContacts(filter, comparator, getCursor(Config.getApplicationContext()));
     }
 
-    public void findAllContacts(final Comparator<Contact> comparator, final FindCallback<List<Contact>> callback) {
+    public void findAllContacts(final Filter<Contact> filter, final Comparator<Contact> comparator, final FindCallback<List<Contact>> callback) {
         final Handler handler = new Handler();
         new Thread(new Runnable() {
             @Override
             public void run() {
-                final List<Contact> contacts = findAllContactsSync(comparator);
+                final List<Contact> contacts = findAllContactsSync(filter, comparator);
                 //run on the thread on which clients originally called us
                 handler.post(new Runnable() {
                     @Override
@@ -63,9 +62,8 @@ public class ContactsManager {
                 null, null, null);
     }
 
-    private List<Contact> doFindAllContacts(Comparator<Contact> comparator, Cursor cursor) {
+    private List<Contact> doFindAllContacts(Filter<Contact> filter, Comparator<Contact> comparator, Cursor cursor) {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
-        RealmResults<User> users = realm.where(User.class).findAll();
         List<Contact> contacts = new ArrayList<>();
         while (cursor.moveToNext()) {
             String phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract
@@ -91,8 +89,12 @@ public class ContactsManager {
             }
             ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, status, isRegistered);
             Log.d(TAG, contact.name + ":" + contact.phoneNumber);
+            if ((filter != null) && !filter.accept(contact)) {
+                continue;
+            }
             contacts.add(contact);
         }
+        cursor.close();
         realm.close();
         if (comparator != null) {
             Collections.sort(contacts, comparator);
@@ -100,9 +102,6 @@ public class ContactsManager {
         return contacts;
     }
 
-    public void sort(List<Contact> contacts, Comparator<Contact> comparator) {
-        Collections.sort(contacts, comparator);
-    }
     public interface FindCallback<T> {
         void done(T t);
     }
@@ -134,10 +133,7 @@ public class ContactsManager {
             if (o == null || getClass() != o.getClass()) return false;
 
             Contact contact = (Contact) o;
-
-            if (isRegisteredUser != contact.isRegisteredUser) return false;
-            if (!name.equals(contact.name)) return false;
-            return phoneNumber.equals(contact.phoneNumber);
+            return (isRegisteredUser == contact.isRegisteredUser) && name.equals(contact.name) && phoneNumber.equals(contact.phoneNumber);
 
         }
 
@@ -152,5 +148,9 @@ public class ContactsManager {
         public String toString() {
             return this.phoneNumber;
         }
+    }
+
+    public interface Filter<T> {
+        boolean accept(T t);
     }
 }

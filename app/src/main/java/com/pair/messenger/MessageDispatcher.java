@@ -24,20 +24,21 @@ import retrofit.android.AndroidLog;
 import retrofit.client.Response;
 
 /**
- * Created by Null-Pointer on 5/26/2015.
+ * @author by Null-Pointer on 5/26/2015.
  */
-public class MessageDispatcher implements Dispatcher<Message> {
+class MessageDispatcher implements Dispatcher<Message> {
     //TODO implement messageDispatcher as a service
     private static final String TAG = MessageDispatcher.class.getSimpleName();
-
+    private volatile int NUM_OF_TASKS = 0;
     private static volatile MessageDispatcher INSTANCE;
     private final int MAX_RETRY_TIMES;
     private final MessageApi MESSAGE_API;
-    private final Object adapterLock = new Object();
     private final Object dispatcherMonitorLock = new Object();
-    private BaseJsonAdapter<Message> jsonAdapter;
-    private Sender sender;
+    private final BaseJsonAdapter<Message> jsonAdapter;
+    private final Sender sender;
     private DispatcherMonitor dispatcherMonitor;
+    private final Handler RETRY_HANDLER;
+
 
     private MessageDispatcher(BaseJsonAdapter<Message> jsonAdapter, DispatcherMonitor errorHandler, int retryTimes) {
         RestAdapter adapter = new RestAdapter.Builder()
@@ -51,6 +52,8 @@ public class MessageDispatcher implements Dispatcher<Message> {
         this.dispatcherMonitor = errorHandler;
         this.MAX_RETRY_TIMES = (retryTimes < 0) ? 0 : retryTimes;
         this.jsonAdapter = jsonAdapter;
+        RETRY_HANDLER = new Handler();
+
     }
 
     public static MessageDispatcher getInstance(BaseJsonAdapter<Message> adapter, DispatcherMonitor dispatcherMonitor, int retryTimes) {
@@ -77,12 +80,6 @@ public class MessageDispatcher implements Dispatcher<Message> {
         //FIXME spawn background daemons to send messages in the collection instead of looping over it
         for (Message message : messages) {
             dispatch(message);
-        }
-    }
-
-    public void setJsonAdapter(BaseJsonAdapter<Message> adapter) {
-        synchronized (adapterLock) {
-            this.jsonAdapter = adapter;
         }
     }
 
@@ -127,15 +124,16 @@ public class MessageDispatcher implements Dispatcher<Message> {
         }
 
         void doSend(final SenderJob job) {
+            incrementNumOfTasks();
             Log.d(TAG, job.data.toString());
             //actual send implementation
             MESSAGE_API.sendMessage(job.data, new Callback<HttpResponse>() {
                 @Override
                 public void success(HttpResponse httpResponse, Response response) {
-
                     if (dispatcherMonitor != null) {
                         dispatcherMonitor.onSendSucceeded(job.id);
                     }
+                    decrementNumOfTasks();
                 }
 
                 @Override
@@ -147,8 +145,6 @@ public class MessageDispatcher implements Dispatcher<Message> {
                     } else if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)) {
                         int statusCode = retrofitError.getResponse().getStatus();
                         if (statusCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
-                            //TODO use  a correct exponential backoff algorithm to avoid overwhelming the server with bunch of requests
-                            // while it attempts to come back alive.
                             Log.i(TAG, "internal server error, trying to send again");
                             tryAgain(job);
                         } else {//crash early
@@ -164,6 +160,7 @@ public class MessageDispatcher implements Dispatcher<Message> {
                             tryAgain(job);
                         } else if (dispatcherMonitor != null) {
                             dispatcherMonitor.onSendFailed("Error in network connection", job.id);
+                            decrementNumOfTasks();
                         }
                     }
                 }
@@ -177,7 +174,7 @@ public class MessageDispatcher implements Dispatcher<Message> {
                 if (job.backOff > SenderJob.MAX_DELAY) {
                     job.backOff = SenderJob.MAX_DELAY;
                 }
-                Log.i(TAG, "retrying in: " + job.backOff);
+                Log.i(TAG, "retrying in: " + job.backOff + " milliseconds");
                 RETRY_HANDLER.postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -186,13 +183,30 @@ public class MessageDispatcher implements Dispatcher<Message> {
                 }, job.backOff);
                 return;
             }
-            if (dispatcherMonitor != null)
+            if (dispatcherMonitor != null) {
                 Log.i(TAG, "unable to send message after: " + job.backOff + "seconds");
                 dispatcherMonitor.onSendFailed("an unknown error occurred", job.id);
+                decrementNumOfTasks();
+            }
 
         }
 
     }
 
-    private final Handler RETRY_HANDLER = new Handler();
+    private void decrementNumOfTasks() {
+        synchronized (this) {
+            NUM_OF_TASKS--;
+        }
+        if (NUM_OF_TASKS == 0) {
+            if (dispatcherMonitor != null) {
+                dispatcherMonitor.onAllDispatched();
+            }
+        }
+    }
+
+    private void incrementNumOfTasks() {
+        synchronized (this) {
+            NUM_OF_TASKS++;
+        }
+    }
 }

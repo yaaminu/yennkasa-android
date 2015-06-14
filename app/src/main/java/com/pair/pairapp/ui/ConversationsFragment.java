@@ -16,7 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import com.pair.adapter.InboxAdapter;
+import com.pair.adapter.ConversationAdapter;
 import com.pair.data.Conversation;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
@@ -26,13 +26,13 @@ import io.realm.Realm;
 import io.realm.RealmResults;
 
 /**
- * Created by Null-Pointer on 5/29/2015.
+ * @author by Null-Pointer on 5/29/2015.
  */
-public class CoversationsFragment extends ListFragment {
+public class ConversationsFragment extends ListFragment {
 
     private Realm realm;
 
-    public CoversationsFragment() {
+    public ConversationsFragment() {
     } //required no-arg constructor
 
     @Override
@@ -47,12 +47,22 @@ public class CoversationsFragment extends ListFragment {
         super.onCreateView(null, null, savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_inbox, container, false);
         realm = Realm.getInstance(getActivity());
+        realm.beginTransaction();
         RealmResults<Conversation> conversations = realm.allObjectsSorted(Conversation.class, "lastActiveTime", false);
-        InboxAdapter adapter = new InboxAdapter(getActivity(), conversations, true);
+        for (int i = 0; i < conversations.size(); i++) {
+            Conversation conversation = conversations.get(i);
+            if (conversation.getLastMessage() == null) {
+                conversations.remove(i);
+            }
+        }
+        realm.commitTransaction();
+        ConversationAdapter adapter = new ConversationAdapter(getActivity(), conversations, true);
         setListAdapter(adapter);
         String title = getArguments().getString(MainActivity.ARG_TITLE);
         ActionBarActivity activity = (ActionBarActivity) getActivity();
+        //noinspection ConstantConditions
         activity.getSupportActionBar().setTitle(title);
+
         return view;
     }
 
@@ -64,7 +74,7 @@ public class CoversationsFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        Conversation conversation = ((InboxAdapter.ViewHolder) v.getTag()).currentConversation;
+        Conversation conversation = ((ConversationAdapter.ViewHolder) v.getTag()).currentConversation;
         String peerId = conversation.getPeerId();
         UiHelpers.enterChatRoom(getActivity(), peerId);
     }

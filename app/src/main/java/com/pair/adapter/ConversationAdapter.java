@@ -1,8 +1,8 @@
 package com.pair.adapter;
 
+import android.app.AlarmManager;
 import android.content.Context;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,25 +10,28 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.pair.data.Conversation;
-import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
+
+import java.util.Date;
 
 import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
 
-import static android.text.format.DateUtils.SECOND_IN_MILLIS;
+import static android.text.format.DateUtils.MINUTE_IN_MILLIS;
 import static android.text.format.DateUtils.getRelativeTimeSpanString;
 
 /**
  * @author Null-Pointer on 5/30/2015.
  */
-public class InboxAdapter extends RealmBaseAdapter<Conversation> {
-    private static final String TAG = InboxAdapter.class.getSimpleName();
+public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
+    private static final String TAG = ConversationAdapter.class.getSimpleName();
+    final long FIVE_MINUTES = AlarmManager.INTERVAL_FIFTEEN_MINUTES / 3;
 
-    public InboxAdapter(Context context, RealmResults<Conversation> realmResults, boolean automaticUpdate) {
+
+    public ConversationAdapter(Context context, RealmResults<Conversation> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
     }
 
@@ -49,27 +52,19 @@ public class InboxAdapter extends RealmBaseAdapter<Conversation> {
         }
         Conversation conversation = getItem(position);
         holder.chatSummary.setText(conversation.getSummary());
-        //TODO find a better way to handle this peer name thing
         String peerName = getPeerName(conversation.getPeerId());
-
         holder.peerName.setText(peerName);
-        long now = System.currentTimeMillis();
-        CharSequence formattedDate = getRelativeTimeSpanString(conversation.getLastActiveTime().getTime(), now, SECOND_IN_MILLIS);
+        long now = new Date().getTime();
+        long then = conversation.getLastActiveTime().getTime();
+        CharSequence formattedDate;
+        formattedDate = ((now - then) <= FIVE_MINUTES) ? "moments ago" : getRelativeTimeSpanString(then, now, MINUTE_IN_MILLIS);
         holder.dateLastActive.setText(formattedDate);
-
         String summary = conversation.getSummary();
-        Log.d(TAG, "summary is : " + summary);
-        Log.d(TAG, "last message is : " + conversation.getLastMessage());
-
         if (TextUtils.isEmpty(summary)) {
-            Message message = conversation.getLastMessage();
-            summary = message.getMessageBody();
-            if (TextUtils.isEmpty(summary)) {
-                if (BuildConfig.DEBUG) { //development environment, crash and burn!
-                    throw new RuntimeException("conversation with no description");
-                }
-                summary = "Conversation with " + peerName;
+            if (BuildConfig.DEBUG) { //development environment, crash and burn!
+                throw new RuntimeException("conversation with no description and message");
             }
+            summary = "Conversation with " + peerName;
         }
         holder.chatSummary.setText(summary);
         holder.currentConversation = conversation;

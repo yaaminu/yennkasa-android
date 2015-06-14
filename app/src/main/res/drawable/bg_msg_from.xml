@@ -6,7 +6,10 @@
     <solid android:color="@color/bg_msg_from" >
     </solid>
 
-    <corners android:radius="5dp" >
-    </corners>
+    <corners
+        android:bottomLeftRadius="0dp"
+        android:bottomRightRadius="5dp"
+        android:topLeftRadius="5dp"
+        android:topRightRadius="5dp"/>
 
 </shape>

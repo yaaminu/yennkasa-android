@@ -11,7 +11,7 @@ import retrofit.http.POST;
 
 
 /**
- * Created by Null-Pointer on 5/26/2015.
+ * @author by Null-Pointer on 5/26/2015.
  */
 public interface MessageApi {
     String BASE_URL = "/api/v1";
@@ -23,6 +23,7 @@ public interface MessageApi {
     })
     void sendMessage(@Body JsonObject message, Callback<HttpResponse> responseCallback);
 
+    @SuppressWarnings("unused")
     @POST(BASE_URL + "/messages")
     @Headers({
             "Content-Type:application/json",

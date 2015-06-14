@@ -13,12 +13,11 @@ import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.net.api.UserApi;
-import com.pair.pairapp.BuildConfig;
+import com.pair.workers.BootReceiver;
 
 import java.util.List;
 
 import io.realm.Realm;
-import io.realm.exceptions.RealmException;
 import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
@@ -26,7 +25,7 @@ import retrofit.android.AndroidLog;
 import retrofit.client.Response;
 
 /**
- * Created by Null-Pointer on 5/27/2015.
+ * @author by Null-Pointer on 5/27/2015.
  */
 public class UserManager {
 
@@ -108,6 +107,7 @@ public class UserManager {
             public void success(User user, Response response) {
                 busy = false;
                 saveUser(user);
+                Config.enableComponent(BootReceiver.class);
                 callback.done(null);
             }
 
@@ -133,6 +133,7 @@ public class UserManager {
             public void success(User user, Response response) {
                 busy = false;
                 saveUser(user);
+                Config.enableComponent(BootReceiver.class);
                 callback.done(null);
             }
 
@@ -145,65 +146,62 @@ public class UserManager {
 
     }
 
-    public void LogOut(Context context,final LogOutCallback logOutCallback) {
+    public void LogOut(Context context, final LogOutCallback logOutCallback) {
         //TODO logout user from backend
         SharedPreferences sharedPreferences = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
         String userId = sharedPreferences.getString(KEY_SESSION_ID, null);
         if ((userId == null)) {
-            if (BuildConfig.DEBUG) { //crash early
-                throw new IllegalStateException("calling logout when no user is logged in");
-            }
-            //clean up
-            cleanUpRealm();
-            return;
+            throw new AssertionError("calling logout when no user is logged in");
         }
+
         sharedPreferences
                 .edit()
                 .remove(KEY_SESSION_ID)
-                .commit();
+                .apply();
         Realm realm = Realm.getInstance(context);
+        // TODO: 6/14/2015 remove this in production code.
         User user = realm.where(User.class).equalTo("_id", userId).findFirst();
         if (user == null) {
-            if (BuildConfig.DEBUG) {
-                throw new IllegalStateException("existing session id with no corresponding User in the database");
-            }
+            throw new IllegalStateException("existing session id with no corresponding User in the database");
         }
         realm.close();
         cleanUpRealm();
         GcmHelper.unRegister(context, new GcmHelper.UnregisterCallback() {
             @Override
             public void done(Exception e) {
+                if (e == null) {
+                    Config.disableComponent(BootReceiver.class);
+                }
                 logOutCallback.done(e);
             }
         });
     }
 
-    public void fetchFriends(final List<String> array,final FriendsFetchCallback callback){
+    public void fetchFriends(final List<String> array, final FriendsFetchCallback callback) {
         userApi.fetchFriends(array, new Callback<List<User>>() {
             @Override
             public void success(List<User> users, Response response) {
-                Realm realm = Realm.getInstance(context);
-                realm.beginTransaction();
-                try {
-                    realm.copyToRealm(users);
-                    realm.commitTransaction();
-                }catch (RealmException e){ //primary keys violation
-                    //never mind
-                }
-                realm.close();
-                callback.done(null);
+                callback.done(null, users);
             }
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                if(retrofitError.getKind().equals(RetrofitError.Kind.HTTP)){
-                    Log.e(TAG, retrofitError.getMessage());
-                    callback.done(retrofitError);
-                }else if(ConnectionHelper.isConnectedOrConnecting(context)){
-                    //try again
-                    fetchFriends(array,callback);
-                }else{
-                    callback.done(retrofitError);
+                Log.e(TAG, retrofitError.getMessage());
+                if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)
+                        || retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)
+                        ) {
+                    callback.done(retrofitError, null);
+                } else if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
+                    if (ConnectionHelper.isConnectedOrConnecting(context)) {
+                        //try again
+                        fetchFriends(array, callback);
+                    } else {
+                        callback.done(retrofitError, null);
+                    }
+                } else if (retrofitError.getKind().equals(RetrofitError.Kind.CONVERSION)) {
+                    throw new AssertionError(retrofitError);
+                } else {
+                    callback.done(retrofitError, null);
                 }
             }
         });
@@ -222,14 +220,15 @@ public class UserManager {
         void done(Exception e);
     }
 
-    public interface LogOutCallback{
+    public interface LogOutCallback {
         void done(Exception e);
     }
+
     public interface SignUpCallback {
         void done(Exception e);
     }
 
-    public interface FriendsFetchCallback{
-        void done(Exception e);
+    public interface FriendsFetchCallback {
+        void done(Exception e, List<User> users);
     }
 }

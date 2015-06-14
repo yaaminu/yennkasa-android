@@ -1,12 +1,15 @@
 package com.pair.util;
 
 import android.app.Application;
-import android.content.Context;
+import android.content.ComponentName;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
- * Created by Null-Pointer on 5/26/2015.
+ * @author null-pointer
  */
 public class Config {
 
@@ -20,18 +23,27 @@ public class Config {
     public static final String PAIRAPP_ENDPOINT = getEndPoint();
     private static final String logMessage = "calling getApplication when init has not be called";
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
-    public static String auth = "kiiboda+=s3cr3t3";
     private static Application application;
+    private static AtomicBoolean isChatRoomOpen = new AtomicBoolean(false);
 
     public static void init(Application pairApp) {
         Config.application = pairApp;
+        isChatRoomOpen.set(false);
     }
 
-    public static Context getApplicationContext() {
+    public static boolean isChatRoomOpen() {
+        return isChatRoomOpen.get();
+    }
+
+    public static void setIsChatRoomOpen(boolean chatRoomOpen) {
+        isChatRoomOpen.set(chatRoomOpen);
+    }
+
+    public static Application getApplicationContext() {
         if (application == null) {
             warnAndThrow(logMessage, detailMessage);
         }
-        return application.getApplicationContext();
+        return application;
     }
 
     public static Application getApplication() {
@@ -69,5 +81,27 @@ public class Config {
             // TODO replace this with real url
             return HOST_REAL_SERVER;
         }
+    }
+
+    public static void enableComponent(Class clazz) {
+        Log.d(TAG, "enabling " + clazz.getSimpleName());
+        ComponentName receiver = new ComponentName(application, clazz);
+
+        PackageManager pm = application.getPackageManager();
+
+        pm.setComponentEnabledSetting(receiver,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP);
+    }
+
+    public static void disableComponent(Class clazz) {
+        Log.d(TAG, "disabling " + clazz.getSimpleName());
+        ComponentName receiver = new ComponentName(application, clazz);
+
+        PackageManager pm = application.getPackageManager();
+
+        pm.setComponentEnabledSetting(receiver,
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP);
     }
 }

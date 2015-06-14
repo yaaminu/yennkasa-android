@@ -4,10 +4,10 @@ package com.pair.messenger;
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Toast;
 
 import com.pair.data.Conversation;
 import com.pair.data.Message;
+import com.pair.pairapp.ui.ChatActivity;
 
 import java.util.Date;
 
@@ -30,8 +30,9 @@ public class MessageProcessor extends IntentService {
         Realm realm = Realm.getInstance(this);
         realm.beginTransaction();
         Message message = realm.createObjectFromJson(Message.class, messageJson);
-        message.setState(Message.RECEIVED);
-
+        // TODO: 6/14/2015 send a socket/gcm broadcast to server to notify sender of message state.
+        //noinspection ConstantConditions
+        message.setState(Message.STATE_RECEIVED);
         Conversation conversation = realm.where(Conversation.class).equalTo("peerId", message.getFrom()).findFirst();
         if (conversation == null) { //create a new one
             conversation = realm.createObject(Conversation.class);
@@ -40,15 +41,15 @@ public class MessageProcessor extends IntentService {
         }
         conversation.setLastActiveTime(new Date());//now
         conversation.setLastMessage(message);
+        conversation.setSummary("<--" + message.getMessageBody());
         realm.commitTransaction();
         if (!conversation.isActive()) {
-            //notify user, for now we are showing a toast message
-            Toast toast = Toast.makeText(this, message.getFrom() +":\n" + message.getMessageBody(), Toast.LENGTH_LONG);
-            toast.show();
+            Message copied = new Message(message);
+            Intent action = new Intent(this, ChatActivity.class);
+            action.putExtra(ChatActivity.PEER_ID, copied.getFrom());
+            NotificationManager.INSTANCE.onNewMessage(copied, action);
         }
         realm.close();
-
-        //TODO notify user
         MessageCenter.completeWakefulIntent(intent);
     }
 }

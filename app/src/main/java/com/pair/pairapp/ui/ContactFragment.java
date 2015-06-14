@@ -63,11 +63,12 @@ public class ContactFragment extends ListFragment {
         View view = inflater.inflate(R.layout.fragment_contact, container, false);
         String title = getArguments().getString(MainActivity.ARG_TITLE);
         ActionBarActivity activity = (ActionBarActivity) getActivity();
+        //noinspection ConstantConditions
         activity.getSupportActionBar().setTitle(title);
 
         List<Contact> contacts = new ArrayList<>();
         final ContactsAdapter adapter = new ContactsAdapter(contacts);
-        ContactsManager.INSTANCE.findAllContacts(comparator, new ContactsManager.FindCallback<List<Contact>>() {
+        ContactsManager.INSTANCE.findAllContacts(null, comparator, new ContactsManager.FindCallback<List<Contact>>() {
             @Override
             public void done(List<Contact> contacts) {
                 adapter.refill(contacts);
@@ -79,7 +80,7 @@ public class ContactFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        Contact contact = ((Contact) v.getTag()); //very safe
+        Contact contact = ((ContactsAdapter.ViewHolder) v.getTag()).contact; //very safe
         if (contact.isRegisteredUser) {
             UiHelpers.enterChatRoom(getActivity(), contact.phoneNumber);
         } else {

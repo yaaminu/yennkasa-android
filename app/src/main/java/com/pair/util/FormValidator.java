@@ -11,8 +11,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Created by Null-Pointer on 5/29/2015.
+ * @author by Null-Pointer on 5/29/2015.
  */
+@SuppressWarnings("unused")
 public class FormValidator {
     Map<ValidationStrategy,Runnable> fields;
 
@@ -26,6 +27,7 @@ public class FormValidator {
     }
 
     public void dismissStrategy(Strategy strategy) {
+        //noinspection SuspiciousMethodCalls
         this.fields.remove(strategy);
     }
 

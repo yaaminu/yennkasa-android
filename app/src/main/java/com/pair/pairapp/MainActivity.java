@@ -1,7 +1,5 @@
 package com.pair.pairapp;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -14,14 +12,13 @@ import android.view.MenuItem;
 
 import com.pair.data.User;
 import com.pair.pairapp.ui.ContactFragment;
-import com.pair.pairapp.ui.CoversationsFragment;
+import com.pair.pairapp.ui.ConversationsFragment;
 import com.pair.pairapp.ui.FriendsFragment;
-import com.pair.pairapp.ui.SetUpActivity;
 import com.pair.pairapp.ui.SideBarFragment;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
-import com.pair.workers.UserServices;
+import com.pair.workers.RealmHelper;
 
 /**
  * @author Null-Pointer on 6/6/2015.
@@ -36,16 +33,15 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        RealmHelper.runRealmOperation(this);
         if (GcmHelper.checkPlayServices(this)) {
             userManager = UserManager.getInstance(getApplication());
             User user = userManager.getCurrentUser();
             if (user == null) {
                 gotoSetUpActivity();
             } else {
-                syncContacts();
-
                 drawer = (DrawerLayout) findViewById(R.id.drawer);
-                Fragment fragment = new CoversationsFragment();
+                Fragment fragment = new ConversationsFragment();
                 Bundle bundle = new Bundle();
                 bundle.putString(ARG_TITLE, "Conversations");
                 fragment.setArguments(bundle);
@@ -54,16 +50,6 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
         } else {
             Log.e(TAG, "Google cloud messaging not available on this device");
         }
-    }
-
-    private void syncContacts() {
-        //attempt to update user's friends at startup
-        Intent intent = new Intent(this, UserServices.class);
-        intent.putExtra(UserServices.ACTION, UserServices.ACTION_FETCH_FRIENDS);
-        PendingIntent operation = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        AlarmManager manager = ((AlarmManager) getSystemService(ALARM_SERVICE));
-        long now = 1;
-        manager.setRepeating(AlarmManager.ELAPSED_REALTIME, now, AlarmManager.INTERVAL_HOUR, operation); //start now
     }
 
     @Override
@@ -78,11 +64,11 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
             userManager.LogOut(this, new UserManager.LogOutCallback() {
                 @Override
                 public void done(Exception e) {
-                    if(e == null) {
+                    if (e == null) {
                         gotoSetUpActivity();
                         finish();
-                    }else{
-                        UiHelpers.showErrorDialog(MainActivity.this,e.getMessage());
+                    } else {
+                        UiHelpers.showErrorDialog(MainActivity.this, e.getMessage());
                     }
                 }
             });
@@ -106,12 +92,12 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
 
     @Override
     public void onItemSelected(int position, String recommendedTitle) {
-        drawer.closeDrawer(Gravity.LEFT);
+        drawer.closeDrawer(Gravity.START);
         Log.i(TAG, "clicked " + recommendedTitle + " @ position: " + position);
         Fragment fragment;
         switch (position) {
             case 0:
-                fragment = new CoversationsFragment();
+                fragment = new ConversationsFragment();
                 break;
             case 1:
                 fragment = new FriendsFragment();
@@ -122,7 +108,7 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
             case 3://fall through
             case 5:
             default:
-                fragment = new CoversationsFragment();
+                fragment = new ConversationsFragment();
                 break; //redundant but safe
         }
         Bundle bundle = new Bundle();

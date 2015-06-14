@@ -3,12 +3,13 @@
        android:shape="rectangle">
 
     <!-- view background color -->
-    <solid android:color="@color/bg_msg_you">
+    <solid android:color="@color/bg_msg_date">
     </solid>
 
     <corners
         android:bottomLeftRadius="5dp"
-        android:bottomRightRadius="0dp"
+        android:bottomRightRadius="5dp"
         android:topLeftRadius="5dp"
         android:topRightRadius="5dp"/>
+
 </shape>
