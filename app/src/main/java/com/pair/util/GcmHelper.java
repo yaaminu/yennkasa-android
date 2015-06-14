@@ -15,7 +15,7 @@ import com.pair.pairapp.BuildConfig;
 import java.io.IOException;
 
 /**
- * Created by Null-Pointer on 5/27/2015.
+ * @author by Null-Pointer on 5/27/2015.
  */
 public class GcmHelper {
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
@@ -35,7 +35,7 @@ public class GcmHelper {
 
     public static boolean checkPlayServices(Activity context) {
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
-        Log.i(TAG, "resutlt code: " + resultCode);
+        Log.i(TAG, "results code: " + resultCode);
         if (resultCode != ConnectionResult.SUCCESS) {
             if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
                 errorDialog = GooglePlayServicesUtil.getErrorDialog(resultCode, context,
@@ -127,7 +127,7 @@ public class GcmHelper {
     }
 
     public interface UnregisterCallback {
-        public void done(Exception e);
+        void done(Exception e);
     }
 
     public interface GCMRegCallback {

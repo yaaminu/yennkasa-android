@@ -21,12 +21,13 @@ import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
 /**
- * Created by Null-Pointer on 5/28/2015.
+ * @author by Null-Pointer on 5/28/2015.
  */
-public class SignupFragment extends Fragment {
+public class SignUpFragment extends Fragment {
 
     private EditText passWordEt,userNameEt;
     private AutoCompleteTextView phoneNumberEt;
+    @SuppressWarnings("unused")
     private FormValidator validator;
     private boolean busy;
     private View progressView;
@@ -55,7 +56,8 @@ public class SignupFragment extends Fragment {
         }
     };
 
-    public SignupFragment(){}
+    public SignUpFragment() {
+    }
 
     @Nullable
     @Override

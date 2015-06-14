@@ -26,7 +26,7 @@ import io.realm.Realm;
 import io.realm.RealmResults;
 
 /**
- * Created by Null-Pointer on 5/29/2015.
+ * @author by Null-Pointer on 5/29/2015.
  */
 public class ConversationsFragment extends ListFragment {
 
@@ -60,6 +60,7 @@ public class ConversationsFragment extends ListFragment {
         setListAdapter(adapter);
         String title = getArguments().getString(MainActivity.ARG_TITLE);
         ActionBarActivity activity = (ActionBarActivity) getActivity();
+        //noinspection ConstantConditions
         activity.getSupportActionBar().setTitle(title);
 
         return view;

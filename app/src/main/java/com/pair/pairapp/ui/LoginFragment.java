@@ -21,7 +21,7 @@ import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
 /**
- * Created by Null-Pointer on 5/28/2015.
+ * @author by Null-Pointer on 5/28/2015.
  */
 public class LoginFragment extends Fragment {
     private EditText passwordEt;
@@ -66,7 +66,7 @@ public class LoginFragment extends Fragment {
             public void onClick(View v) {
                 if (busy)
                     return;
-                getFragmentManager().beginTransaction().replace(R.id.container, new SignupFragment()).addToBackStack(null).commit();
+                getFragmentManager().beginTransaction().replace(R.id.container, new SignUpFragment()).addToBackStack(null).commit();
             }
         });
 

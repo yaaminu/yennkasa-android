@@ -9,6 +9,7 @@ import android.net.NetworkInfo;
  */
 public class ConnectionHelper {
 
+    @SuppressWarnings("unused")
     public static boolean isConnected(Context context) {
         ConnectivityManager manager = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE));
         NetworkInfo networkInfo = manager.getActiveNetworkInfo();

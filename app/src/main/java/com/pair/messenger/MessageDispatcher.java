@@ -24,7 +24,7 @@ import retrofit.android.AndroidLog;
 import retrofit.client.Response;
 
 /**
- * Created by Null-Pointer on 5/26/2015.
+ * @author by Null-Pointer on 5/26/2015.
  */
 class MessageDispatcher implements Dispatcher<Message> {
     //TODO implement messageDispatcher as a service

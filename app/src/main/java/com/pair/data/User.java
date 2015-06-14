@@ -6,8 +6,9 @@ import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.RealmClass;
 
 /**
- * Created by Null-Pointer on 5/27/2015.
+ * @author by Null-Pointer on 5/27/2015.
  */
+@SuppressWarnings("unused")
 @RealmClass
 public class User extends RealmObject {
     @PrimaryKey

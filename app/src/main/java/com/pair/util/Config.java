@@ -9,7 +9,7 @@ import android.util.Log;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Created by Null-Pointer on 5/26/2015.
+ * @author null-pointer
  */
 public class Config {
 
@@ -23,7 +23,6 @@ public class Config {
     public static final String PAIRAPP_ENDPOINT = getEndPoint();
     private static final String logMessage = "calling getApplication when init has not be called";
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
-    public static final String auth = "kiiboda+=s3cr3t3";
     private static Application application;
     private static AtomicBoolean isChatRoomOpen = new AtomicBoolean(false);
 

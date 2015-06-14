@@ -12,6 +12,7 @@ public class HttpResponse {
         this.message = responseString;
     }
 
+    @SuppressWarnings("unused")
     public int getStatus() {
         return status;
     }

@@ -16,6 +16,7 @@ import io.realm.annotations.RealmClass;
 /**
  * @author Null-Pointer on 5/26/2015.
  */
+@SuppressWarnings("unused")
 @RealmClass
 public class Message extends RealmObject {
 

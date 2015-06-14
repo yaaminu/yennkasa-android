@@ -64,11 +64,11 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
             userManager.LogOut(this, new UserManager.LogOutCallback() {
                 @Override
                 public void done(Exception e) {
-                    if(e == null) {
+                    if (e == null) {
                         gotoSetUpActivity();
                         finish();
-                    }else{
-                        UiHelpers.showErrorDialog(MainActivity.this,e.getMessage());
+                    } else {
+                        UiHelpers.showErrorDialog(MainActivity.this, e.getMessage());
                     }
                 }
             });
@@ -92,7 +92,7 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
 
     @Override
     public void onItemSelected(int position, String recommendedTitle) {
-        drawer.closeDrawer(Gravity.LEFT);
+        drawer.closeDrawer(Gravity.START);
         Log.i(TAG, "clicked " + recommendedTitle + " @ position: " + position);
         Fragment fragment;
         switch (position) {

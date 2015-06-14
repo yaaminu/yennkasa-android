@@ -77,6 +77,7 @@ public class PairAppClient extends Service {
         super.onRebind(intent);
     }
 
+    @SuppressWarnings("unused")
     public class PairAppClientInterface extends Binder {
         public Dispatcher<Message> getMessageDispatcher(BaseJsonAdapter<Message> adapter, int retryTimes) {
             return MessageDispatcher.getInstance(adapter, monitor, retryTimes);

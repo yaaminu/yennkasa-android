@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -40,6 +41,7 @@ public class NotificationManager {
     }
 
     public interface Notifier {
+        @SuppressWarnings("unused")
         void notifyUser(String title, String tickerText, String message, PendingIntent intent);
     }
 
@@ -51,7 +53,7 @@ public class NotificationManager {
                     .setContentTitle(title)
                     .setContentText(message)
                     .setSmallIcon(android.R.drawable.stat_notify_chat)
-                    .setLights(android.R.color.holo_green_dark, 1500, 3000)
+                    .setLights(Color.GREEN, 1500, 3000)
                     .setContentIntent(intent);
             Notification notification = builder.build();
             android.app.NotificationManager notMgr = ((android.app.NotificationManager) Config.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE));

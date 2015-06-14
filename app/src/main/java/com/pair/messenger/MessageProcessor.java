@@ -31,6 +31,7 @@ public class MessageProcessor extends IntentService {
         realm.beginTransaction();
         Message message = realm.createObjectFromJson(Message.class, messageJson);
         // TODO: 6/14/2015 send a socket/gcm broadcast to server to notify sender of message state.
+        //noinspection ConstantConditions
         message.setState(Message.STATE_RECEIVED);
         Conversation conversation = realm.where(Conversation.class).equalTo("peerId", message.getFrom()).findFirst();
         if (conversation == null) { //create a new one

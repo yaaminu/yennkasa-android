@@ -66,7 +66,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        realm = realm.getInstance(this);
+        realm = Realm.getInstance(this);
         setContentView(R.layout.activity_chat);
         editText = ((EditText) findViewById(R.id.et_inputMsg));
         sendButton = ((Button) findViewById(R.id.btn_send));
@@ -76,6 +76,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         String peerId = bundle.getString(PEER_ID);
         peer = realm.where(User.class).equalTo("_id", peerId).findFirst();
         String peerName = peer.getName();
+        //noinspection ConstantConditions
         getSupportActionBar().setTitle(peerName);
 
         //TODO change this query to a more general one than will work even when we add group chat
@@ -223,6 +224,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         return UserManager.getInstance(getApplication()).getCurrentUser();
     }
 
+    @SuppressWarnings("unused")
     private void scheduleFakeNotification(final Message message) {
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {

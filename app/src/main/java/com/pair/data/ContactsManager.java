@@ -16,7 +16,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import io.realm.Realm;
-import io.realm.RealmResults;
 
 /**
  * @author Null-Pointer on 6/11/2015.
@@ -65,7 +64,6 @@ public class ContactsManager {
 
     private List<Contact> doFindAllContacts(Filter<Contact> filter, Comparator<Contact> comparator, Cursor cursor) {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
-        RealmResults<User> users = realm.where(User.class).findAll();
         List<Contact> contacts = new ArrayList<>();
         while (cursor.moveToNext()) {
             String phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract
@@ -134,10 +132,7 @@ public class ContactsManager {
             if (o == null || getClass() != o.getClass()) return false;
 
             Contact contact = (Contact) o;
-
-            if (isRegisteredUser != contact.isRegisteredUser) return false;
-            if (!name.equals(contact.name)) return false;
-            return phoneNumber.equals(contact.phoneNumber);
+            return (isRegisteredUser == contact.isRegisteredUser) && name.equals(contact.name) && phoneNumber.equals(contact.phoneNumber);
 
         }
 

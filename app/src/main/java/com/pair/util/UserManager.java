@@ -25,7 +25,7 @@ import retrofit.android.AndroidLog;
 import retrofit.client.Response;
 
 /**
- * Created by Null-Pointer on 5/27/2015.
+ * @author by Null-Pointer on 5/27/2015.
  */
 public class UserManager {
 

@@ -63,6 +63,7 @@ public class ContactFragment extends ListFragment {
         View view = inflater.inflate(R.layout.fragment_contact, container, false);
         String title = getArguments().getString(MainActivity.ARG_TITLE);
         ActionBarActivity activity = (ActionBarActivity) getActivity();
+        //noinspection ConstantConditions
         activity.getSupportActionBar().setTitle(title);
 
         List<Contact> contacts = new ArrayList<>();
