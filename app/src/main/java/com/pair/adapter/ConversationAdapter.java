@@ -25,6 +25,8 @@ import static android.text.format.DateUtils.getRelativeTimeSpanString;
  */
 public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
     private static final String TAG = ConversationAdapter.class.getSimpleName();
+    final int FIVE_MINUTES = 5 * 60 * 60 * 100;
+
 
     public ConversationAdapter(Context context, RealmResults<Conversation> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
@@ -47,14 +49,13 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         }
         Conversation conversation = getItem(position);
         holder.chatSummary.setText(conversation.getSummary());
-        //TODO find a better way to handle this peer name thing
         String peerName = getPeerName(conversation.getPeerId());
-
         holder.peerName.setText(peerName);
         long now = System.currentTimeMillis();
-        CharSequence formattedDate = getRelativeTimeSpanString(conversation.getLastActiveTime().getTime(), now, MINUTE_IN_MILLIS);
+        long then = conversation.getLastActiveTime().getTime();
+        CharSequence formattedDate;
+        formattedDate = ((now - then) < FIVE_MINUTES) ? "moments ago" : getRelativeTimeSpanString(then, now, MINUTE_IN_MILLIS);
         holder.dateLastActive.setText(formattedDate);
-
         String summary = conversation.getSummary();
         if (TextUtils.isEmpty(summary)) {
             if (BuildConfig.DEBUG) { //development environment, crash and burn!

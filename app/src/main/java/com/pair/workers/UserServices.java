@@ -23,7 +23,8 @@ public class UserServices extends IntentService {
     public static final String ACTION = "action";
 
     /**
-     * Creates an IntentService.  Invoked by subclass' constructor.
+     * A service(fake sync adapter) primarily for synchronizing users.
+     * this class will be used until we implement a sync adapter
      */
     public UserServices() {
         super(TAG);
@@ -80,11 +81,11 @@ public class UserServices extends IntentService {
         realm.beginTransaction();
         try {
             realm.copyToRealm(users);
-            realm.commitTransaction();
             Log.i(TAG, "added " + users.size() + " new users");
         } catch (RealmException e) { //primary keys violation
             //never mind
         } finally {
+            realm.commitTransaction();
             realm.close();
         }
     }

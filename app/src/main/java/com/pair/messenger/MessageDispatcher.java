@@ -33,10 +33,9 @@ public class MessageDispatcher implements Dispatcher<Message> {
     private static volatile MessageDispatcher INSTANCE;
     private final int MAX_RETRY_TIMES;
     private final MessageApi MESSAGE_API;
-    private final Object adapterLock = new Object();
     private final Object dispatcherMonitorLock = new Object();
-    private BaseJsonAdapter<Message> jsonAdapter;
-    private Sender sender;
+    private final BaseJsonAdapter<Message> jsonAdapter;
+    private final Sender sender;
     private DispatcherMonitor dispatcherMonitor;
 
     private MessageDispatcher(BaseJsonAdapter<Message> jsonAdapter, DispatcherMonitor errorHandler, int retryTimes) {
@@ -77,12 +76,6 @@ public class MessageDispatcher implements Dispatcher<Message> {
         //FIXME spawn background daemons to send messages in the collection instead of looping over it
         for (Message message : messages) {
             dispatch(message);
-        }
-    }
-
-    public void setJsonAdapter(BaseJsonAdapter<Message> adapter) {
-        synchronized (adapterLock) {
-            this.jsonAdapter = adapter;
         }
     }
 
