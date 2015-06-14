@@ -66,6 +66,9 @@
             android:exported="false" />
         <service
             android:name="com.pair.messenger.MessageService"
+            android:exported="false" />
+        <service
+            android:name="com.pair.messenger.PairAppClient"
             android:exported="false"></service>
     </application>
 
