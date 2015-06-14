@@ -94,6 +94,7 @@ public class ContactsManager {
             }
             contacts.add(contact);
         }
+        cursor.close();
         realm.close();
         if (comparator != null) {
             Collections.sort(contacts, comparator);

@@ -16,7 +16,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 
-import com.pair.adapter.MessageJsonAdapter;
 import com.pair.adapter.MessagesAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
@@ -53,7 +52,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            dispatcher = ((PairAppClient.PairAppClientInterface) service).getMessageDispatcher(MessageJsonAdapter.INSTANCE, 10);
+            dispatcher = ((PairAppClient.PairAppClientInterface) service).getMessageDispatcher();
             bound = true;
         }
 

@@ -8,7 +8,6 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.pair.adapter.BaseJsonAdapter;
 import com.pair.adapter.MessageJsonAdapter;
 import com.pair.data.Message;
 import com.pair.net.Dispatcher;
@@ -30,7 +29,7 @@ public class PairAppClient extends Service {
     private boolean bound = false;
     private volatile int boundClients = 0;
     public final PairAppClientInterface INSTANCE = new PairAppClientInterface();
-
+    private Dispatcher DISPATCHER_INSTANCE;
 
     public static void start(Context context) {
         Intent pairAppClient = new Intent(context, PairAppClient.class);
@@ -85,8 +84,11 @@ public class PairAppClient extends Service {
 
     @SuppressWarnings("unused")
     public class PairAppClientInterface extends Binder {
-        public Dispatcher<Message> getMessageDispatcher(BaseJsonAdapter<Message> adapter, int retryTimes) {
-            return MessageDispatcher.getInstance(adapter, monitor, retryTimes);
+        public Dispatcher<Message> getMessageDispatcher() {
+            if (DISPATCHER_INSTANCE == null) {
+                DISPATCHER_INSTANCE = MessageDispatcher.getInstance(MessageJsonAdapter.INSTANCE, monitor, 10);
+            }
+            return DISPATCHER_INSTANCE;
         }
 
         public Dispatcher getEventDispatcher() {
@@ -133,14 +135,27 @@ public class PairAppClient extends Service {
 
     private void attemptToSendAllUnsentMessages() {
         //TODO make sure this does not conflict with message dispatcher's backoff mechanism
+        Realm realm = Realm.getInstance(this);
+        long unSentMessages = realm.where(Message.class).notEqualTo("type", Message.TYPE_DATE_MESSAGE).equalTo("state", Message.STATE_PENDING).count();
+        realm.close();
+        if (unSentMessages < 1) {
+            Log.d(TAG, "all messages sent");
+            return;
+        }
+        if (DISPATCHER_INSTANCE == null) {
+            DISPATCHER_INSTANCE = MessageDispatcher.getInstance(MessageJsonAdapter.INSTANCE, monitor, 10);
+
+        }
         new Thread() {
             @Override
             public void run() {
                 Realm realm = Realm.getInstance(PairAppClient.this);
-                RealmResults<Message> messages = realm.where(Message.class).equalTo("state", Message.STATE_PENDING).findAll();
-                MessageDispatcher dispatcher = MessageDispatcher.getInstance(MessageJsonAdapter.INSTANCE, monitor, 10);
+                RealmResults<Message> messages = realm.where(Message.class)
+                        .notEqualTo("type", Message.TYPE_DATE_MESSAGE)
+                        .equalTo("state", Message.STATE_PENDING)
+                        .findAll();
                 for (Message message : messages) {
-                    dispatcher.dispatch(message);
+                    DISPATCHER_INSTANCE.dispatch(message);
                 }
                 realm.close();
             }

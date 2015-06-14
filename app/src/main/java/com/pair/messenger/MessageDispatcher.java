@@ -37,6 +37,8 @@ class MessageDispatcher implements Dispatcher<Message> {
     private final BaseJsonAdapter<Message> jsonAdapter;
     private final Sender sender;
     private DispatcherMonitor dispatcherMonitor;
+    private final Handler RETRY_HANDLER;
+
 
     private MessageDispatcher(BaseJsonAdapter<Message> jsonAdapter, DispatcherMonitor errorHandler, int retryTimes) {
         RestAdapter adapter = new RestAdapter.Builder()
@@ -50,6 +52,8 @@ class MessageDispatcher implements Dispatcher<Message> {
         this.dispatcherMonitor = errorHandler;
         this.MAX_RETRY_TIMES = (retryTimes < 0) ? 0 : retryTimes;
         this.jsonAdapter = jsonAdapter;
+        RETRY_HANDLER = new Handler();
+
     }
 
     public static MessageDispatcher getInstance(BaseJsonAdapter<Message> adapter, DispatcherMonitor dispatcherMonitor, int retryTimes) {
@@ -188,8 +192,6 @@ class MessageDispatcher implements Dispatcher<Message> {
         }
 
     }
-
-    private final Handler RETRY_HANDLER = new Handler();
 
     private void decrementNumOfTasks() {
         synchronized (this) {
