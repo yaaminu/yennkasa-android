@@ -115,11 +115,15 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private void setUpSession() {
         //set up session
         String formatted = DateUtils.formatDateTime(this, new Date().getTime(), DateUtils.FORMAT_NUMERIC_DATE);
-        Message message = realm.where(Message.class).equalTo("type", Message.TYPE_DATE_MESSAGE).equalTo("id", formatted + "@" + peer.get_id()).findFirst();
+        Message message = realm.where(Message.class)
+                .equalTo("type", Message.TYPE_DATE_MESSAGE)
+                .equalTo("to", peer.get_id())
+                .equalTo("messageBody", formatted)
+                .findFirst();
         if (message == null) {
             realm.beginTransaction();
             message = realm.createObject(Message.class);
-            message.setId(formatted + "@" + peer.get_id());
+            message.setId(Message.generateIdPossiblyUnique());
             message.setMessageBody(formatted);
             message.setTo(peer.get_id());
             message.setDateComposed(new Date());
@@ -180,9 +184,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             message.setFrom(getCurrentUser().get_id());
             message.setDateComposed(new Date());
             message.setType(Message.TYPE_TEXT_MESSAGE);
-            //generate a unique id
-            long messageCount = realm.where(Message.class).count() + 1;
-            message.setId(messageCount + "@" + getCurrentUser().get_id() + "@" + System.currentTimeMillis());
+            message.setId(Message.generateIdPossiblyUnique());
             message.setState(Message.STATE_PENDING);
             currConversation.setLastMessage(message);
             currConversation.setLastActiveTime(message.getDateComposed());

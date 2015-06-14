@@ -11,10 +11,9 @@
         android:layout_weight="1"
         android:background="@null"
         android:divider="@null"
-        android:transcriptMode="alwaysScroll"
         android:scrollbars="none"
-        android:stackFromBottom="true">
-    </ListView>
+        android:stackFromBottom="true"
+        android:transcriptMode="alwaysScroll" />
 
     <LinearLayout
         android:id="@+id/llMsgCompose"
@@ -22,7 +21,7 @@
         android:layout_height="wrap_content"
         android:background="@color/white"
         android:orientation="horizontal"
-        android:weightSum="5" >
+        android:weightSum="5">
 
         <EditText
             android:id="@+id/et_inputMsg"
@@ -30,9 +29,13 @@
             android:layout_height="fill_parent"
             android:layout_weight="4"
             android:background="@color/bg_msg_input"
-            android:textColor="@color/text_msg_input"
             android:paddingLeft="6dp"
-            android:paddingRight="6dp"/>
+            android:inputType="text"
+            android:paddingRight="6dp"
+            android:textColor="@color/text_msg_input">
+
+            <requestFocus />
+        </EditText>
 
         <Button
             android:id="@+id/btn_send"
@@ -40,8 +43,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@color/bg_btn_join"
-            android:textColor="@color/white" 
-            android:text="@string/send" />
+            android:text="@string/send"
+            android:textColor="@color/white" />
     </LinearLayout>
 
 </LinearLayout>

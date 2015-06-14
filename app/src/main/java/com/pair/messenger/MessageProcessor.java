@@ -30,8 +30,8 @@ public class MessageProcessor extends IntentService {
         Realm realm = Realm.getInstance(this);
         realm.beginTransaction();
         Message message = realm.createObjectFromJson(Message.class, messageJson);
+        // TODO: 6/14/2015 send a socket/gcm broadcast to server to notify sender of message state.
         message.setState(Message.STATE_RECEIVED);
-
         Conversation conversation = realm.where(Conversation.class).equalTo("peerId", message.getFrom()).findFirst();
         if (conversation == null) { //create a new one
             conversation = realm.createObject(Conversation.class);
@@ -40,15 +40,15 @@ public class MessageProcessor extends IntentService {
         }
         conversation.setLastActiveTime(new Date());//now
         conversation.setLastMessage(message);
+        conversation.setSummary("NEW!->" + message.getMessageBody());
         realm.commitTransaction();
         if (!conversation.isActive()) {
-            //notify user, for now we are showing a toast message
+            //TODO notify user,play tone and/or vibrate device
+            //for now we are showing a toast message
             Toast toast = Toast.makeText(this, message.getFrom() +":\n" + message.getMessageBody(), Toast.LENGTH_LONG);
             toast.show();
         }
         realm.close();
-
-        //TODO notify user
         MessageCenter.completeWakefulIntent(intent);
     }
 }

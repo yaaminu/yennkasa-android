@@ -1,7 +1,6 @@
 package com.pair.util;
 
 import android.app.Application;
-import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
@@ -27,11 +26,11 @@ public class Config {
         Config.application = pairApp;
     }
 
-    public static Context getApplicationContext() {
+    public static Application getApplicationContext() {
         if (application == null) {
             warnAndThrow(logMessage, detailMessage);
         }
-        return application.getApplicationContext();
+        return application;
     }
 
     public static Application getApplication() {
