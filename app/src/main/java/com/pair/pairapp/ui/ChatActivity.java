@@ -1,6 +1,10 @@
 package com.pair.pairapp.ui;
 
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
 import android.text.format.DateUtils;
 import android.view.Menu;
@@ -15,7 +19,7 @@ import com.pair.adapter.MessagesAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
-import com.pair.messenger.MessageDispatcher;
+import com.pair.messenger.PairAppClient;
 import com.pair.net.Dispatcher;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
@@ -37,33 +41,24 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private ListView messagesListView;
     private EditText editText;
     private Button sendButton;
-    private MessageDispatcher dispatcher;
-    private Dispatcher.DispatcherMonitor monitor = new Dispatcher.DispatcherMonitor() {
+    private Dispatcher<Message> dispatcher;
+    private boolean bound = false;
+
+    private boolean sessionSetUp = false;
+
+    private ServiceConnection connection = new ServiceConnection() {
         @Override
-        public void onSendFailed(String reason, String messageId) {
-            //TODO handle this callback
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            dispatcher = ((PairAppClient.PairAppClientInterface) service).getMessageDispatcher(MessageJsonAdapter.INSTANCE, 10);
+            bound = true;
         }
 
         @Override
-        public void onSendSucceeded(final String messageId) {
-            //if dispatcher calls this method on a background thread we are doomed :-)
-            //that's why we are not using the realm of chatactivity  here...
-            Realm realm = Realm.getInstance(ChatActivity.this);
-            realm.executeTransaction(new Realm.Transaction() {
-                //this code is not asynchronous so we can close() realm and be sure we are not closing a realm instance which is in use
-                @Override
-                public void execute(Realm realm) {
-                    Message message = realm.where(Message.class).equalTo("id", messageId).findFirst();
-                    if (message != null) {
-                        message.setState(Message.STATE_SENT);
-                    }
-                    realm.close();
-                }
-            });
-            realm.close();
+        public void onServiceDisconnected(ComponentName name) {
+            bound = false;
+            dispatcher = null; //free memory.
         }
     };
-    private boolean sessionSetUp = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +67,6 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         setContentView(R.layout.activity_chat);
         editText = ((EditText) findViewById(R.id.et_inputMsg));
         sendButton = ((Button) findViewById(R.id.btn_send));
-        dispatcher = MessageDispatcher.getInstance(MessageJsonAdapter.INSTANCE, monitor, 10);
         sendButton.setOnClickListener(this);
 
         Bundle bundle = getIntent().getExtras();
@@ -87,6 +81,26 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         MessagesAdapter adapter = new MessagesAdapter(this, messages, true);
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
         messagesListView.setAdapter(adapter);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        doBind();
+    }
+
+    private void doBind() {
+        Intent intent = new Intent(this, PairAppClient.class);
+        intent.putExtra(PairAppClient.ACTION, PairAppClient.ACTION_SEND_ALL_UNSENT);
+        bindService(intent, connection, BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        bound = false;
+        unbindService(connection);
+        dispatcher = null;
+        super.onStop();
     }
 
     private void getConversation(String peerId) {
@@ -190,7 +204,11 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             currConversation.setLastActiveTime(message.getDateComposed());
             currConversation.setSummary(message.getMessageBody());
             realm.commitTransaction();
-            dispatcher.dispatch(message);
+            if (bound && (dispatcher != null)) {
+                dispatcher.dispatch(message);
+            } else {
+                doBind();
+            }
         }
     }
 

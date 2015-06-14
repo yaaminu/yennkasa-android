@@ -21,5 +21,7 @@ public interface Dispatcher<T> {
         void onSendFailed(String reason, String messageId);
 
         void onSendSucceeded(String messageId);
+
+        void onAllDispatched();
     }
 }

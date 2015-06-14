@@ -1,7 +1,5 @@
 package com.pair.pairapp;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -22,7 +20,6 @@ import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 import com.pair.workers.RealmHelper;
-import com.pair.workers.UserServices;
 
 /**
  * @author Null-Pointer on 6/6/2015.
@@ -44,7 +41,6 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
             if (user == null) {
                 gotoSetUpActivity();
             } else {
-                syncContacts();
                 drawer = (DrawerLayout) findViewById(R.id.drawer);
                 Fragment fragment = new ConversationsFragment();
                 Bundle bundle = new Bundle();
@@ -55,16 +51,6 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
         } else {
             Log.e(TAG, "Google cloud messaging not available on this device");
         }
-    }
-
-    private void syncContacts() {
-        //attempt to update user's friends at startup
-        Intent intent = new Intent(this, UserServices.class);
-        intent.putExtra(UserServices.ACTION, UserServices.ACTION_FETCH_FRIENDS);
-        PendingIntent operation = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        AlarmManager manager = ((AlarmManager) getSystemService(ALARM_SERVICE));
-        long now = 1;
-        manager.setRepeating(AlarmManager.ELAPSED_REALTIME, now, AlarmManager.INTERVAL_HOUR, operation); //start now
     }
 
     @Override

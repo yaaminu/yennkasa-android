@@ -26,10 +26,10 @@ import retrofit.client.Response;
 /**
  * Created by Null-Pointer on 5/26/2015.
  */
-public class MessageDispatcher implements Dispatcher<Message> {
+class MessageDispatcher implements Dispatcher<Message> {
     //TODO implement messageDispatcher as a service
     private static final String TAG = MessageDispatcher.class.getSimpleName();
-
+    private volatile int NUM_OF_TASKS = 0;
     private static volatile MessageDispatcher INSTANCE;
     private final int MAX_RETRY_TIMES;
     private final MessageApi MESSAGE_API;
@@ -120,15 +120,16 @@ public class MessageDispatcher implements Dispatcher<Message> {
         }
 
         void doSend(final SenderJob job) {
+            incrementNumOfTasks();
             Log.d(TAG, job.data.toString());
             //actual send implementation
             MESSAGE_API.sendMessage(job.data, new Callback<HttpResponse>() {
                 @Override
                 public void success(HttpResponse httpResponse, Response response) {
-
                     if (dispatcherMonitor != null) {
                         dispatcherMonitor.onSendSucceeded(job.id);
                     }
+                    decrementNumOfTasks();
                 }
 
                 @Override
@@ -140,8 +141,6 @@ public class MessageDispatcher implements Dispatcher<Message> {
                     } else if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)) {
                         int statusCode = retrofitError.getResponse().getStatus();
                         if (statusCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
-                            //TODO use  a correct exponential backoff algorithm to avoid overwhelming the server with bunch of requests
-                            // while it attempts to come back alive.
                             Log.i(TAG, "internal server error, trying to send again");
                             tryAgain(job);
                         } else {//crash early
@@ -157,6 +156,7 @@ public class MessageDispatcher implements Dispatcher<Message> {
                             tryAgain(job);
                         } else if (dispatcherMonitor != null) {
                             dispatcherMonitor.onSendFailed("Error in network connection", job.id);
+                            decrementNumOfTasks();
                         }
                     }
                 }
@@ -170,7 +170,7 @@ public class MessageDispatcher implements Dispatcher<Message> {
                 if (job.backOff > SenderJob.MAX_DELAY) {
                     job.backOff = SenderJob.MAX_DELAY;
                 }
-                Log.i(TAG, "retrying in: " + job.backOff);
+                Log.i(TAG, "retrying in: " + job.backOff + " milliseconds");
                 RETRY_HANDLER.postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -179,13 +179,32 @@ public class MessageDispatcher implements Dispatcher<Message> {
                 }, job.backOff);
                 return;
             }
-            if (dispatcherMonitor != null)
+            if (dispatcherMonitor != null) {
                 Log.i(TAG, "unable to send message after: " + job.backOff + "seconds");
                 dispatcherMonitor.onSendFailed("an unknown error occurred", job.id);
+                decrementNumOfTasks();
+            }
 
         }
 
     }
 
     private final Handler RETRY_HANDLER = new Handler();
+
+    private void decrementNumOfTasks() {
+        synchronized (this) {
+            NUM_OF_TASKS--;
+        }
+        if (NUM_OF_TASKS == 0) {
+            if (dispatcherMonitor != null) {
+                dispatcherMonitor.onAllDispatched();
+            }
+        }
+    }
+
+    private void incrementNumOfTasks() {
+        synchronized (this) {
+            NUM_OF_TASKS++;
+        }
+    }
 }
