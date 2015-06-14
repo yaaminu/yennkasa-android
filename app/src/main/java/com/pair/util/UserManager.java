@@ -190,12 +190,20 @@ public class UserManager {
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)) {
-                    Log.e(TAG, retrofitError.getMessage());
+                Log.e(TAG, retrofitError.getMessage());
+                if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)
+                        || retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)
+                        ) {
                     callback.done(retrofitError);
-                } else if (ConnectionHelper.isConnectedOrConnecting(context)) {
-                    //try again
-                    fetchFriends(array, callback);
+                } else if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
+                    if (ConnectionHelper.isConnectedOrConnecting(context)) {
+                        //try again
+                        fetchFriends(array, callback);
+                    } else {
+                        callback.done(retrofitError);
+                    }
+                } else if (retrofitError.getKind().equals(RetrofitError.Kind.CONVERSION)) {
+                    throw new AssertionError(retrofitError);
                 } else {
                     callback.done(retrofitError);
                 }
