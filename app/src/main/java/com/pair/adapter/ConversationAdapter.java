@@ -2,7 +2,6 @@ package com.pair.adapter;
 
 import android.content.Context;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,7 +9,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.pair.data.Conversation;
-import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
@@ -19,7 +17,7 @@ import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
 
-import static android.text.format.DateUtils.SECOND_IN_MILLIS;
+import static android.text.format.DateUtils.MINUTE_IN_MILLIS;
 import static android.text.format.DateUtils.getRelativeTimeSpanString;
 
 /**
@@ -54,22 +52,15 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
 
         holder.peerName.setText(peerName);
         long now = System.currentTimeMillis();
-        CharSequence formattedDate = getRelativeTimeSpanString(conversation.getLastActiveTime().getTime(), now, SECOND_IN_MILLIS);
+        CharSequence formattedDate = getRelativeTimeSpanString(conversation.getLastActiveTime().getTime(), now, MINUTE_IN_MILLIS);
         holder.dateLastActive.setText(formattedDate);
 
         String summary = conversation.getSummary();
-        Log.d(TAG, "summary is : " + summary);
-        Log.d(TAG, "last message is : " + conversation.getLastMessage());
-
         if (TextUtils.isEmpty(summary)) {
-            Message message = conversation.getLastMessage();
-            summary = message.getMessageBody();
-            if (TextUtils.isEmpty(summary)) {
-                if (BuildConfig.DEBUG) { //development environment, crash and burn!
-                    throw new RuntimeException("conversation with no description");
-                }
-                summary = "Conversation with " + peerName;
+            if (BuildConfig.DEBUG) { //development environment, crash and burn!
+                throw new RuntimeException("conversation with no description and message");
             }
+            summary = "Conversation with " + peerName;
         }
         holder.chatSummary.setText(summary);
         holder.currentConversation = conversation;

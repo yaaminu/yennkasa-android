@@ -46,25 +46,40 @@ public class ContactsAdapter extends BaseAdapter {
     }
 
     @Override
+    public int getItemViewType(int position) {
+        return ((Contact) getItem(position)).isRegisteredUser ? 0 : 1;
+    }
+
+    @Override
+    public int getViewTypeCount() {
+        return 2;
+    }
+
+    @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         Contact contact = ((Contact) getItem(position));
-        if (contact.isRegisteredUser) {
-            convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.registered_contact_item, parent, false);
-            TextView userName = ((TextView) convertView.findViewById(R.id.tv_user_name)),
-                    userStatus = ((TextView) convertView.findViewById(R.id.tv_user_status));
-            userName.setText(contact.name);
-            userStatus.setText(contact.status);
-            convertView.setTag(contact);
+
+        ViewHolder holder;
+        int layoutRes = layoutResource[getItemViewType(position)];
+        if (convertView == null) {
+            convertView = LayoutInflater.from(parent.getContext()).inflate(layoutRes, parent, false);
+            holder = new ViewHolder();
+            holder.userName = ((TextView) convertView.findViewById(R.id.tv_user_name));
+            holder.userStatus = ((TextView) convertView.findViewById(R.id.tv_user_status));
+            holder.inviteButton = (Button) convertView.findViewById(R.id.bt_invite);
+            convertView.setTag(holder);
         } else {
-            convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.unregistered_contact_item, parent, false);
-            TextView userName = ((TextView) convertView.findViewById(R.id.tv_user_name)),
-                    userStatus = ((TextView) convertView.findViewById(R.id.tv_phone_number));
-            Button button = (Button) convertView.findViewById(R.id.bt_invite);
-            button.setOnClickListener(new InviteContact(contact));
-            userName.setText(contact.name);
-            userStatus.setText(contact.phoneNumber);
+            holder = ((ViewHolder) convertView.getTag());
         }
 
+        holder.userName.setText(contact.name);
+        if (contact.isRegisteredUser) {
+            holder.userStatus.setText(contact.status);
+        } else {
+            holder.userStatus.setText(contact.phoneNumber);
+            holder.inviteButton.setOnClickListener(new InviteContact(contact));
+        }
+        holder.contact = contact;
         return convertView;
     }
 
@@ -73,7 +88,14 @@ public class ContactsAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
+    public class ViewHolder {
+        private TextView userName,
+                userStatus;
+        private Button inviteButton;
+        public Contact contact;
+    }
     private class InviteContact implements View.OnClickListener {
+
         Contact contact;
 
         public InviteContact(Contact contact) {
@@ -87,4 +109,8 @@ public class ContactsAdapter extends BaseAdapter {
     }
 
 
+    private final int[] layoutResource = {
+            R.layout.registered_contact_item,
+            R.layout.unregistered_contact_item
+    };
 }

@@ -79,7 +79,7 @@ public class ContactFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        Contact contact = ((Contact) v.getTag()); //very safe
+        Contact contact = ((ContactsAdapter.ViewHolder) v.getTag()).contact; //very safe
         if (contact.isRegisteredUser) {
             UiHelpers.enterChatRoom(getActivity(), contact.phoneNumber);
         } else {

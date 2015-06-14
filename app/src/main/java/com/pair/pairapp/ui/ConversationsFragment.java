@@ -28,11 +28,11 @@ import io.realm.RealmResults;
 /**
  * Created by Null-Pointer on 5/29/2015.
  */
-public class CoversationsFragment extends ListFragment {
+public class ConversationsFragment extends ListFragment {
 
     private Realm realm;
 
-    public CoversationsFragment() {
+    public ConversationsFragment() {
     } //required no-arg constructor
 
     @Override
@@ -47,12 +47,21 @@ public class CoversationsFragment extends ListFragment {
         super.onCreateView(null, null, savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_inbox, container, false);
         realm = Realm.getInstance(getActivity());
+        realm.beginTransaction();
         RealmResults<Conversation> conversations = realm.allObjectsSorted(Conversation.class, "lastActiveTime", false);
+        for (int i = 0; i < conversations.size(); i++) {
+            Conversation conversation = conversations.get(i);
+            if (conversation.getLastMessage() == null) {
+                conversations.remove(i);
+            }
+        }
+        realm.commitTransaction();
         ConversationAdapter adapter = new ConversationAdapter(getActivity(), conversations, true);
         setListAdapter(adapter);
         String title = getArguments().getString(MainActivity.ARG_TITLE);
         ActionBarActivity activity = (ActionBarActivity) getActivity();
         activity.getSupportActionBar().setTitle(title);
+
         return view;
     }
 

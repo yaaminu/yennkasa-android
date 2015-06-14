@@ -14,13 +14,14 @@ import android.view.MenuItem;
 
 import com.pair.data.User;
 import com.pair.pairapp.ui.ContactFragment;
-import com.pair.pairapp.ui.CoversationsFragment;
+import com.pair.pairapp.ui.ConversationsFragment;
 import com.pair.pairapp.ui.FriendsFragment;
 import com.pair.pairapp.ui.SetUpActivity;
 import com.pair.pairapp.ui.SideBarFragment;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
+import com.pair.workers.RealmHelper;
 import com.pair.workers.UserServices;
 
 /**
@@ -36,6 +37,7 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        RealmHelper.runRealmOperation(this);
         if (GcmHelper.checkPlayServices(this)) {
             userManager = UserManager.getInstance(getApplication());
             User user = userManager.getCurrentUser();
@@ -44,7 +46,7 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
             } else {
                 syncContacts();
                 drawer = (DrawerLayout) findViewById(R.id.drawer);
-                Fragment fragment = new CoversationsFragment();
+                Fragment fragment = new ConversationsFragment();
                 Bundle bundle = new Bundle();
                 bundle.putString(ARG_TITLE, "Conversations");
                 fragment.setArguments(bundle);
@@ -110,7 +112,7 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
         Fragment fragment;
         switch (position) {
             case 0:
-                fragment = new CoversationsFragment();
+                fragment = new ConversationsFragment();
                 break;
             case 1:
                 fragment = new FriendsFragment();
@@ -121,7 +123,7 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
             case 3://fall through
             case 5:
             default:
-                fragment = new CoversationsFragment();
+                fragment = new ConversationsFragment();
                 break; //redundant but safe
         }
         Bundle bundle = new Bundle();

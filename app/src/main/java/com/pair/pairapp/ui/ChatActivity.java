@@ -63,6 +63,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             realm.close();
         }
     };
+    private boolean sessionSetUp = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,19 +108,24 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
                 currConversation.setSummary(message.getMessageBody());
             }
         }
+        currConversation.setActive(true);
+        realm.commitTransaction();
+    }
+
+    private void setUpSession() {
         //set up session
         String formatted = DateUtils.formatDateTime(this, new Date().getTime(), DateUtils.FORMAT_NUMERIC_DATE);
         Message message = realm.where(Message.class).equalTo("type", Message.TYPE_DATE_MESSAGE).equalTo("id", formatted + "@" + peer.get_id()).findFirst();
         if (message == null) {
+            realm.beginTransaction();
             message = realm.createObject(Message.class);
             message.setId(formatted + "@" + peer.get_id());
             message.setMessageBody(formatted);
             message.setTo(peer.get_id());
             message.setDateComposed(new Date());
             message.setType(Message.TYPE_DATE_MESSAGE);
+            realm.commitTransaction();
         }
-        currConversation.setActive(true);
-        realm.commitTransaction();
     }
 
     @Override
@@ -163,12 +169,17 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         editText.setText(""); //clear the text field
         //TODO use a regular expression to validate the message body
         if (!content.isEmpty()) {
+            if (!sessionSetUp) {
+                setUpSession();
+                sessionSetUp = true;
+            }
             realm.beginTransaction();
             Message message = realm.createObject(Message.class);
             message.setMessageBody(content);
             message.setTo(peer.get_id());
             message.setFrom(getCurrentUser().get_id());
             message.setDateComposed(new Date());
+            message.setType(Message.TYPE_TEXT_MESSAGE);
             //generate a unique id
             long messageCount = realm.where(Message.class).count() + 1;
             message.setId(messageCount + "@" + getCurrentUser().get_id() + "@" + System.currentTimeMillis());
