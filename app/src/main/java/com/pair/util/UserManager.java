@@ -17,7 +17,6 @@ import com.pair.net.api.UserApi;
 import java.util.List;
 
 import io.realm.Realm;
-import io.realm.exceptions.RealmException;
 import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
@@ -176,16 +175,7 @@ public class UserManager {
         userApi.fetchFriends(array, new Callback<List<User>>() {
             @Override
             public void success(List<User> users, Response response) {
-                Realm realm = Realm.getInstance(context);
-                realm.beginTransaction();
-                try {
-                    realm.copyToRealm(users);
-                    realm.commitTransaction();
-                } catch (RealmException e) { //primary keys violation
-                    //never mind
-                }
-                realm.close();
-                callback.done(null);
+                callback.done(null, users);
             }
 
             @Override
@@ -194,18 +184,18 @@ public class UserManager {
                 if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)
                         || retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)
                         ) {
-                    callback.done(retrofitError);
+                    callback.done(retrofitError, null);
                 } else if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
                     if (ConnectionHelper.isConnectedOrConnecting(context)) {
                         //try again
                         fetchFriends(array, callback);
                     } else {
-                        callback.done(retrofitError);
+                        callback.done(retrofitError, null);
                     }
                 } else if (retrofitError.getKind().equals(RetrofitError.Kind.CONVERSION)) {
                     throw new AssertionError(retrofitError);
                 } else {
-                    callback.done(retrofitError);
+                    callback.done(retrofitError, null);
                 }
             }
         });
@@ -233,6 +223,6 @@ public class UserManager {
     }
 
     public interface FriendsFetchCallback {
-        void done(Exception e);
+        void done(Exception e, List<User> users);
     }
 }

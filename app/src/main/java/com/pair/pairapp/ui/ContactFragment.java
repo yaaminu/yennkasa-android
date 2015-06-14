@@ -67,7 +67,7 @@ public class ContactFragment extends ListFragment {
 
         List<Contact> contacts = new ArrayList<>();
         final ContactsAdapter adapter = new ContactsAdapter(contacts);
-        ContactsManager.INSTANCE.findAllContacts(comparator, new ContactsManager.FindCallback<List<Contact>>() {
+        ContactsManager.INSTANCE.findAllContacts(null, comparator, new ContactsManager.FindCallback<List<Contact>>() {
             @Override
             public void done(List<Contact> contacts) {
                 adapter.refill(contacts);
