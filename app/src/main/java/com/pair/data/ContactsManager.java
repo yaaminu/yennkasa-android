@@ -91,9 +91,10 @@ public class ContactsManager {
             }
             ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, status, isRegistered);
             Log.d(TAG, contact.name + ":" + contact.phoneNumber);
-            if ((filter != null) && filter.accept(contact)) {
-                contacts.add(contact);
+            if ((filter != null) && !filter.accept(contact)) {
+                continue;
             }
+            contacts.add(contact);
         }
         realm.close();
         if (comparator != null) {

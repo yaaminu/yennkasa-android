@@ -1,9 +1,9 @@
-package com.pair.pairapp.ui;
+package com.pair.pairapp;
 
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 
-import com.pair.pairapp.R;
+import com.pair.pairapp.ui.LoginFragment;
 
 
 public class SetUpActivity extends ActionBarActivity {

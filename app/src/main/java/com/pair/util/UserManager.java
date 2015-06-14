@@ -13,6 +13,7 @@ import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.net.api.UserApi;
+import com.pair.workers.BootReceiver;
 
 import java.util.List;
 
@@ -106,6 +107,8 @@ public class UserManager {
             public void success(User user, Response response) {
                 busy = false;
                 saveUser(user);
+                // TODO: 6/14/2015 enable boot receiver
+                Config.enableComponent(BootReceiver.class);
                 callback.done(null);
             }
 
@@ -131,6 +134,8 @@ public class UserManager {
             public void success(User user, Response response) {
                 busy = false;
                 saveUser(user);
+                // TODO: 6/14/2015 enable boot receiver
+                Config.enableComponent(BootReceiver.class);
                 callback.done(null);
             }
 
@@ -166,6 +171,10 @@ public class UserManager {
         GcmHelper.unRegister(context, new GcmHelper.UnregisterCallback() {
             @Override
             public void done(Exception e) {
+                if (e == null) {
+                    // TODO: 6/14/2015 disable boot receiver
+                    Config.disableComponent(BootReceiver.class);
+                }
                 logOutCallback.done(e);
             }
         });

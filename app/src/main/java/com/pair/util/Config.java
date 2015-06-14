@@ -1,6 +1,8 @@
 package com.pair.util;
 
 import android.app.Application;
+import android.content.ComponentName;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
@@ -68,5 +70,27 @@ public class Config {
             // TODO replace this with real url
             return HOST_REAL_SERVER;
         }
+    }
+
+    public static void enableComponent(Class clazz) {
+        Log.d(TAG, "enabling " + clazz.getSimpleName());
+        ComponentName receiver = new ComponentName(application, clazz);
+
+        PackageManager pm = application.getPackageManager();
+
+        pm.setComponentEnabledSetting(receiver,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP);
+    }
+
+    public static void disableComponent(Class clazz) {
+        Log.d(TAG, "disabling " + clazz.getSimpleName());
+        ComponentName receiver = new ComponentName(application, clazz);
+
+        PackageManager pm = application.getPackageManager();
+
+        pm.setComponentEnabledSetting(receiver,
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.DONT_KILL_APP);
     }
 }

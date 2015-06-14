@@ -95,14 +95,6 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
-    @Override
-    protected void onStop() {
-        bound = false;
-        unbindService(connection);
-        dispatcher = null;
-        super.onStop();
-    }
-
     private void getConversation(String peerId) {
         currConversation = realm.where(Conversation.class).equalTo("peerId", peerId).findFirst();
         realm.beginTransaction();
@@ -178,6 +170,11 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     @Override
     protected void onDestroy() {
         realm.close();
+        if (bound) {
+            bound = false;
+            unbindService(connection);
+        }
+        dispatcher = null;
         super.onDestroy();
     }
 
@@ -202,7 +199,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             message.setState(Message.STATE_PENDING);
             currConversation.setLastMessage(message);
             currConversation.setLastActiveTime(message.getDateComposed());
-            currConversation.setSummary(message.getMessageBody());
+            currConversation.setSummary("You: " + message.getMessageBody());
             realm.commitTransaction();
             if (bound && (dispatcher != null)) {
                 dispatcher.dispatch(message);

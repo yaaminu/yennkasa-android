@@ -40,7 +40,7 @@ public class MessageProcessor extends IntentService {
         }
         conversation.setLastActiveTime(new Date());//now
         conversation.setLastMessage(message);
-        conversation.setSummary("NEW!->" + message.getMessageBody());
+        conversation.setSummary("<--" + message.getMessageBody());
         realm.commitTransaction();
         if (!conversation.isActive()) {
             //TODO notify user,play tone and/or vibrate device
