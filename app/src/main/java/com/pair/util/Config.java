@@ -6,6 +6,8 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * Created by Null-Pointer on 5/26/2015.
  */
@@ -21,11 +23,21 @@ public class Config {
     public static final String PAIRAPP_ENDPOINT = getEndPoint();
     private static final String logMessage = "calling getApplication when init has not be called";
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
-    public static String auth = "kiiboda+=s3cr3t3";
+    public static final String auth = "kiiboda+=s3cr3t3";
     private static Application application;
+    private static AtomicBoolean isChatRoomOpen = new AtomicBoolean(false);
 
     public static void init(Application pairApp) {
         Config.application = pairApp;
+        isChatRoomOpen.set(false);
+    }
+
+    public static boolean isChatRoomOpen() {
+        return isChatRoomOpen.get();
+    }
+
+    public static void setIsChatRoomOpen(boolean chatRoomOpen) {
+        isChatRoomOpen.set(chatRoomOpen);
     }
 
     public static Application getApplicationContext() {

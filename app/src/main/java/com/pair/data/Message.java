@@ -44,6 +44,18 @@ public class Message extends RealmObject {
     private int state;
     private int type;
 
+    public Message() {
+    } //required no-arg c'tor;
+
+    public Message(Message message) {
+        this.from = message.getFrom();
+        this.to = message.getTo();
+        this.id = message.getId();
+        this.type = message.getType();
+        this.dateComposed = message.getDateComposed();
+        this.messageBody = message.getMessageBody();
+        this.state = message.getState();
+    }
     public void setType(int type) {
         this.type = type;
     }

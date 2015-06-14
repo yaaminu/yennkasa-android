@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
 import android.text.format.DateUtils;
@@ -19,9 +20,11 @@ import com.pair.adapter.MessagesAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
+import com.pair.messenger.NotificationManager;
 import com.pair.messenger.PairAppClient;
 import com.pair.net.Dispatcher;
 import com.pair.pairapp.R;
+import com.pair.util.Config;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
@@ -160,10 +163,17 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        Config.setIsChatRoomOpen(true);
+    }
+
+    @Override
     protected void onPause() {
         realm.beginTransaction();
         currConversation.setActive(false);
         realm.commitTransaction();
+        Config.setIsChatRoomOpen(false);
         super.onPause();
     }
 
@@ -211,5 +221,17 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     private User getCurrentUser() {
         return UserManager.getInstance(getApplication()).getCurrentUser();
+    }
+
+    private void scheduleFakeNotification(final Message message) {
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Intent intent = new Intent(Config.getApplicationContext(), ChatActivity.class);
+                intent.putExtra(ChatActivity.PEER_ID, message.getFrom());
+                NotificationManager.INSTANCE.onNewMessage(message, intent);
+            }
+        }, 1000);
     }
 }
