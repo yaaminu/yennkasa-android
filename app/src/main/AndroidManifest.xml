@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.WRITE_CONTACTS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.receive_boot_completed" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
     <uses-permission android:name="com.pair.pairapp.permission.C2D_MESSAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -60,7 +60,7 @@
         </receiver>
 
         <service
-            android:name="com.pair.workers.UserServices"
+            android:name="com.pair.workers.ContactSyncService"
             android:exported="false" />
         <service
             android:name="com.pair.messenger.MessageProcessor"
@@ -72,9 +72,10 @@
             android:name="com.pair.messenger.PairAppClient"
             android:exported="false" />
 
+        <!--TODO flip the enable flag to false -->
         <receiver
             android:name="com.pair.workers.BootReceiver"
-            android:enabled="false"
+            android:enabled="true"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

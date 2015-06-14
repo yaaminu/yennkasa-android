@@ -53,7 +53,7 @@ public class PairAppClient extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.i(TAG, "binding service");
+        Log.i(TAG, intent.getComponent().getClassName() + " binding");
         bound = true;
         boundClients++;
         return INSTANCE;
@@ -61,6 +61,7 @@ public class PairAppClient extends Service {
 
     @Override
     public boolean onUnbind(Intent intent) {
+        Log.i(TAG, intent.getComponent().getClassName() + " unbinding");
         boundClients--;
         if (boundClients < 1) {
             bound = false;
@@ -114,10 +115,17 @@ public class PairAppClient extends Service {
         @Override
         public void onAllDispatched() {
             if (!bound) { //in the future this service will run infinitely
+                Log.i(TAG, "stopping self no job and now client bound");
                 stopSelf();
             }
         }
     };
+
+    @Override
+    public void onDestroy() {
+        Log.i(TAG, TAG + ": bye");
+        super.onDestroy();
+    }
 
     private void attemptToSendAllUnsentMessages() {
         //TODO make sure this does not conflict with message dispatcher's backoff mechanism

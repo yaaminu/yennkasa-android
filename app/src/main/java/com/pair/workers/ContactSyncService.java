@@ -17,8 +17,8 @@ import io.realm.exceptions.RealmException;
 /**
  * @author Null-Pointer on 6/9/2015.
  */
-public class UserServices extends IntentService {
-    public static final String TAG = UserServices.class.getSimpleName();
+public class ContactSyncService extends IntentService {
+    public static final String TAG = ContactSyncService.class.getSimpleName();
     public static final String ACTION_FETCH_FRIENDS = "fetchFriends";
     public static final String ACTION = "action";
 
@@ -26,7 +26,7 @@ public class UserServices extends IntentService {
      * A service(fake sync adapter) primarily for synchronizing users.
      * this class will be used until we implement a sync adapter
      */
-    public UserServices() {
+    public ContactSyncService() {
         super(TAG);
     }
 
