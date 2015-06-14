@@ -9,7 +9,7 @@
         android:gravity="center"
         android:maxWidth="100dp"
         android:padding="5dp"
-        android:background="@drawable/bg_msg_from"
+        android:background="@drawable/bg_date"
         android:textColor="@color/title_gray"
         android:id="@+id/tv_message_content"
         android:text="2/2/2015"

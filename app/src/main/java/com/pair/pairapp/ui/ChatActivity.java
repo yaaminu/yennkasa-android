@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
+import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -194,7 +195,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         String content = UiHelpers.getFieldContent(editText);
         editText.setText(""); //clear the text field
         //TODO use a regular expression to validate the message body
-        if (!content.isEmpty()) {
+        if (!TextUtils.isEmpty(content)) {
             if (!sessionSetUp) {
                 setUpSession();
                 sessionSetUp = true;
@@ -215,7 +216,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             if (bound && (dispatcher != null)) {
                 dispatcher.dispatch(message);
             } else {
-                doBind();
+                doBind(); //after binding dispatcher will send all unsent messages
             }
         }
     }

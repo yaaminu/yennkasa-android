@@ -1,7 +1,9 @@
 package com.pair.adapter;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +21,8 @@ import io.realm.RealmResults;
  * @author Null-Pointer on 5/31/2015.
  */
 public class MessagesAdapter extends RealmBaseAdapter<Message> {
-    public static final String TAG = MessagesAdapter.class.getSimpleName();
+    private static final String TAG = MessagesAdapter.class.getSimpleName();
+    private static final long THREE_MINUTES = AlarmManager.INTERVAL_FIFTEEN_MINUTES / 5;
     private User thisUser;
     private UserManager userManager;
     private final int OWN_MESSAGE = 1, IN_MESSAGE = 2, DATE_MESSAGE = 0;
@@ -74,9 +77,39 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
             holder.content.toString();
             holder.content.setText(message.getMessageBody());
             String formattedDate = DateUtils.formatDateTime(context, message.getDateComposed().getTime(), DateUtils.FORMAT_SHOW_TIME);
-            holder.dateComposed.setText(formattedDate);
+            //show messages at a particular time together
+            if (!isLast(position)) { //prevents out of bound access
+                Message nextMessage = getItem(position + 1);
+                if (nextMessage.getType() != Message.TYPE_DATE_MESSAGE) {
+                    //ensure they are all from same user
+                    if ((isOwnMessage(message) && isOwnMessage(nextMessage)
+                            || (!isOwnMessage(message) && !isOwnMessage(nextMessage)))) {
+                        // TODO: 6/14/2015 attempt to show them together if date sent are close
+                        if (nextMessage.getDateComposed().getTime() - message.getDateComposed().getTime() < THREE_MINUTES) {
+                            Log.i(TAG, nextMessage.getDateComposed().getTime() - message.getDateComposed().getTime() + " millis");
+                            // TODO: 6/14/2015 collapse the padding and hide its time
+                            holder.dateComposed.setVisibility(View.GONE);
+                        } else {
+                            doNotCollapse(holder, formattedDate);
+                        }
+                    } else {
+                        doNotCollapse(holder, formattedDate);
+                    }
+                }
+            } else {
+                doNotCollapse(holder, formattedDate);
+            }
         }
         return convertView;
+    }
+
+    private void doNotCollapse(ViewHolder holder, String formattedDate) {
+        holder.dateComposed.setVisibility(View.VISIBLE);
+        holder.dateComposed.setText(formattedDate);
+    }
+
+    private boolean isLast(int position) {
+        return getCount() - 1 == position;
     }
 
     private boolean isDateMessage(int position) {

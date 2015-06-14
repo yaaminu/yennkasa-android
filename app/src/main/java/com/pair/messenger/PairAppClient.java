@@ -27,6 +27,8 @@ public class PairAppClient extends Service {
     public static final String TAG = PairAppClient.class.getSimpleName();
     public static final String ACTION_SEND_ALL_UNSENT = "send unsent messages";
     public static final String ACTION = "action";
+    private boolean bound = false;
+    private volatile int boundClients = 0;
     public final PairAppClientInterface INSTANCE = new PairAppClientInterface();
 
 
@@ -35,6 +37,7 @@ public class PairAppClient extends Service {
         pairAppClient.putExtra(PairAppClient.ACTION, PairAppClient.ACTION_SEND_ALL_UNSENT);
         context.startService(pairAppClient);
     }
+
     public PairAppClient() {
         super();
     }
@@ -45,7 +48,7 @@ public class PairAppClient extends Service {
         super.onStartCommand(intent, flags, startId);
         if (intent != null) {
             if (intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
-                attemptToSendAllUnsentMessages();
+                attemptToSendAllUnsentMessages(); //async
             }
         }
         return START_STICKY;
@@ -53,9 +56,12 @@ public class PairAppClient extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.i(TAG, intent.getComponent().getClassName() + " binding");
+        Log.i(TAG, "binding to : " + TAG);
         bound = true;
         boundClients++;
+        if (intent != null && intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
+            attemptToSendAllUnsentMessages(); //async
+        }
         return INSTANCE;
     }
 
@@ -73,7 +79,7 @@ public class PairAppClient extends Service {
     @Override
     public void onRebind(Intent intent) {
         boundClients++;
-        bound = false;
+        bound = true;
         super.onRebind(intent);
     }
 
@@ -87,13 +93,10 @@ public class PairAppClient extends Service {
             throw new UnsupportedOperationException("not yet implemented");
         }
 
-        public Dispatcher getCallDispacher() {
+        public Dispatcher getCallDispatcher() {
             throw new UnsupportedOperationException("not yet implemented");
         }
     }
-
-    private boolean bound = false;
-    private volatile int boundClients = 0;
 
     private Dispatcher.DispatcherMonitor monitor = new Dispatcher.DispatcherMonitor() {
         @Override
@@ -130,12 +133,18 @@ public class PairAppClient extends Service {
 
     private void attemptToSendAllUnsentMessages() {
         //TODO make sure this does not conflict with message dispatcher's backoff mechanism
-        Realm realm = Realm.getInstance(this);
-        RealmResults<Message> messages = realm.where(Message.class).equalTo("state", Message.STATE_PENDING).findAll();
-        MessageDispatcher dispatcher = MessageDispatcher.getInstance(MessageJsonAdapter.INSTANCE, monitor, 10);
-        for (Message message : messages) {
-            dispatcher.dispatch(message);
-        }
-        realm.close();
+        new Thread() {
+            @Override
+            public void run() {
+                Realm realm = Realm.getInstance(PairAppClient.this);
+                RealmResults<Message> messages = realm.where(Message.class).equalTo("state", Message.STATE_PENDING).findAll();
+                MessageDispatcher dispatcher = MessageDispatcher.getInstance(MessageJsonAdapter.INSTANCE, monitor, 10);
+                for (Message message : messages) {
+                    dispatcher.dispatch(message);
+                }
+                realm.close();
+            }
+        }.start();
+
     }
 }

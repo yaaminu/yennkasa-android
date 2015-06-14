@@ -30,8 +30,8 @@
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/iv_user_avatar"
         android:layout_toRightOf="@+id/iv_user_avatar"
-        android:paddingTop="5dp"
-        android:weightSum="5">
+        android:paddingTop="10dp"
+        android:weightSum="6">
 
         <TextView
             android:id="@+id/tv_sender"
@@ -40,6 +40,7 @@
             android:layout_weight="3.5"
             android:ellipsize="end"
             android:singleLine="true"
+            android:gravity="left"
             android:text="Sender name"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -48,9 +49,10 @@
             android:id="@+id/tv_date_last_active"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1.5"
+            android:layout_weight="2.5"
             android:singleLine="true"
-            android:text="Date Last" />
+            android:gravity="right"
+            android:text="Date"/>
     </LinearLayout>
 
 </RelativeLayout>

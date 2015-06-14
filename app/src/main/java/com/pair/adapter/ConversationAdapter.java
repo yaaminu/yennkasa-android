@@ -1,5 +1,6 @@
 package com.pair.adapter;
 
+import android.app.AlarmManager;
 import android.content.Context;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -13,6 +14,8 @@ import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 
+import java.util.Date;
+
 import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
@@ -25,7 +28,7 @@ import static android.text.format.DateUtils.getRelativeTimeSpanString;
  */
 public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
     private static final String TAG = ConversationAdapter.class.getSimpleName();
-    final int FIVE_MINUTES = 5 * 60 * 60 * 100;
+    final long FIVE_MINUTES = AlarmManager.INTERVAL_FIFTEEN_MINUTES / 3;
 
 
     public ConversationAdapter(Context context, RealmResults<Conversation> realmResults, boolean automaticUpdate) {
@@ -51,10 +54,10 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         holder.chatSummary.setText(conversation.getSummary());
         String peerName = getPeerName(conversation.getPeerId());
         holder.peerName.setText(peerName);
-        long now = System.currentTimeMillis();
+        long now = new Date().getTime();
         long then = conversation.getLastActiveTime().getTime();
         CharSequence formattedDate;
-        formattedDate = ((now - then) < FIVE_MINUTES) ? "moments ago" : getRelativeTimeSpanString(then, now, MINUTE_IN_MILLIS);
+        formattedDate = ((now - then) <= FIVE_MINUTES) ? "moments ago" : getRelativeTimeSpanString(then, now, MINUTE_IN_MILLIS);
         holder.dateLastActive.setText(formattedDate);
         String summary = conversation.getSummary();
         if (TextUtils.isEmpty(summary)) {
