@@ -79,6 +79,7 @@ public class UiHelpers {
             }
             phoneCur.close();
             return phoneNumberCollection;
+
         }
 
         @Override
