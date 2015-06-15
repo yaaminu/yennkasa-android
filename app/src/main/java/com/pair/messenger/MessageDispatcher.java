@@ -72,10 +72,28 @@ class MessageDispatcher implements Dispatcher<Message> {
 
     @Override
     public void dispatch(Message message) {
-        JsonObject object = jsonAdapter.toJson(message);
-        doDispatch(object, message.getId());
+        if (!ConnectionHelper.isConnectedOrConnecting(Config.getApplicationContext())) {
+            Log.w(TAG, "no internet connection, message will no be sent");
+            reportError(message, "not internet connection");
+        }
+        if ((message.getType() == Message.TYPE_DATE_MESSAGE)) {
+            Log.w(TAG, "attempted to send a date message,but will not be sent");
+            reportError(message, "date messages cannot be sent");
+            return;
+        }
+        if (message.getState() != Message.STATE_PENDING || message.getState() == Message.STATE_SEND_FAILED) {
+            Log.w(TAG, "attempted to send a sent message, but will not be sent");
+            reportError(message, "message already send");
+            return;
+        }
+        doDispatch(message);
     }
 
+    private void reportError(Message message, String reason) {
+        if (dispatcherMonitor != null) {
+            dispatcherMonitor.onSendFailed(reason, message.getId());
+        }
+    }
     @Override
     public void dispatch(Collection<Message> messages) {
         //FIXME spawn background daemons to send messages in the collection instead of looping over it
@@ -84,8 +102,13 @@ class MessageDispatcher implements Dispatcher<Message> {
         }
     }
 
-    private void doDispatch(JsonObject data, String id) {
-        SenderJob job = new SenderJob(id, data, 0);
+    private void doDispatch(Message message) {
+        JsonObject data = jsonAdapter.toJson(message);
+        SenderJob job = new SenderJob(message.getId(), data, 0);
+        job.jobType = message.getType();
+        if ((message.getType() != Message.TYPE_TEXT_MESSAGE)) {
+            job.binPath = message.getMessageBody(); //message body must be a valid file
+        }
         sender.enqueue(job);
     }
 
@@ -102,14 +125,15 @@ class MessageDispatcher implements Dispatcher<Message> {
     }
 
     private static class SenderJob {
-
-
+        // TODO: 6/15/2015 sender job is to hardcoded, got to do something
         final static long MIN_DELAY = 5000; // 5 seconds
         public static final long MAX_DELAY = AlarmManager.INTERVAL_HOUR;
         int retryTimes;
         JsonObject data;
         String id;
         long backOff;
+        int jobType = Message.TYPE_TEXT_MESSAGE;
+        String binPath;
 
         SenderJob(String id, JsonObject data, int retryTimes) {
             this.retryTimes = retryTimes;
@@ -211,7 +235,6 @@ class MessageDispatcher implements Dispatcher<Message> {
             }
 
         }
-
     }
 
     private void decrementNumOfTasks() {
