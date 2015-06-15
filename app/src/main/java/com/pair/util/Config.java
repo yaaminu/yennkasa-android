@@ -2,6 +2,7 @@ package com.pair.util;
 
 import android.app.Application;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
@@ -40,11 +41,11 @@ public class Config {
         isChatRoomOpen.set(chatRoomOpen);
     }
 
-    public static Application getApplicationContext() {
+    public static Context getApplicationContext() {
         if (application == null) {
             warnAndThrow(logMessage, detailMessage);
         }
-        return application;
+        return application.getApplicationContext();
     }
 
     public static Application getApplication() {
