@@ -19,6 +19,7 @@ import java.util.List;
 
 import io.realm.Realm;
 import retrofit.Callback;
+import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.android.AndroidLog;
@@ -36,7 +37,6 @@ public class UserManager {
     private BaseJsonAdapter<User> adapter;
     private volatile boolean busy = false;
     private static final String KEY_SESSION_ID = "session";
-
 
     public static UserManager getInstance(@NonNull Application context) {
         UserManager localInstance = INSTANCE;
@@ -56,6 +56,7 @@ public class UserManager {
         this.adapter = new UserJsonAdapter();
         RestAdapter restAdapter = new RestAdapter.Builder()
                 .setEndpoint(Config.PAIRAPP_ENDPOINT)
+                .setRequestInterceptor(INTERCEPTOR)
                 .setLogLevel(RestAdapter.LogLevel.FULL)
                 .setLog(new AndroidLog(TAG))
                 .build();
@@ -215,6 +216,14 @@ public class UserManager {
         realm.clear(Conversation.class);
         realm.commitTransaction();
     }
+
+    private static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
+        @Override
+        public void intercept(RequestFacade requestFacade) {
+            requestFacade.addHeader("Authorization", "kiiboda+=s3cr3te");
+            requestFacade.addHeader("User-Agent", Config.APP_USER_AGENT);
+        }
+    };
 
     public interface LoginCallback {
         void done(Exception e);

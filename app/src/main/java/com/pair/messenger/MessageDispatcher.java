@@ -18,6 +18,7 @@ import org.apache.http.HttpStatus;
 import java.util.Collection;
 
 import retrofit.Callback;
+import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.android.AndroidLog;
@@ -38,11 +39,10 @@ class MessageDispatcher implements Dispatcher<Message> {
     private final Sender sender;
     private DispatcherMonitor dispatcherMonitor;
     private final Handler RETRY_HANDLER;
-
-
     private MessageDispatcher(BaseJsonAdapter<Message> jsonAdapter, DispatcherMonitor errorHandler, int retryTimes) {
         RestAdapter adapter = new RestAdapter.Builder()
                 .setEndpoint(Config.PAIRAPP_ENDPOINT)
+                .setRequestInterceptor(INTERCEPTOR)
                 .setLogLevel(RestAdapter.LogLevel.FULL)
                 .setLog(new AndroidLog(TAG))
                 .build();
@@ -56,7 +56,7 @@ class MessageDispatcher implements Dispatcher<Message> {
 
     }
 
-    public static MessageDispatcher getInstance(BaseJsonAdapter<Message> adapter, DispatcherMonitor dispatcherMonitor, int retryTimes) {
+    static MessageDispatcher getInstance(BaseJsonAdapter<Message> adapter, DispatcherMonitor dispatcherMonitor, int retryTimes) {
         MessageDispatcher localInstance = INSTANCE;
         if (localInstance == null) {
             synchronized (MessageDispatcher.class) {
@@ -100,23 +100,23 @@ class MessageDispatcher implements Dispatcher<Message> {
         return false;
     }
 
-
     private static class SenderJob {
+
+
         final static long MIN_DELAY = 5000; // 5 seconds
         public static final long MAX_DELAY = AlarmManager.INTERVAL_HOUR;
         int retryTimes;
         JsonObject data;
         String id;
         long backOff;
-
         SenderJob(String id, JsonObject data, int retryTimes) {
             this.retryTimes = retryTimes;
             this.data = data;
             this.id = id;
             this.backOff = MIN_DELAY;
         }
-    }
 
+    }
     private class Sender {
 
         void enqueue(SenderJob job) {
@@ -209,4 +209,12 @@ class MessageDispatcher implements Dispatcher<Message> {
             NUM_OF_TASKS++;
         }
     }
+
+    private static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
+        @Override
+        public void intercept(RequestFacade requestFacade) {
+            requestFacade.addHeader("Authorization", "kiiboda+=s3cr3te");
+            requestFacade.addHeader("User-Agent", Config.APP_USER_AGENT);
+        }
+    };
 }

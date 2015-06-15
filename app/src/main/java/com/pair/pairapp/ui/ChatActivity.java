@@ -4,7 +4,6 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
@@ -20,7 +19,6 @@ import com.pair.adapter.MessagesAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
-import com.pair.messenger.NotificationManager;
 import com.pair.messenger.PairAppClient;
 import com.pair.net.Dispatcher;
 import com.pair.pairapp.R;
@@ -224,16 +222,4 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         return UserManager.getInstance(getApplication()).getCurrentUser();
     }
 
-    @SuppressWarnings("unused")
-    private void scheduleFakeNotification(final Message message) {
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Intent intent = new Intent(Config.getApplicationContext(), ChatActivity.class);
-                intent.putExtra(ChatActivity.PEER_ID, message.getFrom());
-                NotificationManager.INSTANCE.onNewMessage(message, intent);
-            }
-        }, 1000);
-    }
 }

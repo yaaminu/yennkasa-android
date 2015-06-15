@@ -18,16 +18,14 @@ public interface MessageApi {
 
     @POST(BASE_URL + "/messages")
     @Headers({
-            "Content-Type:application/json",
-            "Authorization:kiiboda+=s3cr3te"
+            "Content-Type:application/json"
     })
     void sendMessage(@Body JsonObject message, Callback<HttpResponse> responseCallback);
 
     @SuppressWarnings("unused")
     @POST(BASE_URL + "/messages")
     @Headers({
-            "Content-Type:application/json",
-            "Authorization:kiiboda+=s3cr3te"
+            "Content-Type:application/json"
     })
     void sendMessage(@Body JsonArray messages, Callback<HttpResponse> responseCallback);
 }

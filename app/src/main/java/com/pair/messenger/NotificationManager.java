@@ -8,21 +8,25 @@ import android.graphics.Color;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
+import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.pair.data.Message;
+import com.pair.pairapp.ui.ChatActivity;
 import com.pair.util.Config;
 
 /**
  * @author Null-Pointer on 6/14/2015.
  */
-public class NotificationManager {
+class NotificationManager {
     private final static int MESSAGE_NOTIFICATION_ID = 1001;
     private final static int MESSAGE_PENDING_INTENT_REQUEST_CODE = 1002;
     public static final NotificationManager INSTANCE = new NotificationManager();
+    private static final String TAG = NotificationManager.class.getSimpleName();
 
-    public void onNewMessage(Message message, Intent action) {
+    void onNewMessage(Message message, Intent action) {
         if (Config.isChatRoomOpen()) {
             // TODO: 6/14/2015 give title and description of notification based on type of message
 
@@ -66,7 +70,24 @@ public class NotificationManager {
         // TODO: 6/14/2015 fetch url from preferences
         Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         Ringtone ringtone = RingtoneManager.getRingtone(Config.getApplicationContext(), uri);
-        ringtone.play();
+        if (ringtone != null) {
+            ringtone.play();
+        } else {
+            Log.d(TAG, "unable to play ringtone");
+            // TODO: 6/15/2015 fallback to default tone for app 
+        }
     }
 
+    @SuppressWarnings("unused")
+    private void scheduleFakeNotification(final Message message) {
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Intent intent = new Intent(Config.getApplicationContext(), ChatActivity.class);
+                intent.putExtra(ChatActivity.PEER_ID, message.getFrom());
+                NotificationManager.INSTANCE.onNewMessage(message, intent);
+            }
+        }, 1000);
+    }
 }

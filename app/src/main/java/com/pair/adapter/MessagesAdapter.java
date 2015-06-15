@@ -3,7 +3,6 @@ package com.pair.adapter;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.text.format.DateUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -84,10 +83,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
                     //ensure they are all from same user
                     if ((isOwnMessage(message) && isOwnMessage(nextMessage)
                             || (!isOwnMessage(message) && !isOwnMessage(nextMessage)))) {
-                        // TODO: 6/14/2015 attempt to show them together if date sent are close
                         if (nextMessage.getDateComposed().getTime() - message.getDateComposed().getTime() < THREE_MINUTES) {
-                            Log.i(TAG, nextMessage.getDateComposed().getTime() - message.getDateComposed().getTime() + " millis");
-                            // TODO: 6/14/2015 collapse the padding and hide its time
                             holder.dateComposed.setVisibility(View.GONE);
                         } else {
                             doNotCollapse(holder, formattedDate);

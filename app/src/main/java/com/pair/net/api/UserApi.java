@@ -7,7 +7,6 @@ import java.util.List;
 
 import retrofit.Callback;
 import retrofit.http.Body;
-import retrofit.http.Headers;
 import retrofit.http.POST;
 
 /**
@@ -16,14 +15,11 @@ import retrofit.http.POST;
 public interface UserApi {
 
     @POST("/api/v1/users/register")
-    @Headers("Authorization:kiiboda+=s3cr3te")
     void registerUser(@Body JsonObject user, Callback<User> callback);
 
     @POST("/api/v1/users/login")
-    @Headers("Authorization:kiiboda+=s3cr3te")
     void logIn(@Body JsonObject object,Callback<User> callback);
 
     @POST("/api/v1/users/")
-    @Headers("Authorization:kiiboda+=s3cr3te")
     void fetchFriends(@Body List<String> userIds,Callback<List<User>> response);
 }

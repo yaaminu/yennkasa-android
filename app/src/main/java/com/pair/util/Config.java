@@ -23,6 +23,7 @@ public class Config {
     public static final String PAIRAPP_ENDPOINT = getEndPoint();
     private static final String logMessage = "calling getApplication when init has not be called";
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
+    public static final String APP_USER_AGENT = "pairapp-android-development-version";
     private static Application application;
     private static AtomicBoolean isChatRoomOpen = new AtomicBoolean(false);
 
