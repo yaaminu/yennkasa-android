@@ -3,6 +3,7 @@ package com.pair.messenger;
 import android.app.AlarmManager;
 import android.os.Handler;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
 import com.google.gson.JsonObject;
 import com.pair.adapter.BaseJsonAdapter;
@@ -15,6 +16,7 @@ import com.pair.util.ConnectionHelper;
 
 import org.apache.http.HttpStatus;
 
+import java.io.File;
 import java.util.Collection;
 
 import retrofit.Callback;
@@ -23,6 +25,7 @@ import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.android.AndroidLog;
 import retrofit.client.Response;
+import retrofit.mime.TypedFile;
 
 /**
  * @author by Null-Pointer on 5/26/2015.
@@ -75,13 +78,14 @@ class MessageDispatcher implements Dispatcher<Message> {
         if (!ConnectionHelper.isConnectedOrConnecting(Config.getApplicationContext())) {
             Log.w(TAG, "no internet connection, message will no be sent");
             reportError(message, "not internet connection");
+            return;
         }
         if ((message.getType() == Message.TYPE_DATE_MESSAGE)) {
             Log.w(TAG, "attempted to send a date message,but will not be sent");
             reportError(message, "date messages cannot be sent");
             return;
         }
-        if (message.getState() != Message.STATE_PENDING || message.getState() == Message.STATE_SEND_FAILED) {
+        if ((message.getState() != Message.STATE_PENDING) || (message.getState() != Message.STATE_SEND_FAILED)) {
             Log.w(TAG, "attempted to send a sent message, but will not be sent");
             reportError(message, "message already send");
             return;
@@ -94,6 +98,7 @@ class MessageDispatcher implements Dispatcher<Message> {
             dispatcherMonitor.onSendFailed(reason, message.getId());
         }
     }
+
     @Override
     public void dispatch(Collection<Message> messages) {
         //FIXME spawn background daemons to send messages in the collection instead of looping over it
@@ -107,6 +112,11 @@ class MessageDispatcher implements Dispatcher<Message> {
         SenderJob job = new SenderJob(message.getId(), data, 0);
         job.jobType = message.getType();
         if ((message.getType() != Message.TYPE_TEXT_MESSAGE)) {
+            if ((!new File(message.getMessageBody()).exists())) {
+                Log.w(TAG, "error: " + message.getMessageBody() + " is not a valid file path");
+                reportError(message, "file does not exist");
+                return;
+            }
             job.binPath = message.getMessageBody(); //message body must be a valid file
         }
         sender.enqueue(job);
@@ -128,15 +138,15 @@ class MessageDispatcher implements Dispatcher<Message> {
         // TODO: 6/15/2015 sender job is to hardcoded, got to do something
         final static long MIN_DELAY = 5000; // 5 seconds
         public static final long MAX_DELAY = AlarmManager.INTERVAL_HOUR;
-        int retryTimes;
+        int retries;
         JsonObject data;
         String id;
         long backOff;
         int jobType = Message.TYPE_TEXT_MESSAGE;
         String binPath;
 
-        SenderJob(String id, JsonObject data, int retryTimes) {
-            this.retryTimes = retryTimes;
+        SenderJob(String id, JsonObject data, int retries) {
+            this.retries = retries;
             this.data = data;
             this.id = id;
             this.backOff = MIN_DELAY;
@@ -154,24 +164,21 @@ class MessageDispatcher implements Dispatcher<Message> {
         void doSend(final SenderJob job) {
             incrementNumOfTasks();
             Log.i(TAG, "about to send message: " + job.data.toString());
-            sendTextMessage(job);
+            if (job.jobType == Message.TYPE_TEXT_MESSAGE) {
+                sendTextMessage(job);
+            } else if (job.jobType == Message.TYPE_DATE_MESSAGE) {
+                throw new AssertionError("impossible");
+            } else {
+                sendBinaryMessage(job);
+            }
 
         }
 
-        void doSendBin(final SenderJob job) {
-            incrementNumOfTasks();
-            Log.i(TAG, "about to send a binary message" + job.data.toString());
-        }
-
-        private void sendTextMessage(final SenderJob job) {
-            //actual send implementation
-            MESSAGE_API.sendMessage(job.data, new Callback<HttpResponse>() {
+        void sendBinaryMessage(final SenderJob job) {
+            final Callback<HttpResponse> responseCallback = new Callback<HttpResponse>() {
                 @Override
                 public void success(HttpResponse httpResponse, Response response) {
-                    if (dispatcherMonitor != null) {
-                        dispatcherMonitor.onSendSucceeded(job.id);
-                    }
-                    decrementNumOfTasks();
+                    reportSucess(job);
                 }
 
                 @Override
@@ -179,7 +186,27 @@ class MessageDispatcher implements Dispatcher<Message> {
                     //retry if network available
                     handleError(retrofitError, job);
                 }
-            });
+            };
+            String mimeType = MimeTypeMap.getFileExtensionFromUrl(job.binPath);
+            TypedFile file = new TypedFile(mimeType, new File((job.binPath)));
+            MESSAGE_API.sendMessage(job.data, file, responseCallback);
+        }
+
+        private void sendTextMessage(final SenderJob job) {
+            //actual send implementation
+            final Callback<HttpResponse> responseCallback = new Callback<HttpResponse>() {
+                @Override
+                public void success(HttpResponse httpResponse, Response response) {
+                    reportSucess(job);
+                }
+
+                @Override
+                public void failure(RetrofitError retrofitError) {
+                    //retry if network available
+                    handleError(retrofitError, job);
+                }
+            };
+            MESSAGE_API.sendMessage(job.data, responseCallback);
         }
 
         private void handleError(RetrofitError retrofitError, SenderJob job) {
@@ -213,9 +240,9 @@ class MessageDispatcher implements Dispatcher<Message> {
         private void tryAgain(final SenderJob job) {
             // TODO: 6/15/2015 check network availability before trying 
             // TODO: 6/15/2015 if there is no network we wont try again but will rather wait till we get connected
-            if (job.retryTimes < MAX_RETRY_TIMES) {
-                job.retryTimes++;
-                job.backOff *= job.retryTimes; //backoff exponentially
+            if (job.retries < MAX_RETRY_TIMES) {
+                job.retries++;
+                job.backOff *= job.retries; //backoff exponentially
                 if (job.backOff > SenderJob.MAX_DELAY) {
                     job.backOff = SenderJob.MAX_DELAY;
                 }
@@ -235,6 +262,13 @@ class MessageDispatcher implements Dispatcher<Message> {
             }
 
         }
+    }
+
+    private void reportSucess(SenderJob job) {
+        if (dispatcherMonitor != null) {
+            dispatcherMonitor.onSendSucceeded(job.id);
+        }
+        decrementNumOfTasks();
     }
 
     private void decrementNumOfTasks() {
