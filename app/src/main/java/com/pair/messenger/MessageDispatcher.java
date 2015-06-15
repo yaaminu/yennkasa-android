@@ -39,6 +39,7 @@ class MessageDispatcher implements Dispatcher<Message> {
     private final Sender sender;
     private DispatcherMonitor dispatcherMonitor;
     private final Handler RETRY_HANDLER;
+
     private MessageDispatcher(BaseJsonAdapter<Message> jsonAdapter, DispatcherMonitor errorHandler, int retryTimes) {
         RestAdapter adapter = new RestAdapter.Builder()
                 .setEndpoint(Config.PAIRAPP_ENDPOINT)
@@ -109,6 +110,7 @@ class MessageDispatcher implements Dispatcher<Message> {
         JsonObject data;
         String id;
         long backOff;
+
         SenderJob(String id, JsonObject data, int retryTimes) {
             this.retryTimes = retryTimes;
             this.data = data;
@@ -117,15 +119,27 @@ class MessageDispatcher implements Dispatcher<Message> {
         }
 
     }
+
     private class Sender {
 
         void enqueue(SenderJob job) {
+            // TODO: 6/15/2015 implement an internal queue where some of the messages will be queued if there are too many to send
             doSend(job);
         }
 
         void doSend(final SenderJob job) {
             incrementNumOfTasks();
-            Log.d(TAG, job.data.toString());
+            Log.i(TAG, "about to send message: " + job.data.toString());
+            sendTextMessage(job);
+
+        }
+
+        void doSendBin(final SenderJob job) {
+            incrementNumOfTasks();
+            Log.i(TAG, "about to send a binary message" + job.data.toString());
+        }
+
+        private void sendTextMessage(final SenderJob job) {
             //actual send implementation
             MESSAGE_API.sendMessage(job.data, new Callback<HttpResponse>() {
                 @Override
@@ -139,35 +153,42 @@ class MessageDispatcher implements Dispatcher<Message> {
                 @Override
                 public void failure(RetrofitError retrofitError) {
                     //retry if network available
-                    if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
-                        Log.i(TAG, "unexpected error, trying to send message again");
-                        tryAgain(job);
-                    } else if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)) {
-                        int statusCode = retrofitError.getResponse().getStatus();
-                        if (statusCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
-                            Log.i(TAG, "internal server error, trying to send again");
-                            tryAgain(job);
-                        } else {//crash early
-                            // as far as we know, our backend will only return other status code if its is our fault and that normally should not happen
-                            throw new RuntimeException("An unknown internal error occurred");
-                        }
-                    } else if (retrofitError.getKind().equals(RetrofitError.Kind.CONVERSION)) { //crash early
-                        throw new RuntimeException("poorly encoded json data");
-                    } else if (retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)) {
-                        //TODO handle the EOF error that retrofit causes every first time we try to make a network request
-                        //bubble up error and empty send queue let callers re-dispatch messages again;
-                        if (ConnectionHelper.isConnectedOrConnecting(Config.getApplicationContext())) {
-                            tryAgain(job);
-                        } else if (dispatcherMonitor != null) {
-                            dispatcherMonitor.onSendFailed("Error in network connection", job.id);
-                            decrementNumOfTasks();
-                        }
-                    }
+                    handleError(retrofitError, job);
                 }
             });
         }
 
+        private void handleError(RetrofitError retrofitError, SenderJob job) {
+            if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
+                Log.w(TAG, "unexpected error, trying to send message again");
+                tryAgain(job);
+            } else if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)) {
+                int statusCode = retrofitError.getResponse().getStatus();
+                if (statusCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
+                    Log.w(TAG, "internal server error, trying to send again");
+                    tryAgain(job);
+                } else {//crash early
+                    // as far as we know, our backend will only return other status code if its is our fault and that normally should not happen
+                    Log.wtf(TAG, "internal error, exiting");
+                    throw new RuntimeException("An unknown internal error occurred");
+                }
+            } else if (retrofitError.getKind().equals(RetrofitError.Kind.CONVERSION)) { //crash early
+                Log.wtf(TAG, "internal error ");
+                throw new RuntimeException("poorly encoded json data");
+            } else if (retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)) {
+                //bubble up error and empty send queue let callers re-dispatch messages again;
+                if (ConnectionHelper.isConnectedOrConnecting(Config.getApplicationContext())) {
+                    tryAgain(job);
+                } else if (dispatcherMonitor != null) {
+                    dispatcherMonitor.onSendFailed("Error in network connection", job.id);
+                    decrementNumOfTasks();
+                }
+            }
+        }
+
         private void tryAgain(final SenderJob job) {
+            // TODO: 6/15/2015 check network availability before trying 
+            // TODO: 6/15/2015 if there is no network we wont try again but will rather wait till we get connected
             if (job.retryTimes < MAX_RETRY_TIMES) {
                 job.retryTimes++;
                 job.backOff *= job.retryTimes; //backoff exponentially
@@ -184,7 +205,7 @@ class MessageDispatcher implements Dispatcher<Message> {
                 return;
             }
             if (dispatcherMonitor != null) {
-                Log.i(TAG, "unable to send message after: " + job.backOff + "seconds");
+                Log.w(TAG, "unable to send message after: " + job.backOff + "seconds");
                 dispatcherMonitor.onSendFailed("an unknown error occurred", job.id);
                 decrementNumOfTasks();
             }
