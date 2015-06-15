@@ -69,10 +69,9 @@
             android:name="com.pair.messenger.PairAppClient"
             android:exported="false" />
 
-        <!--TODO flip the enable flag to false -->
         <receiver
             android:name="com.pair.workers.BootReceiver"
-            android:enabled="true"
+            android:enabled="false"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

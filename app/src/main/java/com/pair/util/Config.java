@@ -49,12 +49,12 @@ public class Config {
 
     public static Application getApplication() {
         if (application == null) {
-            return warnAndThrow(logMessage, detailMessage);
+            warnAndThrow(logMessage, detailMessage);
         }
         return Config.application;
     }
 
-    private static Application warnAndThrow(String msg, String detailMessage) {
+    private static void warnAndThrow(String msg, String detailMessage) {
         Log.w(TAG, msg);
         throw new IllegalStateException(detailMessage);
     }
