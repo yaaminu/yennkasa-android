@@ -78,6 +78,7 @@ public class PairAppClient extends Service {
 
     @Override
     public void onRebind(Intent intent) {
+        Log.i(TAG, intent.getComponent().getClassName() + " re-binding");
         boundClients++;
         bound = true;
         super.onRebind(intent);
@@ -148,7 +149,7 @@ public class PairAppClient extends Service {
                 if (messages.size() < 1) {
                     Log.d(TAG, "all messages sent");
                 }else {
-                    //ideally copied version of the messages should be passed to dispatcher
+                    // ideally copied version of the messages should be passed to dispatcher
                     // but since we know dispatcher never uses message on a different thread we can
                     // confidently pass them
                     for (Message message : messages) {

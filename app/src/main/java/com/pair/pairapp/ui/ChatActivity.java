@@ -149,13 +149,13 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_attach) {
+            //create chooser dialog
+            //listen to selections
+            //fire appropriate intent
+            //receive intent result
+            //send message
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -197,29 +197,52 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
                 setUpSession();
                 sessionSetUp = true;
             }
-            realm.beginTransaction();
-            Message message = realm.createObject(Message.class);
-            message.setMessageBody(content);
-            message.setTo(peer.get_id());
-            message.setFrom(getCurrentUser().get_id());
-            message.setDateComposed(new Date());
-            message.setType(Message.TYPE_TEXT_MESSAGE);
-            message.setId(Message.generateIdPossiblyUnique());
-            message.setState(Message.STATE_PENDING);
-            currConversation.setLastMessage(message);
-            currConversation.setLastActiveTime(message.getDateComposed());
-            currConversation.setSummary("You: " + message.getMessageBody());
-            realm.commitTransaction();
+            Message message = createMessage(content, Message.TYPE_TEXT_MESSAGE);
             if (bound && (dispatcher != null)) {
                 dispatcher.dispatch(message);
             } else {
-                doBind(); //after binding dispatcher will send all unsent messages
+                doBind(); //after binding dispatcher will smartly send all unsent messages
             }
         }
+    }
+
+    private Message createMessage(String messageBody, int type) {
+        realm.beginTransaction();
+        Message message = realm.createObject(Message.class);
+        message.setMessageBody(messageBody);
+        message.setTo(peer.get_id());
+        message.setFrom(getCurrentUser().get_id());
+        message.setDateComposed(new Date());
+        message.setId(Message.generateIdPossiblyUnique());
+        message.setState(Message.STATE_PENDING);
+        message.setType(type);
+        currConversation.setLastMessage(message);
+        currConversation.setLastActiveTime(message.getDateComposed());
+        String summary;
+        if (type == Message.TYPE_TEXT_MESSAGE) {
+            summary = "You: " + message.getMessageBody();
+        } else {
+            summary = "You: " + getDescription(type);
+        }
+        currConversation.setSummary(summary);
+        realm.commitTransaction();
+        return message;
     }
 
     private User getCurrentUser() {
         return UserManager.getInstance(getApplication()).getCurrentUser();
     }
 
+    private static String getDescription(int type) {
+        switch (type) {
+            case Message.TYPE_BIN_MESSAGE:
+                return "File";
+            case Message.TYPE_PICTURE_MESSAGE:
+                return "Image";
+            case Message.TYPE_VIDEO_MESSAGE:
+                return "video";
+            default:
+                return "Image";
+        }
+    }
 }

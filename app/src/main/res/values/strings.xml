@@ -15,8 +15,6 @@
     <string name="action_settings">Settings</string>
     <string name="send">send</string>
 
-<!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="str_drawer_open">drawer open</string>
     <string name="str_drawer_closed">drawer closed</string>
     <string name="content_desc_user_avatar">user dp thumbnail</string>
@@ -25,4 +23,12 @@
     <string name="action_call_sender">call sender</string>
     <string name="action_delete_conversation">delete</string>
     <string name="title_pick_contact">Pick a contact</string>
+    <string name="action_attach">attach</string>
+
+    <string-array name="attach_options">
+        <item >Take Picture</item>
+        <item >Take Video</item>
+        <item >Choose Picture</item>
+        <item >Choose Video</item>
+    </string-array>
 </resources>

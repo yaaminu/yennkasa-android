@@ -92,7 +92,7 @@ class MessageDispatcher implements Dispatcher<Message> {
         }
         if ((message.getState() == Message.STATE_PENDING) || (message.getState() == Message.STATE_SEND_FAILED)) {
             doDispatch(message);
-        }else{
+        } else {
             Log.w(TAG, "attempted to send a sent message, but will not be sent");
             reportError(message.getId(), "message already send");
         }
@@ -101,22 +101,22 @@ class MessageDispatcher implements Dispatcher<Message> {
     @Override
     public void dispatch(Collection<Message> messages) {
         // TODO: 6/16/2015 change this once our backend supports batch sending
-        for (Message message : messages) { 
+        for (Message message : messages) {
             dispatch(message);
         }
     }
 
     private void doDispatch(Message message) {
         JsonObject data = jsonAdapter.toJson(message);
-        SenderJob job = new SenderJob(message.getId(), data, 0);
-        job.jobType = message.getType();
-        if ((message.getType() != Message.TYPE_TEXT_MESSAGE)) {
-            if ((!new File(message.getMessageBody()).exists())) {
+        SenderJob job = new SenderJob(message.getId(), data, message.getType(), message.getMessageBody());
+        if (message.getType() != Message.TYPE_TEXT_MESSAGE
+                && message.getType() != Message.TYPE_DATE_MESSAGE
+                && message.getType() != Message.TYPE_TYPING_MESSAGE) {
+            if (!new File(message.getMessageBody()).exists()) {
                 Log.w(TAG, "error: " + message.getMessageBody() + " is not a valid file path");
                 reportError(message.getId(), "file does not exist");
                 return;
             }
-            job.binPath = message.getMessageBody(); //message body must be a valid file
         }
         sender.enqueue(job);
     }
@@ -145,17 +145,19 @@ class MessageDispatcher implements Dispatcher<Message> {
         final static long MIN_DELAY = 5000; // 5 seconds
         public static final long MAX_DELAY = AlarmManager.INTERVAL_HOUR;
         int retries;
-        JsonObject data;
-        String id;
+        final JsonObject data;
+        final String id;
         long backOff;
-        int jobType = Message.TYPE_TEXT_MESSAGE;
-        String binPath;
+        final int jobType;
+        final String binPath;
 
-        SenderJob(String id, JsonObject data, int retries) {
-            this.retries = retries;
+        SenderJob(String id, JsonObject data, int jobType, String binPath) {
+            this.retries = 0;
             this.data = data;
             this.id = id;
             this.backOff = MIN_DELAY;
+            this.jobType = jobType;
+            this.binPath = binPath;
         }
 
     }
