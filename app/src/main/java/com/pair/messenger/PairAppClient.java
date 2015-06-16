@@ -29,7 +29,7 @@ public class PairAppClient extends Service {
     private boolean bound = false;
     private volatile int boundClients = 0;
     public final PairAppClientInterface INSTANCE = new PairAppClientInterface();
-    private Dispatcher DISPATCHER_INSTANCE;
+    private Dispatcher<Message> DISPATCHER_INSTANCE;
 
     public static void start(Context context) {
         Intent pairAppClient = new Intent(context, PairAppClient.class);
@@ -86,7 +86,7 @@ public class PairAppClient extends Service {
     public class PairAppClientInterface extends Binder {
         public Dispatcher<Message> getMessageDispatcher() {
             if (DISPATCHER_INSTANCE == null) {
-                DISPATCHER_INSTANCE = MessageDispatcher.getInstance(MessageJsonAdapter.INSTANCE, monitor, 10);
+                DISPATCHER_INSTANCE = MessageDispatcher.getInstance(MessageJsonAdapter.INSTANCE, MONITOR, 10);
             }
             return DISPATCHER_INSTANCE;
         }
@@ -100,7 +100,7 @@ public class PairAppClient extends Service {
         }
     }
 
-    private Dispatcher.DispatcherMonitor monitor = new Dispatcher.DispatcherMonitor() {
+    private final Dispatcher.DispatcherMonitor MONITOR = new Dispatcher.DispatcherMonitor() {
         @Override
         public void onSendFailed(String reason, String messageId) {
             //TODO handle this callback
@@ -137,13 +137,13 @@ public class PairAppClient extends Service {
         //TODO make sure this does not conflict with message dispatcher's backoff mechanism
         Realm realm = Realm.getInstance(this);
         long unSentMessages = realm.where(Message.class).notEqualTo("type", Message.TYPE_DATE_MESSAGE).equalTo("state", Message.STATE_PENDING).count();
-        realm.close();
+        realm.close(); //its a pain we cannot share realms across thread
         if (unSentMessages < 1) {
             Log.d(TAG, "all messages sent");
             return;
         }
         if (DISPATCHER_INSTANCE == null) {
-            DISPATCHER_INSTANCE = MessageDispatcher.getInstance(MessageJsonAdapter.INSTANCE, monitor, 10);
+            DISPATCHER_INSTANCE = MessageDispatcher.getInstance(MessageJsonAdapter.INSTANCE, MONITOR, 10);
 
         }
         new Thread() {
