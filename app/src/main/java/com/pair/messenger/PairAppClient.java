@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 
 import com.pair.adapter.MessageJsonAdapter;
@@ -43,7 +44,7 @@ public class PairAppClient extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "starting service");
+        Log.i(TAG, "starting pairapp client service");
         super.onStartCommand(intent, flags, startId);
         if (intent != null) {
             if (intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
@@ -134,14 +135,6 @@ public class PairAppClient extends Service {
     }
 
     private void attemptToSendAllUnsentMessages() {
-        //TODO make sure this does not conflict with message dispatcher's backoff mechanism
-        Realm realm = Realm.getInstance(this);
-        long unSentMessages = realm.where(Message.class).notEqualTo("type", Message.TYPE_DATE_MESSAGE).equalTo("state", Message.STATE_PENDING).count();
-        realm.close(); //its a pain we cannot share realms across thread
-        if (unSentMessages < 1) {
-            Log.d(TAG, "all messages sent");
-            return;
-        }
         if (DISPATCHER_INSTANCE == null) {
             DISPATCHER_INSTANCE = MessageDispatcher.getInstance(MessageJsonAdapter.INSTANCE, MONITOR, 10);
 
@@ -149,13 +142,18 @@ public class PairAppClient extends Service {
         new Thread() {
             @Override
             public void run() {
+                Looper.prepare(); //ensure our query is updated while we run
                 Realm realm = Realm.getInstance(PairAppClient.this);
-                RealmResults<Message> messages = realm.where(Message.class)
-                        .notEqualTo("type", Message.TYPE_DATE_MESSAGE)
-                        .equalTo("state", Message.STATE_PENDING)
-                        .findAll();
-                for (Message message : messages) {
-                    DISPATCHER_INSTANCE.dispatch(message);
+                RealmResults<Message> messages = realm.where(Message.class).notEqualTo("type", Message.TYPE_DATE_MESSAGE).equalTo("state", Message.STATE_PENDING).findAll();
+                if (messages.size() < 1) {
+                    Log.d(TAG, "all messages sent");
+                }else {
+                    //ideally copied version of the messages should be passed to dispatcher
+                    // but since we know dispatcher never uses message on a different thread we can
+                    // confidently pass them
+                    for (Message message : messages) {
+                        DISPATCHER_INSTANCE.dispatch(message);
+                    }
                 }
                 realm.close();
             }
