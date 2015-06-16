@@ -82,19 +82,31 @@ class MessageDispatcher implements Dispatcher<Message> {
         incrementNumOfTasks();
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             Log.w(TAG, "no internet connection, message will not be sent");
-            reportError(message.getId(), "not internet connection");
+            reportError(message.getId(), "no internet connection");
             return;
         }
-        if ((message.getType() == Message.TYPE_DATE_MESSAGE)) {
+        if (message.getType() == Message.TYPE_DATE_MESSAGE) {
             Log.w(TAG, "attempted to send a date message,but will not be sent");
             reportError(message.getId(), "date messages cannot be sent");
             return;
+        }
+        if (message.getType() == Message.TYPE_TYPING_MESSAGE) {
+            Log.w(TAG, "attempted to send a typing message,but will not be sent");
+            reportError(message.getId(), "\'typing\' messages cannot be sent");
+            return;
+        }
+        if (message.getType() != Message.TYPE_TEXT_MESSAGE) {
+            if (!new File(message.getMessageBody()).exists()) {
+                Log.w(TAG, "error: " + message.getMessageBody() + " is not a valid file path");
+                reportError(message.getId(), "file does not exist");
+                return;
+            }
         }
         if ((message.getState() == Message.STATE_PENDING) || (message.getState() == Message.STATE_SEND_FAILED)) {
             doDispatch(message);
         } else {
             Log.w(TAG, "attempted to send a sent message, but will not be sent");
-            reportError(message.getId(), "message already send");
+            reportError(message.getId(), "message already sent");
         }
     }
 
@@ -109,15 +121,6 @@ class MessageDispatcher implements Dispatcher<Message> {
     private void doDispatch(Message message) {
         JsonObject data = jsonAdapter.toJson(message);
         SenderJob job = new SenderJob(message.getId(), data, message.getType(), message.getMessageBody());
-        if (message.getType() != Message.TYPE_TEXT_MESSAGE
-                && message.getType() != Message.TYPE_DATE_MESSAGE
-                && message.getType() != Message.TYPE_TYPING_MESSAGE) {
-            if (!new File(message.getMessageBody()).exists()) {
-                Log.w(TAG, "error: " + message.getMessageBody() + " is not a valid file path");
-                reportError(message.getId(), "file does not exist");
-                return;
-            }
-        }
         sender.enqueue(job);
     }
 

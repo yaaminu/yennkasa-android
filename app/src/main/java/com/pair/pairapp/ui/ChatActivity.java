@@ -12,12 +12,14 @@ import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.pair.adapter.MessagesAdapter;
 import com.pair.data.Conversation;
@@ -25,6 +27,7 @@ import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.messenger.PairAppClient;
 import com.pair.net.Dispatcher;
+import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.FileHelper;
@@ -207,20 +210,24 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         editText.setText(""); //clear the text field
         //TODO use a regular expression to validate the message body
         if (!TextUtils.isEmpty(content)) {
-            if (!sessionSetUp) {
-                setUpSession();
-                sessionSetUp = true;
-            }
             Message message = createMessage(content, Message.TYPE_TEXT_MESSAGE);
-            if (bound && (dispatcher != null)) {
-                dispatcher.dispatch(message);
-            } else {
-                doBind(); //after binding dispatcher will smartly send all unsent messages
-            }
+            sendMessage(message);
+        }
+    }
+
+    private void sendMessage(Message message) {
+        if (bound && (dispatcher != null)) {
+            dispatcher.dispatch(message);
+        } else {
+            doBind(); //after binding dispatcher will smartly send all unsent messages
         }
     }
 
     private Message createMessage(String messageBody, int type) {
+        if (!sessionSetUp) {
+            setUpSession();
+            sessionSetUp = true;
+        }
         realm.beginTransaction();
         Message message = realm.createObject(Message.class);
         message.setMessageBody(messageBody);
@@ -268,10 +275,10 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
                 case 0:
                     //take picture.
                     attachIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    Uri mMediaUri = FileHelper.getOutputUri(FileHelper.MEDIA_TYPE_IMAGE);
-                    attachIntent.putExtra(MediaStore.EXTRA_OUTPUT, mMediaUri);
-                    startActivityForResult(attachIntent, TAKE_PHOTO_REQUEST);
-
+                    takePhoto(attachIntent);
+                    break;
+                case 2:
+                    choosePicture();
                     break;
                 default:
                     break;
@@ -279,8 +286,49 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         }
     };
 
+    private void choosePicture() {
+        Intent attachIntent;
+        attachIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        attachIntent.setType("image/*");
+        startActivityForResult(attachIntent, PICK_PHOTO_REQUEST);
+    }
+
+    private void takePhoto(Intent attachIntent) {
+        Uri mMediaUri;
+        try {
+            mMediaUri = FileHelper.getOutputUri(FileHelper.MEDIA_TYPE_IMAGE);
+            attachIntent.putExtra(MediaStore.EXTRA_OUTPUT, mMediaUri);
+            startActivityForResult(attachIntent, TAKE_PHOTO_REQUEST);
+        } catch (Exception e) {
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, e.getMessage(), e.getCause());
+            } else {
+                Log.e(TAG, e.getMessage());
+            }
+            Toast.makeText(ChatActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode != RESULT_OK) {
+            Toast.makeText(this, "request canceled", Toast.LENGTH_LONG).show();
+            return;
+        }
+        Uri uri = data.getData();
+        String actualPath;
+        if (uri.getScheme().equals("content")) {
+            actualPath = FileHelper.resolveUriToFile(uri);
+        } else {
+            actualPath = uri.toString();
+        }
+        switch (requestCode) {
+            case PICK_PHOTO_REQUEST:
+                Message message = createMessage(actualPath, Message.TYPE_PICTURE_MESSAGE);
+                sendMessage(message);
+                break;
+            default:
+                break;
+        }
     }
 }

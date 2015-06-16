@@ -50,7 +50,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
             }
         }
 
-        throw new RuntimeException("impossible");
+        // throw new RuntimeException("impossible");
+        return OWN_MESSAGE;
     }
 
     @Override
