@@ -12,8 +12,8 @@ public interface Dispatcher<T> {
 
     boolean cancelDispatchMayPossiblyFail(T t);
 
-    void setDispatcherMonitor(DispatcherMonitor callBack);
-
+    void addMonitor(DispatcherMonitor monitor);
+    void unregisterMonitor(DispatcherMonitor monitor);
     /**
      * Created by Null-Pointer on 5/26/2015.
      */

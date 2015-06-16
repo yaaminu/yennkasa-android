@@ -121,7 +121,7 @@ public class PairAppClient extends Service {
         @Override
         public void onAllDispatched() {
             if (!bound) { //in the future this service will run infinitely
-                Log.i(TAG, "stopping self no job and now client bound");
+                Log.i(TAG, "stopping self no job and no bound client");
                 stopSelf();
             }
         }

@@ -8,6 +8,7 @@ import io.realm.Realm;
  * @author Null-Pointer on 6/10/2015.
  */
 public class RealmHelper {
+    // FIXME: 6/16/2015 remove this helper class
     public static void runRealmOperation(final Context context) {
         //helper method for cleaning up real and seeding it with data
         Realm realm = Realm.getInstance(context);

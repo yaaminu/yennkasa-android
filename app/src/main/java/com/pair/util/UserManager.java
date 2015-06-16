@@ -31,6 +31,7 @@ import retrofit.client.Response;
 public class UserManager {
 
     private static final String TAG = UserManager.class.getSimpleName();
+    private final Exception NO_CONNECTION_ERROR = new Exception("not connected to the internet");
     private Context context;
     private UserApi userApi;
     private static UserManager INSTANCE;
@@ -94,10 +95,17 @@ public class UserManager {
     }
 
     public void logIn(User user, final LoginCallback callback) {
+        if (!ConnectionHelper.isConnectedOrConnecting()) {
+            callback.done(NO_CONNECTION_ERROR);
+        }
+
         logIn(adapter.toJson(user), callback);
     }
 
     public void logIn(JsonObject user, final LoginCallback callback) {
+        if (!ConnectionHelper.isConnectedOrConnecting()) {
+            callback.done(NO_CONNECTION_ERROR);
+        }
         if (busy) {
             return;
         }
@@ -121,10 +129,16 @@ public class UserManager {
     }
 
     public void signUp(User user, final SignUpCallback callback) {
+        if (!ConnectionHelper.isConnectedOrConnecting()) {
+            callback.done(NO_CONNECTION_ERROR);
+        }
         signUp(adapter.toJson(user), callback);
     }
 
     public void signUp(JsonObject user, final SignUpCallback callback) {
+        if (!ConnectionHelper.isConnectedOrConnecting()) {
+            callback.done(NO_CONNECTION_ERROR);
+        }
         if (busy) {
             return;
         }
@@ -179,6 +193,10 @@ public class UserManager {
     }
 
     public void fetchFriends(final List<String> array, final FriendsFetchCallback callback) {
+        if (!ConnectionHelper.isConnected()) {
+            callback.done(NO_CONNECTION_ERROR,null);
+            return;
+        }
         userApi.fetchFriends(array, new Callback<List<User>>() {
             @Override
             public void success(List<User> users, Response response) {
@@ -193,7 +211,7 @@ public class UserManager {
                         ) {
                     callback.done(retrofitError, null);
                 } else if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
-                    if (ConnectionHelper.isConnectedOrConnecting(context)) {
+                    if (ConnectionHelper.isConnectedOrConnecting()) {
                         //try again
                         fetchFriends(array, callback);
                     } else {
