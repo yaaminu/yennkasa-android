@@ -38,7 +38,7 @@ public class UiHelpers {
 
     public static void enterChatRoom(Context context, String peerId) {
         Intent intent = new Intent(context, ChatActivity.class);
-        intent.putExtra(ChatActivity.PEER_ID, peerId);
+        intent.putExtra(ChatActivity.EXTRA_PEER_ID, peerId);
         context.startActivity(intent);
     }
 

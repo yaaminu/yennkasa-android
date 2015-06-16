@@ -85,7 +85,7 @@ class NotificationManager {
             @Override
             public void run() {
                 Intent intent = new Intent(Config.getApplicationContext(), ChatActivity.class);
-                intent.putExtra(ChatActivity.PEER_ID, message.getFrom());
+                intent.putExtra(ChatActivity.EXTRA_PEER_ID, message.getFrom());
                 NotificationManager.INSTANCE.onNewMessage(message, intent);
             }
         }, 1000);

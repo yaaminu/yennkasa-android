@@ -13,6 +13,8 @@ import com.pair.adapter.MessageJsonAdapter;
 import com.pair.data.Message;
 import com.pair.net.Dispatcher;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import io.realm.Realm;
 import io.realm.RealmResults;
 
@@ -24,11 +26,13 @@ import io.realm.RealmResults;
  * TODO: Customize class - update intent actions and extra parameters.
  */
 public class PairAppClient extends Service {
+    // FIXME: 6/16/2015 improve how we stop background task
     public static final String TAG = PairAppClient.class.getSimpleName();
     public static final String ACTION_SEND_ALL_UNSENT = "send unsent messages";
     public static final String ACTION = "action";
     private boolean bound = false;
     private volatile int boundClients = 0;
+    private AtomicBoolean noJob = new AtomicBoolean(false);
     public final PairAppClientInterface INSTANCE = new PairAppClientInterface();
     private Dispatcher<Message> DISPATCHER_INSTANCE;
 
@@ -69,8 +73,9 @@ public class PairAppClient extends Service {
     public boolean onUnbind(Intent intent) {
         Log.i(TAG, intent.getComponent().getClassName() + " unbinding");
         boundClients--;
-        if (boundClients < 1) {
-            bound = false;
+        bound = boundClients < 1;
+        if (!bound) {
+            Log.i(TAG, "stopping self no job and no bound client");
             stopSelf();
         }
         return true; //support re-binding
@@ -148,6 +153,11 @@ public class PairAppClient extends Service {
                 RealmResults<Message> messages = realm.where(Message.class).notEqualTo("type", Message.TYPE_DATE_MESSAGE).equalTo("state", Message.STATE_PENDING).findAll();
                 if (messages.size() < 1) {
                     Log.d(TAG, "all messages sent");
+                    realm.close();
+                    if (!bound) {
+                        Log.i(TAG, "stopping self no unsent message and no bound client");
+                        stopSelf();
+                    }
                 }else {
                     // ideally copied version of the messages should be passed to dispatcher
                     // but since we know dispatcher never uses message on a different thread we can
@@ -155,8 +165,8 @@ public class PairAppClient extends Service {
                     for (Message message : messages) {
                         DISPATCHER_INSTANCE.dispatch(message);
                     }
+                    realm.close();
                 }
-                realm.close();
             }
         }.start();
 

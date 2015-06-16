@@ -46,7 +46,7 @@ public class MessageProcessor extends IntentService {
         if (!conversation.isActive()) {
             Message copied = new Message(message);
             Intent action = new Intent(this, ChatActivity.class);
-            action.putExtra(ChatActivity.PEER_ID, copied.getFrom());
+            action.putExtra(ChatActivity.EXTRA_PEER_ID, copied.getFrom());
             NotificationManager.INSTANCE.onNewMessage(copied, action);
         }
         realm.close();

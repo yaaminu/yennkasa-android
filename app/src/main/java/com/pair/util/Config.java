@@ -5,8 +5,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
+import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -25,12 +28,50 @@ public class Config {
     private static final String logMessage = "calling getApplication when init has not be called";
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
     public static final String APP_USER_AGENT = "pairapp-android-development-version";
+    private static String APP_NAME = "PairApp";
+    public static final File APP_IMG_MEDIA_BASE_DIR = getImageBasedir();
+    public static final File APP_VID_MEDIA_BASE_DIR = getVideoBaseDir();
+
+    @NonNull
+    private static File getImageBasedir() {
+        if (isExternalStorageAvailable()) {
+            return new File(Environment
+                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), APP_NAME);
+        }
+        return null;
+    }
+
+    @NonNull
+    private static File getVideoBaseDir() {
+        if (isExternalStorageAvailable()) {
+            return new File(Environment
+                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), APP_NAME);
+        }
+        return null;
+    }
+
+    private static boolean isExternalStorageAvailable() {
+        String state = Environment.getExternalStorageState();
+        if (state.equals(Environment.MEDIA_MOUNTED)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     private static Application application;
     private static AtomicBoolean isChatRoomOpen = new AtomicBoolean(false);
 
     public static void init(Application pairApp) {
         Config.application = pairApp;
-        isChatRoomOpen.set(false);
+        setUpDirs();
+    }
+
+    private static void setUpDirs() {
+        //no need to worry calling this several times
+        //if the file is already a directory it will fail silently
+        APP_IMG_MEDIA_BASE_DIR.mkdirs();
+        APP_VID_MEDIA_BASE_DIR.mkdirs();
     }
 
     public static boolean isChatRoomOpen() {

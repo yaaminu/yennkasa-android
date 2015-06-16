@@ -1,10 +1,14 @@
 package com.pair.pairapp.ui;
 
+import android.app.AlertDialog;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
@@ -23,6 +27,7 @@ import com.pair.messenger.PairAppClient;
 import com.pair.net.Dispatcher;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
+import com.pair.util.FileHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
@@ -33,8 +38,14 @@ import io.realm.RealmResults;
 
 
 public class ChatActivity extends ActionBarActivity implements View.OnClickListener {
-    public static final String TAG = ChatActivity.class.getSimpleName();
-    public static final String PEER_ID = "peer id";
+    private static final int TAKE_PHOTO_REQUEST = 0x0;
+    private static final int TAKE_VIDEO_REQUEST = 0x1;
+    private static final int PICK_PHOTO_REQUEST = 0x2;
+    private static final int PICK_VIDEO_REQUEST = 0x3;
+
+    private static final String TAG = ChatActivity.class.getSimpleName();
+    public static final String EXTRA_PEER_ID = "peer id";
+
     private RealmResults<Message> messages;
     private User peer;
     private Conversation currConversation;
@@ -71,7 +82,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         sendButton.setOnClickListener(this);
 
         Bundle bundle = getIntent().getExtras();
-        String peerId = bundle.getString(PEER_ID);
+        String peerId = bundle.getString(EXTRA_PEER_ID);
         peer = realm.where(User.class).equalTo("_id", peerId).findFirst();
         String peerName = peer.getName();
         //noinspection ConstantConditions
@@ -151,7 +162,10 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_attach) {
-            //create chooser dialog
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setItems(R.array.attach_options, mDialogListener);
+            AlertDialog dialog = builder.create();
+            dialog.show();
             //listen to selections
             //fire appropriate intent
             //receive intent result
@@ -244,5 +258,29 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             default:
                 return "Image";
         }
+    }
+
+    private DialogInterface.OnClickListener mDialogListener = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            Intent attachIntent;
+            switch (which) {
+                case 0:
+                    //take picture.
+                    attachIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    Uri mMediaUri = FileHelper.getOutputUri(FileHelper.MEDIA_TYPE_IMAGE);
+                    attachIntent.putExtra(MediaStore.EXTRA_OUTPUT, mMediaUri);
+                    startActivityForResult(attachIntent, TAKE_PHOTO_REQUEST);
+
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
     }
 }
