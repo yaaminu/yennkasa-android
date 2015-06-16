@@ -3,7 +3,7 @@
        android:shape="rectangle">
 
     <!-- view background color -->
-    <solid android:color="@color/bg_msg_date">
+    <solid android:color="@color/color_msg_date">
     </solid>
 
     <corners

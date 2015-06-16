@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:paddingBottom="1.5dp"
+    android:paddingLeft="1.5dp"
+    android:paddingRight="10dp"
+    android:paddingTop="1.5dp">
+
+    <FrameLayout
+        android:id="@+id/fl_message_body_view"
+        style="@style/outgoing_message_body_root_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tv_message_content"
+            style="@style/message_incoming"
+            android:text="message sent by user"
+            />
+
+        <ImageView
+            android:id="@+id/iv_message_preview"
+            style="@style/outgoing_message_body_root_view"
+            android:layout_width="250dp"
+            android:layout_height="200dp"
+            android:padding="10dp"
+            android:scaleType="fitXY"
+            android:src="@drawable/avatar_empty"/>
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tv_message_date"
+        style="@style/message_outgoing_date"
+        android:singleLine="true"
+        android:text="date sent"
+        />
+</RelativeLayout>
+

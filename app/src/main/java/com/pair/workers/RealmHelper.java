@@ -13,6 +13,7 @@ public class RealmHelper {
         //helper method for cleaning up real and seeding it with data
         Realm realm = Realm.getInstance(context);
         realm.beginTransaction();
+        //  realm.where(Message.class).findAll().clear();
         realm.commitTransaction();
         realm.close();
     }

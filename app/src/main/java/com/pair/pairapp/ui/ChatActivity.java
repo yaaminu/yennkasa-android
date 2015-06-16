@@ -315,13 +315,9 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             Toast.makeText(this, "request canceled", Toast.LENGTH_LONG).show();
             return;
         }
-        Uri uri = data.getData();
+
         String actualPath;
-        if (uri.getScheme().equals("content")) {
-            actualPath = FileHelper.resolveUriToFile(uri);
-        } else {
-            actualPath = uri.toString();
-        }
+        actualPath = getFilePath(requestCode, data);
         switch (requestCode) {
             case PICK_PHOTO_REQUEST:
                 Message message = createMessage(actualPath, Message.TYPE_PICTURE_MESSAGE);
@@ -330,5 +326,19 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             default:
                 break;
         }
+    }
+
+    private String getFilePath(int requestCode, Intent data) {
+        String actualPath;
+
+        Uri uri = data.getData();
+        if (uri.getScheme().equals("content")) {
+            actualPath = FileHelper.resolveUriToFile(uri);
+        } else {
+            //because BitmapFactory#decodeStream() does not support file:// style urls, we are stripping that part off.
+            actualPath = uri.getPath();
+            Log.i(TAG, actualPath);
+        }
+        return actualPath;
     }
 }
