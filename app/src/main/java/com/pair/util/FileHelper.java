@@ -19,10 +19,12 @@ public class FileHelper {
     public static final int MEDIA_TYPE_VIDEO = 0x1;
 
     public static Uri getOutputUri(int mediaType) throws Exception {
+        StringBuilder pathBuilder = new StringBuilder((mediaType == MEDIA_TYPE_IMAGE) ? "IMG_" : "VID");
+        Date now = new Date();
+        pathBuilder.append(new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(now));
         switch (mediaType) {
             case MEDIA_TYPE_IMAGE:
-                Date now = new Date();
-                String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(now);
+                pathBuilder.append(".jpeg");
                 File file = Config.APP_IMG_MEDIA_BASE_DIR;
                 if (file != null) {
                     if (!file.isDirectory()) {
@@ -30,7 +32,7 @@ public class FileHelper {
                             throw new Exception("Could not create File, check you SD card");
                         }
                     }
-                    return Uri.fromFile(new File(file, timestamp));
+                    return Uri.fromFile(new File(file, pathBuilder.toString()));
                 }
                 return null;
             case MEDIA_TYPE_VIDEO:

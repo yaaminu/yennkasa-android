@@ -293,8 +293,9 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         startActivityForResult(attachIntent, PICK_PHOTO_REQUEST);
     }
 
+    private Uri mMediaUri;
+
     private void takePhoto(Intent attachIntent) {
-        Uri mMediaUri;
         try {
             mMediaUri = FileHelper.getOutputUri(FileHelper.MEDIA_TYPE_IMAGE);
             attachIntent.putExtra(MediaStore.EXTRA_OUTPUT, mMediaUri);
@@ -315,14 +316,15 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             Toast.makeText(this, "request canceled", Toast.LENGTH_LONG).show();
             return;
         }
-
         String actualPath;
         actualPath = getFilePath(requestCode, data);
         switch (requestCode) {
             case PICK_PHOTO_REQUEST:
+                //fall through
+            case TAKE_PHOTO_REQUEST:
                 Message message = createMessage(actualPath, Message.TYPE_PICTURE_MESSAGE);
                 sendMessage(message);
-                break;
+                break; //redundant but safe
             default:
                 break;
         }
@@ -330,14 +332,17 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     private String getFilePath(int requestCode, Intent data) {
         String actualPath;
-
-        Uri uri = data.getData();
-        if (uri.getScheme().equals("content")) {
-            actualPath = FileHelper.resolveUriToFile(uri);
+        if (requestCode == TAKE_PHOTO_REQUEST || requestCode == TAKE_VIDEO_REQUEST) {
+            actualPath = mMediaUri.getPath();
         } else {
-            //because BitmapFactory#decodeStream() does not support file:// style urls, we are stripping that part off.
-            actualPath = uri.getPath();
-            Log.i(TAG, actualPath);
+            Uri uri = data.getData();
+            if (uri.getScheme().equals("content")) {
+                actualPath = FileHelper.resolveUriToFile(uri);
+            } else {
+                //because BitmapFactory#decodeStream() does not support file:// style urls, we are stripping that part off.
+                actualPath = uri.getPath();
+                Log.i(TAG, actualPath);
+            }
         }
         return actualPath;
     }

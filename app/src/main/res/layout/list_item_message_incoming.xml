@@ -22,12 +22,21 @@
 
         <ImageView
             android:id="@+id/iv_message_preview"
+            style="@style/incoming_message_body_root_view"
             android:layout_width="250dp"
             android:layout_height="200dp"
-            android:scaleType="fitXY"
             android:padding="10dp"
-            style="@style/incoming_message_body_root_view"
+            android:scaleType="fitXY"
             android:src="@drawable/avatar_empty"/>
+
+        <Button
+            android:id="@+id/bt_download"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="#3d0f"
+            android:text="download"
+            />
     </FrameLayout>
 
     <TextView

@@ -16,7 +16,7 @@
 
         <TextView
             android:id="@+id/tv_message_content"
-            style="@style/message_incoming"
+            style="@style/message_outgoing"
             android:text="message sent by user"
             />
 
@@ -28,6 +28,16 @@
             android:padding="10dp"
             android:scaleType="fitXY"
             android:src="@drawable/avatar_empty"/>
+
+        <Button
+            android:visibility="gone"
+            android:id="@+id/bt_download"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="#3d0f"
+            android:text="download"
+            />
     </FrameLayout>
 
     <TextView

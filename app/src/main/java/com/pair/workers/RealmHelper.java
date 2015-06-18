@@ -2,6 +2,10 @@ package com.pair.workers;
 
 import android.content.Context;
 
+import com.pair.data.Message;
+import com.pair.util.Config;
+import com.pair.util.UserManager;
+
 import io.realm.Realm;
 
 /**
@@ -13,7 +17,9 @@ public class RealmHelper {
         //helper method for cleaning up real and seeding it with data
         Realm realm = Realm.getInstance(context);
         realm.beginTransaction();
-        //  realm.where(Message.class).findAll().clear();
+        Message message = realm.where(Message.class).findFirst();
+        message.setFrom("00000000");
+        message.setTo(UserManager.getInstance(Config.getApplication()).getCurrentUser().get_id());
         realm.commitTransaction();
         realm.close();
     }
