@@ -337,7 +337,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         } else {
             Uri uri = data.getData();
             if (uri.getScheme().equals("content")) {
-                actualPath = FileHelper.resolveUriToFile(uri);
+                actualPath = FileHelper.resolveContentUriToFilePath(uri);
             } else {
                 //because BitmapFactory#decodeStream() does not support file:// style urls, we are stripping that part off.
                 actualPath = uri.getPath();

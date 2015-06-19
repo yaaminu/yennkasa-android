@@ -62,19 +62,19 @@ class NotificationManager {
             Notification notification = builder.build();
             android.app.NotificationManager notMgr = ((android.app.NotificationManager) Config.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE));
             notMgr.notify(MESSAGE_NOTIFICATION_ID, notification);
-            playBeep();
+            playTone();
         }
     };
 
-    private void playBeep() {
-        // TODO: 6/14/2015 fetch url from preferences
+    private void playTone() {
+        // TODO: 6/14/2015 fetch correct tone from preferences
         Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         Ringtone ringtone = RingtoneManager.getRingtone(Config.getApplicationContext(), uri);
         if (ringtone != null) {
             ringtone.play();
         } else {
             Log.d(TAG, "unable to play ringtone");
-            // TODO: 6/15/2015 fallback to default tone for app 
+            // TODO: 6/15/2015 fallback to default tone for app if available
         }
     }
 

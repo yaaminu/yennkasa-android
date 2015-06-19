@@ -2,8 +2,6 @@ package com.pair.util;
 
 import android.widget.EditText;
 
-import com.google.android.gms.nearby.messages.Strategy;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -26,7 +24,7 @@ public class FormValidator {
         this.fields.put(strategy,action);
     }
 
-    public void dismissStrategy(Strategy strategy) {
+    public void dismissStrategy(ValidationStrategy strategy) {
         //noinspection SuspiciousMethodCalls
         this.fields.remove(strategy);
     }
