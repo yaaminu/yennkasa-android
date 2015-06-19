@@ -317,7 +317,17 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             return;
         }
         String actualPath;
-        actualPath = getFilePath(requestCode, data);
+        try {
+            Uri uri = data.getData();
+            if (uri.getScheme() == "content") {
+                actualPath = FileHelper.resolveContentUriToFilePath(uri);
+            } else {
+                actualPath = uri.getPath();
+            }
+        } catch (NullPointerException itIsTakePhotoOrVideoRequest) {
+            Log.e(TAG, itIsTakePhotoOrVideoRequest.getMessage());
+            actualPath = mMediaUri.getPath();
+        }
         switch (requestCode) {
             case PICK_PHOTO_REQUEST:
                 //fall through
@@ -346,4 +356,6 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         }
         return actualPath;
     }
+
+
 }

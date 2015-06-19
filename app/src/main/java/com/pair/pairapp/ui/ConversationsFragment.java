@@ -24,21 +24,26 @@ import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
 
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import io.realm.Realm;
+import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
 /**
  * @author by Null-Pointer on 5/29/2015.
  */
-public class ConversationsFragment extends ListFragment {
+public class ConversationsFragment extends ListFragment implements RealmChangeListener {
 
     private static final String TAG = ConversationsFragment.class.getSimpleName();
     private Realm realm;
     private RealmResults<Conversation> conversations;
     private ConversationAdapter adapter;
+    private static long currentTimeOut = 0L;
+    private static Timer timer;
+
     public ConversationsFragment() {
     } //required no-arg constructor
 
@@ -69,16 +74,30 @@ public class ConversationsFragment extends ListFragment {
         ActionBarActivity activity = (ActionBarActivity) getActivity();
         //noinspection ConstantConditions
         activity.getSupportActionBar().setTitle(title);
-
+        realm.addChangeListener(this);
+        startTimer();
         return view;
     }
 
     @Override
     public void onResume() {
         super.onResume();
+    }
+
+    private void startTimer() {
+        if (timer == null) {
+            Log.i(TAG, "starting timer");
+            timer = newTimer(null);
+            currentTimeOut = AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15;
+            timer.scheduleAtFixedRate(task, 0L, currentTimeOut);
+        }
+    }
+    private void scheduleTimer(long interval) {
         try {
-            long ONE_MINUTE = AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15;
-            timer.scheduleAtFixedRate(task, 0L, ONE_MINUTE);
+            timer.purge();
+            timer = newTimer("uiRefresher");
+            timer.scheduleAtFixedRate(task, 0L, interval);
+            currentTimeOut = interval;
         } catch (Exception ignored) { //timer is already scheduled!
 
         }
@@ -140,18 +159,56 @@ public class ConversationsFragment extends ListFragment {
     private TimerTask task = new TimerTask() {
         @Override
         public void run() {
-            getActivity().runOnUiThread(refreshRealm);
+            getActivity().runOnUiThread(doRefreshDisplay);
         }
     };
 
-    private Runnable refreshRealm = new Runnable() {
+    @Override
+    public void onChange() {
+        refreshDisplay();
+        setUpTimerIfPossible();
+    }
+
+    private Runnable doRefreshDisplay = new Runnable() {
         @Override
         public void run() {
-            // conversations = realm.where(Conversation.class).findAll();
-            adapter.notifyDataSetChanged();
-            Log.i(TAG, "refreshing");
+            refreshDisplay();
+            setUpTimerIfPossible();
         }
     };
 
-    private Timer timer = new Timer("dateRefresher", true);
+    private void setUpTimerIfPossible() {
+        Date then = (realm.where(Conversation.class).maximumDate("lastActiveTime"));
+        if (then != null) {
+            long elapsed = new Date().getTime() - then.getTime();
+            if (elapsed < AlarmManager.INTERVAL_HOUR) {
+                if (currentTimeOut == 0L || currentTimeOut != AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15 /*one minute*/) {
+                    //reset timer.
+                    Log.i(TAG, "rescheduling time to one minute");
+                    scheduleTimer(AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15);
+                }
+            } else if (elapsed < AlarmManager.INTERVAL_DAY) {
+                //reschedule timer
+                if (currentTimeOut == 0L || currentTimeOut != AlarmManager.INTERVAL_HOUR) {
+                    Log.i(TAG, "rescheduling time to one hour");
+                    scheduleTimer(AlarmManager.INTERVAL_HOUR);
+                }
+            } else {
+                Log.i(TAG, "canceling timer");
+                if (timer != null) timer.cancel();
+            }
+        } else {
+            Log.i(TAG, "date is null");
+        }
+    }
+
+    private void refreshDisplay() {
+        adapter.notifyDataSetChanged();
+        Log.i(TAG, "refreshing");
+    }
+
+    private Timer newTimer(String id) {
+        id = (id == null) ? "defaultName" : id;
+        return new Timer(id, true);
+    }
 }
