@@ -1,12 +1,14 @@
 package com.pair.pairapp.ui;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -22,6 +24,9 @@ import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import io.realm.Realm;
 import io.realm.RealmResults;
 
@@ -30,8 +35,10 @@ import io.realm.RealmResults;
  */
 public class ConversationsFragment extends ListFragment {
 
+    private static final String TAG = ConversationsFragment.class.getSimpleName();
     private Realm realm;
-
+    private RealmResults<Conversation> conversations;
+    private ConversationAdapter adapter;
     public ConversationsFragment() {
     } //required no-arg constructor
 
@@ -48,7 +55,7 @@ public class ConversationsFragment extends ListFragment {
         View view = inflater.inflate(R.layout.fragment_inbox, container, false);
         realm = Realm.getInstance(getActivity());
         realm.beginTransaction();
-        RealmResults<Conversation> conversations = realm.allObjectsSorted(Conversation.class, "lastActiveTime", false);
+        conversations = realm.allObjectsSorted(Conversation.class, "lastActiveTime", false);
         for (int i = 0; i < conversations.size(); i++) {
             Conversation conversation = conversations.get(i);
             if (conversation.getLastMessage() == null) {
@@ -56,7 +63,7 @@ public class ConversationsFragment extends ListFragment {
             }
         }
         realm.commitTransaction();
-        ConversationAdapter adapter = new ConversationAdapter(getActivity(), conversations, true);
+        adapter = new ConversationAdapter(getActivity(), conversations, true);
         setListAdapter(adapter);
         String title = getArguments().getString(MainActivity.ARG_TITLE);
         ActionBarActivity activity = (ActionBarActivity) getActivity();
@@ -64,6 +71,17 @@ public class ConversationsFragment extends ListFragment {
         activity.getSupportActionBar().setTitle(title);
 
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        try {
+            long ONE_MINUTE = AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15;
+            timer.scheduleAtFixedRate(task, 0L, ONE_MINUTE);
+        } catch (Exception ignored) { //timer is already scheduled!
+
+        }
     }
 
     @Override
@@ -115,7 +133,25 @@ public class ConversationsFragment extends ListFragment {
     @Override
     public void onDestroy() {
         realm.close();
+        task.cancel();
         super.onDestroy();
     }
 
+    private TimerTask task = new TimerTask() {
+        @Override
+        public void run() {
+            getActivity().runOnUiThread(refreshRealm);
+        }
+    };
+
+    private Runnable refreshRealm = new Runnable() {
+        @Override
+        public void run() {
+            // conversations = realm.where(Conversation.class).findAll();
+            adapter.notifyDataSetChanged();
+            Log.i(TAG, "refreshing");
+        }
+    };
+
+    private Timer timer = new Timer("dateRefresher", true);
 }

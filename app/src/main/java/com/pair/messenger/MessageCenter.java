@@ -12,14 +12,24 @@ import android.util.Log;
  */
 public class MessageCenter extends WakefulBroadcastReceiver {
     private static final String TAG = MessageCenter.class.getSimpleName();
+    private static final String EXTRA_MESSAGE = "message";
+    private static final String EXTRA_NEW_USER = "user";
+    private static final String EXTRA_TYPE = "type";
 
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.i(TAG, "message received");
         Bundle bundle = intent.getExtras();
-        intent = new Intent(context,MessageProcessor.class);
-        intent.putExtras(bundle);
-        startWakefulService(context, intent);
+        if (bundle.getString(EXTRA_TYPE).equals(EXTRA_MESSAGE)) {
+            intent = new Intent(context, MessageProcessor.class);
+            intent.putExtras(bundle);
+            startWakefulService(context, intent);
+        } else if (bundle.getString(EXTRA_TYPE).equals(EXTRA_NEW_USER)) {
+            Log.i(TAG, "new user registered");
+            // TODO: 6/19/2015 add user to our list of users
+        } else {
+            Log.i(TAG, "an unknown message received");
+        }
         setResultCode(Activity.RESULT_OK);
     }
 }
