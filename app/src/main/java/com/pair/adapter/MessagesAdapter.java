@@ -3,9 +3,11 @@ package com.pair.adapter;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.v4.util.LruCache;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,9 +35,12 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     private static final String TAG = MessagesAdapter.class.getSimpleName();
     private static final long THREE_MINUTES = AlarmManager.INTERVAL_FIFTEEN_MINUTES / 5;
     private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2, DATE_MESSAGE = 0x0;
-
+    private final LruCache<String, Bitmap> imageCaches;
     public MessagesAdapter(Activity context, RealmResults<Message> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
+        long cacheSize = Runtime.getRuntime().totalMemory();
+        cacheSize /= 8;
+        imageCaches = new LruCache<>(((int) cacheSize));
     }
 
     @Override
@@ -100,10 +105,15 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     private void getPictureView(ViewHolder holder, final Message message) {
         holder.content.setVisibility(View.GONE);
         holder.preview.setVisibility(View.VISIBLE);
+        Bitmap cachedImage = imageCaches.get(message.getId());
         Log.d(TAG, message.getMessageBody());
         if (new File(message.getMessageBody()).exists()) { //whew downloaded!
             holder.downloadButton.setVisibility(View.GONE);
-            holder.preview.setImageBitmap(BitmapFactory.decodeFile(message.getMessageBody()));
+            if (cachedImage == null) {
+                cachedImage = BitmapFactory.decodeFile(message.getMessageBody());
+                imageCaches.put(message.getId(), cachedImage);
+            }
+            holder.preview.setImageBitmap(cachedImage);
             //downloaded
             final View.OnClickListener imageClickHandler = new View.OnClickListener() {
                 @Override
@@ -120,7 +130,11 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
             holder.preview.setOnClickListener(null); //clear click handler that was previously set
             holder.downloadButton.setOnClickListener(new downloader(null));
             // TODO: 6/18/2015 replace the avatar_empty with a correct message
-            holder.preview.setImageBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.avatar_empty)); //show a place holder image
+            if (cachedImage == null) {
+                cachedImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.avatar_empty);//show a place holder image
+                imageCaches.put(message.getId(), cachedImage);
+            }
+            holder.preview.setImageBitmap(cachedImage);
         }
     }
 
