@@ -1,0 +1,9 @@
+/************* things that can wait************************************/
+
+# logout users from backend when the choose to logout
+# code our own errorhandler that we will pass to retrofit
+# add call
+# add group chat
+# decouple  the notification component from message processor
+# fix the timer issue in conversation fragment
+# give control to users so that they can change their dps,names,statuses etc.

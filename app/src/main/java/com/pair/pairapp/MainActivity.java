@@ -1,5 +1,6 @@
 package com.pair.pairapp;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -15,9 +16,11 @@ import com.pair.pairapp.ui.ContactFragment;
 import com.pair.pairapp.ui.ConversationsFragment;
 import com.pair.pairapp.ui.FriendsFragment;
 import com.pair.pairapp.ui.SideBarFragment;
+import com.pair.util.Config;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
+import com.pair.workers.BootReceiver;
 import com.pair.workers.RealmHelper;
 
 /**
@@ -61,10 +64,15 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_logout) {
+            final ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setMessage("Logging out");
+            progressDialog.show();
             userManager.LogOut(this, new UserManager.LogOutCallback() {
                 @Override
                 public void done(Exception e) {
+                    progressDialog.dismiss();
                     if (e == null) {
+                        Config.disableComponent(BootReceiver.class);
                         gotoSetUpActivity();
                         finish();
                     } else {

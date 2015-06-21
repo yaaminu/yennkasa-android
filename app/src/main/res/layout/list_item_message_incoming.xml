@@ -27,8 +27,7 @@
             android:layout_height="200dp"
             android:padding="10dp"
             android:scaleType="fitXY"
-            android:src="@drawable/avatar_empty"/>
-
+            android:src="@drawable/image_placeholder"/>
         <Button
             android:id="@+id/bt_download"
             android:layout_width="wrap_content"

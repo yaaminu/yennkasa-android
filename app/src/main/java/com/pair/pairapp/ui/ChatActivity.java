@@ -45,6 +45,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private static final int TAKE_VIDEO_REQUEST = 0x1;
     private static final int PICK_PHOTO_REQUEST = 0x2;
     private static final int PICK_VIDEO_REQUEST = 0x3;
+    private static final int PICK_FILE_REQUEST = 0x4;
 
     private static final String TAG = ChatActivity.class.getSimpleName();
     public static final String EXTRA_PEER_ID = "peer id";
@@ -58,7 +59,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private Button sendButton;
     private Dispatcher<Message> dispatcher;
     private boolean bound = false;
-
+    private MessagesAdapter adapter;
     private boolean sessionSetUp = false;
 
     private ServiceConnection connection = new ServiceConnection() {
@@ -94,7 +95,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         //TODO change this query to a more general one than will work even when we add group chat
         messages = realm.where(Message.class).equalTo("from", peer.get_id()).or().equalTo("to", peer.get_id()).findAllSorted("dateComposed", true);
         getConversation(peerId);
-        MessagesAdapter adapter = new MessagesAdapter(this, messages, true);
+        adapter = new MessagesAdapter(this, messages, true);
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
         messagesListView.setAdapter(adapter);
     }
@@ -166,13 +167,9 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         int id = item.getItemId();
         if (id == R.id.action_attach) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setItems(R.array.attach_options, mDialogListener);
+            builder.setItems(R.array.attach_options, dialogListener);
             AlertDialog dialog = builder.create();
             dialog.show();
-            //listen to selections
-            //fire appropriate intent
-            //receive intent result
-            //send message
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -201,6 +198,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             unbindService(connection);
         }
         dispatcher = null;
+        adapter = null;
         super.onDestroy();
     }
 
@@ -267,24 +265,40 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         }
     }
 
-    private DialogInterface.OnClickListener mDialogListener = new DialogInterface.OnClickListener() {
+    private DialogInterface.OnClickListener dialogListener = new DialogInterface.OnClickListener() {
         @Override
         public void onClick(DialogInterface dialog, int which) {
-            Intent attachIntent;
             switch (which) {
-                case 0:
+                case TAKE_PHOTO_REQUEST:
                     //take picture.
-                    attachIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    takePhoto(attachIntent);
+                    takePhoto();
                     break;
-                case 2:
+                case TAKE_VIDEO_REQUEST:
+                    recordVideo();
+                    break;
+                case PICK_PHOTO_REQUEST:
                     choosePicture();
                     break;
+                case PICK_VIDEO_REQUEST:
+                    chooseVideo();
+                    break;
+                case PICK_FILE_REQUEST:
+                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                    intent.setType("*/*");
+                    startActivityForResult(intent, PICK_FILE_REQUEST);
+                    break; //safety!
                 default:
                     break;
             }
         }
     };
+
+
+    private void chooseVideo() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("video/*");
+        startActivityForResult(intent, PICK_VIDEO_REQUEST);
+    }
 
     private void choosePicture() {
         Intent attachIntent;
@@ -295,8 +309,27 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     private Uri mMediaUri;
 
-    private void takePhoto(Intent attachIntent) {
+    private void recordVideo() {
         try {
+            Intent attachIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+            mMediaUri = FileHelper.getOutputUri(FileHelper.MEDIA_TYPE_IMAGE);
+            attachIntent.putExtra(MediaStore.EXTRA_OUTPUT, mMediaUri);
+            attachIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
+            attachIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 60 * 10);
+            startActivityForResult(attachIntent, TAKE_VIDEO_REQUEST);
+        } catch (Exception e) {
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, e.getMessage(), e.getCause());
+            } else {
+                Log.e(TAG, e.getMessage());
+            }
+            Toast.makeText(ChatActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void takePhoto() {
+        try {
+            Intent attachIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             mMediaUri = FileHelper.getOutputUri(FileHelper.MEDIA_TYPE_IMAGE);
             attachIntent.putExtra(MediaStore.EXTRA_OUTPUT, mMediaUri);
             startActivityForResult(attachIntent, TAKE_PHOTO_REQUEST);
@@ -319,43 +352,34 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         String actualPath;
         try {
             Uri uri = data.getData();
-            if (uri.getScheme() == "content") {
+            if (uri.getScheme().equals("content")) {
                 actualPath = FileHelper.resolveContentUriToFilePath(uri);
             } else {
                 actualPath = uri.getPath();
             }
         } catch (NullPointerException itIsTakePhotoOrVideoRequest) {
-            Log.e(TAG, itIsTakePhotoOrVideoRequest.getMessage());
             actualPath = mMediaUri.getPath();
         }
+        Message message;
         switch (requestCode) {
             case PICK_PHOTO_REQUEST:
                 //fall through
             case TAKE_PHOTO_REQUEST:
-                Message message = createMessage(actualPath, Message.TYPE_PICTURE_MESSAGE);
+                message = createMessage(actualPath, Message.TYPE_PICTURE_MESSAGE);
                 sendMessage(message);
-                break; //redundant but safe
-            default:
                 break;
+            case TAKE_VIDEO_REQUEST:
+                //fall through
+            case PICK_VIDEO_REQUEST:
+                message = createMessage(actualPath, Message.TYPE_VIDEO_MESSAGE);
+                sendMessage(message);
+                break;
+            case PICK_FILE_REQUEST:
+                message = createMessage(actualPath, Message.TYPE_BIN_MESSAGE);
+                sendMessage(message);
+                break;
+            default:
+                throw new AssertionError("impossible");
         }
     }
-
-    private String getFilePath(int requestCode, Intent data) {
-        String actualPath;
-        if (requestCode == TAKE_PHOTO_REQUEST || requestCode == TAKE_VIDEO_REQUEST) {
-            actualPath = mMediaUri.getPath();
-        } else {
-            Uri uri = data.getData();
-            if (uri.getScheme().equals("content")) {
-                actualPath = FileHelper.resolveContentUriToFilePath(uri);
-            } else {
-                //because BitmapFactory#decodeStream() does not support file:// style urls, we are stripping that part off.
-                actualPath = uri.getPath();
-                Log.i(TAG, actualPath);
-            }
-        }
-        return actualPath;
-    }
-
-
 }

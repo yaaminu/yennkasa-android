@@ -1,6 +1,9 @@
 package com.pair.workers;
 
+import android.app.AlarmManager;
 import android.app.IntentService;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
@@ -88,5 +91,14 @@ public class ContactSyncService extends IntentService {
             realm.commitTransaction();
             realm.close();
         }
+    }
+
+    public static void start(Context context) {
+        Intent intent = new Intent(context, ContactSyncService.class);
+        intent.putExtra(ContactSyncService.ACTION, ContactSyncService.ACTION_FETCH_FRIENDS);
+        PendingIntent operation = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager manager = ((AlarmManager) context.getSystemService(Context.ALARM_SERVICE));
+        long now = 1;
+        manager.setRepeating(AlarmManager.ELAPSED_REALTIME, now, AlarmManager.INTERVAL_HOUR, operation); //start now
     }
 }

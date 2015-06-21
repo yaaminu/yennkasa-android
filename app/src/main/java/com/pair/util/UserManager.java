@@ -180,12 +180,11 @@ public class UserManager {
             throw new IllegalStateException("existing session id with no corresponding User in the database");
         }
         realm.close();
-        cleanUpRealm();
         GcmHelper.unRegister(context, new GcmHelper.UnregisterCallback() {
             @Override
             public void done(Exception e) {
                 if (e == null) {
-                    Config.disableComponent(BootReceiver.class);
+                    cleanUpRealm();
                 }
                 logOutCallback.done(e);
             }

@@ -5,7 +5,11 @@ import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
@@ -16,19 +20,24 @@ import com.pair.data.ContactsManager.Contact;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
+import com.pair.workers.ContactSyncService;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import io.realm.RealmChangeListener;
+
 
 /**
  * A simple {@link ListFragment} subclass.
  */
-public class ContactFragment extends ListFragment {
+public class ContactFragment extends ListFragment implements RealmChangeListener {
 
 
     private static final String TAG = ContactFragment.class.getSimpleName();
+
+    private ContactsAdapter adapter;
     private final Comparator<Contact> comparator = new Comparator<Contact>() {
         @Override
         public int compare(Contact lhs, Contact rhs) {
@@ -51,6 +60,12 @@ public class ContactFragment extends ListFragment {
         }
     };
 
+    private final ContactsManager.FindCallback<List<Contact>> contactsFindCallback = new ContactsManager.FindCallback<List<Contact>>() {
+        @Override
+        public void done(List<Contact> contacts) {
+            adapter.refill(contacts);
+        }
+    };
 
     public ContactFragment() {
         // Required empty public constructor
@@ -67,13 +82,8 @@ public class ContactFragment extends ListFragment {
         activity.getSupportActionBar().setTitle(title);
 
         List<Contact> contacts = new ArrayList<>();
-        final ContactsAdapter adapter = new ContactsAdapter(contacts);
-        ContactsManager.INSTANCE.findAllContacts(null, comparator, new ContactsManager.FindCallback<List<Contact>>() {
-            @Override
-            public void done(List<Contact> contacts) {
-                adapter.refill(contacts);
-            }
-        });
+        adapter = new ContactsAdapter(contacts);
+        ContactsManager.INSTANCE.findAllContacts(null, comparator, contactsFindCallback);
         setListAdapter(adapter);
         return view;
     }
@@ -88,5 +98,28 @@ public class ContactFragment extends ListFragment {
         }
     }
 
-    public static final ContactFragment INSTANCE = new ContactFragment();
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.contact_fragment_menu, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_refresh) {
+            ContactSyncService.start(getActivity());
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onChange() {
+
+        ContactsManager.INSTANCE.findAllContacts(null, comparator, contactsFindCallback);
+    }
 }

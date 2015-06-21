@@ -70,7 +70,7 @@ public class ContactsManager {
                     .CommonDataKinds.Phone.NUMBER));
             //TODO do this with regexp
             if (TextUtils.isEmpty(phoneNumber)) {
-                Log.i(TAG, "no phone number for this contact, continuing");
+                Log.i(TAG, "no phone number for this contact, ignoring");
                 continue;
             }
             // TODO use string#replace(regExp).

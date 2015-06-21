@@ -2,6 +2,7 @@ package com.pair.adapter;
 
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -17,10 +18,12 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.pair.data.Message;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
+import com.pair.util.FileHelper;
 import com.pair.util.UserManager;
 
 import java.io.File;
@@ -36,6 +39,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     private static final long THREE_MINUTES = AlarmManager.INTERVAL_FIFTEEN_MINUTES / 5;
     private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2, DATE_MESSAGE = 0x0;
     private final LruCache<String, Bitmap> imageCaches;
+
     public MessagesAdapter(Activity context, RealmResults<Message> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
         long cacheSize = Runtime.getRuntime().totalMemory();
@@ -77,12 +81,16 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
             return convertView;
         } else if (message.getType() == Message.TYPE_TEXT_MESSAGE) {
             //normal message
-            holder.preview.setVisibility(View.GONE);
-            holder.downloadButton.setVisibility(View.GONE);
+            hideViews(holder.preview, holder.downloadButton);
             holder.content.setVisibility(View.VISIBLE);
             holder.content.setText(message.getMessageBody());
         } else if (message.getType() == Message.TYPE_PICTURE_MESSAGE) {
             getPictureView(holder, message);
+        } else if (message.getType() == Message.TYPE_VIDEO_MESSAGE) {
+            showPreview(holder, message, "video/*", R.drawable.video_placeholder);
+        } else if (message.getType() == Message.TYPE_BIN_MESSAGE) {
+            String mimeType = FileHelper.getMimeType(message.getMessageBody());
+            showPreview(holder, message, mimeType, R.drawable.file_placeholder);
         }
         hideDateIfClose(position, holder, message);
         return convertView;
@@ -103,12 +111,12 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     }
 
     private void getPictureView(ViewHolder holder, final Message message) {
-        holder.content.setVisibility(View.GONE);
+        hideViews(holder.content);
         holder.preview.setVisibility(View.VISIBLE);
         Bitmap cachedImage = imageCaches.get(message.getId());
         Log.d(TAG, message.getMessageBody());
         if (new File(message.getMessageBody()).exists()) { //whew downloaded!
-            holder.downloadButton.setVisibility(View.GONE);
+            hideViews(holder.downloadButton);
             if (cachedImage == null) {
                 cachedImage = BitmapFactory.decodeFile(message.getMessageBody());
                 imageCaches.put(message.getId(), cachedImage);
@@ -138,6 +146,37 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         }
     }
 
+    private void showPreview(ViewHolder holder, final Message message, final String mimeType, int drawable) {
+        hideViews(holder.content);
+        holder.preview.setVisibility(View.VISIBLE);
+        Bitmap cachedImage = imageCaches.get(message.getId());
+        Log.d(TAG, message.getMessageBody());
+        if (cachedImage == null) {
+            cachedImage = BitmapFactory.decodeResource(context.getResources(), drawable);
+            imageCaches.put(message.getId(), cachedImage);
+        }
+        holder.preview.setImageBitmap(cachedImage);
+        if (new File(message.getMessageBody()).exists()) {
+            holder.downloadButton.setVisibility(View.GONE);
+            final View.OnClickListener videoClickHandler = new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    Uri uri = Uri.fromFile(new File(message.getMessageBody()));
+                    intent.setDataAndType(uri, mimeType);
+                    try {
+                        context.startActivity(intent);
+                    } catch (ActivityNotFoundException e) {
+                        Toast.makeText(context, R.string.error_sory_no_application_to_open_file, Toast.LENGTH_LONG).show();
+                    }
+                }
+            };
+            holder.preview.setOnClickListener(videoClickHandler);
+        } else {
+            holder.downloadButton.setVisibility(View.VISIBLE);
+            holder.preview.setOnClickListener(null);//clear click handler if it was set in the recycled view
+        }
+    }
 
     private class downloader implements View.OnClickListener {
         ProgressBar progressBar;
@@ -172,7 +211,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
 //                (holder.dateComposed.setVisibility(View.GONE)):
 //        (doNotCollapse(holder, formattedDate));
         if (hideDate) {
-            holder.dateComposed.setVisibility(View.GONE);
+            hideViews(holder.dateComposed);
         } else {
             doNotCollapse(holder, formattedDate);
         }
@@ -194,6 +233,12 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
 
     private boolean isOutgoingMessage(Message message) {
         return (message.getFrom().equals(UserManager.getInstance(Config.getApplication()).getCurrentUser().get_id()));
+    }
+
+    private void hideViews(View... viewsToHide) {
+        for (View view : viewsToHide) {
+            view.setVisibility(View.GONE);
+        }
     }
 
     private class ViewHolder {

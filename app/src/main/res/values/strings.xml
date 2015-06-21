@@ -24,11 +24,14 @@
     <string name="action_delete_conversation">delete</string>
     <string name="title_pick_contact">Pick a contact</string>
     <string name="action_attach">attach</string>
+    <string name="error_sory_no_application_to_open_file">sorry no application to open file type</string>
+    <string name="action_refresh">Refresh</string>
 
     <string-array name="attach_options">
         <item >Take Picture</item>
         <item >Take Video</item>
         <item >Choose Picture</item>
         <item >Choose Video</item>
+        <item>Choose File</item>
     </string-array>
 </resources>

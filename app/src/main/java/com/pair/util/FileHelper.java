@@ -4,6 +4,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -70,6 +71,18 @@ public class FileHelper {
         return path;
     }
 
+    public static String getMimeType(String path) {
+        if (path == null) return "";
+        int extStart = path.lastIndexOf(".");
+        if (extStart == -1) return "";
+        String extension = path.substring(extStart + 1);
+        //re use extension.
+        extension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+        Log.i(TAG, "mime type of " + path + " is: " + extension);
+
+        return extension;
+    }
+
     public class CountingTypedFile extends TypedFile {
         private final ProgressListener listener;
 
@@ -98,8 +111,9 @@ public class FileHelper {
             boolean callOnComplete = false;
             try {
                 callOnComplete = listener.onStart(length);
-                for (; (read = in.read(buffer)) != -1; processed += read) { //original implementation uses a while loop
+                while ((read = in.read(buffer)) != -1) {
                     out.write(buffer, 0, read);
+                    processed += read;
                     listener.onProgress(length, processed);
                 }
             } finally {
