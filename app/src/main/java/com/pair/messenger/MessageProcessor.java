@@ -4,6 +4,7 @@ package com.pair.messenger;
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.pair.data.Conversation;
 import com.pair.data.Message;
@@ -27,6 +28,7 @@ public class MessageProcessor extends IntentService {
 
         Bundle bundle = intent.getExtras();
         String messageJson = bundle.getString("message");
+        Log.i(TAG, messageJson);
         Realm realm = Realm.getInstance(this);
         realm.beginTransaction();
         Message message = realm.createObjectFromJson(Message.class, messageJson);

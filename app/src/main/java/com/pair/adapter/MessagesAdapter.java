@@ -70,7 +70,6 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     public View getView(int position, View convertView, ViewGroup parent) {
         ViewHolder holder;
         final Message message = getItem(position);
-
         if (convertView == null) {
             convertView = hookupViews(layoutResources[getItemViewType(position)], parent);
         }
@@ -79,7 +78,11 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         if (isDateMessage(position)) {
             holder.content.setText(message.getMessageBody());
             return convertView;
-        } else if (message.getType() == Message.TYPE_TEXT_MESSAGE) {
+        }
+        if (!isOutgoingMessage(message) && message.getType() != Message.TYPE_TEXT_MESSAGE)
+            Log.d(TAG, message.getType() + " is the type");
+
+        if (message.getType() == Message.TYPE_TEXT_MESSAGE) {
             //normal message
             hideViews(holder.preview, holder.downloadButton);
             holder.content.setVisibility(View.VISIBLE);
