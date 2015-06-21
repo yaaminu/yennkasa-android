@@ -375,7 +375,14 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
                 sendMessage(message);
                 break;
             case PICK_FILE_REQUEST:
-                message = createMessage(actualPath, Message.TYPE_BIN_MESSAGE);
+                String extension = FileHelper.getExtension(actualPath);
+                int type = Message.TYPE_BIN_MESSAGE;
+                if (extension.equals("jpeg") || extension.equals("jpg") || extension.equals("png")) {
+                    type = Message.TYPE_PICTURE_MESSAGE;
+                } else if (extension.equals("mp4") || extension.equals("3gp")) {
+                    type = Message.TYPE_VIDEO_MESSAGE;
+                }
+                message = createMessage(actualPath, type);
                 sendMessage(message);
                 break;
             default:

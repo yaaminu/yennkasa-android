@@ -75,6 +75,7 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+        setHasOptionsMenu(true);
         View view = inflater.inflate(R.layout.fragment_contact, container, false);
         String title = getArguments().getString(MainActivity.ARG_TITLE);
         ActionBarActivity activity = (ActionBarActivity) getActivity();

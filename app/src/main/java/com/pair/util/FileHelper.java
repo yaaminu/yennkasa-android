@@ -72,17 +72,20 @@ public class FileHelper {
     }
 
     public static String getMimeType(String path) {
-        if (path == null) return "";
-        int extStart = path.lastIndexOf(".");
-        if (extStart == -1) return "";
-        String extension = path.substring(extStart + 1);
+        String extension = getExtension(path);
+        if ("".equals(extension)) return extension;
         //re use extension.
         extension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
         Log.i(TAG, "mime type of " + path + " is: " + extension);
-
         return extension;
     }
 
+    public static String getExtension(String path) {
+        if (path == null) return "";
+        int extStart = path.lastIndexOf(".");
+        if (extStart == -1) return "";
+        return path.substring(extStart + 1);
+    }
     public class CountingTypedFile extends TypedFile {
         private final ProgressListener listener;
 

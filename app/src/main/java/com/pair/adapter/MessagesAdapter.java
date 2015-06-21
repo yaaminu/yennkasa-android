@@ -79,8 +79,6 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
             holder.content.setText(message.getMessageBody());
             return convertView;
         }
-        if (!isOutgoingMessage(message) && message.getType() != Message.TYPE_TEXT_MESSAGE)
-            Log.d(TAG, message.getType() + " is the type");
 
         if (message.getType() == Message.TYPE_TEXT_MESSAGE) {
             //normal message

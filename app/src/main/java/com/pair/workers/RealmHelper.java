@@ -26,13 +26,12 @@ public class RealmHelper {
     // FIXME: 6/16/2015 remove this helper class
     public static void runRealmOperation(final Context context) {
         //helper method for cleaning up real and seeding it with data
-        Realm realm = Realm.getInstance(context);
-        User user = UserManager.getInstance(Config.getApplication()).getCurrentUser();
-        realm.commitTransaction();
-        realm.close();
+
     }
 
-    private static void seedIncomingMessages(Realm realm) {
+    private static void seedIncomingMessages() {
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        realm.beginTransaction();
         User user = UserManager.getInstance(Config.getApplication()).getCurrentUser();
         RealmList<Message> messages = new RealmList<>();
         for (int i = 0; i < 10; i++) {
@@ -46,8 +45,8 @@ public class RealmHelper {
             message.setDateComposed(new Date());
             messages.add(message);
         }
-
-        testMessageProcessr(realm, user, messages);
+        realm.commitTransaction();
+        realm.close();
     }
 
     private static void seedOutgoingMessages() {
@@ -67,9 +66,11 @@ public class RealmHelper {
             messages.add(message);
         }
         realm.commitTransaction();
+        realm.close();
     }
 
-    private static void testMessageProcessr(Realm realm, User user, RealmList<Message> messages) {
+    private static void testMessageProcessr(User user, RealmList<Message> messages) {
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
         JsonArray array = MessageJsonAdapter.INSTANCE.toJson(messages);
         for (JsonElement jsonElement : array) {
             Context context = Config.getApplicationContext();
