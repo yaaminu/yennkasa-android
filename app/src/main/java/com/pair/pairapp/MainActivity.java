@@ -39,7 +39,7 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
         RealmHelper.runRealmOperation(this);
         if (GcmHelper.checkPlayServices(this)) {
             userManager = UserManager.getInstance(getApplication());
-            User user = userManager.getCurrentUser();
+            User user = userManager.getMainUser();
             if (user == null) {
                 gotoSetUpActivity();
             } else {

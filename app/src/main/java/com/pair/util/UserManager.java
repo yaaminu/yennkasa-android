@@ -76,7 +76,7 @@ public class UserManager {
                 .commit();
     }
 
-    public User getCurrentUser() {
+    public User getMainUser() {
         String currUserId = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE)
                 .getString(KEY_SESSION_ID, null);
         User copy = null;
@@ -94,6 +94,18 @@ public class UserManager {
         return copy;
     }
 
+    public boolean isMainUser(User user) {
+        User thisUser = getMainUser();
+        if (user == null || this == null) {
+            return false;
+        }
+        return thisUser.get_id().equals(user.get_id());
+    }
+
+    public void refreshUserDetails(User user, RefreshCallback callback) {
+        //update user here
+        callback.done(null);
+    }
     public void logIn(User user, final LoginCallback callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
@@ -102,6 +114,7 @@ public class UserManager {
         logIn(adapter.toJson(user), callback);
     }
 
+    //this method must be called on the main thread
     public void logIn(JsonObject user, final LoginCallback callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
@@ -193,7 +206,7 @@ public class UserManager {
 
     public void fetchFriends(final List<String> array, final FriendsFetchCallback callback) {
         if (!ConnectionHelper.isConnected()) {
-            callback.done(NO_CONNECTION_ERROR,null);
+            callback.done(NO_CONNECTION_ERROR, null);
             return;
         }
         userApi.fetchFriends(array, new Callback<List<User>>() {
@@ -256,5 +269,9 @@ public class UserManager {
 
     public interface FriendsFetchCallback {
         void done(Exception e, List<User> users);
+    }
+
+    public interface RefreshCallback {
+        void done(Exception e);
     }
 }

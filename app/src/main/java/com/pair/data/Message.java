@@ -117,7 +117,7 @@ public class Message extends RealmObject {
         Application appContext = Config.getApplication();
         Realm realm = Realm.getInstance(appContext);
         long count = realm.where(Message.class).count() + 1;
-        String id = count + "@" + UserManager.getInstance(appContext).getCurrentUser().get_id() + "@" + System.currentTimeMillis();
+        String id = count + "@" + UserManager.getInstance(appContext).getMainUser().get_id() + "@" + System.currentTimeMillis();
         Log.i(TAG, "generated message id: " + id);
         realm.close();
         return id;

@@ -51,7 +51,7 @@ public class FriendsFragment extends Fragment implements AdapterView.OnItemClick
     }
 
     private User getCurrentUser() {
-        return UserManager.getInstance(getActivity().getApplication()).getCurrentUser();
+        return UserManager.getInstance(getActivity().getApplication()).getMainUser();
     }
 
     @Override

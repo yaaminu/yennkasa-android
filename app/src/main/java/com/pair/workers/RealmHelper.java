@@ -32,7 +32,7 @@ public class RealmHelper {
     private static void seedIncomingMessages() {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         realm.beginTransaction();
-        User user = UserManager.getInstance(Config.getApplication()).getCurrentUser();
+        User user = UserManager.getInstance(Config.getApplication()).getMainUser();
         RealmList<Message> messages = new RealmList<>();
         for (int i = 0; i < 10; i++) {
             Message message = realm.createObject(Message.class);
@@ -52,7 +52,7 @@ public class RealmHelper {
     private static void seedOutgoingMessages() {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         realm.beginTransaction();
-        User user = UserManager.getInstance(Config.getApplication()).getCurrentUser();
+        User user = UserManager.getInstance(Config.getApplication()).getMainUser();
         RealmList<Message> messages = new RealmList<>();
         for (int i = 0; i < 10; i++) {
             Message message = realm.createObject(Message.class);

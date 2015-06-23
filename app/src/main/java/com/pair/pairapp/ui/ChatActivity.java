@@ -249,7 +249,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     }
 
     private User getCurrentUser() {
-        return UserManager.getInstance(getApplication()).getCurrentUser();
+        return UserManager.getInstance(getApplication()).getMainUser();
     }
 
     private static String getDescription(int type) {

@@ -233,7 +233,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     }
 
     private boolean isOutgoingMessage(Message message) {
-        return (message.getFrom().equals(UserManager.getInstance(Config.getApplication()).getCurrentUser().get_id()));
+        return (message.getFrom().equals(UserManager.getInstance(Config.getApplication()).getMainUser().get_id()));
     }
 
     private void hideViews(View... viewsToHide) {
