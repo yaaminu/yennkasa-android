@@ -120,7 +120,6 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
 
     @Override
     public void onChange() {
-
         ContactsManager.INSTANCE.findAllContacts(null, comparator, contactsFindCallback);
     }
 }

@@ -345,6 +345,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
         if (resultCode != RESULT_OK) {
             Toast.makeText(this, "request canceled", Toast.LENGTH_LONG).show();
             return;

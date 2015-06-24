@@ -38,4 +38,7 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="error_occured">sorry an error occurred</string>
+    <string name="error_canceled">Canceled</string>
+    <string name="dp_changed_successfully">DP changed successfully</string>
 </resources>

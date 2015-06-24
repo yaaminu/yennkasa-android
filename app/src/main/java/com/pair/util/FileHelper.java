@@ -6,9 +6,13 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -86,6 +90,12 @@ public class FileHelper {
         if (extStart == -1) return "";
         return path.substring(extStart + 1);
     }
+
+    public static void save(File profilePicture, InputStream in) throws IOException {
+        byte[] imageBytes = IOUtils.toByteArray(in);
+        FileUtils.writeByteArrayToFile(profilePicture, imageBytes);
+    }
+
     public class CountingTypedFile extends TypedFile {
         private final ProgressListener listener;
 
