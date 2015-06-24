@@ -114,7 +114,10 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
                 fragment = new ContactFragment();
                 break;
             case 3://fall through
-            case 5:
+
+            case 4:
+                gotoProfileActivity(userManager.getMainUser().get_id());
+                return;
             default:
                 fragment = new ConversationsFragment();
                 break; //redundant but safe
@@ -123,6 +126,12 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
         bundle.putString(ARG_TITLE, recommendedTitle);
         fragment.setArguments(bundle);
         addFragment(fragment);
+    }
+
+    private void gotoProfileActivity(String id) {
+        Intent intent = new Intent(this, ProfileActivity.class);
+        intent.putExtra(ProfileActivity.EXTRA_USER_ID, id);
+        startActivity(intent);
     }
 
 }

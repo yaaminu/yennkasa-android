@@ -10,6 +10,20 @@ public class ProfileActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
+        Bundle bundle = getIntent().getExtras();
+        String id = bundle.getString(ProfileActivity.EXTRA_USER_ID);
+        if (id == null) {
+            throw new IllegalStateException("should in user id");
+        }
+        final ProfileFragment fragment = new ProfileFragment();
+        bundle = new Bundle();
+        bundle.putString(ProfileFragment.ARG_USER_ID, id);
+        fragment.setArguments(bundle);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .add(R.id.container, fragment, null)
+                .commit();
+
     }
 
     @Override
@@ -33,4 +47,6 @@ public class ProfileActivity extends ActionBarActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    public static final String EXTRA_USER_ID = "id";
 }

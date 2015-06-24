@@ -27,6 +27,9 @@ public class Config {
     private static final String logMessage = "calling getApplication when init has not be called";
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
     public static final String APP_USER_AGENT = "pairapp-android-development-version";
+    private static String APP_NAME = "PairApp";
+    public static final File APP_IMG_MEDIA_BASE_DIR = getImageBasedir();
+    public static final File APP_VID_MEDIA_BASE_DIR = getVideoBaseDir();
     public static final File APP_PROFILE_PICS_BASE_DIR = getProfilePicsBasedir();
 
     private static File getProfilePicsBasedir() {
@@ -36,10 +39,6 @@ public class Config {
         }
         return null;
     }
-
-    private static String APP_NAME = "PairApp";
-    public static final File APP_IMG_MEDIA_BASE_DIR = getImageBasedir();
-    public static final File APP_VID_MEDIA_BASE_DIR = getVideoBaseDir();
 
     private static File getImageBasedir() {
         if (isExternalStorageAvailable()) {

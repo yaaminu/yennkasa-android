@@ -4,9 +4,9 @@ package com.pair.pairapp;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.Gravity;
@@ -21,7 +21,14 @@ import android.widget.Toast;
 import com.pair.data.User;
 import com.pair.util.Config;
 import com.pair.util.FileHelper;
+import com.pair.util.ImageResizer;
+import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
+
+import org.apache.commons.io.IOUtils;
+
+import java.io.FileInputStream;
+import java.io.IOException;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
@@ -57,6 +64,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         userPhone = ((TextView) view.findViewById(R.id.tv_user_phone));
         changeDpButton = ((Button) view.findViewById(R.id.bt_change_dp));
         realm = Realm.getInstance(getActivity());
+        realm.addChangeListener(this);
         String id = getArguments().getString(ARG_USER_ID);
         user = realm.where(User.class).equalTo("_id", id).findFirst();
         if (user == null) {
@@ -75,16 +83,16 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         //common to all
         userName.setText("@" + user.getName());
         userPhone.setText(user.get_id());
-        Bitmap bitmap = BitmapFactory.decodeFile(user.getDP());
+        Bitmap bitmap = getDp(user.getDP());
         if (bitmap != null) {
-            changeDpButton.setText("Change");
+            changeDpButton.setText(R.string.change_dp);
             displayPicture.setImageBitmap(bitmap);
         } else {
-            changeDpButton.setText("Add Picture"); //if its not main user this will be View#GONE
+            changeDpButton.setText(R.string.add_picture); //if its not main user this will be View#GONE
         }
 
         //asynchronously check online refresh user details
-        userManager.refreshUserDetails(user);
+        userManager.refreshUserDetails(user.get_id());
         return view;
     }
 
@@ -97,7 +105,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     @Override
     public void onChange() {
-        final Bitmap bitmap = BitmapFactory.decodeFile(user.getDP());
+        final Bitmap bitmap = getDp(user.getDP());
         if (bitmap != null) {
             displayPicture.setImageBitmap(bitmap);
         }
@@ -123,17 +131,43 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 } else {
                     filePath = uri.getPath();
                 }
-                displayPicture.setImageBitmap(BitmapFactory.decodeFile(filePath));
+                Bitmap bitmap = getDp(filePath);
+                if (bitmap == null) return;
+                displayPicture.setImageBitmap(bitmap);
                 UserManager userManager = UserManager.getInstance(getActivity());
                 userManager.changeDp(filePath, DP_CALLBACK);
+
             } else {
                 showToast(R.string.error_canceled);
             }
         }
     }
 
+    @Nullable
+    private Bitmap getDp(String filePath) {
+        byte[] imageBytes;
+        try {
+            imageBytes = IOUtils.toByteArray(new FileInputStream(filePath));
+        } catch (IOException e) {
+            showToast(R.string.error_occured);
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, e.getMessage(), e.getCause());
+            } else {
+                Log.e(TAG, e.getMessage());
+            }
+            return null;
+        }
+        //FIXME calculate the width and height based on screen size an density
+        Bitmap bitmap = ImageResizer.resizeImage(imageBytes, 600, 350);
+        if (bitmap == null) {
+            UiHelpers.showErrorDialog(getActivity(), getActivity().getString(R.string.error_invalid_bitmap_file));
+        }
+        return bitmap;
+    }
+
     private void showToast(int message) {
-        Toast toast = Toast.makeText(getActivity(), message, Toast.LENGTH_LONG);
+        getActivity().getApplicationContext();
+        Toast toast = Toast.makeText(Config.getApplicationContext(), message, Toast.LENGTH_LONG);
         toast.setGravity(Gravity.CENTER, 0, 0);
         toast.show();
     }

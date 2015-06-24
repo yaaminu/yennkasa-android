@@ -41,4 +41,7 @@
     <string name="error_occured">sorry an error occurred</string>
     <string name="error_canceled">Canceled</string>
     <string name="dp_changed_successfully">DP changed successfully</string>
+    <string name="error_invalid_bitmap_file">please chose a valid image file</string>
+    <string name="add_picture">Add Picture</string>
+    <string name="change_dp">Change</string>
 </resources>

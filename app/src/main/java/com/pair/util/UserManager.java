@@ -100,26 +100,38 @@ public class UserManager {
         return copy;
     }
 
+    private void updateUser(User usrToUpdate) {
+        Realm realm = Realm.getInstance(context);
+        User user = realm.where(User.class).equalTo("_id", usrToUpdate.get_id()).findFirst();
+        if (user == null) {
+            throw new IllegalArgumentException("cannot update non-existing user");
+        }
+        realm.beginTransaction();
+        realm.copyToRealmOrUpdate(user);
+        realm.commitTransaction();
+        realm.close();
+    }
     public boolean isMainUser(User user) {
         User thisUser = getMainUser();
-        return ((user == null || thisUser == null)
-                ? false
-                : thisUser.get_id().equals(user.get_id()));
+        return ((!(user == null || thisUser == null)) && thisUser.get_id().equals(user.get_id()));
     }
 
-    public void refreshUserDetails(User user) {
+    public void refreshUserDetails(final String userId) {
         //update user here
-        userApi.getUser(user.get_id(), new Callback<User>() {
+        userApi.getUser(userId, new Callback<User>() {
             @Override
-            public void success(User user, Response response) {
+            public void success(User onlineUser, Response response) {
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
                 realm.beginTransaction();
-                realm.copyToRealmOrUpdate(user);
+                User user = realm.where(User.class).equalTo("_id", userId).findFirst();
+                user.setLastActivity(onlineUser.getLastActivity());
+                user.setStatus(onlineUser.getStatus());
+                user.setName(onlineUser.getName());
                 realm.commitTransaction();
                 realm.close();
-                getUserDp(user, new GetDpCallback() {
+                getUserDp(userId, new GetDpCallback() {
                     @Override
-                    public void done(Exception e, Bitmap bitmap) {
+                    public void done(Exception e) {
                     }
                 });
             }
@@ -134,16 +146,14 @@ public class UserManager {
 
         final User user = getMainUser();
         if (user == null) {
-            throw new IllegalStateException("can't change dp of user that is null");
+            throw new AssertionError("can't change dp of user that is null");
         }
+        user.setDP(imagePath);
+        user.setPassword("d"); // FIXME: 6/24/2015 take out this line of code!
+        updateUser(user);
         userApi.changeDp(user.get_id(), new TypedFile("image/*", new File(imagePath)), user.getPassword(), new Callback<Response>() {
             @Override
             public void success(Response response, Response response2) {
-                Realm realm = Realm.getInstance(Config.getApplicationContext());
-                realm.beginTransaction();
-                user.setDP(imagePath);
-                realm.commitTransaction();
-                realm.close();
                 callback.done(null);
             }
 
@@ -154,24 +164,26 @@ public class UserManager {
         });
     }
 
-    public void getUserDp(final User user, final GetDpCallback callback) {
-        userApi.getUserDp(user.get_id(), new Callback<Response>() {
+    public void getUserDp(final String userId, final GetDpCallback callback) {
+        userApi.getUserDp(userId, new Callback<Response>() {
             @Override
             public void success(Response response, Response response2) {
                 try {
                     final InputStream in = response.getBody().in();
-                    File profileFile = new File(Config.APP_PROFILE_PICS_BASE_DIR, System.currentTimeMillis() + user.get_id());
+                    File profileFile = new File(Config.APP_PROFILE_PICS_BASE_DIR, System.currentTimeMillis() + userId + ".jpeg");
                     FileHelper.save(profileFile, in);
                     Realm realm = Realm.getInstance(Config.getApplicationContext());
                     realm.beginTransaction();
+                    User user = realm.where(User.class).equalTo("_id", userId).findFirst();
                     user.setDP(profileFile.getAbsolutePath());
                     realm.commitTransaction();
                     realm.close();
                     Bitmap bitmap = BitmapFactory.decodeFile(profileFile.getAbsolutePath());
                     if (bitmap == null) {
-                        callback.done(new Exception("invalid image url"), null);
+                        Log.wtf(TAG, "invalid image url or file");
+                        callback.done(new Exception("invalid image url"));
                     } else {
-                        callback.done(null, bitmap);
+                        callback.done(null);
                     }
                 } catch (IOException e) {
                     if (BuildConfig.DEBUG) {
@@ -179,13 +191,13 @@ public class UserManager {
                     } else {
                         Log.e(TAG, e.getMessage());
                     }
-                    callback.done(e, null);
+                    callback.done(e);
                 }
             }
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                callback.done(retrofitError, null);
+                callback.done(retrofitError);
             }
         });
     }
@@ -194,11 +206,11 @@ public class UserManager {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
         }
-        logIn(adapter.toJson(user), callback);
+        doLogIn(user, callback);
     }
 
     //this method must be called on the main thread
-    public void logIn(JsonObject user, final LoginCallback callback) {
+    private void doLogIn(final User user, final LoginCallback callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
         }
@@ -207,11 +219,12 @@ public class UserManager {
         }
         busy = true;
 
-        userApi.logIn(user, new Callback<User>() {
+        userApi.logIn(adapter.toJson(user), new Callback<User>() {
             @Override
-            public void success(User user, Response response) {
+            public void success(User processedUser, Response response) {
                 busy = false;
-                saveUser(user);
+                processedUser.setPassword(user.getPassword());
+                saveUser(processedUser);
                 Config.enableComponent(BootReceiver.class);
                 callback.done(null);
             }
@@ -358,6 +371,6 @@ public class UserManager {
     }
 
     public interface GetDpCallback {
-        void done(Exception e, Bitmap bitmap);
+        void done(Exception e);
     }
 }
