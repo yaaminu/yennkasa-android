@@ -7,7 +7,6 @@ import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.gson.JsonObject;
 import com.pair.adapter.BaseJsonAdapter;
 import com.pair.adapter.UserJsonAdapter;
 import com.pair.data.Conversation;
@@ -16,6 +15,8 @@ import com.pair.data.User;
 import com.pair.net.api.UserApi;
 import com.pair.pairapp.BuildConfig;
 import com.pair.workers.BootReceiver;
+
+import org.apache.http.HttpStatus;
 
 import java.io.File;
 import java.io.IOException;
@@ -36,14 +37,23 @@ import retrofit.mime.TypedFile;
  */
 public class UserManager {
 
+
+    private int loginAttempts = 0;
+    private int signUpAttempts = 0;
+    private int changeDpAttempts = 0;
+    private int refreshAttempts = 0;
+    private int getDpAttempts = 0;
+    private volatile boolean loginSignUpBusy = false, //login or sign up never should run in parallel
+            dpChangeOperationRunning = false,
+            refreshOperationRunning = false,
+            getDpOperationRunning = false;
     private static final String TAG = UserManager.class.getSimpleName();
-    private final Exception NO_CONNECTION_ERROR = new Exception("not connected to the internet");
+    private static final Exception NO_CONNECTION_ERROR = new Exception("not connected to the internet");
     private Context context;
     private UserApi userApi;
     private static UserManager INSTANCE;
     private BaseJsonAdapter<User> adapter;
-    private volatile boolean busy = false;
-    private static final String KEY_SESSION_ID = "session";
+    private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf";
 
     public static UserManager getInstance(@NonNull Context context) {
         UserManager localInstance = INSTANCE;
@@ -74,9 +84,10 @@ public class UserManager {
     private void saveUser(User user) {
         Realm realm = Realm.getInstance(context);
         realm.beginTransaction();
-        realm.copyToRealm(user);
+        realm.copyToRealmOrUpdate(user);
         realm.commitTransaction();
         realm.close();
+        // TODO: 6/25/2015 encrypt the id before storing it
         context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE)
                 .edit().putString(KEY_SESSION_ID, user.get_id())
                 .commit();
@@ -100,83 +111,130 @@ public class UserManager {
         return copy;
     }
 
-    private void updateUser(User usrToUpdate) {
-        Realm realm = Realm.getInstance(context);
-        User user = realm.where(User.class).equalTo("_id", usrToUpdate.get_id()).findFirst();
-        if (user == null) {
-            throw new IllegalArgumentException("cannot update non-existing user");
-        }
-        realm.beginTransaction();
-        realm.copyToRealmOrUpdate(user);
-        realm.commitTransaction();
-        realm.close();
-    }
+
     public boolean isMainUser(User user) {
         User thisUser = getMainUser();
         return ((!(user == null || thisUser == null)) && thisUser.get_id().equals(user.get_id()));
     }
 
     public void refreshUserDetails(final String userId) {
+        if (!ConnectionHelper.isConnectedOrConnecting()) {
+            return;
+        }
+        if (refreshOperationRunning) {
+            return;
+        }
+        refreshOperationRunning = true;
         //update user here
         userApi.getUser(userId, new Callback<User>() {
             @Override
             public void success(User onlineUser, Response response) {
+                refreshOperationRunning = false;
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
                 realm.beginTransaction();
                 User user = realm.where(User.class).equalTo("_id", userId).findFirst();
                 user.setLastActivity(onlineUser.getLastActivity());
                 user.setStatus(onlineUser.getStatus());
                 user.setName(onlineUser.getName());
+                String dp = new File(Config.APP_PROFILE_PICS_BASE_DIR, onlineUser.getDP() + ".jpeg").getAbsolutePath();
+
+                if (!dp.equals(user.getDP())) { //new dp!
+                    user.setDP(dp);
+                }
                 realm.commitTransaction();
+                if (!new File(user.getDP()).exists()) {
+                    getUserDp(userId, new GetDpCallback() {
+                        @Override
+                        public void done(Exception e) {
+                        }
+                    });
+                }
                 realm.close();
-                getUserDp(userId, new GetDpCallback() {
-                    @Override
-                    public void done(Exception e) {
-                    }
-                });
             }
 
             @Override
             public void failure(RetrofitError retrofitError) {
+                refreshOperationRunning = false;
+                Exception e = handleError(retrofitError);
+                if (e == null && refreshAttempts < 3) {
+                    refreshUserDetails(userId);
+                } else {
+                    refreshAttempts = 0;
+                    Log.i(TAG, "failed to refresh after 3 attempts");
+                }
             }
         });
     }
 
     public void changeDp(final String imagePath, final DpChangeCallback callback) {
-
+        File imageFile = new File(imagePath);
+        if (!imageFile.exists()) {
+            callback.done(new Exception("path " + imagePath + " does not exist"));
+            return;
+        }
+        if (!ConnectionHelper.isConnectedOrConnecting()) {
+            callback.done(NO_CONNECTION_ERROR);
+            return;
+        }
+        if (dpChangeOperationRunning) {
+            return;
+        }
+        dpChangeOperationRunning = true;
         final User user = getMainUser();
         if (user == null) {
             throw new AssertionError("can't change dp of user that is null");
         }
+        Realm realm = Realm.getInstance(context);
+        realm.beginTransaction();
         user.setDP(imagePath);
         user.setPassword("d"); // FIXME: 6/24/2015 take out this line of code!
-        updateUser(user);
-        userApi.changeDp(user.get_id(), new TypedFile("image/*", new File(imagePath)), user.getPassword(), new Callback<Response>() {
+        realm.commitTransaction();
+        changeDpAttempts++;
+        userApi.changeDp(user.get_id(), new TypedFile("image/*", imageFile), user.getPassword(), new Callback<Response>() {
             @Override
             public void success(Response response, Response response2) {
+                dpChangeOperationRunning = false;
                 callback.done(null);
             }
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                callback.done(retrofitError);
+                dpChangeOperationRunning = false;
+                Exception e = handleError(retrofitError);
+                if (e == null && changeDpAttempts < 3) {
+                    changeDp(imagePath, callback);
+                } else {
+                    changeDpAttempts = 0;
+                    callback.done(e == null ? retrofitError : e); //may be our fault but we have ran out of resources
+                }
             }
         });
     }
 
     public void getUserDp(final String userId, final GetDpCallback callback) {
+        if (!ConnectionHelper.isConnectedOrConnecting()) {
+            callback.done(NO_CONNECTION_ERROR);
+            return;
+        }
+
+        if (getDpOperationRunning) {
+            return;
+        }
+        getDpOperationRunning = true;
+        getDpAttempts++;
         userApi.getUserDp(userId, new Callback<Response>() {
             @Override
             public void success(Response response, Response response2) {
+                getDpOperationRunning = false;
                 try {
                     final InputStream in = response.getBody().in();
-                    File profileFile = new File(Config.APP_PROFILE_PICS_BASE_DIR, System.currentTimeMillis() + userId + ".jpeg");
-                    FileHelper.save(profileFile, in);
                     Realm realm = Realm.getInstance(Config.getApplicationContext());
-                    realm.beginTransaction();
                     User user = realm.where(User.class).equalTo("_id", userId).findFirst();
-                    user.setDP(profileFile.getAbsolutePath());
-                    realm.commitTransaction();
+                    if (user == null) {
+                        throw new IllegalArgumentException("user does not exist");
+                    }
+                    File profileFile = new File(user.getDP());
+                    FileHelper.save(profileFile, in);
                     realm.close();
                     Bitmap bitmap = BitmapFactory.decodeFile(profileFile.getAbsolutePath());
                     if (bitmap == null) {
@@ -197,7 +255,14 @@ public class UserManager {
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                callback.done(retrofitError);
+                getDpOperationRunning = false;
+                Exception e = handleError(retrofitError);
+                if (e == null && getDpAttempts < 3) {
+                    getUserDp(userId, callback);
+                } else {
+                    getDpAttempts = 0;
+                    callback.done(e == null ? retrofitError : e); //may be our fault but we have ran out of resources
+                }
             }
         });
     }
@@ -213,58 +278,72 @@ public class UserManager {
     private void doLogIn(final User user, final LoginCallback callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
-        }
-        if (busy) {
             return;
         }
-        busy = true;
-
+        if (loginSignUpBusy) {
+            return;
+        }
+        loginSignUpBusy = true;
+        loginAttempts++;
         userApi.logIn(adapter.toJson(user), new Callback<User>() {
             @Override
-            public void success(User processedUser, Response response) {
-                busy = false;
-                processedUser.setPassword(user.getPassword());
-                saveUser(processedUser);
+            public void success(User backendUser, Response response) {
+                loginSignUpBusy = false;
+                //our backend deletes password fields so we got to use our copy here
+                backendUser.setPassword(user.getPassword());
+                saveUser(backendUser);
                 Config.enableComponent(BootReceiver.class);
                 callback.done(null);
             }
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                busy = false;
-                callback.done(retrofitError);
+                loginSignUpBusy = false;
+                Exception e = handleError(retrofitError);
+                if (e == null && loginAttempts < 3) {
+                    //not our problem lets try again
+                    doLogIn(user, callback);
+                } else {
+                    loginAttempts = 0;
+                    callback.done(e == null ? retrofitError : e); //may be our fault but we have ran out of resources
+                }
             }
         });
     }
 
-    public void signUp(User user, final SignUpCallback callback) {
-        if (!ConnectionHelper.isConnectedOrConnecting()) {
-            callback.done(NO_CONNECTION_ERROR);
-        }
-        signUp(adapter.toJson(user), callback);
-    }
 
-    public void signUp(JsonObject user, final SignUpCallback callback) {
+    public void signUp(final User user, final SignUpCallback callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
-        }
-        if (busy) {
             return;
         }
-        busy = true;
-        userApi.registerUser(user, new Callback<User>() {
+        if (loginSignUpBusy) {
+            return;
+        }
+        loginSignUpBusy = true;
+        signUpAttempts++;
+        userApi.registerUser(adapter.toJson(user), new Callback<User>() {
             @Override
-            public void success(User user, Response response) {
-                busy = false;
-                saveUser(user);
+            public void success(User backEndUser, Response response) {
+                loginSignUpBusy = false;
+                backEndUser.setPassword(user.getPassword());
+                saveUser(backEndUser);
                 Config.enableComponent(BootReceiver.class);
                 callback.done(null);
             }
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                busy = false;
-                callback.done(retrofitError);
+                loginSignUpBusy = false;
+                // TODO: 6/25/2015 handle error
+                Exception e = handleError(retrofitError);
+                if (e == null && signUpAttempts < 3) {
+                    //not our problem lets try again
+                    signUp(user, callback);
+                } else {
+                    signUpAttempts = 0;
+                    callback.done(e == null ? retrofitError : e); //may be our fault but we have ran out of resources
+                }
             }
         });
 
@@ -275,7 +354,7 @@ public class UserManager {
         SharedPreferences sharedPreferences = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
         String userId = sharedPreferences.getString(KEY_SESSION_ID, null);
         if ((userId == null)) {
-            throw new AssertionError("calling logout when no user is logged in");
+            throw new AssertionError("calling logout when no user is logged in"); //security hole!
         }
 
         sharedPreferences
@@ -341,6 +420,40 @@ public class UserManager {
         realm.clear(Conversation.class);
         realm.commitTransaction();
     }
+
+
+    // FIXME: 6/25/2015 find a sensible place to keep this error handlelr so that message dispatcher and others can share it
+    private Exception handleError(RetrofitError retrofitError) {
+        if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
+            Log.w(TAG, "unexpected error, trying again");
+            return null;
+        } else if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)) {
+            int statusCode = retrofitError.getResponse().getStatus();
+            if (statusCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
+                Log.w(TAG, "internal server error, trying again");
+                return null;
+            }
+            //crash early
+            // as far as we know, our backend will only return other status code if its is our fault and that normally should not happen
+            Log.wtf(TAG, "internal error, exiting");
+            throw new RuntimeException("An unknown internal error occurred");
+        } else if (retrofitError.getKind().equals(RetrofitError.Kind.CONVERSION)) { //crash early
+            Log.wtf(TAG, "internal error ");
+            throw new RuntimeException("poorly encoded json data");
+        } else if (retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)) {
+            if (ConnectionHelper.isConnectedOrConnecting()) {
+                return null;
+            }
+            //bubble up error and empty send queue let callers re-dispatch messages again;
+            Log.w(TAG, "no network connection, aborting");
+            return NO_CONNECTION_ERROR;
+        }
+
+        //may be retrofit added some error kinds in a new version we are not aware of so lets crash to ensure that
+        //our we find out
+        throw new AssertionError("unknown error kind");
+    }
+
 
     private static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
         @Override

@@ -9,11 +9,11 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -27,6 +27,7 @@ import com.pair.util.UserManager;
 
 import org.apache.commons.io.IOUtils;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
@@ -42,7 +43,17 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     public static final String ARG_USER_ID = "user_id";
     public static final String TAG = ProfileFragment.class.getSimpleName();
     private static final int PICK_PHOTO_REQUEST = 0x3e9;
-
+    private final View.OnClickListener ONDPCLICKED = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            final File file = new File(user.getDP());
+            if (file.exists()) {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(Uri.fromFile(file), "image/*");
+                startActivity(intent);
+            }
+        }
+    };
     private ImageView displayPicture;
     private TextView userName, userPhone;
     private Button changeDpButton;
@@ -63,22 +74,24 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         userName = ((TextView) view.findViewById(R.id.tv_user_name));
         userPhone = ((TextView) view.findViewById(R.id.tv_user_phone));
         changeDpButton = ((Button) view.findViewById(R.id.bt_change_dp));
+        ImageButton imageButton = (ImageButton) view.findViewById(R.id.ib_change_name);
         realm = Realm.getInstance(getActivity());
         realm.addChangeListener(this);
         String id = getArguments().getString(ARG_USER_ID);
         user = realm.where(User.class).equalTo("_id", id).findFirst();
         if (user == null) {
             Log.wtf(TAG, "invalid user id passed");
-            throw new IllegalStateException("invalid user id");
+            throw new IllegalArgumentException("invalid user id");
         }
         final UserManager userManager = UserManager.getInstance(Config.getApplication());
         if (userManager.isMainUser(user)) {
             changeDpButton.setVisibility(View.VISIBLE);
+            imageButton.setVisibility(View.VISIBLE);
+            imageButton.setOnClickListener(CHANGE_USERNAME);
             changeDpButton.setOnClickListener(CHANGE_DP);
-            userName.setCompoundDrawables(null, null, getResources().getDrawable(android.R.drawable.ic_menu_edit), null);
         } else {
+            imageButton.setVisibility(View.GONE);
             changeDpButton.setVisibility(View.GONE);
-            userName.setCompoundDrawables(null, null, null, null);
         }
         //common to all
         userName.setText("@" + user.getName());
@@ -90,7 +103,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         } else {
             changeDpButton.setText(R.string.add_picture); //if its not main user this will be View#GONE
         }
-
+        displayPicture.setOnClickListener(ONDPCLICKED);
         //asynchronously check online refresh user details
         userManager.refreshUserDetails(user.get_id());
         return view;
@@ -109,7 +122,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         if (bitmap != null) {
             displayPicture.setImageBitmap(bitmap);
         }
-        userName.setText(user.getName());
+        userName.setText("@" + user.getName());
         //probably change status too and last activity
     }
 
@@ -126,6 +139,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             if (resultCode == Activity.RESULT_OK) {
                 String filePath;
                 Uri uri = data.getData();
+                // TODO: 6/24/2015 check if we should really change the dp sometimes the user may pick the same  
+                //file so we have to just tell the user everything is ok. but we will not make a call to our backend
                 if (uri.getScheme().equals("content")) {
                     filePath = FileHelper.resolveContentUriToFilePath(uri);
                 } else {
@@ -133,23 +148,23 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 }
                 Bitmap bitmap = getDp(filePath);
                 if (bitmap == null) return;
+                displayPicture.setImageBitmap(null);
                 displayPicture.setImageBitmap(bitmap);
                 UserManager userManager = UserManager.getInstance(getActivity());
                 userManager.changeDp(filePath, DP_CALLBACK);
 
             } else {
-                showToast(R.string.error_canceled);
             }
         }
     }
 
     @Nullable
     private Bitmap getDp(String filePath) {
+        Log.i(TAG, "dp path; " + filePath);
         byte[] imageBytes;
         try {
             imageBytes = IOUtils.toByteArray(new FileInputStream(filePath));
         } catch (IOException e) {
-            showToast(R.string.error_occured);
             if (BuildConfig.DEBUG) {
                 Log.e(TAG, e.getMessage(), e.getCause());
             } else {
@@ -165,27 +180,32 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         return bitmap;
     }
 
-    private void showToast(int message) {
-        getActivity().getApplicationContext();
-        Toast toast = Toast.makeText(Config.getApplicationContext(), message, Toast.LENGTH_LONG);
-        toast.setGravity(Gravity.CENTER, 0, 0);
-        toast.show();
-    }
+//    private void showToast(int message) {
+//        Toast toast = Toast.makeText(Config.getApplicationContext(), message, Toast.LENGTH_LONG);
+//        toast.setGravity(Gravity.CENTER, 0, 0);
+//        toast.show();
+//    }
 
     private final UserManager.DpChangeCallback DP_CALLBACK = new UserManager.DpChangeCallback() {
         @Override
         public void done(Exception e) {
             if (e == null) {
                 //success
-                showToast(R.string.dp_changed_successfully);
-            } else {
-                showToast(R.string.error_occured);
+
             }
+        }
+    };
+
+    private final View.OnClickListener CHANGE_USERNAME = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Toast.makeText(Config.getApplicationContext(), "not implemented", Toast.LENGTH_LONG).show();
         }
     };
 
     @Override
     public void onDestroy() {
+        realm.removeChangeListener(this);
         realm.close();
         super.onDestroy();
     }

@@ -44,4 +44,7 @@
     <string name="error_invalid_bitmap_file">please chose a valid image file</string>
     <string name="add_picture">Add Picture</string>
     <string name="change_dp">Change</string>
+    <string name="edit_username">edit username</string>
+    <string name="display_picture">Display picture</string>
+    <string name="username_placeholder">Username</string>
 </resources>

@@ -176,7 +176,7 @@ class MessageDispatcher implements Dispatcher<Message> {
             Log.i(TAG, "about to send message: " + job.data.toString());
             if (job.jobType == Message.TYPE_TEXT_MESSAGE) {
                 sendTextMessage(job);
-            } else if (job.jobType == Message.TYPE_DATE_MESSAGE) {
+            } else if (job.jobType == Message.TYPE_DATE_MESSAGE) { // FIXME: 6/25/2015 take this off in production
                 throw new AssertionError("impossible"); //should have been filtered off in dispatch().
             } else {
                 sendBinaryMessage(job);
@@ -234,10 +234,10 @@ class MessageDispatcher implements Dispatcher<Message> {
                 Log.wtf(TAG, "internal error ");
                 throw new RuntimeException("poorly encoded json data");
             } else if (retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)) {
-                //bubble up error and empty send queue let callers re-dispatch messages again;
                 if (ConnectionHelper.isConnectedOrConnecting()) {
                     tryAgain(job);
                 } else {
+                    //bubble up error and empty send queue let callers re-dispatch messages again;
                     Log.w(TAG, "no network connection, message will not be sent");
                     reportError(job.id, "Error in network connection");
                 }
@@ -278,7 +278,7 @@ class MessageDispatcher implements Dispatcher<Message> {
             if (dispatcherMonitor != null) {
                 dispatcherMonitor.onSendSucceeded(job.id);
             } else {
-                warnAndThrowIfNotInDevelopment();
+                warnAndThrowIfInDevelopment();
             }
         }
     }
@@ -289,12 +289,12 @@ class MessageDispatcher implements Dispatcher<Message> {
             if (monitor != null) {
                 monitor.onSendFailed(reason, jobId);
             } else {
-                warnAndThrowIfNotInDevelopment();
+                warnAndThrowIfInDevelopment();
             }
         }
     }
 
-    private void warnAndThrowIfNotInDevelopment() {
+    private void warnAndThrowIfInDevelopment() {
         Log.w(TAG, "null reference added as monitors");
         if (BuildConfig.DEBUG) {
             throw new IllegalArgumentException("cannot passe a null reference as a monitor");

@@ -12,7 +12,7 @@
         android:layout_height="wrap_content">
 
         <ImageView
-            android:contentDescription="Display picture"
+            android:contentDescription="@string/display_picture"
             android:id="@+id/iv_display_picture"
             android:layout_width="match_parent"
             android:layout_height="200dp"
@@ -27,7 +27,7 @@
             android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"
             android:id="@+id/bt_change_dp"
-            android:text="Change"/>
+            android:text="@string/change_dp"/>
     </RelativeLayout>
 
     <ScrollView
@@ -39,25 +39,36 @@
         android:fillViewport="true"
         >
 
-        <LinearLayout
+        <RelativeLayout
             android:id="@+id/ll_detail_pane"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            >
 
             <TextView
                 android:id="@+id/tv_user_name"
-                android:layout_width="match_parent"
+                android:maxLength="20"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:clickable="true"
-                android:drawableRight="@android:drawable/ic_menu_edit"
                 android:padding="15dp"
-                android:text="Username"
+                android:text="@string/username_placeholder"
                 android:textColor="#000"
                 android:textSize="18sp"/>
 
+            <ImageButton
+                android:contentDescription="@string/edit_username"
+                android:id="@+id/ib_change_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentEnd="true"
+                android:src="@android:drawable/ic_menu_edit"
+                android:layout_alignTop="@+id/tv_user_name"/>
+
             <TextView
                 android:id="@+id/tv_user_phone"
+                android:layout_below="@+id/tv_user_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clickable="true"
@@ -66,6 +77,6 @@
                 android:text="Phone\n0266349205"
                 android:textColor="#000"
                 android:textSize="18sp"/>
-        </LinearLayout>
+        </RelativeLayout>
     </ScrollView>
 </LinearLayout>

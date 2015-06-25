@@ -93,6 +93,9 @@ public class FileHelper {
 
     public static void save(File profilePicture, InputStream in) throws IOException {
         byte[] imageBytes = IOUtils.toByteArray(in);
+        if (profilePicture.exists()) {
+            return;
+        }
         FileUtils.writeByteArrayToFile(profilePicture, imageBytes);
     }
 
