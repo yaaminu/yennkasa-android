@@ -37,51 +37,47 @@ import retrofit.mime.TypedFile;
  */
 public class UserManager {
 
-
-    private int loginAttempts = 0;
-    private int signUpAttempts = 0;
-    private int changeDpAttempts = 0;
-    private int refreshAttempts = 0;
-    private int getDpAttempts = 0;
-    private volatile boolean loginSignUpBusy = false, //login or sign up never should run in parallel
+    private static volatile int loginAttempts = 0,
+            signUpAttempts = 0, changeDpAttempts = 0,
+            refreshAttempts = 0,
+            getDpAttempts = 0;
+    private static volatile boolean loginSignUpBusy = false, //login or sign up never should run in parallel
             dpChangeOperationRunning = false,
             refreshOperationRunning = false,
             getDpOperationRunning = false;
     private static final String TAG = UserManager.class.getSimpleName();
     private static final Exception NO_CONNECTION_ERROR = new Exception("not connected to the internet");
-    private Context context;
-    private UserApi userApi;
-    private static UserManager INSTANCE;
-    private BaseJsonAdapter<User> adapter;
-    private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf";
+    public static final UserManager INSTANCE = new UserManager();
+    private static final BaseJsonAdapter<User> adapter = new UserJsonAdapter();
+    private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is
 
-    public static UserManager getInstance(@NonNull Context context) {
-        UserManager localInstance = INSTANCE;
-        if (localInstance == null) {
-            synchronized (UserManager.class) {
-                localInstance = INSTANCE;
-                if (localInstance == null) {
-                    INSTANCE = localInstance = new UserManager(context);
-                }
-            }
+    private static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
+        @Override
+        public void intercept(RequestFacade requestFacade) {
+            requestFacade.addHeader("Authorization", "kiiboda+=s3cr3te");
+            requestFacade.addHeader("User-Agent", Config.APP_USER_AGENT);
         }
-        return localInstance;
+    };
+
+    private static final UserApi userApi = new RestAdapter.Builder()
+            .setEndpoint(Config.PAIRAPP_ENDPOINT)
+            .setRequestInterceptor(INTERCEPTOR)
+            .setLogLevel(RestAdapter.LogLevel.FULL)
+            .setLog(new AndroidLog(TAG))
+            .build()
+            .create(UserApi.class);
+
+    @Deprecated
+    public static UserManager getInstance(@NonNull Context context) {
+        return INSTANCE;
     }
 
-    private UserManager(Context context) {
-        this.context = context;
-        this.adapter = new UserJsonAdapter();
-        RestAdapter restAdapter = new RestAdapter.Builder()
-                .setEndpoint(Config.PAIRAPP_ENDPOINT)
-                .setRequestInterceptor(INTERCEPTOR)
-                .setLogLevel(RestAdapter.LogLevel.FULL)
-                .setLog(new AndroidLog(TAG))
-                .build();
-        this.userApi = restAdapter.create(UserApi.class);
+    private UserManager() {
     }
 
 
     private void saveUser(User user) {
+        final Context context = Config.getApplicationContext();
         Realm realm = Realm.getInstance(context);
         realm.beginTransaction();
         realm.copyToRealmOrUpdate(user);
@@ -94,6 +90,7 @@ public class UserManager {
     }
 
     public User getMainUser() {
+        final Context context = Config.getApplicationContext();
         String currUserId = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE)
                 .getString(KEY_SESSION_ID, null);
         User copy = null;
@@ -184,7 +181,7 @@ public class UserManager {
         if (user == null) {
             throw new AssertionError("can't change dp of user that is null");
         }
-        Realm realm = Realm.getInstance(context);
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
         realm.beginTransaction();
         user.setDP(imagePath);
         user.setPassword("d"); // FIXME: 6/24/2015 take out this line of code!
@@ -338,11 +335,11 @@ public class UserManager {
                 // TODO: 6/25/2015 handle error
                 Exception e = handleError(retrofitError);
                 if (e == null && signUpAttempts < 3) {
-                    //not our problem lets try again
+                    //not our fault and we have more chance lets try again
                     signUp(user, callback);
                 } else {
                     signUpAttempts = 0;
-                    callback.done(e == null ? retrofitError : e); //may be our fault but we have ran out of resources
+                    callback.done(e == null ? retrofitError : e); //may not be our fault but we have ran out of retries
                 }
             }
         });
@@ -413,7 +410,7 @@ public class UserManager {
     }
 
     private void cleanUpRealm() {
-        Realm realm = Realm.getInstance(context);
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
         realm.beginTransaction();
         realm.clear(User.class);
         realm.clear(Message.class);
@@ -454,14 +451,6 @@ public class UserManager {
         throw new AssertionError("unknown error kind");
     }
 
-
-    private static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
-        @Override
-        public void intercept(RequestFacade requestFacade) {
-            requestFacade.addHeader("Authorization", "kiiboda+=s3cr3te");
-            requestFacade.addHeader("User-Agent", Config.APP_USER_AGENT);
-        }
-    };
 
     public interface LoginCallback {
         void done(Exception e);
