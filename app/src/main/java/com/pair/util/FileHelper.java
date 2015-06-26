@@ -32,7 +32,7 @@ public class FileHelper {
         if (mediaType != MEDIA_TYPE_IMAGE && mediaType != MEDIA_TYPE_VIDEO) {
             throw new IllegalArgumentException("you can only pass either: " + MEDIA_TYPE_IMAGE + " or " + MEDIA_TYPE_VIDEO);
         }
-        StringBuilder pathBuilder = new StringBuilder((mediaType == MEDIA_TYPE_IMAGE) ? "IMG_" : "VID");
+        StringBuilder pathBuilder = new StringBuilder((mediaType == MEDIA_TYPE_IMAGE) ? "IMG_" : "VID_");
         File file = (mediaType == MEDIA_TYPE_IMAGE) ? Config.APP_IMG_MEDIA_BASE_DIR : Config.APP_VID_MEDIA_BASE_DIR;
         Date now = new Date();
         pathBuilder.append(new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(now));
@@ -42,20 +42,20 @@ public class FileHelper {
                 return doCreateOutputFile(pathBuilder.toString(), file);
             case MEDIA_TYPE_VIDEO:
                 pathBuilder.append(".mp4");
-                throw new UnsupportedOperationException("not yet supported");
+                return doCreateOutputFile(pathBuilder.toString(), file);
             default:
                 return null;
         }
     }
 
-    private static Uri doCreateOutputFile(String path, File file) throws Exception {
-        if (file != null) {
-            if (!file.isDirectory()) {
-                if (!file.mkdirs()) {
-                    throw new Exception("Could not create File, check you SD card");
+    private static Uri doCreateOutputFile(String path, File parentDir) throws Exception {
+        if (parentDir != null) {
+            if (!parentDir.isDirectory()) {
+                if (!parentDir.mkdirs()) {
+                    throw new Exception("Could not create directory, check you SD card");
                 }
             }
-            return Uri.fromFile(new File(file, path));
+            return Uri.fromFile(new File(parentDir, path));
         }
         return null;
     }
@@ -87,7 +87,7 @@ public class FileHelper {
     public static String getExtension(String path) {
         if (path == null) return "";
         int extStart = path.lastIndexOf(".");
-        if (extStart == -1) return "";
+        if (extStart == -1 || path.endsWith(".")) return "";
         return path.substring(extStart + 1);
     }
 
@@ -147,8 +147,7 @@ public class FileHelper {
             }
 
             @Override
-            public boolean onProgress(long expected, long received) {
-                return false;
+            public void onProgress(long expected, long received) {
             }
 
             @Override
@@ -161,7 +160,7 @@ public class FileHelper {
     public interface ProgressListener {
         boolean onStart(long expected);
 
-        boolean onProgress(long expected, long received);
+        void onProgress(long expected, long received);
 
         void onComplete();
     }
