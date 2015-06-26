@@ -37,21 +37,23 @@ import retrofit.mime.TypedFile;
  */
 public class UserManager {
 
-    private static volatile int loginAttempts = 0,
+    private static final String TAG = UserManager.class.getSimpleName();
+    private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is
+    public static final UserManager INSTANCE = new UserManager();
+
+    private volatile int loginAttempts = 0,
             signUpAttempts = 0, changeDpAttempts = 0,
             refreshAttempts = 0,
             getDpAttempts = 0;
-    private static volatile boolean loginSignUpBusy = false, //login or sign up never should run in parallel
+    private volatile boolean loginSignUpBusy = false, //login or sign up never should run in parallel
             dpChangeOperationRunning = false,
             refreshOperationRunning = false,
             getDpOperationRunning = false;
-    private static final String TAG = UserManager.class.getSimpleName();
-    private static final Exception NO_CONNECTION_ERROR = new Exception("not connected to the internet");
-    public static final UserManager INSTANCE = new UserManager();
-    private static final BaseJsonAdapter<User> adapter = new UserJsonAdapter();
-    private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is
+    private final Exception NO_CONNECTION_ERROR = new Exception("not connected to the internet");
+    private final BaseJsonAdapter<User> adapter = new UserJsonAdapter();
 
-    private static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
+    //shared with message adapter
+    public static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
         @Override
         public void intercept(RequestFacade requestFacade) {
             requestFacade.addHeader("Authorization", "kiiboda+=s3cr3te");
@@ -59,7 +61,7 @@ public class UserManager {
         }
     };
 
-    private static final UserApi userApi = new RestAdapter.Builder()
+    private final UserApi userApi = new RestAdapter.Builder()
             .setEndpoint(Config.PAIRAPP_ENDPOINT)
             .setRequestInterceptor(INTERCEPTOR)
             .setLogLevel(RestAdapter.LogLevel.FULL)

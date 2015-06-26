@@ -14,6 +14,7 @@ import com.pair.net.api.MessageApi;
 import com.pair.pairapp.BuildConfig;
 import com.pair.util.Config;
 import com.pair.util.ConnectionHelper;
+import com.pair.util.UserManager;
 
 import org.apache.http.HttpStatus;
 
@@ -61,7 +62,6 @@ class MessageDispatcher implements Dispatcher<Message> {
         this.MAX_RETRY_TIMES = (retryTimes < 0) ? 0 : retryTimes;
         this.jsonAdapter = jsonAdapter;
         RETRY_HANDLER = new Handler();
-
     }
 
     static MessageDispatcher getInstance(BaseJsonAdapter<Message> adapter, DispatcherMonitor dispatcherMonitor, int retryTimes) {
@@ -326,11 +326,5 @@ class MessageDispatcher implements Dispatcher<Message> {
         }
     }
 
-    private static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
-        @Override
-        public void intercept(RequestFacade requestFacade) {
-            requestFacade.addHeader("Authorization", "kiiboda+=s3cr3te");
-            requestFacade.addHeader("User-Agent", Config.APP_USER_AGENT);
-        }
-    };
+    private static final RequestInterceptor INTERCEPTOR = UserManager.INTERCEPTOR;
 }
