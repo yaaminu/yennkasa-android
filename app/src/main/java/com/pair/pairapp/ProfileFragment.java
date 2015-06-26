@@ -153,7 +153,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 UserManager userManager = UserManager.getInstance(getActivity());
                 userManager.changeDp(filePath, DP_CALLBACK);
 
-            } else {
             }
         }
     }
@@ -189,10 +188,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private final UserManager.DpChangeCallback DP_CALLBACK = new UserManager.DpChangeCallback() {
         @Override
         public void done(Exception e) {
-            if (e == null) {
-                //success
 
-            }
         }
     };
 

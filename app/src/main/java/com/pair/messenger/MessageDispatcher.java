@@ -231,8 +231,8 @@ class MessageDispatcher implements Dispatcher<Message> {
                     throw new RuntimeException("An unknown internal error occurred");
                 }
             } else if (retrofitError.getKind().equals(RetrofitError.Kind.CONVERSION)) { //crash early
-                Log.wtf(TAG, "internal error ");
-                throw new RuntimeException("poorly encoded json data");
+                Log.wtf(TAG, "internal error, conversion error ");
+                throw new RuntimeException("poorly encoded json data", retrofitError.getCause());
             } else if (retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)) {
                 if (ConnectionHelper.isConnectedOrConnecting()) {
                     tryAgain(job);
@@ -320,6 +320,8 @@ class MessageDispatcher implements Dispatcher<Message> {
         for (DispatcherMonitor monitor : monitors) {
             if (monitor != null) {
                 monitor.onAllDispatched();
+            } else {
+                warnAndThrowIfInDevelopment();
             }
         }
     }
