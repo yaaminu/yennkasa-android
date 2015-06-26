@@ -111,8 +111,7 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        Conversation conversation = ((ConversationAdapter.ViewHolder) v.getTag()).currentConversation;
-        String peerId = conversation.getPeerId();
+        String peerId = ((ConversationAdapter.ViewHolder) v.getTag()).peerId;
         UiHelpers.enterChatRoom(getActivity(), peerId);
     }
 
@@ -151,8 +150,9 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
 
     @Override
     public void onDestroy() {
-        realm.close();
         task.cancel();
+        realm.removeChangeListener(this);
+        realm.close();
         super.onDestroy();
     }
 
@@ -193,7 +193,7 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
                     Log.i(TAG, "rescheduling time to one hour");
                     scheduleTimer(AlarmManager.INTERVAL_HOUR);
                 }
-            } else {
+            } else {//one day or more interval is too long
                 Log.i(TAG, "canceling timer");
                 if (timer != null) timer.cancel();
             }

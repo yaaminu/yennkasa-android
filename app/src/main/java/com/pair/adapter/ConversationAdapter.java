@@ -67,7 +67,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
             summary = "Conversation with " + peerName;
         }
         holder.chatSummary.setText(summary);
-        holder.currentConversation = conversation;
+        holder.peerId = conversation.getPeerId();
         return convertView;
     }
 
@@ -79,7 +79,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
     }
 
     public class ViewHolder {
-        public Conversation currentConversation; //holds current item to be used by callers outside this adapter.
+        public String peerId; //holds current item to be used by callers outside this adapter.
         TextView chatSummary, dateLastActive, peerName;
         ImageView senderAvatar;
     }
