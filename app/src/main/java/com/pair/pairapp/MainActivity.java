@@ -112,8 +112,9 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
             case 2:
                 fragment = new ContactFragment();
                 break;
-            case 3://fall through
-
+            case 3:
+                fragment = new GroupsFragment();
+                break;
             case 4:
                 gotoProfileActivity(userManager.getMainUser().get_id());
                 return;
