@@ -26,18 +26,7 @@
     <string name="action_attach">attach</string>
     <string name="error_sory_no_application_to_open_file">sorry no application to open file type</string>
     <string name="action_refresh">Refresh</string>
-
-    <string-array name="attach_options">
-        <item >Take Picture</item>
-        <item >Take Video</item>
-        <item >Choose Picture</item>
-        <item >Choose Video</item>
-        <item>Choose File</item>
-    </string-array>
     <string name="title_activity_profile">ProfileActivity</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="error_occured">sorry an error occurred</string>
     <string name="error_canceled">Canceled</string>
     <string name="dp_changed_successfully">DP changed successfully</string>
@@ -47,4 +36,12 @@
     <string name="edit_username">edit username</string>
     <string name="display_picture">Display picture</string>
     <string name="username_placeholder">Username</string>
+
+    <string-array name="attach_options">
+        <item>Take Picture</item>
+        <item>Take Video</item>
+        <item>Choose Picture</item>
+        <item>Choose Video</item>
+        <item>Choose File</item>
+    </string-array>
 </resources>

@@ -26,7 +26,6 @@ public class RealmHelper {
     // FIXME: 6/16/2015 remove this helper class
     public static void runRealmOperation(final Context context) {
         //helper method for cleaning up real and seeding it with data
-
     }
 
     private static void seedIncomingMessages() {
@@ -81,5 +80,12 @@ public class RealmHelper {
             realm.where(Message.class).equalTo("to", user.get_id()).findAll().clear();
             context.startService(intent);
         }
+    }
+
+    private static void cleanUsers() {
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        realm.beginTransaction();
+        realm.where(User.class).findAll().clear();
+        realm.commitTransaction();
     }
 }

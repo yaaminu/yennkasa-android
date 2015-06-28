@@ -14,7 +14,6 @@ import com.pair.net.api.MessageApi;
 import com.pair.pairapp.BuildConfig;
 import com.pair.util.Config;
 import com.pair.util.ConnectionHelper;
-import com.pair.util.UserManager;
 
 import org.apache.http.HttpStatus;
 
@@ -24,7 +23,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import retrofit.Callback;
-import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.android.AndroidLog;
@@ -35,10 +33,9 @@ import retrofit.mime.TypedFile;
  * @author by Null-Pointer on 5/26/2015.
  */
 class MessageDispatcher implements Dispatcher<Message> {
-    //TODO implement messageDispatcher as a service
     private static final String TAG = MessageDispatcher.class.getSimpleName();
     private volatile int NUM_OF_TASKS = 0;
-    private static volatile MessageDispatcher INSTANCE;
+    private static MessageDispatcher INSTANCE;
     private final int MAX_RETRY_TIMES;
     private final MessageApi MESSAGE_API;
     private final Object dispatcherMonitorLock = new Object();
@@ -50,7 +47,7 @@ class MessageDispatcher implements Dispatcher<Message> {
     private MessageDispatcher(BaseJsonAdapter<Message> jsonAdapter, DispatcherMonitor errorHandler, int retryTimes) {
         RestAdapter adapter = new RestAdapter.Builder()
                 .setEndpoint(Config.PAIRAPP_ENDPOINT)
-                .setRequestInterceptor(INTERCEPTOR)
+                .setRequestInterceptor(Config.INTERCEPTOR)
                 .setLogLevel(RestAdapter.LogLevel.FULL)
                 .setLog(new AndroidLog(TAG))
                 .build();
@@ -61,7 +58,7 @@ class MessageDispatcher implements Dispatcher<Message> {
         this.monitors.add(errorHandler);
         this.MAX_RETRY_TIMES = (retryTimes < 0) ? 0 : retryTimes;
         this.jsonAdapter = jsonAdapter;
-        RETRY_HANDLER = new Handler();
+        this.RETRY_HANDLER = new Handler();
     }
 
     static MessageDispatcher getInstance(BaseJsonAdapter<Message> adapter, DispatcherMonitor dispatcherMonitor, int retryTimes) {
@@ -95,7 +92,7 @@ class MessageDispatcher implements Dispatcher<Message> {
             reportError(message.getId(), "\'typing\' messages cannot be sent");
             return;
         }
-        if (message.getType() != Message.TYPE_TEXT_MESSAGE) {
+        if (message.getType() != Message.TYPE_TEXT_MESSAGE) { //is it a binary message?
             if (!new File(message.getMessageBody()).exists()) {
                 Log.w(TAG, "error: " + message.getMessageBody() + " is not a valid file path");
                 reportError(message.getId(), "file does not exist");
@@ -325,6 +322,4 @@ class MessageDispatcher implements Dispatcher<Message> {
             }
         }
     }
-
-    private static final RequestInterceptor INTERCEPTOR = UserManager.INTERCEPTOR;
 }

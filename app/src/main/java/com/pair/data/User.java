@@ -19,7 +19,9 @@ public class User extends RealmObject {
     private String password;
     private String status, DP;
     private long lastActivity, accountCreated;
-    private RealmList<User> peers; //a group will be a user with its members represented by this field.
+    private RealmList<User> members; //a group will be a user with its members represented by this field.
+    private RealmList<User> admins; // this represents admins for a group
+
 
     //required no-arg c'tor
     public User() {
@@ -28,7 +30,7 @@ public class User extends RealmObject {
     //copy constructor - LOL,(c++ things).
     public User(User other) {
         //realm forces us to use setters and getters everywhere for predictable results
-        //null check because is good not to throw in constructors
+        //null check because is good not to throw in constructors(not so sure if its true)
         if (other != null) {
             this.set_id(other.get_id());
             this.setAccountCreated(other.getAccountCreated());
@@ -39,6 +41,14 @@ public class User extends RealmObject {
             this.setDP(other.getDP());
             this.setName(other.getName());
         }
+    }
+
+    public RealmList<User> getAdmins() {
+        return admins;
+    }
+
+    public void setAdmins(RealmList<User> admins) {
+        this.admins = admins;
     }
 
     public String get_id() {
@@ -105,11 +115,11 @@ public class User extends RealmObject {
         this.gcmRegId = gcmRegId;
     }
 
-    public RealmList<User> getPeers() {
-        return peers;
+    public RealmList<User> getMembers() {
+        return members;
     }
 
-    public void setPeers(RealmList<User> peers) {
-        this.peers = peers;
+    public void setMembers(RealmList<User> members) {
+        this.members = members;
     }
 }

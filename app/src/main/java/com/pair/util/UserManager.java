@@ -52,19 +52,10 @@ public class UserManager {
     private final Exception NO_CONNECTION_ERROR = new Exception("not connected to the internet");
     private final BaseJsonAdapter<User> adapter = new UserJsonAdapter();
 
-    //shared with message adapter
-    public static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
-        @Override
-        public void intercept(RequestFacade requestFacade) {
-            requestFacade.addHeader("Authorization", "kiiboda+=s3cr3te");
-            requestFacade.addHeader("User-Agent", Config.APP_USER_AGENT);
-        }
-    };
-
     private final UserApi userApi = new RestAdapter.Builder()
             .setEndpoint(Config.PAIRAPP_ENDPOINT)
-            .setRequestInterceptor(INTERCEPTOR)
-            .setLogLevel(RestAdapter.LogLevel.FULL)
+            .setRequestInterceptor(Config.INTERCEPTOR)
+            .setLogLevel((BuildConfig.DEBUG) ? RestAdapter.LogLevel.FULL : RestAdapter.LogLevel.NONE)
             .setLog(new AndroidLog(TAG))
             .build()
             .create(UserApi.class);

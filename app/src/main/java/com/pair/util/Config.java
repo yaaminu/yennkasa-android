@@ -11,6 +11,8 @@ import android.util.Log;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import retrofit.RequestInterceptor;
+
 /**
  * @author null-pointer
  */
@@ -31,6 +33,14 @@ public class Config {
     public static final File APP_IMG_MEDIA_BASE_DIR = getImageBasedir();
     public static final File APP_VID_MEDIA_BASE_DIR = getVideoBaseDir();
     public static final File APP_PROFILE_PICS_BASE_DIR = getProfilePicsBasedir();
+    //shared with message adapter
+    public static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
+        @Override
+        public void intercept(RequestFacade requestFacade) {
+            requestFacade.addHeader("Authorization", "kiiboda+=s3cr3te");
+            requestFacade.addHeader("User-Agent", Config.APP_USER_AGENT);
+        }
+    };
 
     private static File getProfilePicsBasedir() {
         if (isExternalStorageAvailable()) {
