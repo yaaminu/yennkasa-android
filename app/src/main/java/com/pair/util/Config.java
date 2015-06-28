@@ -8,6 +8,11 @@ import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
+import com.pair.messenger.MessageProcessor;
+import com.pair.messenger.PairAppClient;
+import com.pair.workers.BootReceiver;
+import com.pair.workers.ContactSyncService;
+
 import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -138,7 +143,7 @@ public class Config {
         }
     }
 
-    public static void enableComponent(Class clazz) {
+    private static void enableComponent(Class clazz) {
         Log.d(TAG, "enabling " + clazz.getSimpleName());
         ComponentName receiver = new ComponentName(application, clazz);
 
@@ -149,7 +154,7 @@ public class Config {
                 PackageManager.DONT_KILL_APP);
     }
 
-    public static void disableComponent(Class clazz) {
+    private static void disableComponent(Class clazz) {
         Log.d(TAG, "disabling " + clazz.getSimpleName());
         ComponentName receiver = new ComponentName(application, clazz);
 
@@ -158,5 +163,19 @@ public class Config {
         pm.setComponentEnabledSetting(receiver,
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                 PackageManager.DONT_KILL_APP);
+    }
+
+    public static void enableComponents() {
+        enableComponent(BootReceiver.class);
+        enableComponent(ContactSyncService.class);
+        enableComponent(PairAppClient.class);
+        enableComponent(MessageProcessor.class);
+    }
+
+    public static void disableComponents() {
+        disableComponent(BootReceiver.class);
+        disableComponent(ContactSyncService.class);
+        disableComponent(PairAppClient.class);
+        disableComponent(MessageProcessor.class);
     }
 }

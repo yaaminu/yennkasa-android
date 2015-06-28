@@ -15,6 +15,7 @@ import android.widget.Toast;
 import com.pair.data.User;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
+import com.pair.util.Config;
 import com.pair.util.FormValidator;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
@@ -44,6 +45,7 @@ public class SignUpFragment extends Fragment {
             progressView.setVisibility(View.GONE);
             busy = false;
             if (e == null) {
+                Config.enableComponents();
                 startActivity(new Intent(getActivity(), MainActivity.class));
                 getActivity().finish();
             } else {

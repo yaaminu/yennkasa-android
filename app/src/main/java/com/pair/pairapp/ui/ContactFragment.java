@@ -17,9 +17,11 @@ import android.widget.ListView;
 import com.pair.adapter.ContactsAdapter;
 import com.pair.data.ContactsManager;
 import com.pair.data.ContactsManager.Contact;
+import com.pair.data.User;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
+import com.pair.util.UserManager;
 import com.pair.workers.ContactSyncService;
 
 import java.util.ArrayList;
@@ -84,7 +86,14 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
 
         List<Contact> contacts = new ArrayList<>();
         adapter = new ContactsAdapter(contacts);
-        ContactsManager.INSTANCE.findAllContacts(null, comparator, contactsFindCallback);
+        final ContactsManager.Filter<Contact> filter = new ContactsManager.Filter<Contact>() {
+            @Override
+            public boolean accept(Contact contact) {
+                User user = UserManager.INSTANCE.getMainUser(); //main user cannot be null
+                return !(contact.phoneNumber.equals(user.get_id()));
+            }
+        };
+        ContactsManager.INSTANCE.findAllContacts(filter, comparator, contactsFindCallback);
         setListAdapter(adapter);
         return view;
     }

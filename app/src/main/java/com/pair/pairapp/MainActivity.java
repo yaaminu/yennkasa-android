@@ -20,7 +20,6 @@ import com.pair.util.Config;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
-import com.pair.workers.BootReceiver;
 import com.pair.workers.RealmHelper;
 
 /**
@@ -72,7 +71,7 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
                 public void done(Exception e) {
                     progressDialog.dismiss();
                     if (e == null) {
-                        Config.disableComponent(BootReceiver.class);
+                        Config.disableComponents();
                         gotoSetUpActivity();
                         finish();
                     } else {

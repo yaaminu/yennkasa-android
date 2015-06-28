@@ -12,6 +12,7 @@ import android.util.Log;
 import com.pair.adapter.MessageJsonAdapter;
 import com.pair.data.Message;
 import com.pair.net.Dispatcher;
+import com.pair.util.UserManager;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -37,6 +38,9 @@ public class PairAppClient extends Service {
     private Dispatcher<Message> DISPATCHER_INSTANCE;
 
     public static void start(Context context) {
+        if (UserManager.INSTANCE.getMainUser() == null) {
+            return;
+        }
         Intent pairAppClient = new Intent(context, PairAppClient.class);
         pairAppClient.putExtra(PairAppClient.ACTION, PairAppClient.ACTION_SEND_ALL_UNSENT);
         context.startService(pairAppClient);
@@ -50,6 +54,10 @@ public class PairAppClient extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "starting pairapp client service");
         super.onStartCommand(intent, flags, startId);
+        if (UserManager.INSTANCE.getMainUser() == null) {
+            stopSelf();
+            return START_STICKY;
+        }
         if (intent != null) {
             if (intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
                 attemptToSendAllUnsentMessages(); //async

@@ -14,7 +14,6 @@ import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.net.api.UserApi;
 import com.pair.pairapp.BuildConfig;
-import com.pair.workers.BootReceiver;
 
 import org.apache.http.HttpStatus;
 
@@ -25,7 +24,6 @@ import java.util.List;
 
 import io.realm.Realm;
 import retrofit.Callback;
-import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.android.AndroidLog;
@@ -282,7 +280,6 @@ public class UserManager {
                 //our backend deletes password fields so we got to use our copy here
                 backendUser.setPassword(user.getPassword());
                 saveUser(backendUser);
-                Config.enableComponent(BootReceiver.class);
                 callback.done(null);
             }
 
@@ -318,7 +315,6 @@ public class UserManager {
                 loginSignUpBusy = false;
                 backEndUser.setPassword(user.getPassword());
                 saveUser(backEndUser);
-                Config.enableComponent(BootReceiver.class);
                 callback.done(null);
             }
 
@@ -361,10 +357,9 @@ public class UserManager {
         GcmHelper.unRegister(context, new GcmHelper.UnregisterCallback() {
             @Override
             public void done(Exception e) {
-                if (e == null) {
-                    cleanUpRealm();
-                }
-                logOutCallback.done(e);
+                //we dont care about gcm regid
+                cleanUpRealm();
+                logOutCallback.done(null);
             }
         });
     }

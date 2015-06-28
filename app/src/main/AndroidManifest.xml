@@ -61,13 +61,16 @@
 
         <service
             android:name="com.pair.workers.ContactSyncService"
-            android:exported="false" />
+            android:exported="false"
+            android:enabled="false"/>
         <service
             android:name="com.pair.messenger.MessageProcessor"
-            android:exported="false" />
+            android:exported="false"
+            android:enabled="false"/>
         <service
             android:name="com.pair.messenger.PairAppClient"
-            android:exported="false" />
+            android:exported="false"
+            android:enabled="false"/>
 
         <receiver
             android:name="com.pair.workers.BootReceiver"

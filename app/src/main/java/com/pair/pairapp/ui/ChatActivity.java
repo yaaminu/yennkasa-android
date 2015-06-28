@@ -191,14 +191,19 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     }
 
     @Override
-    protected void onDestroy() {
-        realm.close();
+    protected void onStop() {
         if (bound) {
             bound = false;
             unbindService(connection);
         }
         dispatcher = null;
         adapter = null;
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        realm.close();
         super.onDestroy();
     }
 

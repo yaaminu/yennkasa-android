@@ -16,6 +16,7 @@ import android.widget.Toast;
 import com.pair.data.User;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
+import com.pair.util.Config;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
@@ -34,11 +35,12 @@ public class LoginFragment extends Fragment {
             progressView.setVisibility(View.GONE);
             busy = false;
             if (e == null) {
+                Config.enableComponents();
                 startActivity(new Intent(getActivity(), MainActivity.class));
                 getActivity().finish();
             } else {
                 String message = e.getMessage();
-                //this is necessary because retrofit sometime throw exceptions with no message
+                //this is necessary because retrofit sometimes throws exceptions with no message
                 if ((message == null) || (message.isEmpty())) {
                     message = "an unknown error occurred";
                 }

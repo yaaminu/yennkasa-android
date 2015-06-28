@@ -35,7 +35,8 @@ public class ContactSyncService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (intent.getStringExtra(ACTION).equals(ACTION_FETCH_FRIENDS)) {
+        if (intent.getStringExtra(ACTION).equals(ACTION_FETCH_FRIENDS) &&
+                (UserManager.INSTANCE.getMainUser() != null)) {
             //do work here
             UserManager manager = UserManager.getInstance(this.getApplication());
             ContactsManager.Filter<ContactsManager.Contact> filter = new ContactsManager.Filter<ContactsManager.Contact>() {
@@ -55,9 +56,7 @@ public class ContactSyncService extends IntentService {
             for (ContactsManager.Contact contact : numbers) {
                 onlyNumbers.add(contact.phoneNumber);
             }
-
             doFetchFriends(manager, onlyNumbers);
-
         }
     }
 
