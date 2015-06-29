@@ -8,6 +8,8 @@ import java.util.List;
 import retrofit.Callback;
 import retrofit.client.Response;
 import retrofit.http.Body;
+import retrofit.http.Field;
+import retrofit.http.FormUrlEncoded;
 import retrofit.http.GET;
 import retrofit.http.Multipart;
 import retrofit.http.POST;
@@ -41,4 +43,14 @@ public interface UserApi {
     @Multipart
     @PUT("/api/v1/users/{id}/dp")
     void changeDp(@Path("id") String id, @Part("bin") TypedFile file, @Part("password") String password, Callback<Response> response);
+
+    @POST("/api/v1/groups/")
+    void createGroup(@Body JsonObject group, Callback<Response> response);
+
+    @FormUrlEncoded
+    @PUT("/api/v1/groups/{id}/members")
+    void addMembersToGroup(@Path("id") String id
+            , @Field("by") String by
+            , @Field("members") List<String> members
+            , Callback<Response> response);
 }

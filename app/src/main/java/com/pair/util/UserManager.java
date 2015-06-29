@@ -5,8 +5,10 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.gson.JsonObject;
 import com.pair.adapter.BaseJsonAdapter;
 import com.pair.adapter.UserJsonAdapter;
 import com.pair.data.Conversation;
@@ -23,6 +25,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import io.realm.Realm;
+import io.realm.RealmList;
 import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
@@ -42,11 +45,13 @@ public class UserManager {
     private volatile int loginAttempts = 0,
             signUpAttempts = 0, changeDpAttempts = 0,
             refreshAttempts = 0,
-            getDpAttempts = 0;
+            getDpAttempts = 0,
+            createGroupAttempts = 0;
     private volatile boolean loginSignUpBusy = false, //login or sign up never should run in parallel
             dpChangeOperationRunning = false,
             refreshOperationRunning = false,
-            getDpOperationRunning = false;
+            getDpOperationRunning = false,
+            groupOperationRunning = false;
     private final Exception NO_CONNECTION_ERROR = new Exception("not connected to the internet");
     private final BaseJsonAdapter<User> adapter = new UserJsonAdapter();
 
@@ -67,13 +72,12 @@ public class UserManager {
     }
 
 
-    private void saveUser(User user) {
+    private void saveUserMainUser(User user) {
         final Context context = Config.getApplicationContext();
         Realm realm = Realm.getInstance(context);
         realm.beginTransaction();
         realm.copyToRealmOrUpdate(user);
         realm.commitTransaction();
-        realm.close();
         // TODO: 6/25/2015 encrypt the id before storing it
         context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE)
                 .edit().putString(KEY_SESSION_ID, user.get_id())
@@ -95,6 +99,8 @@ public class UserManager {
                 copy = new User(user);
             }
             realm.close();
+        } else {
+            Config.disableComponents();
         }
         return copy;
     }
@@ -104,6 +110,132 @@ public class UserManager {
         User thisUser = getMainUser();
         return ((!(user == null || thisUser == null)) && thisUser.get_id().equals(user.get_id()));
     }
+
+    public void createGroup(final String groupName, final CallBack callBack) {
+        if (!ConnectionHelper.isConnectedOrConnecting()) {
+            callBack.done(NO_CONNECTION_ERROR);
+        }
+        if (groupOperationRunning) {
+            return;
+        }
+        groupOperationRunning = true;
+        createGroupAttempts++;
+        RealmList admins = new RealmList();
+        admins.add(getMainUser());
+        final User group = new User();
+        group.set_id(User.generateGroupIdPossiblyUnique(groupName));
+        group.setName(groupName);
+        group.setType(User.TYPE_GROUP);
+        //group will be persisted in the callback#succes()
+        JsonObject obj = new JsonObject();
+        obj.addProperty("name", group.getName());
+        obj.addProperty("_id", group.get_id());
+        obj.addProperty("createdBy", getMainUser().get_id());
+        userApi.createGroup(obj, new Callback<Response>() {
+            @Override
+            public void success(Response response, Response response2) {
+                groupOperationRunning = false;
+                createGroupAttempts = 0;
+                Realm realm = Realm.getInstance(Config.getApplicationContext());
+                realm.beginTransaction();
+                User savedGroup = realm.copyToRealm(group);
+                savedGroup.setAdmins(new RealmList<User>());
+                savedGroup.setMembers(new RealmList<User>());
+                User user = realm.where(User.class).equalTo("_id", getMainUser().get_id()).findFirst(); //mainuser() returns a non managed user object
+                savedGroup.getAdmins().add(user);
+                realm.commitTransaction();
+                realm.close();
+                callBack.done(null);
+            }
+
+            @Override
+            public void failure(RetrofitError retrofitError) {
+                groupOperationRunning = false;
+                Exception e = handleError(retrofitError);
+                if (e == null && createGroupAttempts < 3) {
+                    createGroup(groupName, callBack);
+                } else {
+                    createGroupAttempts = 0;
+                    Log.i(TAG, "failed to create group");
+                    callBack.done(e);
+                }
+            }
+        });
+    }
+
+    public boolean isUser(String id) {
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        boolean isUser = realm.where(User.class).equalTo("_id", id) != null;
+        realm.close();
+        return isUser;
+    }
+
+    public boolean isAdmin(String groupId, String userId) {
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        User group = realm.where(User.class).equalTo("_id", groupId).findFirst();
+        if (group == null) {
+            throw new IllegalArgumentException("no group with such id");
+        }
+        boolean isAdmin = false;
+        RealmList<User> admins = group.getAdmins();
+        for (User admin : admins) {
+            if (admin.get_id().equals(userId)) {
+                isAdmin = true;
+            }
+        }
+        realm.close();
+        return isAdmin;
+    }
+
+    public void addMembers(final String groupId, final List<String> membersId, final CallBack callBack) {
+        if (!ConnectionHelper.isConnectedOrConnecting()) {
+            callBack.done(NO_CONNECTION_ERROR);
+            return;
+        }
+        //thanks to realm we have to write really dirty code.
+        if (!isUser(groupId)) {
+            callBack.done(new IllegalArgumentException("no group with such id"));
+            return;
+        }
+        if (!isAdmin(groupId, getMainUser().get_id())) {
+            callBack.done(new IllegalAccessException("you don't have the authority to add a member"));
+            return;
+        }
+        userApi.addMembersToGroup(groupId, getMainUser().get_id(), membersId, new Callback<Response>() {
+
+            @Override
+            public void success(Response response, Response response2) {
+                Realm realm = Realm.getInstance(Config.getApplicationContext());
+                realm.beginTransaction();
+                RealmList<User> members = aggregateUsers(realm, membersId);
+                User group = realm.where(User.class).equalTo("_id", groupId).findFirst();
+                group.getMembers().addAll(members);
+                realm.commitTransaction();
+                realm.close();
+                callBack.done(null);
+            }
+
+            @Override
+            public void failure(RetrofitError retrofitError) {
+
+            }
+        });
+    }
+
+    @Nullable
+    private RealmList<User> aggregateUsers(Realm realm, List<String> membersId) {
+        RealmList<User> members = new RealmList<>();
+        for (String id : membersId) {
+            User user = realm.where(User.class).equalTo("_id", id).findFirst();
+            if (user != null) {
+                members.add(user);
+            } else {
+                Log.w(TAG, "user does not exist hence wont be added to group");
+            }
+        }
+        return members;
+    }
+
 
     public void refreshUserDetails(final String userId) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
@@ -118,6 +250,7 @@ public class UserManager {
             @Override
             public void success(User onlineUser, Response response) {
                 refreshOperationRunning = false;
+                refreshAttempts = 0;
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
                 realm.beginTransaction();
                 User user = realm.where(User.class).equalTo("_id", userId).findFirst();
@@ -131,7 +264,7 @@ public class UserManager {
                 }
                 realm.commitTransaction();
                 if (!new File(user.getDP()).exists()) {
-                    getUserDp(userId, new GetDpCallback() {
+                    getUserDp(userId, new CallBack() {
                         @Override
                         public void done(Exception e) {
                         }
@@ -154,7 +287,7 @@ public class UserManager {
         });
     }
 
-    public void changeDp(final String imagePath, final DpChangeCallback callback) {
+    public void changeDp(final String imagePath, final CallBack callback) {
         File imageFile = new File(imagePath);
         if (!imageFile.exists()) {
             callback.done(new Exception("path " + imagePath + " does not exist"));
@@ -182,6 +315,7 @@ public class UserManager {
             @Override
             public void success(Response response, Response response2) {
                 dpChangeOperationRunning = false;
+                changeDpAttempts = 0;
                 callback.done(null);
             }
 
@@ -199,7 +333,7 @@ public class UserManager {
         });
     }
 
-    public void getUserDp(final String userId, final GetDpCallback callback) {
+    public void getUserDp(final String userId, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
@@ -214,6 +348,7 @@ public class UserManager {
             @Override
             public void success(Response response, Response response2) {
                 getDpOperationRunning = false;
+                getDpAttempts = 0;
                 try {
                     final InputStream in = response.getBody().in();
                     Realm realm = Realm.getInstance(Config.getApplicationContext());
@@ -255,7 +390,7 @@ public class UserManager {
         });
     }
 
-    public void logIn(User user, final LoginCallback callback) {
+    public void logIn(User user, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
         }
@@ -263,7 +398,7 @@ public class UserManager {
     }
 
     //this method must be called on the main thread
-    private void doLogIn(final User user, final LoginCallback callback) {
+    private void doLogIn(final User user, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
@@ -277,9 +412,10 @@ public class UserManager {
             @Override
             public void success(User backendUser, Response response) {
                 loginSignUpBusy = false;
+                loginAttempts = 0;
                 //our backend deletes password fields so we got to use our copy here
                 backendUser.setPassword(user.getPassword());
-                saveUser(backendUser);
+                saveUserMainUser(backendUser);
                 callback.done(null);
             }
 
@@ -299,7 +435,7 @@ public class UserManager {
     }
 
 
-    public void signUp(final User user, final SignUpCallback callback) {
+    public void signUp(final User user, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
@@ -313,8 +449,9 @@ public class UserManager {
             @Override
             public void success(User backEndUser, Response response) {
                 loginSignUpBusy = false;
+                signUpAttempts = 0;
                 backEndUser.setPassword(user.getPassword());
-                saveUser(backEndUser);
+                saveUserMainUser(backEndUser);
                 callback.done(null);
             }
 
@@ -335,7 +472,7 @@ public class UserManager {
 
     }
 
-    public void LogOut(Context context, final LogOutCallback logOutCallback) {
+    public void LogOut(Context context, final CallBack logOutCallback) {
         //TODO logout user from backend
         SharedPreferences sharedPreferences = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
         String userId = sharedPreferences.getString(KEY_SESSION_ID, null);
@@ -435,32 +572,16 @@ public class UserManager {
         }
 
         //may be retrofit added some error kinds in a new version we are not aware of so lets crash to ensure that
-        //our we find out
+        //we find out
         throw new AssertionError("unknown error kind");
     }
 
-
-    public interface LoginCallback {
-        void done(Exception e);
-    }
-
-    public interface LogOutCallback {
-        void done(Exception e);
-    }
-
-    public interface SignUpCallback {
-        void done(Exception e);
-    }
 
     public interface FriendsFetchCallback {
         void done(Exception e, List<User> users);
     }
 
-    public interface DpChangeCallback {
-        void done(Exception e);
-    }
-
-    public interface GetDpCallback {
+    public interface CallBack {
         void done(Exception e);
     }
 }

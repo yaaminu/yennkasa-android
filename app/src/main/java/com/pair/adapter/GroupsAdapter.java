@@ -42,7 +42,7 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
         int itemCount = 0;
         for (User groupMember : groupMembers) {
             if (groupMember.get_id().equals(mainUser.get_id())) {
-                throw new IllegalStateException("main user must be not be added to members");
+                throw new IllegalStateException("main user must not be added to members");
             }
             itemCount++;
             members.append(",")

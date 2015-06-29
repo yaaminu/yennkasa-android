@@ -88,11 +88,9 @@ public class ContactsManager {
                 status = user.getStatus();
             }
             ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, status, isRegistered);
-            Log.d(TAG, contact.name + ":" + contact.phoneNumber);
-            if ((filter != null) && !filter.accept(contact)) {
-                continue;
+            if ((filter != null) && filter.accept(contact)) {
+                contacts.add(contact);
             }
-            contacts.add(contact);
         }
         cursor.close();
         realm.close();
@@ -131,7 +129,6 @@ public class ContactsManager {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-
             Contact contact = (Contact) o;
             return (isRegisteredUser == contact.isRegisteredUser) && name.equals(contact.name) && phoneNumber.equals(contact.phoneNumber);
 

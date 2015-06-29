@@ -1,5 +1,7 @@
 package com.pair.data;
 
+import com.pair.util.UserManager;
+
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
@@ -42,6 +44,9 @@ public class User extends RealmObject {
             this.setLastActivity(other.getLastActivity());
             this.setDP(other.getDP());
             this.setName(other.getName());
+            this.setType(other.getType());
+            this.setAdmins(other.getAdmins());
+            this.setMembers(other.getMembers());
         }
     }
 
@@ -131,5 +136,9 @@ public class User extends RealmObject {
 
     public void setMembers(RealmList<User> members) {
         this.members = members;
+    }
+
+    public static String generateGroupIdPossiblyUnique(String groupName) {
+        return new StringBuilder(groupName).append("@").append(UserManager.INSTANCE.getMainUser().get_id()).toString();
     }
 }

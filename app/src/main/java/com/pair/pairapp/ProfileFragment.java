@@ -185,7 +185,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 //        toast.show();
 //    }
 
-    private final UserManager.DpChangeCallback DP_CALLBACK = new UserManager.DpChangeCallback() {
+    private final UserManager.CallBack DP_CALLBACK = new UserManager.CallBack() {
         @Override
         public void done(Exception e) {
 

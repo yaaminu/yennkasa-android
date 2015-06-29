@@ -8,3 +8,6 @@
 # fix the timer issue in conversation fragment //fixed
 # give control to users so that they can change their dps,names,statuses etc. //partly fixed
 # implement a sync adapter once our backend starts giving it support
+# implement synchronous version of all our network calls for background services to use
+# declare all field names of models as constants so that realm queries will be neat
+# write test. I know it should have been the first thing to do

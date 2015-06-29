@@ -20,6 +20,7 @@ import com.pair.util.FormValidator;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
+import com.pair.workers.ContactSyncService;
 
 /**
  * @author by Null-Pointer on 5/28/2015.
@@ -40,12 +41,13 @@ public class SignUpFragment extends Fragment {
             getFragmentManager().popBackStackImmediate();
         }
     };
-    private UserManager.SignUpCallback signUpCallback = new UserManager.SignUpCallback() {
+    private UserManager.CallBack signUpCallback = new UserManager.CallBack() {
         public void done(Exception e) {
             progressView.setVisibility(View.GONE);
             busy = false;
             if (e == null) {
                 Config.enableComponents();
+                ContactSyncService.start(getActivity());
                 startActivity(new Intent(getActivity(), MainActivity.class));
                 getActivity().finish();
             } else {

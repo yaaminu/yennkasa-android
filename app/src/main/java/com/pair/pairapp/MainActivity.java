@@ -64,7 +64,7 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
             final ProgressDialog progressDialog = new ProgressDialog(this);
             progressDialog.setMessage("Logging out");
             progressDialog.show();
-            userManager.LogOut(this, new UserManager.LogOutCallback() {
+            userManager.LogOut(this, new UserManager.CallBack() {
                 @Override
                 public void done(Exception e) {
                     progressDialog.dismiss();

@@ -23,6 +23,7 @@ import com.pair.data.Conversation;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
+import com.pair.util.UserManager;
 
 import java.util.Date;
 import java.util.Timer;
@@ -81,6 +82,16 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
 
     @Override
     public void onResume() {
+        final UserManager.CallBack callBack = new UserManager.CallBack() {
+            @Override
+            public void done(Exception e) {
+                if (e != null) {
+                    Log.e(TAG, e.getMessage(), e.getCause());
+                }
+            }
+        };
+        UserManager.INSTANCE.createGroup("TNS", callBack);
+        //UserManager.INSTANCE.addMembers(groupId,membersId,callBack);
         super.onResume();
     }
 

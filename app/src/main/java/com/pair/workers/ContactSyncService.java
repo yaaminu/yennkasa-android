@@ -79,15 +79,18 @@ public class ContactSyncService extends IntentService {
             Log.i(TAG, "no new friend");
             return;
         }
+        Log.i(TAG, UserManager.INSTANCE.getMainUser().get_id());
         Realm realm = Realm.getInstance(this);
         realm.beginTransaction();
         try {
             realm.copyToRealm(users);
             Log.i(TAG, "added " + users.size() + " new users");
+            realm.commitTransaction();
         } catch (RealmException e) { //primary keys violation
             //never mind
+            Log.wtf(TAG, "users already exist");
+            realm.cancelTransaction();
         } finally {
-            realm.commitTransaction();
             realm.close();
         }
     }

@@ -20,6 +20,7 @@ import com.pair.util.Config;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
+import com.pair.workers.ContactSyncService;
 
 /**
  * @author by Null-Pointer on 5/28/2015.
@@ -30,12 +31,13 @@ public class LoginFragment extends Fragment {
     private Button loginButton;
     private boolean busy = false;
     private View progressView;
-    private UserManager.LoginCallback loginCallback = new UserManager.LoginCallback() {
+    private UserManager.CallBack loginCallback = new UserManager.CallBack() {
         public void done(Exception e) {
             progressView.setVisibility(View.GONE);
             busy = false;
             if (e == null) {
                 Config.enableComponents();
+                ContactSyncService.start(getActivity());
                 startActivity(new Intent(getActivity(), MainActivity.class));
                 getActivity().finish();
             } else {
