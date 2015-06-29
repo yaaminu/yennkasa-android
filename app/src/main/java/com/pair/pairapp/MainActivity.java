@@ -20,7 +20,6 @@ import com.pair.util.Config;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
-import com.pair.workers.RealmHelper;
 
 /**
  * @author Null-Pointer on 6/6/2015.
@@ -35,7 +34,6 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        RealmHelper.runRealmOperation(this);
         if (GcmHelper.checkPlayServices(this)) {
             userManager = UserManager.getInstance(getApplication());
             User user = userManager.getMainUser();

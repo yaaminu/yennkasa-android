@@ -33,14 +33,10 @@ public class GroupsFragment extends ListFragment {
         Realm realm = Realm.getInstance(getActivity());
         String title = getArguments().getString(MainActivity.ARG_TITLE);
         ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(title);
-        RealmResults<User> groups = realm.where(User.class)
-                .isNotNull("admin")
-                .or().isNotNull("members") //only groups will have members field set
-                .findAllSorted("name"); // only groups will have admin field as not null
+        RealmResults<User> groups = realm.where(User.class).equalTo("type", User.TYPE_GROUP).findAllSorted("name");
         BaseAdapter adapter = new GroupsAdapter(getActivity(), groups);
         setListAdapter(adapter);
         return view;
     }
-
 
 }

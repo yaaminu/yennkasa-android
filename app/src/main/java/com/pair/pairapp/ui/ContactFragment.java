@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import io.realm.Realm;
 import io.realm.RealmChangeListener;
 
 
@@ -40,6 +41,7 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
     private static final String TAG = ContactFragment.class.getSimpleName();
 
     private ContactsAdapter adapter;
+    Realm realm;
     private final Comparator<Contact> comparator = new Comparator<Contact>() {
         @Override
         public int compare(Contact lhs, Contact rhs) {
@@ -99,6 +101,15 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
     }
 
     @Override
+    public void onStart() {
+        if (realm == null) {
+            realm = Realm.getInstance(getActivity());
+        }
+        realm.addChangeListener(this);
+        super.onStart();
+    }
+
+    @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         Contact contact = ((ContactsAdapter.ViewHolder) v.getTag()).contact; //very safe
         if (contact.isRegisteredUser) {
@@ -125,6 +136,18 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onPause() {
+        realm.removeChangeListener(this);
+        super.onPause();
+    }
+
+    @Override
+    public void onDestroy() {
+        realm.close();
+        super.onDestroy();
     }
 
     @Override

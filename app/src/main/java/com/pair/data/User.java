@@ -11,6 +11,8 @@ import io.realm.annotations.RealmClass;
 @SuppressWarnings("unused")
 @RealmClass
 public class User extends RealmObject {
+    public static final int TYPE_GROUP = 0x3e8;
+    public static final int TYPE_NORMAL_USER = 0x3e9;
     @PrimaryKey
     private String _id;
 
@@ -21,13 +23,13 @@ public class User extends RealmObject {
     private long lastActivity, accountCreated;
     private RealmList<User> members; //a group will be a user with its members represented by this field.
     private RealmList<User> admins; // this represents admins for a group
-
+    private int type;
 
     //required no-arg c'tor
     public User() {
     }
 
-    //copy constructor - LOL,(c++ things).
+    //copy constructor
     public User(User other) {
         //realm forces us to use setters and getters everywhere for predictable results
         //null check because is good not to throw in constructors(not so sure if its true)
@@ -41,6 +43,14 @@ public class User extends RealmObject {
             this.setDP(other.getDP());
             this.setName(other.getName());
         }
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
     }
 
     public RealmList<User> getAdmins() {
