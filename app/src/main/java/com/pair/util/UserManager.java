@@ -2,8 +2,6 @@ package com.pair.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -11,6 +9,7 @@ import android.util.Log;
 import com.google.gson.JsonObject;
 import com.pair.adapter.BaseJsonAdapter;
 import com.pair.adapter.UserJsonAdapter;
+import com.pair.data.ContactsManager;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
@@ -19,9 +18,11 @@ import com.pair.pairapp.BuildConfig;
 
 import org.apache.http.HttpStatus;
 
+import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.util.List;
 
 import io.realm.Realm;
@@ -85,26 +86,30 @@ public class UserManager {
     }
 
     public User getMainUser() {
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        User user = getMainUser(realm);
+        if (user != null) {
+            //returning {@code RealmObject} from methods leaks resources since
+            // that will prevent us from closing the realm instance. hence we do a shallow copy.
+            // downside is changes to this object will not be persisted which is just what we want
+            user = new User(user);
+        }
+        realm.close();
+        return user == null ? user : new User(user);
+    }
+
+    private User getMainUser(Realm realm) {
         final Context context = Config.getApplicationContext();
         String currUserId = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE)
                 .getString(KEY_SESSION_ID, null);
-        User copy = null;
-        if (currUserId != null) {
-            Realm realm = Realm.getInstance(context);
-            User user = realm.where(User.class).equalTo("_id", currUserId).findFirst();
-            if (user != null) {
-                //returning {@code RealmObject} from methods leaks resources since
-                // that will prevent us from closing the realm instance. hence we do a shallow copy.
-                // downside is changes to this object will not be persisted which is just what we want
-                copy = new User(user);
-            }
-            realm.close();
-        } else {
+        if (currUserId == null) {
             Config.disableComponents();
+            return null;
         }
-        return copy;
-    }
+        User user = realm.where(User.class).equalTo("_id", currUserId).findFirst();
+        return user;
 
+    }
 
     public boolean isMainUser(User user) {
         User thisUser = getMainUser();
@@ -115,13 +120,16 @@ public class UserManager {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callBack.done(NO_CONNECTION_ERROR);
         }
+        if (isUser(User.generateGroupIdPossiblyUnique(groupName))) {
+            //already exist
+            callBack.done(new Exception("group already exist"));
+            return;
+        }
         if (groupOperationRunning) {
             return;
         }
         groupOperationRunning = true;
         createGroupAttempts++;
-        RealmList admins = new RealmList();
-        admins.add(getMainUser());
         final User group = new User();
         group.set_id(User.generateGroupIdPossiblyUnique(groupName));
         group.setName(groupName);
@@ -139,10 +147,9 @@ public class UserManager {
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
                 realm.beginTransaction();
                 User savedGroup = realm.copyToRealm(group);
-                savedGroup.setAdmins(new RealmList<User>());
-                savedGroup.setMembers(new RealmList<User>());
-                User user = realm.where(User.class).equalTo("_id", getMainUser().get_id()).findFirst(); //mainuser() returns a non managed user object
-                savedGroup.getAdmins().add(user);
+                savedGroup.setMembers(new RealmList<User>());//required for realm to behave
+                savedGroup.getMembers().add(getMainUser(realm));
+                savedGroup.setAdmin(getMainUser(realm));
                 realm.commitTransaction();
                 realm.close();
                 callBack.done(null);
@@ -165,7 +172,7 @@ public class UserManager {
 
     public boolean isUser(String id) {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
-        boolean isUser = realm.where(User.class).equalTo("_id", id) != null;
+        boolean isUser = realm.where(User.class).equalTo("_id", id).findFirst() != null;
         realm.close();
         return isUser;
     }
@@ -174,31 +181,31 @@ public class UserManager {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         User group = realm.where(User.class).equalTo("_id", groupId).findFirst();
         if (group == null) {
+            realm.close();
             throw new IllegalArgumentException("no group with such id");
         }
-        boolean isAdmin = false;
-        RealmList<User> admins = group.getAdmins();
-        for (User admin : admins) {
-            if (admin.get_id().equals(userId)) {
-                isAdmin = true;
-            }
-        }
+        String adminId = group.getAdmin().get_id();
         realm.close();
-        return isAdmin;
+        return adminId.equals(userId);
+    }
+
+    private Exception checkPermission(String groupId) {
+        if (!ConnectionHelper.isConnectedOrConnecting()) {
+            return (NO_CONNECTION_ERROR);
+        }
+        if (!isUser(groupId)) {
+            return new IllegalArgumentException("no group with such group");
+        }
+        if (!isAdmin(groupId, getMainUser().get_id())) {
+            return new IllegalAccessException("you don't have the authority to add/remove a member");
+        }
+        return null;
     }
 
     public void addMembers(final String groupId, final List<String> membersId, final CallBack callBack) {
-        if (!ConnectionHelper.isConnectedOrConnecting()) {
-            callBack.done(NO_CONNECTION_ERROR);
-            return;
-        }
-        //thanks to realm we have to write really dirty code.
-        if (!isUser(groupId)) {
-            callBack.done(new IllegalArgumentException("no group with such id"));
-            return;
-        }
-        if (!isAdmin(groupId, getMainUser().get_id())) {
-            callBack.done(new IllegalAccessException("you don't have the authority to add a member"));
+        Exception e = checkPermission(groupId);
+        if (e != null) {
+            callBack.done(e);
             return;
         }
         userApi.addMembersToGroup(groupId, getMainUser().get_id(), membersId, new Callback<Response>() {
@@ -207,9 +214,15 @@ public class UserManager {
             public void success(Response response, Response response2) {
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
                 realm.beginTransaction();
-                RealmList<User> members = aggregateUsers(realm, membersId);
-                User group = realm.where(User.class).equalTo("_id", groupId).findFirst();
-                group.getMembers().addAll(members);
+                final User group = realm.where(User.class).equalTo("_id", groupId).findFirst();
+                final ContactsManager.Filter filter = new ContactsManager.Filter<User>() {
+                    @Override
+                    public boolean accept(User user) {
+                        return (user != null && !group.getMembers().contains(user));
+                    }
+                };
+                RealmList<User> newMembers = aggregateUsers(realm, membersId, filter);
+                group.getMembers().addAll(newMembers);
                 realm.commitTransaction();
                 realm.close();
                 callBack.done(null);
@@ -217,25 +230,127 @@ public class UserManager {
 
             @Override
             public void failure(RetrofitError retrofitError) {
+                Exception e = handleError(retrofitError);
+                if (e == null) {
+                    addMembers(groupId, membersId, callBack);
+                } else {
+                    callBack.done(e);
+                }
+            }
+        });
+    }
 
+    public void removeMember(final String groupId, final List<String> members, final CallBack callBack) {
+        final Exception e = checkPermission(groupId);
+        if (e != null) { //unauthorised
+            callBack.done(e);
+            return;
+        }
+
+        userApi.removeMembersFromGroup(groupId, getMainUser().get_id(), members, new Callback<Response>() {
+            @Override
+            public void success(Response o, Response response) {
+                Realm realm = Realm.getInstance(Config.getApplicationContext());
+                realm.beginTransaction();
+                final User group = realm.where(User.class).equalTo("_id", groupId).findFirst();
+                final ContactsManager.Filter filter = new ContactsManager.Filter<User>() {
+                    @Override
+                    public boolean accept(User user) {
+                        return (user != null && group.getMembers().contains(user) && !isAdmin(group.get_id(), user.get_id()));
+                    }
+                };
+                RealmList<User> membersToDelete = aggregateUsers(realm, members, filter);
+                group.getMembers().removeAll(membersToDelete);
+                realm.commitTransaction();
+                realm.close();
+                callBack.done(null);
+            }
+
+            @Override
+            public void failure(RetrofitError retrofitError) {
+                Exception e = handleError(retrofitError);
+                if (e == null) {
+                    removeMember(groupId, members, callBack);
+                } else {
+                    callBack.done(e);
+                }
+            }
+        });
+    }
+
+    private void getGroupMembers(final String id) {
+        userApi.getGroupMembers(id, new Callback<List<User>>() {
+            @Override
+            public void success(List<User> users, Response response) {
+                Realm realm = Realm.getInstance(Config.getApplicationContext());
+                realm.beginTransaction();
+                User group = realm.where(User.class).equalTo("_id", id).findFirst();
+                RealmList<User> members = group.getMembers();
+                members.clear();
+                for (User user : users) {
+                    if (!isMainUser(user)) { //main user must be updated independently
+                        members.add(realm.copyToRealmOrUpdate(user));
+                    }
+                }
+                members.add(getMainUser(realm)); //add main user
+                realm.commitTransaction();
+                realm.close();
+            }
+
+            @Override
+            public void failure(RetrofitError retrofitError) {
+                if (handleError(retrofitError) == null) {
+                    refreshGroup(id);
+                }
+            }
+        });
+    }
+
+    private void getGroupDp(String id) {
+
+    }
+
+    public void refreshGroup(final String id) {
+        if (!isUser(id)) {
+            throw new IllegalArgumentException("passed id is invalid");
+        }
+        getGroupInfo(id); //async
+        getGroupMembers(id); //async
+        getGroupDp(id); //async // FIXME: 6/29/2015 implement this method
+    }
+
+    private void getGroupInfo(final String id) {
+        userApi.getGroup(id, new Callback<User>() {
+            @Override
+            public void success(User group, Response response) {
+                Realm realm = Realm.getInstance(Config.getApplicationContext());
+                User staleGroup = realm.where(User.class).equalTo("_id", id).findFirst();
+                realm.beginTransaction();
+                staleGroup.getAdmin().setName(group.getName());
+                realm.commitTransaction();
+                realm.close();
+            }
+
+            @Override
+            public void failure(RetrofitError retrofitError) {
+                if (handleError(retrofitError) == null) {
+                    getGroupInfo(id);
+                }
             }
         });
     }
 
     @Nullable
-    private RealmList<User> aggregateUsers(Realm realm, List<String> membersId) {
+    private RealmList<User> aggregateUsers(Realm realm, List<String> membersId, ContactsManager.Filter<User> filter) {
         RealmList<User> members = new RealmList<>();
         for (String id : membersId) {
             User user = realm.where(User.class).equalTo("_id", id).findFirst();
-            if (user != null) {
+            if (filter.accept(user)) {
                 members.add(user);
-            } else {
-                Log.w(TAG, "user does not exist hence wont be added to group");
             }
         }
         return members;
     }
-
 
     public void refreshUserDetails(final String userId) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
@@ -282,6 +397,39 @@ public class UserManager {
                 } else {
                     refreshAttempts = 0;
                     Log.i(TAG, "failed to refresh after 3 attempts");
+                }
+            }
+        });
+    }
+
+    private void getGroups() {
+        User mainUser = getMainUser();
+        if (mainUser == null) {
+            throw new IllegalStateException("this operation can only continue only when user is logged in");
+        }
+
+        userApi.getGroups(mainUser.get_id(), new Callback<List<User>>() {
+            @Override
+            public void success(List<User> groups, Response response) {
+                Realm realm = Realm.getInstance(Config.getApplicationContext());
+                realm.beginTransaction();
+                for (User group : groups) {
+                    if (!isMainUser(group.getAdmin())) {
+                        group.setAdmin(getMainUser(realm));
+                    }
+                    group.setMembers(new RealmList<User>());
+                    group.getMembers().add(getMainUser(realm));
+                    group.setType(User.TYPE_GROUP);
+                    realm.copyToRealmOrUpdate(group);
+                }
+                realm.commitTransaction();
+                realm.close();
+            }
+
+            @Override
+            public void failure(RetrofitError retrofitError) {
+                if (handleError(retrofitError) == null) {
+                    getGroups();
                 }
             }
         });
@@ -359,13 +507,7 @@ public class UserManager {
                     File profileFile = new File(user.getDP());
                     FileHelper.save(profileFile, in);
                     realm.close();
-                    Bitmap bitmap = BitmapFactory.decodeFile(profileFile.getAbsolutePath());
-                    if (bitmap == null) {
-                        Log.wtf(TAG, "invalid image url or file");
-                        callback.done(new Exception("invalid image url"));
-                    } else {
-                        callback.done(null);
-                    }
+                    callback.done(null);
                 } catch (IOException e) {
                     if (BuildConfig.DEBUG) {
                         Log.e(TAG, e.getMessage(), e.getCause());
@@ -416,6 +558,7 @@ public class UserManager {
                 //our backend deletes password fields so we got to use our copy here
                 backendUser.setPassword(user.getPassword());
                 saveUserMainUser(backendUser);
+                getGroups();
                 callback.done(null);
             }
 
@@ -544,8 +687,14 @@ public class UserManager {
     }
 
 
-    // FIXME: 6/25/2015 find a sensible place to keep this error handlelr so that message dispatcher and others can share it
+    // FIXME: 6/25/2015 find a sensible place to keep this error handler so that message dispatcher and others can share it
     private Exception handleError(RetrofitError retrofitError) {
+        if (retrofitError.getCause() instanceof SocketTimeoutException) { //likely that no user turned on data but no plan
+            return NO_CONNECTION_ERROR;
+        } else if (retrofitError.getCause() instanceof EOFException) { //usual error when we try to connect first time after server startup
+            Log.w(TAG, "EOF_EXCEPTION trying again");
+            return null;
+        }
         if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
             Log.w(TAG, "unexpected error, trying again");
             return null;
@@ -583,5 +732,18 @@ public class UserManager {
 
     public interface CallBack {
         void done(Exception e);
+    }
+
+    private class GroupFilter implements ContactsManager.Filter<User> {
+        private final User group;
+
+        public GroupFilter(User user) {
+            this.group = user;
+        }
+
+        @Override
+        public boolean accept(User user) {
+            return (user != null && !group.getMembers().contains(user) && !isAdmin(group.get_id(), user.get_id()));
+        }
     }
 }

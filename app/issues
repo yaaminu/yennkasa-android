@@ -10,4 +10,5 @@
 # implement a sync adapter once our backend starts giving it support
 # implement synchronous version of all our network calls for background services to use
 # declare all field names of models as constants so that realm queries will be neat
-# write test. I know it should have been the first thing to do
+# write test for some of the classes. I know it should have been the first thing to do
+# move the group related operations to its own class

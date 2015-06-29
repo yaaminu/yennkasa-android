@@ -25,7 +25,7 @@ public class RealmHelper {
     public static final String TAG = RealmHelper.class.getSimpleName();
     // FIXME: 6/16/2015 remove this helper class
     public static void runRealmOperation(final Context context) {
-        //helper method for cleaning up real and seeding it with data
+        //helper method for cleaning up realm and seeding it with data
     }
 
     private static void seedIncomingMessages() {

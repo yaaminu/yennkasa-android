@@ -40,6 +40,9 @@ public interface UserApi {
     @GET("/api/v1/users/{id}/dp")
     void getUserDp(@Path("id") String id, Callback<Response> response);
 
+    @GET("/api/v1/users/{id}/groups")
+    void getGroups(@Path("id") String id, Callback<List<User>> response);
+
     @Multipart
     @PUT("/api/v1/users/{id}/dp")
     void changeDp(@Path("id") String id, @Part("bin") TypedFile file, @Part("password") String password, Callback<Response> response);
@@ -47,10 +50,25 @@ public interface UserApi {
     @POST("/api/v1/groups/")
     void createGroup(@Body JsonObject group, Callback<Response> response);
 
+    @GET("/api/v1/groups/{id}")
+    void getGroup(@Path("id") String id, Callback<User> group);
+
+    @GET("/api/v1/groups/{id}/members")
+    void getGroupMembers(@Path("id") String id, Callback<List<User>> response);
+
     @FormUrlEncoded
-    @PUT("/api/v1/groups/{id}/members")
+    @PUT("/api/v1/groups/{id}/members/add")
     void addMembersToGroup(@Path("id") String id
             , @Field("by") String by
             , @Field("members") List<String> members
             , Callback<Response> response);
+
+    @FormUrlEncoded
+    @PUT("/api/v1/groups/{id}/members/remove")
+    void removeMembersFromGroup(@Path("id") String id
+            , @Field("by") String by
+            , @Field("members") List<String> members
+            , Callback<Response> response);
+
+
 }

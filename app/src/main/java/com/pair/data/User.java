@@ -24,7 +24,7 @@ public class User extends RealmObject {
     private String status, DP;
     private long lastActivity, accountCreated;
     private RealmList<User> members; //a group will be a user with its members represented by this field.
-    private RealmList<User> admins; // this represents admins for a group
+    private User admin; // this represents admins for a group
     private int type;
 
     //required no-arg c'tor
@@ -45,7 +45,7 @@ public class User extends RealmObject {
             this.setDP(other.getDP());
             this.setName(other.getName());
             this.setType(other.getType());
-            this.setAdmins(other.getAdmins());
+            this.setAdmin(other.getAdmin());
             this.setMembers(other.getMembers());
         }
     }
@@ -58,12 +58,12 @@ public class User extends RealmObject {
         this.type = type;
     }
 
-    public RealmList<User> getAdmins() {
-        return admins;
+    public User getAdmin() {
+        return admin;
     }
 
-    public void setAdmins(RealmList<User> admins) {
-        this.admins = admins;
+    public void setAdmin(User admin) {
+        this.admin = admin;
     }
 
     public String get_id() {
@@ -139,6 +139,7 @@ public class User extends RealmObject {
     }
 
     public static String generateGroupIdPossiblyUnique(String groupName) {
-        return new StringBuilder(groupName).append("@").append(UserManager.INSTANCE.getMainUser().get_id()).toString();
+        return groupName + "@" + UserManager.INSTANCE.getMainUser().get_id();
     }
+
 }

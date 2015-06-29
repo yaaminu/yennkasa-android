@@ -20,12 +20,15 @@ import android.widget.ListView;
 
 import com.pair.adapter.ConversationAdapter;
 import com.pair.data.Conversation;
+import com.pair.data.User;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -90,8 +93,12 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
                 }
             }
         };
-        UserManager.INSTANCE.createGroup("TNS", callBack);
-        //UserManager.INSTANCE.addMembers(groupId,membersId,callBack);
+//        UserManager.INSTANCE.createGroup("TeamNoSleep", callBack);
+        User group = realm.where(User.class).equalTo("type", User.TYPE_GROUP).findFirst();
+        List<String> membersId = new ArrayList<>();
+        membersId.add("0266349205");
+        UserManager.INSTANCE.addMembers(group.get_id(), membersId, callBack);
+        // UserManager.INSTANCE.refreshGroup(group.get_id());
         super.onResume();
     }
 
@@ -128,6 +135,7 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        Log.d("f", UserManager.INSTANCE.getMainUser().toString());
         inflater.inflate(R.menu.new_message_menu, menu);
         super.onCreateOptionsMenu(menu, inflater);
     }

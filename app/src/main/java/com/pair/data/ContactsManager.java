@@ -88,9 +88,10 @@ public class ContactsManager {
                 status = user.getStatus();
             }
             ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, status, isRegistered);
-            if ((filter != null) && filter.accept(contact)) {
-                contacts.add(contact);
+            if ((filter != null) && !filter.accept(contact)) {
+                continue;
             }
+            contacts.add(contact);
         }
         cursor.close();
         realm.close();
