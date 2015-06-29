@@ -9,7 +9,6 @@ public interface Dispatcher<T> {
     void dispatch(T t);
 
     void dispatch(Collection<T> t);
-
     boolean cancelDispatchMayPossiblyFail(T t);
 
     void addMonitor(DispatcherMonitor monitor);

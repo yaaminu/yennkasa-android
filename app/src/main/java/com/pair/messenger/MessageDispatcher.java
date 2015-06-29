@@ -8,6 +8,7 @@ import android.webkit.MimeTypeMap;
 import com.google.gson.JsonObject;
 import com.pair.adapter.BaseJsonAdapter;
 import com.pair.data.Message;
+import com.pair.data.User;
 import com.pair.net.Dispatcher;
 import com.pair.net.HttpResponse;
 import com.pair.net.api.MessageApi;
@@ -22,6 +23,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.realm.Realm;
 import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
@@ -74,37 +76,49 @@ class MessageDispatcher implements Dispatcher<Message> {
         return localInstance;
     }
 
-    @Override
-    public void dispatch(Message message) {
-        incrementNumOfTasks();
+    private boolean failedScreening(Message message) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             Log.w(TAG, "no internet connection, message will not be sent");
             reportError(message.getId(), "no internet connection");
-            return;
+            return true;
         }
         if (message.getType() == Message.TYPE_DATE_MESSAGE) {
             Log.w(TAG, "attempted to send a date message,but will not be sent");
             reportError(message.getId(), "date messages cannot be sent");
-            return;
+            return true;
         }
         if (message.getType() == Message.TYPE_TYPING_MESSAGE) {
             Log.w(TAG, "attempted to send a typing message,but will not be sent");
             reportError(message.getId(), "\'typing\' messages cannot be sent");
-            return;
+            return true;
         }
         if (message.getType() != Message.TYPE_TEXT_MESSAGE) { //is it a binary message?
             if (!new File(message.getMessageBody()).exists()) {
                 Log.w(TAG, "error: " + message.getMessageBody() + " is not a valid file path");
                 reportError(message.getId(), "file does not exist");
-                return;
+                return true;
             }
         }
-        if ((message.getState() == Message.STATE_PENDING) || (message.getState() == Message.STATE_SEND_FAILED)) {
-            doDispatch(message);
-        } else {
+        if ((message.getState() != Message.STATE_PENDING) && (message.getState() != Message.STATE_SEND_FAILED)) {
             Log.w(TAG, "attempted to send a sent message, but will not be sent");
             reportError(message.getId(), "message already sent");
+            return true;
         }
+        return false;
+    }
+
+    @Override
+    public void dispatch(Message message) {
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        User recipient = realm.where(User.class).equalTo("_id", message.getTo()).findFirst();
+        if (recipient == null) {
+            realm.close();
+            Log.wtf(TAG, "recipient of message could not be found,exiting");
+            throw new IllegalArgumentException("recipient of message could not be found");
+        }
+        int isGroup = (recipient.getType() == User.TYPE_GROUP) ? 1 : 0;
+        realm.close();
+        doDispatch(message, isGroup);
     }
 
     @Override
@@ -115,9 +129,13 @@ class MessageDispatcher implements Dispatcher<Message> {
         }
     }
 
-    private void doDispatch(Message message) {
+    private void doDispatch(Message message, int isGroupMessage) {
+        incrementNumOfTasks();
+        if (failedScreening(message)) {
+            return;
+        }
         JsonObject data = jsonAdapter.toJson(message);
-        SenderJob job = new SenderJob(message.getId(), data, message.getType(), message.getMessageBody());
+        SenderJob job = new SenderJob(message.getId(), data, message.getType(), message.getMessageBody(), isGroupMessage);
         sender.enqueue(job);
     }
 
@@ -150,14 +168,16 @@ class MessageDispatcher implements Dispatcher<Message> {
         long backOff;
         final int jobType;
         final String binPath;
+        final int toGroup;
 
-        SenderJob(String id, JsonObject data, int jobType, String binPath) {
+        SenderJob(String id, JsonObject data, int jobType, String binPath, int toGroup) {
             this.retries = 0;
             this.data = data;
             this.id = id;
             this.backOff = MIN_DELAY;
             this.jobType = jobType;
             this.binPath = binPath;
+            this.toGroup = toGroup;
         }
 
     }
@@ -195,7 +215,7 @@ class MessageDispatcher implements Dispatcher<Message> {
             };
             String mimeType = MimeTypeMap.getFileExtensionFromUrl(job.binPath);
             TypedFile file = new TypedFile(mimeType, new File((job.binPath)));
-            MESSAGE_API.sendMessage(job.data, file, responseCallback);
+            MESSAGE_API.sendMessage(job.data, file, job.toGroup, responseCallback);
         }
 
         private void sendTextMessage(final SenderJob job) {
@@ -210,7 +230,7 @@ class MessageDispatcher implements Dispatcher<Message> {
                     handleError(retrofitError, job);
                 }
             };
-            MESSAGE_API.sendMessage(job.data, responseCallback);
+            MESSAGE_API.sendMessage(job.data, job.toGroup, responseCallback);
         }
 
         private void handleError(RetrofitError retrofitError, SenderJob job) {
@@ -322,4 +342,5 @@ class MessageDispatcher implements Dispatcher<Message> {
             }
         }
     }
+
 }

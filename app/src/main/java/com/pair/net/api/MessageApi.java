@@ -10,6 +10,7 @@ import retrofit.http.Headers;
 import retrofit.http.Multipart;
 import retrofit.http.POST;
 import retrofit.http.Part;
+import retrofit.http.Query;
 import retrofit.mime.TypedFile;
 
 
@@ -23,7 +24,7 @@ public interface MessageApi {
     @Headers({
             "Content-Type:application/json"
     })
-    void sendMessage(@Body JsonObject message, Callback<HttpResponse> responseCallback);
+    void sendMessage(@Body JsonObject message, @Query("group") int toGroup, Callback<HttpResponse> responseCallback);
 
     @SuppressWarnings("unused")
     @POST(BASE_URL + "/messages")
@@ -34,6 +35,6 @@ public interface MessageApi {
 
     @Multipart
     @POST(BASE_URL + "/messages/bin")
-    void sendMessage(@Part("message") JsonObject message, @Part("bin") TypedFile binary, Callback<HttpResponse> responseCallback);
+    void sendMessage(@Part("message") JsonObject message, @Part("bin") TypedFile binary, @Query("group") int toGroup, Callback<HttpResponse> responseCallback);
 
 }
