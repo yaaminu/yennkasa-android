@@ -36,7 +36,7 @@ import io.realm.RealmResults;
  */
 public class MessagesAdapter extends RealmBaseAdapter<Message> {
     private static final String TAG = MessagesAdapter.class.getSimpleName();
-    private static final long THREE_MINUTES = AlarmManager.INTERVAL_FIFTEEN_MINUTES / 5;
+    private static final long ONE_MINUTE = AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15;
     private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2, DATE_MESSAGE = 0x0;
     private final LruCache<String, Bitmap> imageCaches;
 
@@ -203,7 +203,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
             //ensure they are all from same user
             if ((isOutgoingMessage(message) && isOutgoingMessage(nextMessage))
                     || (!isOutgoingMessage(message) && !isOutgoingMessage(nextMessage))) {
-                if (nextMessage.getDateComposed().getTime() - message.getDateComposed().getTime() < THREE_MINUTES) { //close enough!
+                if (nextMessage.getDateComposed().getTime() - message.getDateComposed().getTime() < ONE_MINUTE) { //close enough!
                     hideDate = true;
                 }
             }

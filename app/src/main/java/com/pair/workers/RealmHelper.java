@@ -26,6 +26,11 @@ public class RealmHelper {
     // FIXME: 6/16/2015 remove this helper class
     public static void runRealmOperation(final Context context) {
         //helper method for cleaning up realm and seeding it with data
+        Realm realm = Realm.getInstance(context);
+        realm.beginTransaction();
+        realm.where(Message.class).findAll().clear();
+        realm.commitTransaction();
+        realm.close();
     }
 
     private static void seedIncomingMessages() {

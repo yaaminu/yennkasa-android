@@ -34,7 +34,7 @@ public interface MessageApi {
     void sendMessage(@Body JsonArray messages, Callback<HttpResponse> responseCallback);
 
     @Multipart
-    @POST(BASE_URL + "/messages/bin")
+    @POST(BASE_URL + "/messages?bin=1")
     void sendMessage(@Part("message") JsonObject message, @Part("bin") TypedFile binary, @Query("group") int toGroup, Callback<HttpResponse> responseCallback);
 
 }
