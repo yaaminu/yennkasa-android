@@ -1,4 +1,4 @@
-package com.pair.pairapp;
+package com.pair.pairapp.ui;
 
 
 import android.app.Activity;
@@ -19,6 +19,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.pair.data.User;
+import com.pair.pairapp.BuildConfig;
+import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.FileHelper;
 import com.pair.util.ImageResizer;

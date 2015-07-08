@@ -15,6 +15,7 @@ import com.pair.data.User;
 import com.pair.pairapp.ui.ContactFragment;
 import com.pair.pairapp.ui.ConversationsFragment;
 import com.pair.pairapp.ui.FriendsFragment;
+import com.pair.pairapp.ui.GroupsFragment;
 import com.pair.pairapp.ui.SideBarFragment;
 import com.pair.util.Config;
 import com.pair.util.GcmHelper;

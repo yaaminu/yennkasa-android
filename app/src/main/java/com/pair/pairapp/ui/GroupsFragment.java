@@ -1,4 +1,4 @@
-package com.pair.pairapp;
+package com.pair.pairapp.ui;
 
 
 import android.os.Bundle;
@@ -11,6 +11,8 @@ import android.widget.BaseAdapter;
 
 import com.pair.adapter.GroupsAdapter;
 import com.pair.data.User;
+import com.pair.pairapp.MainActivity;
+import com.pair.pairapp.R;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
