@@ -138,7 +138,7 @@ public class User extends RealmObject {
         this.members = members;
     }
 
-    public static String generateGroupIdPossiblyUnique(String groupName) {
+    public static String generateId(String groupName) {
         return groupName + "@" + UserManager.INSTANCE.getMainUser().get_id();
     }
 

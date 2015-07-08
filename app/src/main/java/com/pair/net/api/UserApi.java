@@ -48,7 +48,7 @@ public interface UserApi {
     void changeDp(@Path("id") String id, @Part("bin") TypedFile file, @Part("password") String password, Callback<Response> response);
 
     @POST("/api/v1/groups/")
-    void createGroup(@Body JsonObject group, Callback<Response> response);
+    void createGroup(@Body JsonObject group, Callback<User> response);
 
     @GET("/api/v1/groups/{id}")
     void getGroup(@Path("id") String id, Callback<User> group);

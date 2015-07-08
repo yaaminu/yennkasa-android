@@ -120,36 +120,27 @@ public class UserManager {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callBack.done(NO_CONNECTION_ERROR);
         }
-        if (isUser(User.generateGroupIdPossiblyUnique(groupName))) {
+        if (isUser(User.generateId(groupName))) {
             //already exist
             callBack.done(new Exception("group already exist"));
             return;
         }
-        if (groupOperationRunning) {
-            return;
-        }
-        groupOperationRunning = true;
         createGroupAttempts++;
-        final User group = new User();
-        group.set_id(User.generateGroupIdPossiblyUnique(groupName));
-        group.setName(groupName);
-        group.setType(User.TYPE_GROUP);
-        //group will be persisted in the callback#succes()
         JsonObject obj = new JsonObject();
-        obj.addProperty("name", group.getName());
-        obj.addProperty("_id", group.get_id());
+        obj.addProperty("name", groupName);
         obj.addProperty("createdBy", getMainUser().get_id());
-        userApi.createGroup(obj, new Callback<Response>() {
+        userApi.createGroup(obj, new Callback<User>() {
             @Override
-            public void success(Response response, Response response2) {
-                groupOperationRunning = false;
+            public void success(User group, Response response) {
                 createGroupAttempts = 0;
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
                 realm.beginTransaction();
-                User savedGroup = realm.copyToRealm(group);
-                savedGroup.setMembers(new RealmList<User>());//required for realm to behave
-                savedGroup.getMembers().add(getMainUser(realm));
-                savedGroup.setAdmin(getMainUser(realm));
+                group.setMembers(new RealmList<User>());//required for realm to behave
+                User mainUser = getMainUser(realm);
+                group.getMembers().add(mainUser);
+                group.setAdmin(mainUser);
+                group.setType(User.TYPE_GROUP);
+                realm.copyToRealmOrUpdate(group);
                 realm.commitTransaction();
                 realm.close();
                 callBack.done(null);
@@ -157,7 +148,6 @@ public class UserManager {
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                groupOperationRunning = false;
                 Exception e = handleError(retrofitError);
                 if (e == null && createGroupAttempts < 3) {
                     createGroup(groupName, callBack);
@@ -170,14 +160,14 @@ public class UserManager {
         });
     }
 
-    public boolean isUser(String id) {
+    private boolean isUser(String id) {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         boolean isUser = realm.where(User.class).equalTo("_id", id).findFirst() != null;
         realm.close();
         return isUser;
     }
 
-    public boolean isAdmin(String groupId, String userId) {
+    private boolean isAdmin(String groupId, String userId) {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         User group = realm.where(User.class).equalTo("_id", groupId).findFirst();
         if (group == null) {
@@ -209,7 +199,6 @@ public class UserManager {
             return;
         }
         userApi.addMembersToGroup(groupId, getMainUser().get_id(), membersId, new Callback<Response>() {
-
             @Override
             public void success(Response response, Response response2) {
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
@@ -240,11 +229,14 @@ public class UserManager {
         });
     }
 
-    public void removeMember(final String groupId, final List<String> members, final CallBack callBack) {
+    public void removeMembers(final String groupId, final List<String> members, final CallBack callBack) {
         final Exception e = checkPermission(groupId);
         if (e != null) { //unauthorised
             callBack.done(e);
             return;
+        }
+        if (members.contains(getMainUser().get_id())) {
+            throw new IllegalArgumentException("admin cannot remove him/herself");
         }
 
         userApi.removeMembersFromGroup(groupId, getMainUser().get_id(), members, new Callback<Response>() {
@@ -256,7 +248,7 @@ public class UserManager {
                 final ContactsManager.Filter filter = new ContactsManager.Filter<User>() {
                     @Override
                     public boolean accept(User user) {
-                        return (user != null && group.getMembers().contains(user) && !isAdmin(group.get_id(), user.get_id()));
+                        return (user != null && group.getMembers().contains(user));
                     }
                 };
                 RealmList<User> membersToDelete = aggregateUsers(realm, members, filter);
@@ -270,7 +262,7 @@ public class UserManager {
             public void failure(RetrofitError retrofitError) {
                 Exception e = handleError(retrofitError);
                 if (e == null) {
-                    removeMember(groupId, members, callBack);
+                    removeMembers(groupId, members, callBack);
                 } else {
                     callBack.done(e);
                 }
@@ -326,7 +318,13 @@ public class UserManager {
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
                 User staleGroup = realm.where(User.class).equalTo("_id", id).findFirst();
                 realm.beginTransaction();
-                staleGroup.getAdmin().setName(group.getName());
+                if (staleGroup != null) {
+                    group.setMembers(staleGroup.getMembers());
+                } else {
+                    group.setType(User.TYPE_GROUP);
+                    group.setMembers(new RealmList<User>());
+                }
+                realm.copyToRealmOrUpdate(group);
                 realm.commitTransaction();
                 realm.close();
             }
@@ -481,7 +479,7 @@ public class UserManager {
         });
     }
 
-    public void getUserDp(final String userId, final CallBack callback) {
+    private void getUserDp(final String userId, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
@@ -492,21 +490,30 @@ public class UserManager {
         }
         getDpOperationRunning = true;
         getDpAttempts++;
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        User user = realm.where(User.class).equalTo("_id", userId).findFirst();
+        if (user.getType() == User.TYPE_GROUP) {
+
+        }
+        realm.close();
+        doGetUserDp(userId, callback);
+    }
+
+    private void doGetUserDp(final String userId, final CallBack callback) {
         userApi.getUserDp(userId, new Callback<Response>() {
             @Override
             public void success(Response response, Response response2) {
                 getDpOperationRunning = false;
                 getDpAttempts = 0;
+                Realm realm = Realm.getInstance(Config.getApplicationContext());
                 try {
                     final InputStream in = response.getBody().in();
-                    Realm realm = Realm.getInstance(Config.getApplicationContext());
                     User user = realm.where(User.class).equalTo("_id", userId).findFirst();
                     if (user == null) {
                         throw new IllegalArgumentException("user does not exist");
                     }
                     File profileFile = new File(user.getDP());
                     FileHelper.save(profileFile, in);
-                    realm.close();
                     callback.done(null);
                 } catch (IOException e) {
                     if (BuildConfig.DEBUG) {
@@ -515,6 +522,8 @@ public class UserManager {
                         Log.e(TAG, e.getMessage());
                     }
                     callback.done(e);
+                } finally {
+                    realm.close();
                 }
             }
 

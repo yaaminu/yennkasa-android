@@ -80,8 +80,8 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
         return view;
     }
 
-    @Override
-    public void onResume() {
+//    @Override
+//    public void onResume() {
 //        final UserManager.CallBack callBack = new UserManager.CallBack() {
 //            @Override
 //            public void done(Exception e) {
@@ -90,14 +90,16 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
 //                }
 //            }
 //        };
-////        UserManager.INSTANCE.createGroup("TeamNoSleep", callBack);
-//        User group = realm.where(User.class).equalTo("type", User.TYPE_GROUP).findFirst();
-//        List<String> membersId = new ArrayList<>();
-//        membersId.add("0266349205");
-//        UserManager.INSTANCE.addMembers(group.get_id(), membersId, callBack);
-//        // UserManager.INSTANCE.refreshGroup(group.get_id());
-        super.onResume();
-    }
+////        UserManager.INSTANCE.createGroup("DemoGroup" + System.currentTimeMillis(), callBack);
+////        User group = realm.where(User.class).equalTo("type", User.TYPE_GROUP)
+////                .equalTo("admin._id", UserManager.INSTANCE.getMainUser().get_id())
+////                .equalTo("name", "DemoGroup").findFirst();
+////        List<String> membersId = new ArrayList<>();
+////        membersId.add("0266349205");
+////        UserManager.INSTANCE.removeMembers(group.get_id(), membersId, callBack);
+////        UserManager.INSTANCE.refreshGroup(group.get_id());
+//        super.onResume();
+//    }
 
     private void startTimer() {
         if (timer == null) {
@@ -107,6 +109,7 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
             timer.scheduleAtFixedRate(task, 0L, currentTimeOut);
         }
     }
+
     private void scheduleTimer(long interval) {
         try {
             timer.purge();
