@@ -3,12 +3,8 @@
       xmlns:app="http://schemas.android.com/apk/res-auto"
       xmlns:tools="http://schemas.android.com/tools"
       tools:context="com.pair.pairapp.ui.ChatActivity">
-    <item
-        android:id="@+id/action_ok"
-        android:orderInCategory="100"
-        android:title="OK"
-        app:showAsAction="always"/>
-    <item
+
+<item
         android:id="@+id/action_refresh"
         android:orderInCategory="100"
         android:title="@string/action_refresh"
