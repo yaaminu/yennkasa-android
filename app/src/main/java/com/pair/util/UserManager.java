@@ -126,10 +126,10 @@ public class UserManager {
             return;
         }
         createGroupAttempts++;
-        JsonObject obj = new JsonObject();
-        obj.addProperty("name", groupName);
-        obj.addProperty("createdBy", getMainUser().get_id());
-        userApi.createGroup(obj, new Callback<User>() {
+        JsonObject requestBody = new JsonObject();
+        requestBody.addProperty("name", groupName);
+        requestBody.addProperty("createdBy", getMainUser().get_id());
+        userApi.createGroup(requestBody, new Callback<User>() {
             @Override
             public void success(User group, Response response) {
                 createGroupAttempts = 0;
