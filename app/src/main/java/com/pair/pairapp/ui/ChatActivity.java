@@ -156,6 +156,12 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        menu.findItem(R.id.action_add_peers).setVisible(peer.getType() == User.TYPE_GROUP);
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.chat_menu, menu);
@@ -171,6 +177,11 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             AlertDialog dialog = builder.create();
             dialog.show();
             return true;
+        } else if (id == R.id.action_add_peers) {
+            Intent intent = new Intent(this, FriendsActivity.class);
+            intent.putExtra(FriendsActivity.EXTRA_ACTION, FriendsActivity.EXTRA_ACTION_ADD);
+            intent.putExtra(FriendsActivity.EXTRA_GROUP_ID, peer.get_id());
+            startActivity(intent);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -254,7 +265,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     }
 
     private User getCurrentUser() {
-        return UserManager.getInstance(getApplication()).getMainUser();
+        return UserManager.INSTANCE.getMainUser();
     }
 
     private static String getDescription(int type) {

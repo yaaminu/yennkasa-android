@@ -36,6 +36,7 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
             holder = ((ViewHolder) convertView.getTag());
         }
         holder.groupName.setText(group.getName());
+        holder.groupId = group.get_id(); //adapters will use this
         RealmList<User> groupMembers = group.getMembers();
         User mainUser = UserManager.INSTANCE.getMainUser();
         StringBuilder members = new StringBuilder(groupMembers.size() * 10); //summary
@@ -54,8 +55,9 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
         return convertView;
     }
 
-    private class ViewHolder {
+    public class ViewHolder {
         private TextView groupName,
                 groupMembers;
+        public String groupId;
     }
 }

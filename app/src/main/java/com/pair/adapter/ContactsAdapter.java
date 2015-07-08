@@ -20,9 +20,11 @@ import static com.pair.data.ContactsManager.Contact;
 public class ContactsAdapter extends BaseAdapter {
     private static final String TAG = ContactsAdapter.class.getSimpleName();
     private List<Contact> contacts;
+    private boolean isAddOrRemoveFromGroup;
 
-    public ContactsAdapter(List<Contact> contacts) {
+    public ContactsAdapter(List<Contact> contacts, boolean isAddOrRemoveFromGroup) {
         this.contacts = contacts;
+        this.isAddOrRemoveFromGroup = isAddOrRemoveFromGroup;
     }
 
     @Override
@@ -31,7 +33,7 @@ public class ContactsAdapter extends BaseAdapter {
     }
 
     @Override
-    public Object getItem(int position) {
+    public Contact getItem(int position) {
         return contacts.get(position);
     }
 
@@ -47,24 +49,28 @@ public class ContactsAdapter extends BaseAdapter {
 
     @Override
     public int getItemViewType(int position) {
-        return ((Contact) getItem(position)).isRegisteredUser ? 0 : 1;
+        return (isAddOrRemoveFromGroup) ? 2 : getItem(position).isRegisteredUser ? 0 : 1;
     }
 
     @Override
     public int getViewTypeCount() {
-        return 2;
+        return 3;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Contact contact = ((Contact) getItem(position));
+        Contact contact = getItem(position);
 
         ViewHolder holder;
         int layoutRes = layoutResource[getItemViewType(position)];
         if (convertView == null) {
             convertView = LayoutInflater.from(parent.getContext()).inflate(layoutRes, parent, false);
             holder = new ViewHolder();
-            holder.userName = ((TextView) convertView.findViewById(R.id.tv_user_name));
+            if (isAddOrRemoveFromGroup) {
+                holder.userName = ((TextView) convertView);
+            } else {
+                holder.userName = ((TextView) convertView.findViewById(R.id.tv_user_name));
+            }
             holder.userStatus = ((TextView) convertView.findViewById(R.id.tv_user_status));
             holder.inviteButton = (Button) convertView.findViewById(R.id.bt_invite);
             convertView.setTag(holder);
@@ -72,14 +78,17 @@ public class ContactsAdapter extends BaseAdapter {
             holder = ((ViewHolder) convertView.getTag());
         }
 
+        holder.contact = contact;
         holder.userName.setText(contact.name);
+        if (isAddOrRemoveFromGroup) {
+            return convertView;
+        }
         if (contact.isRegisteredUser) {
             holder.userStatus.setText(contact.status);
         } else {
             holder.userStatus.setText(contact.phoneNumber);
             holder.inviteButton.setOnClickListener(new InviteContact(contact));
         }
-        holder.contact = contact;
         return convertView;
     }
 
@@ -111,6 +120,7 @@ public class ContactsAdapter extends BaseAdapter {
 
     private final int[] layoutResource = {
             R.layout.registered_contact_item,
-            R.layout.unregistered_contact_item
+            R.layout.unregistered_contact_item,
+            android.R.layout.simple_list_item_checked
     };
 }

@@ -87,7 +87,7 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         activity.getSupportActionBar().setTitle(title);
 
         List<Contact> contacts = new ArrayList<>();
-        adapter = new ContactsAdapter(contacts);
+        adapter = new ContactsAdapter(contacts, false);
         final ContactsManager.Filter<Contact> filter = new ContactsManager.Filter<Contact>() {
             @Override
             public boolean accept(Contact contact) {

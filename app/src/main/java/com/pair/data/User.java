@@ -1,7 +1,13 @@
 package com.pair.data;
 
+import android.support.annotation.Nullable;
+
 import com.pair.util.UserManager;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
@@ -140,6 +146,29 @@ public class User extends RealmObject {
 
     public static String generateId(String groupName) {
         return groupName + "@" + UserManager.INSTANCE.getMainUser().get_id();
+    }
+
+    @Nullable
+    public static RealmList<User> aggregateUsers(Realm realm, List<String> membersId, ContactsManager.Filter<User> filter) {
+        RealmList<User> members = new RealmList<>();
+        for (String id : membersId) {
+            User user = realm.where(User.class).equalTo("_id", id).findFirst();
+            if (filter == null || filter.accept(user)) {
+                members.add(user);
+            }
+        }
+        return members;
+    }
+
+    public static List<String> aggregateUserIds(RealmList<User> users, ContactsManager.Filter<User> filter) {
+        List<String> members = new ArrayList<>();
+        for (User user : users) {
+            String userId = user.get_id();
+            if (filter == null || filter.accept(user)) {
+                members.add(userId);
+            }
+        }
+        return members;
     }
 
 }

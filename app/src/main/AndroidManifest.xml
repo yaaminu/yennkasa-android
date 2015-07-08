@@ -61,16 +61,16 @@
 
         <service
             android:name="com.pair.workers.ContactSyncService"
-            android:exported="false"
-            android:enabled="false"/>
+            android:enabled="false"
+            android:exported="false"/>
         <service
             android:name="com.pair.messenger.MessageProcessor"
-            android:exported="false"
-            android:enabled="false"/>
+            android:enabled="false"
+            android:exported="false"/>
         <service
             android:name="com.pair.messenger.PairAppClient"
-            android:exported="false"
-            android:enabled="false"/>
+            android:enabled="false"
+            android:exported="false"/>
 
         <receiver
             android:name="com.pair.workers.BootReceiver"
@@ -88,6 +88,10 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.pair.pairapp.MainActivity"/>
+        </activity>
+        <activity
+            android:name=".ui.FriendsActivity"
+            android:label="@string/title_activity_friends_">
         </activity>
     </application>
 
