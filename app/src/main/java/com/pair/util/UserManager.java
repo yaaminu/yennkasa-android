@@ -89,7 +89,7 @@ public class UserManager {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         User user = getMainUser(realm);
         if (user != null) {
-            //returning {@code RealmObject} from methods leaks resources since
+            //returning {@link RealmObject} from methods leaks resources since
             // that will prevent us from closing the realm instance. hence we do a shallow copy.
             // downside is changes to this object will not be persisted which is just what we want
             user = new User(user);
@@ -184,7 +184,7 @@ public class UserManager {
             return (NO_CONNECTION_ERROR);
         }
         if (!isUser(groupId)) {
-            return new IllegalArgumentException("no group with such group");
+            return new IllegalArgumentException("no group with such id");
         }
         if (!isAdmin(groupId, getMainUser().get_id())) {
             return new IllegalAccessException("you don't have the authority to add/remove a member");
@@ -412,11 +412,11 @@ public class UserManager {
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
                 realm.beginTransaction();
                 for (User group : groups) {
-                    if (!isMainUser(group.getAdmin())) {
+                    if (isMainUser(group.getAdmin())) {
                         group.setAdmin(getMainUser(realm));
                     }
                     group.setMembers(new RealmList<User>());
-                    group.getMembers().add(getMainUser(realm));
+                    group.getMembers().add(group.getAdmin());
                     group.setType(User.TYPE_GROUP);
                     realm.copyToRealmOrUpdate(group);
                 }

@@ -291,22 +291,26 @@ class MessageDispatcher implements Dispatcher<Message> {
 
     private void reportSuccess(SenderJob job) {
         decrementNumOfTasks();
-        for (DispatcherMonitor dispatcherMonitor : monitors) {
-            if (dispatcherMonitor != null) {
-                dispatcherMonitor.onSendSucceeded(job.id);
-            } else {
-                warnAndThrowIfInDevelopment();
+        synchronized (dispatcherMonitorLock) {
+            for (DispatcherMonitor dispatcherMonitor : monitors) {
+                if (dispatcherMonitor != null) {
+                    dispatcherMonitor.onSendSucceeded(job.id);
+                } else {
+                    warnAndThrowIfInDevelopment();
+                }
             }
         }
     }
 
     private void reportError(String jobId, String reason) {
         decrementNumOfTasks();
-        for (DispatcherMonitor monitor : monitors) {
-            if (monitor != null) {
-                monitor.onSendFailed(reason, jobId);
-            } else {
-                warnAndThrowIfInDevelopment();
+        synchronized (dispatcherMonitorLock) {
+            for (DispatcherMonitor monitor : monitors) {
+                if (monitor != null) {
+                    monitor.onSendFailed(reason, jobId);
+                } else {
+                    warnAndThrowIfInDevelopment();
+                }
             }
         }
     }
@@ -334,11 +338,13 @@ class MessageDispatcher implements Dispatcher<Message> {
     }
 
     private void allTaskComplete() {
-        for (DispatcherMonitor monitor : monitors) {
-            if (monitor != null) {
-                monitor.onAllDispatched();
-            } else {
-                warnAndThrowIfInDevelopment();
+        synchronized (dispatcherMonitorLock) {
+            for (DispatcherMonitor monitor : monitors) {
+                if (monitor != null) {
+                    monitor.onAllDispatched();
+                } else {
+                    warnAndThrowIfInDevelopment();
+                }
             }
         }
     }
