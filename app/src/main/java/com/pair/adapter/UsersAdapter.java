@@ -16,8 +16,8 @@ import io.realm.RealmResults;
 /**
  * @author Null-Pointer on 6/6/2015.
  */
-public class FriendsAdapter extends RealmBaseAdapter<User> {
-    public FriendsAdapter(Context context, RealmResults<User> realmResults, boolean automaticUpdate) {
+public class UsersAdapter extends RealmBaseAdapter<User> {
+    public UsersAdapter(Context context, RealmResults<User> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
     }
 

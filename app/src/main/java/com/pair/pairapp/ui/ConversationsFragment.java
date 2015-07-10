@@ -122,7 +122,7 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.new_message) {
-            Fragment fragment = new ContactFragment();
+            Fragment fragment = new UsersFragment();
             Bundle args = new Bundle();
             args.putString(MainActivity.ARG_TITLE, getActivity().getString(R.string.title_pick_contact));
             fragment.setArguments(args);

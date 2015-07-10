@@ -2,7 +2,6 @@
 <resources>
     <string-array name="menuItems">
         <item>Conversations</item>
-        <item>Friends</item>
         <item>Contacts</item>
         <item>Groups</item>
         <item>Settings</item>

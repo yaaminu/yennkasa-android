@@ -14,7 +14,6 @@ import android.view.MenuItem;
 import com.pair.data.User;
 import com.pair.pairapp.ui.ContactFragment;
 import com.pair.pairapp.ui.ConversationsFragment;
-import com.pair.pairapp.ui.FriendsFragment;
 import com.pair.pairapp.ui.GroupsFragment;
 import com.pair.pairapp.ui.SideBarFragment;
 import com.pair.util.Config;
@@ -106,15 +105,12 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
                 fragment = new ConversationsFragment();
                 break;
             case 1:
-                fragment = new FriendsFragment();
-                break;
-            case 2:
                 fragment = new ContactFragment();
                 break;
-            case 3:
+            case 2:
                 fragment = new GroupsFragment();
                 break;
-            case 4:
+            case 3:
                 gotoProfileActivity(userManager.getMainUser().get_id());
                 return;
             default:

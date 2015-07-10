@@ -13,7 +13,6 @@ public class FileHelperTest extends TestCase {
 
     @Before
     public void setUp() throws Exception {
-
     }
 
     @After

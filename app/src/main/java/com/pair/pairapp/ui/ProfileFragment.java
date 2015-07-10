@@ -2,39 +2,37 @@ package com.pair.pairapp.ui;
 
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.pair.data.User;
-import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.FileHelper;
-import com.pair.util.ImageResizer;
-import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
-import org.apache.commons.io.IOUtils;
-
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
+import io.realm.RealmResults;
 
 
 /**
@@ -57,10 +55,12 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         }
     };
     private ImageView displayPicture;
-    private TextView userName, userPhone;
+    private TextView userName, userPhone, listHeading;
     private Button changeDpButton;
+    private ListView membersOrMutualGroupsList;
     private User user;
     private Realm realm;
+    private BaseAdapter membersAdapter;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -77,16 +77,25 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         userPhone = ((TextView) view.findViewById(R.id.tv_user_phone));
         changeDpButton = ((Button) view.findViewById(R.id.bt_change_dp));
         ImageButton imageButton = (ImageButton) view.findViewById(R.id.ib_change_name);
+        listHeading = ((TextView) view.findViewById(R.id.tv_list_heading));
+        membersOrMutualGroupsList = ((ListView) view.findViewById(R.id.lv_members_list));
+
+
         realm = Realm.getInstance(getActivity());
         realm.addChangeListener(this);
         String id = getArguments().getString(ARG_USER_ID);
         user = realm.where(User.class).equalTo("_id", id).findFirst();
+
         if (user == null) {
             Log.wtf(TAG, "invalid user id passed");
             throw new IllegalArgumentException("invalid user id");
         }
-        final UserManager userManager = UserManager.getInstance(Config.getApplication());
-        if (userManager.isMainUser(user)) {
+        final UserManager userManager = UserManager.INSTANCE;
+
+        //common to all
+        userName.setText("@" + user.getName());
+        displayPicture.setOnClickListener(ONDPCLICKED);
+        if (userManager.isMainUser(user) || userManager.isAdmin(user.get_id(), userManager.getMainUser().get_id())) {
             changeDpButton.setVisibility(View.VISIBLE);
             imageButton.setVisibility(View.VISIBLE);
             imageButton.setOnClickListener(CHANGE_USERNAME);
@@ -95,20 +104,40 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             imageButton.setVisibility(View.GONE);
             changeDpButton.setVisibility(View.GONE);
         }
-        //common to all
-        userName.setText("@" + user.getName());
-        userPhone.setText(user.get_id());
-        Bitmap bitmap = getDp(user.getDP());
-        if (bitmap != null) {
-            changeDpButton.setText(R.string.change_dp);
-            displayPicture.setImageBitmap(bitmap);
+
+        if (user.getType() == User.TYPE_GROUP) {
+            setUpViewsGroupWay();
         } else {
-            changeDpButton.setText(R.string.add_picture); //if its not main user this will be View#GONE
+            setUpViewSingleUserWay();
         }
-        displayPicture.setOnClickListener(ONDPCLICKED);
-        //asynchronously check online refresh user details
-        userManager.refreshUserDetails(user.get_id());
+        userManager.refreshUserDetails(user.get_id()); //async
         return view;
+    }
+
+    private void setUpViewSingleUserWay() {
+        userPhone.setVisibility(View.VISIBLE);
+        userPhone.append(user.get_id());
+        listHeading.setText(R.string.st_mutual_groups);
+        final RealmResults<User> tmp = realm.where(User.class).equalTo("members._id", user.get_id()).findAll();
+        User[] results = realmResultsToArray(tmp);
+        membersAdapter = new GroupsOrMembersAdapter(getActivity(), results);
+        membersOrMutualGroupsList.setAdapter(membersAdapter);
+    }
+
+    @NonNull
+    private User[] realmResultsToArray(RealmResults<User> tmp) {
+        User[] results = new User[tmp.size()];
+        tmp.toArray(results);
+        return results;
+    }
+
+    private void setUpViewsGroupWay() {
+        userPhone.setVisibility(View.GONE);
+        listHeading.setText(R.string.st_group_members);
+        User[] results = new User[user.getMembers().size()];
+        user.getMembers().toArray(results);
+        membersAdapter = new GroupsOrMembersAdapter(getActivity(), results);
+        membersOrMutualGroupsList.setAdapter(membersAdapter);
     }
 
     private void choosePicture() {
@@ -120,10 +149,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     @Override
     public void onChange() {
-        final Bitmap bitmap = getDp(user.getDP());
-        if (bitmap != null) {
-            displayPicture.setImageBitmap(bitmap);
-        }
+        if (!isResumed()) //fragment not in layout
+            return;
         userName.setText("@" + user.getName());
         //probably change status too and last activity
     }
@@ -141,51 +168,20 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             if (resultCode == Activity.RESULT_OK) {
                 String filePath;
                 Uri uri = data.getData();
-                // TODO: 6/24/2015 check if we should really change the dp sometimes the user may pick the same  
+                // TODO: 6/24/2015 check if we should really change the dp sometimes the user may pick the same
                 //file so we have to just tell the user everything is ok. but we will not make a call to our backend
                 if (uri.getScheme().equals("content")) {
                     filePath = FileHelper.resolveContentUriToFilePath(uri);
                 } else {
                     filePath = uri.getPath();
                 }
-                Bitmap bitmap = getDp(filePath);
-                if (bitmap == null) return;
-                displayPicture.setImageBitmap(null);
-                displayPicture.setImageBitmap(bitmap);
+                displayPicture.setImageBitmap(BitmapFactory.decodeFile(filePath));
                 UserManager userManager = UserManager.getInstance(getActivity());
                 userManager.changeDp(filePath, DP_CALLBACK);
 
             }
         }
     }
-
-    @Nullable
-    private Bitmap getDp(String filePath) {
-        Log.i(TAG, "dp path; " + filePath);
-        byte[] imageBytes;
-        try {
-            imageBytes = IOUtils.toByteArray(new FileInputStream(filePath));
-        } catch (IOException e) {
-            if (BuildConfig.DEBUG) {
-                Log.e(TAG, e.getMessage(), e.getCause());
-            } else {
-                Log.e(TAG, e.getMessage());
-            }
-            return null;
-        }
-        //FIXME calculate the width and height based on screen size an density
-        Bitmap bitmap = ImageResizer.resizeImage(imageBytes, 600, 350);
-        if (bitmap == null) {
-            UiHelpers.showErrorDialog(getActivity(), getActivity().getString(R.string.error_invalid_bitmap_file));
-        }
-        return bitmap;
-    }
-
-//    private void showToast(int message) {
-//        Toast toast = Toast.makeText(Config.getApplicationContext(), message, Toast.LENGTH_LONG);
-//        toast.setGravity(Gravity.CENTER, 0, 0);
-//        toast.show();
-//    }
 
     private final UserManager.CallBack DP_CALLBACK = new UserManager.CallBack() {
         @Override
@@ -207,4 +203,22 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         realm.close();
         super.onDestroy();
     }
+
+    private class GroupsOrMembersAdapter extends ArrayAdapter<User> {
+
+        public GroupsOrMembersAdapter(Context context, User[] users) {
+            super(context, android.R.layout.simple_list_item_1, users);
+
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            if (convertView == null) {
+                convertView = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
+            }
+            ((TextView) convertView).setText(getItem(position).getName());
+            return convertView;
+        }
+    }
+
 }

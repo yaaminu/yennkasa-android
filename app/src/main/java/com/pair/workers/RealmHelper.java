@@ -29,6 +29,7 @@ public class RealmHelper {
         Realm realm = Realm.getInstance(context);
         realm.beginTransaction();
         realm.where(Message.class).findAll().clear();
+        realm.where(User.class).equalTo("name", "DemoGroup").findAll().clear();
         realm.commitTransaction();
         realm.close();
     }

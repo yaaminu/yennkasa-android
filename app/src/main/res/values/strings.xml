@@ -53,4 +53,6 @@
     <string name="st_done">done</string>
     <string name="st_please_wait">Please Wait</string>
     <string name="st_group_name">Group name</string>
+    <string name="st_mutual_groups">Mutual Groups</string>
+    <string name="st_group_members">Group Members</string>
 </resources>

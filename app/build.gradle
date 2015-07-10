@@ -4,6 +4,9 @@ android {
     compileSdkVersion 21
     buildToolsVersion "21.1.2"
 
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
     defaultConfig {
         applicationId "com.pair.pairapp"
         minSdkVersion 9

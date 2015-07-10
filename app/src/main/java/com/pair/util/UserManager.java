@@ -167,7 +167,7 @@ public class UserManager {
         return isUser;
     }
 
-    private boolean isAdmin(String groupId, String userId) {
+    public boolean isAdmin(String groupId, String userId) {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         User group = realm.where(User.class).equalTo("_id", groupId).findFirst();
         if (group == null) {

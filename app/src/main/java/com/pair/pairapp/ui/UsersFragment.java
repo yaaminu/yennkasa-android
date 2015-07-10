@@ -8,9 +8,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.GridView;
+import android.widget.ListView;
 
-import com.pair.adapter.FriendsAdapter;
+import com.pair.adapter.UsersAdapter;
 import com.pair.data.User;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
@@ -24,10 +24,10 @@ import io.realm.RealmResults;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class FriendsFragment extends Fragment implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
+public class UsersFragment extends Fragment implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener {
 
 
-    public FriendsFragment() {
+    public UsersFragment() {
         // Required empty public constructor
     }
 
@@ -41,12 +41,12 @@ public class FriendsFragment extends Fragment implements AdapterView.OnItemClick
         activity.getSupportActionBar().setTitle(title);
 
         View view = inflater.inflate(R.layout.fragment_freinds, container, false);
-        GridView friendsGrid = ((GridView) view.findViewById(R.id.gv_friends));
+        ListView usersList = ((ListView) view.findViewById(R.id.lv_users));
         Realm realm = Realm.getInstance(getActivity());
         RealmResults<User> results = realm.where(User.class).notEqualTo("_id", getCurrentUser().get_id()).findAllSorted("name", true);
-        FriendsAdapter adapter = new FriendsAdapter(getActivity(), results, true);
-        friendsGrid.setAdapter(adapter);
-        friendsGrid.setOnItemClickListener(this);
+        UsersAdapter adapter = new UsersAdapter(getActivity(), results, true);
+        usersList.setAdapter(adapter);
+        usersList.setOnItemClickListener(this);
         return view;
     }
 
@@ -57,7 +57,7 @@ public class FriendsFragment extends Fragment implements AdapterView.OnItemClick
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         //navigate to chat activity
-        User user = ((FriendsAdapter.ViewHolder) view.getTag()).user;
+        User user = ((UsersAdapter.ViewHolder) view.getTag()).user;
         String peerId = user.get_id();
         UiHelpers.enterChatRoom(getActivity(), peerId);
 
