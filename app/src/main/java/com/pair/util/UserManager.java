@@ -468,6 +468,14 @@ public class UserManager {
             public void success(HttpResponse response, Response response2) {
                 dpChangeOperationRunning = false;
                 changeDpAttempts = 0;
+                final String path = new File(Config.APP_PROFILE_PICS_BASE_DIR, response.getMessage() + ".jpeg").getAbsolutePath(),
+                        newPath = user.getDP();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateDpPath(path, newPath);
+                    }
+                }).start();
                 callback.done(null);
             }
 
@@ -479,10 +487,23 @@ public class UserManager {
                     changeDp(imagePath, callback);
                 } else {
                     changeDpAttempts = 0;
-                    callback.done(e == null ? retrofitError : e); //may be our fault but we have ran out of resources
+                    callback.done(e == null ? retrofitError : e); //may be our fault but we have reach maximum retries
                 }
             }
         });
+    }
+
+    private void updateDpPath(String path, String newPath) {
+        try {
+
+            FileHelper.copyTo(newPath, path);
+        } catch (IOException e) {
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, e.getMessage(), e.getCause());
+            } else {
+                Log.e(TAG, e.getMessage());
+            }
+        }
     }
 
     private void getUserDp(final String userId, final CallBack callback) {

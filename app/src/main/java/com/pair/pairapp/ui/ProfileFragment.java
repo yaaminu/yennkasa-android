@@ -2,6 +2,7 @@ package com.pair.pairapp.ui;
 
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
@@ -20,12 +21,11 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.pair.data.User;
 import com.pair.pairapp.R;
-import com.pair.util.Config;
 import com.pair.util.FileHelper;
+import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
 import java.io.File;
@@ -95,6 +95,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         //common to all
         userName.setText("@" + user.getName());
         displayPicture.setOnClickListener(ONDPCLICKED);
+        displayPicture.setImageBitmap(BitmapFactory.decodeFile(user.getDP()));
         if (userManager.isMainUser(user) || userManager.isAdmin(user.get_id(), userManager.getMainUser().get_id())) {
             changeDpButton.setVisibility(View.VISIBLE);
             imageButton.setVisibility(View.VISIBLE);
@@ -152,7 +153,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         if (!isResumed()) //fragment not in layout
             return;
         userName.setText("@" + user.getName());
-        //probably change status too and last activity
+        displayPicture.setImageBitmap(BitmapFactory.decodeFile(user.getDP()));
+        //todo probably change status too and last activity
     }
 
     private View.OnClickListener CHANGE_DP = new View.OnClickListener() {
@@ -168,32 +170,47 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             if (resultCode == Activity.RESULT_OK) {
                 String filePath;
                 Uri uri = data.getData();
-                // TODO: 6/24/2015 check if we should really change the dp sometimes the user may pick the same
-                //file so we have to just tell the user everything is ok. but we will not make a call to our backend
                 if (uri.getScheme().equals("content")) {
                     filePath = FileHelper.resolveContentUriToFilePath(uri);
                 } else {
                     filePath = uri.getPath();
                 }
+                filePath += "dummy";
+                //check if we should really change the dp sometimes the user may pick the same
+                //file so we have to just tell the user everything is ok. but we will not make a call to our backend
+                if (user.getDP().equals(filePath)) {
+                    UiHelpers.showErrorDialog(getActivity(), getResources().getString(R.string.st_choose_a_different_image));
+                    return;
+                }
                 displayPicture.setImageBitmap(BitmapFactory.decodeFile(filePath));
                 UserManager userManager = UserManager.getInstance(getActivity());
+                dpChangeProgress = new ProgressDialog(getActivity());
+                dpChangeProgress.setMessage(getResources().getString(R.string.st_please_wait));
+                dpChangeProgress.setCancelable(false);
+                dpChangeProgress.show();
                 userManager.changeDp(filePath, DP_CALLBACK);
 
             }
         }
     }
 
+    private ProgressDialog dpChangeProgress;
     private final UserManager.CallBack DP_CALLBACK = new UserManager.CallBack() {
         @Override
         public void done(Exception e) {
-
+            dpChangeProgress.dismiss();
+            if (e == null) {
+                UiHelpers.showToast(getActivity().getString(R.string.st_success));
+            } else {
+                UiHelpers.showErrorDialog(getActivity(), e.getMessage());
+            }
         }
     };
 
     private final View.OnClickListener CHANGE_USERNAME = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Toast.makeText(Config.getApplicationContext(), "not implemented", Toast.LENGTH_LONG).show();
+            UiHelpers.showToast("not implemented");
         }
     };
 

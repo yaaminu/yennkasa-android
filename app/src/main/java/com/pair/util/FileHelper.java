@@ -99,6 +99,10 @@ public class FileHelper {
         FileUtils.writeByteArrayToFile(profilePicture, imageBytes);
     }
 
+    public static void copyTo(String oldPath, String newPath) throws IOException {
+        FileUtils.copyFile(new File(oldPath), new File(newPath));
+    }
+
     public class CountingTypedFile extends TypedFile {
         private final ProgressListener listener;
 

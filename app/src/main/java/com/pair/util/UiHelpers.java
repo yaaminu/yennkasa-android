@@ -17,6 +17,8 @@ import com.pair.pairapp.ui.ChatActivity;
 import java.util.ArrayList;
 import java.util.List;
 
+import static android.widget.Toast.*;
+
 /**
  * @author by Null-Pointer on 5/28/2015.
  */
@@ -36,11 +38,16 @@ public class UiHelpers {
                 .show();
     }
 
+    public static void showToast(String message) {
+        makeText(Config.getApplicationContext(), message, LENGTH_SHORT).show();
+    }
+
     public static void enterChatRoom(Context context, String peerId) {
         Intent intent = new Intent(context, ChatActivity.class);
         intent.putExtra(ChatActivity.EXTRA_PEER_ID, peerId);
         context.startActivity(intent);
     }
+
 
     /**
      * Use an AsyncTask to fetch the user's email addresses on a background thread, and update
