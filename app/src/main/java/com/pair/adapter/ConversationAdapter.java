@@ -13,7 +13,9 @@ import com.pair.data.Conversation;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
+import com.pair.util.UiHelpers;
 
+import java.io.File;
 import java.util.Date;
 
 import io.realm.Realm;
@@ -52,8 +54,10 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         }
         Conversation conversation = getItem(position);
         holder.chatSummary.setText(conversation.getSummary());
-        String peerName = getPeerName(conversation.getPeerId());
+        User peer = getPeer(conversation.getPeerId());
+        String peerName = peer.getName();
         holder.peerName.setText(peerName);
+        UiHelpers.loadImageIntoIv(new File(peer.getDP()), holder.senderAvatar);
         long now = new Date().getTime();
         long then = conversation.getLastActiveTime().getTime();
         CharSequence formattedDate;
@@ -71,11 +75,12 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         return convertView;
     }
 
-    private String getPeerName(String peerId) {
+    private User getPeer(String peerId) {
         Realm realm = Realm.getInstance(context);
-        String peerName = realm.where(User.class).equalTo("_id", peerId).findFirst().getName();
+        User peer = realm.where(User.class).equalTo("_id", peerId).findFirst();
+        User copy = new User(peer); //shallow copy
         realm.close();
-        return peerName;
+        return copy;
     }
 
     public class ViewHolder {

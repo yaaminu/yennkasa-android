@@ -4,20 +4,26 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.ImageView;
 
 import com.pair.data.ContactsManager;
+import com.pair.pairapp.R;
 import com.pair.pairapp.ui.ChatActivity;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.widget.Toast.*;
+import static android.widget.Toast.LENGTH_SHORT;
+import static android.widget.Toast.makeText;
 
 /**
  * @author by Null-Pointer on 5/28/2015.
@@ -31,9 +37,9 @@ public class UiHelpers {
 
     public static void showErrorDialog(Context context, String message) {
         new AlertDialog.Builder(context)
-                .setTitle("Error")
+                .setTitle(R.string.st_error)
                 .setMessage(message)
-                .setPositiveButton("OK", null)
+                .setPositiveButton(android.R.string.ok, null)
                 .create()
                 .show();
     }
@@ -81,7 +87,6 @@ public class UiHelpers {
                 }
                 phoneNumber = phoneNumber.replace("(", "").replace(")", "").replace("-", "");
                 ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, null, false);
-                Log.d(TAG, name + ":" + phoneNumber);
                 phoneNumberCollection.add(contact);
             }
             phoneCur.close();
@@ -96,8 +101,23 @@ public class UiHelpers {
                     new ArrayAdapter<>(context,
                             android.R.layout.simple_dropdown_item_1line, contacts);
             autoCompleteTextView.setAdapter(arrayAdapter);
-            System.out.println("AutoCompleter.onPostExecute");
         }
     }
 
+    public static void loadImageIntoIv(final File file, final ImageView iv) {
+
+        new AsyncTask<Void, Void, Bitmap>() {
+
+            @Override
+            protected Bitmap doInBackground(Void... params) {
+                return BitmapFactory.decodeFile(file.getAbsolutePath());
+            }
+
+            @Override
+            protected void onPostExecute(Bitmap bitmap) {
+                if (bitmap != null)
+                    iv.setImageBitmap(bitmap);
+            }
+        }.execute();
+    }
 }

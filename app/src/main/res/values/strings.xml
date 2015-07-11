@@ -57,4 +57,5 @@
     <string name="st_group_members">Group Members</string>
     <string name="st_success">success</string>
     <string name="st_choose_a_different_image">This image is already your DP please choose a different one</string>
+    <string name="st_error">Error</string>
 </resources>

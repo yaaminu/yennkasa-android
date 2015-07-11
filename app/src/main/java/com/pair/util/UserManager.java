@@ -468,12 +468,12 @@ public class UserManager {
             public void success(HttpResponse response, Response response2) {
                 dpChangeOperationRunning = false;
                 changeDpAttempts = 0;
-                final String path = new File(Config.APP_PROFILE_PICS_BASE_DIR, response.getMessage() + ".jpeg").getAbsolutePath(),
-                        newPath = user.getDP();
+                final String newPath = new File(Config.APP_PROFILE_PICS_BASE_DIR, response.getMessage() + ".jpeg").getAbsolutePath(),
+                        oldPath = user.getDP();
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        updateDpPath(path, newPath);
+                        updateDpPath(oldPath, newPath);
                     }
                 }).start();
                 callback.done(null);
@@ -493,10 +493,10 @@ public class UserManager {
         });
     }
 
-    private void updateDpPath(String path, String newPath) {
+    private void updateDpPath(String oldPath, String newPath) {
         try {
 
-            FileHelper.copyTo(newPath, path);
+            FileHelper.copyTo(oldPath, newPath);
         } catch (IOException e) {
             if (BuildConfig.DEBUG) {
                 Log.e(TAG, e.getMessage(), e.getCause());

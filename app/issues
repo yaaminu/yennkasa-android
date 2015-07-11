@@ -3,7 +3,7 @@
 # logout users from backend when they choose to logout
 # code our own errorhandler that we will pass to retrofit
 # add call support
-# add group chat
+# add group chat //partly complete
 # decouple  the notification component from message processor
 # fix the timer issue in conversation fragment //fixed
 # give control to users so that they can change their dps,names,statuses etc. //partly fixed
@@ -12,3 +12,4 @@
 # declare all field names of models as constants so that realm queries will be neat
 # write test for some of the classes. I know it should have been the first thing to do
 # move the group related operations to its own class
+# change the schema of conversation

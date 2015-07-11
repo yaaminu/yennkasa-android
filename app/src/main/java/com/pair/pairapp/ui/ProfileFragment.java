@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -95,7 +94,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         //common to all
         userName.setText("@" + user.getName());
         displayPicture.setOnClickListener(ONDPCLICKED);
-        displayPicture.setImageBitmap(BitmapFactory.decodeFile(user.getDP()));
+        UiHelpers.loadImageIntoIv(new File(user.getDP()), displayPicture);
         if (userManager.isMainUser(user) || userManager.isAdmin(user.get_id(), userManager.getMainUser().get_id())) {
             changeDpButton.setVisibility(View.VISIBLE);
             imageButton.setVisibility(View.VISIBLE);
@@ -153,7 +152,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         if (!isResumed()) //fragment not in layout
             return;
         userName.setText("@" + user.getName());
-        displayPicture.setImageBitmap(BitmapFactory.decodeFile(user.getDP()));
+        UiHelpers.loadImageIntoIv(new File(user.getDP()), displayPicture);
         //todo probably change status too and last activity
     }
 
@@ -175,15 +174,14 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 } else {
                     filePath = uri.getPath();
                 }
-                filePath += "dummy";
                 //check if we should really change the dp sometimes the user may pick the same
                 //file so we have to just tell the user everything is ok. but we will not make a call to our backend
                 if (user.getDP().equals(filePath)) {
                     UiHelpers.showErrorDialog(getActivity(), getResources().getString(R.string.st_choose_a_different_image));
                     return;
                 }
-                displayPicture.setImageBitmap(BitmapFactory.decodeFile(filePath));
-                UserManager userManager = UserManager.getInstance(getActivity());
+                UiHelpers.loadImageIntoIv(new File(user.getDP()), displayPicture);
+                UserManager userManager = UserManager.INSTANCE;
                 dpChangeProgress = new ProgressDialog(getActivity());
                 dpChangeProgress.setMessage(getResources().getString(R.string.st_please_wait));
                 dpChangeProgress.setCancelable(false);
