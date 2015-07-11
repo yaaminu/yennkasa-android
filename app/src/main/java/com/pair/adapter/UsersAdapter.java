@@ -27,7 +27,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> {
         if (convertView == null) {
             convertView = LayoutInflater.from(context).inflate(R.layout.user_item, parent, false);
             ViewHolder holder = new ViewHolder();
-            holder.iv = ((ImageView) convertView.findViewById(R.id.iv_userImageView));
+            holder.iv = ((ImageView) convertView.findViewById(R.id.iv_display_picture));
             holder.tv = ((TextView) convertView.findViewById(R.id.tv_user_name));
             convertView.setTag(holder);
         }

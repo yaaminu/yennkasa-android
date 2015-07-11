@@ -27,9 +27,12 @@ public class Config {
     public static final String APP_PREFS = "prefs";
     private static final String HOST_REAL_SERVER = "http://192.168.43.42:3000";
     private static final String LOCAL_HOST_GENYMOTION = "http://10.0.3.2:3000";
+    private static final String DP_API_GENYMOTION = "http://10.0.3.2:5000/fileApi/dp";
+    private static final String DP_API_REAL_PHONE = "http://192.168.43.42:5000/fileApi/dp";
     private static final String ENV_PROD = "prod";
     private static final String ENV_DEV = "dev";
     public static final String PAIRAPP_ENV = getEnvironment();
+    public static final String DP_ENDPOINT = getDpEndpoint();
     public static final String PAIRAPP_ENDPOINT = getEndPoint();
     private static final String logMessage = "calling getApplication when init has not be called";
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
@@ -143,6 +146,14 @@ public class Config {
         }
     }
 
+    private static String getDpEndpoint() {
+        if (PAIRAPP_ENV.equals(ENV_DEV)) {
+            return DP_API_GENYMOTION;
+        } else {
+            // TODO replace this with real url
+            return DP_API_REAL_PHONE;
+        }
+    }
     private static void enableComponent(Class clazz) {
         Log.d(TAG, "enabling " + clazz.getSimpleName());
         ComponentName receiver = new ComponentName(application, clazz);

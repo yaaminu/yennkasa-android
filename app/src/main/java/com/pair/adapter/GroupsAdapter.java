@@ -44,12 +44,11 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
         for (int i = 0; i < groupMembers.size(); i++) {
             User groupMember = groupMembers.get(i);
             if (!groupMember.get_id().equals(mainUser.get_id())) {
-                members.append(groupMember.getName());
+                members.append(",").append(groupMember.getName());
             }
             if ((i + 1) == groupMembers.size()) {
                 continue;
             }
-            members.append(",");
         }
         holder.groupMembers.setText(members.toString());
         return convertView;

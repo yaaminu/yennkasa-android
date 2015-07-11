@@ -6,9 +6,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.pair.pairapp.R;
+import com.pair.util.Config;
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -73,6 +76,7 @@ public class ContactsAdapter extends BaseAdapter {
             }
             holder.userStatus = ((TextView) convertView.findViewById(R.id.tv_user_status));
             holder.inviteButton = (Button) convertView.findViewById(R.id.bt_invite);
+            holder.userDp = ((ImageView) convertView.findViewById(R.id.iv_display_picture));
             convertView.setTag(holder);
         } else {
             holder = ((ViewHolder) convertView.getTag());
@@ -85,6 +89,11 @@ public class ContactsAdapter extends BaseAdapter {
         }
         if (contact.isRegisteredUser) {
             holder.userStatus.setText(contact.status);
+            // FIXME: 7/11/2015 normalise number first
+            Picasso.with(parent.getContext())
+                    .load(Config.DP_ENDPOINT + "/" + contact.phoneNumber)
+                    .error(R.drawable.avatar_empty)
+                    .into(holder.userDp);
         } else {
             holder.userStatus.setText(contact.phoneNumber);
             holder.inviteButton.setOnClickListener(new InviteContact(contact));
@@ -101,6 +110,7 @@ public class ContactsAdapter extends BaseAdapter {
         private TextView userName,
                 userStatus;
         private Button inviteButton;
+        private ImageView userDp;
         public Contact contact;
     }
     private class InviteContact implements View.OnClickListener {

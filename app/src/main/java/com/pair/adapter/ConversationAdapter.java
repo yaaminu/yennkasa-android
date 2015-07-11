@@ -13,9 +13,9 @@ import com.pair.data.Conversation;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
-import com.pair.util.UiHelpers;
+import com.pair.util.Config;
+import com.squareup.picasso.Picasso;
 
-import java.io.File;
 import java.util.Date;
 
 import io.realm.Realm;
@@ -57,7 +57,8 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         User peer = getPeer(conversation.getPeerId());
         String peerName = peer.getName();
         holder.peerName.setText(peerName);
-        UiHelpers.loadImageIntoIv(new File(peer.getDP()), holder.senderAvatar);
+        String dpUrl = Config.DP_ENDPOINT + "/" + peer.get_id();
+        Picasso.with(context).load(dpUrl).error(R.drawable.avatar_empty).into(holder.senderAvatar);
         long now = new Date().getTime();
         long then = conversation.getLastActiveTime().getTime();
         CharSequence formattedDate;
