@@ -200,7 +200,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         public void done(Exception e) {
             dpChangeProgress.dismiss();
             if (e == null) {
-                UiHelpers.showToast(getActivity().getString(R.string.st_success));
+                Log.i(TAG, user.getDP());
                 displayPicture.setImageBitmap(BitmapFactory.decodeFile(user.getDP()));
             } else {
                 UiHelpers.showErrorDialog(getActivity(), e.getMessage());
