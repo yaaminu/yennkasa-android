@@ -2,6 +2,7 @@ package com.pair.net.api;
 
 import com.google.gson.JsonObject;
 import com.pair.data.User;
+import com.pair.net.HttpResponse;
 
 import java.util.List;
 
@@ -11,10 +12,8 @@ import retrofit.http.Body;
 import retrofit.http.Field;
 import retrofit.http.FormUrlEncoded;
 import retrofit.http.GET;
-import retrofit.http.Multipart;
 import retrofit.http.POST;
 import retrofit.http.PUT;
-import retrofit.http.Part;
 import retrofit.http.Path;
 import retrofit.http.Streaming;
 import retrofit.mime.TypedFile;
@@ -28,10 +27,10 @@ public interface UserApi {
     void registerUser(@Body JsonObject user, Callback<User> callback);
 
     @POST("/api/v1/users/login")
-    void logIn(@Body JsonObject object,Callback<User> callback);
+    void logIn(@Body JsonObject object, Callback<User> callback);
 
     @POST("/api/v1/users/")
-    void fetchFriends(@Body List<String> userIds,Callback<List<User>> response);
+    void fetchFriends(@Body List<String> userIds, Callback<List<User>> response);
 
     @GET("/api/v1/users/{id}")
     void getUser(@Path("id") String id, Callback<User> response);
@@ -43,9 +42,9 @@ public interface UserApi {
     @GET("/api/v1/users/{id}/groups")
     void getGroups(@Path("id") String id, Callback<List<User>> response);
 
-    @Multipart
+
     @PUT("/api/v1/users/{id}/dp")
-    void changeDp(@Path("id") String id, @Part("bin") TypedFile file, @Part("password") String password, Callback<Response> response);
+    void changeDp(@Path("id") String id, @Body TypedFile file, Callback<HttpResponse> response);
 
     @POST("/api/v1/groups/")
     void createGroup(@Body JsonObject group, Callback<User> response);

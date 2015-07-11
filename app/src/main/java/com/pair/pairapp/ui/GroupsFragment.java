@@ -54,6 +54,7 @@ public class GroupsFragment extends ListFragment {
         String title = getArguments().getString(MainActivity.ARG_TITLE);
         ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(title);
         realm = Realm.getInstance(getActivity());
+        UserManager.INSTANCE.refreshGroups();
         return view;
     }
 
@@ -63,6 +64,16 @@ public class GroupsFragment extends ListFragment {
         RealmResults<User> groups = realm.where(User.class).equalTo("type", User.TYPE_GROUP).findAllSorted("name");
         BaseAdapter adapter = new GroupsAdapter(getActivity(), groups);
         setListAdapter(adapter);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
     }
 
     @Override
@@ -95,8 +106,9 @@ public class GroupsFragment extends ListFragment {
         return super.onOptionsItemSelected(item);
     }
 
+
     public static class Dialogue extends DialogFragment {
-        ProgressDialog pdialog;
+        ProgressDialog pDialog;
 
         public Dialogue() {
         }
@@ -104,9 +116,9 @@ public class GroupsFragment extends ListFragment {
         @NonNull
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
-            pdialog = new ProgressDialog(getActivity());
-            pdialog.setMessage(getResources().getString(R.string.st_please_wait));
-            pdialog.setCancelable(false);
+            pDialog = new ProgressDialog(getActivity());
+            pDialog.setMessage(getResources().getString(R.string.st_please_wait));
+            pDialog.setCancelable(false);
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
             View view = LayoutInflater.from(getActivity()).inflate(R.layout.create_group, null);
             final EditText et = ((EditText) view.findViewById(R.id.et_group_name));
@@ -118,7 +130,7 @@ public class GroupsFragment extends ListFragment {
                             String groupName = UiHelpers.getFieldContent(et);
                             if (!TextUtils.isEmpty(groupName)) {
                                 //TODO use regex to validate name
-                                pdialog.show();
+                                pDialog.show();
                                 UserManager.INSTANCE.createGroup(groupName, callBack);
                             }
                         }
@@ -130,7 +142,7 @@ public class GroupsFragment extends ListFragment {
         private UserManager.CallBack callBack = new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
-                pdialog.dismiss();
+                pDialog.dismiss();
                 if (e != null) {
                     UiHelpers.showErrorDialog(getActivity(), e.getMessage());
                 } else {

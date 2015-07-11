@@ -13,6 +13,7 @@ import com.pair.data.ContactsManager;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
+import com.pair.net.HttpResponse;
 import com.pair.net.api.UserApi;
 import com.pair.pairapp.BuildConfig;
 
@@ -350,6 +351,13 @@ public class UserManager {
         return members;
     }
 
+    public void refreshGroups() {
+        if (!ConnectionHelper.isConnectedOrConnecting()) {
+            return;
+        }
+        getGroups();
+    }
+
     public void refreshUserDetails(final String userId) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             return;
@@ -448,18 +456,16 @@ public class UserManager {
         }
         dpChangeOperationRunning = true;
         final User user = getMainUser();
-        if (user == null) {
-            throw new AssertionError("can't change dp of user that is null");
-        }
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         realm.beginTransaction();
         user.setDP(imagePath);
         user.setPassword("d"); // FIXME: 6/24/2015 take out this line of code!
         realm.commitTransaction();
+        realm.close();
         changeDpAttempts++;
-        userApi.changeDp(user.get_id(), new TypedFile("image/*", imageFile), user.getPassword(), new Callback<Response>() {
+        userApi.changeDp(user.get_id(), new TypedFile("image/*", imageFile), new Callback<HttpResponse>() {
             @Override
-            public void success(Response response, Response response2) {
+            public void success(HttpResponse response, Response response2) {
                 dpChangeOperationRunning = false;
                 changeDpAttempts = 0;
                 callback.done(null);
