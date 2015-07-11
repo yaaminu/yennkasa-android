@@ -13,3 +13,4 @@
 # write test for some of the classes. I know it should have been the first thing to do
 # move the group related operations to its own class
 # change the schema of conversation
+# change the way we handle dps

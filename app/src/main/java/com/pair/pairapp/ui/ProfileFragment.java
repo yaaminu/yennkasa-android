@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -27,6 +26,7 @@ import com.pair.pairapp.R;
 import com.pair.util.FileHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
+import com.squareup.picasso.Picasso;
 
 import java.io.File;
 
@@ -96,7 +96,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         //common to all
         userName.setText("@" + user.getName());
         displayPicture.setOnClickListener(ONDPCLICKED);
-        UiHelpers.loadImageIntoIv(new File(user.getDP()), displayPicture);
+        showDp();
         if (userManager.isMainUser(user) || userManager.isAdmin(user.get_id(), userManager.getMainUser().get_id())) {
             changeDpButton.setVisibility(View.VISIBLE);
             imageButton.setVisibility(View.VISIBLE);
@@ -154,7 +154,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         if (!isResumed()) //fragment not in layout
             return;
         userName.setText("@" + user.getName());
-        UiHelpers.loadImageIntoIv(new File(user.getDP()), displayPicture);
+        showDp();
         //todo probably change status too and last activity
     }
 
@@ -182,7 +182,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     UiHelpers.showErrorDialog(getActivity(), getResources().getString(R.string.st_choose_a_different_image));
                     return;
                 }
-                UiHelpers.loadImageIntoIv(new File(user.getDP()), displayPicture);
+                showDp();
                 UserManager userManager = UserManager.INSTANCE;
                 dpChangeProgress = new ProgressDialog(getActivity());
                 dpChangeProgress.setMessage(getResources().getString(R.string.st_please_wait));
@@ -201,12 +201,16 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             dpChangeProgress.dismiss();
             if (e == null) {
                 Log.i(TAG, user.getDP());
-                displayPicture.setImageBitmap(BitmapFactory.decodeFile(user.getDP()));
+                showDp();
             } else {
                 UiHelpers.showErrorDialog(getActivity(), e.getMessage());
             }
         }
     };
+
+    private void showDp() {
+        Picasso.with(getActivity()).load(new File(user.getDP())).error(R.drawable.avatar_empty).resize(320, 200).into(displayPicture);
+    }
 
     private final View.OnClickListener CHANGE_USERNAME = new View.OnClickListener() {
         @Override

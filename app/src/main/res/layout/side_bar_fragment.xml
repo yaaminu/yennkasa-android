@@ -7,6 +7,7 @@
     >
     <ImageView
         android:layout_width="match_parent"
+        android:id="@+id/iv_display_picture"
         android:layout_height="0dp"
         android:padding="5dp"
         android:scaleType="fitXY"

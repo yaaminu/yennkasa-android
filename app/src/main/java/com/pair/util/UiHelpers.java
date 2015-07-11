@@ -4,24 +4,17 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
-import android.widget.ImageView;
 
 import com.pair.data.ContactsManager;
-import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.pairapp.ui.ChatActivity;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -108,48 +101,4 @@ public class UiHelpers {
             autoCompleteTextView.setAdapter(arrayAdapter);
         }
     }
-
-    public static void loadImageIntoIv(final File file, final ImageView iv) {
-
-        new AsyncTask<Void, Void, Bitmap>() {
-
-            @Override
-            protected Bitmap doInBackground(Void... params) {
-                return BitmapFactory.decodeFile(file.getAbsolutePath());
-            }
-
-            @Override
-            protected void onPostExecute(Bitmap bitmap) {
-                if (bitmap != null)
-                    iv.setImageBitmap(bitmap);
-            }
-        }.execute();
-    }
-
-    public static void loadImageIntoIv(final String resource, final ImageView iv) {
-
-        new AsyncTask<Void, Void, Bitmap>() {
-
-            @Override
-            protected Bitmap doInBackground(Void... params) {
-                try {
-                    return BitmapFactory.decodeStream(new URL(resource).openStream());
-                } catch (IOException e) {
-                    if (BuildConfig.DEBUG) {
-                        Log.e(TAG, e.getMessage(), e.getCause());
-                    } else {
-                        Log.e(TAG, e.getMessage());
-                    }
-                    return null;
-                }
-            }
-
-            @Override
-            protected void onPostExecute(Bitmap bitmap) {
-                if (bitmap != null)
-                    iv.setImageBitmap(bitmap);
-            }
-        }.execute();
-    }
-
 }
