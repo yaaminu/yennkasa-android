@@ -34,7 +34,6 @@ public class GcmHelper {
 
 
     public static boolean checkPlayServices(Activity context) {
-        if (true) return true; // FIXME: 7/11/2015 remove this!
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
         Log.i(TAG, "results code: " + resultCode);
         if (resultCode != ConnectionResult.SUCCESS) {
@@ -67,19 +66,16 @@ public class GcmHelper {
             if (regId != null) {
                 return new GcmRegResults(regId, null);
             }
-//            try {
-//                GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(context);
-//                String registrationId = gcm.register("554068366623");
-//                sharedPreferences.edit().putString(GCM_REG_ID, registrationId).commit();
-//                return new GcmRegResults(registrationId, null);
-//            } catch (IOException e) {
-//                Log.e(TAG, e.getMessage(), e.getCause());
-//                return new GcmRegResults(null, e);
-//            }
+            try {
+                GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(context);
+                String registrationId = gcm.register("554068366623");
+                sharedPreferences.edit().putString(GCM_REG_ID, registrationId).commit();
+                return new GcmRegResults(registrationId, null);
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage(), e.getCause());
+                return new GcmRegResults(null, e);
+            }
 
-            String registrationId = "kflafkdaf" + System.currentTimeMillis();
-            sharedPreferences.edit().putString(GCM_REG_ID, registrationId).commit();
-            return new GcmRegResults(registrationId, null);
         }
 
         @Override

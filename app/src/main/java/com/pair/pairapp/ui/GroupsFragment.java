@@ -67,16 +67,6 @@ public class GroupsFragment extends ListFragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
-
-    @Override
     public void onDestroy() {
         realm.close();
         super.onDestroy();

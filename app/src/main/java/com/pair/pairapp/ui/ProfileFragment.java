@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -69,6 +70,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        super.onCreateView(inflater, container, savedInstanceState);
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
         displayPicture = ((ImageView) view.findViewById(R.id.iv_display_picture));
@@ -199,6 +201,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             dpChangeProgress.dismiss();
             if (e == null) {
                 UiHelpers.showToast(getActivity().getString(R.string.st_success));
+                displayPicture.setImageBitmap(BitmapFactory.decodeFile(user.getDP()));
             } else {
                 UiHelpers.showErrorDialog(getActivity(), e.getMessage());
             }

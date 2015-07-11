@@ -57,7 +57,7 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        super.onCreateView(null, null, savedInstanceState);
+        super.onCreateView(inflater, container, savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_inbox, container, false);
         realm = Realm.getInstance(getActivity());
         realm.beginTransaction();

@@ -56,7 +56,7 @@ public class LoginFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        super.onCreateView(null, null, savedInstanceState);
+        super.onCreateView(inflater, container, savedInstanceState);
         View view = inflater.inflate(R.layout.login_fragment, container, false);
         phoneNumberEt = (AutoCompleteTextView) view.findViewById(R.id.et_phone_number_field);
         new UiHelpers.AutoCompleter(getActivity(), phoneNumberEt).execute();//enable autocompletion

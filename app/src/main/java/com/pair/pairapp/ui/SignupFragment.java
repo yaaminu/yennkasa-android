@@ -66,7 +66,7 @@ public class SignUpFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        super.onCreateView(null, null, savedInstanceState);
+        super.onCreateView(inflater, container, savedInstanceState);
         View view = inflater.inflate(R.layout.signup_fragment, container, false);
         passWordEt = (EditText) view.findViewById(R.id.et_passwordField);
         phoneNumberEt = (AutoCompleteTextView) view.findViewById(R.id.et_phone_number_field);
