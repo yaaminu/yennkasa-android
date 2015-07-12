@@ -4,5 +4,5 @@
     <item
         android:id="@+id/new_message"
         android:title="new message"
-        pairapp:showAsAction="never"></item>
+        pairapp:showAsAction="never"/>
 </menu>
