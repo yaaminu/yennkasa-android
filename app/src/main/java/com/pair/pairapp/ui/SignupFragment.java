@@ -1,5 +1,6 @@
 package com.pair.pairapp.ui;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -61,6 +62,12 @@ public class SignUpFragment extends Fragment {
     };
 
     public SignUpFragment() {
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        setRetainInstance(true);
+        super.onAttach(activity);
     }
 
     @Nullable

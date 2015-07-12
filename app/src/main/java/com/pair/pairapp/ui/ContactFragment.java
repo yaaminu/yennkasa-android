@@ -1,6 +1,7 @@
 package com.pair.pairapp.ui;
 
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.support.v7.app.ActionBarActivity;
@@ -73,6 +74,12 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
 
     public ContactFragment() {
         // Required empty public constructor
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        setRetainInstance(true);
+        super.onAttach(activity);
     }
 
     @Override

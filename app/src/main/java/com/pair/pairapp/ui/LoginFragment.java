@@ -1,5 +1,6 @@
 package com.pair.pairapp.ui;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 import com.pair.data.User;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
+import com.pair.pairapp.SetUpActivity;
 import com.pair.util.Config;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
@@ -26,6 +28,7 @@ import com.pair.workers.ContactSyncService;
  * @author by Null-Pointer on 5/28/2015.
  */
 public class LoginFragment extends Fragment {
+    public static final String TAG = LoginFragment.class.getSimpleName();
     private EditText passwordEt;
     private AutoCompleteTextView phoneNumberEt;
     private Button loginButton;
@@ -53,6 +56,12 @@ public class LoginFragment extends Fragment {
 
     public LoginFragment(){}
 
+    @Override
+    public void onAttach(Activity activity) {
+        setRetainInstance(true);
+        super.onAttach(activity);
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -70,7 +79,7 @@ public class LoginFragment extends Fragment {
             public void onClick(View v) {
                 if (busy)
                     return;
-                getFragmentManager().beginTransaction().replace(R.id.container, new SignUpFragment()).addToBackStack(null).commit();
+                getFragmentManager().beginTransaction().replace(R.id.container, new SignUpFragment(), SetUpActivity.f_TAG).addToBackStack(null).commit();
             }
         });
 

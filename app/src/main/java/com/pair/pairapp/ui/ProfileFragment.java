@@ -66,6 +66,11 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         // Required empty public constructor
     }
 
+    @Override
+    public void onAttach(Activity activity) {
+        setRetainInstance(true);
+        super.onAttach(activity);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

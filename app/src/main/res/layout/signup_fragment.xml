@@ -1,4 +1,6 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    android:id="@+id/fr_signup"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
@@ -7,76 +9,78 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin">
 
-        <EditText
-            android:id="@+id/usernameField"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true"
-            android:ems="10"
-            android:hint="@string/username_hint" >
+    <EditText
+        android:id="@+id/usernameField"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:ems="10"
+        android:hint="@string/username_hint">
 
-            <requestFocus />
-        </EditText>
+        <requestFocus/>
+    </EditText>
 
-        <EditText
-            android:id="@+id/et_passwordField"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignLeft="@+id/usernameField"
-            android:layout_below="@+id/et_phone_number_field"
-            android:ems="10"
-            android:hint="@string/password_hint"
-            android:inputType="textPassword" />
+    <EditText
+        android:id="@+id/et_passwordField"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/usernameField"
+        android:layout_below="@+id/et_phone_number_field"
+        android:ems="10"
+        android:hint="@string/password_hint"
+        android:inputType="textPassword"/>
 
-        <AutoCompleteTextView
-            android:id="@+id/et_phone_number_field"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignLeft="@+id/et_passwordField"
-            android:layout_below="@+id/usernameField"
-            android:ems="10"
-            android:hint="@string/phone_hint"
-            android:inputType="phone" />
+    <AutoCompleteTextView
+        android:id="@+id/et_phone_number_field"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/et_passwordField"
+        android:layout_below="@+id/usernameField"
+        android:ems="10"
+        android:hint="@string/phone_hint"
+        android:inputType="phone"/>
 
-        <Button
-            android:id="@+id/signupButton"
-            android:layout_width="match_parent"
+    <Button
+        android:id="@+id/signupButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/et_phone_number_field"
+        android:layout_below="@+id/et_passwordField"
+        android:text="@string/sign_up_button_label"/>
+
+    <TextView
+        android:id="@+id/tv_login"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/signupButton"
+        android:layout_centerHorizontal="true"
+        android:clickable="true"
+        android:padding="5dp"
+        android:text="Already have an account? Login."
+        android:textColor="#00f"
+        android:textSize="14sp"/>
+
+    <LinearLayout
+        android:id="@+id/progressView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_login"
+        android:layout_centerHorizontal="true"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignLeft="@+id/et_phone_number_field"
-            android:layout_below="@+id/et_passwordField"
-            android:text="@string/sign_up_button_label" />
+            android:indeterminate="true"
+            />
 
         <TextView
-            android:id="@+id/tv_login"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/signupButton"
-            android:layout_centerHorizontal="true"
-            android:clickable="true"
-            android:padding="5dp"
-            android:text="Already have an account? Login."
-            android:textColor="#00f"
-            android:textSize="14sp" />
-
-        <LinearLayout
-            android:id="@+id/progressView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/tv_login"
-            android:layout_centerHorizontal="true"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:visibility="gone">
-            <ProgressBar
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:indeterminate="true"
-                />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Please wait..."
-                android:textSize="18sp"/>
-        </LinearLayout>
-    </RelativeLayout>
+            android:text="Please wait..."
+            android:textSize="18sp"/>
+    </LinearLayout>
+</RelativeLayout>

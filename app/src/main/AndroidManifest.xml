@@ -39,6 +39,7 @@
         </activity>
         <activity
             android:name=".SetUpActivity"
+            android:configChanges="orientation|keyboardHidden"
             android:label="@string/title_activity_set_up" />
         <activity
             android:name=".ui.ChatActivity"

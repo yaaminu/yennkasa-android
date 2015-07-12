@@ -31,8 +31,9 @@ public class SideBarFragment extends ListFragment {
         if(!(activity instanceof MenuCallback)){
             throw new ClassCastException(activity.getClass().getName() + " must implement interface" + MenuCallback.class.getSimpleName());
         }
-        super.onAttach(activity);
         callback = (MenuCallback) activity;
+        setRetainInstance(true);
+        super.onAttach(activity);
     }
 
     @Override

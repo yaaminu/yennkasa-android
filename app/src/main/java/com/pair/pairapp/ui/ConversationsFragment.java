@@ -51,6 +51,7 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     @Override
     public void onAttach(Activity activity) {
         setHasOptionsMenu(true);
+        setRetainInstance(true);
         super.onAttach(activity);
     }
 

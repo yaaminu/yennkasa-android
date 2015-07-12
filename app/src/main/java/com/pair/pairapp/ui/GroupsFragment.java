@@ -1,6 +1,7 @@
 package com.pair.pairapp.ui;
 
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -43,6 +44,12 @@ public class GroupsFragment extends ListFragment {
 
     public GroupsFragment() {
         // Required empty public constructor
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        setRetainInstance(true);
+        super.onAttach(activity);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.pair.pairapp.ui;
 
 
+import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
@@ -31,6 +32,11 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
         // Required empty public constructor
     }
 
+    @Override
+    public void onAttach(Activity activity) {
+        setRetainInstance(true);
+        super.onAttach(activity);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

@@ -37,7 +37,7 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
         if (GcmHelper.checkPlayServices(this)) {
             userManager = UserManager.getInstance(getApplication());
             User user = userManager.getMainUser();
-            if (user == null) {
+            if (user == null || true) {
                 gotoSetUpActivity();
             } else {
                 drawer = (DrawerLayout) findViewById(R.id.drawer);
