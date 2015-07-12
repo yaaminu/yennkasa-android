@@ -11,6 +11,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.pair.data.Conversation;
 import com.pair.data.User;
 import com.pair.pairapp.ui.ContactFragment;
 import com.pair.pairapp.ui.ConversationsFragment;
@@ -37,14 +38,16 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
         if (GcmHelper.checkPlayServices(this)) {
             userManager = UserManager.getInstance(getApplication());
             User user = userManager.getMainUser();
-            if (user == null || true) {
+            if (user == null) {
                 gotoSetUpActivity();
             } else {
                 drawer = (DrawerLayout) findViewById(R.id.drawer);
-                Fragment fragment = new ConversationsFragment();
-                Bundle bundle = new Bundle();
-                bundle.putString(ARG_TITLE, "Conversations");
-                fragment.setArguments(bundle);
+
+                Fragment fragment = findFragment(Conversation.class.getSimpleName());
+                if (fragment == null) {
+                    fragment = new ConversationsFragment();
+                    setArgs("Conversations", fragment);
+                }
                 addFragment(fragment);
             }
         } else {
@@ -91,36 +94,49 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
     private void addFragment(Fragment fragment) {
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.container, fragment)
+                .replace(R.id.container, fragment, fragment.getClass().getSimpleName())
                 .commit();
     }
 
     @Override
     public void onItemSelected(int position, String recommendedTitle) {
         drawer.closeDrawer(Gravity.START);
-        Log.i(TAG, "clicked " + recommendedTitle + " @ position: " + position);
         Fragment fragment;
         switch (position) {
             case 0:
-                fragment = new ConversationsFragment();
+                fragment = findFragment(ConversationsFragment.class.getSimpleName());
+                if (fragment == null) {
+                    fragment = new ConversationsFragment();
+                    setArgs(recommendedTitle, fragment);
+                }
                 break;
             case 1:
-                fragment = new ContactFragment();
+                fragment = findFragment(ContactFragment.class.getSimpleName());
+                if (fragment == null) {
+                    fragment = new ContactFragment();
+                    setArgs(recommendedTitle, fragment);
+                }
                 break;
             case 2:
-                fragment = new GroupsFragment();
+                fragment = findFragment(GroupsFragment.class.getSimpleName());
+                if (fragment == null) {
+                    fragment = new GroupsFragment();
+                    setArgs(recommendedTitle, fragment);
+                }
                 break;
             case 3:
                 gotoProfileActivity(userManager.getMainUser().get_id());
                 return;
             default:
-                fragment = new ConversationsFragment();
-                break; //redundant but safe
+                throw new AssertionError("impossible"); //redundant but safe
         }
+        addFragment(fragment);
+    }
+
+    private void setArgs(String recommendedTitle, Fragment fragment) {
         Bundle bundle = new Bundle();
         bundle.putString(ARG_TITLE, recommendedTitle);
         fragment.setArguments(bundle);
-        addFragment(fragment);
     }
 
     private void gotoProfileActivity(String id) {
@@ -129,4 +145,7 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
         startActivity(intent);
     }
 
+    private Fragment findFragment(String tag) {
+        return getSupportFragmentManager().findFragmentByTag(tag);
+    }
 }

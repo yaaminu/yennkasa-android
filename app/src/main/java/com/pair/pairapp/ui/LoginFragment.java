@@ -27,11 +27,12 @@ import com.pair.workers.ContactSyncService;
 /**
  * @author by Null-Pointer on 5/28/2015.
  */
+@SuppressWarnings("ConstantConditions FieldCanBeLocal")
 public class LoginFragment extends Fragment {
+    private Button loginButton;
     public static final String TAG = LoginFragment.class.getSimpleName();
     private EditText passwordEt;
     private AutoCompleteTextView phoneNumberEt;
-    private Button loginButton;
     private boolean busy = false;
     private View progressView;
     private UserManager.CallBack loginCallback = new UserManager.CallBack() {
