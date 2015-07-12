@@ -9,7 +9,6 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -23,7 +22,6 @@ import com.pair.data.Conversation;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
-import com.pair.util.UserManager;
 
 import java.util.Date;
 import java.util.Timer;
@@ -76,8 +74,6 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
         ActionBarActivity activity = (ActionBarActivity) getActivity();
         //noinspection ConstantConditions
         activity.getSupportActionBar().setTitle(title);
-        realm.addChangeListener(this);
-        startTimer();
         return view;
     }
 
@@ -104,7 +100,6 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        registerForContextMenu(getListView());
     }
 
     @Override
@@ -115,7 +110,6 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        Log.d("f", UserManager.INSTANCE.getMainUser().toString());
         inflater.inflate(R.menu.new_message_menu, menu);
         super.onCreateOptionsMenu(menu, inflater);
     }
@@ -138,19 +132,21 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     }
 
     @Override
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        getActivity().getMenuInflater().inflate(R.menu.inbox_context_menu, menu);
+    public void onResume() {
+        realm.addChangeListener(this);
+        startTimer();
+        super.onResume();
     }
 
     @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        return super.onContextItemSelected(item);
+    public void onPause() {
+        task.cancel();
+        realm.removeChangeListener(this);
+        super.onPause();
     }
 
     @Override
     public void onDestroy() {
-        task.cancel();
-        realm.removeChangeListener(this);
         realm.close();
         super.onDestroy();
     }
@@ -164,8 +160,7 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
 
     @Override
     public void onChange() {
-        refreshDisplay();
-        setUpTimerIfPossible();
+        doRefreshDisplay.run();
     }
 
     private Runnable doRefreshDisplay = new Runnable() {
@@ -181,14 +176,14 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
         if (then != null) {
             long elapsed = new Date().getTime() - then.getTime();
             if (elapsed < AlarmManager.INTERVAL_HOUR) {
-                if (currentTimeOut == 0L || currentTimeOut != AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15 /*one minute*/) {
+                if (currentTimeOut != AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15 /*one minute*/) {
                     //reset timer.
                     Log.i(TAG, "rescheduling time to one minute");
                     scheduleTimer(AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15);
                 }
             } else if (elapsed < AlarmManager.INTERVAL_DAY) {
                 //reschedule timer
-                if (currentTimeOut == 0L || currentTimeOut != AlarmManager.INTERVAL_HOUR) {
+                if (currentTimeOut != AlarmManager.INTERVAL_HOUR) {
                     Log.i(TAG, "rescheduling time to one hour");
                     scheduleTimer(AlarmManager.INTERVAL_HOUR);
                 }
@@ -196,8 +191,6 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
                 Log.i(TAG, "canceling timer");
                 if (timer != null) timer.cancel();
             }
-        } else {
-            Log.i(TAG, "date is null");
         }
     }
 
