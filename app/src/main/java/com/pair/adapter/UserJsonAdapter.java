@@ -15,7 +15,6 @@ public class UserJsonAdapter implements BaseJsonAdapter<User> {
         JsonObject obj = new JsonObject();
         obj.addProperty("_id", user.get_id());
         obj.addProperty("name", user.getName());
-        obj.addProperty("password", user.getPassword());
         obj.addProperty("gcmRegId", user.getGcmRegId());
         obj.addProperty("DP", user.getDP());
         obj.addProperty("status", user.getStatus());

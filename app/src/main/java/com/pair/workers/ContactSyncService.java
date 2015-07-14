@@ -83,6 +83,9 @@ public class ContactSyncService extends IntentService {
         Realm realm = Realm.getInstance(this);
         realm.beginTransaction();
         try {
+            for (User user : users) {
+                user.setType(User.TYPE_NORMAL_USER);
+            }
             realm.copyToRealm(users);
             Log.i(TAG, "added " + users.size() + " new users");
             realm.commitTransaction();
