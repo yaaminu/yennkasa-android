@@ -34,13 +34,13 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
         if (GcmHelper.checkPlayServices(this)) {
             userManager = UserManager.getInstance(getApplication());
             User user = userManager.getMainUser();
             if (user == null) {
                 gotoSetUpActivity();
             } else {
+                setContentView(R.layout.activity_main);
                 drawer = (DrawerLayout) findViewById(R.id.drawer);
 
                 Fragment fragment = findFragment(Conversation.class.getSimpleName());
@@ -125,7 +125,7 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
                 }
                 break;
             case 3:
-                gotoProfileActivity(userManager.getMainUser().get_id());
+                UiHelpers.gotoProfileActivity(this, userManager.getMainUser().get_id());
                 return;
             default:
                 throw new AssertionError("impossible"); //redundant but safe
@@ -137,12 +137,6 @@ public class MainActivity extends ActionBarActivity implements SideBarFragment.M
         Bundle bundle = new Bundle();
         bundle.putString(ARG_TITLE, recommendedTitle);
         fragment.setArguments(bundle);
-    }
-
-    private void gotoProfileActivity(String id) {
-        Intent intent = new Intent(this, ProfileActivity.class);
-        intent.putExtra(ProfileActivity.EXTRA_USER_ID, id);
-        startActivity(intent);
     }
 
     private Fragment findFragment(String tag) {

@@ -26,10 +26,9 @@ public class RealmHelper {
     // FIXME: 6/16/2015 remove this helper class
     public static void runRealmOperation(final Context context) {
         //helper method for cleaning up realm and seeding it with data
+        //Realm.deleteRealmFile(context);
         Realm realm = Realm.getInstance(context);
         realm.beginTransaction();
-        realm.where(Message.class).findAll().clear();
-        realm.where(User.class).equalTo("type", User.TYPE_GROUP).findAll().clear();
         realm.commitTransaction();
         realm.close();
     }
@@ -83,7 +82,7 @@ public class RealmHelper {
             bundle.putString("message", jsonElement.toString());
             Intent intent = new Intent(context, MessageProcessor.class);
             intent.putExtras(bundle);
-            realm.where(Message.class).equalTo("to", user.get_id()).findAll().clear();
+            realm.where(Message.class).equalTo("to", user.get_id()).findAll();
             context.startService(intent);
         }
     }

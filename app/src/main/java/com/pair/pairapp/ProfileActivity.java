@@ -21,7 +21,7 @@ public class ProfileActivity extends ActionBarActivity {
         fragment.setArguments(bundle);
         getSupportFragmentManager()
                 .beginTransaction()
-                .add(R.id.container, fragment, null)
+                .replace(R.id.container, fragment)
                 .commit();
 
     }

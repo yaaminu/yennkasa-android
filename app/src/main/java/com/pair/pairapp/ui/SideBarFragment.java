@@ -13,9 +13,6 @@ import android.widget.ListView;
 import com.pair.data.User;
 import com.pair.pairapp.R;
 import com.pair.util.UserManager;
-import com.squareup.picasso.Picasso;
-
-import java.io.File;
 
 /**
  * @author Null-Pointer on 6/6/2015.
@@ -42,7 +39,7 @@ public class SideBarFragment extends ListFragment {
         View view = inflater.inflate(R.layout.side_bar_fragment, container, false);
         ImageView iv = ((ImageView) view.findViewById(R.id.iv_display_picture));
         User user = UserManager.INSTANCE.getMainUser();
-        Picasso.with(getActivity()).load(new File(user.getDP())).resize(150, 150).centerCrop().error(R.drawable.avatar_empty).into(iv);
+        // Picasso.with(getActivity()).load(new File(user.getDP())).resize(150, 150).centerCrop().error(R.drawable.avatar_empty).into(iv);
         items = getResources().getStringArray(R.array.menuItems);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_list_item_1, items);
         setListAdapter(adapter);

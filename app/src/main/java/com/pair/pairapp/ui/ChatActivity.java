@@ -40,6 +40,7 @@ import io.realm.Realm;
 import io.realm.RealmResults;
 
 
+@SuppressWarnings({"ConstantConditions", "FieldCanBeLocal"})
 public class ChatActivity extends ActionBarActivity implements View.OnClickListener {
     private static final int TAKE_PHOTO_REQUEST = 0x0;
     private static final int TAKE_VIDEO_REQUEST = 0x1;
@@ -135,6 +136,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         realm.commitTransaction();
     }
 
+    @SuppressWarnings("ConstantConditions")
     private void setUpSession() {
         //set up session
         String formatted = DateUtils.formatDateTime(this, new Date().getTime(), DateUtils.FORMAT_NUMERIC_DATE);
@@ -157,7 +159,11 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        menu.findItem(R.id.action_add_peers).setVisible(peer.getType() == User.TYPE_GROUP);
+        if (peer.getType() == User.TYPE_GROUP) {
+            User mainUser = UserManager.INSTANCE.getMainUser();
+            menu.findItem(R.id.action_add_peers).setVisible(peer.getAdmin().get_id().equals(mainUser.get_id()));
+            menu.findItem(R.id.action_peer_info).setTitle(R.string.st_group_info);
+        }
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -182,6 +188,10 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             intent.putExtra(FriendsActivity.EXTRA_ACTION, FriendsActivity.EXTRA_ACTION_ADD);
             intent.putExtra(FriendsActivity.EXTRA_GROUP_ID, peer.get_id());
             startActivity(intent);
+            return true;
+        } else if (id == R.id.action_peer_info) {
+            UiHelpers.gotoProfileActivity(this, peer.get_id());
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

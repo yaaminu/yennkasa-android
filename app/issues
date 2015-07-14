@@ -14,4 +14,9 @@
 # move the group related operations to its own class
 # change the schema of conversation
 # change the way we handle dps
-#code our own cache for picasso
+# ensure fragments retain their states //partly fixed
+# code our own cache for picasso
+# fix group problem with profile fragment
+# design interface
+# fix group fragment
+# change the copy constructor of the user DTO

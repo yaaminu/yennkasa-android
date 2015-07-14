@@ -12,4 +12,9 @@
         android:orderInCategory="100"
         android:title="@string/add_peers"
         app:showAsAction="never"/>
+    <item
+        android:id="@+id/action_peer_info"
+        android:orderInCategory="100"
+        android:title="@string/st_peer_info"
+        app:showAsAction="never"/>
 </menu>

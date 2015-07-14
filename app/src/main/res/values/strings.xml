@@ -58,4 +58,6 @@
     <string name="st_success">success</string>
     <string name="st_choose_a_different_image">This image is already your DP please choose a different one</string>
     <string name="st_error">Error</string>
+    <string name="st_peer_info">Peer Info</string>
+    <string name="st_group_info">Group Info</string>
 </resources>

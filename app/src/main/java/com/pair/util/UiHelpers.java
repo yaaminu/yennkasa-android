@@ -12,6 +12,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 
 import com.pair.data.ContactsManager;
+import com.pair.pairapp.ProfileActivity;
 import com.pair.pairapp.R;
 import com.pair.pairapp.ui.ChatActivity;
 
@@ -100,5 +101,11 @@ public class UiHelpers {
                             android.R.layout.simple_dropdown_item_1line, contacts);
             autoCompleteTextView.setAdapter(arrayAdapter);
         }
+    }
+
+    public static void gotoProfileActivity(Context context, String id) {
+        Intent intent = new Intent(context, ProfileActivity.class);
+        intent.putExtra(ProfileActivity.EXTRA_USER_ID, id);
+        context.startActivity(intent);
     }
 }

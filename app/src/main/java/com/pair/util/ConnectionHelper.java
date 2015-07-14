@@ -11,7 +11,6 @@ public class ConnectionHelper {
 
     @SuppressWarnings("unused")
     public static boolean isConnected() {
-
         Context context = Config.getApplicationContext();
         ConnectivityManager manager = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE));
         NetworkInfo networkInfo = manager.getActiveNetworkInfo();

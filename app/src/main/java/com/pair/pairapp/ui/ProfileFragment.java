@@ -68,7 +68,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     @Override
     public void onAttach(Activity activity) {
-        setRetainInstance(true);
         super.onAttach(activity);
     }
 
@@ -85,10 +84,9 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         ImageButton imageButton = (ImageButton) view.findViewById(R.id.ib_change_name);
         listHeading = ((TextView) view.findViewById(R.id.tv_list_heading));
         membersOrMutualGroupsList = ((ListView) view.findViewById(R.id.lv_members_list));
-
+        //end view hookup
 
         realm = Realm.getInstance(getActivity());
-        realm.addChangeListener(this);
         String id = getArguments().getString(ARG_USER_ID);
         user = realm.where(User.class).equalTo("_id", id).findFirst();
 
@@ -101,8 +99,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         //common to all
         userName.setText("@" + user.getName());
         displayPicture.setOnClickListener(ONDPCLICKED);
-        showDp();
-        if (userManager.isMainUser(user) || userManager.isAdmin(user.get_id(), userManager.getMainUser().get_id())) {
+        if (userManager.isMainUser(user) ||
+                (userManager.isGroup(user.get_id()) && userManager.isAdmin(user.get_id(), userManager.getMainUser().get_id()))) {
             changeDpButton.setVisibility(View.VISIBLE);
             imageButton.setVisibility(View.VISIBLE);
             imageButton.setOnClickListener(CHANGE_USERNAME);
@@ -121,12 +119,29 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         return view;
     }
 
+    @Override
+    public void onResume() {
+        realm.addChangeListener(this);
+        showDp();
+        super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        realm.removeChangeListener(this);
+        super.onPause();
+    }
+
     private void setUpViewSingleUserWay() {
         userPhone.setVisibility(View.VISIBLE);
         userPhone.append(user.get_id());
         listHeading.setText(R.string.st_mutual_groups);
-        final RealmResults<User> tmp = realm.where(User.class).equalTo("members._id", user.get_id()).findAll();
-        User[] results = realmResultsToArray(tmp);
+        final RealmResults<User> tmp = realm.where(User.class).equalTo("type", User.TYPE_GROUP).equalTo("members._id", user.get_id()).findAll();
+        User[] results = realmResultsToArray(tmp); // TODO: 7/12/2015 this might not scale!
+        resetAdapter(results);
+    }
+
+    private void resetAdapter(User[] results) {
         membersAdapter = new GroupsOrMembersAdapter(getActivity(), results);
         membersOrMutualGroupsList.setAdapter(membersAdapter);
     }
@@ -141,10 +156,14 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private void setUpViewsGroupWay() {
         userPhone.setVisibility(View.GONE);
         listHeading.setText(R.string.st_group_members);
-        User[] results = new User[user.getMembers().size()];
+        resetAdapter(getGroupMembers());
+    }
+
+    @NonNull
+    private User[] getGroupMembers() {
+        User[] results = new User[user.getMembers().size()]; // TODO: 7/12/2015 this might not scale!
         user.getMembers().toArray(results);
-        membersAdapter = new GroupsOrMembersAdapter(getActivity(), results);
-        membersOrMutualGroupsList.setAdapter(membersAdapter);
+        return results;
     }
 
     private void choosePicture() {
@@ -156,11 +175,14 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     @Override
     public void onChange() {
-        if (!isResumed()) //fragment not in layout
-            return;
-        userName.setText("@" + user.getName());
-        showDp();
-        //todo probably change status too and last activity
+        try {
+            userName.setText("@" + user.getName());
+            resetAdapter(getGroupMembers());
+            showDp();
+            //todo probably change status too and last activity
+        } catch (Exception lateUpdate) {//fragment no more in layout
+            Log.e(TAG, lateUpdate.getMessage(), lateUpdate.getCause());
+        }
     }
 
     private View.OnClickListener CHANGE_DP = new View.OnClickListener() {
@@ -214,7 +236,12 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     };
 
     private void showDp() {
-        Picasso.with(getActivity()).load(new File(user.getDP())).error(R.drawable.avatar_empty).resize(320, 200).into(displayPicture);
+        Log.i(TAG, user.getDP());
+        Picasso.with(getActivity())
+                .load(new File(user.getDP()))
+                .error(R.drawable.avatar_empty)
+                .resize(320, 150)
+                .into(displayPicture);
     }
 
     private final View.OnClickListener CHANGE_USERNAME = new View.OnClickListener() {
@@ -226,7 +253,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     @Override
     public void onDestroy() {
-        realm.removeChangeListener(this);
         realm.close();
         super.onDestroy();
     }

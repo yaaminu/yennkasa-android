@@ -5,6 +5,9 @@ import junit.framework.TestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
+
+import java.io.File;
 
 /**
  * @author Null-Pointer on 6/24/2015.
@@ -22,7 +25,11 @@ public class FileHelperTest extends TestCase {
 
     @Test
     public void testGetOutputUri() throws Exception {
-
+        File rootDir = new File("/mnt/sdcard/");
+        rootDir.mkdirs();
+        File file = Mockito.mock(File.class);
+        Mockito.when(file.getName()).thenReturn("fake stub");
+        assertEquals("mocked", "fake stub", file.getName());
     }
 
     @Test
