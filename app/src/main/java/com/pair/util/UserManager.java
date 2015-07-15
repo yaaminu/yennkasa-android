@@ -46,15 +46,8 @@ public class UserManager {
     public static final UserManager INSTANCE = new UserManager();
 
     private volatile int loginAttempts = 0,
-            signUpAttempts = 0, changeDpAttempts = 0,
-            refreshAttempts = 0,
-            getDpAttempts = 0,
-            createGroupAttempts = 0;
-    private volatile boolean loginSignUpBusy = false, //login or sign up never should run in parallel
-            dpChangeOperationRunning = false,
-            refreshOperationRunning = false,
-            getDpOperationRunning = false,
-            groupOperationRunning = false;
+            signUpAttempts = 0;
+    private volatile boolean loginSignUpBusy = false; //login or sign up never should run in parallel
     private final Exception NO_CONNECTION_ERROR = new Exception("not connected to the internet");
     private final BaseJsonAdapter<User> adapter = new UserJsonAdapter();
 
@@ -126,18 +119,19 @@ public class UserManager {
             callBack.done(new Exception("group already exist"));
             return;
         }
-        createGroupAttempts++;
         JsonObject requestBody = new JsonObject();
         requestBody.addProperty("name", groupName);
         requestBody.addProperty("createdBy", getMainUser().get_id());
         userApi.createGroup(requestBody, new Callback<User>() {
             @Override
             public void success(User group, Response response) {
-                createGroupAttempts = 0;
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
                 realm.beginTransaction();
                 group.setMembers(new RealmList<User>());//required for realm to behave
                 User mainUser = getMainUser(realm);
+                if (mainUser == null) {
+                    throw new IllegalStateException("no user logged in");
+                }
                 group.getMembers().add(mainUser);
                 group.setAdmin(mainUser);
                 group.setType(User.TYPE_GROUP);
@@ -150,10 +144,9 @@ public class UserManager {
             @Override
             public void failure(RetrofitError retrofitError) {
                 Exception e = handleError(retrofitError);
-                if (e == null && createGroupAttempts < 3) {
+                if (e == null) {
                     createGroup(groupName, callBack);
                 } else {
-                    createGroupAttempts = 0;
                     Log.i(TAG, "failed to create group");
                     callBack.done(e);
                 }
@@ -376,10 +369,6 @@ public class UserManager {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             return;
         }
-        if (refreshOperationRunning) {
-            return;
-        }
-        refreshOperationRunning = true;
         //update user here
         if (isGroup(userId)) {
             doRefreshGroup(userId);
@@ -387,8 +376,6 @@ public class UserManager {
             userApi.getUser(userId, new Callback<User>() {
                 @Override
                 public void success(User onlineUser, Response response) {
-                    refreshOperationRunning = false;
-                    refreshAttempts = 0;
                     Realm realm = Realm.getInstance(Config.getApplicationContext());
                     realm.beginTransaction();
                     User user = realm.where(User.class).equalTo("_id", userId).findFirst();
@@ -413,12 +400,10 @@ public class UserManager {
 
                 @Override
                 public void failure(RetrofitError retrofitError) {
-                    refreshOperationRunning = false;
                     Exception e = handleError(retrofitError);
-                    if (e == null && refreshAttempts < 3) {
+                    if (e == null) {
                         refreshUserDetails(userId);
                     } else {
-                        refreshAttempts = 0;
                         Log.i(TAG, "failed to refresh after 3 attempts");
                     }
                 }
@@ -492,10 +477,6 @@ public class UserManager {
             callback.done(NO_CONNECTION_ERROR);
             return;
         }
-        if (dpChangeOperationRunning) {
-            return;
-        }
-        dpChangeOperationRunning = true;
         final User user = getMainUser();
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         realm.beginTransaction();
@@ -503,12 +484,9 @@ public class UserManager {
         user.setPassword("d"); // FIXME: 6/24/2015 take out this line of code!
         realm.commitTransaction();
         realm.close();
-        changeDpAttempts++;
         userApi.changeDp(user.get_id(), new TypedFile("image/*", imageFile), new Callback<HttpResponse>() {
             @Override
             public void success(HttpResponse response, Response response2) {
-                dpChangeOperationRunning = false;
-                changeDpAttempts = 0;
                 final String newPath = new File(Config.APP_PROFILE_PICS_BASE_DIR, response.getMessage() + ".jpeg").getAbsolutePath(),
                         oldPath = user.getDP();
                 new Thread(new Runnable() {
@@ -522,13 +500,11 @@ public class UserManager {
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                dpChangeOperationRunning = false;
                 Exception e = handleError(retrofitError);
-                if (e == null && changeDpAttempts < 3) {
+                if (e == null) {
                     changeDp(imagePath, callback);
                 } else {
-                    changeDpAttempts = 0;
-                    callback.done(e == null ? retrofitError : e); //may be our fault but we have reach maximum retries
+                    callback.done(e); //may be our fault but we have reach maximum retries
                 }
             }
         });
@@ -553,11 +529,6 @@ public class UserManager {
             return;
         }
 
-        if (getDpOperationRunning) {
-            return;
-        }
-        getDpOperationRunning = true;
-        getDpAttempts++;
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         User user = realm.where(User.class).equalTo("_id", userId).findFirst();
 //        if (user.getType() == User.TYPE_GROUP) {
@@ -571,8 +542,6 @@ public class UserManager {
         userApi.getUserDp(userId, new Callback<Response>() {
             @Override
             public void success(Response response, Response response2) {
-                getDpOperationRunning = false;
-                getDpAttempts = 0;
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
                 try {
                     final InputStream in = response.getBody().in();
@@ -597,13 +566,11 @@ public class UserManager {
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                getDpOperationRunning = false;
                 Exception e = handleError(retrofitError);
-                if (e == null && getDpAttempts < 3) {
+                if (e == null) {
                     getUserDp(userId, callback);
                 } else {
-                    getDpAttempts = 0;
-                    callback.done(e == null ? retrofitError : e); //may be our fault but we have ran out of resources
+                    callback.done(e); //may be our fault but we have ran out of resources
                 }
             }
         });
@@ -648,7 +615,7 @@ public class UserManager {
                     doLogIn(user, callback);
                 } else {
                     loginAttempts = 0;
-                    callback.done(e == null ? retrofitError : e); //may be our fault but we have ran out of resources
+                    callback.done(e); //may be our fault but we have ran out of resources
                 }
             }
         });
@@ -685,7 +652,7 @@ public class UserManager {
                     signUp(user, callback);
                 } else {
                     signUpAttempts = 0;
-                    callback.done(e == null ? retrofitError : e); //may not be our fault but we have ran out of retries
+                    callback.done(e); //may not be our fault but we have ran out of retries
                 }
             }
         });

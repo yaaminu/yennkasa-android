@@ -206,7 +206,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 //check if we should really change the dp sometimes the user may pick the same
                 //file so we have to just tell the user everything is ok. but we will not make a call to our backend
                 if (user.getDP().equals(filePath)) {
-                    UiHelpers.showErrorDialog(getActivity(), getResources().getString(R.string.st_choose_a_different_image));
+                    // UiHelpers.showErrorDialog(getActivity(), getResources().getString(R.string.st_choose_a_different_image));
                     return;
                 }
                 showDp();

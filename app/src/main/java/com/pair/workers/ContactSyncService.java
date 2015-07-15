@@ -79,7 +79,6 @@ public class ContactSyncService extends IntentService {
             Log.i(TAG, "no new friend");
             return;
         }
-        Log.i(TAG, UserManager.INSTANCE.getMainUser().get_id());
         Realm realm = Realm.getInstance(this);
         realm.beginTransaction();
         try {
@@ -104,6 +103,7 @@ public class ContactSyncService extends IntentService {
         PendingIntent operation = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager manager = ((AlarmManager) context.getSystemService(Context.ALARM_SERVICE));
         long now = 1;
+        //noinspection ConstantConditions
         manager.setRepeating(AlarmManager.ELAPSED_REALTIME, now, AlarmManager.INTERVAL_HOUR, operation); //start now
     }
 }
