@@ -159,11 +159,9 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        if (peer.getType() == User.TYPE_GROUP) {
-            User mainUser = UserManager.INSTANCE.getMainUser();
-            menu.findItem(R.id.action_add_peers).setVisible(peer.getAdmin().get_id().equals(mainUser.get_id()));
-            menu.findItem(R.id.action_peer_info).setTitle(R.string.st_group_info);
-        }
+        User mainUser = UserManager.INSTANCE.getMainUser();
+        menu.findItem(R.id.action_add_peers).setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().get_id().equals(mainUser.get_id()));
+        menu.findItem(R.id.action_peer_info).setTitle((peer.getType() == User.TYPE_GROUP) ? R.string.st_group_info : R.string.st_peer_info);
         return super.onPrepareOptionsMenu(menu);
     }
 

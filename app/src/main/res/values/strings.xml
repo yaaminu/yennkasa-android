@@ -24,10 +24,10 @@
     <string name="action_delete_conversation">delete</string>
     <string name="title_pick_contact">Pick a contact</string>
     <string name="action_attach">attach</string>
-    <string name="error_sory_no_application_to_open_file">sorry no application to open file type</string>
+    <string name="error_sorry_no_application_to_open_file">sorry no application to open file type</string>
     <string name="action_refresh">Refresh</string>
-    <string name="title_activity_profile">ProfileActivity</string>
-    <string name="error_occured">sorry an error occurred</string>
+    <string name="title_activity_profile">User Profile</string>
+    <string name="error_occurred">sorry an error occurred</string>
     <string name="error_canceled">Canceled</string>
     <string name="dp_changed_successfully">DP changed successfully</string>
     <string name="error_invalid_bitmap_file">please chose a valid image file</string>

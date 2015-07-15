@@ -15,7 +15,6 @@ import retrofit.http.GET;
 import retrofit.http.POST;
 import retrofit.http.PUT;
 import retrofit.http.Path;
-import retrofit.http.Streaming;
 import retrofit.mime.TypedFile;
 
 /**
@@ -35,16 +34,11 @@ public interface UserApi {
     @GET("/api/v1/users/{id}")
     void getUser(@Path("id") String id, Callback<User> response);
 
-    @Streaming
-    @GET("/api/v1/users/{id}/dp")
-    void getUserDp(@Path("id") String id, Callback<Response> response);
-
     @GET("/api/v1/users/{id}/groups")
     void getGroups(@Path("id") String id, Callback<List<User>> response);
 
-
-    @PUT("/api/v1/users/{id}/dp")
-    void changeDp(@Path("id") String id, @Body TypedFile file, Callback<HttpResponse> response);
+    @PUT("/api/v1/{placeHolder}/{id}/dp")
+    void changeDp(@Path("placeHolder") String userOrGroup, @Path("id") String id, @Body TypedFile file, Callback<HttpResponse> response);
 
     @POST("/api/v1/groups/")
     void createGroup(@Body JsonObject group, Callback<User> response);

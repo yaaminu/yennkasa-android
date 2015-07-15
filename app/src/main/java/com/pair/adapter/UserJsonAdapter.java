@@ -16,11 +16,10 @@ public class UserJsonAdapter implements BaseJsonAdapter<User> {
         obj.addProperty("_id", user.get_id());
         obj.addProperty("name", user.getName());
         obj.addProperty("gcmRegId", user.getGcmRegId());
-        obj.addProperty("DP", user.getDP());
+        obj.addProperty("password", user.getPassword());
         obj.addProperty("status", user.getStatus());
         obj.addProperty("lastActivity", user.getLastActivity());
         obj.addProperty("accountCreatedAt", user.getAccountCreated());
-        ;
         return obj;
     }
 

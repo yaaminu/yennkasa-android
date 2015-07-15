@@ -168,7 +168,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
                     try {
                         context.startActivity(intent);
                     } catch (ActivityNotFoundException e) {
-                        Toast.makeText(context, R.string.error_sory_no_application_to_open_file, Toast.LENGTH_LONG).show();
+                        Toast.makeText(context, R.string.error_sorry_no_application_to_open_file, Toast.LENGTH_LONG).show();
                     }
                 }
             };

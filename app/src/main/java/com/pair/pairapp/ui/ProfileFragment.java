@@ -23,12 +23,11 @@ import android.widget.TextView;
 
 import com.pair.data.User;
 import com.pair.pairapp.R;
+import com.pair.util.Config;
 import com.pair.util.FileHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 import com.squareup.picasso.Picasso;
-
-import java.io.File;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
@@ -38,20 +37,17 @@ import io.realm.RealmResults;
 /**
  * A simple {@link Fragment} subclass.
  */
+@SuppressWarnings("FieldCanBeLocal")
 public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     public static final String ARG_USER_ID = "user_id";
     public static final String TAG = ProfileFragment.class.getSimpleName();
     private static final int PICK_PHOTO_REQUEST = 0x3e9;
+    @SuppressWarnings("SpellCheckingInspection")
     private final View.OnClickListener ONDPCLICKED = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            final File file = new File(user.getDP());
-            if (file.exists()) {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.fromFile(file), "image/*");
-                startActivity(intent);
-            }
+            // TODO: 7/15/2015 fix this
         }
     };
     private ImageView displayPicture;
@@ -99,8 +95,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         //common to all
         userName.setText("@" + user.getName());
         displayPicture.setOnClickListener(ONDPCLICKED);
-        if (userManager.isMainUser(user) ||
-                (userManager.isGroup(user.get_id()) && userManager.isAdmin(user.get_id(), userManager.getMainUser().get_id()))) {
+        if (userManager.isGroup(user.get_id()) && userManager.isAdmin(user.get_id(), userManager.getMainUser().get_id())) {
             changeDpButton.setVisibility(View.VISIBLE);
             imageButton.setVisibility(View.VISIBLE);
             imageButton.setOnClickListener(CHANGE_USERNAME);
@@ -136,9 +131,13 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         userPhone.setVisibility(View.VISIBLE);
         userPhone.append(user.get_id());
         listHeading.setText(R.string.st_mutual_groups);
+        setUpMutualMembers();
+    }
+
+    private void setUpMutualMembers() {
         final RealmResults<User> tmp = realm.where(User.class).equalTo("type", User.TYPE_GROUP).equalTo("members._id", user.get_id()).findAll();
-        User[] results = realmResultsToArray(tmp); // TODO: 7/12/2015 this might not scale!
-        resetAdapter(results);
+        // TODO: 7/12/2015 this might not scale!
+        resetAdapter(realmResultsToArray(tmp));
     }
 
     private void resetAdapter(User[] results) {
@@ -156,11 +155,11 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private void setUpViewsGroupWay() {
         userPhone.setVisibility(View.GONE);
         listHeading.setText(R.string.st_group_members);
-        resetAdapter(getGroupMembers());
+        resetAdapter(setUpGroupMembers());
     }
 
     @NonNull
-    private User[] getGroupMembers() {
+    private User[] setUpGroupMembers() {
         User[] results = new User[user.getMembers().size()]; // TODO: 7/12/2015 this might not scale!
         user.getMembers().toArray(results);
         return results;
@@ -177,7 +176,11 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     public void onChange() {
         try {
             userName.setText("@" + user.getName());
-            resetAdapter(getGroupMembers());
+            if (UserManager.INSTANCE.isGroup(user.get_id())) {
+                setUpGroupMembers();
+            } else {
+                setUpMutualMembers();
+            }
             showDp();
             //todo probably change status too and last activity
         } catch (Exception lateUpdate) {//fragment no more in layout
@@ -203,19 +206,13 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 } else {
                     filePath = uri.getPath();
                 }
-                //check if we should really change the dp sometimes the user may pick the same
-                //file so we have to just tell the user everything is ok. but we will not make a call to our backend
-                if (user.getDP().equals(filePath)) {
-                    // UiHelpers.showErrorDialog(getActivity(), getResources().getString(R.string.st_choose_a_different_image));
-                    return;
-                }
                 showDp();
                 UserManager userManager = UserManager.INSTANCE;
                 dpChangeProgress = new ProgressDialog(getActivity());
                 dpChangeProgress.setMessage(getResources().getString(R.string.st_please_wait));
                 dpChangeProgress.setCancelable(false);
                 dpChangeProgress.show();
-                userManager.changeDp(filePath, DP_CALLBACK);
+                userManager.changeDp(user.get_id(), filePath, DP_CALLBACK);
 
             }
         }
@@ -227,7 +224,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         public void done(Exception e) {
             dpChangeProgress.dismiss();
             if (e == null) {
-                Log.i(TAG, user.getDP());
                 showDp();
             } else {
                 UiHelpers.showErrorDialog(getActivity(), e.getMessage());
@@ -236,9 +232,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     };
 
     private void showDp() {
-        Log.i(TAG, user.getDP());
         Picasso.with(getActivity())
-                .load(new File(user.getDP()))
+                .load(Config.DP_ENDPOINT + "/" + user.get_id())
                 .error(R.drawable.avatar_empty)
                 .resize(320, 150)
                 .into(displayPicture);
@@ -267,6 +262,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             if (convertView == null) {
+                //noinspection ConstantConditions
                 convertView = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
             }
             ((TextView) convertView).setText(getItem(position).getName());

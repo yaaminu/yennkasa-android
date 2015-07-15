@@ -21,8 +21,6 @@ import org.apache.http.HttpStatus;
 
 import java.io.EOFException;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.util.List;
 
@@ -105,9 +103,9 @@ public class UserManager {
 
     }
 
-    public boolean isMainUser(User user) {
+    public boolean isMainUser(String userId) {
         User thisUser = getMainUser();
-        return ((!(user == null || thisUser == null)) && thisUser.get_id().equals(user.get_id()));
+        return ((!(userId == null || thisUser == null)) && thisUser.get_id().equals(userId));
     }
 
     public void createGroup(final String groupName, final CallBack callBack) {
@@ -285,7 +283,6 @@ public class UserManager {
                 }
                 Log.i(TAG, "members of " + g.getName() + " are: " + g.getMembers().size());
                 realm.close();
-                getGroupDp(id); //async // FIXME: 6/29/2015 implement this method
             }
 
             @Override
@@ -295,10 +292,6 @@ public class UserManager {
                 }
             }
         });
-    }
-
-    private void getGroupDp(String id) {
-
     }
 
     public void refreshGroup(final String id) {
@@ -321,7 +314,6 @@ public class UserManager {
                 realm.beginTransaction();
                 if (staleGroup != null) {
                     staleGroup.setName(group.getName());
-                    staleGroup.setDP(group.getDP());
                 } else {
                     group.setType(User.TYPE_GROUP);
                     group.setMembers(new RealmList<User>());
@@ -382,19 +374,7 @@ public class UserManager {
                     user.setLastActivity(onlineUser.getLastActivity());
                     user.setStatus(onlineUser.getStatus());
                     user.setName(onlineUser.getName());
-                    String dp = new File(Config.APP_PROFILE_PICS_BASE_DIR, onlineUser.getDP() + ".jpeg").getAbsolutePath();
-
-                    if (!dp.equals(user.getDP())) { //new dp!
-                        user.setDP(dp);
-                    }
                     realm.commitTransaction();
-                    if (!new File(user.getDP()).exists()) {
-                        getUserDp(userId, new CallBack() {
-                            @Override
-                            public void done(Exception e) {
-                            }
-                        });
-                    }
                     realm.close();
                 }
 
@@ -440,7 +420,6 @@ public class UserManager {
                     User staleGroup = realm.where(User.class).equalTo("_id", group.get_id()).findFirst();
                     if (staleGroup != null) { //already exist just update
                         staleGroup.setName(group.getName()); //admin might have changed name
-                        staleGroup.setDP(group.getDP());
                         staleGroup.setType(User.TYPE_GROUP);
                     } else { //new group
                         // because the json returned from our backend is not compatible with our schema here
@@ -467,110 +446,39 @@ public class UserManager {
         });
     }
 
-    public void changeDp(final String imagePath, final CallBack callback) {
+    public void changeDp(String imagePath, CallBack callBack) {
+        this.changeDp(getMainUser().get_id(), imagePath, callBack);
+    }
+
+    public void changeDp(final String userId, final String imagePath, final CallBack callback) {
         File imageFile = new File(imagePath);
         if (!imageFile.exists()) {
-            callback.done(new Exception("path " + imagePath + " does not exist"));
+            callback.done(new Exception("file " + imagePath + " does not exist"));
             return;
         }
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
         }
-        final User user = getMainUser();
         Realm realm = Realm.getInstance(Config.getApplicationContext());
-        realm.beginTransaction();
-        user.setDP(imagePath);
-        user.setPassword("d"); // FIXME: 6/24/2015 take out this line of code!
-        realm.commitTransaction();
+        final User user = realm.where(User.class).equalTo("_id", userId).findFirst();
+        if (user == null) {
+            throw new IllegalArgumentException("user does not exist");
+        }
+        String placeHolder = user.getType() == User.TYPE_GROUP ? "groups" : "users";
         realm.close();
-        userApi.changeDp(user.get_id(), new TypedFile("image/*", imageFile), new Callback<HttpResponse>() {
+        userApi.changeDp(placeHolder, userId, new TypedFile("image/*", imageFile), new Callback<HttpResponse>() {
             @Override
             public void success(HttpResponse response, Response response2) {
-                final String newPath = new File(Config.APP_PROFILE_PICS_BASE_DIR, response.getMessage() + ".jpeg").getAbsolutePath(),
-                        oldPath = user.getDP();
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateDpPath(oldPath, newPath);
-                    }
-                }).start();
                 callback.done(null);
             }
-
             @Override
             public void failure(RetrofitError retrofitError) {
                 Exception e = handleError(retrofitError);
                 if (e == null) {
-                    changeDp(imagePath, callback);
+                    changeDp(imagePath, callback); //retry
                 } else {
                     callback.done(e); //may be our fault but we have reach maximum retries
-                }
-            }
-        });
-    }
-
-    private void updateDpPath(String oldPath, String newPath) {
-        try {
-
-            FileHelper.copyTo(oldPath, newPath);
-        } catch (IOException e) {
-            if (BuildConfig.DEBUG) {
-                Log.e(TAG, e.getMessage(), e.getCause());
-            } else {
-                Log.e(TAG, e.getMessage());
-            }
-        }
-    }
-
-    private void getUserDp(final String userId, final CallBack callback) {
-        if (!ConnectionHelper.isConnectedOrConnecting()) {
-            callback.done(NO_CONNECTION_ERROR);
-            return;
-        }
-
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
-        User user = realm.where(User.class).equalTo("_id", userId).findFirst();
-//        if (user.getType() == User.TYPE_GROUP) {
-//
-//        }
-        realm.close();
-        doGetUserDp(userId, callback);
-    }
-
-    private void doGetUserDp(final String userId, final CallBack callback) {
-        userApi.getUserDp(userId, new Callback<Response>() {
-            @Override
-            public void success(Response response, Response response2) {
-                Realm realm = Realm.getInstance(Config.getApplicationContext());
-                try {
-                    final InputStream in = response.getBody().in();
-                    User user = realm.where(User.class).equalTo("_id", userId).findFirst();
-                    if (user == null) {
-                        throw new IllegalArgumentException("user does not exist");
-                    }
-                    File profileFile = new File(user.getDP());
-                    FileHelper.save(profileFile, in);
-                    callback.done(null);
-                } catch (IOException e) {
-                    if (BuildConfig.DEBUG) {
-                        Log.e(TAG, e.getMessage(), e.getCause());
-                    } else {
-                        Log.e(TAG, e.getMessage());
-                    }
-                    callback.done(e);
-                } finally {
-                    realm.close();
-                }
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-                Exception e = handleError(retrofitError);
-                if (e == null) {
-                    getUserDp(userId, callback);
-                } else {
-                    callback.done(e); //may be our fault but we have ran out of resources
                 }
             }
         });
@@ -733,7 +641,7 @@ public class UserManager {
 
     // FIXME: 6/25/2015 find a sensible place to keep this error handler so that message dispatcher and others can share it
     private Exception handleError(RetrofitError retrofitError) {
-        if (retrofitError.getCause() instanceof SocketTimeoutException) { //likely that no user turned on data but no plan
+        if (retrofitError.getCause() instanceof SocketTimeoutException) { //likely that  user turned on data but no plan
             return NO_CONNECTION_ERROR;
         } else if (retrofitError.getCause() instanceof EOFException) { //usual error when we try to connect first time after server startup
             Log.w(TAG, "EOF_EXCEPTION trying again");
@@ -759,7 +667,7 @@ public class UserManager {
             if (ConnectionHelper.isConnectedOrConnecting()) {
                 return null;
             }
-            //bubble up error and empty send queue let callers re-dispatch messages again;
+            //bubble up error and empty
             Log.w(TAG, "no network connection, aborting");
             return NO_CONNECTION_ERROR;
         }
