@@ -112,7 +112,7 @@ public class UserManager {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callBack.done(NO_CONNECTION_ERROR);
         }
-        if (isUser(User.generateId(groupName))) {
+        if (isUser(User.generateGroupId(groupName))) {
             //already exist[
             callBack.done(new Exception("group already exist"));
             return;

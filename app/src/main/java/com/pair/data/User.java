@@ -38,6 +38,7 @@ public class User extends RealmObject {
     }
 
     //copy constructor
+    @Deprecated
     public User(User other) {
         //realm forces us to use setters and getters everywhere for predictable results
         //null check because is good not to throw in constructors(not so sure if its true)
@@ -135,7 +136,26 @@ public class User extends RealmObject {
         this.members = members;
     }
 
-    public static String generateId(String groupName) {
+    public static User copy(User other) {
+        if (other == null) {
+            throw new IllegalArgumentException("null!");
+        }
+
+        User clone = new User();
+        clone.set_id(other.get_id());
+        clone.setAccountCreated(other.getAccountCreated());
+        clone.setGcmRegId(other.getGcmRegId());
+        clone.setPassword(other.getPassword());
+        clone.setStatus(other.getStatus());
+        clone.setLastActivity(other.getLastActivity());
+        clone.setName(other.getName());
+        clone.setType(other.getType());
+        clone.setAdmin(other.getAdmin());
+        clone.setMembers(other.getMembers());
+        return clone;
+    }
+
+    public static String generateGroupId(String groupName) {
         return groupName + "@" + UserManager.INSTANCE.getMainUser().get_id();
     }
 

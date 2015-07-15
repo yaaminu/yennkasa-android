@@ -86,7 +86,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         String id = getArguments().getString(ARG_USER_ID);
         user = realm.where(User.class).equalTo("_id", id).findFirst();
 
-        if (user == null) {
+        if (user == null || UserManager.INSTANCE.isMainUser(id)) {
             Log.wtf(TAG, "invalid user id passed");
             throw new IllegalArgumentException("invalid user id");
         }

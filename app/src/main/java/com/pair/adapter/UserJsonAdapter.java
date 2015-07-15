@@ -7,7 +7,7 @@ import com.pair.data.User;
 import java.util.Collection;
 
 /**
- * Created by Null-Pointer on 5/27/2015.
+ * @author Null-Pointer on 5/27/2015.
  */
 public class UserJsonAdapter implements BaseJsonAdapter<User> {
     @Override

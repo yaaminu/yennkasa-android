@@ -1,9 +1,9 @@
 /************* things that can wait************************************/
 
 # logout users from backend when they choose to logout
-# code our own errorhandler that we will pass to retrofit
+# code our own errorHandler that we will pass to retrofit
 # add call support
-# add group chat //partly complete
+# add group chat //complete
 # decouple  the notification component from message processor
 # fix the timer issue in conversation fragment //fixed
 # give control to users so that they can change their dps,names,statuses etc. //partly fixed
@@ -11,12 +11,11 @@
 # implement synchronous version of all our network calls for background services to use
 # declare all field names of models as constants so that realm queries will be neat
 # write test for some of the classes. I know it should have been the first thing to do
-# move the group related operations to its own class
 # change the schema of conversation
-# change the way we handle dps
+# change the way we handle dps //fixed
 # ensure fragments retain their states //partly fixed
 # code our own cache for picasso
-# fix group problem with profile fragment
+# fix group problem with profile fragment //fixed
 # design interface
-# fix group fragment
-# change the copy constructor of the user DTO
+# fix group fragment //fixed
+# change the copy constructor of the user DTO //fixed
