@@ -4,11 +4,14 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.pair.data.User;
 import com.pair.pairapp.R;
+import com.pair.util.Config;
 import com.pair.util.UserManager;
+import com.squareup.picasso.Picasso;
 
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmList;
@@ -27,15 +30,21 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
         ViewHolder holder;
         User group = getItem(position);
         if (convertView == null) {
+            //noinspection ConstantConditions
             convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.group_list_item, parent, false);
             holder = new ViewHolder();
             holder.groupName = ((TextView) convertView.findViewById(R.id.tv_user_name));
             holder.groupMembers = ((TextView) convertView.findViewById(R.id.tv_group_members));
+            holder.groupIcon = (ImageView) convertView.findViewById(R.id.iv_group_dp);
             convertView.setTag(holder);
         } else {
             holder = ((ViewHolder) convertView.getTag());
         }
         holder.groupName.setText(group.getName());
+        Picasso.with(parent.getContext())
+                .load(Config.DP_ENDPOINT + "/" + group.get_id())
+                .error(R.drawable.avatar_empty)
+                .into(holder.groupIcon);
         holder.groupId = group.get_id(); //adapters will use this
         RealmList<User> groupMembers = group.getMembers();
         User mainUser = UserManager.INSTANCE.getMainUser();
@@ -46,9 +55,6 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
             if (!groupMember.get_id().equals(mainUser.get_id())) {
                 members.append(",").append(groupMember.getName());
             }
-            if ((i + 1) == groupMembers.size()) {
-                continue;
-            }
         }
         holder.groupMembers.setText(members.toString());
         return convertView;
@@ -57,6 +63,7 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
     public class ViewHolder {
         private TextView groupName,
                 groupMembers;
+        private ImageView groupIcon;
         public String groupId;
     }
 }
