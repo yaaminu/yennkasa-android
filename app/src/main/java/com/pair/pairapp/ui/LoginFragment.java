@@ -80,7 +80,7 @@ public class LoginFragment extends Fragment {
             public void onClick(View v) {
                 if (busy)
                     return;
-                getFragmentManager().beginTransaction().replace(R.id.container, new SignUpFragment(), SetUpActivity.f_TAG).addToBackStack(null).commit();
+                getFragmentManager().beginTransaction().replace(R.id.container, new SignupFragment(), SetUpActivity.f_TAG).addToBackStack(null).commit();
             }
         });
 

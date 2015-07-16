@@ -16,9 +16,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.pair.adapter.MessagesAdapter;
@@ -39,9 +41,11 @@ import java.util.Date;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
+import static com.pair.data.Message.TYPE_DATE_MESSAGE;
+
 
 @SuppressWarnings({"ConstantConditions", "FieldCanBeLocal"})
-public class ChatActivity extends ActionBarActivity implements View.OnClickListener {
+public class ChatActivity extends ActionBarActivity implements View.OnClickListener, AbsListView.OnScrollListener {
     private static final int TAKE_PHOTO_REQUEST = 0x0;
     private static final int TAKE_VIDEO_REQUEST = 0x1;
     private static final int PICK_PHOTO_REQUEST = 0x2;
@@ -58,6 +62,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private ListView messagesListView;
     private EditText editText;
     private Button sendButton;
+    private TextView dateHeader;
     private Dispatcher<Message> dispatcher;
     private boolean bound = false;
     private MessagesAdapter adapter;
@@ -80,11 +85,14 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        realm = Realm.getInstance(this);
         setContentView(R.layout.activity_chat);
+        realm = Realm.getInstance(this);
         editText = ((EditText) findViewById(R.id.et_inputMsg));
         sendButton = ((Button) findViewById(R.id.btn_send));
+        messagesListView = ((ListView) findViewById(R.id.lv_messages));
+        dateHeader = ((TextView) findViewById(R.id.tv_header_date));
         sendButton.setOnClickListener(this);
+
 
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
@@ -97,8 +105,8 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         messages = realm.where(Message.class).equalTo("from", peer.get_id()).or().equalTo("to", peer.get_id()).findAllSorted("dateComposed", true);
         getConversation(peerId);
         adapter = new MessagesAdapter(this, messages, true);
-        messagesListView = ((ListView) findViewById(R.id.lv_messages));
         messagesListView.setAdapter(adapter);
+        messagesListView.setOnScrollListener(this);
     }
 
     @Override
@@ -141,7 +149,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         //set up session
         String formatted = DateUtils.formatDateTime(this, new Date().getTime(), DateUtils.FORMAT_NUMERIC_DATE);
         Message message = realm.where(Message.class)
-                .equalTo("type", Message.TYPE_DATE_MESSAGE)
+                .equalTo("type", TYPE_DATE_MESSAGE)
                 .equalTo("to", peer.get_id())
                 .equalTo("messageBody", formatted)
                 .findFirst();
@@ -152,7 +160,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             message.setMessageBody(formatted);
             message.setTo(peer.get_id());
             message.setDateComposed(new Date());
-            message.setType(Message.TYPE_DATE_MESSAGE);
+            message.setType(TYPE_DATE_MESSAGE);
             realm.commitTransaction();
         }
     }
@@ -412,6 +420,30 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
                 break;
             default:
                 throw new AssertionError("impossible");
+        }
+    }
+
+    @Override
+    public void onScrollStateChanged(AbsListView view, int scrollState) {
+    }
+
+    @Override
+    public void onScroll(AbsListView view, final int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+        //check if the members have filled the screen
+        if (firstVisibleItem == 0) { //first item
+            dateHeader.setVisibility(View.GONE);
+            return;
+        }
+        if (visibleItemCount < totalItemCount && firstVisibleItem > 0) {
+            dateHeader.setVisibility(View.VISIBLE);
+            for (int i = firstVisibleItem; i >= 0; i--) { //loop backwards
+                final Message message = messages.get(i);
+                if (message.getType() == TYPE_DATE_MESSAGE) {
+                    dateHeader.setText(message.getMessageBody());
+                    return;
+                }
+            }
+            throw new AssertionError("impossible");
         }
     }
 }

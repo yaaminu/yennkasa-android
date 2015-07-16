@@ -26,7 +26,7 @@ import com.pair.workers.ContactSyncService;
 /**
  * @author by Null-Pointer on 5/28/2015.
  */
-public class SignUpFragment extends Fragment {
+public class SignupFragment extends Fragment {
 
     private EditText passWordEt,userNameEt;
     private AutoCompleteTextView phoneNumberEt;
@@ -61,7 +61,7 @@ public class SignUpFragment extends Fragment {
         }
     };
 
-    public SignUpFragment() {
+    public SignupFragment() {
     }
 
     @Override

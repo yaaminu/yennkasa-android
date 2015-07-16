@@ -34,8 +34,10 @@ import io.realm.RealmResults;
 /**
  * @author Null-Pointer on 5/31/2015.
  */
+@SuppressWarnings("ConstantConditions")
 public class MessagesAdapter extends RealmBaseAdapter<Message> {
     private static final String TAG = MessagesAdapter.class.getSimpleName();
+    private static String TOP_MOST_DATE = "no date";
     private static final long ONE_MINUTE = AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15;
     private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2, DATE_MESSAGE = 0x0;
     private final LruCache<String, Bitmap> imageCaches;
@@ -208,12 +210,11 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
                 }
             }
         }
-//        (hideDate == true)?
-//                (holder.dateComposed.setVisibility(View.GONE)):
-//        (doNotCollapse(holder, formattedDate));
+
         if (hideDate) {
             hideViews(holder.dateComposed);
         } else {
+            //noinspection ConstantConditions
             doNotCollapse(holder, formattedDate);
         }
 
