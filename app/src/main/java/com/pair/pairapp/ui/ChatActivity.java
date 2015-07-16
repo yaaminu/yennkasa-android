@@ -434,7 +434,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             dateHeader.setVisibility(View.GONE);
             return;
         }
-        if (visibleItemCount < totalItemCount && firstVisibleItem > 0) {
+        if (visibleItemCount != 0 && visibleItemCount < totalItemCount && firstVisibleItem > 0) {
             dateHeader.setVisibility(View.VISIBLE);
             for (int i = firstVisibleItem; i >= 0; i--) { //loop backwards
                 final Message message = messages.get(i);

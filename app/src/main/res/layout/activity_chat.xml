@@ -1,32 +1,40 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:id="@+id/container"
+<LinearLayout
+    android:id="@+id/container"
+    xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:background="@color/white"
               android:orientation="vertical">
 
     <TextView
+        android:id="@+id/tv_header_date"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:background="@drawable/bg_date"
         android:gravity="center"
+        android:layout_marginTop="5dp"
         android:maxWidth="100dp"
         android:padding="5dp"
-        android:background="@drawable/bg_date"
         android:textColor="@color/title_gray"
-        android:id="@+id/tv_header_date"
-        android:visibility="gone"
-        android:layout_gravity="center_horizontal"
-        android:textSize="12sp"/>
-    <ListView
-        android:id="@+id/lv_messages"
-        android:layout_width="fill_parent"
+        android:textSize="12sp"
+        android:visibility="gone"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_weight="1">
+
+        <ListView
+        android:id="@+id/lv_messages"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:background="@null"
         android:divider="@null"
         android:scrollbars="none"
         android:stackFromBottom="true"
-        android:transcriptMode="alwaysScroll" />
+        android:transcriptMode="alwaysScroll"/>
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/llMsgCompose"
@@ -42,12 +50,11 @@
             android:layout_height="fill_parent"
             android:layout_weight="4"
             android:background="@color/bg_msg_input"
-            android:paddingLeft="6dp"
             android:inputType="text"
+            android:imeActionLabel="@string/send"
+            android:paddingLeft="6dp"
             android:paddingRight="6dp"
             android:textColor="@color/text_msg_input">
-
-            <requestFocus />
         </EditText>
 
         <Button
@@ -57,7 +64,7 @@
             android:layout_weight="1"
             android:background="@color/bg_btn_join"
             android:text="@string/send"
-            android:textColor="@color/white" />
+            android:textColor="@color/white"/>
     </LinearLayout>
 
 </LinearLayout>
