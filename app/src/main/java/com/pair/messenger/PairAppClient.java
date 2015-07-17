@@ -125,7 +125,7 @@ public class PairAppClient extends Service {
         public void onSendSucceeded(final String messageId) {
             Realm realm = Realm.getInstance(PairAppClient.this);
             realm.beginTransaction();
-            Message message = realm.where(Message.class).equalTo("id", messageId).findFirst();
+            Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
             if (message != null) {
                 message.setState(Message.STATE_SENT);
             }
@@ -158,7 +158,7 @@ public class PairAppClient extends Service {
             public void run() {
                 Looper.prepare(); //ensure our query is updated while we run
                 Realm realm = Realm.getInstance(PairAppClient.this);
-                RealmResults<Message> messages = realm.where(Message.class).notEqualTo("type", Message.TYPE_DATE_MESSAGE).equalTo("state", Message.STATE_PENDING).findAll();
+                RealmResults<Message> messages = realm.where(Message.class).notEqualTo(Message.FIELD_TYPE, Message.TYPE_DATE_MESSAGE).equalTo(Message.FIELD_STATE, Message.STATE_PENDING).findAll();
                 if (messages.size() < 1) {
                     Log.d(TAG, "all messages sent");
                     realm.close();

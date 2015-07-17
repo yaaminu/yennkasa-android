@@ -78,7 +78,7 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
     private void refreshDisplay() {
         supportInvalidateOptionsMenu();
         Realm realm = Realm.getInstance(this);
-        User group = realm.where(User.class).equalTo("_id", groupId).findFirst();
+        User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
         final List<String> membersId = User.aggregateUserIds(group.getMembers(), null);
         realm.close();
         final ContactsManager.Filter<ContactsManager.Contact> filter = new ContactsManager.Filter<ContactsManager.Contact>() {

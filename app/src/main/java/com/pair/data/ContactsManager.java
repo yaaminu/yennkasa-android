@@ -80,7 +80,7 @@ public class ContactsManager {
             if (TextUtils.isEmpty(name)) {
                 name = "No name";
             }
-            User user = realm.where(User.class).equalTo("_id", phoneNumber).findFirst();
+            User user = realm.where(User.class).equalTo(User.FIELD_ID, phoneNumber).findFirst();
             boolean isRegistered = false;
             String status = "";
             if (user != null) {

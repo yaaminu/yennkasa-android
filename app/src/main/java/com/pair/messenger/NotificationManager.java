@@ -8,13 +8,11 @@ import android.graphics.Color;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Handler;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.pair.data.Message;
-import com.pair.pairapp.ui.ChatActivity;
 import com.pair.util.Config;
 
 /**
@@ -30,7 +28,7 @@ class NotificationManager {
         if (Config.isChatRoomOpen()) {
             // TODO: 6/14/2015 give title and description of notification based on type of message
 
-            //TODO use a croutin style notification, for now we show a toast
+            //TODO use a snackbar style notification, for now we show a toast
             Toast.makeText(Config.getApplicationContext(), message.getFrom() + " : " + message.getMessageBody(), Toast.LENGTH_LONG).show();
         } else {
             PendingIntent pendingIntent = PendingIntent.getActivity(Config.getApplicationContext(),
@@ -78,16 +76,4 @@ class NotificationManager {
         }
     }
 
-    @SuppressWarnings("unused")
-    private void scheduleFakeNotification(final Message message) {
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Intent intent = new Intent(Config.getApplicationContext(), ChatActivity.class);
-                intent.putExtra(ChatActivity.EXTRA_PEER_ID, message.getFrom());
-                NotificationManager.INSTANCE.onNewMessage(message, intent);
-            }
-        }, 1000);
-    }
 }

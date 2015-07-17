@@ -59,7 +59,7 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
         View view = inflater.inflate(R.layout.fragment_inbox, container, false);
         realm = Realm.getInstance(getActivity());
         realm.beginTransaction();
-        conversations = realm.allObjectsSorted(Conversation.class, "lastActiveTime", false);
+        conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
         for (int i = 0; i < conversations.size(); i++) {
             Conversation conversation = conversations.get(i);
             if (conversation.getLastMessage() == null) {
@@ -163,7 +163,7 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     };
 
     private void setUpTimerIfPossible() {
-        Date then = (realm.where(Conversation.class).maximumDate("lastActiveTime"));
+        Date then = (realm.where(Conversation.class).maximumDate(Conversation.FIELD_LAST_ACTIVE_TIME));
         if (then != null) {
             long elapsed = new Date().getTime() - then.getTime();
             if (elapsed < AlarmManager.INTERVAL_HOUR) {

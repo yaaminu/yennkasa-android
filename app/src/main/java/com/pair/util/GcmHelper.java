@@ -10,6 +10,7 @@ import android.util.Log;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 
 import java.io.IOException;
@@ -20,7 +21,7 @@ import java.io.IOException;
 public class GcmHelper {
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     private static final String TAG = GcmHelper.class.getSimpleName();
-    public static final String GCM_REG_ID = "gcmRegId";
+    public static final String GCM_REG_ID = User.FIELD_GCM_REG_ID;
     private static Dialog errorDialog;
 
     public static void register(Activity context, GCMRegCallback callback) {

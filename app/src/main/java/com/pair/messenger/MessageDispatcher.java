@@ -110,7 +110,7 @@ class MessageDispatcher implements Dispatcher<Message> {
     @Override
     public void dispatch(Message message) {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
-        User recipient = realm.where(User.class).equalTo("_id", message.getTo()).findFirst();
+        User recipient = realm.where(User.class).equalTo(User.FIELD_ID, message.getTo()).findFirst();
         if (recipient == null) {
             realm.close();
             Log.wtf(TAG, "recipient of message could not be found,exiting");
@@ -262,7 +262,6 @@ class MessageDispatcher implements Dispatcher<Message> {
         }
 
         private void tryAgain(final SenderJob job) {
-            // TODO: 6/15/2015 check network availability before trying
             // TODO: 6/15/2015 if there is no network we wont try again but will rather wait till we get connected
             if (!ConnectionHelper.isConnectedOrConnecting()) {
                 Log.w(TAG, "no network connection, message will not be sent");

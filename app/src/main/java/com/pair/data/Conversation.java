@@ -9,8 +9,16 @@ import io.realm.annotations.RealmClass;
 /**
  * @author by Null-Pointer on 5/30/2015.
  */
+@SuppressWarnings("unused")
 @RealmClass
 public class Conversation extends RealmObject {
+
+
+    public static final String FIELD_SUMMARY = "summary",
+            FIELD_ACTIVE = "active",
+            FIELD_LAST_MESSAGE = "lastMessage",
+            FIELD_LAST_ACTIVE_TIME = "lastActiveTime",
+            FIELD_PEER_ID = "peerId";
     @PrimaryKey
     private String peerId; //other peer in chat
     private String summary;
@@ -50,7 +58,7 @@ public class Conversation extends RealmObject {
         this.summary = summary;
     }
 
-    public boolean isActive(){
+    public boolean isActive() {
         return this.active;
     }
 

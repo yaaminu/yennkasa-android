@@ -34,7 +34,13 @@ public class Message extends RealmObject {
             TYPE_TYPING_MESSAGE = 0x3f3;
     private static final String TAG = Message.class.getSimpleName();
 
-    //    public static final String
+    public static final String FIELD_ID = "id",
+            FIELD_FROM = "from",
+            FIELD_TO = "to",
+            FIELD_TYPE = "type",
+            FIELD_STATE = "state",
+            FIELD_DATE_COMPOSED = "dateComposed",
+            FIELD_MESSAGE_BODY = "messageBody";
     @PrimaryKey
     private String id;
 

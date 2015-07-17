@@ -5,6 +5,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.view.MenuItem;
 
+import com.pair.data.Message;
 import com.pair.pairapp.ui.ProfileFragment;
 import com.pair.util.UserManager;
 
@@ -34,7 +35,7 @@ public class ProfileActivity extends ActionBarActivity {
         }
     }
 
-    public static final String EXTRA_USER_ID = "id";
+    public static final String EXTRA_USER_ID = Message.FIELD_ID;
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {

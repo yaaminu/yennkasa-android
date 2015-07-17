@@ -13,13 +13,13 @@ public class UserJsonAdapter implements BaseJsonAdapter<User> {
     @Override
     public JsonObject toJson(User user) {
         JsonObject obj = new JsonObject();
-        obj.addProperty("_id", user.get_id());
-        obj.addProperty("name", user.getName());
-        obj.addProperty("gcmRegId", user.getGcmRegId());
-        obj.addProperty("password", user.getPassword());
-        obj.addProperty("status", user.getStatus());
-        obj.addProperty("lastActivity", user.getLastActivity());
-        obj.addProperty("accountCreatedAt", user.getAccountCreated());
+        obj.addProperty(User.FIELD_ID, user.get_id());
+        obj.addProperty(User.FIELD_NAME, user.getName());
+        obj.addProperty(User.FIELD_GCM_REG_ID, user.getGcmRegId());
+        obj.addProperty(User.FIELD_PASSWORD, user.getPassword());
+        obj.addProperty(User.FIELD_STATUS, user.getStatus());
+        obj.addProperty(User.FIELD_LAST_ACTIVITY, user.getLastActivity());
+        obj.addProperty(User.FIELD_ACCOUNT_CREATED, user.getAccountCreated());
         return obj;
     }
 

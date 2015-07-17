@@ -1,6 +1,7 @@
 package com.pair.net.api;
 
 import com.google.gson.JsonObject;
+import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.net.HttpResponse;
 
@@ -32,35 +33,35 @@ public interface UserApi {
     void fetchFriends(@Body List<String> userIds, Callback<List<User>> response);
 
     @GET("/api/v1/users/{id}")
-    void getUser(@Path("id") String id, Callback<User> response);
+    void getUser(@Path(Message.FIELD_ID) String id, Callback<User> response);
 
     @GET("/api/v1/users/{id}/groups")
-    void getGroups(@Path("id") String id, Callback<List<User>> response);
+    void getGroups(@Path(Message.FIELD_ID) String id, Callback<List<User>> response);
 
     @PUT("/api/v1/{placeHolder}/{id}/dp")
-    void changeDp(@Path("placeHolder") String userOrGroup, @Path("id") String id, @Body TypedFile file, Callback<HttpResponse> response);
+    void changeDp(@Path("placeHolder") String userOrGroup, @Path(Message.FIELD_ID) String id, @Body TypedFile file, Callback<HttpResponse> response);
 
     @POST("/api/v1/groups/")
     void createGroup(@Body JsonObject group, Callback<User> response);
 
     @GET("/api/v1/groups/{id}")
-    void getGroup(@Path("id") String id, Callback<User> group);
+    void getGroup(@Path(Message.FIELD_ID) String id, Callback<User> group);
 
     @GET("/api/v1/groups/{id}/members")
-    void getGroupMembers(@Path("id") String id, Callback<List<User>> response);
+    void getGroupMembers(@Path(Message.FIELD_ID) String id, Callback<List<User>> response);
 
     @FormUrlEncoded
     @PUT("/api/v1/groups/{id}/members/add")
-    void addMembersToGroup(@Path("id") String id
+    void addMembersToGroup(@Path(Message.FIELD_ID) String id
             , @Field("by") String by
-            , @Field("members") List<String> members
+            , @Field(User.FIELD_MEMBERS) List<String> members
             , Callback<Response> response);
 
     @FormUrlEncoded
     @PUT("/api/v1/groups/{id}/members/remove")
-    void removeMembersFromGroup(@Path("id") String id
+    void removeMembersFromGroup(@Path(Message.FIELD_ID) String id
             , @Field("by") String by
-            , @Field("members") List<String> members
+            , @Field(User.FIELD_MEMBERS) List<String> members
             , Callback<Response> response);
 
 

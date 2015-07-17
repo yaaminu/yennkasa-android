@@ -16,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.pair.adapter.UsersAdapter;
+import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
@@ -36,7 +37,7 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
 
     public static final String ARG_ACTION = "action",
             ARG_SHOW_GROUP_MEMBERS = "show_members",
-            ARG_GROUP_ID = "id";
+            ARG_GROUP_ID = Message.FIELD_ID;
 
     public UsersFragment() {
         // Required empty public constructor
@@ -67,13 +68,13 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
             if (groupId == null) {
                 throw new IllegalArgumentException("id cannot be null");
             }
-            User group = realm.where(User.class).equalTo("_id", groupId).findFirst();
+            User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
             if (group == null) {
                 throw new IllegalArgumentException("no group with id:  " + groupId);
             }
             adapter = new MembersAdapter(group.getMembers(), groupId);
         } else {
-            RealmResults<User> results = realm.where(User.class).notEqualTo("_id", getCurrentUser().get_id()).findAllSorted("name", true);
+            RealmResults<User> results = realm.where(User.class).notEqualTo(User.FIELD_ID, getCurrentUser().get_id()).findAllSorted(User.FIELD_NAME, true);
             adapter = new UsersAdapter(getActivity(), results, true);
         }
         usersGrid.setAdapter(adapter);

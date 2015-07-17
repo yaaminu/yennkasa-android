@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.support.v4.content.WakefulBroadcastReceiver;
 import android.util.Log;
 
+import com.pair.data.Message;
+
 /**
  * @author by Null-Pointer on 5/28/2015.
  */
@@ -14,7 +16,7 @@ public class MessageCenter extends WakefulBroadcastReceiver {
     private static final String TAG = MessageCenter.class.getSimpleName();
     private static final String EXTRA_MESSAGE = "message";
     private static final String EXTRA_NEW_USER = "user";
-    private static final String EXTRA_TYPE = "type";
+    private static final String EXTRA_TYPE = Message.FIELD_TYPE;
 
     @Override
     public void onReceive(Context context, Intent intent) {

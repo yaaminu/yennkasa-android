@@ -1,4 +1,4 @@
-/************* things that can wait************************************/
+/************* things that can wait ************************************/
 
 # logout users from backend when they choose to logout
 # code our own errorHandler that we will pass to retrofit

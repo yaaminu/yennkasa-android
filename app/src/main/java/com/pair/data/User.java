@@ -21,6 +21,16 @@ import io.realm.annotations.RealmClass;
 public class User extends RealmObject {
     public static final int TYPE_GROUP = 0x3e8;
     public static final int TYPE_NORMAL_USER = 0x3e9;
+    public static final String FIELD_ID = "_id",
+            FIELD_NAME = "name",
+            FIELD_STATUS = "status",
+            FIELD_ADMIN = "admin",
+            FIELD_MEMBERS = "members",
+            FIELD_TYPE = Message.FIELD_TYPE,
+            FIELD_LAST_ACTIVITY = "lastActivity",
+            FIELD_GCM_REG_ID = "gcmRegId",
+            FIELD_ACCOUNT_CREATED = "accountCreated",
+            FIELD_PASSWORD = "password";
     @PrimaryKey
     private String _id;
 
@@ -168,7 +178,7 @@ public class User extends RealmObject {
     public static RealmList<User> aggregateUsers(Realm realm, List<String> membersId, ContactsManager.Filter<User> filter) {
         RealmList<User> members = new RealmList<>();
         for (String id : membersId) {
-            User user = realm.where(User.class).equalTo("_id", id).findFirst();
+            User user = realm.where(User.class).equalTo(FIELD_ID, id).findFirst();
             if (filter == null || filter.accept(user)) {
                 members.add(user);
             }

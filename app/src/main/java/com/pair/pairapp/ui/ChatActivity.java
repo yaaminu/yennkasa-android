@@ -96,7 +96,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         editText.setOnEditorActionListener(this);
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
-        peer = realm.where(User.class).equalTo("_id", peerId).findFirst();
+        peer = realm.where(User.class).equalTo(User.FIELD_ID, peerId).findFirst();
         String peerName = peer.getName();
         //noinspection ConstantConditions
         getSupportActionBar().setTitle(peerName);
@@ -104,7 +104,10 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
         //TODO change this query to a more general one than will work even when we add group chat
-        messages = realm.where(Message.class).equalTo("from", peer.get_id()).or().equalTo("to", peer.get_id()).findAllSorted("dateComposed", true);
+        messages = realm.where(Message.class).equalTo(Message.FIELD_FROM, peer.get_id())
+                .or()
+                .equalTo(Message.FIELD_TO, peer.get_id())
+                .findAllSorted(Message.FIELD_DATE_COMPOSED, true);
         getConversation(peerId);
         adapter = new MessagesAdapter(this, messages, true);
         messagesListView.setAdapter(adapter);
@@ -124,7 +127,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     }
 
     private void getConversation(String peerId) {
-        currConversation = realm.where(Conversation.class).equalTo("peerId", peerId).findFirst();
+        currConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
         realm.beginTransaction();
         if (currConversation == null) { //first time
             currConversation = realm.createObject(Conversation.class);
@@ -151,9 +154,9 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         //set up session
         String formatted = DateUtils.formatDateTime(this, new Date().getTime(), DateUtils.FORMAT_NUMERIC_DATE);
         Message message = realm.where(Message.class)
-                .equalTo("type", TYPE_DATE_MESSAGE)
-                .equalTo("to", peer.get_id())
-                .equalTo("messageBody", formatted)
+                .equalTo(Message.FIELD_TYPE, TYPE_DATE_MESSAGE)
+                .equalTo(Message.FIELD_TO, peer.get_id())
+                .equalTo(Message.FIELD_MESSAGE_BODY, formatted)
                 .findFirst();
         if (message == null) {
             realm.beginTransaction();

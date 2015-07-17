@@ -81,7 +81,7 @@ public class RealmHelper {
             bundle.putString("message", jsonElement.toString());
             Intent intent = new Intent(context, MessageProcessor.class);
             intent.putExtras(bundle);
-            realm.where(Message.class).equalTo("to", user.get_id()).findAll();
+            realm.where(Message.class).equalTo(Message.FIELD_TO, user.get_id()).findAll();
             context.startService(intent);
         }
     }

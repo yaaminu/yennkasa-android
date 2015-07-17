@@ -99,7 +99,7 @@ public class UserManager {
             Config.disableComponents();
             return null;
         }
-        return realm.where(User.class).equalTo("_id", currUserId).findFirst();
+        return realm.where(User.class).equalTo(User.FIELD_ID, currUserId).findFirst();
 
     }
 
@@ -118,7 +118,7 @@ public class UserManager {
             return;
         }
         JsonObject requestBody = new JsonObject();
-        requestBody.addProperty("name", groupName);
+        requestBody.addProperty(User.FIELD_NAME, groupName);
         requestBody.addProperty("createdBy", getMainUser().get_id());
         userApi.createGroup(requestBody, new Callback<User>() {
             @Override
@@ -167,7 +167,7 @@ public class UserManager {
             public void success(Response o, Response response) {
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
                 realm.beginTransaction();
-                final User group = realm.where(User.class).equalTo("_id", groupId).findFirst();
+                final User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
                 final ContactsManager.Filter<User> filter = new ContactsManager.Filter<User>() {
                     @Override
                     public boolean accept(User user) {
@@ -195,14 +195,14 @@ public class UserManager {
 
     private boolean isUser(String id) {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
-        boolean isUser = realm.where(User.class).equalTo("_id", id).findFirst() != null;
+        boolean isUser = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst() != null;
         realm.close();
         return isUser;
     }
 
     public boolean isAdmin(String groupId, String userId) {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
-        User group = realm.where(User.class).equalTo("_id", groupId).findFirst();
+        User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
         if (group == null) {
             realm.close();
             throw new IllegalArgumentException("no group with such id");
@@ -236,7 +236,7 @@ public class UserManager {
             public void success(Response response, Response response2) {
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
                 realm.beginTransaction();
-                final User group = realm.where(User.class).equalTo("_id", groupId).findFirst();
+                final User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
                 final ContactsManager.Filter<User> filter = new ContactsManager.Filter<User>() {
                     @Override
                     public boolean accept(User user) {
@@ -268,7 +268,7 @@ public class UserManager {
             public void success(List<User> freshMembers, Response response) {
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
                 realm.beginTransaction();
-                User group = realm.where(User.class).equalTo("_id", id).findFirst();
+                User group = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
                 group.getMembers().clear();
                 for (User freshMember : freshMembers) {
                     freshMember.setType(User.TYPE_NORMAL_USER);
@@ -277,7 +277,7 @@ public class UserManager {
                 realm.commitTransaction();
                 realm.close();
                 realm = Realm.getInstance(Config.getApplicationContext());
-                User g = realm.where(User.class).equalTo("_id", id).findFirst();
+                User g = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
                 if (g.getMembers().size() != freshMembers.size()) {
                     throw new IllegalStateException("data state is inconsistent"); // FIXME: 7/14/2015 remove this line
                 }
@@ -310,7 +310,7 @@ public class UserManager {
             @Override
             public void success(User group, Response response) {
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
-                User staleGroup = realm.where(User.class).equalTo("_id", id).findFirst();
+                User staleGroup = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
                 realm.beginTransaction();
                 if (staleGroup != null) {
                     staleGroup.setName(group.getName());
@@ -323,7 +323,7 @@ public class UserManager {
                 realm.commitTransaction();
                 realm.close();
                 realm = Realm.getInstance(Config.getApplicationContext());
-                User g = realm.where(User.class).equalTo("_id", id).findFirst();
+                User g = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
                 Log.i(TAG, "members of " + g.getName() + " are: " + g.getMembers().size());
                 realm.close();
                 getGroupMembers(id); //async
@@ -342,7 +342,7 @@ public class UserManager {
     private RealmList<User> aggregateUsers(Realm realm, List<String> membersId, ContactsManager.Filter<User> filter) {
         RealmList<User> members = new RealmList<>();
         for (String id : membersId) {
-            User user = realm.where(User.class).equalTo("_id", id).findFirst();
+            User user = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
             if (filter.accept(user)) {
                 members.add(user);
             }
@@ -370,7 +370,7 @@ public class UserManager {
                 public void success(User onlineUser, Response response) {
                     Realm realm = Realm.getInstance(Config.getApplicationContext());
                     realm.beginTransaction();
-                    User user = realm.where(User.class).equalTo("_id", userId).findFirst();
+                    User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
                     user.setLastActivity(onlineUser.getLastActivity());
                     user.setStatus(onlineUser.getStatus());
                     user.setName(onlineUser.getName());
@@ -394,7 +394,7 @@ public class UserManager {
     public boolean isGroup(String userId) {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         try {
-            User potentiallyGroup = realm.where(User.class).equalTo("_id", userId).findFirst();
+            User potentiallyGroup = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
             return potentiallyGroup != null && (potentiallyGroup.getType() == User.TYPE_GROUP);
         } finally {
             realm.close();
@@ -417,7 +417,7 @@ public class UserManager {
                     throw new IllegalStateException("no user logged in");
                 }
                 for (User group : groups) {
-                    User staleGroup = realm.where(User.class).equalTo("_id", group.get_id()).findFirst();
+                    User staleGroup = realm.where(User.class).equalTo(User.FIELD_ID, group.get_id()).findFirst();
                     if (staleGroup != null) { //already exist just update
                         staleGroup.setName(group.getName()); //admin might have changed name
                         staleGroup.setType(User.TYPE_GROUP);
@@ -461,7 +461,7 @@ public class UserManager {
             return;
         }
         Realm realm = Realm.getInstance(Config.getApplicationContext());
-        final User user = realm.where(User.class).equalTo("_id", userId).findFirst();
+        final User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
         if (user == null) {
             throw new IllegalArgumentException("user does not exist");
         }
@@ -581,7 +581,7 @@ public class UserManager {
                 .apply();
         Realm realm = Realm.getInstance(context);
         // TODO: 6/14/2015 remove this in production code.
-        User user = realm.where(User.class).equalTo("_id", userId).findFirst();
+        User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
         if (user == null) {
             throw new IllegalStateException("existing session id with no corresponding User in the database");
         }

@@ -22,6 +22,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
@@ -94,7 +95,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
         realm = Realm.getInstance(getActivity());
         String id = getArguments().getString(ARG_USER_ID);
-        user = realm.where(User.class).equalTo("_id", id).findFirst();
+        user = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
 
         if (user == null || UserManager.INSTANCE.isMainUser(id)) {
             Log.wtf(TAG, "invalid user id. program aborting");
@@ -145,7 +146,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     }
 
     private void setUpMutualMembers() {
-        final RealmResults<User> tmp = realm.where(User.class).equalTo("type", User.TYPE_GROUP).equalTo("members._id", user.get_id()).findAll();
+        final RealmResults<User> tmp = realm.where(User.class).equalTo(Message.FIELD_TYPE, User.TYPE_GROUP).equalTo("members._id", user.get_id()).findAll();
         // TODO: 7/12/2015 this might not scale!
         resetAdapter(realmResultsToArray(tmp));
     }

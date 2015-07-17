@@ -23,6 +23,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.pair.adapter.GroupsAdapter;
+import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
@@ -64,7 +65,7 @@ public class GroupsFragment extends ListFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        RealmResults<User> groups = realm.where(User.class).equalTo("type", User.TYPE_GROUP).findAllSorted("name");
+        RealmResults<User> groups = realm.where(User.class).equalTo(Message.FIELD_TYPE, User.TYPE_GROUP).findAllSorted(User.FIELD_NAME);
         BaseAdapter adapter = new GroupsAdapter(getActivity(), groups);
         setListAdapter(adapter);
     }

@@ -14,13 +14,13 @@ public class MessageJsonAdapter implements BaseJsonAdapter<Message> {
     public JsonObject toJson(Message message) {
         JsonObject obj = new JsonObject();
 
-        obj.addProperty("from", message.getFrom());
-        obj.addProperty("to", message.getTo());
-        obj.addProperty("state", message.getState());
-        obj.addProperty("id", message.getId());
-        obj.addProperty("messageBody", message.getMessageBody());
-        obj.addProperty("dateComposed", message.getDateComposed().getTime());
-        obj.addProperty("type", message.getType());
+        obj.addProperty(Message.FIELD_FROM, message.getFrom());
+        obj.addProperty(Message.FIELD_TO, message.getTo());
+        obj.addProperty(Message.FIELD_STATE, message.getState());
+        obj.addProperty(Message.FIELD_ID, message.getId());
+        obj.addProperty(Message.FIELD_MESSAGE_BODY, message.getMessageBody());
+        obj.addProperty(Message.FIELD_DATE_COMPOSED, message.getDateComposed().getTime());
+        obj.addProperty(Message.FIELD_TYPE, message.getType());
         return obj;
     }
 

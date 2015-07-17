@@ -88,7 +88,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
 
     private User getPeer(String peerId) {
         Realm realm = Realm.getInstance(context);
-        User peer = realm.where(User.class).equalTo("_id", peerId).findFirst();
+        User peer = realm.where(User.class).equalTo(User.FIELD_ID, peerId).findFirst();
         User copy = new User(peer); //shallow copy
         realm.close();
         return copy;
