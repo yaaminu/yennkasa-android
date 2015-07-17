@@ -1,17 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="100dp"
-    android:layout_margin="@dimen/activity_horizontal_margin"
-    android:gravity="center"
-    android:padding="5dp">
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_margin="@dimen/activity_horizontal_margin"
+                android:descendantFocusability="afterDescendants"
+                android:gravity="center"
+                android:padding="5dp">
 
     <ImageView
         android:id="@+id/iv_user_avatar"
         android:layout_width="70dp"
         android:layout_height="70dp"
+        android:clickable="true"
         android:padding="5dp"
-        android:src="@drawable/avatar_empty" />
+        android:src="@drawable/avatar_empty"/>
 
     <TextView
         android:id="@+id/tv_chat_summary"
@@ -22,7 +24,7 @@
         android:ellipsize="end"
         android:paddingBottom="10dp"
         android:singleLine="true"
-        android:text="Summary of conversation" />
+        android:text="Summary of conversation"/>
 
     <LinearLayout
         android:id="@+id/ll_conversation_desc"
@@ -38,20 +40,21 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="3.5"
+            android:clickable="true"
             android:ellipsize="end"
-            android:singleLine="true"
             android:gravity="left"
+            android:singleLine="true"
             android:text="Sender name"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"/>
 
         <TextView
             android:id="@+id/tv_date_last_active"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="2.5"
-            android:singleLine="true"
             android:gravity="right"
+            android:singleLine="true"
             android:text="Date"/>
     </LinearLayout>
 

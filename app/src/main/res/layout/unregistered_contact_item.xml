@@ -1,7 +1,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:background="@android:color/white">
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:background="@android:color/white"
+                android:descendantFocusability="afterDescendants">
 
     <TextView
         android:id="@+id/tv_user_name"
@@ -13,7 +14,7 @@
         android:singleLine="true"
         android:text="name"
         android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"/>
 
     <TextView
         android:id="@+id/tv_user_status"
@@ -25,17 +26,17 @@
         android:singleLine="true"
         android:text="0266349205"
         android:textSize="18sp"
-        android:textStyle="italic" />
+        android:textStyle="italic"/>
 
     <Button
         android:id="@+id/bt_invite"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/tv_phone_number"
+        android:layout_alignBottom="@+id/tv_user_status"
         android:layout_alignParentRight="true"
         android:layout_marginRight="10dp"
         android:background="#f99"
         android:text="INVITE"
-        android:textColor="@android:color/white" />
+        android:textColor="@android:color/white"/>
 
 </RelativeLayout>

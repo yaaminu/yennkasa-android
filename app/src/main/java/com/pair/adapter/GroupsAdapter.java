@@ -10,6 +10,7 @@ import android.widget.TextView;
 import com.pair.data.User;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
+import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 import com.squareup.picasso.Picasso;
 
@@ -28,7 +29,7 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         ViewHolder holder;
-        User group = getItem(position);
+        final User group = getItem(position);
         if (convertView == null) {
             //noinspection ConstantConditions
             convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.group_list_item, parent, false);
@@ -57,6 +58,14 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
             }
         }
         holder.groupMembers.setText(members.toString());
+        View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                UiHelpers.gotoProfileActivity(v.getContext(), group.get_id());
+            }
+        };
+        holder.groupIcon.setOnClickListener(listener);
+        holder.groupName.setOnClickListener(listener);
         return convertView;
     }
 

@@ -1,6 +1,8 @@
 package com.pair.adapter;
 
-import android.util.Log;
+import android.content.Intent;
+import android.net.Uri;
+import android.telephony.SmsManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +13,8 @@ import android.widget.TextView;
 
 import com.pair.pairapp.R;
 import com.pair.util.Config;
+import com.pair.util.UiHelpers;
+import com.pair.util.UserManager;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -62,11 +66,12 @@ public class ContactsAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Contact contact = getItem(position);
+        final Contact contact = getItem(position);
 
-        ViewHolder holder;
+        final ViewHolder holder;
         int layoutRes = layoutResource[getItemViewType(position)];
         if (convertView == null) {
+            //noinspection ConstantConditions
             convertView = LayoutInflater.from(parent.getContext()).inflate(layoutRes, parent, false);
             holder = new ViewHolder();
             if (isAddOrRemoveFromGroup) {
@@ -94,10 +99,31 @@ public class ContactsAdapter extends BaseAdapter {
                     .load(Config.DP_ENDPOINT + "/" + contact.phoneNumber)
                     .error(R.drawable.avatar_empty)
                     .into(holder.userDp);
+            holder.userName.setClickable(true);
+            holder.userDp.setClickable(true);
+            final View.OnClickListener listener = new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    UiHelpers.gotoProfileActivity(v.getContext(), holder.contact.phoneNumber);
+                }
+            };
+            holder.userName.setOnClickListener(listener);
+            holder.userDp.setOnClickListener(listener);
         } else {
             holder.userStatus.setText(contact.phoneNumber);
+            final View.OnClickListener listener = new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(Intent.ACTION_DIAL);
+                    intent.setData(Uri.parse("tel:" + contact.phoneNumber));
+                    v.getContext().startActivity(intent);
+                }
+            };
+            holder.userStatus.setOnClickListener(listener);
+            holder.userName.setOnClickListener(listener);
             holder.inviteButton.setOnClickListener(new InviteContact(contact));
         }
+
         return convertView;
     }
 
@@ -113,6 +139,7 @@ public class ContactsAdapter extends BaseAdapter {
         private ImageView userDp;
         public Contact contact;
     }
+
     private class InviteContact implements View.OnClickListener {
 
         Contact contact;
@@ -123,7 +150,8 @@ public class ContactsAdapter extends BaseAdapter {
 
         @Override
         public void onClick(View v) {
-            Log.d(TAG, "invite button clicked");
+            String message = "sms:Try out PAIRAPP messenger for android . Its free and fast!\\n download here: http://pairapp.com/download";
+            SmsManager.getDefault().sendTextMessage(contact.phoneNumber, UserManager.INSTANCE.getMainUser().get_id(), message, null, null);
         }
     }
 

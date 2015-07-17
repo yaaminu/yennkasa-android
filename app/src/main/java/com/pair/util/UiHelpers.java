@@ -43,6 +43,7 @@ public class UiHelpers {
                 .show();
     }
 
+
     public static void showToast(String message) {
         makeText(Config.getApplicationContext(), message, LENGTH_SHORT).show();
     }

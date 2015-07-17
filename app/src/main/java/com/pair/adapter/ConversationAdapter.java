@@ -14,6 +14,7 @@ import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
+import com.pair.util.UiHelpers;
 import com.squareup.picasso.Picasso;
 
 import java.util.Date;
@@ -52,7 +53,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
-        Conversation conversation = getItem(position);
+        final Conversation conversation = getItem(position);
         holder.chatSummary.setText(conversation.getSummary());
         User peer = getPeer(conversation.getPeerId());
         String peerName = peer.getName();
@@ -73,6 +74,15 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         }
         holder.chatSummary.setText(summary);
         holder.peerId = conversation.getPeerId();
+        final View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                UiHelpers.gotoProfileActivity(v.getContext(), conversation.getPeerId());
+            }
+        };
+        holder.peerName.setOnClickListener(listener);
+        holder.senderAvatar.setOnClickListener(listener);
+
         return convertView;
     }
 

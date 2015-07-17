@@ -1,28 +1,27 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:background="@android:color/white">
+                xmlns:tools="http://schemas.android.com/tools"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="5dp"
+                android:background="@android:color/white">
 
     <ImageView
         android:id="@+id/iv_display_picture"
-        android:layout_width="70dp"
+        android:layout_width="match_parent"
         android:layout_height="70dp"
-        android:layout_alignParentLeft="true"
-        android:layout_margin="5dp"
         android:adjustViewBounds="true"
         android:contentDescription="@string/content_desc_user_avatar"
         android:scaleType="fitXY"
-        android:src="@drawable/avatar_empty" />
+        android:src="@drawable/avatar_empty"/>
 
     <TextView
         android:id="@+id/tv_user_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/iv_display_picture"
-        android:paddingTop="30dp"
-        android:paddingLeft="5dp"
+        android:layout_below="@id/iv_display_picture"
+        android:singleLine="true"
         android:text="User name"
         android:textSize="16sp"
-        android:singleLine="true" />
+        tools:ignore="RtlHardcoded"/>
 
 </RelativeLayout>

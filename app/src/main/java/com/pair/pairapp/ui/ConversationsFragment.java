@@ -2,12 +2,10 @@ package com.pair.pairapp.ui;
 
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
-import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -21,6 +19,7 @@ import com.pair.adapter.ConversationAdapter;
 import com.pair.data.Conversation;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
+import com.pair.pairapp.UsersActivity;
 import com.pair.util.UiHelpers;
 
 import java.util.Date;
@@ -70,10 +69,6 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
         realm.commitTransaction();
         adapter = new ConversationAdapter(getActivity(), conversations, true);
         setListAdapter(adapter);
-        String title = getArguments().getString(MainActivity.ARG_TITLE);
-        ActionBarActivity activity = (ActionBarActivity) getActivity();
-        //noinspection ConstantConditions
-        activity.getSupportActionBar().setTitle(title);
         return view;
     }
 
@@ -117,15 +112,11 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.new_message) {
-            Fragment fragment = new UsersFragment();
             Bundle args = new Bundle();
             args.putString(MainActivity.ARG_TITLE, getActivity().getString(R.string.title_pick_contact));
-            fragment.setArguments(args);
-            getFragmentManager().beginTransaction()
-                    .replace(R.id.container, fragment)
-                    .addToBackStack(null)
-                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                    .commit();
+            Intent intent = new Intent(getActivity(), UsersActivity.class);
+            intent.putExtras(args);
+            startActivity(intent);
             return true;
         }
         return super.onOptionsItemSelected(item);

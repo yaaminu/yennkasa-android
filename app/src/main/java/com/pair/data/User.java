@@ -24,10 +24,7 @@ public class User extends RealmObject {
     @PrimaryKey
     private String _id;
 
-    private String gcmRegId;
-    private String name;
-    private String password;
-    private String status;
+    private String gcmRegId, name, password, status, localName;
     private long lastActivity, accountCreated;
     private RealmList<User> members; //a group will be a user with its members represented by this field.
     private User admin; // this represents admins for a group
@@ -102,6 +99,14 @@ public class User extends RealmObject {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getLocalName() {
+        return localName;
+    }
+
+    public void setLocalName(String localName) {
+        this.localName = localName;
     }
 
     public long getLastActivity() {

@@ -26,7 +26,7 @@
     <string name="action_attach">attach</string>
     <string name="error_sorry_no_application_to_open_file">sorry no application to open file type</string>
     <string name="action_refresh">Refresh</string>
-    <string name="title_activity_profile">User Profile</string>
+    <string name="title_activity_profile">Profile</string>
     <string name="error_occurred">sorry an error occurred</string>
     <string name="error_canceled">Canceled</string>
     <string name="dp_changed_successfully">DP changed successfully</string>
@@ -60,4 +60,9 @@
     <string name="st_error">Error</string>
     <string name="st_peer_info">Peer Info</string>
     <string name="st_group_info">Group Info</string>
+    <string name="title_activity_users">UsersActivity</string>
+    <string name="st_group_members_title">" - Members"</string>
+    <string name="message">message</string>
+    <string name="you">You</string>
+    <string name="admin">Admin</string>
 </resources>

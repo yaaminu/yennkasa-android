@@ -25,8 +25,9 @@ public class UsersAdapter extends RealmBaseAdapter<User> {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        context = parent.getContext();
+        Context context = parent.getContext();
         if (convertView == null) {
+            //noinspection ConstantConditions
             convertView = LayoutInflater.from(context).inflate(R.layout.user_item, parent, false);
             ViewHolder holder = new ViewHolder();
             holder.iv = ((ImageView) convertView.findViewById(R.id.iv_display_picture));
@@ -34,15 +35,19 @@ public class UsersAdapter extends RealmBaseAdapter<User> {
             convertView.setTag(holder);
         }
         ViewHolder holder = (ViewHolder) convertView.getTag();
-        holder.user = getItem(position);
-        holder.tv.setText(holder.user.getName());
-        Picasso.with(context).load(Config.DP_ENDPOINT + "/" + holder.user.get_id()).error(R.drawable.avatar_empty).into(holder.iv);
+        holder.userId = ((User) getItem(position)).get_id();
+        holder.tv.setText(((User) getItem(position)).getName());
+        Picasso.with(context)
+                .load(Config.DP_ENDPOINT + "/" + holder.userId)
+                .placeholder(R.drawable.avatar_empty)
+                .error(R.drawable.avatar_empty)
+                .into(holder.iv);
         return convertView;
     }
 
-    public class ViewHolder {
-        public User user;
-        ImageView iv;
-        TextView tv;
+    public static class ViewHolder {
+        public String userId;
+        private ImageView iv;
+        private TextView tv;
     }
 }

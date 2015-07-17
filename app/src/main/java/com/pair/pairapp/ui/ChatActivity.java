@@ -13,6 +13,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -45,7 +46,7 @@ import static com.pair.data.Message.TYPE_DATE_MESSAGE;
 
 
 @SuppressWarnings({"ConstantConditions", "FieldCanBeLocal"})
-public class ChatActivity extends ActionBarActivity implements View.OnClickListener, AbsListView.OnScrollListener {
+public class ChatActivity extends ActionBarActivity implements View.OnClickListener, AbsListView.OnScrollListener, TextView.OnEditorActionListener {
     private static final int TAKE_PHOTO_REQUEST = 0x0;
     private static final int TAKE_VIDEO_REQUEST = 0x1;
     private static final int PICK_PHOTO_REQUEST = 0x2;
@@ -92,15 +93,16 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
         dateHeader = ((TextView) findViewById(R.id.tv_header_date));
         sendButton.setOnClickListener(this);
-
-
+        editText.setOnEditorActionListener(this);
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
         peer = realm.where(User.class).equalTo("_id", peerId).findFirst();
         String peerName = peer.getName();
         //noinspection ConstantConditions
         getSupportActionBar().setTitle(peerName);
-
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setHomeButtonEnabled(true);
         //TODO change this query to a more general one than will work even when we add group chat
         messages = realm.where(Message.class).equalTo("from", peer.get_id()).or().equalTo("to", peer.get_id()).findAllSorted("dateComposed", true);
         getConversation(peerId);
@@ -198,6 +200,9 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         } else if (id == R.id.action_peer_info) {
             UiHelpers.gotoProfileActivity(this, peer.get_id());
             return true;
+        } else if (id == android.R.id.home) {
+            finish();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -206,6 +211,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     protected void onResume() {
         super.onResume();
         Config.setIsChatRoomOpen(true);
+        editText.clearFocus();
     }
 
     @Override
@@ -236,6 +242,10 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
+        doSendMessage();
+    }
+
+    private void doSendMessage() {
         String content = UiHelpers.getFieldContent(editText);
         editText.setText(""); //clear the text field
         //TODO use a regular expression to validate the message body
@@ -445,5 +455,11 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             }
             throw new AssertionError("impossible");
         }
+    }
+
+    @Override
+    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+        doSendMessage();
+        return true;
     }
 }

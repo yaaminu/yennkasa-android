@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.ListFragment;
-import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -25,7 +24,6 @@ import android.widget.Toast;
 
 import com.pair.adapter.GroupsAdapter;
 import com.pair.data.User;
-import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.UiHelpers;
@@ -58,8 +56,6 @@ public class GroupsFragment extends ListFragment {
         super.onCreateView(inflater, container, savedInstanceState);
         setHasOptionsMenu(true);
         View view = inflater.inflate(R.layout.fragment_groups, container, false);
-        String title = getArguments().getString(MainActivity.ARG_TITLE);
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(title);
         realm = Realm.getInstance(getActivity());
         UserManager.INSTANCE.refreshGroups();
         return view;
@@ -104,6 +100,7 @@ public class GroupsFragment extends ListFragment {
     }
 
 
+    @SuppressWarnings("ConstantConditions")
     public static class Dialogue extends DialogFragment {
         ProgressDialog pDialog;
 

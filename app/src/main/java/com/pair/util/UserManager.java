@@ -510,7 +510,7 @@ public class UserManager {
                 //our backend deletes password fields so we got to use our copy here
                 backendUser.setPassword(user.getPassword());
                 saveUserMainUser(backendUser);
-                getGroups();
+                getGroups(); //async
                 callback.done(null);
             }
 

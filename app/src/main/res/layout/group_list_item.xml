@@ -1,9 +1,11 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="fill_parent"
+                android:descendantFocusability="afterDescendants"
                 android:layout_height="fill_parent"
                 android:background="@android:color/white">
 
     <ImageView
+        android:clickable="true"
         android:id="@+id/iv_group_dp"
         android:layout_width="70dp"
         android:layout_height="70dp"
@@ -15,6 +17,7 @@
         android:src="@drawable/avatar_empty"/>
 
     <TextView
+        android:clickable="true"
         android:id="@+id/tv_user_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

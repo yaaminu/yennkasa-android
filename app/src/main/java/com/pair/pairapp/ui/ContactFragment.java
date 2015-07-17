@@ -4,9 +4,7 @@ package com.pair.pairapp.ui;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
-import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -19,7 +17,6 @@ import com.pair.adapter.ContactsAdapter;
 import com.pair.data.ContactsManager;
 import com.pair.data.ContactsManager.Contact;
 import com.pair.data.User;
-import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
@@ -89,11 +86,6 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         // Inflate the layout for this fragment
         setHasOptionsMenu(true);
         View view = inflater.inflate(R.layout.fragment_contact, container, false);
-        String title = getArguments().getString(MainActivity.ARG_TITLE);
-        ActionBarActivity activity = (ActionBarActivity) getActivity();
-        //noinspection ConstantConditions
-        activity.getSupportActionBar().setTitle(title);
-
         List<Contact> contacts = new ArrayList<>();
         adapter = new ContactsAdapter(contacts, false);
         final ContactsManager.Filter<Contact> filter = new ContactsManager.Filter<Contact>() {
@@ -127,10 +119,6 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         }
     }
 
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        super.onCreateContextMenu(menu, v, menuInfo);
-    }
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {

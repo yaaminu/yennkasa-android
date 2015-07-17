@@ -13,6 +13,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
@@ -22,7 +23,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.pair.data.User;
+import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
+import com.pair.pairapp.UsersActivity;
 import com.pair.util.Config;
 import com.pair.util.FileHelper;
 import com.pair.util.UiHelpers;
@@ -53,7 +56,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private ImageView displayPicture;
     private TextView userName, userPhone, listHeading;
     private Button changeDpButton;
-    private ListView membersOrMutualGroupsList;
+    private ListView mutualGroupsList;
     private User user;
     private Realm realm;
     private BaseAdapter membersAdapter;
@@ -78,8 +81,15 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         userPhone = ((TextView) view.findViewById(R.id.tv_user_phone));
         changeDpButton = ((Button) view.findViewById(R.id.bt_change_dp));
         ImageButton imageButton = (ImageButton) view.findViewById(R.id.ib_change_name);
+        Button sendMessageButton = (Button) view.findViewById(R.id.bt_message);
+        sendMessageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                UiHelpers.enterChatRoom(getActivity(), user.get_id());
+            }
+        });
         listHeading = ((TextView) view.findViewById(R.id.tv_list_heading));
-        membersOrMutualGroupsList = ((ListView) view.findViewById(R.id.lv_members_list));
+        mutualGroupsList = ((ListView) view.findViewById(R.id.lv_mutual_groups_list));
         //end view hookup
 
         realm = Realm.getInstance(getActivity());
@@ -87,7 +97,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         user = realm.where(User.class).equalTo("_id", id).findFirst();
 
         if (user == null || UserManager.INSTANCE.isMainUser(id)) {
-            Log.wtf(TAG, "invalid user id passed");
+            Log.wtf(TAG, "invalid user id. program aborting");
             throw new IllegalArgumentException("invalid user id");
         }
         final UserManager userManager = UserManager.INSTANCE;
@@ -142,7 +152,13 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     private void resetAdapter(User[] results) {
         membersAdapter = new GroupsOrMembersAdapter(getActivity(), results);
-        membersOrMutualGroupsList.setAdapter(membersAdapter);
+        mutualGroupsList.setAdapter(membersAdapter);
+        mutualGroupsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                UiHelpers.gotoProfileActivity(getActivity(), ((User) view.getTag()).get_id());
+            }
+        });
     }
 
     @NonNull
@@ -155,15 +171,21 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private void setUpViewsGroupWay() {
         userPhone.setVisibility(View.GONE);
         listHeading.setText(R.string.st_group_members);
-        resetAdapter(setUpGroupMembers());
+        listHeading.setClickable(true);
+        listHeading.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Bundle bundle = new Bundle(3);
+                bundle.putString(MainActivity.ARG_TITLE, user.getName() + getResources().getString(R.string.st_group_members_title));
+                bundle.putString(UsersFragment.ARG_GROUP_ID, user.get_id());
+                bundle.putString(UsersFragment.ARG_ACTION, UsersFragment.ARG_SHOW_GROUP_MEMBERS);
+                Intent intent = new Intent(getActivity(), UsersActivity.class);
+                intent.putExtras(bundle);
+                startActivity(intent);
+            }
+        });
     }
 
-    @NonNull
-    private User[] setUpGroupMembers() {
-        User[] results = new User[user.getMembers().size()]; // TODO: 7/12/2015 this might not scale!
-        user.getMembers().toArray(results);
-        return results;
-    }
 
     private void choosePicture() {
         Intent attachIntent;
@@ -176,9 +198,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     public void onChange() {
         try {
             userName.setText("@" + user.getName());
-            if (UserManager.INSTANCE.isGroup(user.get_id())) {
-                setUpGroupMembers();
-            } else {
+            if (!UserManager.INSTANCE.isGroup(user.get_id())) {
                 setUpMutualMembers();
             }
             showDp();
@@ -234,6 +254,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private void showDp() {
         Picasso.with(getActivity())
                 .load(Config.DP_ENDPOINT + "/" + user.get_id())
+                .placeholder(R.drawable.avatar_empty)
                 .error(R.drawable.avatar_empty)
                 .resize(320, 150)
                 .into(displayPicture);
@@ -266,6 +287,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 convertView = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
             }
             ((TextView) convertView).setText(getItem(position).getName());
+            convertView.setTag(getItem(position));
             return convertView;
         }
     }
