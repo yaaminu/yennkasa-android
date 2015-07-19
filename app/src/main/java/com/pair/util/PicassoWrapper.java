@@ -22,8 +22,7 @@ import java.net.URLEncoder;
  * @author Null-Pointer on 7/17/2015.
  */
 public class PicassoWrapper {
-    public static final String TAG = PicassoWrapper.class.getSimpleName();
-
+    private static final String TAG = PicassoWrapper.class.getSimpleName();
     private PicassoWrapper() {
         throw new UnsupportedOperationException("cannot instantiate");
     }
@@ -41,21 +40,26 @@ public class PicassoWrapper {
             Log.w(TAG, "failed to initialise file based cache");
             return builder.build();
         }
-
-        builder.memoryCache(new DiskCache(file));
-        return builder.build();
+        return builder.memoryCache(new DiskCache(file)).build();
     }
 
     private static class DiskCache implements Cache {
-        final LruCache<String, Bitmap> memoryCache;
-        final File cacheDirectory;
+        final static LruCache<String, Bitmap> inMemoryCache;
 
+        static LruCache<String, Bitmap> initCache() {
+            int maxMemory = ((int) (Runtime.getRuntime().maxMemory() / 1024));
+            return new LruCache<>(maxMemory / 8);
+        }
+
+        static {
+            inMemoryCache = initCache();
+        }
+
+        final File cacheDirectory;
         DiskCache(File cacheDirectory) {
             if (cacheDirectory == null || !cacheDirectory.isDirectory()) {
                 throw new IllegalArgumentException("cache directory is invalid");
             }
-            int maxMemory = ((int) (Runtime.getRuntime().maxMemory() / 1024));
-            memoryCache = new LruCache<>(maxMemory / 8);
             this.cacheDirectory = cacheDirectory;
         }
 
@@ -63,7 +67,7 @@ public class PicassoWrapper {
         public Bitmap get(String s) {
             final String normalisedString = normalise(s);
             Log.d(TAG, "retrieving entry: " + normalisedString + " from cache");
-            Bitmap cache = memoryCache.get(normalisedString);
+            Bitmap cache = inMemoryCache.get(normalisedString);
             if (cache == null) {
                 File cacheFile = new File(cacheDirectory, normalisedString + ".jpeg");
                 if (cacheFile.exists()) {
@@ -76,7 +80,7 @@ public class PicassoWrapper {
         @Override
         public void set(final String s, Bitmap bitmap) {
             final String normalisedString = normalise(s);
-            memoryCache.put(normalisedString, bitmap);
+            inMemoryCache.put(normalisedString, bitmap);
             FileOutputStream out = null;
             final File cache = new File(cacheDirectory, normalisedString + ".jpeg");
             if (cache.exists()) { //file already exists don't save again
@@ -111,7 +115,7 @@ public class PicassoWrapper {
 
         @Override
         public int size() {
-            return memoryCache.size();
+            return inMemoryCache.size();
         }
 
         @Override
@@ -121,7 +125,7 @@ public class PicassoWrapper {
 
         @Override
         public void clear() {
-            memoryCache.evictAll();
+            inMemoryCache.evictAll();
             File[] files = cacheDirectory.listFiles();
             if (files != null) {
                 for (File file : files) {
@@ -132,7 +136,7 @@ public class PicassoWrapper {
 
         @Override
         public void clearKeyUri(String s) {
-            memoryCache.remove(s);
+            inMemoryCache.remove(normalise(s));
             File file = new File(cacheDirectory, normalise(s) + ".jpeg");
             file.delete();
         }

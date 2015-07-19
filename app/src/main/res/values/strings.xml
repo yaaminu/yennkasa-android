@@ -17,7 +17,7 @@
 
     <string name="str_drawer_open">drawer open</string>
     <string name="str_drawer_closed">drawer closed</string>
-    <string name="content_desc_user_avatar">user dp thumbnail</string>
+    <string name="content_desc_user_avatar">user DP thumbnail</string>
     <string name="action_seed_users">seed users</string>
     <string name="st_empty_contacts">Its Lonely Here :-) No Contact To Display</string>
     <string name="action_call_sender">call sender</string>
@@ -66,4 +66,5 @@
     <string name="you">You</string>
     <string name="admin">Admin</string>
     <string name="leave">Leave</string>
+    <string name="call">Call</string>
 </resources>

@@ -41,7 +41,7 @@ public class UserManager {
 
     private static final String TAG = UserManager.class.getSimpleName();
     private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is
-    private static final String KEY_USER_PASSWORD = "klfiielklaklier" + System.currentTimeMillis();
+    private static final String KEY_USER_PASSWORD = "klfiielklaklier";
     public static final UserManager INSTANCE = new UserManager();
 
     private volatile int loginAttempts = 0,
@@ -485,11 +485,25 @@ public class UserManager {
         if (user == null) {
             throw new IllegalArgumentException("user does not exist");
         }
+
         String placeHolder = user.getType() == User.TYPE_GROUP ? "groups" : "users";
+
         realm.close();
         userApi.changeDp(placeHolder, userId, new TypedFile("image/*", imageFile), new Callback<HttpResponse>() {
             @Override
             public void success(HttpResponse response, Response response2) {
+                Realm realm = Realm.getInstance(Config.getApplicationContext());
+                try {
+                    realm.beginTransaction();
+                    //noinspection ConstantConditions
+                    User user = realm.where(User.class).equalTo("_id", userId).findFirst();
+                    if (user != null) {
+                        user.setDP(response.getMessage());
+                    }
+                    realm.commitTransaction();
+                } finally {
+                    realm.close();
+                }
                 callback.done(null);
             }
 

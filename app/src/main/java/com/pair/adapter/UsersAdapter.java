@@ -38,10 +38,10 @@ public class UsersAdapter extends RealmBaseAdapter<User> {
         holder.userId = getItem(position).get_id();
         holder.tv.setText(getItem(position).getName());
         PicassoWrapper.with(context)
-                .load(Config.DP_ENDPOINT + "/" + holder.userId)
+                .load(Config.DP_ENDPOINT + "/" + getItem(position).getDP())
                 .placeholder(R.drawable.avatar_empty)
-                .resize(150, 150)
                 .error(R.drawable.avatar_empty)
+                .resize(150, 150)
                 .into(holder.iv);
         return convertView;
     }

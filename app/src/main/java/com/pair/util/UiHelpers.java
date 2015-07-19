@@ -86,7 +86,7 @@ public class UiHelpers {
                     continue;
                 }
                 phoneNumber = phoneNumber.replace("(", "").replace(")", "").replace("-", "");
-                ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, null, false);
+                ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, null, false, null);
                 phoneNumberCollection.add(contact);
             }
             phoneCur.close();

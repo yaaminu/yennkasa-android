@@ -82,12 +82,13 @@ public class ContactsManager {
             }
             User user = realm.where(User.class).equalTo(User.FIELD_ID, phoneNumber).findFirst();
             boolean isRegistered = false;
-            String status = "";
+            String status = "", DP = "";
             if (user != null) {
                 isRegistered = true;
                 status = user.getStatus();
+                DP = user.getDP();
             }
-            ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, status, isRegistered);
+            ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, status, isRegistered, DP);
             if ((filter != null) && !filter.accept(contact)) {
                 continue;
             }
@@ -106,10 +107,10 @@ public class ContactsManager {
     }
 
     public static final class Contact {
-        public final String name, phoneNumber, status;
+        public final String name, phoneNumber, status, DP;
         public final boolean isRegisteredUser;
 
-        public Contact(String name, String phoneNumber, String status, boolean isRegisteredUser) {
+        public Contact(String name, String phoneNumber, String status, boolean isRegisteredUser, String DP) {
             if (TextUtils.isEmpty(name)) {
                 name = "unknown";
             }
@@ -124,6 +125,7 @@ public class ContactsManager {
             this.phoneNumber = phoneNumber;
             this.isRegisteredUser = isRegisteredUser;
             this.status = status;
+            this.DP = DP;
         }
 
         @Override

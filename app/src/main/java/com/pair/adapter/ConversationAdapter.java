@@ -58,7 +58,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         User peer = getPeer(conversation.getPeerId());
         String peerName = peer.getName();
         holder.peerName.setText(peerName);
-        String dpUrl = Config.DP_ENDPOINT + "/" + peer.get_id();
+        String dpUrl = Config.DP_ENDPOINT + "/" + peer.getDP();
         PicassoWrapper.with(context)
                 .load(dpUrl)
                 .error(R.drawable.avatar_empty)

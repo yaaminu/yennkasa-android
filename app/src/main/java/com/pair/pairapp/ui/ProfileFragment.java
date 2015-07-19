@@ -62,6 +62,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private Realm realm;
     private BaseAdapter membersAdapter;
     private Button exitGroupButton;
+    private Button callButton;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -85,6 +86,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         ImageButton imageButton = (ImageButton) view.findViewById(R.id.ib_change_name);
         Button sendMessageButton = (Button) view.findViewById(R.id.bt_message);
         sendMessageButton.setOnClickListener(clickListener);
+        callButton = ((Button) view.findViewById(R.id.bt_call));
         exitGroupButton = ((Button) view.findViewById(R.id.bt_exit_group));
         listHeading = ((TextView) view.findViewById(R.id.tv_list_heading));
         mutualGroupsList = ((ListView) view.findViewById(R.id.lv_mutual_groups_list));
@@ -138,6 +140,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private void setUpViewSingleUserWay() {
         userPhone.setVisibility(View.VISIBLE);
         exitGroupButton.setVisibility(View.GONE);
+        //noinspection ConstantConditions
+        callButton.setOnClickListener(clickListener);
         userPhone.append(user.get_id());
         listHeading.setText(R.string.st_mutual_groups);
         setUpMutualMembers();
@@ -169,6 +173,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     private void setUpViewsGroupWay() {
         userPhone.setVisibility(View.GONE);
+        //noinspection ConstantConditions
+        callButton.setVisibility(View.GONE);
         if (UserManager.getInstance().isAdmin(user.get_id())) {
             exitGroupButton.setVisibility(View.GONE);
         } else {
@@ -213,12 +219,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         }
     }
 
-    private View.OnClickListener CHANGE_DP = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            choosePicture();
-        }
-    };
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -231,7 +231,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 } else {
                     filePath = uri.getPath();
                 }
-                showDp();
                 UserManager userManager = UserManager.INSTANCE;
                 dpChangeProgress = new ProgressDialog(getActivity());
                 dpChangeProgress.setMessage(getResources().getString(R.string.st_please_wait));
@@ -258,19 +257,13 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     private void showDp() {
         PicassoWrapper.with(getActivity())
-                .load(Config.DP_ENDPOINT + "/" + user.get_id())
+                .load(Config.DP_ENDPOINT + "/" + user.getDP())
                 .placeholder(R.drawable.avatar_empty)
                 .error(R.drawable.avatar_empty)
                 .resize(320, 150)
                 .into(displayPicture);
     }
 
-    private final View.OnClickListener CHANGE_USERNAME = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            UiHelpers.showToast("not implemented");
-        }
-    };
 
     @Override
     public void onDestroy() {
@@ -321,6 +314,11 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     break;
                 case R.id.ib_change_name:
                     UiHelpers.showToast("not implemented");
+                    break;
+                case R.id.bt_call:
+                    Intent intent = new Intent(Intent.ACTION_DIAL);
+                    intent.setData(Uri.parse("tel:" + user.get_id()));
+                    startActivity(intent);
                     break;
                 default:
                     throw new IllegalArgumentException("unknown view");

@@ -3,6 +3,7 @@ package com.pair.adapter;
 import android.content.Intent;
 import android.net.Uri;
 import android.telephony.SmsManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -94,10 +95,10 @@ public class ContactsAdapter extends BaseAdapter {
         }
         if (contact.isRegisteredUser) {
             holder.userStatus.setText(contact.status);
-            // FIXME: 7/11/2015 normalise number first
             PicassoWrapper.with(parent.getContext())
-                    .load(Config.DP_ENDPOINT + "/" + contact.phoneNumber)
+                    .load(Config.DP_ENDPOINT + "/" + contact.DP)
                     .error(R.drawable.avatar_empty)
+                    .placeholder(R.drawable.avatar_empty)
                     .resize(150, 150)
                     .centerInside()
                     .into(holder.userDp);
@@ -126,6 +127,7 @@ public class ContactsAdapter extends BaseAdapter {
             holder.inviteButton.setOnClickListener(new InviteContact(contact));
         }
 
+        Log.i(TAG, "Display picture: " + contact.DP);
         return convertView;
     }
 

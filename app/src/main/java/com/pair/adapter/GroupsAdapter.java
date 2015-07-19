@@ -1,6 +1,7 @@
 package com.pair.adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,8 @@ import io.realm.RealmResults;
  * @author Null-Pointer on 6/28/2015.
  */
 public class GroupsAdapter extends RealmBaseAdapter<User> {
+    private static final String TAG = GroupsAdapter.class.getSimpleName();
+
     public GroupsAdapter(Context context, RealmResults<User> realmResults) {
         super(context, realmResults, true);
     }
@@ -43,9 +46,10 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
         }
         holder.groupName.setText(group.getName());
         PicassoWrapper.with(parent.getContext())
-                .load(Config.DP_ENDPOINT + "/" + group.get_id())
-                .resize(150, 150)
+                .load(Config.DP_ENDPOINT + "/" + group.getDP())
+                .placeholder(R.drawable.avatar_empty)
                 .error(R.drawable.avatar_empty)
+                .resize(150, 150)
                 .into(holder.groupIcon);
         holder.groupId = group.get_id(); //adapters will use this
         RealmList<User> groupMembers = group.getMembers();
@@ -67,6 +71,7 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
         };
         holder.groupIcon.setOnClickListener(listener);
         holder.groupName.setOnClickListener(listener);
+        Log.i(TAG, "Display Picture: " + group.getDP());
         return convertView;
     }
 

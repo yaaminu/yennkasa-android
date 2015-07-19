@@ -34,7 +34,7 @@ public class User extends RealmObject {
     @PrimaryKey
     private String _id;
 
-    private String gcmRegId, name, password, status, localName;
+    private String gcmRegId, name, password, status, localName, DP;
     private long lastActivity, accountCreated;
     private RealmList<User> members; //a group will be a user with its members represented by this field.
     private User admin; // this represents admins for a group
@@ -59,8 +59,17 @@ public class User extends RealmObject {
             this.setName(other.getName());
             this.setType(other.getType());
             this.setAdmin(other.getAdmin());
+            this.setDP(other.getDP());
             this.setMembers(other.getMembers());
         }
+    }
+
+    public String getDP() {
+        return DP;
+    }
+
+    public void setDP(String DP) {
+        this.DP = DP;
     }
 
     public int getType() {
@@ -168,6 +177,7 @@ public class User extends RealmObject {
         clone.setAdmin(other.getAdmin());
         clone.setMembers(other.getMembers());
         clone.setLocalName(other.getLocalName());
+        clone.setDP(other.getDP());
         return clone;
     }
 
