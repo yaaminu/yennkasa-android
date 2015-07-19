@@ -39,7 +39,6 @@ public class MainActivity extends ActionBarActivity {
             } else {
                 setContentView(R.layout.activity_main);
                 //noinspection ConstantConditions
-                getSupportActionBar().hide();
                 pager = ((ViewPager) findViewById(R.id.vp_pager));
                 PagerTabStrip tabStrip = ((PagerTabStrip) findViewById(R.id.pts_title_strip));
                 tabStrip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);

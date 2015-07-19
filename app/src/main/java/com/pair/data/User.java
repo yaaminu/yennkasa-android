@@ -167,6 +167,7 @@ public class User extends RealmObject {
         clone.setType(other.getType());
         clone.setAdmin(other.getAdmin());
         clone.setMembers(other.getMembers());
+        clone.setLocalName(other.getLocalName());
         return clone;
     }
 

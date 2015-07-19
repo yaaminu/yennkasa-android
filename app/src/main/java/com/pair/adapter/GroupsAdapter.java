@@ -10,9 +10,9 @@ import android.widget.TextView;
 import com.pair.data.User;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
+import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
-import com.squareup.picasso.Picasso;
 
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmList;
@@ -42,8 +42,9 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
             holder = ((ViewHolder) convertView.getTag());
         }
         holder.groupName.setText(group.getName());
-        Picasso.with(parent.getContext())
+        PicassoWrapper.with(parent.getContext())
                 .load(Config.DP_ENDPOINT + "/" + group.get_id())
+                .resize(150, 150)
                 .error(R.drawable.avatar_empty)
                 .into(holder.groupIcon);
         holder.groupId = group.get_id(); //adapters will use this

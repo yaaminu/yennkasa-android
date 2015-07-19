@@ -13,9 +13,9 @@ import android.widget.TextView;
 
 import com.pair.pairapp.R;
 import com.pair.util.Config;
+import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
-import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -95,9 +95,11 @@ public class ContactsAdapter extends BaseAdapter {
         if (contact.isRegisteredUser) {
             holder.userStatus.setText(contact.status);
             // FIXME: 7/11/2015 normalise number first
-            Picasso.with(parent.getContext())
+            PicassoWrapper.with(parent.getContext())
                     .load(Config.DP_ENDPOINT + "/" + contact.phoneNumber)
                     .error(R.drawable.avatar_empty)
+                    .resize(150, 150)
+                    .centerInside()
                     .into(holder.userDp);
             holder.userName.setClickable(true);
             holder.userDp.setClickable(true);

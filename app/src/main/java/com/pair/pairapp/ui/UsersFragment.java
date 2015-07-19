@@ -21,9 +21,9 @@ import com.pair.data.User;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
+import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
-import com.squareup.picasso.Picasso;
 
 import io.realm.Realm;
 import io.realm.RealmList;
@@ -154,7 +154,7 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
             if (UserManager.INSTANCE.isAdmin(groupId, user.get_id())) {
                 holder.username.append(" - " + adminText);
             }
-            Picasso.with(context)
+            PicassoWrapper.with(context)
                     .load(Config.DP_ENDPOINT + "/" + holder.userId)
                     .placeholder(R.drawable.avatar_empty)
                     .error(R.drawable.avatar_empty)

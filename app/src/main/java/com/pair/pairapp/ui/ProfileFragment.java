@@ -28,10 +28,10 @@ import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.pairapp.UsersActivity;
 import com.pair.util.Config;
+import com.pair.util.PicassoWrapper;
 import com.pair.util.FileHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
-import com.squareup.picasso.Picasso;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
@@ -253,7 +253,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     };
 
     private void showDp() {
-        Picasso.with(getActivity())
+        PicassoWrapper.with(getActivity())
                 .load(Config.DP_ENDPOINT + "/" + user.get_id())
                 .placeholder(R.drawable.avatar_empty)
                 .error(R.drawable.avatar_empty)

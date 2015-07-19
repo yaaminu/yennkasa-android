@@ -14,8 +14,8 @@ import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
+import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
-import com.squareup.picasso.Picasso;
 
 import java.util.Date;
 
@@ -59,7 +59,13 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         String peerName = peer.getName();
         holder.peerName.setText(peerName);
         String dpUrl = Config.DP_ENDPOINT + "/" + peer.get_id();
-        Picasso.with(context).load(dpUrl).error(R.drawable.avatar_empty).into(holder.senderAvatar);
+        PicassoWrapper.with(context)
+                .load(dpUrl)
+                .error(R.drawable.avatar_empty)
+                .placeholder(R.drawable.avatar_empty)
+                .resize(150, 150)
+                .into(holder.senderAvatar);
+
         long now = new Date().getTime();
         long then = conversation.getLastActiveTime().getTime();
         CharSequence formattedDate;

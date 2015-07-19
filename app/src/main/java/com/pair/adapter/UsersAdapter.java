@@ -10,7 +10,7 @@ import android.widget.TextView;
 import com.pair.data.User;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
-import com.squareup.picasso.Picasso;
+import com.pair.util.PicassoWrapper;
 
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
@@ -35,11 +35,12 @@ public class UsersAdapter extends RealmBaseAdapter<User> {
             convertView.setTag(holder);
         }
         ViewHolder holder = (ViewHolder) convertView.getTag();
-        holder.userId = ((User) getItem(position)).get_id();
-        holder.tv.setText(((User) getItem(position)).getName());
-        Picasso.with(context)
+        holder.userId = getItem(position).get_id();
+        holder.tv.setText(getItem(position).getName());
+        PicassoWrapper.with(context)
                 .load(Config.DP_ENDPOINT + "/" + holder.userId)
                 .placeholder(R.drawable.avatar_empty)
+                .resize(150, 150)
                 .error(R.drawable.avatar_empty)
                 .into(holder.iv);
         return convertView;
