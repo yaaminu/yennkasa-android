@@ -1,8 +1,12 @@
 package com.pair.pairapp.ui;
 
-import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBarActivity;
+import android.text.Editable;
+import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -10,33 +14,32 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CheckedTextView;
+import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.pair.data.ContactsManager;
 import com.pair.data.User;
 import com.pair.pairapp.R;
-import com.pair.util.Config;
-import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import io.realm.Realm;
 
 public class FriendsActivity extends ActionBarActivity implements AdapterView.OnItemClickListener {
 
     public static final String EXTRA_GROUP_ID = "groupId";
-    public static final String EXTRA_ACTION = "action",
-            EXTRA_ACTION_ADD = "add",
-            EXTRA_ACTION_REMOVE = "remove";
+    public static final String SELECTED_USERS = "results";
     private ListView listView;
-    private List<String> selectedFriends;
-    private String action, groupId;
-
+    private Set<String> selectedFriends;
+    private String groupId;
+    private ArrayAdapter<ContactsManager.Contact> adapter;
 
     private final Comparator<ContactsManager.Contact> comparator = new Comparator<ContactsManager.Contact>() {
         @Override
@@ -65,37 +68,66 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_friends_);
+        //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        listView = ((ListView) findViewById(R.id.lv_friends_list));
-
+        listView = ((ListView) findViewById(android.R.id.list));
+        listView.setEmptyView(findViewById(android.R.id.empty));
+        Button addButton = ((Button) findViewById(R.id.bt_add));
+        final EditText editText = ((EditText) findViewById(R.id.et_filter_input_box));
+        editText.addTextChangedListener(ADAPTER_FILTER);
+        addButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String numBerToAdd = editText.getText().toString().trim();
+                if (!TextUtils.isEmpty(numBerToAdd)) {
+                    // TODO: 7/19/2015 normalise number first
+                    selectedFriends.add(numBerToAdd);
+                    editText.setText("");
+                    supportInvalidateOptionsMenu();
+                }
+            }
+        });
         groupId = getIntent().getStringExtra(EXTRA_GROUP_ID);
-        action = getIntent().getStringExtra(EXTRA_ACTION);
-        selectedFriends = new ArrayList<>();
-        pdialog = new ProgressDialog(this);
+        selectedFriends = new HashSet<>();
         refreshDisplay();
     }
 
     private void refreshDisplay() {
         supportInvalidateOptionsMenu();
+        ContactsManager.Filter<ContactsManager.Contact> filter = null;
+        if (groupId != null) {
+            filter = getContactFilter();
+        } else {
+            filter = new ContactsManager.Filter<ContactsManager.Contact>() {
+                @Override
+                public boolean accept(ContactsManager.Contact contact) {
+                    return contact.isRegisteredUser;
+                }
+            };
+        }
+        ContactsManager.INSTANCE.findAllContacts(filter, comparator, new ContactsManager.FindCallback<List<ContactsManager.Contact>>() {
+            @Override
+            public void done(List<ContactsManager.Contact> contacts) {
+                adapter = new Adapter(contacts);
+                listView.setAdapter(adapter);
+                listView.setOnItemClickListener(FriendsActivity.this);
+            }
+        });
+    }
+
+    @NonNull
+    private ContactsManager.Filter<ContactsManager.Contact> getContactFilter() {
         Realm realm = Realm.getInstance(this);
-        User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
+        final User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
         final List<String> membersId = User.aggregateUserIds(group.getMembers(), null);
         realm.close();
-        final ContactsManager.Filter<ContactsManager.Contact> filter = new ContactsManager.Filter<ContactsManager.Contact>() {
+        return new ContactsManager.Filter<ContactsManager.Contact>() {
             @Override
             public boolean accept(ContactsManager.Contact contact) {
                 User user = UserManager.INSTANCE.getMainUser(); //main user cannot be null
                 return !(contact.phoneNumber.equals(user.get_id())) && contact.isRegisteredUser && !membersId.contains(contact.phoneNumber);
             }
         };
-        ContactsManager.INSTANCE.findAllContacts(filter, comparator, new ContactsManager.FindCallback<List<ContactsManager.Contact>>() {
-            @Override
-            public void done(List<ContactsManager.Contact> contacts) {
-                Adapter adapter = new Adapter(contacts);
-                listView.setAdapter(adapter);
-                listView.setOnItemClickListener(FriendsActivity.this);
-            }
-        });
     }
 
     @Override
@@ -115,21 +147,9 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_ok && !selectedFriends.isEmpty()) {
-            UserManager manager = UserManager.INSTANCE;
-            pdialog.setMessage(getString(R.string.st_please_wait));
-            pdialog.setCancelable(false);
-            if (action.equals(EXTRA_ACTION_ADD)) {
-                pdialog.show();
-                manager.addMembers(groupId, selectedFriends, CALLBACK);
-            } else if (action.equals(EXTRA_ACTION_REMOVE)) {
-                pdialog.show();
-                manager.removeMembers(groupId, selectedFriends, CALLBACK);
-            } else {
-                throw new UnsupportedOperationException("unknown action passed as extra");
-            }
-            return true;
+            setupResultsAndFinish();
         } else if (id == android.R.id.home) {
-            goBack();
+            setupResultsAndFinish();
         }
 
         return super.onOptionsItemSelected(item);
@@ -137,11 +157,7 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
 
     @Override
     public void onBackPressed() {
-        goBack();
-    }
-
-    private void goBack() {
-        UiHelpers.enterChatRoom(this, groupId);
+        setupResultsAndFinish();
     }
 
     @Override
@@ -169,6 +185,7 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             if (convertView == null) {
+                //noinspection ConstantConditions
                 convertView = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_checked, parent, false);
             }
             ((CheckedTextView) convertView).setText(getItem(position).name);
@@ -177,18 +194,34 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
         }
     }
 
-    private final UserManager.CallBack CALLBACK = new UserManager.CallBack() {
+
+    private void setupResultsAndFinish() {
+        if (selectedFriends.isEmpty()) {
+            setResult(RESULT_CANCELED);
+        } else {
+            Intent intent = new Intent();
+            intent.putStringArrayListExtra(SELECTED_USERS, new ArrayList<>(selectedFriends));
+            setResult(RESULT_OK, intent);
+        }
+        finish();
+    }
+
+    private final TextWatcher ADAPTER_FILTER = new TextWatcher() {
         @Override
-        public void done(Exception e) {
-            pdialog.dismiss();
-            if (e != null) {
-                Toast.makeText(Config.getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-            } else {
-                selectedFriends.clear();
-                refreshDisplay();
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            if (adapter != null) {
+                adapter.getFilter().filter(s.toString());
             }
         }
     };
-
-    private ProgressDialog pdialog;
 }

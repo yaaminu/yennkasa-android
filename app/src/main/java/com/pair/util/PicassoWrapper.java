@@ -75,10 +75,10 @@ public class PicassoWrapper {
 
         @Override
         public void set(final String s, Bitmap bitmap) {
-            String normalisedString = normalise(s);
+            final String normalisedString = normalise(s);
             memoryCache.put(normalisedString, bitmap);
             FileOutputStream out = null;
-            File cache = new File(cacheDirectory, normalisedString + ".jpeg");
+            final File cache = new File(cacheDirectory, normalisedString + ".jpeg");
             if (cache.exists()) { //file already exists don't save again
                 Log.i(TAG, "cache already exists don't overwrite");
                 return;

@@ -15,17 +15,23 @@ import android.view.Menu;
 import com.pair.data.User;
 import com.pair.pairapp.ui.ContactFragment;
 import com.pair.pairapp.ui.ConversationsFragment;
+import com.pair.pairapp.ui.FriendsActivity;
 import com.pair.pairapp.ui.GroupsFragment;
 import com.pair.util.GcmHelper;
+import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
+
+import java.util.ArrayList;
 
 /**
  * @author Null-Pointer on 6/6/2015.
  */
 public class MainActivity extends ActionBarActivity {
     public static final String TAG = MainActivity.class.getSimpleName();
+    public static String groupName;
     public static final String ARG_TITLE = "title";
     private static int savedPosition = -1;
+    public static final int SELECT_USERS_REQUEST = 1001;
     private ViewPager pager;
 
     @Override
@@ -111,6 +117,25 @@ public class MainActivity extends ActionBarActivity {
         @Override
         public CharSequence getPageTitle(int position) {
             return pageTitles[position];
+        }
+    }
+
+    // FIXME: 7/19/2015 for one or two reasons the request code returned does not match so we don't check for it now
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            ArrayList<String> members = data.getStringArrayListExtra(FriendsActivity.SELECTED_USERS);
+            if (members == null) {
+                return;
+            }
+            UserManager.getInstance().createGroup(groupName, members, new UserManager.CallBack() {
+                @Override
+                public void done(Exception e) {
+                    if (e != null) {
+                        UiHelpers.showErrorDialog(getApplicationContext(), e.getMessage());
+                    }
+                }
+            });
         }
     }
 }

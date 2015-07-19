@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.google.gson.JsonObject;
 import com.pair.adapter.BaseJsonAdapter;
 import com.pair.adapter.UserJsonAdapter;
 import com.pair.data.ContactsManager;
@@ -22,6 +21,7 @@ import org.apache.http.HttpStatus;
 import java.io.EOFException;
 import java.io.File;
 import java.net.SocketTimeoutException;
+import java.util.Collections;
 import java.util.List;
 
 import io.realm.Realm;
@@ -62,6 +62,9 @@ public class UserManager {
         return INSTANCE;
     }
 
+    public static UserManager getInstance() {
+        return INSTANCE;
+    }
     private UserManager() {
     }
 
@@ -117,10 +120,13 @@ public class UserManager {
             callBack.done(new Exception("group already exist"));
             return;
         }
-        JsonObject requestBody = new JsonObject();
-        requestBody.addProperty(User.FIELD_NAME, groupName);
-        requestBody.addProperty("createdBy", getMainUser().get_id());
-        userApi.createGroup(requestBody, new Callback<User>() {
+        //noinspection unchecked
+        createGroup(groupName, Collections.EMPTY_LIST, callBack);
+    }
+
+    public void createGroup(final String groupName, final List<String> membersId, final CallBack callBack) {
+
+        userApi.createGroup(getMainUser().get_id(), groupName, membersId, new Callback<User>() {
             @Override
             public void success(User group, Response response) {
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
@@ -130,6 +136,8 @@ public class UserManager {
                 if (mainUser == null) {
                     throw new IllegalStateException("no user logged in");
                 }
+                RealmList<User> members = User.aggregateUsers(realm, membersId, null);
+                group.getMembers().addAll(members);
                 group.getMembers().add(mainUser);
                 group.setAdmin(mainUser);
                 group.setType(User.TYPE_GROUP);
@@ -150,8 +158,8 @@ public class UserManager {
                 }
             }
         });
-    }
 
+    }
     public void removeMembers(final String groupId, final List<String> members, final CallBack callBack) {
         final Exception e = checkPermission(groupId);
         if (e != null) { //unauthorised

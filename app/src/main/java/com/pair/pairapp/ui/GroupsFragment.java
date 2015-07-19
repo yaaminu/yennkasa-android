@@ -4,11 +4,9 @@ package com.pair.pairapp.ui;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
 import android.support.v4.app.ListFragment;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -20,13 +18,12 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.pair.adapter.GroupsAdapter;
 import com.pair.data.Message;
 import com.pair.data.User;
+import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
-import com.pair.util.Config;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
@@ -38,8 +35,9 @@ import io.realm.RealmResults;
  * A simple {@link ListFragment} subclass.
  */
 public class GroupsFragment extends ListFragment {
-
-    Realm realm;
+    public static final int SELECT_USERS_REQUEST = 1001;
+    private Realm realm;
+    private EditText et;
 
     public GroupsFragment() {
         // Required empty public constructor
@@ -70,6 +68,7 @@ public class GroupsFragment extends ListFragment {
         setListAdapter(adapter);
     }
 
+
     @Override
     public void onDestroy() {
         realm.close();
@@ -93,58 +92,35 @@ public class GroupsFragment extends ListFragment {
         long id = item.getItemId();
         if (id == R.id.action_createGroup) {
             //show a dialog
-            Dialogue dialogue = new Dialogue();
-            dialogue.show(getFragmentManager(), null);
+            Dialog dialog = createDialog();
+            dialog.show();
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
-
-    @SuppressWarnings("ConstantConditions")
-    public static class Dialogue extends DialogFragment {
-        ProgressDialog pDialog;
-
-        public Dialogue() {
-        }
-
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            pDialog = new ProgressDialog(getActivity());
-            pDialog.setMessage(getResources().getString(R.string.st_please_wait));
-            pDialog.setCancelable(false);
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-            View view = LayoutInflater.from(getActivity()).inflate(R.layout.create_group, null);
-            final EditText et = ((EditText) view.findViewById(R.id.et_group_name));
-            builder.setTitle("Create Group")
-                    .setView(view)
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            String groupName = UiHelpers.getFieldContent(et);
-                            if (!TextUtils.isEmpty(groupName)) {
-                                //TODO use regex to validate name
-                                pDialog.show();
-                                UserManager.INSTANCE.createGroup(groupName, callBack);
-                            }
-                        }
-                    })
-                    .setNegativeButton(android.R.string.no, null);
-            return builder.create();
-        }
-
-        private UserManager.CallBack callBack = new UserManager.CallBack() {
-            @Override
-            public void done(Exception e) {
-                pDialog.dismiss();
-                if (e != null) {
-                    UiHelpers.showErrorDialog(getActivity(), e.getMessage());
-                } else {
-                    Toast.makeText(Config.getApplicationContext(), "Success", Toast.LENGTH_LONG).show();
-                }
-            }
-        };
+    public Dialog createDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        View view = LayoutInflater.from(getActivity()).inflate(R.layout.create_group, null);
+        et = ((EditText) view.findViewById(R.id.et_group_name));
+        builder.setTitle("Create Group")
+                .setCancelable(false)
+                .setView(view)
+                .setPositiveButton(android.R.string.ok, listener)
+                .setNegativeButton(android.R.string.no, null);
+        return builder.create();
     }
 
+    final DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            String groupName = UiHelpers.getFieldContent(et);
+            if (!TextUtils.isEmpty(groupName)) {
+                //TODO use regex to validate name
+                MainActivity.groupName = groupName;
+                Intent intent = new Intent(getActivity(), FriendsActivity.class);
+                startActivityForResult(intent, MainActivity.SELECT_USERS_REQUEST);
+            }
+        }
+    };
 }

@@ -41,8 +41,9 @@ public interface UserApi {
     @PUT("/api/v1/{placeHolder}/{id}/dp")
     void changeDp(@Path("placeHolder") String userOrGroup, @Path(Message.FIELD_ID) String id, @Body TypedFile file, Callback<HttpResponse> response);
 
+    @FormUrlEncoded
     @POST("/api/v1/groups/")
-    void createGroup(@Body JsonObject group, Callback<User> response);
+    void createGroup(@Field("createdBy") String by, @Field("name") String name, @Field("starters") List<String> members, Callback<User> response);
 
     @GET("/api/v1/groups/{id}")
     void getGroup(@Path(Message.FIELD_ID) String id, Callback<User> group);

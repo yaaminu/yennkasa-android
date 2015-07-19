@@ -37,6 +37,7 @@ import com.pair.util.FileHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 import io.realm.Realm;
@@ -52,6 +53,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private static final int PICK_PHOTO_REQUEST = 0x2;
     private static final int PICK_VIDEO_REQUEST = 0x3;
     private static final int PICK_FILE_REQUEST = 0x4;
+    private static final int ADD_USERS_REQUEST = 0x5;
 
     private static final String TAG = ChatActivity.class.getSimpleName();
     public static final String EXTRA_PEER_ID = "peer id";
@@ -196,9 +198,8 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             return true;
         } else if (id == R.id.action_add_peers) {
             Intent intent = new Intent(this, FriendsActivity.class);
-            intent.putExtra(FriendsActivity.EXTRA_ACTION, FriendsActivity.EXTRA_ACTION_ADD);
             intent.putExtra(FriendsActivity.EXTRA_GROUP_ID, peer.get_id());
-            startActivity(intent);
+            startActivityForResult(intent, ADD_USERS_REQUEST);
             return true;
         } else if (id == R.id.action_peer_info) {
             UiHelpers.gotoProfileActivity(this, peer.get_id());
@@ -395,45 +396,67 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             Toast.makeText(this, "request canceled", Toast.LENGTH_LONG).show();
             return;
         }
-        String actualPath;
-        try {
-            Uri uri = data.getData();
-            if (uri.getScheme().equals("content")) {
-                actualPath = FileHelper.resolveContentUriToFilePath(uri);
-            } else {
-                actualPath = uri.getPath();
-            }
-        } catch (NullPointerException itIsTakePhotoOrVideoRequest) {
-            actualPath = mMediaUri.getPath();
-        }
-        Message message;
+
+        Message message = null;
         switch (requestCode) {
+            case ADD_USERS_REQUEST:
+                addMembersToGroup(data.getStringArrayListExtra(FriendsActivity.SELECTED_USERS));
+                break;
             case PICK_PHOTO_REQUEST:
-                //fall through
+                message = createMessage(getActualPath(data), Message.TYPE_PICTURE_MESSAGE);
+                break;
             case TAKE_PHOTO_REQUEST:
-                message = createMessage(actualPath, Message.TYPE_PICTURE_MESSAGE);
-                sendMessage(message);
+                message = createMessage(mMediaUri.getPath(), Message.TYPE_PICTURE_MESSAGE);
                 break;
             case TAKE_VIDEO_REQUEST:
                 //fall through
+                message = createMessage(mMediaUri.getPath(), Message.TYPE_VIDEO_MESSAGE);
+                break;
             case PICK_VIDEO_REQUEST:
-                message = createMessage(actualPath, Message.TYPE_VIDEO_MESSAGE);
-                sendMessage(message);
+                message = createMessage(getActualPath(data), Message.TYPE_VIDEO_MESSAGE);
                 break;
             case PICK_FILE_REQUEST:
+                String actualPath = getActualPath(data);
                 String extension = FileHelper.getExtension(actualPath);
                 int type = Message.TYPE_BIN_MESSAGE;
+                //some image formats like bmp,gif are considered invalid
                 if (extension.equals("jpeg") || extension.equals("jpg") || extension.equals("png")) {
                     type = Message.TYPE_PICTURE_MESSAGE;
                 } else if (extension.equals("mp4") || extension.equals("3gp")) {
                     type = Message.TYPE_VIDEO_MESSAGE;
                 }
                 message = createMessage(actualPath, type);
-                sendMessage(message);
                 break;
             default:
                 throw new AssertionError("impossible");
         }
+        sendMessage(message);
+    }
+
+    private void addMembersToGroup(ArrayList<String> members) {
+
+        UserManager userManager = UserManager.getInstance();
+        if (userManager.isGroup(peer.get_id())) {
+            userManager.addMembers(peer.get_id(), members, new UserManager.CallBack() {
+                @Override
+                public void done(Exception e) {
+                    if (e != null) {
+                        UiHelpers.showToast(e.getMessage());
+                    }
+                }
+            });
+        }
+    }
+
+    private String getActualPath(Intent data) {
+        String actualPath;
+        Uri uri = data.getData();
+        if (uri.getScheme().equals("content")) {
+            actualPath = FileHelper.resolveContentUriToFilePath(uri);
+        } else {
+            actualPath = uri.getPath();
+        }
+        return actualPath;
     }
 
     @Override
