@@ -41,6 +41,7 @@ public class UserManager {
 
     private static final String TAG = UserManager.class.getSimpleName();
     private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is
+    private static final String KEY_USER_PASSWORD = "klfiielklaklier" + System.currentTimeMillis();
     public static final UserManager INSTANCE = new UserManager();
 
     private volatile int loginAttempts = 0,
@@ -65,19 +66,21 @@ public class UserManager {
     public static UserManager getInstance() {
         return INSTANCE;
     }
+
     private UserManager() {
     }
 
 
-    private void saveUserMainUser(User user) {
+    private void saveMainUser(User user) {
         final Context context = Config.getApplicationContext();
         Realm realm = Realm.getInstance(context);
         realm.beginTransaction();
         realm.copyToRealmOrUpdate(user);
         realm.commitTransaction();
-        // TODO: 6/25/2015 encrypt the id before storing it
+        // TODO: 6/25/2015 encrypt the id and password before storing it
         context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE)
                 .edit().putString(KEY_SESSION_ID, user.get_id())
+                .putString(KEY_USER_PASSWORD, user.getPassword())
                 .commit();
     }
 
@@ -88,7 +91,7 @@ public class UserManager {
             //returning {@link RealmObject} from methods leaks resources since
             // that will prevent us from closing the realm instance. hence we do a shallow copy.
             // downside is changes to this object will not be persisted which is just what we want
-            user = new User(user);
+            user = User.copy(user);
         }
         realm.close();
         return user;
@@ -96,14 +99,22 @@ public class UserManager {
 
     private User getMainUser(Realm realm) {
         final Context context = Config.getApplicationContext();
-        String currUserId = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE)
-                .getString(KEY_SESSION_ID, null);
+        final SharedPreferences sharedPreferences = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
+        String currUserId = sharedPreferences.getString(KEY_SESSION_ID, null);
         if (currUserId == null) {
             Config.disableComponents();
             return null;
         }
         return realm.where(User.class).equalTo(User.FIELD_ID, currUserId).findFirst();
+    }
 
+    private String getUserPassword() {
+        String password = Config.getApplicationContext().getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE).getString(KEY_USER_PASSWORD, null);
+        if (password == null) {
+            // TODO: 7/19/2015 logout user clean up realm
+            throw new IllegalStateException("session data tampered with");
+        }
+        return password;
     }
 
     public boolean isMainUser(String userId) {
@@ -160,6 +171,7 @@ public class UserManager {
         });
 
     }
+
     public void removeMembers(final String groupId, final List<String> members, final CallBack callBack) {
         final Exception e = checkPermission(groupId);
         if (e != null) { //unauthorised
@@ -480,6 +492,7 @@ public class UserManager {
             public void success(HttpResponse response, Response response2) {
                 callback.done(null);
             }
+
             @Override
             public void failure(RetrofitError retrofitError) {
                 Exception e = handleError(retrofitError);
@@ -501,10 +514,7 @@ public class UserManager {
 
     //this method must be called on the main thread
     private void doLogIn(final User user, final CallBack callback) {
-        if (!ConnectionHelper.isConnectedOrConnecting()) {
-            callback.done(NO_CONNECTION_ERROR);
-            return;
-        }
+
         if (loginSignUpBusy) {
             return;
         }
@@ -517,7 +527,7 @@ public class UserManager {
                 loginAttempts = 0;
                 //our backend deletes password fields so we got to use our copy here
                 backendUser.setPassword(user.getPassword());
-                saveUserMainUser(backendUser);
+                saveMainUser(backendUser);
                 getGroups(); //async
                 callback.done(null);
             }
@@ -554,7 +564,7 @@ public class UserManager {
                 loginSignUpBusy = false;
                 signUpAttempts = 0;
                 backEndUser.setPassword(user.getPassword());
-                saveUserMainUser(backEndUser);
+                saveMainUser(backEndUser);
                 callback.done(null);
             }
 
@@ -683,6 +693,47 @@ public class UserManager {
         //may be retrofit added some error kinds in a new version we are not aware of so lets crash to ensure that
         //we find out
         throw new AssertionError("unknown error kind");
+    }
+
+    public void leaveGroup(final String id, final CallBack callBack) {
+        if (!isGroup(id) || isAdmin(id)) {
+            throw new IllegalArgumentException("not group or you are the admin");
+        }
+        if (!ConnectionHelper.isConnectedOrConnecting()) {
+            callBack.done(NO_CONNECTION_ERROR);
+        }
+        userApi.leaveGroup(id, getMainUser().get_id(), getUserPassword(), new Callback<HttpResponse>() {
+            @Override
+            public void success(HttpResponse httpResponse, Response response) {
+                Realm realm = Realm.getInstance(Config.getApplicationContext());
+                try {
+                    User group = realm.where(User.class).equalTo("_id", id).findFirst();
+                    if (group != null) {
+                        realm.beginTransaction();
+                        group.removeFromRealm();
+                        realm.commitTransaction();
+                        callBack.done(null);
+                    }
+                } finally {
+                    realm.close();
+                }
+
+            }
+
+            @Override
+            public void failure(RetrofitError retrofitError) {
+                Exception e = handleError(retrofitError);
+                if (e == null) {
+                    leaveGroup(id, callBack);
+                } else {
+                    callBack.done(e);
+                }
+            }
+        });
+    }
+
+    public boolean isAdmin(String id) {
+        return isAdmin(id, getMainUser().get_id());
     }
 
 

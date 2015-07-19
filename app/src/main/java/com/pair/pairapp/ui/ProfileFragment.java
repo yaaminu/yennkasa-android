@@ -61,6 +61,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private User user;
     private Realm realm;
     private BaseAdapter membersAdapter;
+    private Button exitGroupButton;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -83,12 +84,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         changeDpButton = ((Button) view.findViewById(R.id.bt_change_dp));
         ImageButton imageButton = (ImageButton) view.findViewById(R.id.ib_change_name);
         Button sendMessageButton = (Button) view.findViewById(R.id.bt_message);
-        sendMessageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                UiHelpers.enterChatRoom(getActivity(), user.get_id());
-            }
-        });
+        sendMessageButton.setOnClickListener(clickListener);
+        exitGroupButton = ((Button) view.findViewById(R.id.bt_exit_group));
         listHeading = ((TextView) view.findViewById(R.id.tv_list_heading));
         mutualGroupsList = ((ListView) view.findViewById(R.id.lv_mutual_groups_list));
         //end view hookup
@@ -109,8 +106,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         if (userManager.isGroup(user.get_id()) && userManager.isAdmin(user.get_id(), userManager.getMainUser().get_id())) {
             changeDpButton.setVisibility(View.VISIBLE);
             imageButton.setVisibility(View.VISIBLE);
-            imageButton.setOnClickListener(CHANGE_USERNAME);
-            changeDpButton.setOnClickListener(CHANGE_DP);
+            imageButton.setOnClickListener(clickListener);
+            changeDpButton.setOnClickListener(clickListener);
         } else {
             imageButton.setVisibility(View.GONE);
             changeDpButton.setVisibility(View.GONE);
@@ -140,6 +137,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     private void setUpViewSingleUserWay() {
         userPhone.setVisibility(View.VISIBLE);
+        exitGroupButton.setVisibility(View.GONE);
         userPhone.append(user.get_id());
         listHeading.setText(R.string.st_mutual_groups);
         setUpMutualMembers();
@@ -171,6 +169,11 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     private void setUpViewsGroupWay() {
         userPhone.setVisibility(View.GONE);
+        if (UserManager.getInstance().isAdmin(user.get_id())) {
+            exitGroupButton.setVisibility(View.GONE);
+        } else {
+            exitGroupButton.setOnClickListener(clickListener);
+        }
         listHeading.setText(R.string.st_group_members);
         listHeading.setClickable(true);
         listHeading.setOnClickListener(new View.OnClickListener() {
@@ -185,6 +188,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 startActivity(intent);
             }
         });
+
     }
 
 
@@ -204,7 +208,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             }
             showDp();
             //todo probably change status too and last activity
-        } catch (Exception lateUpdate) {//fragment no more in layout
+        } catch (Exception lateUpdate) {//fragment no more in layout or maybe user left group
             Log.e(TAG, lateUpdate.getMessage(), lateUpdate.getCause());
         }
     }
@@ -293,4 +297,35 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         }
     }
 
+    private final View.OnClickListener clickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.bt_message:
+                    UiHelpers.enterChatRoom(v.getContext(), user.get_id());
+                    break;
+                case R.id.bt_exit_group:
+                    UserManager.getInstance().leaveGroup(user.get_id(), new UserManager.CallBack() {
+                        @Override
+                        public void done(Exception e) {
+                            if (e != null) {
+                                UiHelpers.showErrorDialog(getActivity().getApplicationContext(), e.getMessage());
+                            } else {
+                                getActivity().finish();
+                            }
+                        }
+                    });
+                    break;
+                case R.id.bt_change_dp:
+                    choosePicture();
+                    break;
+                case R.id.ib_change_name:
+                    UiHelpers.showToast("not implemented");
+                    break;
+                default:
+                    throw new IllegalArgumentException("unknown view");
+
+            }
+        }
+    };
 }
