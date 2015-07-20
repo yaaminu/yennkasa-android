@@ -60,6 +60,7 @@ public class User extends RealmObject {
             this.setType(other.getType());
             this.setAdmin(other.getAdmin());
             this.setDP(other.getDP());
+            this.setLocalName(other.getLocalName());
             this.setMembers(other.getMembers());
         }
     }

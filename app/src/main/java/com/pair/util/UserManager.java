@@ -123,20 +123,20 @@ public class UserManager {
     }
 
     public void createGroup(final String groupName, final CallBack callBack) {
+        //noinspection unchecked
+        createGroup(groupName, Collections.EMPTY_LIST, callBack);
+    }
+
+    public void createGroup(final String groupName, final List<String> membersId, final CallBack callBack) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callBack.done(NO_CONNECTION_ERROR);
+            return;
         }
         if (isUser(User.generateGroupId(groupName))) {
             //already exist[
             callBack.done(new Exception("group already exist"));
             return;
         }
-        //noinspection unchecked
-        createGroup(groupName, Collections.EMPTY_LIST, callBack);
-    }
-
-    public void createGroup(final String groupName, final List<String> membersId, final CallBack callBack) {
-
         userApi.createGroup(getMainUser().get_id(), groupName, membersId, new Callback<User>() {
             @Override
             public void success(User group, Response response) {

@@ -3,11 +3,13 @@ package com.pair.util;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.support.v4.util.LruCache;
 import android.util.Log;
 
 import com.pair.pairapp.BuildConfig;
 import com.squareup.picasso.Cache;
+import com.squareup.picasso.Downloader;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -34,7 +36,18 @@ public class PicassoWrapper {
 
     public static Picasso with(Context context, String cachePath) {
         Picasso.Builder builder = new Picasso.Builder(context)
-                .indicatorsEnabled(BuildConfig.DEBUG);
+                .indicatorsEnabled(BuildConfig.DEBUG)
+                .downloader(new Downloader() {
+                    @Override
+                    public Response load(Uri uri, int i) throws IOException {
+                        return null;
+                    }
+
+                    @Override
+                    public void shutdown() {
+
+                    }
+                });
         File file = new File(cachePath);
         if (!file.isDirectory() && !file.mkdirs()) {
             Log.w(TAG, "failed to initialise file based cache");

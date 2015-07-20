@@ -55,6 +55,8 @@
             android:paddingLeft="6dp"
             android:paddingRight="6dp"
             android:textColor="@color/text_msg_input">
+
+            <requestFocus/>
         </EditText>
 
         <Button

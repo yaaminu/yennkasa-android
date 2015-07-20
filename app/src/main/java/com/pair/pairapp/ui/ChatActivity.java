@@ -215,7 +215,6 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     protected void onResume() {
         super.onResume();
         Config.setIsChatRoomOpen(true);
-        editText.clearFocus();
     }
 
     @Override
