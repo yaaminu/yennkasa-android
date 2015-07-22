@@ -5,6 +5,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.Handler;
 import android.provider.ContactsContract;
+import android.telephony.PhoneNumberUtils;
+import android.text.Editable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -73,11 +75,11 @@ public class ContactsManager {
                 Log.i(TAG, "no phone number for this contact, ignoring");
                 continue;
             }
+
             // TODO use string#replace(regExp).
             phoneNumber = phoneNumber.replace("(", "").replace(")", "").replace("-", "");
-
             String name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-            if (TextUtils.isEmpty(name)) {
+            if (TextUtils.isEmpty(name)) { //people store numbers with no name; am a victim :-P
                 name = "No name";
             }
             User user = realm.where(User.class).equalTo(User.FIELD_ID, phoneNumber).findFirst();

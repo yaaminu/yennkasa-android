@@ -85,6 +85,7 @@ public class UiHelpers {
                     Log.i(TAG, "no phone number for this contact, continuing");
                     continue;
                 }
+                Log.i(TAG,phoneNumber);
                 phoneNumber = phoneNumber.replace("(", "").replace(")", "").replace("-", "");
                 ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, null, false, null);
                 phoneNumberCollection.add(contact);

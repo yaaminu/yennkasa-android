@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 
 import com.pair.adapter.BaseJsonAdapter;
@@ -169,7 +170,6 @@ public class UserManager {
                 }
             }
         });
-
     }
 
     public void removeMembers(final String groupId, final List<String> members, final CallBack callBack) {
@@ -285,24 +285,13 @@ public class UserManager {
     private void getGroupMembers(final String id) {
         userApi.getGroupMembers(id, new Callback<List<User>>() {
             @Override
-            public void success(List<User> freshMembers, Response response) {
-                Realm realm = Realm.getInstance(Config.getApplicationContext());
-                realm.beginTransaction();
-                User group = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
-                group.getMembers().clear();
-                for (User freshMember : freshMembers) {
-                    freshMember.setType(User.TYPE_NORMAL_USER);
-                }
-                group.getMembers().addAll(realm.copyToRealmOrUpdate(freshMembers));
-                realm.commitTransaction();
-                realm.close();
-                realm = Realm.getInstance(Config.getApplicationContext());
-                User g = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
-                if (g.getMembers().size() != freshMembers.size()) {
-                    throw new IllegalStateException("data state is inconsistent"); // FIXME: 7/14/2015 remove this line
-                }
-                Log.i(TAG, "members of " + g.getName() + " are: " + g.getMembers().size());
-                realm.close();
+            public void success(final List<User> freshMembers,final Response response) {
+                new Thread() {
+                    @Override
+                    public void run() {
+                        updateLocalGroupMembers(freshMembers, id);
+                    }
+                }.start();
             }
 
             @Override
@@ -312,6 +301,19 @@ public class UserManager {
                 }
             }
         });
+    }
+
+    private void updateLocalGroupMembers(List<User> freshMembers, String id) {
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        realm.beginTransaction();
+        User group = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
+        group.getMembers().clear();
+        for (User freshMember : freshMembers) {
+            freshMember.setType(User.TYPE_NORMAL_USER);
+        }
+        group.getMembers().addAll(realm.copyToRealmOrUpdate(freshMembers));
+        realm.commitTransaction();
+        realm.close();
     }
 
     public void refreshGroup(final String id) {

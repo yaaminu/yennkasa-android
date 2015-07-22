@@ -1,7 +1,10 @@
 package com.pair.adapter;
 
 import android.content.Intent;
+import android.database.ContentObserver;
 import android.net.Uri;
+import android.os.Handler;
+import android.provider.ContactsContract;
 import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -154,9 +157,10 @@ public class ContactsAdapter extends BaseAdapter {
 
         @Override
         public void onClick(View v) {
-            String message = "sms:Try out PAIRAPP messenger for android . Its free and fast!\\n download here: http://pairapp.com/download";
-            SmsManager.getDefault().sendTextMessage(contact.phoneNumber, UserManager.INSTANCE.getMainUser().get_id(), message, null, null);
+            String message = "Try out PAIRAPP messenger for android . Its free and fast!\\n download here: http://pairapp.com/download";
+           SmsManager.getDefault().sendTextMessage(contact.phoneNumber,null,message,null,null);
         }
+
     }
 
 
@@ -165,4 +169,5 @@ public class ContactsAdapter extends BaseAdapter {
             R.layout.unregistered_contact_item,
             android.R.layout.simple_list_item_checked
     };
+
 }
