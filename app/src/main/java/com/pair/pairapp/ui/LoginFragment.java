@@ -103,11 +103,11 @@ public class LoginFragment extends Fragment {
             @Override
             public void done(Exception e, String regId) {
                 if (e == null) {
-                    User user = new User();
+                    User user = ((SetUpActivity)getActivity()).registeringUser;
                     user.set_id(UiHelpers.getFieldContent(phoneNumberEt));
                     user.setPassword(UiHelpers.getFieldContent(passwordEt));
                     user.setGcmRegId(regId);
-                    UserManager.getInstance(getActivity().getApplication()).logIn(user, loginCallback);
+                    SignupFragment.goToVerificationFragment(LoginFragment.this,SetUpActivity.ACTION_LOGIN);
                 } else {
                     progressView.setVisibility(View.GONE);
                     busy = false;

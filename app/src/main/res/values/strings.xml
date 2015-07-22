@@ -45,8 +45,6 @@
         <item>Choose File</item>
     </string-array>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="add_peers">add peers</string>
     <string name="add_peers_title">Add Peers To Chat</string>
     <string name="title_activity_friends_">Select Contacts</string>
@@ -67,4 +65,8 @@
     <string name="admin">Admin</string>
     <string name="leave">Leave</string>
     <string name="call">Call</string>
+    <string name="st_verification_notice">Enter the code you received.</string>
+    <string name="st_hint_et_verification">Verification Code</string>
+    <string name="st_complete_setup">Complete Setup</string>
+    <string name="st_send_verification_notice">Tap send to get your phone number verified. This could cost you money so ensure you have a working SMS plan</string>
 </resources>

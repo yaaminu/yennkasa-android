@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.telephony.PhoneNumberUtils;
+import android.telephony.SmsManager;
 import android.util.Log;
 
 import com.pair.adapter.BaseJsonAdapter;
@@ -22,6 +22,7 @@ import org.apache.http.HttpStatus;
 import java.io.EOFException;
 import java.io.File;
 import java.net.SocketTimeoutException;
+import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,8 +42,9 @@ import retrofit.mime.TypedFile;
 public class UserManager {
 
     private static final String TAG = UserManager.class.getSimpleName();
-    private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is
-    private static final String KEY_USER_PASSWORD = "klfiielklaklier";
+    private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is for security reasons
+    private static final String KEY_USER_PASSWORD = "klfiielklaklier"; //and this one too
+    private String VERIFICATION_TOKEN;
     public static final UserManager INSTANCE = new UserManager();
 
     private volatile int loginAttempts = 0,
@@ -285,7 +287,7 @@ public class UserManager {
     private void getGroupMembers(final String id) {
         userApi.getGroupMembers(id, new Callback<List<User>>() {
             @Override
-            public void success(final List<User> freshMembers,final Response response) {
+            public void success(final List<User> freshMembers, final Response response) {
                 new Thread() {
                     @Override
                     public void run() {
@@ -521,9 +523,14 @@ public class UserManager {
         });
     }
 
-    public void logIn(User user, final CallBack callback) {
+    public void logIn(User user, String verificationToken, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
+            return;
+        }
+        if (!verificationToken.equals(this.getVERIFICATION_TOKEN())) {
+            callback.done(new Exception("Invalid Verification Token"));
+            return;
         }
         doLogIn(user, callback);
     }
@@ -564,11 +571,16 @@ public class UserManager {
     }
 
 
-    public void signUp(final User user, final CallBack callback) {
+    public void signUp(final User user, final String verificationToken, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
         }
+        if (!verificationToken.equals(this.getVERIFICATION_TOKEN())) {
+            callback.done(new Exception("Invalid Verification Token"));
+            return;
+        }
+
         if (loginSignUpBusy) {
             return;
         }
@@ -591,7 +603,7 @@ public class UserManager {
                 Exception e = handleError(retrofitError);
                 if (e == null && signUpAttempts < 3) {
                     //not our fault and we have more chance lets try again
-                    signUp(user, callback);
+                    signUp(user, verificationToken, callback);
                 } else {
                     signUpAttempts = 0;
                     callback.done(e); //may not be our fault but we have ran out of retries
@@ -599,6 +611,26 @@ public class UserManager {
             }
         });
 
+    }
+
+    public void generateAndSendVerificationToken(final String number) {
+        new Thread() {
+            @Override
+            public void run() {
+                SecureRandom random = new SecureRandom();
+                int num = random.nextInt() / 10000;
+                num = (num > 0) ? num : num * -1; //convert negative ints to positive ones
+                synchronized (this) {
+                    VERIFICATION_TOKEN = String.valueOf(num);
+                }
+                Log.i(TAG, VERIFICATION_TOKEN);
+                SmsManager.getDefault().sendTextMessage(number, null, VERIFICATION_TOKEN, null,null);
+            }
+        }.start();
+    }
+
+    private synchronized String getVERIFICATION_TOKEN() {
+        return VERIFICATION_TOKEN;
     }
 
     public void LogOut(Context context, final CallBack logOutCallback) {

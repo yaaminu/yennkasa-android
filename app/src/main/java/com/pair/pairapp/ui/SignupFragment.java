@@ -1,7 +1,6 @@
 package com.pair.pairapp.ui;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -11,24 +10,20 @@ import android.view.ViewGroup;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.pair.data.User;
-import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
-import com.pair.util.Config;
+import com.pair.pairapp.SetUpActivity;
 import com.pair.util.FormValidator;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
-import com.pair.util.UserManager;
-import com.pair.workers.ContactSyncService;
 
 /**
  * @author by Null-Pointer on 5/28/2015.
  */
 public class SignupFragment extends Fragment {
 
-    private EditText passWordEt,userNameEt;
+    private EditText passWordEt, userNameEt;
     private AutoCompleteTextView phoneNumberEt;
     @SuppressWarnings("unused")
     private FormValidator validator;
@@ -40,24 +35,6 @@ public class SignupFragment extends Fragment {
             if (busy) //trying to login, see {code attemptSignUp}
                 return;
             getFragmentManager().popBackStackImmediate();
-        }
-    };
-    private UserManager.CallBack signUpCallback = new UserManager.CallBack() {
-        public void done(Exception e) {
-            progressView.setVisibility(View.GONE);
-            busy = false;
-            if (e == null) {
-                Config.enableComponents();
-                ContactSyncService.start(getActivity());
-                startActivity(new Intent(getActivity(), MainActivity.class));
-                getActivity().finish();
-            } else {
-                String message = e.getMessage();
-                if ((message == null) || (message.isEmpty())) {
-                    message = "an unknown error occurred";
-                }
-                Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
-            }
         }
     };
 
@@ -77,7 +54,7 @@ public class SignupFragment extends Fragment {
         View view = inflater.inflate(R.layout.signup_fragment, container, false);
         passWordEt = (EditText) view.findViewById(R.id.et_passwordField);
         phoneNumberEt = (AutoCompleteTextView) view.findViewById(R.id.et_phone_number_field);
-        new UiHelpers.AutoCompleter(getActivity(),phoneNumberEt).execute(); //enable autocompletion
+        new UiHelpers.AutoCompleter(getActivity(), phoneNumberEt).execute(); //enable autocompletion
         userNameEt = (EditText) view.findViewById(R.id.usernameField);
         progressView = view.findViewById(R.id.progressView);
 
@@ -103,12 +80,12 @@ public class SignupFragment extends Fragment {
             @Override
             public void done(Exception e, String regId) {
                 if (e == null) {
-                    User user = new User();
+                    User user = ((SetUpActivity) getActivity()).registeringUser;
                     user.set_id(UiHelpers.getFieldContent(phoneNumberEt));
                     user.setPassword(UiHelpers.getFieldContent(passWordEt));
                     user.setName(UiHelpers.getFieldContent(userNameEt));
                     user.setGcmRegId(regId);
-                    UserManager.getInstance(getActivity().getApplication()).signUp(user, signUpCallback);
+                    goToVerificationFragment(SignupFragment.this,SetUpActivity.ACTION_SIGN_UP);
                 } else {
                     progressView.setVisibility(View.GONE);
                     busy = false;
@@ -116,5 +93,13 @@ public class SignupFragment extends Fragment {
                 }
             }
         });
+    }
+
+    public static void goToVerificationFragment(Fragment from,String action) {
+        Fragment fragment = new VerificationFragment();
+        Bundle bundle = new Bundle(1);
+        bundle.putString(SetUpActivity.ACTION,action);
+        fragment.setArguments(bundle);
+        from.getFragmentManager().beginTransaction().replace(R.id.container,fragment).commit();
     }
 }
