@@ -623,7 +623,7 @@ public class UserManager {
                 synchronized (this) {
                     VERIFICATION_TOKEN = String.valueOf(num);
                 }
-                Log.i(TAG, VERIFICATION_TOKEN);
+                Log.d(TAG, VERIFICATION_TOKEN);
                 SmsManager.getDefault().sendTextMessage(number, null, VERIFICATION_TOKEN, null,null);
             }
         }.start();

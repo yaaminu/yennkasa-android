@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -63,7 +64,12 @@ public class SignupFragment extends Fragment {
         view.findViewById(R.id.signupButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO validate all fields before proceeding
+                if(TextUtils.isEmpty(passWordEt.getText().toString())
+                        ||TextUtils.isEmpty(phoneNumberEt.getText().toString())
+                        ||TextUtils.isEmpty(userNameEt.getText().toString()))
+                {
+                    return;
+                }
                 attemptSignUp();
             }
         });

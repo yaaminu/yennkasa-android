@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,26 +35,6 @@ public class LoginFragment extends Fragment {
     private EditText passwordEt;
     private AutoCompleteTextView phoneNumberEt;
     private boolean busy = false;
-    private View progressView;
-    private UserManager.CallBack loginCallback = new UserManager.CallBack() {
-        public void done(Exception e) {
-            progressView.setVisibility(View.GONE);
-            busy = false;
-            if (e == null) {
-                Config.enableComponents();
-                ContactSyncService.start(getActivity());
-                startActivity(new Intent(getActivity(), MainActivity.class));
-                getActivity().finish();
-            } else {
-                String message = e.getMessage();
-                //this is necessary because retrofit sometimes throws exceptions with no message
-                if ((message == null) || (message.isEmpty())) {
-                    message = "an unknown error occurred";
-                }
-                Toast.makeText(getActivity(), message, Toast.LENGTH_LONG).show();
-            }
-        }
-    };
 
     public LoginFragment(){}
 
@@ -72,7 +53,6 @@ public class LoginFragment extends Fragment {
         new UiHelpers.AutoCompleter(getActivity(), phoneNumberEt).execute();//enable autocompletion
         passwordEt = (EditText) view.findViewById(R.id.et_passwordField);
         loginButton = (Button) view.findViewById(R.id.bt_loginButton);
-        progressView = view.findViewById(R.id.progressView);
         TextView tv = (TextView) view.findViewById(R.id.tv_signup);
 
         tv.setOnClickListener(new View.OnClickListener() {
@@ -80,13 +60,17 @@ public class LoginFragment extends Fragment {
             public void onClick(View v) {
                 if (busy)
                     return;
-                getFragmentManager().beginTransaction().replace(R.id.container, new SignupFragment(), SetUpActivity.f_TAG).addToBackStack(null).commit();
+                getFragmentManager().beginTransaction().replace(R.id.container, new SignupFragment(), SetUpActivity.f_TAG).commit();
             }
         });
-
         loginButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(TextUtils.isEmpty(passwordEt.getText().toString())
+                        ||TextUtils.isEmpty(phoneNumberEt.getText().toString()))
+                {
+                    return;
+                }
                 attemptLogin();
             }
         });
@@ -98,7 +82,6 @@ public class LoginFragment extends Fragment {
             return;
         }
         busy = true;
-        progressView.setVisibility(View.VISIBLE);
         GcmHelper.register(getActivity(), new GcmHelper.GCMRegCallback() {
             @Override
             public void done(Exception e, String regId) {
@@ -109,7 +92,6 @@ public class LoginFragment extends Fragment {
                     user.setGcmRegId(regId);
                     SignupFragment.goToVerificationFragment(LoginFragment.this,SetUpActivity.ACTION_LOGIN);
                 } else {
-                    progressView.setVisibility(View.GONE);
                     busy = false;
                     UiHelpers.showErrorDialog(getActivity(), e.getMessage());
                 }
