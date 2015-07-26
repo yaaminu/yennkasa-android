@@ -79,4 +79,6 @@
     <string name="st_hint_et_verification">Verification Code</string>
     <string name="st_complete_setup">Complete Setup</string>
     <string name="st_send_verification_notice">Tap send to get your phone number verified. This could cost you money so ensure you have a working SMS plan</string>
+    <string name="st_unknown">unknown</string>
+    <string name="st_offline">offline</string>
 </resources>

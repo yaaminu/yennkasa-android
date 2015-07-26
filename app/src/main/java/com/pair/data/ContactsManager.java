@@ -10,6 +10,7 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.UserManager;
 import com.pair.workers.PhoneNumberNormaliser;
@@ -67,26 +68,28 @@ public class ContactsManager {
     }
 
     private List<Contact> doFindAllContacts(Filter<Contact> filter, Comparator<Contact> comparator, Cursor cursor) {
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        Context context = Config.getApplicationContext();
+        Realm realm = Realm.getInstance(context);
         //noinspection TryFinallyCanBeTryWithResources
         try {
             List<Contact> contacts = new ArrayList<>();
+            String phoneNumber,name,status="",DP="";
+            User user;
+            boolean isRegistered = false;
             while (cursor.moveToNext()) {
-                String phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract
+                 phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract
                         .CommonDataKinds.Phone.NUMBER));
                 if (TextUtils.isEmpty(phoneNumber)) {
                     Log.i(TAG, "strange!: no phone number for this contact, ignoring");
                     continue;
                 }
-                String name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                 name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
                 if (TextUtils.isEmpty(name)) { //some users can store numbers with no name; am a victim :-P
-                    name = "No name"; // TODO: 7/25/2015 use a string resource
+                    name = context.getString(R.string.st_unknown);
                 }
-                User user = realm.where(User.class)
+                user = realm.where(User.class)
                         .equalTo(User.FIELD_ID, PhoneNumberNormaliser.normalise(phoneNumber, UserManager.getInstance().getDefaultCCC()))
                         .findFirst();
-                boolean isRegistered = false;
-                String status = "", DP = "";
                 if (user != null) {
                     isRegistered = true;
                     status = user.getStatus();
@@ -117,15 +120,16 @@ public class ContactsManager {
         public final boolean isRegisteredUser;
 
         public Contact(String name, String phoneNumber, String status, boolean isRegisteredUser, String DP) {
+            Context context = Config.getApplicationContext();
             if (TextUtils.isEmpty(name)) {
-                name = "unknown";
+                name = context.getString(R.string.st_unknown);
             }
             if (TextUtils.isEmpty(phoneNumber)) {
-                phoneNumber = "unknown number";
+                throw new IllegalArgumentException("invalid phone number");
             }
 
             if (TextUtils.isEmpty(status)) {
-                status = "No status set";
+                status = context.getString(R.string.st_offline);
             }
             this.name = name;
             this.phoneNumber = phoneNumber;
