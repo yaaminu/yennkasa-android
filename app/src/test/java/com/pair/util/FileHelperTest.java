@@ -1,6 +1,7 @@
 package com.pair.util;
 
 import android.net.Uri;
+import android.telephony.PhoneNumberUtils;
 
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.MainActivity;
@@ -17,18 +18,22 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricGradleTestRunner;
 import org.robolectric.annotation.*;
+import org.robolectric.annotation.Config;
 
 import java.io.File;
 import java.lang.String;
 
+import io.realm.internal.Util;
+
 /**
  * @author Null-Pointer on 6/24/2015.
  */
-public class FileHelperTest extends AndroidTestCase {
+@RunWith(RobolectricGradleTestRunner.class)
+@Config(constants = BuildConfig.class)
+public class FileHelperTest extends TestCase {
     Uri uri;
     @Before
     public void setUp() throws Exception {
-
     }
 
     @After

@@ -23,7 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/et_passwordField"
-        android:layout_below="@+id/usernameField"
+        android:layout_below="@+id/sp_ccc"
         android:ems="10"
         android:hint="@string/phone_hint"
         android:inputType="phone">
@@ -31,6 +31,13 @@
         <requestFocus />
     </AutoCompleteTextView>
 
+    <Spinner
+        android:id="@+id/sp_ccc"
+        android:entries="@array/dummyCCC"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+    </Spinner>
     <Button
         android:id="@+id/bt_loginButton"
         android:layout_width="match_parent"

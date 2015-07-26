@@ -84,10 +84,11 @@ public class VerificationFragment extends Fragment {
         if (action == null) {
             throw new IllegalArgumentException("action cannot be null");
         }
+        String ccc = ((SetUpActivity) getActivity()).CCC;
         if (action.equals(SetUpActivity.ACTION_LOGIN)) {
-            UserManager.getInstance().logIn(registeringUser, code, loginOrSignUpCallback);
+            UserManager.getInstance().logIn(registeringUser,ccc,code, loginOrSignUpCallback);
         } else if (action.equals(SetUpActivity.ACTION_SIGN_UP)) {
-            UserManager.getInstance().signUp(registeringUser, code, loginOrSignUpCallback);
+            UserManager.getInstance().signUp(registeringUser,ccc,code, loginOrSignUpCallback);
         } else {
             throw new IllegalArgumentException("unknown action: " + action);
         }

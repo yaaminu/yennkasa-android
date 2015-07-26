@@ -15,6 +15,7 @@ public class SetUpActivity extends ActionBarActivity {
     public static final String ACTION_SIGN_UP = "su",ACTION_LOGIN="li";
     public static final String ACTION = "ac";
     public User registeringUser;
+    public String CCC;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

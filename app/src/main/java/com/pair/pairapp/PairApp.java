@@ -1,6 +1,8 @@
 package com.pair.pairapp;
 
 import android.app.Application;
+import android.telephony.PhoneNumberUtils;
+import android.util.Log;
 
 import com.pair.messenger.PairAppClient;
 import com.pair.util.Config;
@@ -17,6 +19,7 @@ public class PairApp extends Application {
     public void onCreate() {
         super.onCreate();
         RealmHelper.runRealmOperation(this);
+        Log.d("com",PhoneNumberUtils.compare("00233204441069", "0204441069")+" SIMILAR");
         Config.init(this);
         if (UserManager.INSTANCE.getMainUser() != null) {
             PairAppClient.start(this);

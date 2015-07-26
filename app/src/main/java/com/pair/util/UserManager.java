@@ -44,12 +44,14 @@ public class UserManager {
     private static final String TAG = UserManager.class.getSimpleName();
     private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is for security reasons
     private static final String KEY_USER_PASSWORD = "klfiielklaklier"; //and this one too
+    private static final String KEY_USER_CCC = "USER_ccc";
     private String VERIFICATION_TOKEN;
     public static final UserManager INSTANCE = new UserManager();
 
     private volatile int loginAttempts = 0,
             signUpAttempts = 0;
     private volatile boolean loginSignUpBusy = false; //login or sign up never should run in parallel
+    @SuppressWarnings("ThrowableInstanceNeverThrown")
     private final Exception NO_CONNECTION_ERROR = new Exception("not connected to the internet");
     private final BaseJsonAdapter<User> adapter = new UserJsonAdapter();
 
@@ -74,7 +76,7 @@ public class UserManager {
     }
 
 
-    private void saveMainUser(User user) {
+    private void saveMainUser(User user, String userCCC) {
         final Context context = Config.getApplicationContext();
         Realm realm = Realm.getInstance(context);
         realm.beginTransaction();
@@ -84,6 +86,7 @@ public class UserManager {
         context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE)
                 .edit().putString(KEY_SESSION_ID, user.get_id())
                 .putString(KEY_USER_PASSWORD, user.getPassword())
+                .putString(KEY_USER_CCC, userCCC)
                 .commit();
     }
 
@@ -523,7 +526,7 @@ public class UserManager {
         });
     }
 
-    public void logIn(User user, String verificationToken, final CallBack callback) {
+    public void logIn(User user, String userCCC, String verificationToken, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
@@ -532,11 +535,11 @@ public class UserManager {
             callback.done(new Exception("Invalid Verification Token"));
             return;
         }
-        doLogIn(user, callback);
+        doLogIn(user, userCCC, callback);
     }
 
     //this method must be called on the main thread
-    private void doLogIn(final User user, final CallBack callback) {
+    private void doLogIn(final User user, final String userCCC, final CallBack callback) {
 
         if (loginSignUpBusy) {
             return;
@@ -550,7 +553,7 @@ public class UserManager {
                 loginAttempts = 0;
                 //our backend deletes password fields so we got to use our copy here
                 backendUser.setPassword(user.getPassword());
-                saveMainUser(backendUser);
+                saveMainUser(backendUser, userCCC);
                 getGroups(); //async
                 callback.done(null);
             }
@@ -561,7 +564,7 @@ public class UserManager {
                 Exception e = handleError(retrofitError);
                 if (e == null && loginAttempts < 3) {
                     //not our problem lets try again
-                    doLogIn(user, callback);
+                    doLogIn(user, userCCC, callback);
                 } else {
                     loginAttempts = 0;
                     callback.done(e); //may be our fault but we have ran out of resources
@@ -571,7 +574,7 @@ public class UserManager {
     }
 
 
-    public void signUp(final User user, final String verificationToken, final CallBack callback) {
+    public void signUp(final User user, final String userCCC, final String verificationToken, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
@@ -592,7 +595,7 @@ public class UserManager {
                 loginSignUpBusy = false;
                 signUpAttempts = 0;
                 backEndUser.setPassword(user.getPassword());
-                saveMainUser(backEndUser);
+                saveMainUser(backEndUser, userCCC);
                 callback.done(null);
             }
 
@@ -603,7 +606,7 @@ public class UserManager {
                 Exception e = handleError(retrofitError);
                 if (e == null && signUpAttempts < 3) {
                     //not our fault and we have more chance lets try again
-                    signUp(user, verificationToken, callback);
+                    signUp(user, userCCC, verificationToken, callback);
                 } else {
                     signUpAttempts = 0;
                     callback.done(e); //may not be our fault but we have ran out of retries
@@ -624,7 +627,7 @@ public class UserManager {
                     VERIFICATION_TOKEN = String.valueOf(num);
                 }
                 Log.d(TAG, VERIFICATION_TOKEN);
-                SmsManager.getDefault().sendTextMessage(number, null, VERIFICATION_TOKEN, null,null);
+                SmsManager.getDefault().sendTextMessage(number, null, VERIFICATION_TOKEN, null, null);
             }
         }.start();
     }
@@ -655,7 +658,7 @@ public class UserManager {
         GcmHelper.unRegister(context, new GcmHelper.UnregisterCallback() {
             @Override
             public void done(Exception e) {
-                //we dont care about gcm regid
+                //we don't care about gcm regid
                 cleanUpRealm();
                 logOutCallback.done(null);
             }
@@ -782,6 +785,18 @@ public class UserManager {
 
     public boolean isAdmin(String id) {
         return isAdmin(id, getMainUser().get_id());
+    }
+
+    public String getDefaultCCC() {
+        String ccc = Config.
+                getApplicationContext()
+                .getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE)
+                .getString(KEY_USER_CCC, null);
+        if (ccc == null) {
+            throw new IllegalStateException("user cc is null");
+        }
+
+        return  ccc;
     }
 
 

@@ -1,10 +1,12 @@
 package com.pair.util;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -100,6 +102,7 @@ public class GcmHelper {
 
         new AsyncTask<Void, Void, Exception>() {
 
+            @SuppressLint("CommitPrefEdits")
             @Override
             protected Exception doInBackground(Void... params) {
                 GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(context);
@@ -121,7 +124,6 @@ public class GcmHelper {
             @Override
             protected void onPostExecute(Exception e) {
                 callBack.done(e);
-
             }
         }.execute();
 

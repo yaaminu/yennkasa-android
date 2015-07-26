@@ -38,7 +38,7 @@ public class ContactSyncService extends IntentService {
         if (intent.getStringExtra(ACTION).equals(ACTION_FETCH_FRIENDS) &&
                 (UserManager.INSTANCE.getMainUser() != null)) {
             //do work here
-            UserManager manager = UserManager.getInstance(this.getApplication());
+            UserManager manager = UserManager.getInstance();
             ContactsManager.Filter<ContactsManager.Contact> filter = new ContactsManager.Filter<ContactsManager.Contact>() {
                 @Override
                 public boolean accept(ContactsManager.Contact contact) {
@@ -47,14 +47,15 @@ public class ContactSyncService extends IntentService {
             };
             List<ContactsManager.Contact> numbers = ContactsManager.INSTANCE.findAllContactsSync(filter, null);
 
-            Log.i(TAG, numbers.toString());
+            Log.d(TAG, numbers.toString());
             if (numbers.isEmpty()) { //all contacts fetched.. this should rarely happen
                 Log.i(TAG, "all friends synced");
                 return;
             }
             List<String> onlyNumbers = new ArrayList<>(numbers.size() + 1);
+            String defaultCountryCCC = UserManager.getInstance().getDefaultCCC();
             for (ContactsManager.Contact contact : numbers) {
-                onlyNumbers.add(contact.phoneNumber);
+                onlyNumbers.add(PhoneNumberNormaliser.normalise(contact.phoneNumber,defaultCountryCCC));
             }
             doFetchFriends(manager, onlyNumbers);
         }

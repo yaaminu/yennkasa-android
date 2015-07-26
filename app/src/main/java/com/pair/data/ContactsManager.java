@@ -11,6 +11,8 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.pair.util.Config;
+import com.pair.util.UserManager;
+import com.pair.workers.PhoneNumberNormaliser;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,52 +58,54 @@ public class ContactsManager {
         }).start();
     }
 
+    private static final String [] PROJECT_NAME_PHONE =  new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME};
     private Cursor getCursor(Context context) {
         ContentResolver cr = context.getContentResolver();
-        return cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
-                        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME},
+        return cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,PROJECT_NAME_PHONE,
                 null, null, null);
     }
 
     private List<Contact> doFindAllContacts(Filter<Contact> filter, Comparator<Contact> comparator, Cursor cursor) {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
-        List<Contact> contacts = new ArrayList<>();
-        while (cursor.moveToNext()) {
-            String phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract
-                    .CommonDataKinds.Phone.NUMBER));
-            //TODO do this with regexp
-            if (TextUtils.isEmpty(phoneNumber)) {
-                Log.i(TAG, "no phone number for this contact, ignoring");
-                continue;
+        //noinspection TryFinallyCanBeTryWithResources
+        try {
+            List<Contact> contacts = new ArrayList<>();
+            while (cursor.moveToNext()) {
+                String phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract
+                        .CommonDataKinds.Phone.NUMBER));
+                if (TextUtils.isEmpty(phoneNumber)) {
+                    Log.i(TAG, "strange!: no phone number for this contact, ignoring");
+                    continue;
+                }
+                String name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                if (TextUtils.isEmpty(name)) { //some users can store numbers with no name; am a victim :-P
+                    name = "No name"; // TODO: 7/25/2015 use a string resource
+                }
+                User user = realm.where(User.class)
+                        .equalTo(User.FIELD_ID, PhoneNumberNormaliser.normalise(phoneNumber, UserManager.getInstance().getDefaultCCC()))
+                        .findFirst();
+                boolean isRegistered = false;
+                String status = "", DP = "";
+                if (user != null) {
+                    isRegistered = true;
+                    status = user.getStatus();
+                    DP = user.getDP();
+                }
+                ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, status, isRegistered, DP);
+                if ((filter != null) && !filter.accept(contact)) {
+                    continue;
+                }
+                contacts.add(contact);
             }
-
-            // TODO use string#replace(regExp).
-            phoneNumber = phoneNumber.replace("(", "").replace(")", "").replace("-", "");
-            String name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-            if (TextUtils.isEmpty(name)) { //people store numbers with no name; am a victim :-P
-                name = "No name";
+            if (comparator != null) {
+                Collections.sort(contacts, comparator);
             }
-            User user = realm.where(User.class).equalTo(User.FIELD_ID, phoneNumber).findFirst();
-            boolean isRegistered = false;
-            String status = "", DP = "";
-            if (user != null) {
-                isRegistered = true;
-                status = user.getStatus();
-                DP = user.getDP();
-            }
-            ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, status, isRegistered, DP);
-            if ((filter != null) && !filter.accept(contact)) {
-                continue;
-            }
-            contacts.add(contact);
+            return contacts;
+        }finally {
+            cursor.close();
+            realm.close();
         }
-        cursor.close();
-        realm.close();
-        if (comparator != null) {
-            Collections.sort(contacts, comparator);
-        }
-        return contacts;
     }
 
     public interface FindCallback<T> {

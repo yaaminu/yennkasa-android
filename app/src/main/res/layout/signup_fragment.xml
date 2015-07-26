@@ -36,11 +36,18 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/et_passwordField"
-        android:layout_below="@+id/usernameField"
         android:ems="10"
+        android:layout_below="@+id/sp_ccc"
         android:hint="@string/phone_hint"
         android:inputType="phone"/>
 
+    <Spinner
+        android:id="@+id/sp_ccc"
+        android:layout_below="@+id/usernameField"
+        android:entries="@array/dummyCCC"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+    </Spinner>
     <Button
         android:id="@+id/signupButton"
         android:layout_width="match_parent"

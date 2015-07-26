@@ -44,6 +44,16 @@
         <item>Choose Video</item>
         <item>Choose File</item>
     </string-array>
+    <string-array name="dummyCCC">
+        <item>Country</item>
+        <item>GH +233</item>
+        <item>US +1</item>
+        <item>UK +44</item>
+        <item>NIG +234</item>
+        <item>FR +33</item>
+        <item>RUS +7</item>
+        <item>TOGO +238</item>
+    </string-array>
 
     <string name="add_peers">add peers</string>
     <string name="add_peers_title">Add Peers To Chat</string>
