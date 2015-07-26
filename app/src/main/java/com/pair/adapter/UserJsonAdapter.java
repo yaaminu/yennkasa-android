@@ -20,6 +20,7 @@ public class UserJsonAdapter implements BaseJsonAdapter<User> {
         obj.addProperty(User.FIELD_STATUS, user.getStatus());
         obj.addProperty(User.FIELD_LAST_ACTIVITY, user.getLastActivity());
         obj.addProperty(User.FIELD_ACCOUNT_CREATED, user.getAccountCreated());
+        obj.addProperty(User.FIELD_COUNTRY,user.getCountry());
         return obj;
     }
 
