@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -22,6 +23,7 @@ import android.widget.ListView;
 import com.pair.data.ContactsManager;
 import com.pair.data.User;
 import com.pair.pairapp.R;
+import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UserManager;
 
 import java.util.ArrayList;
@@ -29,6 +31,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.zip.CheckedInputStream;
 
 import io.realm.Realm;
 
@@ -80,8 +83,7 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
             public void onClick(View v) {
                 String numBerToAdd = editText.getText().toString().trim();
                 if (!TextUtils.isEmpty(numBerToAdd)) {
-                    // TODO: 7/19/2015 normalise number first
-                    selectedFriends.add(numBerToAdd);
+                    selectedFriends.add(PhoneNumberNormaliser.toIEE(numBerToAdd,UserManager.getInstance().getDefaultCCC()));
                     editText.setText("");
                     supportInvalidateOptionsMenu();
                 }
@@ -124,8 +126,8 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
         return new ContactsManager.Filter<ContactsManager.Contact>() {
             @Override
             public boolean accept(ContactsManager.Contact contact) {
-                User user = UserManager.INSTANCE.getMainUser(); //main user cannot be null
-                return !(contact.phoneNumber.equals(user.get_id())) && contact.isRegisteredUser && !membersId.contains(contact.phoneNumber);
+                User user = UserManager.getInstance().getMainUser(); //main user cannot be null
+                return !(contact.numberInIEE_Format.equals(user.get_id())) && contact.isRegisteredUser && !membersId.contains(contact.numberInIEE_Format);
             }
         };
     }
@@ -164,9 +166,9 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         ContactsManager.Contact contact = ((ContactsManager.Contact) view.getTag());
         if (listView.isItemChecked(position)) {
-            selectedFriends.add(contact.phoneNumber);
+            selectedFriends.add(contact.numberInIEE_Format);
         } else {
-            selectedFriends.remove(contact.phoneNumber);
+            selectedFriends.remove(contact.numberInIEE_Format);
         }
         supportInvalidateOptionsMenu();
     }
@@ -184,11 +186,10 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                //noinspection ConstantConditions
-                convertView = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_checked, parent, false);
-            }
-            ((CheckedTextView) convertView).setText(getItem(position).name);
+            //noinspection ConstantConditions
+            convertView = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_checked, parent, false);
+            final CheckedTextView checkedTextView = (CheckedTextView) convertView;
+            checkedTextView.setText(getItem(position).name);
             convertView.setTag(getItem(position));
             return convertView;
         }

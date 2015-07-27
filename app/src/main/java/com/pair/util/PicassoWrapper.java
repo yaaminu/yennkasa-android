@@ -165,7 +165,7 @@ public class PicassoWrapper {
                 } else {
                     Log.e(TAG, e.getMessage());
                 }
-                Log.wtf(TAG, "failed to normalise uri, returning it like that");
+                Log.wtf(TAG, "failed to toIEE uri, returning it like that");
                 return uri;
             }
         }

@@ -19,9 +19,8 @@ public class PairApp extends Application {
     public void onCreate() {
         super.onCreate();
         RealmHelper.runRealmOperation(this);
-        Log.d("com",PhoneNumberUtils.compare("00233204441069", "0204441069")+" SIMILAR");
         Config.init(this);
-        if (UserManager.INSTANCE.getMainUser() != null) {
+        if (UserManager.getInstance().getMainUser() != null) {
             PairAppClient.start(this);
             ContactSyncService.start(this);
         }

@@ -33,12 +33,11 @@ public class PairAppClient extends Service {
     public static final String ACTION = "action";
     private boolean bound = false;
     private volatile int boundClients = 0;
-    private AtomicBoolean noJob = new AtomicBoolean(false);
     public final PairAppClientInterface INSTANCE = new PairAppClientInterface();
     private Dispatcher<Message> DISPATCHER_INSTANCE;
 
     public static void start(Context context) {
-        if (UserManager.INSTANCE.getMainUser() == null) {
+        if (UserManager.getInstance().getMainUser() == null) {
             return;
         }
         Intent pairAppClient = new Intent(context, PairAppClient.class);
@@ -54,7 +53,7 @@ public class PairAppClient extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "starting pairapp client service");
         super.onStartCommand(intent, flags, startId);
-        if (UserManager.INSTANCE.getMainUser() == null) {
+        if (UserManager.getInstance().getMainUser() == null) {
             stopSelf();
             return START_STICKY;
         }

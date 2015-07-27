@@ -91,7 +91,7 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         final ContactsManager.Filter<Contact> filter = new ContactsManager.Filter<Contact>() {
             @Override
             public boolean accept(Contact contact) {
-                User user = UserManager.INSTANCE.getMainUser(); //main user cannot be null
+                User user = UserManager.getInstance().getMainUser(); //main user cannot be null
                 return !(contact.phoneNumber.equals(user.get_id()));
             }
         };
@@ -113,7 +113,7 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
     public void onListItemClick(ListView l, View v, int position, long id) {
         Contact contact = ((ContactsAdapter.ViewHolder) v.getTag()).contact; //very safe
         if (contact.isRegisteredUser) {
-            UiHelpers.enterChatRoom(getActivity(), contact.phoneNumber);
+            UiHelpers.enterChatRoom(getActivity(), contact.numberInIEE_Format);
         } else {
             Log.d(TAG, "clicked an unregistered user");
         }

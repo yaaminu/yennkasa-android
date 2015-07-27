@@ -36,7 +36,7 @@ public class ContactSyncService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent.getStringExtra(ACTION).equals(ACTION_FETCH_FRIENDS) &&
-                (UserManager.INSTANCE.getMainUser() != null)) {
+                (UserManager.getInstance().getMainUser() != null)) {
             //do work here
             UserManager manager = UserManager.getInstance();
             ContactsManager.Filter<ContactsManager.Contact> filter = new ContactsManager.Filter<ContactsManager.Contact>() {
@@ -47,7 +47,6 @@ public class ContactSyncService extends IntentService {
             };
             List<ContactsManager.Contact> numbers = ContactsManager.INSTANCE.findAllContactsSync(filter, null);
 
-            Log.d(TAG, numbers.toString());
             if (numbers.isEmpty()) { //all contacts fetched.. this should rarely happen
                 Log.i(TAG, "all friends synced");
                 return;
@@ -55,8 +54,11 @@ public class ContactSyncService extends IntentService {
             List<String> onlyNumbers = new ArrayList<>(numbers.size() + 1);
             String defaultCountryCCC = UserManager.getInstance().getDefaultCCC();
             for (ContactsManager.Contact contact : numbers) {
-                onlyNumbers.add(PhoneNumberNormaliser.normalise(contact.phoneNumber,defaultCountryCCC));
+                //we need to convert contacts to the format our backend understands so that it can
+                //correctly retrieve the right users.
+                onlyNumbers.add(contact.numberInIEE_Format);
             }
+            Log.d(TAG, onlyNumbers.toString());
             doFetchFriends(manager, onlyNumbers);
         }
     }
@@ -89,9 +91,8 @@ public class ContactSyncService extends IntentService {
             realm.copyToRealm(users);
             Log.i(TAG, "added " + users.size() + " new users");
             realm.commitTransaction();
-        } catch (RealmException e) { //primary keys violation
-            //never mind
-            Log.wtf(TAG, "users already exist");
+        } catch (RealmException e) { //primary keys violation, never mind
+            Log.i(TAG, "users already exist");
             realm.cancelTransaction();
         } finally {
             realm.close();

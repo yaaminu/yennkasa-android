@@ -194,7 +194,7 @@ public class User extends RealmObject {
     }
 
     public static String generateGroupId(String groupName) {
-        return groupName + "@" + UserManager.INSTANCE.getMainUser().get_id();
+        return groupName + "@" + UserManager.getInstance().getMainUser().get_id();
     }
 
     @Nullable

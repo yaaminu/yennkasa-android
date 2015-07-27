@@ -86,8 +86,8 @@ public class UiHelpers {
                     continue;
                 }
                 Log.i(TAG,phoneNumber);
-                phoneNumber = phoneNumber.replace("(", "").replace(")", "").replace("-", "");
-                ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, null, false, null);
+                phoneNumber = PhoneNumberNormaliser.cleanNonDialableChars(phoneNumber);
+                ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, null, false, null,null);
                 phoneNumberCollection.add(contact);
             }
             phoneCur.close();

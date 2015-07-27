@@ -1,6 +1,7 @@
 package com.pair.pairapp.ui;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -12,8 +13,8 @@ import android.view.ViewGroup;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.pair.data.User;
 import com.pair.pairapp.MainActivity;
@@ -35,7 +36,7 @@ public class LoginFragment extends Fragment {
     private EditText passwordEt;
     private AutoCompleteTextView phoneNumberEt;
     private boolean busy = false;
-
+    private ProgressDialog progressDialog;
     public LoginFragment(){}
 
     @Override
@@ -81,21 +82,49 @@ public class LoginFragment extends Fragment {
         if (busy) {
             return;
         }
+        progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setMessage(getString(R.string.st_please_wait));
+        progressDialog.setCancelable(false);
+        progressDialog.show();
         busy = true;
         GcmHelper.register(getActivity(), new GcmHelper.GCMRegCallback() {
             @Override
-            public void done(Exception e, String regId) {
+            public void done(Exception e, String gcmRegId) {
                 if (e == null) {
-                    User user = ((SetUpActivity)getActivity()).registeringUser;
-                    user.set_id(UiHelpers.getFieldContent(phoneNumberEt));
-                    user.setPassword(UiHelpers.getFieldContent(passwordEt));
-                    user.setGcmRegId(regId);
-                    SignupFragment.goToVerificationFragment(LoginFragment.this,SetUpActivity.ACTION_LOGIN);
+                    String phoneNumber = phoneNumberEt.getText().toString().trim();
+                    String password = passwordEt.getText().toString().trim();
+                    int position = ((Spinner) getView().findViewById(R.id.sp_ccc)).getSelectedItemPosition();
+                    String ccc = getResources().getStringArray(R.array.dummyCCC)[position];
+                    UserManager.getInstance().logIn(phoneNumber, password, gcmRegId, ccc, new UserManager.CallBack() {
+                        @Override
+                        public void done(Exception e) {
+                            progressDialog.dismiss();
+                            if (e == null) {
+                                Config.enableComponents();
+                                ContactSyncService.start(Config.getApplicationContext());
+                                startActivity(new Intent(getActivity(), MainActivity.class));
+                                getActivity().finish();
+                            } else {
+                                String message = e.getMessage();
+                                if ((message == null) || (message.isEmpty())) {
+                                    message = "an unknown error occurred";
+                                }
+                                UiHelpers.showErrorDialog(getActivity(),message);
+                            }
+                        }
+                    });
                 } else {
+                    progressDialog.dismiss();
                     busy = false;
                     UiHelpers.showErrorDialog(getActivity(), e.getMessage());
                 }
             }
         });
     }
+
+    private UserManager.CallBack loginOrSignUpCallback = new UserManager.CallBack() {
+        public void done(Exception e) {
+
+        }
+    };
 }

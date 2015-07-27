@@ -130,7 +130,6 @@ public class ContactsAdapter extends BaseAdapter {
             holder.inviteButton.setOnClickListener(new InviteContact(contact));
         }
 
-        Log.i(TAG, "Display picture: " + contact.DP);
         return convertView;
     }
 
@@ -159,6 +158,11 @@ public class ContactsAdapter extends BaseAdapter {
         public void onClick(View v) {
             String message = "Try out PAIRAPP messenger for android . Its free and fast!\\n download here: http://pairapp.com/download";
            SmsManager.getDefault().sendTextMessage(contact.phoneNumber,null,message,null,null);
+            Uri uri = Uri.parse("smsto:"+contact.phoneNumber);
+            Intent intent = new Intent(Intent.ACTION_SENDTO);
+            intent.setData(uri);
+            intent.putExtra(Intent.EXTRA_TEXT,message);
+            v.getContext().startActivity(intent);
         }
 
     }

@@ -1,4 +1,4 @@
-package com.pair.workers;
+package com.pair.util;
 
 import android.telephony.PhoneNumberUtils;
 
@@ -17,12 +17,12 @@ public class PhoneNumberNormaliser {
     private static final Pattern GLOBAL_NUMBER_PATTERN = Pattern.compile("^(00|011|166)"),
             NON_DIALABLE_PATTERN = Pattern.compile("[^\\d]");
 
-    public static String normalise(String phoneNumber, String defaultCountryCallingCode) {
+    public static String toIEE(String phoneNumber, String defaultCountryCallingCode) {
         if (phoneNumber == null) {
             throw new IllegalArgumentException("phoneNumber is null!");
         }
         if (phoneNumber.length() < 7) {
-            throw new IllegalArgumentException("phone number is too short");
+            throw new IllegalArgumentException("phone number " + phoneNumber + " is too short");
         }
         if (defaultCountryCallingCode == null) {
             throw new IllegalArgumentException("defaultCountryCallingCode is null!");
@@ -30,19 +30,21 @@ public class PhoneNumberNormaliser {
         if (!defaultCountryCallingCode.startsWith("+") || defaultCountryCallingCode.length() < 2) {
             throw new IllegalArgumentException("invalid ccc: " + defaultCountryCallingCode);
         }
-        phoneNumber = replaceNonDialable(phoneNumber);
+        phoneNumber = cleanNonDialableChars(phoneNumber);
         if(phoneNumber.startsWith("+")){
             return phoneNumber;
         }
         if (GLOBAL_NUMBER_PATTERN.matcher(phoneNumber).find()) {
             return GLOBAL_NUMBER_PATTERN.matcher(phoneNumber).replaceFirst("+");
         }
-
         phoneNumber = phoneNumber.substring(1);
         return defaultCountryCallingCode + phoneNumber;
     }
 
-    public static String replaceNonDialable(String phoneNumber) {
+    public static boolean isIEE_Formatted(String phoneNumber){
+        return phoneNumber != null && phoneNumber.startsWith("+");
+    }
+    public static String cleanNonDialableChars(String phoneNumber) {
         if(phoneNumber == null){
             throw new IllegalArgumentException("phone number is null!");
         }

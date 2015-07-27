@@ -145,13 +145,13 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
             String adminText = context.getResources().getString(R.string.admin);
             ViewHolder holder = (ViewHolder) convertView.getTag();
             holder.userId = user.get_id();
-            if (UserManager.INSTANCE.isMainUser(user.get_id())) {
+            if (UserManager.getInstance().isMainUser(user.get_id())) {
                 holder.username.setText(context.getResources().getString(R.string.you));
             } else {
                 holder.username.setText(user.getName());
             }
 
-            if (UserManager.INSTANCE.isAdmin(groupId, user.get_id())) {
+            if (UserManager.getInstance().isAdmin(groupId, user.get_id())) {
                 holder.username.append(" - " + adminText);
             }
             PicassoWrapper.with(context)

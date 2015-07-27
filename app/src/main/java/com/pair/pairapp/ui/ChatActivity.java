@@ -105,7 +105,6 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
-        //TODO change this query to a more general one than will work even when we add group chat
         messages = realm.where(Message.class).equalTo(Message.FIELD_FROM, peer.get_id())
                 .or()
                 .equalTo(Message.FIELD_TO, peer.get_id())
@@ -174,7 +173,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        User mainUser = UserManager.INSTANCE.getMainUser();
+        User mainUser = UserManager.getInstance().getMainUser();
         menu.findItem(R.id.action_add_peers).setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().get_id().equals(mainUser.get_id()));
         menu.findItem(R.id.action_peer_info).setTitle((peer.getType() == User.TYPE_GROUP) ? R.string.st_group_info : R.string.st_peer_info);
         return super.onPrepareOptionsMenu(menu);
@@ -294,7 +293,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     }
 
     private User getCurrentUser() {
-        return UserManager.INSTANCE.getMainUser();
+        return UserManager.getInstance().getMainUser();
     }
 
     private static String getDescription(int type) {

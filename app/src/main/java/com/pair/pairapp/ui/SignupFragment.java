@@ -1,6 +1,8 @@
 package com.pair.pairapp.ui;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -10,14 +12,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.pair.data.User;
+import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.pairapp.SetUpActivity;
+import com.pair.util.Config;
 import com.pair.util.FormValidator;
 import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
+import com.pair.util.UserManager;
+import com.pair.workers.ContactSyncService;
 
 /**
  * @author by Null-Pointer on 5/28/2015.
@@ -38,6 +45,7 @@ public class SignupFragment extends Fragment {
             getFragmentManager().popBackStackImmediate();
         }
     };
+    private ProgressDialog pDialog;
 
     public SignupFragment() {
     }
@@ -64,10 +72,9 @@ public class SignupFragment extends Fragment {
         view.findViewById(R.id.signupButton).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(TextUtils.isEmpty(passWordEt.getText().toString())
-                        ||TextUtils.isEmpty(phoneNumberEt.getText().toString())
-                        ||TextUtils.isEmpty(userNameEt.getText().toString()))
-                {
+                if (TextUtils.isEmpty(passWordEt.getText().toString())
+                        || TextUtils.isEmpty(phoneNumberEt.getText().toString())
+                        || TextUtils.isEmpty(userNameEt.getText().toString())) {
                     return;
                 }
                 attemptSignUp();
@@ -81,31 +88,44 @@ public class SignupFragment extends Fragment {
             return;
         }
         busy = true;
-        progressView.setVisibility(View.VISIBLE);
+        pDialog = new ProgressDialog(getActivity());
+        pDialog.setMessage(getString(R.string.st_please_wait));
+        pDialog.setCancelable(false);
+        pDialog.show();
         GcmHelper.register(getActivity(), new GcmHelper.GCMRegCallback() {
             @Override
             public void done(Exception e, String regId) {
                 if (e == null) {
-                    User user = ((SetUpActivity) getActivity()).registeringUser;
-                    user.set_id(UiHelpers.getFieldContent(phoneNumberEt));
-                    user.setPassword(UiHelpers.getFieldContent(passWordEt));
-                    user.setName(UiHelpers.getFieldContent(userNameEt));
-                    user.setGcmRegId(regId);
-                    goToVerificationFragment(SignupFragment.this,SetUpActivity.ACTION_SIGN_UP);
+                    String phoneNumber = phoneNumberEt.getText().toString().trim(),
+                            name = userNameEt.getText().toString().trim(),
+                            password = passWordEt.getText().toString().trim();
+                    @SuppressWarnings("ConstantConditions") int position = ((Spinner) getView().findViewById(R.id.sp_ccc)).getSelectedItemPosition();
+                    String ccc = getResources().getStringArray(R.array.dummyCCC)[position];
+                    UserManager.getInstance().signUp(name, phoneNumber, password, regId, ccc, new UserManager.CallBack() {
+
+                        @Override
+                        public void done(Exception e) {
+                            pDialog.dismiss();
+                            if (e == null) {
+                                Config.enableComponents();
+                                ContactSyncService.start(Config.getApplicationContext());
+                                startActivity(new Intent(getActivity(), MainActivity.class));
+                                getActivity().finish();
+                            } else {
+                                String message = e.getMessage();
+                                if ((message == null) || (message.isEmpty())) {
+                                    message = "an unknown error occurred";
+                                }
+                                UiHelpers.showErrorDialog(getActivity(), message);
+                            }
+                        }
+                    });
                 } else {
-                    progressView.setVisibility(View.GONE);
+                    pDialog.dismiss();
                     busy = false;
                     UiHelpers.showErrorDialog(getActivity(), e.getMessage());
                 }
             }
         });
-    }
-
-    public static void goToVerificationFragment(Fragment from,String action) {
-        Fragment fragment = new VerificationFragment();
-        Bundle bundle = new Bundle(1);
-        bundle.putString(SetUpActivity.ACTION,action);
-        fragment.setArguments(bundle);
-        from.getFragmentManager().beginTransaction().replace(R.id.container,fragment).commit();
     }
 }

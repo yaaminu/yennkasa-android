@@ -53,7 +53,7 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
                 .into(holder.groupIcon);
         holder.groupId = group.get_id(); //adapters will use this
         RealmList<User> groupMembers = group.getMembers();
-        User mainUser = UserManager.INSTANCE.getMainUser();
+        User mainUser = UserManager.getInstance().getMainUser();
         StringBuilder members = new StringBuilder(groupMembers.size() * 10); //summary
         members.append("You");
         for (int i = 0; i < groupMembers.size(); i++) {

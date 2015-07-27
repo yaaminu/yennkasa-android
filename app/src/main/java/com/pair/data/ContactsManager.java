@@ -5,15 +5,13 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.Handler;
 import android.provider.ContactsContract;
-import android.telephony.PhoneNumberUtils;
-import android.text.Editable;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.UserManager;
-import com.pair.workers.PhoneNumberNormaliser;
+import com.pair.util.PhoneNumberNormaliser;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,9 +71,9 @@ public class ContactsManager {
         //noinspection TryFinallyCanBeTryWithResources
         try {
             List<Contact> contacts = new ArrayList<>();
-            String phoneNumber,name,status="",DP="";
+            String phoneNumber,name,status,DP,standardisedNumber;
             User user;
-            boolean isRegistered = false;
+            boolean isRegistered;
             while (cursor.moveToNext()) {
                  phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract
                         .CommonDataKinds.Phone.NUMBER));
@@ -83,19 +81,30 @@ public class ContactsManager {
                     Log.i(TAG, "strange!: no phone number for this contact, ignoring");
                     continue;
                 }
-                 name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                if (TextUtils.isEmpty(name)) { //some users can store numbers with no name; am a victim :-P
-                    name = context.getString(R.string.st_unknown);
+                try {
+                    standardisedNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getDefaultCCC());
+                }catch (IllegalArgumentException invalidPhoneNumber){
+                    Log.e(TAG,"failed to format to IEE number: " + invalidPhoneNumber.getMessage());
+                    continue;
                 }
                 user = realm.where(User.class)
-                        .equalTo(User.FIELD_ID, PhoneNumberNormaliser.normalise(phoneNumber, UserManager.getInstance().getDefaultCCC()))
+                        .equalTo(User.FIELD_ID,standardisedNumber)
                         .findFirst();
                 if (user != null) {
                     isRegistered = true;
                     status = user.getStatus();
                     DP = user.getDP();
+                }else{
+                    isRegistered = false;
+                    status = "";
+                    DP = "";
                 }
-                ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, status, isRegistered, DP);
+                name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                if (TextUtils.isEmpty(name)) { //some users can store numbers with no name; am a victim :-P
+                    name = context.getString(R.string.st_unknown);
+                }
+
+                ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, status, isRegistered, DP,standardisedNumber);
                 if ((filter != null) && !filter.accept(contact)) {
                     continue;
                 }
@@ -116,10 +125,10 @@ public class ContactsManager {
     }
 
     public static final class Contact {
-        public final String name, phoneNumber, status, DP;
+        public final String name, phoneNumber, status, DP, numberInIEE_Format;
         public final boolean isRegisteredUser;
 
-        public Contact(String name, String phoneNumber, String status, boolean isRegisteredUser, String DP) {
+        public Contact(String name, String phoneNumber, String status, boolean isRegisteredUser, String DP,String standardisedPhoneNumber) {
             Context context = Config.getApplicationContext();
             if (TextUtils.isEmpty(name)) {
                 name = context.getString(R.string.st_unknown);
@@ -131,6 +140,10 @@ public class ContactsManager {
             if (TextUtils.isEmpty(status)) {
                 status = context.getString(R.string.st_offline);
             }
+            if(isRegisteredUser && standardisedPhoneNumber==null){
+                throw new IllegalArgumentException("standardised number is null");
+            }
+            this.numberInIEE_Format = standardisedPhoneNumber;
             this.name = name;
             this.phoneNumber = phoneNumber;
             this.isRegisteredUser = isRegisteredUser;

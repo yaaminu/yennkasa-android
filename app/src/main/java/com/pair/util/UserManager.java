@@ -2,9 +2,11 @@ package com.pair.util;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.telephony.SmsManager;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.pair.adapter.BaseJsonAdapter;
@@ -46,7 +48,7 @@ public class UserManager {
     private static final String KEY_USER_PASSWORD = "klfiielklaklier"; //and this one too
     private static final String KEY_USER_CCC = "USER_ccc";
     private String VERIFICATION_TOKEN;
-    public static final UserManager INSTANCE = new UserManager();
+    private static final UserManager INSTANCE = new UserManager();
 
     private volatile int loginAttempts = 0,
             signUpAttempts = 0;
@@ -145,22 +147,25 @@ public class UserManager {
         }
         userApi.createGroup(getMainUser().get_id(), groupName, membersId, new Callback<User>() {
             @Override
-            public void success(User group, Response response) {
-                Realm realm = Realm.getInstance(Config.getApplicationContext());
-                realm.beginTransaction();
-                group.setMembers(new RealmList<User>());//required for realm to behave
-                User mainUser = getMainUser(realm);
-                if (mainUser == null) {
-                    throw new IllegalStateException("no user logged in");
+            public void success(final User group, Response response) {
+                final Handler handler = new Handler();
+               final Realm realm = Realm.getInstance(Config.getApplicationContext());
+                try {
+                    new Thread(){
+                        @Override
+                        public void run() {
+                            completeGroupCreation(group, realm, membersId);
+                           handler.post(new Runnable() {
+                               @Override
+                               public void run() {
+                                   callBack.done(null);
+                               }
+                           });
+                        }
+                    }.start();
+                }finally {
+                    realm.close();
                 }
-                RealmList<User> members = User.aggregateUsers(realm, membersId, null);
-                group.getMembers().addAll(members);
-                group.getMembers().add(mainUser);
-                group.setAdmin(mainUser);
-                group.setType(User.TYPE_GROUP);
-                realm.copyToRealmOrUpdate(group);
-                realm.commitTransaction();
-                realm.close();
                 callBack.done(null);
             }
 
@@ -175,6 +180,22 @@ public class UserManager {
                 }
             }
         });
+    }
+
+    private void completeGroupCreation(User group, Realm realm, List<String> membersId) {
+        realm.beginTransaction();
+        group.setMembers(new RealmList<User>());//required for realm to behave
+        User mainUser = getMainUser(realm);
+        if (mainUser == null) {
+            throw new IllegalStateException("no user logged in");
+        }
+        RealmList<User> members = User.aggregateUsers(realm, membersId, null);
+        group.getMembers().addAll(members);
+        group.getMembers().add(mainUser);
+        group.setAdmin(mainUser);
+        group.setType(User.TYPE_GROUP);
+        realm.copyToRealmOrUpdate(group);
+        realm.commitTransaction();
     }
 
     public void removeMembers(final String groupId, final List<String> members, final CallBack callBack) {
@@ -526,15 +547,35 @@ public class UserManager {
         });
     }
 
-    public void logIn(User user, String userCCC, String verificationToken, final CallBack callback) {
+    public void logIn(String phoneNumber,String password,String gcmRegId,String userCCC, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
         }
-        if (!verificationToken.equals(this.getVERIFICATION_TOKEN())) {
-            callback.done(new Exception("Invalid Verification Token"));
+        if(TextUtils.isEmpty(phoneNumber)){
+            callback.done(new Exception("invalid phone number"));
             return;
         }
+        if(TextUtils.isEmpty(password)){
+            callback.done(new Exception("invalid password"));
+            return;
+        }
+        if(TextUtils.isEmpty(userCCC)){
+            callback.done(new Exception("CCC cannot be null"));
+            return;
+        }
+        if(TextUtils.isEmpty(gcmRegId)){
+            callback.done(new Exception("GCM registration id cannot be null"));
+            return;
+        }
+
+        User user = new User();
+        user.setPassword(password);
+        phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userCCC);
+        user.set_id(phoneNumber);
+        //FIXME: 7/26/2015 use country instead of ccc.
+        user.setCountry(userCCC);
+        user.setGcmRegId(gcmRegId);
         doLogIn(user, userCCC, callback);
     }
 
@@ -574,46 +615,56 @@ public class UserManager {
     }
 
 
-    public void signUp(final User user, final String userCCC, final String verificationToken, final CallBack callback) {
+    public void signUp(final String name, final String phoneNumber, final String password, final String gcmRegId,final String userCCC, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
         }
-        if (!verificationToken.equals(this.getVERIFICATION_TOKEN())) {
-            callback.done(new Exception("Invalid Verification Token"));
-            return;
-        }
-
         if (loginSignUpBusy) {
             return;
         }
         loginSignUpBusy = true;
         signUpAttempts++;
-        userApi.registerUser(adapter.toJson(user), new Callback<User>() {
-            @Override
-            public void success(User backEndUser, Response response) {
-                loginSignUpBusy = false;
-                signUpAttempts = 0;
-                backEndUser.setPassword(user.getPassword());
-                saveMainUser(backEndUser, userCCC);
-                callback.done(null);
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-                loginSignUpBusy = false;
-                // TODO: 6/25/2015 handle error
-                Exception e = handleError(retrofitError);
-                if (e == null && signUpAttempts < 3) {
-                    //not our fault and we have more chance lets try again
-                    signUp(user, userCCC, verificationToken, callback);
-                } else {
+        if(TextUtils.isEmpty(name)){
+            callback.done(new Exception("name is invalid"));
+        }else if(TextUtils.isEmpty(phoneNumber)){
+            callback.done(new Exception("phone number is invalid"));
+        }else if(TextUtils.isEmpty(password)){
+            callback.done(new Exception("password is invalid"));
+        }else if(TextUtils.isEmpty(userCCC)){
+            callback.done(new Exception("ccc is invalid"));
+        }else {
+            final User user = new User();
+            user.set_id(PhoneNumberNormaliser.toIEE(phoneNumber, userCCC));
+            user.setPassword(password);
+            user.setName(name);
+            user.setCountry(userCCC); // TODO: 7/26/2015 use actual country instead of ccc
+            user.setGcmRegId(gcmRegId);
+            userApi.registerUser(adapter.toJson(user), new Callback<User>() {
+                @Override
+                public void success(User backEndUser, Response response) {
+                    loginSignUpBusy = false;
                     signUpAttempts = 0;
-                    callback.done(e); //may not be our fault but we have ran out of retries
+                    backEndUser.setPassword(user.getPassword());
+                    saveMainUser(backEndUser, userCCC);
+                    callback.done(null);
                 }
-            }
-        });
 
+                @Override
+                public void failure(RetrofitError retrofitError) {
+                    loginSignUpBusy = false;
+                    // TODO: 6/25/2015 handle error
+                    Exception e = handleError(retrofitError);
+                    if (e == null && signUpAttempts < 3) {
+                        //not our fault and we have more chance lets try again
+                        signUp(name,phoneNumber,password,gcmRegId, userCCC, callback);
+                    } else {
+                        signUpAttempts = 0;
+                        callback.done(e); //may not be our fault but we have ran out of retries
+                    }
+                }
+            });
+        }
     }
 
     public void generateAndSendVerificationToken(final String number) {

@@ -96,11 +96,11 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         String id = getArguments().getString(ARG_USER_ID);
         user = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
 
-        if (user == null || UserManager.INSTANCE.isMainUser(id)) {
+        if (user == null || UserManager.getInstance().isMainUser(id)) {
             Log.wtf(TAG, "invalid user id. program aborting");
             throw new IllegalArgumentException("invalid user id");
         }
-        final UserManager userManager = UserManager.INSTANCE;
+        final UserManager userManager = UserManager.getInstance();
 
         //common to all
         userName.setText("@" + user.getName());
@@ -209,7 +209,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     public void onChange() {
         try {
             userName.setText("@" + user.getName());
-            if (!UserManager.INSTANCE.isGroup(user.get_id())) {
+            if (!UserManager.getInstance().isGroup(user.get_id())) {
                 setUpMutualMembers();
             }
             showDp();
@@ -231,7 +231,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 } else {
                     filePath = uri.getPath();
                 }
-                UserManager userManager = UserManager.INSTANCE;
+                UserManager userManager = UserManager.getInstance();
                 dpChangeProgress = new ProgressDialog(getActivity());
                 dpChangeProgress.setMessage(getResources().getString(R.string.st_please_wait));
                 dpChangeProgress.setCancelable(false);

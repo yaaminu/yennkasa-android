@@ -23,7 +23,7 @@ public class ProfileActivity extends ActionBarActivity {
             throw new IllegalArgumentException("should in user id");
         }
         Fragment fragment;
-        if (!UserManager.INSTANCE.isMainUser(id)) {
+        if (!UserManager.getInstance().isMainUser(id)) {
             fragment = new ProfileFragment();
             bundle = new Bundle();
             bundle.putString(ProfileFragment.ARG_USER_ID, id);

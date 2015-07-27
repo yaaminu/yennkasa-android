@@ -56,7 +56,7 @@ public class GroupsFragment extends ListFragment {
         setHasOptionsMenu(true);
         View view = inflater.inflate(R.layout.fragment_groups, container, false);
         realm = Realm.getInstance(getActivity());
-        UserManager.INSTANCE.refreshGroups();
+        UserManager.getInstance().refreshGroups();
         return view;
     }
 
