@@ -149,23 +149,18 @@ public class UserManager {
             @Override
             public void success(final User group, Response response) {
                 final Handler handler = new Handler();
-               final Realm realm = Realm.getInstance(Config.getApplicationContext());
-                try {
-                    new Thread(){
-                        @Override
-                        public void run() {
-                            completeGroupCreation(group, realm, membersId);
-                           handler.post(new Runnable() {
-                               @Override
-                               public void run() {
-                                   callBack.done(null);
-                               }
-                           });
-                        }
-                    }.start();
-                }finally {
-                    realm.close();
-                }
+                new Thread() {
+                    @Override
+                    public void run() {
+                        completeGroupCreation(group, membersId);
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                callBack.done(null);
+                            }
+                        });
+                    }
+                }.start();
                 callBack.done(null);
             }
 
@@ -182,7 +177,8 @@ public class UserManager {
         });
     }
 
-    private void completeGroupCreation(User group, Realm realm, List<String> membersId) {
+    private void completeGroupCreation(User group, List<String> membersId) {
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
         realm.beginTransaction();
         group.setMembers(new RealmList<User>());//required for realm to behave
         User mainUser = getMainUser(realm);
@@ -196,6 +192,7 @@ public class UserManager {
         group.setType(User.TYPE_GROUP);
         realm.copyToRealmOrUpdate(group);
         realm.commitTransaction();
+        realm.close();
     }
 
     public void removeMembers(final String groupId, final List<String> members, final CallBack callBack) {
@@ -547,24 +544,24 @@ public class UserManager {
         });
     }
 
-    public void logIn(String phoneNumber,String password,String gcmRegId,String userCCC, final CallBack callback) {
+    public void logIn(String phoneNumber, String password, String gcmRegId, String userCCC, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
         }
-        if(TextUtils.isEmpty(phoneNumber)){
+        if (TextUtils.isEmpty(phoneNumber)) {
             callback.done(new Exception("invalid phone number"));
             return;
         }
-        if(TextUtils.isEmpty(password)){
+        if (TextUtils.isEmpty(password)) {
             callback.done(new Exception("invalid password"));
             return;
         }
-        if(TextUtils.isEmpty(userCCC)){
+        if (TextUtils.isEmpty(userCCC)) {
             callback.done(new Exception("CCC cannot be null"));
             return;
         }
-        if(TextUtils.isEmpty(gcmRegId)){
+        if (TextUtils.isEmpty(gcmRegId)) {
             callback.done(new Exception("GCM registration id cannot be null"));
             return;
         }
@@ -615,7 +612,7 @@ public class UserManager {
     }
 
 
-    public void signUp(final String name, final String phoneNumber, final String password, final String gcmRegId,final String userCCC, final CallBack callback) {
+    public void signUp(final String name, final String phoneNumber, final String password, final String gcmRegId, final String userCCC, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
@@ -625,15 +622,15 @@ public class UserManager {
         }
         loginSignUpBusy = true;
         signUpAttempts++;
-        if(TextUtils.isEmpty(name)){
+        if (TextUtils.isEmpty(name)) {
             callback.done(new Exception("name is invalid"));
-        }else if(TextUtils.isEmpty(phoneNumber)){
+        } else if (TextUtils.isEmpty(phoneNumber)) {
             callback.done(new Exception("phone number is invalid"));
-        }else if(TextUtils.isEmpty(password)){
+        } else if (TextUtils.isEmpty(password)) {
             callback.done(new Exception("password is invalid"));
-        }else if(TextUtils.isEmpty(userCCC)){
+        } else if (TextUtils.isEmpty(userCCC)) {
             callback.done(new Exception("ccc is invalid"));
-        }else {
+        } else {
             final User user = new User();
             user.set_id(PhoneNumberNormaliser.toIEE(phoneNumber, userCCC));
             user.setPassword(password);
@@ -657,7 +654,7 @@ public class UserManager {
                     Exception e = handleError(retrofitError);
                     if (e == null && signUpAttempts < 3) {
                         //not our fault and we have more chance lets try again
-                        signUp(name,phoneNumber,password,gcmRegId, userCCC, callback);
+                        signUp(name, phoneNumber, password, gcmRegId, userCCC, callback);
                     } else {
                         signUpAttempts = 0;
                         callback.done(e); //may not be our fault but we have ran out of retries
@@ -847,7 +844,7 @@ public class UserManager {
             throw new IllegalStateException("user cc is null");
         }
 
-        return  ccc;
+        return ccc;
     }
 
 

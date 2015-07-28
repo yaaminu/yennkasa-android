@@ -1,12 +1,7 @@
 package com.pair.adapter;
 
 import android.content.Intent;
-import android.database.ContentObserver;
 import android.net.Uri;
-import android.os.Handler;
-import android.provider.ContactsContract;
-import android.telephony.SmsManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +14,6 @@ import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
-import com.pair.util.UserManager;
 
 import java.util.List;
 
@@ -147,9 +141,7 @@ public class ContactsAdapter extends BaseAdapter {
     }
 
     private class InviteContact implements View.OnClickListener {
-
         Contact contact;
-
         public InviteContact(Contact contact) {
             this.contact = contact;
         }
@@ -157,11 +149,10 @@ public class ContactsAdapter extends BaseAdapter {
         @Override
         public void onClick(View v) {
             String message = "Try out PAIRAPP messenger for android . Its free and fast!\\n download here: http://pairapp.com/download";
-           SmsManager.getDefault().sendTextMessage(contact.phoneNumber,null,message,null,null);
-            Uri uri = Uri.parse("smsto:"+contact.phoneNumber);
+            Uri uri = Uri.parse("sms:"+contact.phoneNumber);
             Intent intent = new Intent(Intent.ACTION_SENDTO);
             intent.setData(uri);
-            intent.putExtra(Intent.EXTRA_TEXT,message);
+            intent.putExtra(Intent.EXTRA_TEXT, message);
             v.getContext().startActivity(intent);
         }
 

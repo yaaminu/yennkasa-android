@@ -101,7 +101,7 @@ public class GroupsFragment extends ListFragment {
 
     public Dialog createDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        View view = LayoutInflater.from(getActivity()).inflate(R.layout.create_group, null);
+        @SuppressWarnings("ConstantConditions") View view = LayoutInflater.from(getActivity()).inflate(R.layout.create_group, null);
         et = ((EditText) view.findViewById(R.id.et_group_name));
         builder.setTitle("Create Group")
                 .setCancelable(false)

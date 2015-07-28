@@ -126,7 +126,7 @@ public class MainActivity extends ActionBarActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             ArrayList<String> members = data.getStringArrayListExtra(FriendsActivity.SELECTED_USERS);
-            if (members == null) {
+            if (members == null || members.isEmpty()) {
                 return;
             }
             UserManager.getInstance().createGroup(groupName, members, new UserManager.CallBack() {
