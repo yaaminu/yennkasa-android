@@ -104,7 +104,7 @@ public class ContactsAdapter extends BaseAdapter {
             final View.OnClickListener listener = new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    UiHelpers.gotoProfileActivity(v.getContext(), holder.contact.phoneNumber);
+                    UiHelpers.gotoProfileActivity(v.getContext(), holder.contact.numberInIEE_Format);
                 }
             };
             holder.userName.setOnClickListener(listener);

@@ -6,7 +6,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.telephony.PhoneNumberUtils;
+import android.os.Build;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -38,6 +38,9 @@ public class GcmHelper {
 
     public static boolean checkPlayServices(Activity context) {
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
+        if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.HONEYCOMB){
+            return true;
+        }
         Log.i(TAG, "results code: " + resultCode);
         if (resultCode != ConnectionResult.SUCCESS) {
             if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
@@ -62,6 +65,7 @@ public class GcmHelper {
             this.callback = callback;
         }
 
+        @SuppressLint("CommitPrefEdits")
         @Override
         protected GcmRegResults doInBackground(Void... params) {
             SharedPreferences sharedPreferences = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);

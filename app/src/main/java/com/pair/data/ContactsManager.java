@@ -8,6 +8,7 @@ import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.UserManager;
@@ -16,7 +17,9 @@ import com.pair.util.PhoneNumberNormaliser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import io.realm.Realm;
 
@@ -70,7 +73,7 @@ public class ContactsManager {
         Realm realm = Realm.getInstance(context);
         //noinspection TryFinallyCanBeTryWithResources
         try {
-            List<Contact> contacts = new ArrayList<>();
+            Set<Contact> contacts = new HashSet<>();
             String phoneNumber,name,status,DP,standardisedNumber;
             User user;
             boolean isRegistered;
@@ -85,6 +88,9 @@ public class ContactsManager {
                     standardisedNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getDefaultCCC());
                 }catch (IllegalArgumentException invalidPhoneNumber){
                     Log.e(TAG,"failed to format to IEE number: " + invalidPhoneNumber.getMessage());
+                    continue;
+                } catch (NumberParseException e) {
+                    Log.e(TAG,"failed to format to IEE number: " + e.getMessage());
                     continue;
                 }
                 user = realm.where(User.class)
@@ -110,10 +116,11 @@ public class ContactsManager {
                 }
                 contacts.add(contact);
             }
+            List<Contact> ret = new ArrayList<>(contacts);
             if (comparator != null) {
-                Collections.sort(contacts, comparator);
+                Collections.sort(ret, comparator);
             }
-            return contacts;
+            return ret;
         }finally {
             cursor.close();
             realm.close();

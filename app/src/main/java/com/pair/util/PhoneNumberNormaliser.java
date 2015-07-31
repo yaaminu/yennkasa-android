@@ -1,6 +1,8 @@
 package com.pair.util;
 
-import android.telephony.PhoneNumberUtils;
+import com.google.i18n.phonenumbers.NumberParseException;
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber;
 
 import java.util.regex.Pattern;
 
@@ -8,6 +10,8 @@ import java.util.regex.Pattern;
  * @author Null-Pointer on 7/25/2015.
  */
 public class PhoneNumberNormaliser {
+    private static String TAG = PhoneNumberNormaliser.class.getSimpleName();
+
     private PhoneNumberNormaliser() {
         throw new IllegalStateException("cannot instantiate");
     }
@@ -17,41 +21,35 @@ public class PhoneNumberNormaliser {
     private static final Pattern GLOBAL_NUMBER_PATTERN = Pattern.compile("^(00|011|166)"),
             NON_DIALABLE_PATTERN = Pattern.compile("[^\\d]");
 
-    public static String toIEE(String phoneNumber, String defaultCountryCallingCode) {
+    public static String toIEE(String phoneNumber, String defaultCountryCallingCode) throws NumberParseException {
         if (phoneNumber == null) {
             throw new IllegalArgumentException("phoneNumber is null!");
-        }
-        if (phoneNumber.length() < 7) {
-            throw new IllegalArgumentException("phone number " + phoneNumber + " is too short");
         }
         if (defaultCountryCallingCode == null) {
             throw new IllegalArgumentException("defaultCountryCallingCode is null!");
         }
-        if (!defaultCountryCallingCode.startsWith("+") || defaultCountryCallingCode.length() < 2) {
-            throw new IllegalArgumentException("invalid ccc: " + defaultCountryCallingCode);
-        }
-        phoneNumber = cleanNonDialableChars(phoneNumber);
-        if(phoneNumber.startsWith("+")){
-            return phoneNumber;
-        }
-        if (GLOBAL_NUMBER_PATTERN.matcher(phoneNumber).find()) {
-            return GLOBAL_NUMBER_PATTERN.matcher(phoneNumber).replaceFirst("+");
-        }
-        phoneNumber = phoneNumber.substring(1);
-        return defaultCountryCallingCode + phoneNumber;
+        PhoneNumberUtil utils = PhoneNumberUtil.getInstance();
+        Phonenumber.PhoneNumber number = utils.parse(phoneNumber, defaultCountryCallingCode);
+        return "+" + number.getCountryCode() + number.getNationalNumber();
     }
 
-    public static boolean isIEE_Formatted(String phoneNumber){
-        return phoneNumber != null && phoneNumber.startsWith("+");
+    public static boolean isIEE_Formatted(String phoneNumber) {
+        PhoneNumberUtil util = PhoneNumberUtil.getInstance();
+        try {
+            return util.isValidNumber(util.parse(phoneNumber,null));
+        } catch (NumberParseException e) {
+            return false;
+        }
     }
+
     public static String cleanNonDialableChars(String phoneNumber) {
-        if(phoneNumber == null){
+        if (phoneNumber == null) {
             throw new IllegalArgumentException("phone number is null!");
         }
         boolean wasIEEFormatted = phoneNumber.indexOf('+') != -1;
-        String ret= NON_DIALABLE_PATTERN.matcher(phoneNumber).replaceAll("");
-        if(wasIEEFormatted){
-            ret = "+"+ret;
+        String ret = NON_DIALABLE_PATTERN.matcher(phoneNumber).replaceAll("");
+        if (wasIEEFormatted) {
+            ret = "+" + ret;
         }
         return ret;
     }

@@ -90,6 +90,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         exitGroupButton = ((Button) view.findViewById(R.id.bt_exit_group));
         listHeading = ((TextView) view.findViewById(R.id.tv_list_heading));
         mutualGroupsList = ((ListView) view.findViewById(R.id.lv_mutual_groups_list));
+        mutualGroupsList.setEmptyView(view.findViewById(R.id.empty));
         //end view hookup
 
         realm = Realm.getInstance(getActivity());
@@ -173,6 +174,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     private void setUpViewsGroupWay() {
         userPhone.setVisibility(View.GONE);
+        mutualGroupsList.setVisibility(View.GONE);
+        mutualGroupsList.getEmptyView().setVisibility(View.GONE);
         //noinspection ConstantConditions
         callButton.setVisibility(View.GONE);
         if (UserManager.getInstance().isAdmin(user.get_id())) {

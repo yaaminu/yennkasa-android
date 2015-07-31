@@ -44,7 +44,6 @@
     <Spinner
         android:id="@+id/sp_ccc"
         android:layout_below="@+id/usernameField"
-        android:entries="@array/dummyCCC"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
     </Spinner>

@@ -9,6 +9,7 @@ import android.telephony.SmsManager;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.adapter.BaseJsonAdapter;
 import com.pair.adapter.UserJsonAdapter;
 import com.pair.data.ContactsManager;
@@ -568,7 +569,17 @@ public class UserManager {
 
         User user = new User();
         user.setPassword(password);
-        phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userCCC);
+        try {
+            phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userCCC);
+        } catch (NumberParseException e) {
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, e.getMessage(), e.getCause());
+            } else {
+                Log.e(TAG, e.getMessage());
+            }
+            callback.done(e);
+            return;
+        }
         user.set_id(phoneNumber);
         //FIXME: 7/26/2015 use country instead of ccc.
         user.setCountry(userCCC);
@@ -632,7 +643,17 @@ public class UserManager {
             callback.done(new Exception("ccc is invalid"));
         } else {
             final User user = new User();
-            user.set_id(PhoneNumberNormaliser.toIEE(phoneNumber, userCCC));
+            try {
+                user.set_id(PhoneNumberNormaliser.toIEE(phoneNumber, userCCC));
+            } catch (NumberParseException e) {
+                if (BuildConfig.DEBUG) {
+                    Log.e(TAG, e.getMessage(), e.getCause());
+                } else {
+                    Log.e(TAG, e.getMessage());
+                }
+                callback.done(e);
+                return;
+            }
             user.setPassword(password);
             user.setName(name);
             user.setCountry(userCCC); // TODO: 7/26/2015 use actual country instead of ccc

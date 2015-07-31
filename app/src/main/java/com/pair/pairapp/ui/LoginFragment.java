@@ -16,7 +16,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.pair.data.User;
+import com.pair.adapter.CountriesListAdapter;
+import com.pair.data.Country;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.pairapp.SetUpActivity;
@@ -25,6 +26,8 @@ import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 import com.pair.workers.ContactSyncService;
+
+import io.realm.Realm;
 
 /**
  * @author by Null-Pointer on 5/28/2015.
@@ -37,6 +40,7 @@ public class LoginFragment extends Fragment {
     private AutoCompleteTextView phoneNumberEt;
     private boolean busy = false;
     private ProgressDialog progressDialog;
+    private Realm realm;
     public LoginFragment(){}
 
     @Override
@@ -49,19 +53,28 @@ public class LoginFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
+        realm = Realm.getInstance(getActivity());
         View view = inflater.inflate(R.layout.login_fragment, container, false);
         phoneNumberEt = (AutoCompleteTextView) view.findViewById(R.id.et_phone_number_field);
         new UiHelpers.AutoCompleter(getActivity(), phoneNumberEt).execute();//enable autocompletion
         passwordEt = (EditText) view.findViewById(R.id.et_passwordField);
         loginButton = (Button) view.findViewById(R.id.bt_loginButton);
+        Spinner spinner = ((Spinner) view.findViewById(R.id.sp_ccc));
+        final CountriesListAdapter adapter = new CountriesListAdapter(getActivity(),realm.where(Country.class).findAllSorted("name"));
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+        spinner.setSelection(0);
         TextView tv = (TextView) view.findViewById(R.id.tv_signup);
-
         tv.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (busy)
                     return;
-                getFragmentManager().beginTransaction().replace(R.id.container, new SignupFragment(), SetUpActivity.f_TAG).commit();
+                Fragment fragment = getFragmentManager().findFragmentByTag(SetUpActivity.SIGNUP_FRAG);
+                if (fragment == null) {
+                    fragment = new SignupFragment();
+                }
+                getFragmentManager().beginTransaction().replace(R.id.container, new SignupFragment(), SetUpActivity.SIGNUP_FRAG).commit();
             }
         });
         loginButton.setOnClickListener(new View.OnClickListener() {
@@ -93,8 +106,7 @@ public class LoginFragment extends Fragment {
                 if (e == null) {
                     String phoneNumber = phoneNumberEt.getText().toString().trim();
                     String password = passwordEt.getText().toString().trim();
-                    int position = ((Spinner) getView().findViewById(R.id.sp_ccc)).getSelectedItemPosition();
-                    String ccc = getResources().getStringArray(R.array.dummyCCC)[position];
+                    String ccc = ((Country) ((Spinner) getView().findViewById(R.id.sp_ccc)).getSelectedItem()).getIso2letterCode();
                     UserManager.getInstance().logIn(phoneNumber, password, gcmRegId, ccc, new UserManager.CallBack() {
                         @Override
                         public void done(Exception e) {

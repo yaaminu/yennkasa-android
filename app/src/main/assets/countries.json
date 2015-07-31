@@ -1,0 +1,1237 @@
+[
+  {
+    "name": "Aruba",
+    "ccc": "297",
+    "iso2letterCode": "AW"
+  },
+  {
+    "name": "Afghanistan",
+    "ccc": "93",
+    "iso2letterCode": "AF"
+  },
+  {
+    "name": "Angola",
+    "ccc": "244",
+    "iso2letterCode": "AO"
+  },
+  {
+    "name": "Anguilla",
+    "ccc": "1264",
+    "iso2letterCode": "AI"
+  },
+  {
+    "name": "Åland Islands",
+    "ccc": "358",
+    "iso2letterCode": "AX"
+  },
+  {
+    "name": "Albania",
+    "ccc": "355",
+    "iso2letterCode": "AL"
+  },
+  {
+    "name": "Andorra",
+    "ccc": "376",
+    "iso2letterCode": "AD"
+  },
+  {
+    "name": "United Arab Emirates",
+    "ccc": "971",
+    "iso2letterCode": "AE"
+  },
+  {
+    "name": "Argentina",
+    "ccc": "54",
+    "iso2letterCode": "AR"
+  },
+  {
+    "name": "Armenia",
+    "ccc": "374",
+    "iso2letterCode": "AM"
+  },
+  {
+    "name": "American Samoa",
+    "ccc": "1684",
+    "iso2letterCode": "AS"
+  },
+  {
+    "name": "Antarctica",
+    "iso2letterCode": "AQ"
+  },
+  {
+    "name": "French Southern and Antarctic Lands",
+    "iso2letterCode": "TF"
+  },
+  {
+    "name": "Antigua and Barbuda",
+    "ccc": "1268",
+    "iso2letterCode": "AG"
+  },
+  {
+    "name": "Australia",
+    "ccc": "61",
+    "iso2letterCode": "AU"
+  },
+  {
+    "name": "Austria",
+    "ccc": "43",
+    "iso2letterCode": "AT"
+  },
+  {
+    "name": "Azerbaijan",
+    "ccc": "994",
+    "iso2letterCode": "AZ"
+  },
+  {
+    "name": "Burundi",
+    "ccc": "257",
+    "iso2letterCode": "BI"
+  },
+  {
+    "name": "Belgium",
+    "ccc": "32",
+    "iso2letterCode": "BE"
+  },
+  {
+    "name": "Benin",
+    "ccc": "229",
+    "iso2letterCode": "BJ"
+  },
+  {
+    "name": "Burkina Faso",
+    "ccc": "226",
+    "iso2letterCode": "BF"
+  },
+  {
+    "name": "Bangladesh",
+    "ccc": "880",
+    "iso2letterCode": "BD"
+  },
+  {
+    "name": "Bulgaria",
+    "ccc": "359",
+    "iso2letterCode": "BG"
+  },
+  {
+    "name": "Bahrain",
+    "ccc": "973",
+    "iso2letterCode": "BH"
+  },
+  {
+    "name": "Bahamas",
+    "ccc": "1242",
+    "iso2letterCode": "BS"
+  },
+  {
+    "name": "Bosnia and Herzegovina",
+    "ccc": "387",
+    "iso2letterCode": "BA"
+  },
+  {
+    "name": "Saint Barthélemy",
+    "ccc": "590",
+    "iso2letterCode": "BL"
+  },
+  {
+    "name": "Belarus",
+    "ccc": "375",
+    "iso2letterCode": "BY"
+  },
+  {
+    "name": "Belize",
+    "ccc": "501",
+    "iso2letterCode": "BZ"
+  },
+  {
+    "name": "Bermuda",
+    "ccc": "1441",
+    "iso2letterCode": "BM"
+  },
+  {
+    "name": "Bolivia",
+    "ccc": "591",
+    "iso2letterCode": "BO"
+  },
+  {
+    "name": "Brazil",
+    "ccc": "55",
+    "iso2letterCode": "BR"
+  },
+  {
+    "name": "Barbados",
+    "ccc": "1246",
+    "iso2letterCode": "BB"
+  },
+  {
+    "name": "Brunei",
+    "ccc": "673",
+    "iso2letterCode": "BN"
+  },
+  {
+    "name": "Bhutan",
+    "ccc": "975",
+    "iso2letterCode": "BT"
+  },
+  {
+    "name": "Bouvet Island",
+    "iso2letterCode": "BV"
+  },
+  {
+    "name": "Botswana",
+    "ccc": "267",
+    "iso2letterCode": "BW"
+  },
+  {
+    "name": "Central African Republic",
+    "ccc": "236",
+    "iso2letterCode": "CF"
+  },
+  {
+    "name": "Canada",
+    "ccc": "1",
+    "iso2letterCode": "CA"
+  },
+  {
+    "name": "Cocos (Keeling) Islands",
+    "ccc": "61",
+    "iso2letterCode": "CC"
+  },
+  {
+    "name": "Switzerland",
+    "ccc": "41",
+    "iso2letterCode": "CH"
+  },
+  {
+    "name": "Chile",
+    "ccc": "56",
+    "iso2letterCode": "CL"
+  },
+  {
+    "name": "China",
+    "ccc": "86",
+    "iso2letterCode": "CN"
+  },
+  {
+    "name": "Ivory Coast",
+    "ccc": "225",
+    "iso2letterCode": "CI"
+  },
+  {
+    "name": "Cameroon",
+    "ccc": "237",
+    "iso2letterCode": "CM"
+  },
+  {
+    "name": "DR Congo",
+    "ccc": "243",
+    "iso2letterCode": "CD"
+  },
+  {
+    "name": "Republic of the Congo",
+    "ccc": "242",
+    "iso2letterCode": "CG"
+  },
+  {
+    "name": "Cook Islands",
+    "ccc": "682",
+    "iso2letterCode": "CK"
+  },
+  {
+    "name": "Colombia",
+    "ccc": "57",
+    "iso2letterCode": "CO"
+  },
+  {
+    "name": "Comoros",
+    "ccc": "269",
+    "iso2letterCode": "KM"
+  },
+  {
+    "name": "Cape Verde",
+    "ccc": "238",
+    "iso2letterCode": "CV"
+  },
+  {
+    "name": "Costa Rica",
+    "ccc": "506",
+    "iso2letterCode": "CR"
+  },
+  {
+    "name": "Cuba",
+    "ccc": "53",
+    "iso2letterCode": "CU"
+  },
+  {
+    "name": "Curaçao",
+    "ccc": "5999",
+    "iso2letterCode": "CW"
+  },
+  {
+    "name": "Christmas Island",
+    "ccc": "61",
+    "iso2letterCode": "CX"
+  },
+  {
+    "name": "Cayman Islands",
+    "ccc": "1345",
+    "iso2letterCode": "KY"
+  },
+  {
+    "name": "Cyprus",
+    "ccc": "357",
+    "iso2letterCode": "CY"
+  },
+  {
+    "name": "Czech Republic",
+    "ccc": "420",
+    "iso2letterCode": "CZ"
+  },
+  {
+    "name": "Germany",
+    "ccc": "49",
+    "iso2letterCode": "DE"
+  },
+  {
+    "name": "Djibouti",
+    "ccc": "253",
+    "iso2letterCode": "DJ"
+  },
+  {
+    "name": "Dominica",
+    "ccc": "1767",
+    "iso2letterCode": "DM"
+  },
+  {
+    "name": "Denmark",
+    "ccc": "45",
+    "iso2letterCode": "DK"
+  },
+  {
+    "name": "Dominican Republic",
+    "ccc": "1809",
+    "iso2letterCode": "DO"
+  },
+  {
+    "name": "Algeria",
+    "ccc": "213",
+    "iso2letterCode": "DZ"
+  },
+  {
+    "name": "Ecuador",
+    "ccc": "593",
+    "iso2letterCode": "EC"
+  },
+  {
+    "name": "Egypt",
+    "ccc": "20",
+    "iso2letterCode": "EG"
+  },
+  {
+    "name": "Eritrea",
+    "ccc": "291",
+    "iso2letterCode": "ER"
+  },
+  {
+    "name": "Western Sahara",
+    "ccc": "212",
+    "iso2letterCode": "EH"
+  },
+  {
+    "name": "Spain",
+    "ccc": "34",
+    "iso2letterCode": "ES"
+  },
+  {
+    "name": "Estonia",
+    "ccc": "372",
+    "iso2letterCode": "EE"
+  },
+  {
+    "name": "Ethiopia",
+    "ccc": "251",
+    "iso2letterCode": "ET"
+  },
+  {
+    "name": "Finland",
+    "ccc": "358",
+    "iso2letterCode": "FI"
+  },
+  {
+    "name": "Fiji",
+    "ccc": "679",
+    "iso2letterCode": "FJ"
+  },
+  {
+    "name": "Falkland Islands",
+    "ccc": "500",
+    "iso2letterCode": "FK"
+  },
+  {
+    "name": "France",
+    "ccc": "33",
+    "iso2letterCode": "FR"
+  },
+  {
+    "name": "Faroe Islands",
+    "ccc": "298",
+    "iso2letterCode": "FO"
+  },
+  {
+    "name": "Micronesia",
+    "ccc": "691",
+    "iso2letterCode": "FM"
+  },
+  {
+    "name": "Gabon",
+    "ccc": "241",
+    "iso2letterCode": "GA"
+  },
+  {
+    "name": "United Kingdom",
+    "ccc": "44",
+    "iso2letterCode": "GB"
+  },
+  {
+    "name": "Georgia",
+    "ccc": "995",
+    "iso2letterCode": "GE"
+  },
+  {
+    "name": "Guernsey",
+    "ccc": "44",
+    "iso2letterCode": "GG"
+  },
+  {
+    "name": "Ghana",
+    "ccc": "233",
+    "iso2letterCode": "GH"
+  },
+  {
+    "name": "Gibraltar",
+    "ccc": "350",
+    "iso2letterCode": "GI"
+  },
+  {
+    "name": "Guinea",
+    "ccc": "224",
+    "iso2letterCode": "GN"
+  },
+  {
+    "name": "Guadeloupe",
+    "ccc": "590",
+    "iso2letterCode": "GP"
+  },
+  {
+    "name": "Gambia",
+    "ccc": "220",
+    "iso2letterCode": "GM"
+  },
+  {
+    "name": "Guinea-Bissau",
+    "ccc": "245",
+    "iso2letterCode": "GW"
+  },
+  {
+    "name": "Equatorial Guinea",
+    "ccc": "240",
+    "iso2letterCode": "GQ"
+  },
+  {
+    "name": "Greece",
+    "ccc": "30",
+    "iso2letterCode": "GR"
+  },
+  {
+    "name": "Grenada",
+    "ccc": "1473",
+    "iso2letterCode": "GD"
+  },
+  {
+    "name": "Greenland",
+    "ccc": "299",
+    "iso2letterCode": "GL"
+  },
+  {
+    "name": "Guatemala",
+    "ccc": "502",
+    "iso2letterCode": "GT"
+  },
+  {
+    "name": "French Guiana",
+    "ccc": "594",
+    "iso2letterCode": "GF"
+  },
+  {
+    "name": "Guam",
+    "ccc": "1671",
+    "iso2letterCode": "GU"
+  },
+  {
+    "name": "Guyana",
+    "ccc": "592",
+    "iso2letterCode": "GY"
+  },
+  {
+    "name": "Hong Kong",
+    "ccc": "852",
+    "iso2letterCode": "HK"
+  },
+  {
+    "name": "Heard Island and McDonald Islands",
+    "iso2letterCode": "HM"
+  },
+  {
+    "name": "Honduras",
+    "ccc": "504",
+    "iso2letterCode": "HN"
+  },
+  {
+    "name": "Croatia",
+    "ccc": "385",
+    "iso2letterCode": "HR"
+  },
+  {
+    "name": "Haiti",
+    "ccc": "509",
+    "iso2letterCode": "HT"
+  },
+  {
+    "name": "Hungary",
+    "ccc": "36",
+    "iso2letterCode": "HU"
+  },
+  {
+    "name": "Indonesia",
+    "ccc": "62",
+    "iso2letterCode": "ID"
+  },
+  {
+    "name": "Isle of Man",
+    "ccc": "44",
+    "iso2letterCode": "IM"
+  },
+  {
+    "name": "India",
+    "ccc": "91",
+    "iso2letterCode": "IN"
+  },
+  {
+    "name": "British Indian Ocean Territory",
+    "ccc": "246",
+    "iso2letterCode": "IO"
+  },
+  {
+    "name": "Ireland",
+    "ccc": "353",
+    "iso2letterCode": "IE"
+  },
+  {
+    "name": "Iran",
+    "ccc": "98",
+    "iso2letterCode": "IR"
+  },
+  {
+    "name": "Iraq",
+    "ccc": "964",
+    "iso2letterCode": "IQ"
+  },
+  {
+    "name": "Iceland",
+    "ccc": "354",
+    "iso2letterCode": "IS"
+  },
+  {
+    "name": "Israel",
+    "ccc": "972",
+    "iso2letterCode": "IL"
+  },
+  {
+    "name": "Italy",
+    "ccc": "39",
+    "iso2letterCode": "IT"
+  },
+  {
+    "name": "Jamaica",
+    "ccc": "1876",
+    "iso2letterCode": "JM"
+  },
+  {
+    "name": "Jersey",
+    "ccc": "44",
+    "iso2letterCode": "JE"
+  },
+  {
+    "name": "Jordan",
+    "ccc": "962",
+    "iso2letterCode": "JO"
+  },
+  {
+    "name": "Japan",
+    "ccc": "81",
+    "iso2letterCode": "JP"
+  },
+  {
+    "name": "Kazakhstan",
+    "ccc": "76",
+    "iso2letterCode": "KZ"
+  },
+  {
+    "name": "Kenya",
+    "ccc": "254",
+    "iso2letterCode": "KE"
+  },
+  {
+    "name": "Kyrgyzstan",
+    "ccc": "996",
+    "iso2letterCode": "KG"
+  },
+  {
+    "name": "Cambodia",
+    "ccc": "855",
+    "iso2letterCode": "KH"
+  },
+  {
+    "name": "Kiribati",
+    "ccc": "686",
+    "iso2letterCode": "KI"
+  },
+  {
+    "name": "Saint Kitts and Nevis",
+    "ccc": "1869",
+    "iso2letterCode": "KN"
+  },
+  {
+    "name": "South Korea",
+    "ccc": "82",
+    "iso2letterCode": "KR"
+  },
+  {
+    "name": "Kosovo",
+    "ccc": "383",
+    "iso2letterCode": "XK"
+  },
+  {
+    "name": "Kuwait",
+    "ccc": "965",
+    "iso2letterCode": "KW"
+  },
+  {
+    "name": "Laos",
+    "ccc": "856",
+    "iso2letterCode": "LA"
+  },
+  {
+    "name": "Lebanon",
+    "ccc": "961",
+    "iso2letterCode": "LB"
+  },
+  {
+    "name": "Liberia",
+    "ccc": "231",
+    "iso2letterCode": "LR"
+  },
+  {
+    "name": "Libya",
+    "ccc": "218",
+    "iso2letterCode": "LY"
+  },
+  {
+    "name": "Saint Lucia",
+    "ccc": "1758",
+    "iso2letterCode": "LC"
+  },
+  {
+    "name": "Liechtenstein",
+    "ccc": "423",
+    "iso2letterCode": "LI"
+  },
+  {
+    "name": "Sri Lanka",
+    "ccc": "94",
+    "iso2letterCode": "LK"
+  },
+  {
+    "name": "Lesotho",
+    "ccc": "266",
+    "iso2letterCode": "LS"
+  },
+  {
+    "name": "Lithuania",
+    "ccc": "370",
+    "iso2letterCode": "LT"
+  },
+  {
+    "name": "Luxembourg",
+    "ccc": "352",
+    "iso2letterCode": "LU"
+  },
+  {
+    "name": "Latvia",
+    "ccc": "371",
+    "iso2letterCode": "LV"
+  },
+  {
+    "name": "Macau",
+    "ccc": "853",
+    "iso2letterCode": "MO"
+  },
+  {
+    "name": "Saint Martin",
+    "ccc": "590",
+    "iso2letterCode": "MF"
+  },
+  {
+    "name": "Morocco",
+    "ccc": "212",
+    "iso2letterCode": "MA"
+  },
+  {
+    "name": "Monaco",
+    "ccc": "377",
+    "iso2letterCode": "MC"
+  },
+  {
+    "name": "Moldova",
+    "ccc": "373",
+    "iso2letterCode": "MD"
+  },
+  {
+    "name": "Madagascar",
+    "ccc": "261",
+    "iso2letterCode": "MG"
+  },
+  {
+    "name": "Maldives",
+    "ccc": "960",
+    "iso2letterCode": "MV"
+  },
+  {
+    "name": "Mexico",
+    "ccc": "52",
+    "iso2letterCode": "MX"
+  },
+  {
+    "name": "Marshall Islands",
+    "ccc": "692",
+    "iso2letterCode": "MH"
+  },
+  {
+    "name": "Macedonia",
+    "ccc": "389",
+    "iso2letterCode": "MK"
+  },
+  {
+    "name": "Mali",
+    "ccc": "223",
+    "iso2letterCode": "ML"
+  },
+  {
+    "name": "Malta",
+    "ccc": "356",
+    "iso2letterCode": "MT"
+  },
+  {
+    "name": "Myanmar",
+    "ccc": "95",
+    "iso2letterCode": "MM"
+  },
+  {
+    "name": "Montenegro",
+    "ccc": "382",
+    "iso2letterCode": "ME"
+  },
+  {
+    "name": "Mongolia",
+    "ccc": "976",
+    "iso2letterCode": "MN"
+  },
+  {
+    "name": "Northern Mariana Islands",
+    "ccc": "1670",
+    "iso2letterCode": "MP"
+  },
+  {
+    "name": "Mozambique",
+    "ccc": "258",
+    "iso2letterCode": "MZ"
+  },
+  {
+    "name": "Mauritania",
+    "ccc": "222",
+    "iso2letterCode": "MR"
+  },
+  {
+    "name": "Montserrat",
+    "ccc": "1664",
+    "iso2letterCode": "MS"
+  },
+  {
+    "name": "Martinique",
+    "ccc": "596",
+    "iso2letterCode": "MQ"
+  },
+  {
+    "name": "Mauritius",
+    "ccc": "230",
+    "iso2letterCode": "MU"
+  },
+  {
+    "name": "Malawi",
+    "ccc": "265",
+    "iso2letterCode": "MW"
+  },
+  {
+    "name": "Malaysia",
+    "ccc": "60",
+    "iso2letterCode": "MY"
+  },
+  {
+    "name": "Mayotte",
+    "ccc": "262",
+    "iso2letterCode": "YT"
+  },
+  {
+    "name": "Namibia",
+    "ccc": "264",
+    "iso2letterCode": "NA"
+  },
+  {
+    "name": "New Caledonia",
+    "ccc": "687",
+    "iso2letterCode": "NC"
+  },
+  {
+    "name": "Niger",
+    "ccc": "227",
+    "iso2letterCode": "NE"
+  },
+  {
+    "name": "Norfolk Island",
+    "ccc": "672",
+    "iso2letterCode": "NF"
+  },
+  {
+    "name": "Nigeria",
+    "ccc": "234",
+    "iso2letterCode": "NG"
+  },
+  {
+    "name": "Nicaragua",
+    "ccc": "505",
+    "iso2letterCode": "NI"
+  },
+  {
+    "name": "Niue",
+    "ccc": "683",
+    "iso2letterCode": "NU"
+  },
+  {
+    "name": "Netherlands",
+    "ccc": "31",
+    "iso2letterCode": "NL"
+  },
+  {
+    "name": "Norway",
+    "ccc": "47",
+    "iso2letterCode": "NO"
+  },
+  {
+    "name": "Nepal",
+    "ccc": "977",
+    "iso2letterCode": "NP"
+  },
+  {
+    "name": "Nauru",
+    "ccc": "674",
+    "iso2letterCode": "NR"
+  },
+  {
+    "name": "New Zealand",
+    "ccc": "64",
+    "iso2letterCode": "NZ"
+  },
+  {
+    "name": "Oman",
+    "ccc": "968",
+    "iso2letterCode": "OM"
+  },
+  {
+    "name": "Pakistan",
+    "ccc": "92",
+    "iso2letterCode": "PK"
+  },
+  {
+    "name": "Panama",
+    "ccc": "507",
+    "iso2letterCode": "PA"
+  },
+  {
+    "name": "Pitcairn Islands",
+    "ccc": "64",
+    "iso2letterCode": "PN"
+  },
+  {
+    "name": "Peru",
+    "ccc": "51",
+    "iso2letterCode": "PE"
+  },
+  {
+    "name": "Philippines",
+    "ccc": "63",
+    "iso2letterCode": "PH"
+  },
+  {
+    "name": "Palau",
+    "ccc": "680",
+    "iso2letterCode": "PW"
+  },
+  {
+    "name": "Papua New Guinea",
+    "ccc": "675",
+    "iso2letterCode": "PG"
+  },
+  {
+    "name": "Poland",
+    "ccc": "48",
+    "iso2letterCode": "PL"
+  },
+  {
+    "name": "Puerto Rico",
+    "ccc": "1787",
+    "iso2letterCode": "PR"
+  },
+  {
+    "name": "North Korea",
+    "ccc": "850",
+    "iso2letterCode": "KP"
+  },
+  {
+    "name": "Portugal",
+    "ccc": "351",
+    "iso2letterCode": "PT"
+  },
+  {
+    "name": "Paraguay",
+    "ccc": "595",
+    "iso2letterCode": "PY"
+  },
+  {
+    "name": "Palestine",
+    "ccc": "970",
+    "iso2letterCode": "PS"
+  },
+  {
+    "name": "French Polynesia",
+    "ccc": "689",
+    "iso2letterCode": "PF"
+  },
+  {
+    "name": "Qatar",
+    "ccc": "974",
+    "iso2letterCode": "QA"
+  },
+  {
+    "name": "Réunion",
+    "ccc": "262",
+    "iso2letterCode": "RE"
+  },
+  {
+    "name": "Romania",
+    "ccc": "40",
+    "iso2letterCode": "RO"
+  },
+  {
+    "name": "Russia",
+    "ccc": "7",
+    "iso2letterCode": "RU"
+  },
+  {
+    "name": "Rwanda",
+    "ccc": "250",
+    "iso2letterCode": "RW"
+  },
+  {
+    "name": "Saudi Arabia",
+    "ccc": "966",
+    "iso2letterCode": "Saudi"
+  },
+  {
+    "name": "Sudan",
+    "ccc": "249",
+    "iso2letterCode": "SD"
+  },
+  {
+    "name": "Senegal",
+    "ccc": "221",
+    "iso2letterCode": "SN"
+  },
+  {
+    "name": "Singapore",
+    "ccc": "65",
+    "iso2letterCode": "SG"
+  },
+  {
+    "name": "South Georgia",
+    "ccc": "500",
+    "iso2letterCode": "GS"
+  },
+  {
+    "name": "Svalbard and Jan Mayen",
+    "ccc": "4779",
+    "iso2letterCode": "SJ"
+  },
+  {
+    "name": "Solomon Islands",
+    "ccc": "677",
+    "iso2letterCode": "SB"
+  },
+  {
+    "name": "Sierra Leone",
+    "ccc": "232",
+    "iso2letterCode": "SL"
+  },
+  {
+    "name": "El Salvador",
+    "ccc": "503",
+    "iso2letterCode": "SV"
+  },
+  {
+    "name": "San Marino",
+    "ccc": "378",
+    "iso2letterCode": "SM"
+  },
+  {
+    "name": "Somalia",
+    "ccc": "252",
+    "iso2letterCode": "SO"
+  },
+  {
+    "name": "Saint Pierre and Miquelon",
+    "ccc": "508",
+    "iso2letterCode": "PM"
+  },
+  {
+    "name": "Serbia",
+    "ccc": "381",
+    "iso2letterCode": "RS"
+  },
+  {
+    "name": "South Sudan",
+    "ccc": "211",
+    "iso2letterCode": "SS"
+  },
+  {
+    "name": "São Tomé and Príncipe",
+    "ccc": "239",
+    "iso2letterCode": "ST"
+  },
+  {
+    "name": "Suriname",
+    "ccc": "597",
+    "iso2letterCode": "SR"
+  },
+  {
+    "name": "Slovakia",
+    "ccc": "421",
+    "iso2letterCode": "SK"
+  },
+  {
+    "name": "Slovenia",
+    "ccc": "386",
+    "iso2letterCode": "SI"
+  },
+  {
+    "name": "Sweden",
+    "ccc": "46",
+    "iso2letterCode": "SE"
+  },
+  {
+    "name": "Swaziland",
+    "ccc": "268",
+    "iso2letterCode": "SZ"
+  },
+  {
+    "name": "Sint Maarten",
+    "ccc": "1721",
+    "iso2letterCode": "SX"
+  },
+  {
+    "name": "Seychelles",
+    "ccc": "248",
+    "iso2letterCode": "SC"
+  },
+  {
+    "name": "Syria",
+    "ccc": "963",
+    "iso2letterCode": "SY"
+  },
+  {
+    "name": "Turks and Caicos Islands",
+    "ccc": "1649",
+    "iso2letterCode": "TC"
+  },
+  {
+    "name": "Chad",
+    "ccc": "235",
+    "iso2letterCode": "TD"
+  },
+  {
+    "name": "Togo",
+    "ccc": "228",
+    "iso2letterCode": "TG"
+  },
+  {
+    "name": "Thailand",
+    "ccc": "66",
+    "iso2letterCode": "TH"
+  },
+  {
+    "name": "Tajikistan",
+    "ccc": "992",
+    "iso2letterCode": "TJ"
+  },
+  {
+    "name": "Tokelau",
+    "ccc": "690",
+    "iso2letterCode": "TK"
+  },
+  {
+    "name": "Turkmenistan",
+    "ccc": "993",
+    "iso2letterCode": "TM"
+  },
+  {
+    "name": "Timor-Leste",
+    "ccc": "670",
+    "iso2letterCode": "TL"
+  },
+  {
+    "name": "Tonga",
+    "ccc": "676",
+    "iso2letterCode": "TO"
+  },
+  {
+    "name": "Trinidad and Tobago",
+    "ccc": "1868",
+    "iso2letterCode": "TT"
+  },
+  {
+    "name": "Tunisia",
+    "ccc": "216",
+    "iso2letterCode": "TN"
+  },
+  {
+    "name": "Turkey",
+    "ccc": "90",
+    "iso2letterCode": "TR"
+  },
+  {
+    "name": "Tuvalu",
+    "ccc": "688",
+    "iso2letterCode": "TV"
+  },
+  {
+    "name": "Taiwan",
+    "ccc": "886",
+    "iso2letterCode": "TW"
+  },
+  {
+    "name": "Tanzania",
+    "ccc": "255",
+    "iso2letterCode": "TZ"
+  },
+  {
+    "name": "Uganda",
+    "ccc": "256",
+    "iso2letterCode": "UG"
+  },
+  {
+    "name": "Ukraine",
+    "ccc": "380",
+    "iso2letterCode": "UA"
+  },
+  {
+    "name": "United States Minor Outlying Islands",
+    "iso2letterCode": "UM"
+  },
+  {
+    "name": "Uruguay",
+    "ccc": "598",
+    "iso2letterCode": "UY"
+  },
+  {
+    "name": "United States",
+    "ccc": "1",
+    "iso2letterCode": "US"
+  },
+  {
+    "name": "Uzbekistan",
+    "ccc": "998",
+    "iso2letterCode": "UZ"
+  },
+  {
+    "name": "Vatican City",
+    "ccc": "3906698",
+    "iso2letterCode": "VA"
+  },
+  {
+    "name": "Saint Vincent and the Grenadines",
+    "ccc": "1784",
+    "iso2letterCode": "VC"
+  },
+  {
+    "name": "Venezuela",
+    "ccc": "58",
+    "iso2letterCode": "VE"
+  },
+  {
+    "name": "British Virgin Islands",
+    "ccc": "1284",
+    "iso2letterCode": "VG"
+  },
+  {
+    "name": "United States Virgin Islands",
+    "ccc": "1340",
+    "iso2letterCode": "VI"
+  },
+  {
+    "name": "Vietnam",
+    "ccc": "84",
+    "iso2letterCode": "VN"
+  },
+  {
+    "name": "Vanuatu",
+    "ccc": "678",
+    "iso2letterCode": "VU"
+  },
+  {
+    "name": "Wallis and Futuna",
+    "ccc": "681",
+    "iso2letterCode": "WF"
+  },
+  {
+    "name": "Samoa",
+    "ccc": "685",
+    "iso2letterCode": "WS"
+  },
+  {
+    "name": "Yemen",
+    "ccc": "967",
+    "iso2letterCode": "YE"
+  },
+  {
+    "name": "South Africa",
+    "ccc": "27",
+    "iso2letterCode": "ZA"
+  },
+  {
+    "name": "Zambia",
+    "ccc": "260",
+    "iso2letterCode": "ZM"
+  },
+  {
+    "name": "Zimbabwe",
+    "ccc": "263",
+    "iso2letterCode": "ZW"
+  }
+]

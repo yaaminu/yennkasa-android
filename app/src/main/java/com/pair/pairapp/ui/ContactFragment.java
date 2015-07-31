@@ -16,7 +16,6 @@ import android.widget.ListView;
 import com.pair.adapter.ContactsAdapter;
 import com.pair.data.ContactsManager;
 import com.pair.data.ContactsManager.Contact;
-import com.pair.data.User;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
@@ -39,7 +38,13 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
     private static final String TAG = ContactFragment.class.getSimpleName();
 
     private ContactsAdapter adapter;
-    Realm realm;
+    private Realm realm;
+    private final ContactsManager.Filter<Contact> filter = new ContactsManager.Filter<Contact>() {
+        @Override
+        public boolean accept(Contact contact) {
+            return !UserManager.getInstance().isMainUser(contact.numberInIEE_Format);
+        }
+    };
     private final Comparator<Contact> comparator = new Comparator<Contact>() {
         @Override
         public int compare(Contact lhs, Contact rhs) {
@@ -88,13 +93,6 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         View view = inflater.inflate(R.layout.fragment_contact, container, false);
         List<Contact> contacts = new ArrayList<>();
         adapter = new ContactsAdapter(contacts, false);
-        final ContactsManager.Filter<Contact> filter = new ContactsManager.Filter<Contact>() {
-            @Override
-            public boolean accept(Contact contact) {
-                User user = UserManager.getInstance().getMainUser(); //main user cannot be null
-                return !(contact.phoneNumber.equals(user.get_id()));
-            }
-        };
         ContactsManager.INSTANCE.findAllContacts(filter, comparator, contactsFindCallback);
         setListAdapter(adapter);
         return view;
@@ -148,6 +146,6 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
 
     @Override
     public void onChange() {
-        ContactsManager.INSTANCE.findAllContacts(null, comparator, contactsFindCallback);
+        ContactsManager.INSTANCE.findAllContacts(filter, comparator, contactsFindCallback);
     }
 }

@@ -7,12 +7,12 @@ import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -20,10 +20,13 @@ import android.widget.CheckedTextView;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.data.ContactsManager;
 import com.pair.data.User;
+import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.PhoneNumberNormaliser;
+import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
 import java.util.ArrayList;
@@ -31,7 +34,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.zip.CheckedInputStream;
 
 import io.realm.Realm;
 
@@ -65,6 +67,7 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
             return (!lhs.isRegisteredUser && !rhs.isRegisteredUser);
         }
     };
+    private String TAG = FriendsActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +86,17 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
             public void onClick(View v) {
                 String numBerToAdd = editText.getText().toString().trim();
                 if (!TextUtils.isEmpty(numBerToAdd)) {
-                    selectedFriends.add(PhoneNumberNormaliser.toIEE(numBerToAdd,UserManager.getInstance().getDefaultCCC()));
+                    try {
+                        selectedFriends.add(PhoneNumberNormaliser.toIEE(numBerToAdd,UserManager.getInstance().getDefaultCCC()));
+                    } catch (NumberParseException e) {
+                        if (BuildConfig.DEBUG) {
+                            Log.e(TAG, e.getMessage(), e.getCause());
+                        } else {
+                            Log.e(TAG, e.getMessage());
+                        }
+                        UiHelpers.showErrorDialog(getApplicationContext(),e.getMessage());
+                        return;
+                    }
                     editText.setText("");
                     supportInvalidateOptionsMenu();
                 }

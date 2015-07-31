@@ -1,5 +1,4 @@
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,8 +10,7 @@
         android:layout_height="200dp"
         android:contentDescription="@string/display_picture"
         android:scaleType="fitXY"
-        android:src="@drawable/avatar_empty"
-        />
+        android:src="@drawable/avatar_empty" />
 
     <Button
         android:id="@+id/bt_change_dp"
@@ -21,7 +19,7 @@
         android:layout_alignBottom="@+id/iv_display_picture"
         android:layout_marginLeft="5dp"
         android:layout_toRightOf="@+id/bt_message"
-        android:text="@string/change_dp"/>
+        android:text="@string/change_dp" />
 
     <Button
         android:id="@+id/bt_exit_group"
@@ -30,7 +28,7 @@
         android:layout_alignBottom="@+id/iv_display_picture"
         android:layout_marginLeft="5dp"
         android:layout_toRightOf="@+id/bt_message"
-        android:text="@string/leave"/>
+        android:text="@string/leave" />
 
     <Button
         android:id="@+id/bt_call"
@@ -39,14 +37,14 @@
         android:layout_alignBottom="@+id/iv_display_picture"
         android:layout_marginLeft="5dp"
         android:layout_toRightOf="@+id/bt_message"
-        android:text="@string/call"/>
+        android:text="@string/call" />
 
     <Button
         android:id="@+id/bt_message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/iv_display_picture"
-        android:text="@string/message"/>
+        android:text="@string/message" />
 
     <TextView
         android:id="@+id/tv_user_name"
@@ -58,7 +56,7 @@
         android:padding="15dp"
         android:text="@string/username_placeholder"
         android:textColor="#000"
-        android:textSize="18sp"/>
+        android:textSize="18sp" />
 
     <ImageButton
         android:id="@+id/ib_change_name"
@@ -68,7 +66,7 @@
         android:layout_alignParentRight="true"
         android:layout_alignTop="@+id/tv_user_name"
         android:contentDescription="@string/edit_username"
-        android:src="@android:drawable/ic_menu_edit"/>
+        android:src="@android:drawable/ic_menu_edit" />
 
     <LinearLayout
         android:id="@+id/ll_members_view"
@@ -87,8 +85,7 @@
             android:text="Phone\n"
             android:textColor="#000"
             android:textSize="18sp"
-            android:visibility="gone"
-            />
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/tv_list_heading"
@@ -100,13 +97,26 @@
             android:paddingTop="15dp"
             android:text="@string/st_mutual_groups"
             android:textColor="#000"
-            android:textSize="18sp"/>
+            android:textSize="18sp" />
 
-        <ListView
-            android:id="@+id/lv_mutual_groups_list"
+        <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            >
-        </ListView>
+            android:layout_height="wrap_content">
+
+            <ListView
+                android:id="@+id/lv_mutual_groups_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+
+            <TextView
+                android:id="@+id/empty"
+                android:layout_centerInParent="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:gravity="center"
+                android:visibility="gone"
+                android:text="@string/st_no_mutual_group" />
+        </RelativeLayout>
     </LinearLayout>
 </RelativeLayout>
