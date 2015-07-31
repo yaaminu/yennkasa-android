@@ -11,8 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.pair.data.User;
 import com.pair.pairapp.MainActivity;
@@ -68,12 +66,7 @@ public class VerificationFragment extends Fragment {
         view.findViewById(R.id.bt_send_verification).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                UserManager.getInstance().generateAndSendVerificationToken(registeringUser.get_id());
-                v.setVisibility(View.GONE);
-                view.findViewById(R.id.bt_cancel_verification).setVisibility(View.GONE);
-                ((TextView) view.findViewById(R.id.tv_verification_notice)).setText(R.string.st_verification_notice);
-                view.findViewById(R.id.et_verification).setVisibility(View.VISIBLE);
-                b.setVisibility(View.VISIBLE);
+                // FIXME: 7/31/2015
             }
         });
         return view;

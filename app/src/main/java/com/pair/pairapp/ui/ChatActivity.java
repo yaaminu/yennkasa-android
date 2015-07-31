@@ -435,7 +435,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
         UserManager userManager = UserManager.getInstance();
         if (userManager.isGroup(peer.get_id())) {
-            userManager.addMembers(peer.get_id(), members, new UserManager.CallBack() {
+            userManager.addMembersToGroup(peer.get_id(), members, new UserManager.CallBack() {
                 @Override
                 public void done(Exception e) {
                     if (e != null) {

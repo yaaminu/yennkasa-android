@@ -69,4 +69,12 @@ public interface UserApi {
     @FormUrlEncoded
     @PUT("/api/v1/groups/{id}/leave")
     void leaveGroup(@Path("id") String id, @Field("leaver") String userId, @Field("password") String password, Callback<HttpResponse> response);
+
+    @FormUrlEncoded
+    @POST("/api/v1/users/{id}/verify")
+    void verifyUser(@Path("id")String userId,@Field("token")String token, Callback<String> callback);
+
+    @FormUrlEncoded
+    @POST("/api/v1/users/{id}/resendToken")
+    void resendToken(@Path("id") String userId,@Field("password") String password,Callback<Response> response);
 }

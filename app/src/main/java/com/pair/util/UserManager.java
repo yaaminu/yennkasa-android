@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.telephony.SmsManager;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -25,7 +24,6 @@ import org.apache.http.HttpStatus;
 import java.io.EOFException;
 import java.io.File;
 import java.net.SocketTimeoutException;
-import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.List;
 
@@ -47,8 +45,9 @@ public class UserManager {
     private static final String TAG = UserManager.class.getSimpleName();
     private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is for security reasons
     private static final String KEY_USER_PASSWORD = "klfiielklaklier"; //and this one too
-    private static final String KEY_USER_CCC = "USER_ccc";
-    public static final String KEY_USER_VERIFIED = "vvlaikkljhf";
+    public static final String KEY_USER_VERIFIED = "vvlaikkljhf"; // and this
+
+    private static final String KEY_USER_CCC = "user_ccc";
     private String VERIFICATION_TOKEN;
     private static final UserManager INSTANCE = new UserManager();
 
@@ -229,7 +228,7 @@ public class UserManager {
                         return (user != null && group.getMembers().contains(user));
                     }
                 };
-                RealmList<User> membersToDelete = aggregateUsers(realm, members, filter);
+                RealmList<User> membersToDelete = User.aggregateUsers(realm, members, filter);
                 group.getMembers().removeAll(membersToDelete);
                 realm.commitTransaction();
                 realm.close();
@@ -280,7 +279,7 @@ public class UserManager {
         return null;
     }
 
-    public void addMembers(final String groupId, final List<String> membersId, final CallBack callBack) {
+    public void addMembersToGroup(final String groupId, final List<String> membersId, final CallBack callBack) {
         Exception e = checkPermission(groupId);
         if (e != null) {
             callBack.done(e);
@@ -298,7 +297,7 @@ public class UserManager {
                         return (user != null && !group.getMembers().contains(user));
                     }
                 };
-                RealmList<User> newMembers = aggregateUsers(realm, membersId, filter);
+                RealmList<User> newMembers = User.aggregateUsers(realm, membersId, filter);
                 group.getMembers().addAll(newMembers);
                 realm.commitTransaction();
                 realm.close();
@@ -309,7 +308,7 @@ public class UserManager {
             public void failure(RetrofitError retrofitError) {
                 Exception e = handleError(retrofitError);
                 if (e == null) {
-                    addMembers(groupId, membersId, callBack);
+                    addMembersToGroup(groupId, membersId, callBack);
                 } else {
                     callBack.done(e);
                 }
@@ -396,6 +395,7 @@ public class UserManager {
     }
 
     @Nullable
+    @Deprecated
     private RealmList<User> aggregateUsers(Realm realm, List<String> membersId, ContactsManager.Filter<User> filter) {
         RealmList<User> members = new RealmList<>();
         for (String id : membersId) {
@@ -461,6 +461,7 @@ public class UserManager {
     private void getGroups() {
         User mainUser = getMainUser();
         if (mainUser == null) {
+            // TODO: 7/31/2015 clean up everything
             throw new IllegalStateException("this operation can only continue only when user is logged in");
         }
 
@@ -556,7 +557,7 @@ public class UserManager {
         });
     }
 
-    public void logIn(String phoneNumber, String password, String gcmRegId, String userCCC, final CallBack callback) {
+    public void logIn(String phoneNumber, String password, String gcmRegId, String userIso2LetterCode, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
@@ -569,8 +570,8 @@ public class UserManager {
             callback.done(new Exception("invalid password"));
             return;
         }
-        if (TextUtils.isEmpty(userCCC)) {
-            callback.done(new Exception("CCC cannot be null"));
+        if (TextUtils.isEmpty(userIso2LetterCode)) {
+            callback.done(new Exception("userIso2LetterCode cannot be null"));
             return;
         }
         if (TextUtils.isEmpty(gcmRegId)) {
@@ -581,7 +582,7 @@ public class UserManager {
         User user = new User();
         user.setPassword(password);
         try {
-            phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userCCC);
+            phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userIso2LetterCode);
         } catch (NumberParseException e) {
             if (BuildConfig.DEBUG) {
                 Log.e(TAG, e.getMessage(), e.getCause());
@@ -593,9 +594,9 @@ public class UserManager {
         }
         user.set_id(phoneNumber);
         //FIXME: 7/26/2015 use country instead of ccc.
-        user.setCountry(userCCC);
+        user.setCountry(userIso2LetterCode);
         user.setGcmRegId(gcmRegId);
-        doLogIn(user, userCCC, callback);
+        doLogIn(user, userIso2LetterCode, callback);
     }
 
     //this method must be called on the main thread
@@ -696,25 +697,80 @@ public class UserManager {
         }
     }
 
-    public void generateAndSendVerificationToken(final String number) {
-        new Thread() {
+    public void verifyUser(final String token,final CallBack callBack){
+        if (isUserVerified()) {
+            callBack.done(null);
+            return;
+        }
+        if (!ConnectionHelper.isConnectedOrConnecting()) {
+            callBack.done(NO_CONNECTION_ERROR);
+            return;
+        }
+        if(TextUtils.isEmpty(token)){
+            callBack.done(new Exception("invalid token"));
+            return;
+        }
+        if (!isUserLoggedIn()) {
+            throw new IllegalArgumentException(new Exception("no user logged for verification"));
+        }
+        userApi.verifyUser(getMainUser().get_id(),token,new Callback<String>(){
             @Override
-            public void run() {
-                SecureRandom random = new SecureRandom();
-                int num = random.nextInt() / 10000;
-                num = (num > 0) ? num : num * -1; //convert negative ints to positive ones
-                synchronized (this) {
-                    VERIFICATION_TOKEN = String.valueOf(num);
-                }
-                Log.d(TAG, VERIFICATION_TOKEN);
-                SmsManager.getDefault().sendTextMessage(number, null, VERIFICATION_TOKEN, null, null);
+            public void success(String accessToken, Response response) {
+                getSettings().edit().putBoolean(KEY_USER_VERIFIED, false).commit();
+                callBack.done(null);
             }
-        }.start();
+
+            @Override
+            public void failure(RetrofitError retrofitError) {
+                callBack.done(retrofitError);
+            }
+        });
     }
 
-    private synchronized String getVERIFICATION_TOKEN() {
-        return VERIFICATION_TOKEN;
+    public void resendToken(final CallBack callBack){
+        if (!isUserLoggedIn()) {
+            throw new IllegalArgumentException(new Exception("no user logged for verification"));
+        }
+        if (isUserVerified()) {
+            callBack.done(null);
+            return;
+        }
+        if(!ConnectionHelper.isConnectedOrConnecting()){
+            callBack.done(NO_CONNECTION_ERROR);
+            return;
+        }
+        userApi.resendToken(getMainUser().get_id(), getUserPassword(), new Callback<Response>() {
+            @Override
+            public void success(Response response, Response response2) {
+               callBack.done(null);
+            }
+
+            @Override
+            public void failure(RetrofitError retrofitError) {
+                callBack.done(retrofitError);
+            }
+        });
     }
+
+//    public void generateAndSendVerificationToken(final String number) {
+//        new Thread() {
+//            @Override
+//            public void run() {
+//                SecureRandom random = new SecureRandom();
+//                int num = random.nextInt() / 10000;
+//                num = (num > 0) ? num : num * -1; //convert negative ints to positive ones
+//                synchronized (this) {
+//                    VERIFICATION_TOKEN = String.valueOf(num);
+//                }
+//                Log.d(TAG, VERIFICATION_TOKEN);
+//                SmsManager.getDefault().sendTextMessage(number, null, VERIFICATION_TOKEN, null, null);
+//            }
+//        }.start();
+//    }
+//
+//    private synchronized String getVERIFICATION_TOKEN() {
+//        return VERIFICATION_TOKEN;
+//    }
 
     public void LogOut(Context context, final CallBack logOutCallback) {
         //TODO logout user from backend
