@@ -48,6 +48,7 @@ public class UserManager {
     private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is for security reasons
     private static final String KEY_USER_PASSWORD = "klfiielklaklier"; //and this one too
     private static final String KEY_USER_CCC = "USER_ccc";
+    public static final String KEY_USER_VERIFIED = "vvlaikkljhf";
     private String VERIFICATION_TOKEN;
     private static final UserManager INSTANCE = new UserManager();
 
@@ -78,7 +79,6 @@ public class UserManager {
     private UserManager() {
     }
 
-
     private void saveMainUser(User user, String userCCC) {
         final Context context = Config.getApplicationContext();
         Realm realm = Realm.getInstance(context);
@@ -86,8 +86,9 @@ public class UserManager {
         realm.copyToRealmOrUpdate(user);
         realm.commitTransaction();
         // TODO: 6/25/2015 encrypt the id and password before storing it
-        context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE)
-                .edit().putString(KEY_SESSION_ID, user.get_id())
+        getSettings()
+                .edit()
+                .putString(KEY_SESSION_ID, user.get_id())
                 .putString(KEY_USER_PASSWORD, user.getPassword())
                 .putString(KEY_USER_CCC, userCCC)
                 .commit();
@@ -97,7 +98,7 @@ public class UserManager {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         User user = getMainUser(realm);
         if (user != null) {
-            //returning {@link RealmObject} from methods leaks resources since
+            //returning {@link RealmObject} from methods will leak resources since
             // that will prevent us from closing the realm instance. hence we do a shallow copy.
             // downside is changes to this object will not be persisted which is just what we want
             user = User.copy(user);
@@ -106,10 +107,20 @@ public class UserManager {
         return user;
     }
 
+    public boolean isUserLoggedIn() {
+        return getMainUser() != null;
+    }
+
+    public boolean isUserVerified() {
+        return isUserLoggedIn() && getSettings().getBoolean(KEY_USER_VERIFIED, false);
+    }
+
+    private SharedPreferences getSettings() {
+        return Config.getApplicationWidePrefs();
+    }
+
     private User getMainUser(Realm realm) {
-        final Context context = Config.getApplicationContext();
-        final SharedPreferences sharedPreferences = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
-        String currUserId = sharedPreferences.getString(KEY_SESSION_ID, null);
+        String currUserId = getSettings().getString(KEY_SESSION_ID, null);
         if (currUserId == null) {
             Config.disableComponents();
             return null;
@@ -118,9 +129,9 @@ public class UserManager {
     }
 
     private String getUserPassword() {
-        String password = Config.getApplicationContext().getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE).getString(KEY_USER_PASSWORD, null);
+        String password = getSettings().getString(KEY_USER_PASSWORD, null);
         if (password == null) {
-            // TODO: 7/19/2015 logout user clean up realm
+            // TODO: 7/19/2015 logout user and clean up realm as we suspect intruders
             throw new IllegalStateException("session data tampered with");
         }
         return password;
@@ -707,13 +718,12 @@ public class UserManager {
 
     public void LogOut(Context context, final CallBack logOutCallback) {
         //TODO logout user from backend
-        SharedPreferences sharedPreferences = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
-        String userId = sharedPreferences.getString(KEY_SESSION_ID, null);
+        String userId = getSettings().getString(KEY_SESSION_ID, null);
         if ((userId == null)) {
             throw new AssertionError("calling logout when no user is logged in"); //security hole!
         }
 
-        sharedPreferences
+        getSettings()
                 .edit()
                 .remove(KEY_SESSION_ID)
                 .apply();
@@ -857,9 +867,7 @@ public class UserManager {
     }
 
     public String getDefaultCCC() {
-        String ccc = Config.
-                getApplicationContext()
-                .getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE)
+        String ccc = getSettings()
                 .getString(KEY_USER_CCC, null);
         if (ccc == null) {
             throw new IllegalStateException("user cc is null");

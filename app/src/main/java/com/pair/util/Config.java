@@ -3,6 +3,7 @@ package com.pair.util;
 import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Environment;
@@ -188,5 +189,12 @@ public class Config {
         disableComponent(ContactSyncService.class);
         disableComponent(PairAppClient.class);
         disableComponent(MessageProcessor.class);
+    }
+
+    public static SharedPreferences getApplicationWidePrefs(){
+        if(Config.application == null){
+            throw new IllegalStateException("application is null,did you forget to call init(Context) ?");
+        }
+        return getApplication().getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
     }
 }
