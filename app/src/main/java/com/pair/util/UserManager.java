@@ -1,8 +1,11 @@
 package com.pair.util;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Handler;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
@@ -46,14 +49,8 @@ public class UserManager {
     private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is for security reasons
     private static final String KEY_USER_PASSWORD = "klfiielklaklier"; //and this one too
     public static final String KEY_USER_VERIFIED = "vvlaikkljhf"; // and this
-
-    private static final String KEY_USER_CCC = "user_ccc";
-    private String VERIFICATION_TOKEN;
     private static final UserManager INSTANCE = new UserManager();
 
-    private volatile int loginAttempts = 0,
-            signUpAttempts = 0;
-    private volatile boolean loginSignUpBusy = false; //login or sign up never should run in parallel
     @SuppressWarnings("ThrowableInstanceNeverThrown")
     private final Exception NO_CONNECTION_ERROR = new Exception("not connected to the internet");
     private final BaseJsonAdapter<User> adapter = new UserJsonAdapter();
@@ -78,7 +75,7 @@ public class UserManager {
     private UserManager() {
     }
 
-    private void saveMainUser(User user, String userCCC) {
+    private void saveMainUser(User user) {
         final Context context = Config.getApplicationContext();
         Realm realm = Realm.getInstance(context);
         realm.beginTransaction();
@@ -89,7 +86,6 @@ public class UserManager {
                 .edit()
                 .putString(KEY_SESSION_ID, user.get_id())
                 .putString(KEY_USER_PASSWORD, user.getPassword())
-                .putString(KEY_USER_CCC, userCCC)
                 .commit();
     }
 
@@ -196,7 +192,12 @@ public class UserManager {
         if (mainUser == null) {
             throw new IllegalStateException("no user logged in");
         }
-        RealmList<User> members = User.aggregateUsers(realm, membersId, null);
+        RealmList<User> members = User.aggregateUsers(realm, membersId, new ContactsManager.Filter<User>() {
+            @Override
+            public boolean accept(User user) {
+                return user != null;
+            }
+        });
         group.getMembers().addAll(members);
         group.getMembers().add(mainUser);
         group.setAdmin(mainUser);
@@ -337,17 +338,36 @@ public class UserManager {
         });
     }
 
-    private void updateLocalGroupMembers(List<User> freshMembers, String id) {
+    private List<User> saveFreshUsers(List<User> freshMembers) {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
+        List<User> ret = saveFreshUsers(realm, freshMembers);
+        ret = User.copy(ret);
+        realm.close();
+        return ret;
+    }
+
+    private List<User> saveFreshUsers(Realm realm,List<User> freshMembers){
         realm.beginTransaction();
-        User group = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
-        group.getMembers().clear();
         for (User freshMember : freshMembers) {
             freshMember.setType(User.TYPE_NORMAL_USER);
         }
-        group.getMembers().addAll(realm.copyToRealmOrUpdate(freshMembers));
+        List<User> ret = realm.copyToRealmOrUpdate(freshMembers);
         realm.commitTransaction();
-        realm.close();
+        updateUsersLocalNames();
+        return ret;
+    }
+    private void updateLocalGroupMembers(List<User> freshMembers, String id) {
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        try {
+            User group = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
+            freshMembers = saveFreshUsers(realm,freshMembers);
+            realm.beginTransaction();
+            group.getMembers().clear();
+            group.getMembers().addAll(freshMembers);
+            realm.commitTransaction();
+        } finally {
+            realm.close();
+        }
     }
 
     public void refreshGroup(final String id) {
@@ -557,11 +577,24 @@ public class UserManager {
         });
     }
 
-    public void logIn(String phoneNumber, String password, String gcmRegId, String userIso2LetterCode, final CallBack callback) {
+    public void logIn(final Activity context, final String phoneNumber, final String password, final String userIso2LetterCode, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
         }
+        GcmHelper.register(context, new GcmHelper.GCMRegCallback() {
+            @Override
+            public void done(Exception e, String regId) {
+                if (e == null) {
+                    completeLogin(phoneNumber, password, regId, userIso2LetterCode, callback);
+                } else {
+                    callback.done(e);
+                }
+            }
+        });
+    }
+
+    private void completeLogin(String phoneNumber, String password, String gcmRegId, String userIso2LetterCode, CallBack callback) {
         if (TextUtils.isEmpty(phoneNumber)) {
             callback.done(new Exception("invalid phone number"));
             return;
@@ -589,45 +622,38 @@ public class UserManager {
             } else {
                 Log.e(TAG, e.getMessage());
             }
-            callback.done(e);
+            callback.done(new Exception(phoneNumber + " is not a valid phone number"));
             return;
         }
         user.set_id(phoneNumber);
-        //FIXME: 7/26/2015 use country instead of ccc.
         user.setCountry(userIso2LetterCode);
         user.setGcmRegId(gcmRegId);
         doLogIn(user, userIso2LetterCode, callback);
     }
 
     //this method must be called on the main thread
-    private void doLogIn(final User user, final String userCCC, final CallBack callback) {
-
-        if (loginSignUpBusy) {
-            return;
-        }
-        loginSignUpBusy = true;
-        loginAttempts++;
+    private void doLogIn(final User user, final String countryIso, final CallBack callback) {
         userApi.logIn(adapter.toJson(user), new Callback<User>() {
             @Override
             public void success(User backendUser, Response response) {
-                loginSignUpBusy = false;
-                loginAttempts = 0;
                 //our backend deletes password fields so we got to use our copy here
                 backendUser.setPassword(user.getPassword());
-                saveMainUser(backendUser, userCCC);
+                saveMainUser(backendUser);
+                getSettings()
+                        .edit()
+                        .putBoolean(KEY_USER_VERIFIED, true)
+                        .commit();
                 getGroups(); //async
                 callback.done(null);
             }
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                loginSignUpBusy = false;
                 Exception e = handleError(retrofitError);
-                if (e == null && loginAttempts < 3) {
+                if (e == null) {
                     //not our problem lets try again
-                    doLogIn(user, userCCC, callback);
+                    doLogIn(user, countryIso, callback);
                 } else {
-                    loginAttempts = 0;
                     callback.done(e); //may be our fault but we have ran out of resources
                 }
             }
@@ -635,69 +661,83 @@ public class UserManager {
     }
 
 
-    public void signUp(final String name, final String phoneNumber, final String password, final String gcmRegId, final String userCCC, final CallBack callback) {
+    public void signUp(Activity context, final String name, final String phoneNumber, final String password, final String countryIso, final CallBack callback) {
         if (!ConnectionHelper.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
         }
-        if (loginSignUpBusy) {
-            return;
-        }
-        loginSignUpBusy = true;
-        signUpAttempts++;
+        GcmHelper.register(context, new GcmHelper.GCMRegCallback() {
+            @Override
+            public void done(Exception e, String regId) {
+                if (e == null) {
+                    completeSignUp(name, phoneNumber, password, regId, countryIso, callback);
+                } else {
+                    callback.done(e);
+                }
+            }
+        });
+    }
+
+    private void completeSignUp(final String name, final String phoneNumber, final String password, final String gcmRegId, final String countryIso, final CallBack callback) {
         if (TextUtils.isEmpty(name)) {
             callback.done(new Exception("name is invalid"));
         } else if (TextUtils.isEmpty(phoneNumber)) {
             callback.done(new Exception("phone number is invalid"));
         } else if (TextUtils.isEmpty(password)) {
             callback.done(new Exception("password is invalid"));
-        } else if (TextUtils.isEmpty(userCCC)) {
+        } else if (TextUtils.isEmpty(countryIso)) {
             callback.done(new Exception("ccc is invalid"));
         } else {
-            final User user = new User();
-            try {
-                user.set_id(PhoneNumberNormaliser.toIEE(phoneNumber, userCCC));
-            } catch (NumberParseException e) {
-                if (BuildConfig.DEBUG) {
-                    Log.e(TAG, e.getMessage(), e.getCause());
-                } else {
-                    Log.e(TAG, e.getMessage());
-                }
-                callback.done(e);
-                return;
-            }
-            user.setPassword(password);
-            user.setName(name);
-            user.setCountry(userCCC); // TODO: 7/26/2015 use actual country instead of ccc
-            user.setGcmRegId(gcmRegId);
-            userApi.registerUser(adapter.toJson(user), new Callback<User>() {
-                @Override
-                public void success(User backEndUser, Response response) {
-                    loginSignUpBusy = false;
-                    signUpAttempts = 0;
-                    backEndUser.setPassword(user.getPassword());
-                    saveMainUser(backEndUser, userCCC);
-                    callback.done(null);
-                }
-
-                @Override
-                public void failure(RetrofitError retrofitError) {
-                    loginSignUpBusy = false;
-                    // TODO: 6/25/2015 handle error
-                    Exception e = handleError(retrofitError);
-                    if (e == null && signUpAttempts < 3) {
-                        //not our fault and we have more chance lets try again
-                        signUp(name, phoneNumber, password, gcmRegId, userCCC, callback);
-                    } else {
-                        signUpAttempts = 0;
-                        callback.done(e); //may not be our fault but we have ran out of retries
-                    }
-                }
-            });
+            doSignup(name, phoneNumber, password, gcmRegId, countryIso, callback);
         }
     }
 
-    public void verifyUser(final String token,final CallBack callBack){
+    private void doSignup(final String name,
+                          final String phoneNumber,
+                          final String password,
+                          final String gcmRegId,
+                          final String countryIso,
+                          final CallBack callback) {
+        final User user = new User();
+        try {
+            String thePhoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, countryIso);
+            user.set_id(thePhoneNumber);
+        } catch (NumberParseException e) {
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, e.getMessage(), e.getCause());
+            } else {
+                Log.e(TAG, e.getMessage());
+            }
+            callback.done(e);
+            return;
+        }
+        user.setPassword(password);
+        user.setName(name);
+        user.setCountry(countryIso);
+        user.setGcmRegId(gcmRegId);
+        userApi.registerUser(adapter.toJson(user), new Callback<User>() {
+            @Override
+            public void success(User backEndUser, Response response) {
+                backEndUser.setPassword(user.getPassword());
+                saveMainUser(backEndUser);
+                callback.done(null);
+            }
+
+            @Override
+            public void failure(RetrofitError retrofitError) {
+
+                // TODO: 6/25/2015 handle error
+                Exception e = handleError(retrofitError);
+                if (e == null) {
+                    doSignup(name, phoneNumber, password, gcmRegId, countryIso, callback);
+                } else {
+                    callback.done(e);
+                }
+            }
+        });
+    }
+
+    public void verifyUser(final String token, final CallBack callBack) {
         if (isUserVerified()) {
             callBack.done(null);
             return;
@@ -706,17 +746,17 @@ public class UserManager {
             callBack.done(NO_CONNECTION_ERROR);
             return;
         }
-        if(TextUtils.isEmpty(token)){
+        if (TextUtils.isEmpty(token)) {
             callBack.done(new Exception("invalid token"));
             return;
         }
         if (!isUserLoggedIn()) {
             throw new IllegalArgumentException(new Exception("no user logged for verification"));
         }
-        userApi.verifyUser(getMainUser().get_id(),token,new Callback<String>(){
+        userApi.verifyUser(getMainUser().get_id(), token, new Callback<String>() {
             @Override
             public void success(String accessToken, Response response) {
-                getSettings().edit().putBoolean(KEY_USER_VERIFIED, false).commit();
+                getSettings().edit().putBoolean(KEY_USER_VERIFIED, true).commit();
                 callBack.done(null);
             }
 
@@ -727,7 +767,7 @@ public class UserManager {
         });
     }
 
-    public void resendToken(final CallBack callBack){
+    public void resendToken(final CallBack callBack) {
         if (!isUserLoggedIn()) {
             throw new IllegalArgumentException(new Exception("no user logged for verification"));
         }
@@ -735,14 +775,14 @@ public class UserManager {
             callBack.done(null);
             return;
         }
-        if(!ConnectionHelper.isConnectedOrConnecting()){
+        if (!ConnectionHelper.isConnectedOrConnecting()) {
             callBack.done(NO_CONNECTION_ERROR);
             return;
         }
         userApi.resendToken(getMainUser().get_id(), getUserPassword(), new Callback<Response>() {
             @Override
             public void success(Response response, Response response2) {
-               callBack.done(null);
+                callBack.done(null);
             }
 
             @Override
@@ -750,6 +790,49 @@ public class UserManager {
                 callBack.done(retrofitError);
             }
         });
+    }
+
+    public void updateUsersLocalNames() {
+        doUpdateLocalNames();
+    }
+
+    private void doUpdateLocalNames() {
+        Context context = Config.getApplicationContext();
+        Cursor cursor = ContactsManager.INSTANCE.findAllContactsCursor(context);
+        String phoneNumber, name;
+        User user;
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        try {
+            while (cursor.moveToNext()) {
+                phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract
+                        .CommonDataKinds.Phone.NUMBER));
+                if (TextUtils.isEmpty(phoneNumber)) {
+                    Log.i(TAG, "strange!: no phone number for this contact, ignoring");
+                    continue;
+                }
+                try {
+                    phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO());
+                } catch (NumberParseException e) {
+                    Log.e(TAG, "failed to format to IEE number: " + e.getMessage());
+                    continue;
+                }
+                user = realm.where(User.class)
+                        .equalTo(User.FIELD_ID, phoneNumber)
+                        .findFirst();
+
+                if (user != null) {
+                    name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                    if (TextUtils.isEmpty(name)) { //some users can store numbers with no name; am a victim :-P
+                        name = user.getName();
+                    }
+                    realm.beginTransaction();
+                    user.setLocalName(name);
+                    realm.commitTransaction();
+                }
+            }
+        } finally {
+            realm.close();
+        }
     }
 
 //    public void generateAndSendVerificationToken(final String number) {
@@ -800,34 +883,31 @@ public class UserManager {
         });
     }
 
-    public void fetchFriends(final List<String> array, final FriendsFetchCallback callback) {
+    public void syncContacts(final List<String> array) {
         if (!ConnectionHelper.isConnected()) {
-            callback.done(NO_CONNECTION_ERROR, null);
             return;
         }
-        userApi.fetchFriends(array, new Callback<List<User>>() {
+        userApi.syncContacts(array, new Callback<List<User>>() {
             @Override
-            public void success(List<User> users, Response response) {
-                callback.done(null, users);
+            public void success(final List<User> users, Response response) {
+                // FIXME: 8/1/2015
+                new Thread() {
+                    @Override
+                    public void run() {
+                        saveFreshUsers(users);
+                    }
+                }.start();
             }
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)
-                        || retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)
-                        ) {
-                    callback.done(retrofitError, null);
-                } else if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
+                if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
                     if (ConnectionHelper.isConnectedOrConnecting()) {
                         //try again
-                        fetchFriends(array, callback);
-                    } else {
-                        callback.done(retrofitError, null);
+                        syncContacts(array);
                     }
                 } else if (retrofitError.getKind().equals(RetrofitError.Kind.CONVERSION)) {
                     throw new AssertionError(retrofitError);
-                } else {
-                    callback.done(retrofitError, null);
                 }
             }
         });
@@ -922,16 +1002,35 @@ public class UserManager {
         return isAdmin(id, getMainUser().get_id());
     }
 
-    public String getDefaultCCC() {
-        String ccc = getSettings()
-                .getString(KEY_USER_CCC, null);
-        if (ccc == null) {
-            throw new IllegalStateException("user cc is null");
+    public String getUserCountryISO() {
+        if (!isUserLoggedIn()) {
+            throw new IllegalStateException("no user logged in");
         }
-
-        return ccc;
+        return getMainUser().getCountry();
     }
 
+    public void reset() {
+        if (isUserVerified()) {
+            throw new RuntimeException("use logout instead");
+        }
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        try {
+            realm.beginTransaction();
+            realm.where(User.class).findAll().clear();
+            realm.commitTransaction();
+        } finally {
+            realm.close();
+        }
+        cleanUp();
+    }
+
+    private void cleanUp() {
+        getSettings().edit()
+                .remove(KEY_SESSION_ID)
+                .remove(KEY_USER_VERIFIED)
+                .remove(KEY_USER_PASSWORD)
+                .commit();
+    }
 
     public interface FriendsFetchCallback {
         void done(Exception e, List<User> users);
@@ -939,19 +1038,5 @@ public class UserManager {
 
     public interface CallBack {
         void done(Exception e);
-    }
-
-    @SuppressWarnings("unused")
-    private class GroupFilter implements ContactsManager.Filter<User> {
-        private final User group;
-
-        public GroupFilter(User user) {
-            this.group = user;
-        }
-
-        @Override
-        public boolean accept(User user) {
-            return (user != null && !group.getMembers().contains(user) && !isAdmin(group.get_id(), user.get_id()));
-        }
     }
 }

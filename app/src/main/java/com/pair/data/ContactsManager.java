@@ -60,11 +60,12 @@ public class ContactsManager {
         }).start();
     }
 
-    private static final String [] PROJECT_NAME_PHONE =  new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
+    private static final String[] PROJECT_NAME_PHONE = new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
             ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME};
+
     private Cursor getCursor(Context context) {
         ContentResolver cr = context.getContentResolver();
-        return cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,PROJECT_NAME_PHONE,
+        return cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, PROJECT_NAME_PHONE,
                 null, null, null);
     }
 
@@ -74,33 +75,33 @@ public class ContactsManager {
         //noinspection TryFinallyCanBeTryWithResources
         try {
             Set<Contact> contacts = new HashSet<>();
-            String phoneNumber,name,status,DP,standardisedNumber;
+            String phoneNumber, name, status, DP, standardisedNumber;
             User user;
             boolean isRegistered;
             while (cursor.moveToNext()) {
-                 phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract
+                phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract
                         .CommonDataKinds.Phone.NUMBER));
                 if (TextUtils.isEmpty(phoneNumber)) {
                     Log.i(TAG, "strange!: no phone number for this contact, ignoring");
                     continue;
                 }
                 try {
-                    standardisedNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getDefaultCCC());
-                }catch (IllegalArgumentException invalidPhoneNumber){
-                    Log.e(TAG,"failed to format to IEE number: " + invalidPhoneNumber.getMessage());
+                    standardisedNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO());
+                } catch (IllegalArgumentException invalidPhoneNumber) {
+                    Log.e(TAG, "failed to format to IEE number: " + invalidPhoneNumber.getMessage());
                     continue;
                 } catch (NumberParseException e) {
-                    Log.e(TAG,"failed to format to IEE number: " + e.getMessage());
+                    Log.e(TAG, "failed to format to IEE number: " + e.getMessage());
                     continue;
                 }
                 user = realm.where(User.class)
-                        .equalTo(User.FIELD_ID,standardisedNumber)
+                        .equalTo(User.FIELD_ID, standardisedNumber)
                         .findFirst();
                 if (user != null) {
                     isRegistered = true;
                     status = user.getStatus();
                     DP = user.getDP();
-                }else{
+                } else {
                     isRegistered = false;
                     status = "";
                     DP = "";
@@ -110,7 +111,7 @@ public class ContactsManager {
                     name = context.getString(R.string.st_unknown);
                 }
 
-                ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, status, isRegistered, DP,standardisedNumber);
+                ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, status, isRegistered, DP, standardisedNumber);
                 if ((filter != null) && !filter.accept(contact)) {
                     continue;
                 }
@@ -121,7 +122,7 @@ public class ContactsManager {
                 Collections.sort(ret, comparator);
             }
             return ret;
-        }finally {
+        } finally {
             cursor.close();
             realm.close();
         }
@@ -135,7 +136,7 @@ public class ContactsManager {
         public final String name, phoneNumber, status, DP, numberInIEE_Format;
         public final boolean isRegisteredUser;
 
-        public Contact(String name, String phoneNumber, String status, boolean isRegisteredUser, String DP,String standardisedPhoneNumber) {
+        public Contact(String name, String phoneNumber, String status, boolean isRegisteredUser, String DP, String standardisedPhoneNumber) {
             Context context = Config.getApplicationContext();
             if (TextUtils.isEmpty(name)) {
                 name = context.getString(R.string.st_unknown);
@@ -147,7 +148,7 @@ public class ContactsManager {
             if (TextUtils.isEmpty(status)) {
                 status = context.getString(R.string.st_offline);
             }
-            if(isRegisteredUser && standardisedPhoneNumber==null){
+            if (isRegisteredUser && standardisedPhoneNumber == null) {
                 throw new IllegalArgumentException("standardised number is null");
             }
             this.numberInIEE_Format = standardisedPhoneNumber;

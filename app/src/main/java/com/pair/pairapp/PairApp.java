@@ -1,8 +1,6 @@
 package com.pair.pairapp;
 
 import android.app.Application;
-import android.telephony.PhoneNumberUtils;
-import android.util.Log;
 
 import com.pair.messenger.PairAppClient;
 import com.pair.util.Config;
@@ -20,7 +18,7 @@ public class PairApp extends Application {
         super.onCreate();
         RealmHelper.runRealmOperation(this);
         Config.init(this);
-        if (UserManager.getInstance().getMainUser() != null) {
+        if (UserManager.getInstance().isUserVerified()) {
             PairAppClient.start(this);
             ContactSyncService.start(this);
         }

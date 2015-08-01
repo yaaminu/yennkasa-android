@@ -55,19 +55,26 @@ public class PhoneNumberNormaliserTest extends TestCase {
         }catch (Exception e){
             //correct
         }
-        assertEquals("+233266349205", PhoneNumberNormaliser.toIEE("0266349205", "GH"));
-        assertEquals("+233266349205", PhoneNumberNormaliser.toIEE("(026)-(634)9205", "GH"));
-        assertEquals("+233266349205", PhoneNumberNormaliser.toIEE("00233266349205", "GH"));
-        assertEquals("+233266349205", PhoneNumberNormaliser.toIEE("+233266349205", "GH"));
-        assertEquals("+233266349205", PhoneNumberNormaliser.toIEE("(+233)266349205", "GH"));
-        assertEquals("+233266349205", PhoneNumberNormaliser.toIEE("(233)266349205", "GH"));
+        final String expected = "233266349205";
+        assertEquals(expected, PhoneNumberNormaliser.toIEE("0266349205", "GH"));
+        assertEquals(expected, PhoneNumberNormaliser.toIEE("(026)-(634)9205", "GH"));
+        assertEquals(expected, PhoneNumberNormaliser.toIEE("00233266349205", "GH"));
+        assertEquals(expected, PhoneNumberNormaliser.toIEE("+233266349205", "GH"));
+        assertEquals(expected, PhoneNumberNormaliser.toIEE("(+233)266349205", "GH"));
+        assertEquals(expected, PhoneNumberNormaliser.toIEE("(233)266349205", "GH"));
     }
 
     @Test
     public void testIsEE_Fomatted() throws Exception {
-        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("+233266349205"));
-        assertFalse(PhoneNumberNormaliser.isIEE_Formatted("0266349205"));
-        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("+233-266349205"));
+        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("+233266349205","GH"));
+        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("0266349205","GH"));
+        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("+233-266349205", "GH"));
+        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("0204441069","GH"));
+        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("233266349205","GH"));
+        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("0266349205","GH"));
+        assertFalse(PhoneNumberNormaliser.isIEE_Formatted("0766349205","GH"));
+        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("0236349205","GH"));
+        assertFalse(PhoneNumberNormaliser.isIEE_Formatted("0766349205","GH"));
     }
 
 }

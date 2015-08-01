@@ -8,12 +8,9 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBarActivity;
-import android.telephony.PhoneNumberUtils;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.Menu;
 
-import com.pair.data.User;
 import com.pair.pairapp.ui.ContactFragment;
 import com.pair.pairapp.ui.ConversationsFragment;
 import com.pair.pairapp.ui.FriendsActivity;
@@ -38,29 +35,26 @@ public class MainActivity extends ActionBarActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (GcmHelper.checkPlayServices(this)) {
-            UserManager userManager = UserManager.getInstance(getApplication());
-            User user = userManager.getMainUser();
-            if (user == null) {
-                gotoSetUpActivity();
-            } else {
-                setContentView(R.layout.activity_main);
-                //noinspection ConstantConditions
-                pager = ((ViewPager) findViewById(R.id.vp_pager));
-                PagerTabStrip tabStrip = ((PagerTabStrip) findViewById(R.id.pts_title_strip));
-                tabStrip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
-                tabStrip.setDrawFullUnderline(true);
-                pager.setAdapter(new MyFragmentStatePagerAdapter(getSupportFragmentManager()));
-            }
+        //user cannot get pass this if there is no gcm support as he will be presented a blocking dialog that cannot be dismissed
+        GcmHelper.checkPlayServices(this);
+        if (UserManager.getInstance().isUserVerified()) {
+            setContentView(R.layout.activity_main);
+            //noinspection ConstantConditions
+            pager = ((ViewPager) findViewById(R.id.vp_pager));
+            PagerTabStrip tabStrip = ((PagerTabStrip) findViewById(R.id.pts_title_strip));
+            tabStrip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
+            tabStrip.setDrawFullUnderline(true);
+            pager.setAdapter(new MyFragmentStatePagerAdapter(getSupportFragmentManager()));
         } else {
-            Log.e(TAG, "Google cloud messaging not available on this device");
+            gotoSetUpActivity();
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (savedPosition > -1) {
+        GcmHelper.checkPlayServices(this);
+        if (savedPosition != -1) {
             pager.setCurrentItem(savedPosition);
         }
     }
@@ -127,6 +121,7 @@ public class MainActivity extends ActionBarActivity {
         if (resultCode == RESULT_OK) {
             ArrayList<String> members = data.getStringArrayListExtra(FriendsActivity.SELECTED_USERS);
             if (members == null || members.isEmpty()) {
+                UiHelpers.showErrorDialog(this,getString(R.string.st_could_not_create_group));
                 return;
             }
             UserManager.getInstance().createGroup(groupName, members, new UserManager.CallBack() {

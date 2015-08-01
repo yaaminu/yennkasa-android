@@ -35,7 +35,7 @@ public class User extends RealmObject {
     @PrimaryKey
     private String _id;
 
-    private String gcmRegId, name, password, status, localName, DP,country;
+    private String gcmRegId, name, password, status, localName, DP, country;
     private long lastActivity, accountCreated;
     private RealmList<User> members; //a group will be a user with its members represented by this field.
     private User admin; // this represents admins for a group
@@ -191,6 +191,15 @@ public class User extends RealmObject {
         clone.setDP(other.getDP());
         clone.setCountry(other.getCountry());
         return clone;
+    }
+
+    public static List<User> copy(Iterable<User> users) {
+        if (users == null) throw new IllegalArgumentException("users may not be null!");
+        List<User> copied = new ArrayList<>(5);
+        for (User user : users) {
+            copied.add(User.copy(user));
+        }
+        return copied;
     }
 
     public static String generateGroupId(String groupName) {

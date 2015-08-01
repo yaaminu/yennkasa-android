@@ -1,7 +1,9 @@
 package com.pair.pairapp.ui;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -21,7 +23,7 @@ import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.pairapp.SetUpActivity;
 import com.pair.util.Config;
-import com.pair.util.GcmHelper;
+import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 import com.pair.workers.ContactSyncService;
@@ -36,12 +38,9 @@ public class SignupFragment extends Fragment {
     private EditText passWordEt, userNameEt;
     private AutoCompleteTextView phoneNumberEt;
     private Realm realm;
-    private boolean busy;
     private View.OnClickListener gotoLogin = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            if (busy) //trying to login, see {code attemptSignUp}
-                return;
             Fragment fragment = getFragmentManager().findFragmentByTag(SetUpActivity.LOGIN_FRAG);
             if (fragment == null) {
                 fragment = new LoginFragment();
@@ -71,7 +70,7 @@ public class SignupFragment extends Fragment {
         userNameEt = (EditText) view.findViewById(R.id.usernameField);
         Spinner spinner = ((Spinner) view.findViewById(R.id.sp_ccc));
         realm = Realm.getInstance(getActivity());
-        final CountriesListAdapter adapter = new CountriesListAdapter(getActivity(),realm.where(Country.class).findAllSorted("name"));
+        final CountriesListAdapter adapter = new CountriesListAdapter(getActivity(), realm.where(Country.class).findAllSorted("name"));
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
         final TextView tv = (TextView) view.findViewById(R.id.tv_login);
@@ -92,47 +91,47 @@ public class SignupFragment extends Fragment {
     }
 
     private void attemptSignUp() {
-        if (busy) {
-            return;
-        }
-        busy = true;
         pDialog = new ProgressDialog(getActivity());
         pDialog.setMessage(getString(R.string.st_please_wait));
         pDialog.setCancelable(false);
         pDialog.show();
-        GcmHelper.register(getActivity(), new GcmHelper.GCMRegCallback() {
-            @Override
-            public void done(Exception e, String regId) {
-                if (e == null) {
-                    String phoneNumber = phoneNumberEt.getText().toString().trim(),
-                            name = userNameEt.getText().toString().trim(),
-                            password = passWordEt.getText().toString().trim();
-                    @SuppressWarnings("ConstantConditions")
-                    final Spinner spinner = (Spinner) getView().findViewById(R.id.sp_ccc);
-                    String ccc = ((Country) spinner.getSelectedItem()).getIso2letterCode();
-                    UserManager.getInstance().signUp(name, phoneNumber, password, regId, ccc, new UserManager.CallBack() {
-
+        final String phoneNumber = phoneNumberEt.getText().toString().trim(),
+                name = userNameEt.getText().toString().trim(),
+                password = passWordEt.getText().toString().trim();
+        @SuppressWarnings("ConstantConditions")
+        final Spinner spinner = (Spinner) getView().findViewById(R.id.sp_ccc);
+        final String ccc = ((Country) spinner.getSelectedItem()).getIso2letterCode();
+        if (PhoneNumberNormaliser.isIEE_Formatted(phoneNumber, ccc)) {
+            new AlertDialog.Builder(getActivity()).setTitle(R.string.st_invalid_phone_number_title)
+                    .setMessage(R.string.st_invalid_phone_number_message)
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .setPositiveButton(R.string.st_understand, new DialogInterface.OnClickListener() {
                         @Override
-                        public void done(Exception e) {
-                            pDialog.dismiss();
-                            if (e == null) {
-                                Config.enableComponents();
-                                ContactSyncService.start(Config.getApplicationContext());
-                                startActivity(new Intent(getActivity(), MainActivity.class));
-                                getActivity().finish();
-                            } else {
-                                String message = e.getMessage();
-                                if ((message == null) || (message.isEmpty())) {
-                                    message = "an unknown error occurred";
-                                }
-                                UiHelpers.showErrorDialog(getActivity(), message);
-                            }
+                        public void onClick(DialogInterface dialog, int which) {
+                            doAttemptSignUp(phoneNumber, name, password, ccc);
                         }
-                    });
+                    }).create().show();
+        } else {
+            doAttemptSignUp(phoneNumber, name, password, ccc);
+        }
+    }
+
+    private void doAttemptSignUp(String phoneNumber, String name, String password, String ccc) {
+        UserManager.getInstance().signUp(getActivity(), name, phoneNumber, password, ccc, new UserManager.CallBack() {
+            @Override
+            public void done(Exception e) {
+                pDialog.dismiss();
+                if (e == null) {
+                    Config.enableComponents();
+                    ContactSyncService.start(Config.getApplicationContext());
+                    startActivity(new Intent(getActivity(), MainActivity.class));
+                    getActivity().finish();
                 } else {
-                    pDialog.dismiss();
-                    busy = false;
-                    UiHelpers.showErrorDialog(getActivity(), e.getMessage());
+                    String message = e.getMessage();
+                    if ((message == null) || (message.isEmpty())) {
+                        message = "an unknown error occurred";
+                    }
+                    UiHelpers.showErrorDialog(getActivity(), message);
                 }
             }
         });

@@ -38,7 +38,7 @@ public class GcmHelper {
 
     public static boolean checkPlayServices(Activity context) {
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
-        if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.HONEYCOMB){
+        if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.HONEYCOMB){ // FIXME: 8/1/2015 take of this
             return true;
         }
         Log.i(TAG, "results code: " + resultCode);
@@ -74,6 +74,9 @@ public class GcmHelper {
                 return new GcmRegResults(regId, null);
             }
             try {
+                if(Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB){ // FIXME: 8/1/2015 take off this
+                    return new GcmRegResults("kflafiellfkalfkfak",null);
+                }
                 GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(context);
                 String registrationId = gcm.register("554068366623");
                 sharedPreferences.edit().putString(GCM_REG_ID, registrationId).commit();

@@ -14,35 +14,39 @@
         android:layout_above="@+id/et_verification"
         android:text="@string/st_send_verification_notice" />
     <Button
-        android:id="@+id/bt_send_verification"
+        android:id="@+id/bt_verify"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="@string/send"/>
+        android:text="@string/verify"/>
     <Button
-        android:id="@+id/bt_cancel_verification"
+        android:id="@+id/bt_resend_token"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@android:string/cancel"
-        android:layout_below="@+id/bt_send_verification"
-        android:layout_alignRight="@+id/bt_send_verification"
+        android:text="@string/st_send_again"
+        android:layout_below="@+id/bt_verify"
+        android:layout_alignRight="@+id/bt_verify"
         />
     <EditText
+        android:layout_above="@+id/bt_verify"
         android:layout_margin="5dp"
         android:id="@+id/et_verification"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:inputType="number"
-        android:visibility="invisible"
         android:hint="@string/st_hint_et_verification"
         />
-    <Button
-        android:visibility="gone"
-        android:layout_centerHorizontal="true"
-        android:id="@+id/bt_complete_setup"
+    <TextView
+        android:id="@+id/tv_back_to_login"
+        android:layout_margin="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/et_verification"
-        android:text="@string/st_complete_setup"/>
+        android:gravity="center"
+        android:text="@string/st_back_login"
+        android:clickable="true"
+        android:textSize="18sp"
+        android:textColor="#0000ff"
+        android:layout_below="@+id/bt_resend_token"
+        android:layout_centerHorizontal="true"/>
 </RelativeLayout>

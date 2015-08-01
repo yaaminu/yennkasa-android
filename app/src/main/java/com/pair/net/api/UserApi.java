@@ -30,7 +30,7 @@ public interface UserApi {
     void logIn(@Body JsonObject object, Callback<User> callback);
 
     @POST("/api/v1/users/")
-    void fetchFriends(@Body List<String> userIds, Callback<List<User>> response);
+    void syncContacts(@Body List<String> userIds, Callback<List<User>> response);
 
     @GET("/api/v1/users/{id}")
     void getUser(@Path(Message.FIELD_ID) String id, Callback<User> response);

@@ -14,8 +14,6 @@ import com.pair.data.Message;
 import com.pair.net.Dispatcher;
 import com.pair.util.UserManager;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import io.realm.Realm;
 import io.realm.RealmResults;
 
@@ -37,7 +35,7 @@ public class PairAppClient extends Service {
     private Dispatcher<Message> DISPATCHER_INSTANCE;
 
     public static void start(Context context) {
-        if (UserManager.getInstance().getMainUser() == null) {
+        if (UserManager.getInstance().isUserVerified()) {
             return;
         }
         Intent pairAppClient = new Intent(context, PairAppClient.class);
@@ -53,7 +51,7 @@ public class PairAppClient extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "starting pairapp client service");
         super.onStartCommand(intent, flags, startId);
-        if (UserManager.getInstance().getMainUser() == null) {
+        if (UserManager.getInstance().isUserVerified()) {
             stopSelf();
             return START_STICKY;
         }

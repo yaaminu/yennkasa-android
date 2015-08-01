@@ -87,7 +87,7 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
                 String numBerToAdd = editText.getText().toString().trim();
                 if (!TextUtils.isEmpty(numBerToAdd)) {
                     try {
-                        selectedFriends.add(PhoneNumberNormaliser.toIEE(numBerToAdd,UserManager.getInstance().getDefaultCCC()));
+                        selectedFriends.add(PhoneNumberNormaliser.toIEE(numBerToAdd,UserManager.getInstance().getUserCountryISO()));
                     } catch (NumberParseException e) {
                         if (BuildConfig.DEBUG) {
                             Log.e(TAG, e.getMessage(), e.getCause());

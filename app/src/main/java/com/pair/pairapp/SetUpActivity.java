@@ -8,8 +8,10 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 
 import com.pair.data.Country;
-import com.pair.data.User;
 import com.pair.pairapp.ui.LoginFragment;
+import com.pair.pairapp.ui.SignupFragment;
+import com.pair.pairapp.ui.VerificationFragment;
+import com.pair.util.UserManager;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
@@ -22,10 +24,9 @@ import io.realm.Realm;
 public class SetUpActivity extends ActionBarActivity {
 
 
-    public static final String ACTION = "ac";
-    public static final String LOGIN_FRAG = "login",SIGNUP_FRAG = "signup";
-    public User registeringUser;
-    public String CCC;
+    public static final String ACTION = "ac",
+            LOGIN_FRAG = "login",
+            SIGNUP_FRAG = "signup",VERIFICATION_FRAGMENT = "vfrag";
     private String TAG = SetUpActivity.class.getSimpleName();
 
     @Override
@@ -35,11 +36,9 @@ public class SetUpActivity extends ActionBarActivity {
         Realm realm = Realm.getInstance(this);
         boolean countriesSetup = realm.where(Country.class).count() >= 243;
         realm.close();
-        if(!countriesSetup){
-             setUpCountriesTask.execute();
+        if (!countriesSetup) {
+            setUpCountriesTask.execute();
         }
-        registeringUser = new User();
-        registeringUser.setType(User.TYPE_NORMAL_USER);
         //add login fragment
         addFragment();
     }
@@ -47,18 +46,24 @@ public class SetUpActivity extends ActionBarActivity {
     private void addFragment() {
         Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.container);
         if (fragment == null) {
-            fragment = new LoginFragment();
+            if (UserManager.getInstance().isUserLoggedIn()) {
+                if (UserManager.getInstance().isUserVerified()) {
+                    throw new RuntimeException("user logged and verified "); // FIXME: 7/31/2015 remove this
+                }
+                fragment = new VerificationFragment();
+            } else {
+                fragment = new LoginFragment();
+            }
         }
-        String fTag = fragment instanceof LoginFragment?LOGIN_FRAG:SIGNUP_FRAG;
+        String fTag;
+        if (fragment instanceof LoginFragment) fTag = LOGIN_FRAG;
+        else if (fragment instanceof SignupFragment) fTag = SIGNUP_FRAG;
+        else fTag = VERIFICATION_FRAGMENT;
         getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, fTag).commit();
     }
 
-    public void verificationCancelled(){
-        addFragment();
-    }
-
     ProgressDialog pDialog;
-    private AsyncTask<Void,Void,Void> setUpCountriesTask = new AsyncTask<Void, Void, Void>() {
+    private AsyncTask<Void, Void, Void> setUpCountriesTask = new AsyncTask<Void, Void, Void>() {
         @Override
         protected void onPreExecute() {
             pDialog = new ProgressDialog(SetUpActivity.this);

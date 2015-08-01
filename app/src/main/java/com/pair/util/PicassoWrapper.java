@@ -3,28 +3,31 @@ package com.pair.util;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.support.v4.util.LruCache;
+import android.util.Base64;
 import android.util.Log;
 
 import com.pair.pairapp.BuildConfig;
 import com.squareup.picasso.Cache;
-import com.squareup.picasso.Downloader;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * @author Null-Pointer on 7/17/2015.
  */
 public class PicassoWrapper {
     private static final String TAG = PicassoWrapper.class.getSimpleName();
+
     private PicassoWrapper() {
         throw new UnsupportedOperationException("cannot instantiate");
     }
@@ -36,18 +39,7 @@ public class PicassoWrapper {
 
     public static Picasso with(Context context, String cachePath) {
         Picasso.Builder builder = new Picasso.Builder(context)
-                .indicatorsEnabled(BuildConfig.DEBUG)
-                .downloader(new Downloader() {
-                    @Override
-                    public Response load(Uri uri, int i) throws IOException {
-                        return null;
-                    }
-
-                    @Override
-                    public void shutdown() {
-
-                    }
-                });
+                .indicatorsEnabled(BuildConfig.DEBUG);
         File file = new File(cachePath);
         if (!file.isDirectory() && !file.mkdirs()) {
             Log.w(TAG, "failed to initialise file based cache");
@@ -69,6 +61,7 @@ public class PicassoWrapper {
         }
 
         final File cacheDirectory;
+
         DiskCache(File cacheDirectory) {
             if (cacheDirectory == null || !cacheDirectory.isDirectory()) {
                 throw new IllegalArgumentException("cache directory is invalid");
@@ -116,13 +109,7 @@ public class PicassoWrapper {
                     Log.e(TAG, e.getMessage());
                 }
             } finally {
-                if (out != null) {
-                    try {
-                        out.close();
-                    } catch (IOException ignored) {
-
-                    }
-                }
+               closeQuitely(out);
             }
         }
 
@@ -156,16 +143,21 @@ public class PicassoWrapper {
 
         String normalise(String uri) {
             try {
-                String normalised = URLEncoder.encode(uri, "utf8");
-                Log.i(TAG, normalised + " retrieved from uri");
-                return normalised;
+                try {
+                    final String shortened = URLEncoder.encode(Base64.encodeToString(MessageDigest.getInstance("md5").digest(uri.getBytes()), Base64.DEFAULT), "utf8");
+                    Log.i(TAG, "shortened: " + shortened);
+                    return shortened;
+                } catch (NoSuchAlgorithmException e) {
+                    Log.e(TAG, e.getMessage(), e.getCause());
+                    return URLEncoder.encode(uri, "utf8");
+                }
             } catch (UnsupportedEncodingException e) {
                 if (BuildConfig.DEBUG) {
                     Log.e(TAG, e.getMessage(), e.getCause());
                 } else {
                     Log.e(TAG, e.getMessage());
                 }
-                Log.wtf(TAG, "failed to toIEE uri, returning it like that");
+                Log.wtf(TAG, "failed to encode uri, returning it like that");
                 return uri;
             }
         }
@@ -183,6 +175,16 @@ public class PicassoWrapper {
                 }
                 Log.wtf(TAG, "failed to deNormalise uri, returning it like that");
                 return uri;
+            }
+        }
+    }
+
+    private static void closeQuitely(OutputStream out) {
+        if (out != null) {
+            //noinspection EmptyCatchBlock
+            try {
+                out.close();
+            } catch (IOException e) {
             }
         }
     }

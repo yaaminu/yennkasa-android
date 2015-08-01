@@ -30,13 +30,13 @@ public class PhoneNumberNormaliser {
         }
         PhoneNumberUtil utils = PhoneNumberUtil.getInstance();
         Phonenumber.PhoneNumber number = utils.parse(phoneNumber, defaultCountryCallingCode);
-        return "+" + number.getCountryCode() + number.getNationalNumber();
+        return number.getCountryCode()+ "" /*convert to  string*/+ number.getNationalNumber();
     }
 
-    public static boolean isIEE_Formatted(String phoneNumber) {
+    public static boolean isIEE_Formatted(String phoneNumber,String region) {
         PhoneNumberUtil util = PhoneNumberUtil.getInstance();
         try {
-            return util.isValidNumber(util.parse(phoneNumber,null));
+            return util.isValidNumberForRegion(util.parse(phoneNumber,region),region);
         } catch (NumberParseException e) {
             return false;
         }
