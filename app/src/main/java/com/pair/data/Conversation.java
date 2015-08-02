@@ -1,10 +1,18 @@
 package com.pair.data;
 
+import android.content.Context;
+import android.text.format.DateUtils;
+
+import com.pair.util.Config;
+
 import java.util.Date;
 
+import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.RealmClass;
+
+import static com.pair.data.Message.TYPE_DATE_MESSAGE;
 
 /**
  * @author by Null-Pointer on 5/30/2015.
@@ -64,5 +72,29 @@ public class Conversation extends RealmObject {
 
     public void setActive(boolean active) {
         this.active = active;
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public static void newSession(Realm realm, Conversation conversation) {
+        if (conversation == null) {
+            throw new IllegalArgumentException("conversation is null");
+        }
+        Context context = Config.getApplicationContext();
+        User peer = realm.where(User.class).equalTo(User.FIELD_ID, conversation.getPeerId()).findFirst();
+        if (peer == null) {
+            throw new IllegalArgumentException("conversation with no counterpart");
+        }
+        String formatted = DateUtils.formatDateTime(context, new Date().getTime(), DateUtils.FORMAT_NUMERIC_DATE);
+        Message message = realm.where(Message.class)
+                .equalTo(Message.FIELD_ID, peer.get_id() + formatted)
+                .findFirst();
+        if (message == null) { //session not yet set up!
+            message = realm.createObject(Message.class);
+            message.setId(peer.get_id() + formatted);
+            message.setMessageBody(formatted);
+            message.setTo(peer.get_id());
+            message.setDateComposed(new Date());
+            message.setType(TYPE_DATE_MESSAGE);
+        }
     }
 }

@@ -11,7 +11,6 @@ import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
-import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -69,7 +68,6 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private Dispatcher<Message> dispatcher;
     private boolean bound = false;
     private MessagesAdapter adapter;
-    private boolean sessionSetUp = false;
 
     private ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -136,6 +134,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             currConversation.setLastActiveTime(new Date());
             Message message = null;
             //re-construct the conversation
+            // TODO: 8/2/2015 one day we will take this off if conversation is deleted all messages in that conversation will be deleted as well
             if (messages.size() > 0) { // i don't no why , but realm throws some exception when i attempt to read from an empty realm results
                 message = messages.last();
             }
@@ -148,27 +147,6 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         }
         currConversation.setActive(true);
         realm.commitTransaction();
-    }
-
-    @SuppressWarnings("ConstantConditions")
-    private void setUpSession() {
-        //set up session
-        String formatted = DateUtils.formatDateTime(this, new Date().getTime(), DateUtils.FORMAT_NUMERIC_DATE);
-        Message message = realm.where(Message.class)
-                .equalTo(Message.FIELD_TYPE, TYPE_DATE_MESSAGE)
-                .equalTo(Message.FIELD_TO, peer.get_id())
-                .equalTo(Message.FIELD_MESSAGE_BODY, formatted)
-                .findFirst();
-        if (message == null) {
-            realm.beginTransaction();
-            message = realm.createObject(Message.class);
-            message.setId(Message.generateIdPossiblyUnique());
-            message.setMessageBody(formatted);
-            message.setTo(peer.get_id());
-            message.setDateComposed(new Date());
-            message.setType(TYPE_DATE_MESSAGE);
-            realm.commitTransaction();
-        }
     }
 
     @Override
@@ -261,16 +239,18 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         if (bound && (dispatcher != null)) {
             dispatcher.dispatch(message);
         } else {
-            doBind(); //after binding dispatcher will smartly send all unsent messages
+            doBind(); //after binding dispatcher will smartly dispatch all unsent messages
         }
     }
 
+    private void trySetupNewSession() {
+        //set up session
+        Conversation.newSession(realm,currConversation);
+    }
+
     private Message createMessage(String messageBody, int type) {
-        if (!sessionSetUp) {
-            setUpSession();
-            sessionSetUp = true;
-        }
         realm.beginTransaction();
+        trySetupNewSession();
         Message message = realm.createObject(Message.class);
         message.setMessageBody(messageBody);
         message.setTo(peer.get_id());

@@ -41,9 +41,17 @@ public class MessageProcessor extends IntentService {
             conversation.setActive(false);
             conversation.setPeerId(message.getFrom());
         }
-        conversation.setLastActiveTime(new Date());//now
+        Conversation.newSession(realm, conversation);
+        //this is necessary so that the session message is always older than all messages for a given session
+        Date date = new Date(System.currentTimeMillis() + 100);
+
+        //change the date composed for the incoming message.
+        //this is important as it will ensure the messages are displayed well
+        //to the user
+        message.setDateComposed(date);
+        conversation.setLastActiveTime(date);//now
         conversation.setLastMessage(message);
-        conversation.setSummary("<--" + message.getMessageBody());
+        conversation.setSummary("new!->" + message.getMessageBody());
         realm.commitTransaction();
         if (!conversation.isActive()) {
             Message copied = new Message(message);
