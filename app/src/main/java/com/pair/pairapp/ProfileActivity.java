@@ -3,7 +3,6 @@ package com.pair.pairapp;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
-import android.view.MenuItem;
 
 import com.pair.data.Message;
 import com.pair.pairapp.ui.ProfileFragment;
@@ -36,13 +35,4 @@ public class ProfileActivity extends ActionBarActivity {
     }
 
     public static final String EXTRA_USER_ID = Message.FIELD_ID;
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == android.R.id.home) {
-            finish();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 }

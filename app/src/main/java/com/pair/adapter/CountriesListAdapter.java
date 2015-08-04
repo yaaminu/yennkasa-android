@@ -42,7 +42,7 @@ public class CountriesListAdapter extends ArrayAdapter<Country> {
  
 		convertView = inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
 //		TextView textView = (TextView) rowView.findViewById(R.id.txtViewCountryName);
-//		ImageView imageView = (ImageView) rowView.findViewById(R.id.imgViewFlag);
+//		ImageViewer imageView = (ImageViewer) rowView.findViewById(R.id.imgViewFlag);
 		
 		((TextView)convertView).setText(getItem(position).getName());
     	

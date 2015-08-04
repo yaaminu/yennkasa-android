@@ -82,6 +82,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             dispatcher = null; //free memory.
         }
     };
+    private boolean sessionSetup = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,8 +102,8 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             realm.beginTransaction();
             peer = realm.createObject(User.class);
             peer.set_id(peerId);
-            String [] parts = peerId.split("@");
-            peer.setType(parts.length > 1?User.TYPE_GROUP:User.TYPE_NORMAL_USER);
+            String[] parts = peerId.split("@");
+            peer.setType(parts.length > 1 ? User.TYPE_GROUP : User.TYPE_NORMAL_USER);
             peer.setDP(peerId);
             peer.setLocalName(parts[0]);
             peer.setName(parts[0]);
@@ -118,7 +119,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
                 .or()
                 .equalTo(Message.FIELD_TO, peer.get_id())
                 .findAllSorted(Message.FIELD_DATE_COMPOSED, true);
-        getConversation(peerId);
+        setUpCurrentConversation();
         adapter = new MessagesAdapter(this, messages, true);
         messagesListView.setAdapter(adapter);
         messagesListView.setOnScrollListener(this);
@@ -136,7 +137,8 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
-    private void getConversation(String peerId) {
+    private void setUpCurrentConversation() {
+        String peerId = peer.get_id();
         currConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
         // FIXME: 8/4/2015 move this to a background thread
         realm.beginTransaction();
@@ -151,6 +153,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
                 message = messages.last();
             }
             if (message == null) {
+                currConversation.setLastMessage(null);
                 currConversation.setSummary("touch to start chatting with " + peer.getName());
             } else {
                 currConversation.setLastMessage(message);
@@ -193,9 +196,6 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         } else if (id == R.id.action_peer_info) {
             UiHelpers.gotoProfileActivity(this, peer.get_id());
             return true;
-        } else if (id == android.R.id.home) {
-            finish();
-            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -208,9 +208,11 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     protected void onPause() {
-        realm.beginTransaction();
-        currConversation.setActive(false);
-        realm.commitTransaction();
+        if (currConversation != null) {
+            realm.beginTransaction();
+            currConversation.setActive(false);
+            realm.commitTransaction();
+        }
         Config.setIsChatRoomOpen(false);
         super.onPause();
     }
@@ -228,6 +230,11 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     protected void onDestroy() {
+        if (currConversation != null && currConversation.getLastMessage() == null && currConversation.isValid()) {
+            realm.beginTransaction();
+            currConversation.removeFromRealm();
+            realm.commitTransaction();
+        }
         realm.close();
         super.onDestroy();
     }
@@ -257,7 +264,13 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     private void trySetupNewSession() {
         //set up session
-        Conversation.newSession(realm, currConversation);
+        if (!sessionSetup) {
+            if (currConversation == null) {
+                setUpCurrentConversation();
+            }
+            Conversation.newSession(realm, currConversation);
+            sessionSetup = true;
+        }
     }
 
     private Message createMessage(String messageBody, int type) {

@@ -41,7 +41,6 @@ public class MainActivity extends ActionBarActivity {
         //user cannot get pass this if there is no gcm support as he will be presented a blocking dialog that cannot be dismissed
         if (UserManager.getInstance().isUserVerified()) {
             setContentView(R.layout.activity_main);
-            cleanUp(); //async
             //noinspection ConstantConditions
             pager = ((ViewPager) findViewById(R.id.vp_pager));
             PagerTabStrip tabStrip = ((PagerTabStrip) findViewById(R.id.pts_title_strip));

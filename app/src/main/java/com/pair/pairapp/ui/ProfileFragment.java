@@ -18,7 +18,6 @@ import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -52,9 +51,13 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         @Override
         public void onClick(View v) {
             // TODO: 7/15/2015 fix this
+            Uri uri = Uri.parse(Config.DP_ENDPOINT + "/" + user.getDP());
+            Intent intent = new Intent(getActivity(), ImageViewer.class);
+            intent.setData(uri);
+            startActivity(intent);
         }
     };
-    private ImageView displayPicture;
+    private android.widget.ImageView displayPicture;
     private TextView userName, userPhone, listHeading;
     private Button changeDpButton;
     private ListView mutualGroupsList;
@@ -79,7 +82,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         super.onCreateView(inflater, container, savedInstanceState);
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
-        displayPicture = ((ImageView) view.findViewById(R.id.iv_display_picture));
+        displayPicture = ((android.widget.ImageView) view.findViewById(R.id.iv_display_picture));
         userName = ((TextView) view.findViewById(R.id.tv_user_name));
         userPhone = ((TextView) view.findViewById(R.id.tv_user_phone));
         changeDpButton = ((Button) view.findViewById(R.id.bt_change_dp));
@@ -105,7 +108,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
         //common to all
         userName.setText("@" + user.getName());
-        displayPicture.setOnClickListener(ONDPCLICKED);
+        displayPicture.setOnClickListener(clickListener);
         if (userManager.isGroup(user.get_id()) && userManager.isAdmin(user.get_id(), userManager.getMainUser().get_id())) {
             changeDpButton.setVisibility(View.VISIBLE);
             imageButton.setVisibility(View.VISIBLE);
@@ -261,6 +264,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private void showDp() {
         PicassoWrapper.with(getActivity(), Config.APP_PROFILE_PICS_BASE_DIR.getAbsolutePath())
                 .load(Config.DP_ENDPOINT + "/" + user.getDP())
+                .resize(300,120)
                 .placeholder(R.drawable.avatar_empty)
                 .error(R.drawable.avatar_empty)
                 .into(displayPicture);
@@ -329,6 +333,12 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 case R.id.bt_call:
                     Intent intent = new Intent(Intent.ACTION_DIAL);
                     intent.setData(Uri.parse("tel:" + user.get_id()));
+                    startActivity(intent);
+                    break;
+                case R.id.iv_display_picture:
+                    Uri uri = Uri.parse(Config.DP_ENDPOINT + "/" + user.getDP());
+                    intent = new Intent(getActivity(), ImageViewer.class);
+                    intent.setData(uri);
                     startActivity(intent);
                     break;
                 default:

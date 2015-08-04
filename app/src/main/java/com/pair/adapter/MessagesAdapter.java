@@ -21,6 +21,7 @@ import android.widget.TextView;
 import com.pair.data.Message;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
+import com.pair.pairapp.ui.ImageViewer;
 import com.pair.util.Config;
 import com.pair.util.FileHelper;
 import com.pair.util.PicassoWrapper;
@@ -102,14 +103,19 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
                 public void onClick(View v) {
                     if (v.getId() == R.id.iv_message_preview && messageFile.exists()) {
                         try {
-                            Intent intent = new Intent(Intent.ACTION_VIEW);
-                            intent.setDataAndType(Uri.parse(message.getMessageBody()), FileHelper.getMimeType(messageFile.getAbsolutePath()));
+                            Intent intent;
+                            if(message.getType() == Message.TYPE_PICTURE_MESSAGE){
+                              intent = new Intent(context,ImageViewer.class);
+                            }else{
+                                intent = new Intent(Intent.ACTION_VIEW);
+                            }
+                            intent.setDataAndType(Uri.parse(messageFile.getAbsolutePath()), FileHelper.getMimeType(messageFile.getAbsolutePath()));
                             context.startActivity(intent);
                         } catch (ActivityNotFoundException e) {
                             UiHelpers.showToast(context.getString(R.string.error_sorry_no_application_to_open_file));
                         }
                     } else if (v.getId() == R.id.bt_download) {
-                        if (downloadingRows.indexOfKey(position) < 0) {
+                        if (downloadingRows.indexOfKey(position) < 0 && !messageFile.exists()) {
                             UiHelpers.showToast("downloading " + (position + 1));
                             download(message, position);
                         }
