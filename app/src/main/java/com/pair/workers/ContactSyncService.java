@@ -31,8 +31,7 @@ public class ContactSyncService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        if (intent.getStringExtra(ACTION).equals(SYNC_CONTACTS) &&
-                (UserManager.getInstance().isUserVerified())) {
+        if (intent.getStringExtra(ACTION).equals(SYNC_CONTACTS)) {
             //do work here
             UserManager manager = UserManager.getInstance();
             ContactsManager.Filter<ContactsManager.Contact> filter = new ContactsManager.Filter<ContactsManager.Contact>() {
@@ -63,6 +62,9 @@ public class ContactSyncService extends IntentService {
     }
 
     public static void start(Context context) {
+        if(!UserManager.getInstance().isUserVerified()){
+            return;
+        }
         Intent intent = new Intent(context, ContactSyncService.class);
         intent.putExtra(ContactSyncService.ACTION, ContactSyncService.SYNC_CONTACTS);
         PendingIntent operation = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);

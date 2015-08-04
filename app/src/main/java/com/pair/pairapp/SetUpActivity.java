@@ -11,6 +11,7 @@ import com.pair.data.Country;
 import com.pair.pairapp.ui.LoginFragment;
 import com.pair.pairapp.ui.SignupFragment;
 import com.pair.pairapp.ui.VerificationFragment;
+import com.pair.util.GcmHelper;
 import com.pair.util.UserManager;
 
 import org.apache.commons.io.Charsets;
@@ -32,15 +33,23 @@ public class SetUpActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.set_up_activity);
-        Realm realm = Realm.getInstance(this);
-        boolean countriesSetup = realm.where(Country.class).count() >= 243;
-        realm.close();
-        if (!countriesSetup) {
-            setUpCountriesTask.execute();
+        if(GcmHelper.checkPlayServices(this)) {
+            setContentView(R.layout.set_up_activity);
+            Realm realm = Realm.getInstance(this);
+            boolean countriesSetup = realm.where(Country.class).count() >= 243;
+            realm.close();
+            if (!countriesSetup) {
+                setUpCountriesTask.execute();
+            }
+            //add login fragment
+            addFragment();
         }
-        //add login fragment
-        addFragment();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        GcmHelper.checkPlayServices(this);
     }
 
     private void addFragment() {
@@ -77,6 +86,7 @@ public class SetUpActivity extends ActionBarActivity {
             Realm realm = Realm.getInstance(SetUpActivity.this);
             try {
                 realm.beginTransaction();
+                // TODO: 8/4/2015 change this and pass the input stream directly to realm
                 realm.createAllFromJson(Country.class, IOUtils.toString(getAssets().open("countries.json"), Charsets.UTF_8));
                 realm.commitTransaction();
             } catch (IOException e) {

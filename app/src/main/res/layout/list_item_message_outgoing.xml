@@ -38,6 +38,14 @@
             android:background="#3d0f"
             android:text="download"
             />
+        <ProgressBar
+            android:id="@+id/pb_download_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminate="true"
+            android:visibility="gone"
+            />
     </FrameLayout>
 
     <TextView

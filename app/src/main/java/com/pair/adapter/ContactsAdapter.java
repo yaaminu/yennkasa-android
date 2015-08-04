@@ -2,6 +2,7 @@ package com.pair.adapter;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.telephony.SmsManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -107,7 +108,6 @@ public class ContactsAdapter extends BaseAdapter {
                     UiHelpers.gotoProfileActivity(v.getContext(), holder.contact.numberInIEE_Format);
                 }
             };
-            holder.userName.setOnClickListener(listener);
             holder.userDp.setOnClickListener(listener);
         } else {
             holder.userStatus.setText(contact.phoneNumber);
@@ -149,11 +149,12 @@ public class ContactsAdapter extends BaseAdapter {
         @Override
         public void onClick(View v) {
             String message = "Try out PAIRAPP messenger for android . Its free and fast!\\n download here: http://pairapp.com/download";
-            Uri uri = Uri.parse("sms:"+contact.phoneNumber);
-            Intent intent = new Intent(Intent.ACTION_SENDTO);
-            intent.setData(uri);
-            intent.putExtra(Intent.EXTRA_TEXT, message);
-            v.getContext().startActivity(intent);
+            SmsManager.getDefault().sendTextMessage(contact.phoneNumber,null,message,null,null);
+//            Uri uri = Uri.parse("sms:"+contact.phoneNumber);
+//            Intent intent = new Intent(Intent.ACTION_SENDTO);
+//            intent.setData(uri);
+//            intent.putExtra(Intent.EXTRA_TEXT, message);
+//            v.getContext().startActivity(intent);
         }
 
     }

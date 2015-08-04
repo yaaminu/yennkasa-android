@@ -16,9 +16,9 @@ public class PairApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        RealmHelper.runRealmOperation(this);
         Config.init(this);
         if (UserManager.getInstance().isUserVerified()) {
+            RealmHelper.runRealmOperation(this);
             PairAppClient.start(this);
             ContactSyncService.start(this);
         }

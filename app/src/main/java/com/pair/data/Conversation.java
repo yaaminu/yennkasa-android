@@ -4,6 +4,7 @@ import android.content.Context;
 import android.text.format.DateUtils;
 
 import com.pair.util.Config;
+import com.pair.util.UserManager;
 
 import java.util.Date;
 
@@ -80,20 +81,18 @@ public class Conversation extends RealmObject {
             throw new IllegalArgumentException("conversation is null");
         }
         Context context = Config.getApplicationContext();
-        User peer = realm.where(User.class).equalTo(User.FIELD_ID, conversation.getPeerId()).findFirst();
-        if (peer == null) {
-            throw new IllegalArgumentException("conversation with no counterpart");
-        }
+
         String formatted = DateUtils.formatDateTime(context, new Date().getTime(), DateUtils.FORMAT_NUMERIC_DATE);
         Message message = realm.where(Message.class)
-                .equalTo(Message.FIELD_ID, peer.get_id() + formatted)
+                .equalTo(Message.FIELD_ID, conversation.getPeerId() + formatted)
                 .findFirst();
         if (message == null) { //session not yet set up!
             message = realm.createObject(Message.class);
-            message.setId(peer.get_id() + formatted);
+            message.setId(conversation.getPeerId() + formatted);
             message.setMessageBody(formatted);
-            message.setTo(peer.get_id());
-            message.setDateComposed(new Date());
+            message.setTo(UserManager.getInstance().getMainUser().get_id());
+            message.setFrom(conversation.getPeerId());
+            message.setDateComposed(new Date(System.currentTimeMillis()));
             message.setType(TYPE_DATE_MESSAGE);
         }
     }

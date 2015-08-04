@@ -1,41 +1,33 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/fr_login"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
-                android:id="@+id/fr_login"
     android:paddingTop="@dimen/activity_vertical_margin">
 
     <EditText
         android:id="@+id/et_passwordField"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        style="@style/password_editText_style"
         android:layout_alignLeft="@+id/usernameField"
-        android:layout_below="@+id/et_phone_number_field"
-        android:ems="10"
-        android:hint="@string/password_hint"
-        android:inputType="textPassword" />
+        android:layout_below="@+id/et_phone_number_field" />
 
-    <AutoCompleteTextView
+    <EditText
         android:id="@+id/et_phone_number_field"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        style="@style/phone_number_editText_style"
         android:layout_alignLeft="@+id/et_passwordField"
-        android:layout_below="@+id/sp_ccc"
-        android:ems="10"
-        android:hint="@string/phone_hint"
-        android:inputType="phone">
+        android:layout_below="@+id/sp_ccc">
 
         <requestFocus />
-    </AutoCompleteTextView>
+    </EditText>
 
     <Spinner
         android:id="@+id/sp_ccc"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-    </Spinner>
+        android:layout_height="wrap_content"/>
+
     <Button
         android:id="@+id/bt_loginButton"
         android:layout_width="match_parent"
@@ -55,28 +47,4 @@
         android:text="Don't have an account? Sign up!"
         android:textColor="#00f"
         android:textSize="14sp" />
-
-    <LinearLayout
-        android:id="@+id/progressView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/tv_signup"
-        android:layout_centerHorizontal="true"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone">
-
-        <ProgressBar
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:indeterminate="true" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Please wait..."
-            android:textSize="18sp" />
-    </LinearLayout>
-
-
 </RelativeLayout>

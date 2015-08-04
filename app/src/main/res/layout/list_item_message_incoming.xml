@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingBottom="1.5dp"
-                android:paddingLeft="10dp"
-                android:paddingRight="1.5dp"
-                android:paddingTop="1.5dp"
-    >
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:paddingBottom="1.5dp"
+    android:paddingLeft="10dp"
+    android:paddingRight="1.5dp"
+    android:paddingTop="1.5dp">
 
     <FrameLayout
         android:id="@+id/fl_message_body_view"
@@ -17,8 +16,7 @@
         <TextView
             android:id="@+id/tv_message_content"
             style="@style/message_incoming"
-            android:text="message sent by user"
-            />
+            android:text="message sent by user" />
 
         <ImageView
             android:id="@+id/iv_message_preview"
@@ -27,7 +25,8 @@
             android:layout_height="200dp"
             android:padding="10dp"
             android:scaleType="fitXY"
-            android:src="@drawable/image_placeholder"/>
+            android:src="@drawable/image_placeholder" />
+
         <Button
             android:id="@+id/bt_download"
             android:layout_width="wrap_content"
@@ -35,12 +34,21 @@
             android:layout_gravity="center"
             android:background="#3d0f"
             android:text="download"
-            />
+            android:visibility="gone" />
+
+        <ProgressBar
+            android:id="@+id/pb_download_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminate="true"
+            android:visibility="gone" />
     </FrameLayout>
 
     <TextView
         android:id="@+id/tv_message_date"
         style="@style/message_incoming_date"
-        android:text="date sent"/>
+        android:text="date sent"
+        android:textColor="@android:color/black" />
 </RelativeLayout>
 

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.pair.adapter.MessageJsonAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.pairapp.ui.ChatActivity;
@@ -30,29 +31,28 @@ public class MessageProcessor extends IntentService {
         String messageJson = bundle.getString("message");
         Log.i(TAG, messageJson);
         Realm realm = Realm.getInstance(this);
-        realm.beginTransaction();
-        Message message = realm.createObjectFromJson(Message.class, messageJson);
-        // TODO: 6/14/2015 send a socket/gcm broadcast to server to notify sender of message state.
+
+        Message message = MessageJsonAdapter.INSTANCE.fromJson(messageJson);
         //noinspection ConstantConditions
         message.setState(Message.STATE_RECEIVED);
         Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, message.getFrom()).findFirst();
+        //ensure the conversation and session is set up before persisting the message
+        realm.beginTransaction();
         if (conversation == null) { //create a new one
             conversation = realm.createObject(Conversation.class);
             conversation.setActive(false);
             conversation.setPeerId(message.getFrom());
         }
         Conversation.newSession(realm, conversation);
-        //this is necessary so that the session message is always older than all messages for a given session
-        Date date = new Date(System.currentTimeMillis() + 100);
 
-        //change the date composed for the incoming message.
-        //this is important as it will ensure the messages are displayed well
-        //to the user
-        message.setDateComposed(date);
-        conversation.setLastActiveTime(date);//now
-        conversation.setLastMessage(message);
+        //force the new message to be older the session start up time
+        message.setDateComposed(new Date(System.currentTimeMillis()+1));
+        conversation.setLastActiveTime(new Date());//now
+        conversation.setLastMessage(realm.copyToRealm(message));
         conversation.setSummary("new!->" + message.getMessageBody());
         realm.commitTransaction();
+        // TODO: 6/14/2015 send a socket/gcm broadcast to server to notify sender of message state.
+
         if (!conversation.isActive()) {
             Message copied = new Message(message);
             Intent action = new Intent(this, ChatActivity.class);
@@ -60,6 +60,5 @@ public class MessageProcessor extends IntentService {
             NotificationManager.INSTANCE.onNewMessage(copied, action);
         }
         realm.close();
-        MessageCenter.completeWakefulIntent(intent);
     }
 }

@@ -74,8 +74,9 @@
     <string name="st_could_not_create_group">Failed to create group please add at least one member</string>
     <string name="st_send_again">Send Again</string>
     <string name="st_back_login">Back to LogIn</string>
-    <string name="st_invalid_phone_number_message">The phone number you may not be valid continue only if you know what you are doing</string>
+    <string name="st_invalid_phone_number_message">This phone number  may not be valid in you country. continue only if you know what you are doing. It will still be verified though</string>
     <string name="st_understand">I Understand</string>
-    <string name="st_invalid_phone_number_title">Potentially invalid phone Number</string>
+    <string name="st_invalid_phone_number_title">Potentially invalid phone number</string>
     <string name="send">Send</string>
+    <string name="st_already_have_an_account">Already have an account? Login.</string>
 </resources>

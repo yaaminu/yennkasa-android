@@ -1,7 +1,6 @@
 package com.pair.pairapp.ui;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,7 +11,6 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -36,7 +34,7 @@ import io.realm.Realm;
 public class SignupFragment extends Fragment {
 
     private EditText passWordEt, userNameEt;
-    private AutoCompleteTextView phoneNumberEt;
+    private EditText phoneNumberEt;
     private Realm realm;
     private View.OnClickListener gotoLogin = new View.OnClickListener() {
         @Override
@@ -65,8 +63,7 @@ public class SignupFragment extends Fragment {
         super.onCreateView(inflater, container, savedInstanceState);
         View view = inflater.inflate(R.layout.signup_fragment, container, false);
         passWordEt = (EditText) view.findViewById(R.id.et_passwordField);
-        phoneNumberEt = (AutoCompleteTextView) view.findViewById(R.id.et_phone_number_field);
-        new UiHelpers.AutoCompleter(getActivity(), phoneNumberEt).execute(); //enable autocompletion
+        phoneNumberEt = (EditText) view.findViewById(R.id.et_phone_number_field);
         userNameEt = (EditText) view.findViewById(R.id.usernameField);
         Spinner spinner = ((Spinner) view.findViewById(R.id.sp_ccc));
         realm = Realm.getInstance(getActivity());
@@ -91,32 +88,34 @@ public class SignupFragment extends Fragment {
     }
 
     private void attemptSignUp() {
-        pDialog = new ProgressDialog(getActivity());
-        pDialog.setMessage(getString(R.string.st_please_wait));
-        pDialog.setCancelable(false);
-        pDialog.show();
         final String phoneNumber = phoneNumberEt.getText().toString().trim(),
                 name = userNameEt.getText().toString().trim(),
                 password = passWordEt.getText().toString().trim();
         @SuppressWarnings("ConstantConditions")
         final Spinner spinner = (Spinner) getView().findViewById(R.id.sp_ccc);
         final String ccc = ((Country) spinner.getSelectedItem()).getIso2letterCode();
-        if (PhoneNumberNormaliser.isIEE_Formatted(phoneNumber, ccc)) {
-            new AlertDialog.Builder(getActivity()).setTitle(R.string.st_invalid_phone_number_title)
-                    .setMessage(R.string.st_invalid_phone_number_message)
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .setPositiveButton(R.string.st_understand, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            doAttemptSignUp(phoneNumber, name, password, ccc);
-                        }
-                    }).create().show();
-        } else {
-            doAttemptSignUp(phoneNumber, name, password, ccc);
+        if (!PhoneNumberNormaliser.isIEE_Formatted(phoneNumber, ccc)) {
+            final DialogInterface.OnClickListener okListener = new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    doAttemptSignUp(phoneNumber, name, password, ccc);
+                }
+            };
+            UiHelpers.showErrorDialog(getActivity(),
+                    R.string.st_invalid_phone_number_title,
+                    R.string.st_invalid_phone_number_message,
+                    R.string.st_understand,
+                    android.R.string.cancel, okListener, null);
+            return;
         }
+        doAttemptSignUp(phoneNumber, name, password, ccc);
     }
 
     private void doAttemptSignUp(String phoneNumber, String name, String password, String ccc) {
+        pDialog = new ProgressDialog(getActivity());
+        pDialog.setMessage(getString(R.string.st_please_wait));
+        pDialog.setCancelable(false);
+        pDialog.show();
         UserManager.getInstance().signUp(getActivity(), name, phoneNumber, password, ccc, new UserManager.CallBack() {
             @Override
             public void done(Exception e) {

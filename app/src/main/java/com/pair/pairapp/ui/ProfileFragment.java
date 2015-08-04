@@ -259,7 +259,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     };
 
     private void showDp() {
-        PicassoWrapper.with(getActivity(),Config.APP_PROFILE_PICS_BASE_DIR.getAbsolutePath())
+        PicassoWrapper.with(getActivity(), Config.APP_PROFILE_PICS_BASE_DIR.getAbsolutePath())
                 .load(Config.DP_ENDPOINT + "/" + user.getDP())
                 .placeholder(R.drawable.avatar_empty)
                 .error(R.drawable.avatar_empty)
@@ -300,11 +300,20 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     UiHelpers.enterChatRoom(v.getContext(), user.get_id());
                     break;
                 case R.id.bt_exit_group:
+                    final ProgressDialog progressDialog = new ProgressDialog(getActivity());
+                    progressDialog.setMessage(getString(R.string.st_please_wait));
+                    progressDialog.setCancelable(false);
+                    progressDialog.show();
                     UserManager.getInstance().leaveGroup(user.get_id(), new UserManager.CallBack() {
                         @Override
                         public void done(Exception e) {
+                            progressDialog.dismiss();
                             if (e != null) {
-                                UiHelpers.showErrorDialog(getActivity().getApplicationContext(), e.getMessage());
+                                try {
+                                    UiHelpers.showErrorDialog(getActivity().getApplicationContext(), e.getMessage());
+                                } catch (Exception e2) {
+                                    // FIXME: 8/3/2015
+                                }
                             } else {
                                 getActivity().finish();
                             }

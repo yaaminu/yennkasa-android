@@ -30,15 +30,19 @@ public class Config {
     private static final String LOCAL_HOST_GENYMOTION = "http://10.0.3.2:3000";
     private static final String DP_API_GENYMOTION = "http://10.0.3.2:5000/fileApi/dp";
     private static final String DP_API_REAL_PHONE = "http://192.168.43.42:5000/fileApi/dp";
+    private static final String MESSAGE_API_GENY = "http://10.0.3.2:5000/fileApi/message";
+    private static final String MESSAGE_API_REAL_PHONE = "http://192.168.43.42:5000/fileApi/message";
     private static final String ENV_PROD = "prod";
     private static final String ENV_DEV = "dev";
     public static final String PAIRAPP_ENV = getEnvironment();
     public static final String DP_ENDPOINT = getDpEndpoint();
+    public static final String MESSAGE_ENDPOINT = getMessageApiEndpoint();
     public static final String PAIRAPP_ENDPOINT = getEndPoint();
     private static final String logMessage = "calling getApplication when init has not be called";
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
     public static final String APP_USER_AGENT = "pairapp-android-development-version";
     private static String APP_NAME = "PairApp";
+    public static final File APP_BIN_FILES_BASE_DIR = getArbitraryFilesBaseDir();
     public static final File APP_IMG_MEDIA_BASE_DIR = getImageBasedir();
     public static final File APP_VID_MEDIA_BASE_DIR = getVideoBaseDir();
     public static final File APP_PROFILE_PICS_BASE_DIR = getProfilePicsBasedir();
@@ -59,6 +63,14 @@ public class Config {
         return null;
     }
 
+
+    private static File getArbitraryFilesBaseDir() {
+        if (isExternalStorageAvailable()) {
+            return new File(Environment
+                    .getExternalStoragePublicDirectory(APP_NAME), "Files");
+        }
+        return null;
+    }
     private static File getImageBasedir() {
         if (isExternalStorageAvailable()) {
             return new File(Environment
@@ -196,5 +208,14 @@ public class Config {
             throw new IllegalStateException("application is null,did you forget to call init(Context) ?");
         }
         return getApplication().getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
+    }
+
+    private static String getMessageApiEndpoint() {
+        if (PAIRAPP_ENV.equals(ENV_DEV)) {
+            return MESSAGE_API_GENY;
+        } else {
+            // TODO replace this with real url
+            return MESSAGE_API_REAL_PHONE;
+        }
     }
 }

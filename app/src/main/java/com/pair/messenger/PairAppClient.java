@@ -35,7 +35,7 @@ public class PairAppClient extends Service {
     private Dispatcher<Message> DISPATCHER_INSTANCE;
 
     public static void start(Context context) {
-        if (UserManager.getInstance().isUserVerified()) {
+        if (!UserManager.getInstance().isUserVerified()) {
             return;
         }
         Intent pairAppClient = new Intent(context, PairAppClient.class);
@@ -51,10 +51,6 @@ public class PairAppClient extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "starting pairapp client service");
         super.onStartCommand(intent, flags, startId);
-        if (UserManager.getInstance().isUserVerified()) {
-            stopSelf();
-            return START_STICKY;
-        }
         if (intent != null) {
             if (intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
                 attemptToSendAllUnsentMessages(); //async
@@ -120,6 +116,7 @@ public class PairAppClient extends Service {
 
         @Override
         public void onSendSucceeded(final String messageId) {
+            // FIXME: 8/4/2015 move this to a background thread
             Realm realm = Realm.getInstance(PairAppClient.this);
             realm.beginTransaction();
             Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();

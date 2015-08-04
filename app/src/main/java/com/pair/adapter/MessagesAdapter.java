@@ -4,13 +4,12 @@ import android.app.Activity;
 import android.app.AlarmManager;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
-import android.support.v4.util.LruCache;
 import android.text.format.DateUtils;
 import android.util.Log;
+import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,16 +17,21 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.pair.data.Message;
+import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.FileHelper;
+import com.pair.util.PicassoWrapper;
+import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
+import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
 
@@ -37,16 +41,17 @@ import io.realm.RealmResults;
 @SuppressWarnings("ConstantConditions")
 public class MessagesAdapter extends RealmBaseAdapter<Message> {
     private static final String TAG = MessagesAdapter.class.getSimpleName();
-    private static String TOP_MOST_DATE = "no date";
     private static final long ONE_MINUTE = AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15;
     private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2, DATE_MESSAGE = 0x0;
-    private final LruCache<String, Bitmap> imageCaches;
+    private final SparseIntArray previewsMap;
+    private final SparseIntArray downloadingRows = new SparseIntArray();
 
     public MessagesAdapter(Activity context, RealmResults<Message> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
-        long cacheSize = Runtime.getRuntime().totalMemory();
-        cacheSize /= 8;
-        imageCaches = new LruCache<>(((int) cacheSize));
+        previewsMap = new SparseIntArray(3);
+        previewsMap.put(Message.TYPE_PICTURE_MESSAGE, R.drawable.image_placeholder);
+        previewsMap.put(Message.TYPE_VIDEO_MESSAGE, R.drawable.video_placeholder);
+        previewsMap.put(Message.TYPE_BIN_MESSAGE, R.drawable.file_placeholder);
     }
 
     @Override
@@ -69,8 +74,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder holder;
+    public View getView(final int position, View convertView, ViewGroup parent) {
+        final ViewHolder holder;
         final Message message = getItem(position);
         if (convertView == null) {
             convertView = hookupViews(layoutResources[getItemViewType(position)], parent);
@@ -85,18 +90,124 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         if (message.getType() == Message.TYPE_TEXT_MESSAGE) {
             //normal message
             hideViews(holder.preview, holder.downloadButton);
+            holder.preview.setVisibility(View.GONE);
+            holder.downloadButton.setVisibility(View.GONE);
+            holder.progress.setVisibility(View.GONE);
             holder.content.setVisibility(View.VISIBLE);
             holder.content.setText(message.getMessageBody());
-        } else if (message.getType() == Message.TYPE_PICTURE_MESSAGE) {
-            getPictureView(holder, message);
-        } else if (message.getType() == Message.TYPE_VIDEO_MESSAGE) {
-            showPreview(holder, message, "video/*", R.drawable.video_placeholder);
-        } else if (message.getType() == Message.TYPE_BIN_MESSAGE) {
-            String mimeType = FileHelper.getMimeType(message.getMessageBody());
-            showPreview(holder, message, mimeType, R.drawable.file_placeholder);
+        } else {
+            final File messageFile = new File(message.getMessageBody());
+            View.OnClickListener listener = new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (v.getId() == R.id.iv_message_preview && messageFile.exists()) {
+                        try {
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.setDataAndType(Uri.parse(message.getMessageBody()), FileHelper.getMimeType(messageFile.getAbsolutePath()));
+                            context.startActivity(intent);
+                        } catch (ActivityNotFoundException e) {
+                            UiHelpers.showToast(context.getString(R.string.error_sorry_no_application_to_open_file));
+                        }
+                    } else if (v.getId() == R.id.bt_download) {
+                        if (downloadingRows.indexOfKey(position) < 0) {
+                            UiHelpers.showToast("downloading " + (position + 1));
+                            download(message, position);
+                        }
+                    }
+                }
+            };
+            if (messageFile.exists()) {
+                holder.downloadButton.setVisibility(View.GONE);
+                holder.downloadButton.setOnClickListener(null);//in case we recycled a view that attached listener to this view,free it for GC
+                holder.progress.setVisibility(View.GONE);
+                if (message.getType() == Message.TYPE_PICTURE_MESSAGE) {
+                    PicassoWrapper.with(context).load(messageFile)
+                            .placeholder(R.drawable.avatar_empty)
+                            .error(R.drawable.avatar_empty).into(holder.preview);
+                } else {
+                    PicassoWrapper.with(context).load(previewsMap.get(message.getType()))
+                            .error(R.drawable.avatar_empty).into(holder.preview);
+                }
+                holder.preview.setVisibility(View.VISIBLE);
+                holder.preview.setOnClickListener(listener);
+            } else {
+                PicassoWrapper.with(context).load(previewsMap.get(message.getType()))
+                        .error(R.drawable.avatar_empty).into(holder.preview);
+                if (!isOutgoingMessage(message)) {
+                    if (downloadingRows.indexOfKey(position) > -1) {
+                        holder.progress.setVisibility(View.VISIBLE);
+                        holder.downloadButton.setVisibility(View.GONE);
+                    } else {
+                        holder.downloadButton.setVisibility(View.VISIBLE);
+                        holder.downloadButton.setOnClickListener(listener);
+                        holder.progress.setVisibility(View.GONE);
+                    }
+                } else {
+                    holder.progress.setVisibility(View.GONE);
+                    holder.downloadButton.setVisibility(View.GONE);
+                    holder.downloadButton.setOnClickListener(null);
+                }
+                holder.preview.setOnClickListener(null);//in case we recycled a view that attached listener to this view
+            }
         }
         hideDateIfClose(position, holder, message);
         return convertView;
+    }
+
+    private void download(final Message message, final int position) {
+        File file;
+        switch (message.getType()) {
+            case Message.TYPE_VIDEO_MESSAGE:
+                file = new File(Config.APP_VID_MEDIA_BASE_DIR, message.getMessageBody() + ".mp4");
+                break;
+            case Message.TYPE_PICTURE_MESSAGE:
+                file = new File(Config.APP_IMG_MEDIA_BASE_DIR, message.getMessageBody() + ".jpeg");
+                break;
+            case Message.TYPE_BIN_MESSAGE:
+                file = new File(Config.APP_BIN_FILES_BASE_DIR, message.getMessageBody());
+                break;
+            default:
+                throw new AssertionError("should never happen");
+        }
+        final File finalFile = file;
+        final Message copied = new Message(message);
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected void onPreExecute() {
+                downloadingRows.put(position, position);
+                notifyDataSetChanged();
+            }
+
+            @Override
+            protected Void doInBackground(Void... params) {
+                Realm realm = null;
+                try {
+                    FileHelper.save(finalFile, new URL(Config.MESSAGE_ENDPOINT + "/" + copied.getMessageBody()).openStream());
+                    realm = Realm.getInstance(Config.getApplicationContext());
+                    realm.beginTransaction();
+                    Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, copied.getId()).findFirst();
+                    toBeUpdated.setMessageBody(finalFile.getAbsolutePath());
+                    realm.commitTransaction();
+                } catch (IOException e) {
+                    if (BuildConfig.DEBUG) {
+                        Log.e(TAG, e.getMessage(), e.getCause());
+                    } else {
+                        Log.e(TAG, e.getMessage());
+                    }
+                } finally {
+                    if (realm != null) {
+                        realm.close();
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                downloadingRows.delete(position);
+                notifyDataSetChanged();
+            }
+        }.execute();
     }
 
     @NonNull
@@ -109,91 +220,9 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         holder.preview = (ImageView) convertView.findViewById(R.id.iv_message_preview);
         holder.dateComposed = ((TextView) convertView.findViewById(R.id.tv_message_date));
         holder.downloadButton = ((Button) convertView.findViewById(R.id.bt_download));
+        holder.progress = (ProgressBar) convertView.findViewById(R.id.pb_download_progress);
         convertView.setTag(holder);
         return convertView;
-    }
-
-    private void getPictureView(ViewHolder holder, final Message message) {
-        hideViews(holder.content);
-        holder.preview.setVisibility(View.VISIBLE);
-        Bitmap cachedImage = imageCaches.get(message.getId());
-        Log.d(TAG, message.getMessageBody());
-        if (new File(message.getMessageBody()).exists()) { //whew downloaded!
-            hideViews(holder.downloadButton);
-            if (cachedImage == null) {
-                cachedImage = BitmapFactory.decodeFile(message.getMessageBody());
-                imageCaches.put(message.getId(), cachedImage);
-            }
-            holder.preview.setImageBitmap(cachedImage);
-            //downloaded
-            final View.OnClickListener imageClickHandler = new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    Uri uri = Uri.fromFile(new File(message.getMessageBody()));
-                    intent.setDataAndType(uri, "image/*");
-                    context.startActivity(intent);
-                }
-            };
-            holder.preview.setOnClickListener(imageClickHandler);
-        } else { //not downloaded show a notice for user to download
-            holder.downloadButton.setVisibility(View.VISIBLE);
-            holder.preview.setOnClickListener(null); //clear click handler that was previously set
-            holder.downloadButton.setOnClickListener(new downloader(null));
-            // TODO: 6/18/2015 replace the avatar_empty with a correct message
-            if (cachedImage == null) {
-                cachedImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.avatar_empty);//show a place holder image
-                imageCaches.put(message.getId(), cachedImage);
-            }
-            holder.preview.setImageBitmap(cachedImage);
-        }
-    }
-
-    private void showPreview(ViewHolder holder, final Message message, final String mimeType, int drawable) {
-        hideViews(holder.content);
-        holder.preview.setVisibility(View.VISIBLE);
-        Bitmap cachedImage = imageCaches.get(message.getId());
-        Log.d(TAG, message.getMessageBody());
-        if (cachedImage == null) {
-            cachedImage = BitmapFactory.decodeResource(context.getResources(), drawable);
-            imageCaches.put(message.getId(), cachedImage);
-        }
-        holder.preview.setImageBitmap(cachedImage);
-        if (new File(message.getMessageBody()).exists()) {
-            holder.downloadButton.setVisibility(View.GONE);
-            final View.OnClickListener videoClickHandler = new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    Uri uri = Uri.fromFile(new File(message.getMessageBody()));
-                    intent.setDataAndType(uri, mimeType);
-                    try {
-                        context.startActivity(intent);
-                    } catch (ActivityNotFoundException e) {
-                        Toast.makeText(context, R.string.error_sorry_no_application_to_open_file, Toast.LENGTH_LONG).show();
-                    }
-                }
-            };
-            holder.preview.setOnClickListener(videoClickHandler);
-        } else {
-            holder.downloadButton.setVisibility(View.VISIBLE);
-            holder.preview.setOnClickListener(null);//clear click handler if it was set in the recycled view
-        }
-    }
-
-    private class downloader implements View.OnClickListener {
-        ProgressBar progressBar;
-
-        public downloader(ProgressBar progressBar) {
-            this.progressBar = progressBar;
-        }
-
-        @Override
-        public void onClick(View v) {
-            //download
-            Log.i(TAG, "download here");
-
-        }
     }
 
     private void hideDateIfClose(int position, ViewHolder holder, Message message) {
@@ -234,7 +263,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     }
 
     private boolean isOutgoingMessage(Message message) {
-        return (message.getFrom().equals(UserManager.getInstance(Config.getApplication()).getMainUser().get_id()));
+        return (message.getFrom().equals(UserManager.getInstance().getMainUser().get_id()));
     }
 
     private void hideViews(View... viewsToHide) {
@@ -247,6 +276,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         TextView content, dateComposed;
         public ImageView preview;
         public Button downloadButton;
+        public ProgressBar progress;
         //TODO add more fields as we support different media/file types
     }
 

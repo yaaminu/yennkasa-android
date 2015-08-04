@@ -11,15 +11,18 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.TypedValue;
 import android.view.Menu;
 
+import com.pair.data.Conversation;
 import com.pair.pairapp.ui.ContactFragment;
 import com.pair.pairapp.ui.ConversationsFragment;
 import com.pair.pairapp.ui.FriendsActivity;
 import com.pair.pairapp.ui.GroupsFragment;
-import com.pair.util.GcmHelper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
 import java.util.ArrayList;
+
+import io.realm.Realm;
+import io.realm.RealmResults;
 
 /**
  * @author Null-Pointer on 6/6/2015.
@@ -36,9 +39,9 @@ public class MainActivity extends ActionBarActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //user cannot get pass this if there is no gcm support as he will be presented a blocking dialog that cannot be dismissed
-        GcmHelper.checkPlayServices(this);
         if (UserManager.getInstance().isUserVerified()) {
             setContentView(R.layout.activity_main);
+            cleanUp(); //async
             //noinspection ConstantConditions
             pager = ((ViewPager) findViewById(R.id.vp_pager));
             PagerTabStrip tabStrip = ((PagerTabStrip) findViewById(R.id.pts_title_strip));
@@ -50,10 +53,26 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
+    private void cleanUp() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Realm realm = Realm.getInstance(MainActivity.this);
+                realm.beginTransaction();
+                RealmResults<Conversation> conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
+                for (int i = 0; i < conversations.size(); i++) {
+                    Conversation conversation = conversations.get(i);
+                    if (conversation.getLastMessage() == null) {
+                        conversation.removeFromRealm();
+                    }
+                }
+                realm.commitTransaction();
+            }
+        }).start();
+    }
     @Override
     protected void onResume() {
         super.onResume();
-        GcmHelper.checkPlayServices(this);
         if (savedPosition != -1) {
             pager.setCurrentItem(savedPosition);
         }
@@ -121,7 +140,7 @@ public class MainActivity extends ActionBarActivity {
         if (resultCode == RESULT_OK) {
             ArrayList<String> members = data.getStringArrayListExtra(FriendsActivity.SELECTED_USERS);
             if (members == null || members.isEmpty()) {
-                UiHelpers.showErrorDialog(this,getString(R.string.st_could_not_create_group));
+                UiHelpers.showErrorDialog(this, getString(R.string.st_could_not_create_group));
                 return;
             }
             UserManager.getInstance().createGroup(groupName, members, new UserManager.CallBack() {

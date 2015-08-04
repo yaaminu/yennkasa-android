@@ -40,7 +40,7 @@ public class RealmHelper {
                 testMessageProcessor(seedIncomingMessages());
             }
         };
-        timer.scheduleAtFixedRate(task, 100, 30000);
+        //timer.scheduleAtFixedRate(task, 100, 30000);
     }
 
     private static Message seedIncomingMessages() {
@@ -50,8 +50,8 @@ public class RealmHelper {
         Message message = new Message();
         message.setTo(thisUser.get_id());
         message.setFrom(otherUser.get_id());
-        message.setMessageBody("message body");
-        message.setType(Message.TYPE_TEXT_MESSAGE);
+        message.setType(Message.TYPE_PICTURE_MESSAGE);
+        message.setMessageBody("be90b7214b4d0eb67fa71c87b28898d6");
         message.setId(Message.generateIdPossiblyUnique());
         message.setState(Message.STATE_PENDING);
         message.setDateComposed(new Date());
@@ -89,10 +89,4 @@ public class RealmHelper {
         context.startService(intent);
     }
 
-    private static void cleanUsers() {
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
-        realm.beginTransaction();
-        realm.where(User.class).findAll().clear();
-        realm.commitTransaction();
-    }
 }

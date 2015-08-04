@@ -86,7 +86,6 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
                 UiHelpers.gotoProfileActivity(v.getContext(), conversation.getPeerId());
             }
         };
-        holder.peerName.setOnClickListener(listener);
         holder.senderAvatar.setOnClickListener(listener);
 
         return convertView;

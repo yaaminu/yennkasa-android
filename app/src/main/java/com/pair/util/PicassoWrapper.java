@@ -29,7 +29,7 @@ public class PicassoWrapper {
     private static final String TAG = PicassoWrapper.class.getSimpleName();
 
     private PicassoWrapper() {
-        throw new UnsupportedOperationException("cannot instantiate");
+        throw new UnsupportedOperationException("cannot instantiate " + PicassoWrapper.class.getSimpleName());
     }
 
     public static Picasso with(Context context) {
@@ -109,7 +109,7 @@ public class PicassoWrapper {
                     Log.e(TAG, e.getMessage());
                 }
             } finally {
-               closeQuitely(out);
+                closeQuitely(out);
             }
         }
 
@@ -144,7 +144,7 @@ public class PicassoWrapper {
         String normalise(String uri) {
             try {
                 try {
-                    final String shortened = URLEncoder.encode(Base64.encodeToString(MessageDigest.getInstance("md5").digest(uri.getBytes()), Base64.DEFAULT), "utf8");
+                    final String shortened = Base64.encodeToString(MessageDigest.getInstance("md5").digest(uri.getBytes()), Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
                     Log.i(TAG, "shortened: " + shortened);
                     return shortened;
                 } catch (NoSuchAlgorithmException e) {

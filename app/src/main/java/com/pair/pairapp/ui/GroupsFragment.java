@@ -24,6 +24,7 @@ import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
+import com.pair.util.Config;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
@@ -55,7 +56,7 @@ public class GroupsFragment extends ListFragment {
         super.onCreateView(inflater, container, savedInstanceState);
         setHasOptionsMenu(true);
         View view = inflater.inflate(R.layout.fragment_groups, container, false);
-        realm = Realm.getInstance(getActivity());
+        realm = Realm.getInstance(Config.getApplicationContext());
         UserManager.getInstance().refreshGroups();
         return view;
     }

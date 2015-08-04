@@ -97,6 +97,17 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
         peer = realm.where(User.class).equalTo(User.FIELD_ID, peerId).findFirst();
+        if (peer == null) {
+            realm.beginTransaction();
+            peer = realm.createObject(User.class);
+            peer.set_id(peerId);
+            String [] parts = peerId.split("@");
+            peer.setType(parts.length > 1?User.TYPE_GROUP:User.TYPE_NORMAL_USER);
+            peer.setDP(peerId);
+            peer.setLocalName(parts[0]);
+            peer.setName(parts[0]);
+            realm.commitTransaction();
+        }
         String peerName = peer.getName();
         //noinspection ConstantConditions
         getSupportActionBar().setTitle(peerName);
@@ -127,6 +138,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     private void getConversation(String peerId) {
         currConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
+        // FIXME: 8/4/2015 move this to a background thread
         realm.beginTransaction();
         if (currConversation == null) { //first time
             currConversation = realm.createObject(Conversation.class);
@@ -245,10 +257,11 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     private void trySetupNewSession() {
         //set up session
-        Conversation.newSession(realm,currConversation);
+        Conversation.newSession(realm, currConversation);
     }
 
     private Message createMessage(String messageBody, int type) {
+        // FIXME: 8/4/2015 run a background thread
         realm.beginTransaction();
         trySetupNewSession();
         Message message = realm.createObject(Message.class);

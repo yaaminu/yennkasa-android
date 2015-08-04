@@ -2,6 +2,7 @@ package com.pair.pairapp.ui;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -10,7 +11,6 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
@@ -22,6 +22,7 @@ import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.pairapp.SetUpActivity;
 import com.pair.util.Config;
+import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 import com.pair.workers.ContactSyncService;
@@ -36,7 +37,7 @@ public class LoginFragment extends Fragment{
     private Button loginButton;
     public static final String TAG = LoginFragment.class.getSimpleName();
     private EditText passwordEt;
-    private AutoCompleteTextView phoneNumberEt;
+    private EditText phoneNumberEt;
     private ProgressDialog progressDialog;
     private Realm realm;
 
@@ -55,8 +56,7 @@ public class LoginFragment extends Fragment{
         super.onCreateView(inflater, container, savedInstanceState);
         realm = Realm.getInstance(getActivity());
         View view = inflater.inflate(R.layout.login_fragment, container, false);
-        phoneNumberEt = (AutoCompleteTextView) view.findViewById(R.id.et_phone_number_field);
-        new UiHelpers.AutoCompleter(getActivity(), phoneNumberEt).execute();//enable autocompletion
+        phoneNumberEt = (EditText) view.findViewById(R.id.et_phone_number_field);
         passwordEt = (EditText) view.findViewById(R.id.et_passwordField);
         loginButton = (Button) view.findViewById(R.id.bt_loginButton);
         Spinner spinner = ((Spinner) view.findViewById(R.id.sp_ccc));
@@ -89,13 +89,33 @@ public class LoginFragment extends Fragment{
     }
 
     private void attemptLogin() {
+        final String phoneNumber = phoneNumberEt.getText().toString().trim(),
+                password = passwordEt.getText().toString().trim(),
+                ccc = ((Country) ((Spinner) getView().findViewById(R.id.sp_ccc))
+                        .getSelectedItem())
+                        .getIso2letterCode();
+        if (!PhoneNumberNormaliser.isIEE_Formatted(phoneNumber, ccc)) {
+            final DialogInterface.OnClickListener okListener = new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    doAttemptLogin(phoneNumber, password, ccc);
+                }
+            };
+            UiHelpers.showErrorDialog(getActivity(),
+                    R.string.st_invalid_phone_number_title,
+                    R.string.st_invalid_phone_number_message,
+                    R.string.st_understand,
+                    android.R.string.cancel, okListener, null);
+            return;
+        }
+        doAttemptLogin(phoneNumber, password, ccc);
+    }
+
+    private void doAttemptLogin(String phoneNumber, String password, String ccc) {
         progressDialog = new ProgressDialog(getActivity());
         progressDialog.setMessage(getString(R.string.st_please_wait));
         progressDialog.setCancelable(false);
         progressDialog.show();
-        String phoneNumber = phoneNumberEt.getText().toString().trim();
-        String password = passwordEt.getText().toString().trim();
-        String ccc = ((Country) ((Spinner) getView().findViewById(R.id.sp_ccc)).getSelectedItem()).getIso2letterCode();
         UserManager.getInstance().logIn(getActivity(), phoneNumber, password, ccc, new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
@@ -115,5 +135,4 @@ public class LoginFragment extends Fragment{
             }
         });
     }
-
 }

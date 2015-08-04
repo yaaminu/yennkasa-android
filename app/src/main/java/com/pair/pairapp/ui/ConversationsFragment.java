@@ -20,6 +20,7 @@ import com.pair.data.Conversation;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.pairapp.UsersActivity;
+import com.pair.util.Config;
 import com.pair.util.UiHelpers;
 
 import java.util.Date;
@@ -57,16 +58,10 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_inbox, container, false);
-        realm = Realm.getInstance(getActivity());
-        realm.beginTransaction();
+        Log.i(TAG,"conversation fragment 1");
+        realm = Realm.getInstance(Config.getApplicationContext());
+        Log.i(TAG,"conversation fragment 2");
         conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
-        for (int i = 0; i < conversations.size(); i++) {
-            Conversation conversation = conversations.get(i);
-            if (conversation.getLastMessage() == null) {
-                conversations.remove(i);
-            }
-        }
-        realm.commitTransaction();
         adapter = new ConversationAdapter(getActivity(), conversations, true);
         setListAdapter(adapter);
         return view;
