@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="base_style">
+        <item name="android:ems">10</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:maxLength">20</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="password_editText_style" parent="base_style">
+        <item name="android:hint">@string/password_hint</item>
+        <item name="android:inputType">textPassword</item>
+    </style>
+
+    <style name="username_editText_style" parent="base_style">
+        <item name="android:hint">@string/username_hint</item>
+        <item name="android:inputType">text</item>
+    </style>
+
+    <style name="phone_number_editText_style" parent="base_style">
+        <item name="android:hint">@string/phone_hint</item>
+        <item name="android:inputType">phone</item>
+    </style>
+</resources>
