@@ -17,9 +17,11 @@ import android.widget.ListView;
 
 import com.pair.adapter.ConversationAdapter;
 import com.pair.data.Conversation;
+import com.pair.data.Message;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.pairapp.UsersActivity;
+import com.pair.swipeDismisUtils.SwipeDismissListViewTouchListener;
 import com.pair.util.Config;
 import com.pair.util.UiHelpers;
 
@@ -42,6 +44,7 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     private ConversationAdapter adapter;
     private static long currentTimeOut = 0L;
     private static Timer timer;
+    private SwipeDismissListViewTouchListener swipeDismissListViewTouchListener;
 
     public ConversationsFragment() {
     } //required no-arg constructor
@@ -58,9 +61,9 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_inbox, container, false);
-        Log.i(TAG,"conversation fragment 1");
+        Log.i(TAG, "conversation fragment 1");
         realm = Realm.getInstance(Config.getApplicationContext());
-        Log.i(TAG,"conversation fragment 2");
+        Log.i(TAG, "conversation fragment 2");
         conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
         adapter = new ConversationAdapter(getActivity(), conversations, true);
         setListAdapter(adapter);
@@ -90,6 +93,29 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(getListView(), new SwipeDismissListViewTouchListener.OnDismissCallback() {
+            @Override
+            public void onDismiss(ListView listView, int[] reverseSortedPositions) {
+                realm.beginTransaction();
+                for (int position : reverseSortedPositions) {
+                    try {
+                        Conversation conversation = conversations.get(position);
+                        final String peerId = conversation.getPeerId();
+                        realm.where(Message.class).equalTo(Message.FIELD_FROM, peerId)
+                                .or()
+                                .equalTo(Message.FIELD_TO, peerId)
+                                .findAll().clear();
+                        conversation.removeFromRealm();
+                    } catch (Exception e) {
+                        realm.cancelTransaction();
+                        Log.e(TAG, e.getMessage(), e.getCause());
+                    }
+                }
+                realm.commitTransaction();
+            }
+        });
+        getListView().setOnTouchListener(swipeDismissListViewTouchListener);
+        getListView().setOnScrollListener(swipeDismissListViewTouchListener.makeScrollListener());
     }
 
     @Override

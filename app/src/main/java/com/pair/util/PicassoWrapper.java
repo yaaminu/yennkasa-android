@@ -21,6 +21,7 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.regex.Pattern;
 
 /**
  * @author Null-Pointer on 7/17/2015.
@@ -33,7 +34,7 @@ public class PicassoWrapper {
     }
 
     public static Picasso with(Context context) {
-        Log.w(TAG, "calling with without any cache file, using cache dir");
+        Log.w(TAG, "calling with() without any cache dir, using default cache dir");
         return with(context, context.getCacheDir().getAbsolutePath());
     }
 
@@ -42,7 +43,7 @@ public class PicassoWrapper {
                 .indicatorsEnabled(BuildConfig.DEBUG);
         File file = new File(cachePath);
         if (!file.isDirectory() && !file.mkdirs()) {
-            Log.w(TAG, "failed to initialise file based cache");
+            Log.w(TAG, "failed to initialise file based cache, this may be because the cache dir passed is invalid");
             return builder.build();
         }
         return builder.memoryCache(new DiskCache(file)).build();
@@ -75,10 +76,15 @@ public class PicassoWrapper {
             Log.d(TAG, "retrieving entry: " + normalisedString + " from cache");
             Bitmap cache = inMemoryCache.get(normalisedString);
             if (cache == null) {
+                Log.d(TAG, "not in memory cache trying to retrieve from filysystem");
                 File cacheFile = new File(cacheDirectory, normalisedString + ".jpeg");
                 if (cacheFile.exists()) {
+                    Log.i(TAG, cacheFile.getAbsolutePath());
                     cache = BitmapFactory.decodeFile(cacheFile.getAbsolutePath());
                 }
+            }
+            if (cache == null) {
+                Log.d(TAG, "entry: " + normalisedString + " not cached");
             }
             return cache;
         }
@@ -141,10 +147,14 @@ public class PicassoWrapper {
             file.delete();
         }
 
+        Pattern normaliser = Pattern.compile("(=|\\s)+");
+
         String normalise(String uri) {
             try {
                 try {
-                    final String shortened = Base64.encodeToString(MessageDigest.getInstance("md5").digest(uri.getBytes()), Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
+                    String shortened = Base64.encodeToString(MessageDigest.getInstance("md5").digest(uri.getBytes()), Base64.URL_SAFE);
+                    //noinspection ConstantConditions
+                    shortened = normaliser.matcher(shortened).replaceAll("_");
                     Log.i(TAG, "shortened: " + shortened);
                     return shortened;
                 } catch (NoSuchAlgorithmException e) {

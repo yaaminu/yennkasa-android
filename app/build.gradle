@@ -34,4 +34,5 @@ dependencies {
     compile 'io.realm:realm-android:0.80.3'
     compile 'com.google.android.gms:play-services-gcm:7.3.0'
     compile 'com.android.support:support-v4:22.1.1'
+    compile files('libs/nineoldandroids-2.4.0.jar')
 }
