@@ -6,7 +6,6 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
@@ -23,8 +22,8 @@ import retrofit.mime.TypedFile;
 /**
  * @author Null-Pointer on 6/16/2015.
  */
-public class FileHelper {
-    public static final String TAG = FileHelper.class.getSimpleName();
+public class FileUtils {
+    public static final String TAG = FileUtils.class.getSimpleName();
     public static final int MEDIA_TYPE_IMAGE = 0x0;
     public static final int MEDIA_TYPE_VIDEO = 0x1;
 
@@ -96,11 +95,11 @@ public class FileHelper {
         if (profilePicture.exists()) {
             return;
         }
-        FileUtils.writeByteArrayToFile(profilePicture, imageBytes);
+        org.apache.commons.io.FileUtils.writeByteArrayToFile(profilePicture, imageBytes);
     }
 
     public static void copyTo(String oldPath, String newPath) throws IOException {
-        FileUtils.copyFile(new File(oldPath), new File(newPath));
+        org.apache.commons.io.FileUtils.copyFile(new File(oldPath), new File(newPath));
     }
 
     public class CountingTypedFile extends TypedFile {

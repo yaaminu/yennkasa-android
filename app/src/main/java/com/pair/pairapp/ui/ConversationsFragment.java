@@ -61,15 +61,31 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_inbox, container, false);
-        Log.i(TAG, "conversation fragment 1");
+        cleanUp();
         realm = Realm.getInstance(Config.getApplicationContext());
-        Log.i(TAG, "conversation fragment 2");
         conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
         adapter = new ConversationAdapter(getActivity(), conversations, true);
         setListAdapter(adapter);
         return view;
     }
 
+    private void cleanUp() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Realm realm = Realm.getInstance(getActivity());
+                realm.beginTransaction();
+                RealmResults<Conversation> conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
+                for (int i = 0; i < conversations.size(); i++) {
+                    Conversation conversation = conversations.get(i);
+                    if (conversation.getLastMessage() == null) {
+                        conversation.removeFromRealm();
+                    }
+                }
+                realm.commitTransaction();
+            }
+        }).start();
+    }
     private void startTimer() {
         if (timer == null) {
             Log.i(TAG, "starting timer");

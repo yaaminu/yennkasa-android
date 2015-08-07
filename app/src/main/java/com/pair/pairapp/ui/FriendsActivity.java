@@ -21,6 +21,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 
 import com.google.i18n.phonenumbers.NumberParseException;
+import com.pair.adapter.UsersAdapter;
 import com.pair.data.ContactsManager;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
@@ -36,15 +37,24 @@ import java.util.List;
 import java.util.Set;
 
 import io.realm.Realm;
+import io.realm.RealmQuery;
+import io.realm.RealmResults;
 
 public class FriendsActivity extends ActionBarActivity implements AdapterView.OnItemClickListener {
 
     public static final String EXTRA_GROUP_ID = "groupId";
     public static final String SELECTED_USERS = "results";
+    public static final String EXTRA_ACTION = "action";
+    public static final String ACTION_SELECT_RECIPIENTS = "selectRecipient";
+    public static final String EXTRA_TITLE = "title";
+    public static final String EXTRA_EXCLUDE = "exclude";
     private ListView listView;
-    private Set<String> selectedFriends;
+    private EditText editText;
+    private Button addButton;
+    private Set<String> selectedUsers;
     private String groupId;
     private ArrayAdapter<ContactsManager.Contact> adapter;
+    private Realm realm;
 
     private final Comparator<ContactsManager.Contact> comparator = new Comparator<ContactsManager.Contact>() {
         @Override
@@ -78,8 +88,40 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         listView = ((ListView) findViewById(android.R.id.list));
         listView.setEmptyView(findViewById(android.R.id.empty));
-        Button addButton = ((Button) findViewById(R.id.bt_add));
-        final EditText editText = ((EditText) findViewById(R.id.et_filter_input_box));
+        addButton = ((Button) findViewById(R.id.bt_add));
+        editText = ((EditText) findViewById(R.id.et_filter_input_box));
+        selectedUsers = new HashSet<>();
+        if (getIntent().hasExtra(EXTRA_ACTION)) {
+            final String action = getIntent().getStringExtra(EXTRA_ACTION);
+            if (action.equals(ACTION_SELECT_RECIPIENTS)) {
+                String[] exclude = getIntent().getStringArrayExtra(EXTRA_EXCLUDE);
+                editText.setVisibility(View.GONE);
+                addButton.setVisibility(View.GONE);
+                realm = Realm.getInstance(this);
+                RealmQuery<User> query = realm
+                        .where(User.class)
+                        .not().equalTo(User.FIELD_ID, UserManager.getInstance().getMainUser().get_id());
+                if (exclude != null) {
+                    for (String id : exclude) {
+                        query = query.notEqualTo(User.FIELD_ID, id);
+                    }
+                }
+                RealmResults<User> users = query.findAllSorted(User.FIELD_NAME);
+                listView.setAdapter(new UsersAdapter(this, users,false));
+            } else {
+                throw new IllegalArgumentException("extra: " + action + " is unknown");
+            }
+        } else {
+            addMembersToGroup();
+        }
+        String title = getIntent().getStringExtra(EXTRA_TITLE);
+        if (title != null) {
+            getSupportActionBar().setTitle(title);
+        }
+        listView.setOnItemClickListener(FriendsActivity.this);
+    }
+
+    private void addMembersToGroup() {
         editText.addTextChangedListener(ADAPTER_FILTER);
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -87,14 +129,14 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
                 String numBerToAdd = editText.getText().toString().trim();
                 if (!TextUtils.isEmpty(numBerToAdd)) {
                     try {
-                        selectedFriends.add(PhoneNumberNormaliser.toIEE(numBerToAdd,UserManager.getInstance().getUserCountryISO()));
+                        selectedUsers.add(PhoneNumberNormaliser.toIEE(numBerToAdd, UserManager.getInstance().getUserCountryISO()));
                     } catch (NumberParseException e) {
                         if (BuildConfig.DEBUG) {
                             Log.e(TAG, e.getMessage(), e.getCause());
                         } else {
                             Log.e(TAG, e.getMessage());
                         }
-                        UiHelpers.showErrorDialog(getApplicationContext(),e.getMessage());
+                        UiHelpers.showErrorDialog(getApplicationContext(), e.getMessage());
                         return;
                     }
                     editText.setText("");
@@ -103,13 +145,12 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
             }
         });
         groupId = getIntent().getStringExtra(EXTRA_GROUP_ID);
-        selectedFriends = new HashSet<>();
         refreshDisplay();
     }
 
     private void refreshDisplay() {
         supportInvalidateOptionsMenu();
-        ContactsManager.Filter<ContactsManager.Contact> filter = null;
+        ContactsManager.Filter<ContactsManager.Contact> filter;
         if (groupId != null) {
             filter = getContactFilter();
         } else {
@@ -125,7 +166,6 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
             public void done(List<ContactsManager.Contact> contacts) {
                 adapter = new Adapter(contacts);
                 listView.setAdapter(adapter);
-                listView.setOnItemClickListener(FriendsActivity.this);
             }
         });
     }
@@ -147,7 +187,7 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        menu.findItem(R.id.action_ok).setVisible(!selectedFriends.isEmpty());
+        menu.findItem(R.id.action_ok).setVisible(!selectedUsers.isEmpty());
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -161,7 +201,7 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.action_ok && !selectedFriends.isEmpty()) {
+        if (id == R.id.action_ok && !selectedUsers.isEmpty()) {
             setupResultsAndFinish();
         } else if (id == android.R.id.home) {
             setupResultsAndFinish();
@@ -177,11 +217,18 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        ContactsManager.Contact contact = ((ContactsManager.Contact) view.getTag());
+        String itemId;
+        try {
+            ContactsManager.Contact contact = ((ContactsManager.Contact) parent.getAdapter().getItem(position));
+            itemId = contact.numberInIEE_Format;
+        } catch (ClassCastException e) {
+            User user = ((User) parent.getAdapter().getItem(position));
+            itemId = user.get_id();
+        }
         if (listView.isItemChecked(position)) {
-            selectedFriends.add(contact.numberInIEE_Format);
+            selectedUsers.add(itemId);
         } else {
-            selectedFriends.remove(contact.numberInIEE_Format);
+            selectedUsers.remove(itemId);
         }
         supportInvalidateOptionsMenu();
     }
@@ -190,11 +237,6 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
 
         public Adapter(List<ContactsManager.Contact> contacts) {
             super(FriendsActivity.this, android.R.layout.simple_list_item_checked, contacts);
-        }
-
-        @Override
-        public ContactsManager.Contact getItem(int position) {
-            return super.getItem(position);
         }
 
         @Override
@@ -208,13 +250,20 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        if (realm != null) {
+            realm.close();
+        }
+        super.onDestroy();
+    }
 
     private void setupResultsAndFinish() {
-        if (selectedFriends.isEmpty()) {
+        if (selectedUsers.isEmpty()) {
             setResult(RESULT_CANCELED);
         } else {
             Intent intent = new Intent();
-            intent.putStringArrayListExtra(SELECTED_USERS, new ArrayList<>(selectedFriends));
+            intent.putStringArrayListExtra(SELECTED_USERS, new ArrayList<>(selectedUsers));
             setResult(RESULT_OK, intent);
         }
         finish();

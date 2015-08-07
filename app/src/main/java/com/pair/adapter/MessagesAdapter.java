@@ -23,7 +23,7 @@ import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.pairapp.ui.ImageViewer;
 import com.pair.util.Config;
-import com.pair.util.FileHelper;
+import com.pair.util.FileUtils;
 import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
@@ -109,7 +109,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
                             }else{
                                 intent = new Intent(Intent.ACTION_VIEW);
                             }
-                            intent.setDataAndType(Uri.parse(messageFile.getAbsolutePath()), FileHelper.getMimeType(messageFile.getAbsolutePath()));
+                            intent.setDataAndType(Uri.parse(messageFile.getAbsolutePath()), FileUtils.getMimeType(messageFile.getAbsolutePath()));
                             context.startActivity(intent);
                         } catch (ActivityNotFoundException e) {
                             UiHelpers.showToast(context.getString(R.string.error_sorry_no_application_to_open_file));
@@ -188,7 +188,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
             protected Void doInBackground(Void... params) {
                 Realm realm = null;
                 try {
-                    FileHelper.save(finalFile, new URL(Config.MESSAGE_ENDPOINT + "/" + copied.getMessageBody()).openStream());
+                    FileUtils.save(finalFile, new URL(Config.MESSAGE_ENDPOINT + "/" + copied.getMessageBody()).openStream());
                     realm = Realm.getInstance(Config.getApplicationContext());
                     realm.beginTransaction();
                     Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, copied.getId()).findFirst();

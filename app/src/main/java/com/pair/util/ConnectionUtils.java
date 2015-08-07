@@ -7,7 +7,7 @@ import android.net.NetworkInfo;
 /**
  * @author Null-Pointer on 6/6/2015.
  */
-public class ConnectionHelper {
+public class ConnectionUtils {
 
     @SuppressWarnings("unused")
     public static boolean isConnected() {

@@ -44,7 +44,7 @@
         <item>Choose Video</item>
         <item>Choose File</item>
     </string-array>
-    <string name="add_peers">add peers</string>
+    <string name="add">add number</string>
     <string name="add_peers_title">Add Peers To Chat</string>
     <string name="title_activity_friends_">Select Contacts</string>
     <string name="st_done">done</string>
@@ -79,4 +79,16 @@
     <string name="st_invalid_phone_number_title">Potentially invalid phone number</string>
     <string name="send">Send</string>
     <string name="st_already_have_an_account">Already have an account? Login.</string>
+    <string name="st_forward">Forward</string>
+    <string name="select_recipients">Select Recipients</string>
+    <string name="no_app_for_content_sharing">You have no application for sharing content</string>
+    <string name="title_activity_create_group">Create A New Group</string>
+    <string name="st_unable_to_connect">Sorry! We\'re having troubles connecting you. Please check your connection settings and try again</string>
+    <string name="proceed">Proceed</string>
+    <string name="cant_be_empty">This field cannot be empty</string>
+    <string name="st_prompt">Prompt</string>
+    <string name="st_sure_to_exit">Are you really sure you want to go back? All progress will be lost</string>
+    <string name="st_yes">Yes</string>
+    <string name="st_add">Add</string>
+    <string name="i_know">I Know</string>
 </resources>

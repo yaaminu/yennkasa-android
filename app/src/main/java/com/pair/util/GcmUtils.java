@@ -19,9 +19,9 @@ import java.io.IOException;
 /**
  * @author by Null-Pointer on 5/27/2015.
  */
-public class GcmHelper {
+public class GcmUtils {
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
-    private static final String TAG = GcmHelper.class.getSimpleName();
+    private static final String TAG = GcmUtils.class.getSimpleName();
     public static final String GCM_REG_ID = User.FIELD_GCM_REG_ID;
     private static Dialog errorDialog;
 

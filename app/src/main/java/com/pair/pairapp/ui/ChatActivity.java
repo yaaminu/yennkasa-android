@@ -1,7 +1,9 @@
 package com.pair.pairapp.ui;
 
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -10,13 +12,16 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
+import android.text.ClipboardManager;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -32,17 +37,21 @@ import com.pair.net.Dispatcher;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
-import com.pair.util.FileHelper;
+import com.pair.util.FileUtils;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
 
 import static com.pair.data.Message.TYPE_DATE_MESSAGE;
+import static com.pair.data.Message.TYPE_TEXT_MESSAGE;
+import static com.pair.data.Message.TYPE_TYPING_MESSAGE;
 
 
 @SuppressWarnings({"ConstantConditions", "FieldCanBeLocal"})
@@ -53,6 +62,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private static final int PICK_VIDEO_REQUEST = 0x3;
     private static final int PICK_FILE_REQUEST = 0x4;
     private static final int ADD_USERS_REQUEST = 0x5;
+    private static final int SELECT_RECIPIENTS_REQUEST = 0x6;
 
     private static final String TAG = ChatActivity.class.getSimpleName();
     public static final String EXTRA_PEER_ID = "peer id";
@@ -83,6 +93,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         }
     };
     private boolean sessionSetup = false;
+    private static Message selectedMessage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,16 +116,12 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             String[] parts = peerId.split("@");
             peer.setType(parts.length > 1 ? User.TYPE_GROUP : User.TYPE_NORMAL_USER);
             peer.setDP(peerId);
-            peer.setLocalName(parts[0]);
             peer.setName(parts[0]);
             realm.commitTransaction();
         }
         String peerName = peer.getName();
         //noinspection ConstantConditions
         getSupportActionBar().setTitle(peerName);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
         messages = realm.where(Message.class).equalTo(Message.FIELD_FROM, peer.get_id())
                 .or()
                 .equalTo(Message.FIELD_TO, peer.get_id())
@@ -123,6 +130,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         adapter = new MessagesAdapter(this, messages, true);
         messagesListView.setAdapter(adapter);
         messagesListView.setOnScrollListener(this);
+        registerForContextMenu(messagesListView);
     }
 
     @Override
@@ -230,7 +238,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     protected void onDestroy() {
-        if (currConversation != null && currConversation.getLastMessage() == null && currConversation.isValid()) {
+        if (currConversation != null && currConversation.isValid() && currConversation.getLastMessage() == null) {
             realm.beginTransaction();
             currConversation.removeFromRealm();
             realm.commitTransaction();
@@ -362,7 +370,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private void recordVideo() {
         try {
             Intent attachIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-            mMediaUri = FileHelper.getOutputUri(FileHelper.MEDIA_TYPE_IMAGE);
+            mMediaUri = FileUtils.getOutputUri(FileUtils.MEDIA_TYPE_IMAGE);
             attachIntent.putExtra(MediaStore.EXTRA_OUTPUT, mMediaUri);
             attachIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
             attachIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 60 * 10);
@@ -380,7 +388,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private void takePhoto() {
         try {
             Intent attachIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            mMediaUri = FileHelper.getOutputUri(FileHelper.MEDIA_TYPE_IMAGE);
+            mMediaUri = FileUtils.getOutputUri(FileUtils.MEDIA_TYPE_IMAGE);
             attachIntent.putExtra(MediaStore.EXTRA_OUTPUT, mMediaUri);
             startActivityForResult(attachIntent, TAKE_PHOTO_REQUEST);
         } catch (Exception e) {
@@ -401,11 +409,15 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             return;
         }
 
-        Message message = null;
+        Message message;
         switch (requestCode) {
             case ADD_USERS_REQUEST:
                 addMembersToGroup(data.getStringArrayListExtra(FriendsActivity.SELECTED_USERS));
-                break;
+                return;
+            case SELECT_RECIPIENTS_REQUEST:
+
+                forwardToAll(data.getStringArrayListExtra(FriendsActivity.SELECTED_USERS));
+                return;
             case PICK_PHOTO_REQUEST:
                 message = createMessage(getActualPath(data), Message.TYPE_PICTURE_MESSAGE);
                 break;
@@ -421,7 +433,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
                 break;
             case PICK_FILE_REQUEST:
                 String actualPath = getActualPath(data);
-                String extension = FileHelper.getExtension(actualPath);
+                String extension = FileUtils.getExtension(actualPath);
                 int type = Message.TYPE_BIN_MESSAGE;
                 //some image formats like bmp,gif are considered invalid
                 if (extension.equals("jpeg") || extension.equals("jpg") || extension.equals("png")) {
@@ -435,6 +447,42 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
                 throw new AssertionError("impossible");
         }
         sendMessage(message);
+    }
+
+    private void forwardToAll(List<String> recipients) {
+        if(recipients == null ) return;
+        Message backGroundRealmVersion = new Message(selectedMessage); //copy first
+        List<Message> tobeSent = new ArrayList<>(recipients.size());
+        Realm realm = Realm.getInstance(this);
+        try {
+            realm.beginTransaction();
+            for (String recipient : recipients) {
+                Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, recipient).findFirst();
+                if (conversation == null) {
+                    conversation = realm.createObject(Conversation.class);
+                    conversation.setPeerId(recipient);
+                }
+                conversation.setActive(false);
+                conversation.setLastActiveTime(new Date());
+                Conversation.newSession(realm, conversation);
+                backGroundRealmVersion.setTo(recipient);
+                backGroundRealmVersion.setDateComposed(new Date());
+                backGroundRealmVersion.setId(Message.generateIdPossiblyUnique());
+                Message message = realm.copyToRealm(backGroundRealmVersion);
+                tobeSent.add(message);
+                conversation.setLastMessage(message);
+                if(message.getType() == TYPE_TEXT_MESSAGE){
+                    conversation.setSummary("You: " + message.getMessageBody());
+                }else {
+                    conversation.setSummary("You: " + getDescription(message.getType()));
+                }
+            }
+            realm.commitTransaction();
+            if (dispatcher != null && bound)
+                dispatcher.dispatch(tobeSent);
+        } finally {
+            realm.close();
+        }
     }
 
     private void addMembersToGroup(ArrayList<String> members) {
@@ -456,7 +504,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         String actualPath;
         Uri uri = data.getData();
         if (uri.getScheme().equals("content")) {
-            actualPath = FileHelper.resolveContentUriToFilePath(uri);
+            actualPath = FileUtils.resolveContentUriToFilePath(uri);
         } else {
             actualPath = uri.getPath();
         }
@@ -487,9 +535,80 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         }
     }
 
+    private static int cursor = -1;
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        AdapterView.AdapterContextMenuInfo info = ((AdapterView.AdapterContextMenuInfo) menuInfo);
+        selectedMessage = messages.get(info.position);
+        cursor = info.position;
+        if (selectedMessage.getType() != Message.TYPE_DATE_MESSAGE && selectedMessage.getType() != Message.TYPE_TYPING_MESSAGE) {
+            getMenuInflater().inflate(R.menu.message_context_menu, menu);
+            menu.findItem(R.id.action_copy).setVisible(selectedMessage.getType() == TYPE_TEXT_MESSAGE);
+            if (selectedMessage.getType() != TYPE_TEXT_MESSAGE) {
+                menu.findItem(R.id.action_share).setVisible(new File(selectedMessage.getMessageBody()).exists());
+                menu.findItem(R.id.action_forward).setVisible(new File(selectedMessage.getMessageBody()).exists());
+            }
+        }
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        int itemId = item.getItemId();
+        if (itemId == R.id.action_copy) {
+            ClipboardManager manager = ((ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE));
+            manager.setText(selectedMessage.getMessageBody());
+            return true;
+        } else if (itemId == R.id.action_share) {
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            if (selectedMessage.getType() == TYPE_TEXT_MESSAGE) {
+                intent.setType("text/plain");
+                intent.putExtra(Intent.EXTRA_TEXT, selectedMessage.getMessageBody());
+            } else {
+                intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(selectedMessage.getMessageBody()).toString());
+                intent.setType(FileUtils.getMimeType(selectedMessage.getMessageBody()));
+            }
+            try {
+                startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                UiHelpers.showToast(getString(R.string.no_app_for_content_sharing));
+            }
+            return true;
+        } else if (itemId == R.id.action_delete) {
+            realm.beginTransaction();
+            Message next = null;
+            try {
+                next = messages.get(cursor + 1);
+                if (next.getType() == TYPE_DATE_MESSAGE || next.getType() == TYPE_TYPING_MESSAGE) {
+                    throw new ArrayIndexOutOfBoundsException(null);//jump to catch clause
+                }
+            } catch (ArrayIndexOutOfBoundsException wasLastMessage) { //move up
+                Message previous = messages.get(cursor - 1); //cannot be null and cannot be of type: Message#TYPING_MESSAGE
+                if (previous.getType() == TYPE_DATE_MESSAGE) {
+                    previous.removeFromRealm(); //delete session message
+                }
+            }
+            selectedMessage.removeFromRealm(); // remove the message here so that you ensure the cursor remains valid
+            realm.commitTransaction();
+            return true;
+        } else if (itemId == R.id.action_forward) {
+            Intent intent = new Intent(this, FriendsActivity.class);
+            intent.putExtra(FriendsActivity.EXTRA_ACTION, FriendsActivity.ACTION_SELECT_RECIPIENTS);
+            intent.putExtra(FriendsActivity.EXTRA_TITLE, getString(R.string.select_recipients));
+            String [] exclude = {
+                    peer.get_id()
+            };
+            intent.putExtra(FriendsActivity.EXTRA_EXCLUDE,exclude);
+            startActivityForResult(intent, SELECT_RECIPIENTS_REQUEST);
+            return true;
+        }
+        return super.onContextItemSelected(item);
+    }
+
     @Override
     public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
         doSendMessage();
         return true;
     }
+
 }

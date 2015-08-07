@@ -1,4 +1,4 @@
-package com.pair.workers;
+package com.pair.util;
 
 import android.content.Context;
 import android.content.Intent;
@@ -9,8 +9,6 @@ import com.pair.adapter.MessageJsonAdapter;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.messenger.MessageProcessor;
-import com.pair.util.Config;
-import com.pair.util.UserManager;
 
 import java.util.Date;
 import java.util.Timer;
@@ -22,8 +20,8 @@ import io.realm.RealmList;
 /**
  * @author Null-Pointer on 6/10/2015.
  */
-public class RealmHelper {
-    public static final String TAG = RealmHelper.class.getSimpleName();
+public class RealmUtils {
+    public static final String TAG = RealmUtils.class.getSimpleName();
 
     // FIXME: 6/16/2015 remove this helper class
     public static void runRealmOperation(final Context context) {

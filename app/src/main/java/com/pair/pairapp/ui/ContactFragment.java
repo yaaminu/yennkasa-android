@@ -34,11 +34,10 @@ import io.realm.RealmChangeListener;
  */
 public class ContactFragment extends ListFragment implements RealmChangeListener {
 
-
     private static final String TAG = ContactFragment.class.getSimpleName();
-
     private ContactsAdapter adapter;
     private Realm realm;
+    private static List<Contact> contacts = new ArrayList<>();
     private final ContactsManager.Filter<Contact> filter = new ContactsManager.Filter<Contact>() {
         @Override
         public boolean accept(Contact contact) {
@@ -69,7 +68,8 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
 
     private final ContactsManager.FindCallback<List<Contact>> contactsFindCallback = new ContactsManager.FindCallback<List<Contact>>() {
         @Override
-        public void done(List<Contact> contacts) {
+        public void done(List<Contact> freshContacts) {
+            contacts = freshContacts;
             adapter.refill(contacts);
         }
     };
@@ -91,7 +91,6 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         // Inflate the layout for this fragment
         setHasOptionsMenu(true);
         View view = inflater.inflate(R.layout.fragment_contact, container, false);
-        List<Contact> contacts = new ArrayList<>();
         adapter = new ContactsAdapter(contacts, false);
         ContactsManager.INSTANCE.findAllContacts(filter, comparator, contactsFindCallback);
         setListAdapter(adapter);
@@ -149,3 +148,4 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         ContactsManager.INSTANCE.findAllContacts(filter, comparator, contactsFindCallback);
     }
 }
+

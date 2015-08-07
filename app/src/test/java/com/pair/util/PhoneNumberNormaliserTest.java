@@ -1,5 +1,7 @@
 package com.pair.util;
 
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+
 import junit.framework.TestCase;
 
 import org.junit.Ignore;
@@ -52,7 +54,7 @@ public class PhoneNumberNormaliserTest extends TestCase {
         try {
             PhoneNumberNormaliser.toIEE("0266349205", "233");
             fail("must throw");
-        }catch (Exception e){
+        } catch (Exception e) {
             //correct
         }
         final String expected = "233266349205";
@@ -66,15 +68,23 @@ public class PhoneNumberNormaliserTest extends TestCase {
 
     @Test
     public void testIsEE_Fomatted() throws Exception {
-        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("+233266349205","GH"));
-        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("0266349205","GH"));
+        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("+233266349205", "GH"));
         assertTrue(PhoneNumberNormaliser.isIEE_Formatted("+233-266349205", "GH"));
-        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("0204441069","GH"));
-        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("233266349205","GH"));
-        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("0266349205","GH"));
-        assertFalse(PhoneNumberNormaliser.isIEE_Formatted("0766349205","GH"));
-        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("0236349205","GH"));
-        assertFalse(PhoneNumberNormaliser.isIEE_Formatted("0766349205","GH"));
-    }
+        assertTrue(PhoneNumberNormaliser.isIEE_Formatted("+233266349205", "GH"));
+  }
 
+    @Test
+    public void testIsValidPhoneNumber() throws Exception{
+        assertTrue(PhoneNumberNormaliser.isValidPhoneNumber("0266349205", "GH"));
+        assertTrue(PhoneNumberNormaliser.isValidPhoneNumber("0204441069", "GH"));
+        assertFalse(PhoneNumberNormaliser.isValidPhoneNumber("0766349205", "GH"));
+        assertTrue(PhoneNumberNormaliser.isValidPhoneNumber("0266349205", "GH"));
+        assertTrue(PhoneNumberNormaliser.isValidPhoneNumber("0236349205", "GH"));
+        assertFalse(PhoneNumberNormaliser.isValidPhoneNumber("0766349205", "GH"));
+
+    }
+    @Test
+    public void testToLocalNumber() throws Exception {
+        System.out.print(PhoneNumberUtil.getInstance().parse("+2330266564229", "GH"));
+    }
 }

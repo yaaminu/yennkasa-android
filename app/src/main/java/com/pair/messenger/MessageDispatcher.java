@@ -14,7 +14,7 @@ import com.pair.net.HttpResponse;
 import com.pair.net.api.MessageApi;
 import com.pair.pairapp.BuildConfig;
 import com.pair.util.Config;
-import com.pair.util.ConnectionHelper;
+import com.pair.util.ConnectionUtils;
 
 import org.apache.http.HttpStatus;
 
@@ -77,7 +77,7 @@ class MessageDispatcher implements Dispatcher<Message> {
     }
 
     private boolean failedScreening(Message message) {
-        if (!ConnectionHelper.isConnectedOrConnecting()) {
+        if (!ConnectionUtils.isConnectedOrConnecting()) {
             Log.w(TAG, "no internet connection, message will not be sent");
             reportError(message.getId(), "no internet connection");
             return true;
@@ -251,7 +251,7 @@ class MessageDispatcher implements Dispatcher<Message> {
                 Log.wtf(TAG, "internal error, conversion error ");
                 throw new RuntimeException("poorly encoded json data", retrofitError.getCause());
             } else if (retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)) {
-                if (ConnectionHelper.isConnectedOrConnecting()) {
+                if (ConnectionUtils.isConnectedOrConnecting()) {
                     tryAgain(job);
                 } else {
                     //bubble up error and empty send queue let callers re-dispatch messages again;
@@ -263,7 +263,7 @@ class MessageDispatcher implements Dispatcher<Message> {
 
         private void tryAgain(final SenderJob job) {
             // TODO: 6/15/2015 if there is no network we wont try again but will rather wait till we get connected
-            if (!ConnectionHelper.isConnectedOrConnecting()) {
+            if (!ConnectionUtils.isConnectedOrConnecting()) {
                 Log.w(TAG, "no network connection, message will not be sent");
                 reportError(job.id, "no internet connection");
             } else if (job.retries < MAX_RETRY_TIMES) {

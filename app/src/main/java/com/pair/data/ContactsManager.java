@@ -11,8 +11,8 @@ import android.util.Log;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
-import com.pair.util.UserManager;
 import com.pair.util.PhoneNumberNormaliser;
+import com.pair.util.UserManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -126,6 +126,39 @@ public class ContactsManager {
             cursor.close();
             realm.close();
         }
+    }
+
+    public Contact findContactByPhoneSync(String id, String isoRegionCode) {
+        if (!PhoneNumberNormaliser.isIEE_Formatted(id, isoRegionCode)) {
+            return null;
+        }
+        Cursor cursor = Config.getApplicationContext()
+                .getContentResolver()
+                .query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        PROJECT_NAME_PHONE, null, null, null
+                );
+        //noinspection ConstantConditions
+        if (cursor == null) {
+            return null;
+        }
+        String name, phoneNumber;
+        while (cursor.moveToNext()) {
+            phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract
+                    .CommonDataKinds.Phone.NUMBER));
+            if (TextUtils.isEmpty(phoneNumber)) continue;
+
+            try {
+                phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, isoRegionCode);
+                if (phoneNumber.equals(id)) {
+                    name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                    return new Contact(name, phoneNumber, null, false, null, null);
+                }
+            } catch (NumberParseException e) {
+            } finally {
+                cursor.close();
+            }
+        }
+        return null;
     }
 
     public interface FindCallback<T> {

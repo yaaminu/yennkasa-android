@@ -11,18 +11,10 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.TypedValue;
 import android.view.Menu;
 
-import com.pair.data.Conversation;
 import com.pair.pairapp.ui.ContactFragment;
 import com.pair.pairapp.ui.ConversationsFragment;
-import com.pair.pairapp.ui.FriendsActivity;
 import com.pair.pairapp.ui.GroupsFragment;
-import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
-
-import java.util.ArrayList;
-
-import io.realm.Realm;
-import io.realm.RealmResults;
 
 /**
  * @author Null-Pointer on 6/6/2015.
@@ -52,23 +44,6 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    private void cleanUp() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Realm realm = Realm.getInstance(MainActivity.this);
-                realm.beginTransaction();
-                RealmResults<Conversation> conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
-                for (int i = 0; i < conversations.size(); i++) {
-                    Conversation conversation = conversations.get(i);
-                    if (conversation.getLastMessage() == null) {
-                        conversation.removeFromRealm();
-                    }
-                }
-                realm.commitTransaction();
-            }
-        }).start();
-    }
     @Override
     protected void onResume() {
         super.onResume();
@@ -133,23 +108,4 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
-    // FIXME: 7/19/2015 for one or two reasons the request code returned does not match so we don't check for it now
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK) {
-            ArrayList<String> members = data.getStringArrayListExtra(FriendsActivity.SELECTED_USERS);
-            if (members == null || members.isEmpty()) {
-                UiHelpers.showErrorDialog(this, getString(R.string.st_could_not_create_group));
-                return;
-            }
-            UserManager.getInstance().createGroup(groupName, members, new UserManager.CallBack() {
-                @Override
-                public void done(Exception e) {
-                    if (e != null) {
-                        UiHelpers.showErrorDialog(getApplicationContext(), e.getMessage());
-                    }
-                }
-            });
-        }
-    }
 }

@@ -28,7 +28,7 @@ import com.pair.pairapp.R;
 import com.pair.pairapp.UsersActivity;
 import com.pair.util.Config;
 import com.pair.util.PicassoWrapper;
-import com.pair.util.FileHelper;
+import com.pair.util.FileUtils;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
@@ -233,7 +233,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 String filePath;
                 Uri uri = data.getData();
                 if (uri.getScheme().equals("content")) {
-                    filePath = FileHelper.resolveContentUriToFilePath(uri);
+                    filePath = FileUtils.resolveContentUriToFilePath(uri);
                 } else {
                     filePath = uri.getPath();
                 }

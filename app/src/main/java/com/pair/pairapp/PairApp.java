@@ -4,9 +4,9 @@ import android.app.Application;
 
 import com.pair.messenger.PairAppClient;
 import com.pair.util.Config;
+import com.pair.util.RealmUtils;
 import com.pair.util.UserManager;
 import com.pair.workers.ContactSyncService;
-import com.pair.workers.RealmHelper;
 
 /**
  * @author Null-Pointer on 6/6/2015.
@@ -18,7 +18,7 @@ public class PairApp extends Application {
         super.onCreate();
         Config.init(this);
         if (UserManager.getInstance().isUserVerified()) {
-            RealmHelper.runRealmOperation(this);
+            RealmUtils.runRealmOperation(this);
             PairAppClient.start(this);
             ContactSyncService.start(this);
         }

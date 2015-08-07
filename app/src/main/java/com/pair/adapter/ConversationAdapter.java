@@ -74,7 +74,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         String summary = conversation.getSummary();
         if (TextUtils.isEmpty(summary)) {
             if (BuildConfig.DEBUG) { //development environment, crash and burn!
-                throw new RuntimeException("conversation with no description and message");
+              throw new RuntimeException("conversation with no description and message");
             }
             summary = "Conversation with " + peerName;
         }

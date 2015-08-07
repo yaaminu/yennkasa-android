@@ -11,7 +11,7 @@ import com.pair.data.Country;
 import com.pair.pairapp.ui.LoginFragment;
 import com.pair.pairapp.ui.SignupFragment;
 import com.pair.pairapp.ui.VerificationFragment;
-import com.pair.util.GcmHelper;
+import com.pair.util.GcmUtils;
 import com.pair.util.UserManager;
 
 import org.apache.commons.io.Charsets;
@@ -33,23 +33,24 @@ public class SetUpActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(GcmHelper.checkPlayServices(this)) {
+        if(GcmUtils.checkPlayServices(this)) {
             setContentView(R.layout.set_up_activity);
             Realm realm = Realm.getInstance(this);
             boolean countriesSetup = realm.where(Country.class).count() >= 243;
             realm.close();
             if (!countriesSetup) {
                 setUpCountriesTask.execute();
+            }else{
+                addFragment();
             }
             //add login fragment
-            addFragment();
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        GcmHelper.checkPlayServices(this);
+        GcmUtils.checkPlayServices(this);
     }
 
     private void addFragment() {
@@ -105,6 +106,7 @@ public class SetUpActivity extends ActionBarActivity {
         @Override
         protected void onPostExecute(Void aVoid) {
             pDialog.dismiss();
+            addFragment();
         }
     };
 }

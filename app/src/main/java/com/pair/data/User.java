@@ -35,7 +35,7 @@ public class User extends RealmObject {
     @PrimaryKey
     private String _id;
 
-    private String gcmRegId, name, password, status, localName, DP, country;
+    private String gcmRegId, name, password, status, DP, country;
     private long lastActivity, accountCreated;
     private RealmList<User> members; //a group will be a user with its members represented by this field.
     private User admin; // this represents admins for a group
@@ -62,7 +62,6 @@ public class User extends RealmObject {
             this.setAdmin(other.getAdmin());
             this.setDP(other.getDP());
             this.setCountry(other.getCountry());
-            this.setLocalName(other.getLocalName());
             this.setMembers(other.getMembers());
         }
     }
@@ -131,14 +130,6 @@ public class User extends RealmObject {
         this.status = status;
     }
 
-    public String getLocalName() {
-        return localName;
-    }
-
-    public void setLocalName(String localName) {
-        this.localName = localName;
-    }
-
     public long getLastActivity() {
         return lastActivity;
     }
@@ -187,7 +178,6 @@ public class User extends RealmObject {
         clone.setType(other.getType());
         clone.setAdmin(other.getAdmin());
         clone.setMembers(other.getMembers());
-        clone.setLocalName(other.getLocalName());
         clone.setDP(other.getDP());
         clone.setCountry(other.getCountry());
         return clone;
@@ -197,6 +187,18 @@ public class User extends RealmObject {
         if (users == null) throw new IllegalArgumentException("users may not be null!");
         List<User> copied = new ArrayList<>(5);
         for (User user : users) {
+            copied.add(User.copy(user));
+        }
+        return copied;
+    }
+
+    public static List<User> copy(Iterable<User> users,ContactsManager.Filter<User> filter) {
+        if (users == null) throw new IllegalArgumentException("users may not be null!");
+        List<User> copied = new ArrayList<>(5);
+        for (User user : users) {
+            if(filter != null && !filter.accept(user)){
+                continue;
+            }
             copied.add(User.copy(user));
         }
         return copied;
@@ -217,6 +219,7 @@ public class User extends RealmObject {
         }
         return members;
     }
+
 
     public static List<String> aggregateUserIds(RealmList<User> users, ContactsManager.Filter<User> filter) {
         List<String> members = new ArrayList<>();

@@ -1,6 +1,6 @@
 package com.pair.pairapp;
 
-import com.pair.util.FileHelper;
+import com.pair.util.FileUtils;
 
 import org.junit.Test;
 
@@ -9,7 +9,7 @@ public class TestSuite {
 
     @Test
     public void testGetOutputUri() throws Exception {
-        FileHelper.getOutputUri(0);
+        FileUtils.getOutputUri(0);
     }
 
 }

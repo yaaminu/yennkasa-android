@@ -22,6 +22,7 @@ import android.widget.ListView;
 import com.pair.adapter.GroupsAdapter;
 import com.pair.data.Message;
 import com.pair.data.User;
+import com.pair.pairapp.CreateGroupActivity;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
@@ -36,7 +37,6 @@ import io.realm.RealmResults;
  * A simple {@link ListFragment} subclass.
  */
 public class GroupsFragment extends ListFragment {
-    public static final int SELECT_USERS_REQUEST = 1001;
     private Realm realm;
     private EditText et;
 
@@ -92,14 +92,13 @@ public class GroupsFragment extends ListFragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         long id = item.getItemId();
         if (id == R.id.action_createGroup) {
-            //show a dialog
-            Dialog dialog = createDialog();
-            dialog.show();
+            startActivity(new Intent(getActivity(), CreateGroupActivity.class));
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
+    @SuppressWarnings("unused")
     public Dialog createDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         @SuppressWarnings("ConstantConditions") View view = LayoutInflater.from(getActivity()).inflate(R.layout.create_group, null);
