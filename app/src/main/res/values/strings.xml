@@ -15,25 +15,22 @@
     <string name="action_settings">Settings</string>
     <string name="verify">Verify</string>
 
-    <string name="str_drawer_open">drawer open</string>
-    <string name="str_drawer_closed">drawer closed</string>
     <string name="content_desc_user_avatar">user DP thumbnail</string>
-    <string name="action_seed_users">seed users</string>
     <string name="st_empty_contacts">Its Lonely Here :-) No Contact To Display</string>
-    <string name="action_call_sender">call sender</string>
-    <string name="action_delete_conversation">delete</string>
+    <string name="action_call_sender">Call sender</string>
+    <string name="action_delete_conversation">Delete</string>
     <string name="title_pick_contact">Pick a contact</string>
-    <string name="action_attach">attach</string>
+    <string name="action_attach">Attach</string>
     <string name="error_sorry_no_application_to_open_file">sorry no application to open file type</string>
     <string name="action_refresh">Refresh</string>
     <string name="title_activity_profile">Profile</string>
-    <string name="error_occurred">sorry an error occurred</string>
+    <string name="error_occurred">Sorry an error occurred</string>
     <string name="error_canceled">Canceled</string>
     <string name="dp_changed_successfully">DP changed successfully</string>
     <string name="error_invalid_bitmap_file">please chose a valid image file</string>
     <string name="add_picture">Add Picture</string>
     <string name="change_dp">Change</string>
-    <string name="edit_username">edit username</string>
+    <string name="edit_username">Edit username</string>
     <string name="display_picture">Display picture</string>
     <string name="username_placeholder">Username</string>
 
@@ -47,19 +44,19 @@
     <string name="add">add number</string>
     <string name="add_peers_title">Add Peers To Chat</string>
     <string name="title_activity_friends_">Select Contacts</string>
-    <string name="st_done">done</string>
+    <string name="st_done">Done</string>
     <string name="st_please_wait">Please Wait</string>
-    <string name="st_group_name">Group name</string>
+    <string name="st_group_name">Group Name</string>
     <string name="st_mutual_groups">Mutual Groups</string>
     <string name="st_group_members">Group Members</string>
-    <string name="st_success">success</string>
+    <string name="st_success">Success</string>
     <string name="st_choose_a_different_image">This image is already your DP please choose a different one</string>
     <string name="st_error">Error</string>
-    <string name="st_peer_info">Peer Info</string>
+    <string name="st_view_profile">View Profile</string>
     <string name="st_group_info">Group Info</string>
     <string name="title_activity_users">UsersActivity</string>
     <string name="st_group_members_title">" - Members"</string>
-    <string name="message">message</string>
+    <string name="message">Message</string>
     <string name="you">You</string>
     <string name="admin">Admin</string>
     <string name="leave">Leave</string>
@@ -68,8 +65,8 @@
     <string name="st_hint_et_verification">Verification Code</string>
     <string name="st_complete_setup">Complete Setup</string>
     <string name="st_send_verification_notice">Enter the verification code you received and tap verify. Tap send again if you don\'t receive the code in 5 minutes</string>
-    <string name="st_unknown">unknown</string>
-    <string name="st_offline">offline</string>
+    <string name="st_unknown">Unknown</string>
+    <string name="st_offline">Offline</string>
     <string name="st_no_mutual_group">You do not share any group with this user</string>
     <string name="st_could_not_create_group">Failed to create group please add at least one member</string>
     <string name="st_send_again">Send Again</string>
@@ -83,7 +80,7 @@
     <string name="select_recipients">Select Recipients</string>
     <string name="no_app_for_content_sharing">You have no application for sharing content</string>
     <string name="title_activity_create_group">Create A New Group</string>
-    <string name="st_unable_to_connect">Sorry! We\'re having troubles connecting you. Please check your connection settings and try again</string>
+    <string name="st_unable_to_connect">Sorry! We\'re having trouble connecting you. Please check your internet settings and try again</string>
     <string name="proceed">Proceed</string>
     <string name="cant_be_empty">This field cannot be empty</string>
     <string name="st_prompt">Prompt</string>
@@ -91,4 +88,5 @@
     <string name="st_yes">Yes</string>
     <string name="st_add">Add</string>
     <string name="i_know">I Know</string>
+    <string name="invite_member">Invite Friends</string>
 </resources>

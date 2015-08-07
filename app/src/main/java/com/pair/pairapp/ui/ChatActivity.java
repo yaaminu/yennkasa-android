@@ -175,8 +175,8 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         User mainUser = UserManager.getInstance().getMainUser();
-        menu.findItem(R.id.action_add_peers).setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().get_id().equals(mainUser.get_id()));
-        menu.findItem(R.id.action_peer_info).setTitle((peer.getType() == User.TYPE_GROUP) ? R.string.st_group_info : R.string.st_peer_info);
+        menu.findItem(R.id.action_invite_friends).setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().get_id().equals(mainUser.get_id()));
+        menu.findItem(R.id.action_view_profile).setTitle((peer.getType() == User.TYPE_GROUP) ? R.string.st_group_info : R.string.st_view_profile);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -196,12 +196,12 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             AlertDialog dialog = builder.create();
             dialog.show();
             return true;
-        } else if (id == R.id.action_add_peers) {
+        } else if (id == R.id.action_invite_friends) {
             Intent intent = new Intent(this, FriendsActivity.class);
             intent.putExtra(FriendsActivity.EXTRA_GROUP_ID, peer.get_id());
             startActivityForResult(intent, ADD_USERS_REQUEST);
             return true;
-        } else if (id == R.id.action_peer_info) {
+        } else if (id == R.id.action_view_profile) {
             UiHelpers.gotoProfileActivity(this, peer.get_id());
             return true;
         }
@@ -450,7 +450,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     }
 
     private void forwardToAll(List<String> recipients) {
-        if(recipients == null ) return;
+        if (recipients == null) return;
         Message backGroundRealmVersion = new Message(selectedMessage); //copy first
         List<Message> tobeSent = new ArrayList<>(recipients.size());
         Realm realm = Realm.getInstance(this);
@@ -471,9 +471,9 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
                 Message message = realm.copyToRealm(backGroundRealmVersion);
                 tobeSent.add(message);
                 conversation.setLastMessage(message);
-                if(message.getType() == TYPE_TEXT_MESSAGE){
+                if (message.getType() == TYPE_TEXT_MESSAGE) {
                     conversation.setSummary("You: " + message.getMessageBody());
-                }else {
+                } else {
                     conversation.setSummary("You: " + getDescription(message.getType()));
                 }
             }
@@ -595,10 +595,10 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             Intent intent = new Intent(this, FriendsActivity.class);
             intent.putExtra(FriendsActivity.EXTRA_ACTION, FriendsActivity.ACTION_SELECT_RECIPIENTS);
             intent.putExtra(FriendsActivity.EXTRA_TITLE, getString(R.string.select_recipients));
-            String [] exclude = {
+            String[] exclude = {
                     peer.get_id()
             };
-            intent.putExtra(FriendsActivity.EXTRA_EXCLUDE,exclude);
+            intent.putExtra(FriendsActivity.EXTRA_EXCLUDE, exclude);
             startActivityForResult(intent, SELECT_RECIPIENTS_REQUEST);
             return true;
         }
