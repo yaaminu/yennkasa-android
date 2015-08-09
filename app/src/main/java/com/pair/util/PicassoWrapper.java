@@ -76,7 +76,7 @@ public class PicassoWrapper {
             Log.d(TAG, "retrieving entry: " + normalisedString + " from cache");
             Bitmap cache = inMemoryCache.get(normalisedString);
             if (cache == null) {
-                Log.d(TAG, "not in memory cache trying to retrieve from filysystem");
+                Log.d(TAG, "not in memory cache trying to retrieve from file system");
                 File cacheFile = new File(cacheDirectory, normalisedString + ".jpeg");
                 if (cacheFile.exists()) {
                     Log.i(TAG, cacheFile.getAbsolutePath());

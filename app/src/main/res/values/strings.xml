@@ -89,4 +89,5 @@
     <string name="st_add">Add</string>
     <string name="i_know">I Know</string>
     <string name="invite_member">Invite Friends</string>
+    <string name="create_group">Create Group</string>
 </resources>

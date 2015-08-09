@@ -483,9 +483,10 @@ public class UserManager {
         realm.commitTransaction();
         //commit the changes and then
         //check if user is saved locally
-        ContactsManager.Contact contact = ContactsManager.INSTANCE.findContactByPhoneSync(user.get_id(), getUserCountryISO());
+        ContactsManager.Contact contact = ContactsManager.getInstance().findContactByPhoneSync(user.get_id(), getUserCountryISO());
         if (contact != null) {
             realm.beginTransaction();
+            //change remote name to local name
             user.setName(contact.name);
             realm.commitTransaction();
         }
@@ -838,7 +839,7 @@ public class UserManager {
 
     private void doUpdateLocalNames() {
         Context context = Config.getApplicationContext();
-        Cursor cursor = ContactsManager.INSTANCE.findAllContactsCursor(context);
+        Cursor cursor = ContactsManager.getInstance().findAllContactsCursor(context);
         String phoneNumber, name;
         User user;
         Realm realm = Realm.getInstance(Config.getApplicationContext());

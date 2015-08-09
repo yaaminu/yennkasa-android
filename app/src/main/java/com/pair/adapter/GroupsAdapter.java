@@ -51,7 +51,7 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
                 .error(R.drawable.avatar_empty)
                 .resize(150, 150)
                 .into(holder.groupIcon);
-        holder.groupId = group.get_id(); //adapters will use this
+
         RealmList<User> groupMembers = group.getMembers();
         User mainUser = UserManager.getInstance().getMainUser();
         StringBuilder members = new StringBuilder(groupMembers.size() * 10); //summary
@@ -79,6 +79,5 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
         private TextView groupName,
                 groupMembers;
         private ImageView groupIcon;
-        public String groupId;
     }
 }

@@ -161,7 +161,7 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
                 }
             };
         }
-        ContactsManager.INSTANCE.findAllContacts(filter, comparator, new ContactsManager.FindCallback<List<ContactsManager.Contact>>() {
+        ContactsManager.getInstance().findAllContacts(filter, comparator, new ContactsManager.FindCallback<List<ContactsManager.Contact>>() {
             @Override
             public void done(List<ContactsManager.Contact> contacts) {
                 adapter = new Adapter(contacts);

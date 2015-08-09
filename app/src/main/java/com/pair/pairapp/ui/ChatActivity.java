@@ -16,7 +16,6 @@ import android.text.ClipboardManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextMenu;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -55,18 +54,19 @@ import static com.pair.data.Message.TYPE_TYPING_MESSAGE;
 
 
 @SuppressWarnings({"ConstantConditions", "FieldCanBeLocal"})
-public class ChatActivity extends ActionBarActivity implements View.OnClickListener, AbsListView.OnScrollListener, TextView.OnEditorActionListener {
-    private static final int TAKE_PHOTO_REQUEST = 0x0;
-    private static final int TAKE_VIDEO_REQUEST = 0x1;
-    private static final int PICK_PHOTO_REQUEST = 0x2;
-    private static final int PICK_VIDEO_REQUEST = 0x3;
-    private static final int PICK_FILE_REQUEST = 0x4;
-    private static final int ADD_USERS_REQUEST = 0x5;
-    private static final int SELECT_RECIPIENTS_REQUEST = 0x6;
+public class ChatActivity extends ActionBarActivity implements View.OnClickListener, AbsListView.OnScrollListener {
+    private static final int TAKE_PHOTO_REQUEST = 0x0,
+            TAKE_VIDEO_REQUEST = 0x1,
+            PICK_PHOTO_REQUEST = 0x2,
+            PICK_VIDEO_REQUEST = 0x3,
+            PICK_FILE_REQUEST = 0x4,
+            ADD_USERS_REQUEST = 0x5,
+            SELECT_RECIPIENTS_REQUEST = 0x6;
 
     private static final String TAG = ChatActivity.class.getSimpleName();
     public static final String EXTRA_PEER_ID = "peer id";
 
+    private int listScrollPosition = 0; // TODO: 8/7/2015 persist this between activity restarts
     private RealmResults<Message> messages;
     private User peer;
     private Conversation currConversation;
@@ -105,7 +105,6 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
         dateHeader = ((TextView) findViewById(R.id.tv_header_date));
         sendButton.setOnClickListener(this);
-        editText.setOnEditorActionListener(this);
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
         peer = realm.where(User.class).equalTo(User.FIELD_ID, peerId).findFirst();
@@ -408,14 +407,12 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             Toast.makeText(this, "request canceled", Toast.LENGTH_LONG).show();
             return;
         }
-
         Message message;
         switch (requestCode) {
             case ADD_USERS_REQUEST:
                 addMembersToGroup(data.getStringArrayListExtra(FriendsActivity.SELECTED_USERS));
                 return;
             case SELECT_RECIPIENTS_REQUEST:
-
                 forwardToAll(data.getStringArrayListExtra(FriendsActivity.SELECTED_USERS));
                 return;
             case PICK_PHOTO_REQUEST:
@@ -513,16 +510,19 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     public void onScrollStateChanged(AbsListView view, int scrollState) {
+
     }
 
     @Override
     public void onScroll(AbsListView view, final int firstVisibleItem, int visibleItemCount, int totalItemCount) {
         //check if the members have filled the screen
         if (firstVisibleItem == 0) { //first item
-            dateHeader.setVisibility(View.GONE);
+            listScrollPosition = firstVisibleItem;
+            dateHeader.setVisibility(View.GONE);// TODO: 8/7/2015 fade instead of hiding right away
             return;
         }
-        if (visibleItemCount != 0 && visibleItemCount < totalItemCount && firstVisibleItem > 0) {
+        if (visibleItemCount != 0 && visibleItemCount < totalItemCount) {
+            listScrollPosition = firstVisibleItem;
             dateHeader.setVisibility(View.VISIBLE);
             for (int i = firstVisibleItem; i >= 0; i--) { //loop backwards
                 final Message message = messages.get(i);
@@ -535,7 +535,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         }
     }
 
-    private static int cursor = -1;
+    private static int cursor = -1; //static so that it can resist activity restarts.
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
@@ -576,7 +576,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             return true;
         } else if (itemId == R.id.action_delete) {
             realm.beginTransaction();
-            Message next = null;
+            Message next;
             try {
                 next = messages.get(cursor + 1);
                 if (next.getType() == TYPE_DATE_MESSAGE || next.getType() == TYPE_TYPING_MESSAGE) {
@@ -588,7 +588,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
                     previous.removeFromRealm(); //delete session message
                 }
             }
-            selectedMessage.removeFromRealm(); // remove the message here so that you ensure the cursor remains valid
+            selectedMessage.removeFromRealm(); // remove the message here so that you ensure the cursor remain valid
             realm.commitTransaction();
             return true;
         } else if (itemId == R.id.action_forward) {
@@ -604,11 +604,4 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         }
         return super.onContextItemSelected(item);
     }
-
-    @Override
-    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-        doSendMessage();
-        return true;
-    }
-
 }

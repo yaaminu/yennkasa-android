@@ -92,7 +92,7 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         setHasOptionsMenu(true);
         View view = inflater.inflate(R.layout.fragment_contact, container, false);
         adapter = new ContactsAdapter(contacts, false);
-        ContactsManager.INSTANCE.findAllContacts(filter, comparator, contactsFindCallback);
+        ContactsManager.getInstance().findAllContacts(filter, comparator, contactsFindCallback);
         setListAdapter(adapter);
         return view;
     }
@@ -145,7 +145,7 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
 
     @Override
     public void onChange() {
-        ContactsManager.INSTANCE.findAllContacts(filter, comparator, contactsFindCallback);
+        ContactsManager.getInstance().findAllContacts(filter, comparator, contactsFindCallback);
     }
 }
 

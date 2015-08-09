@@ -14,6 +14,7 @@ import android.view.Menu;
 import com.pair.pairapp.ui.ContactFragment;
 import com.pair.pairapp.ui.ConversationsFragment;
 import com.pair.pairapp.ui.GroupsFragment;
+import com.pair.util.RealmUtils;
 import com.pair.util.UserManager;
 
 /**
@@ -39,6 +40,7 @@ public class MainActivity extends ActionBarActivity {
             tabStrip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
             tabStrip.setDrawFullUnderline(true);
             pager.setAdapter(new MyFragmentStatePagerAdapter(getSupportFragmentManager()));
+            RealmUtils.runRealmOperation(this);
         } else {
             gotoSetUpActivity();
         }

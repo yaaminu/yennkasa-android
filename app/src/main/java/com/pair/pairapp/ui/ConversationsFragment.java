@@ -44,7 +44,6 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     private ConversationAdapter adapter;
     private static long currentTimeOut = 0L;
     private static Timer timer;
-    private SwipeDismissListViewTouchListener swipeDismissListViewTouchListener;
 
     public ConversationsFragment() {
     } //required no-arg constructor
@@ -109,7 +108,7 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(getListView(), new SwipeDismissListViewTouchListener.OnDismissCallback() {
+        SwipeDismissListViewTouchListener swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(getListView(), new SwipeDismissListViewTouchListener.OnDismissCallback() {
             @Override
             public void onDismiss(ListView listView, int[] reverseSortedPositions) {
                 realm.beginTransaction();

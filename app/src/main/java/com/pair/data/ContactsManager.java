@@ -27,11 +27,15 @@ import io.realm.Realm;
  * @author Null-Pointer on 6/11/2015.
  */
 public class ContactsManager {
-    public static final ContactsManager INSTANCE = new ContactsManager();
+    private static final ContactsManager INSTANCE = new ContactsManager();
     private static final String TAG = ContactsManager.class.getSimpleName();
 
     private ContactsManager() {
 
+    }
+
+    public static ContactsManager getInstance() {
+        return INSTANCE;
     }
 
 

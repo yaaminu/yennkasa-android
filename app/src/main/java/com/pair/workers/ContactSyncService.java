@@ -40,7 +40,7 @@ public class ContactSyncService extends IntentService {
                     return !contact.isRegisteredUser;
                 }
             };
-            List<ContactsManager.Contact> numbers = ContactsManager.INSTANCE.findAllContactsSync(filter, null);
+            List<ContactsManager.Contact> numbers = ContactsManager.getInstance().findAllContactsSync(filter, null);
 
             if (numbers.isEmpty()) { //all contacts fetched.. this should rarely happen
                 Log.i(TAG, "all friends synced");

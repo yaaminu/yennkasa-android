@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -109,7 +110,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         //common to all
         userName.setText("@" + user.getName());
         displayPicture.setOnClickListener(clickListener);
-        if (userManager.isGroup(user.get_id()) && userManager.isAdmin(user.get_id(), userManager.getMainUser().get_id())) {
+        // TODO: 8/8/2015 merge these conditions into setupviewsingleuserway or setupviewsgroupway
+        if (userManager.isAdmin(user.get_id(), userManager.getMainUser().get_id())) {
             changeDpButton.setVisibility(View.VISIBLE);
             imageButton.setVisibility(View.VISIBLE);
             imageButton.setOnClickListener(clickListener);
@@ -125,6 +127,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             setUpViewSingleUserWay();
         }
         userManager.refreshUserDetails(user.get_id()); //async
+        //noinspection ConstantConditions
+        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(getString(R.string.title_activity_profile) + "-" + user.getName());
         return view;
     }
 
@@ -332,17 +336,18 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     break;
                 case R.id.bt_call:
                     Intent intent = new Intent(Intent.ACTION_DIAL);
-                    intent.setData(Uri.parse("tel:" + user.get_id()));
+                    intent.setData(Uri.parse("tel:" + "+"+user.get_id()));
                     startActivity(intent);
                     break;
                 case R.id.iv_display_picture:
                     Uri uri = Uri.parse(Config.DP_ENDPOINT + "/" + user.getDP());
                     intent = new Intent(getActivity(), ImageViewer.class);
+                    //noinspection ConstantConditions
                     intent.setData(uri);
                     startActivity(intent);
                     break;
                 default:
-                    throw new IllegalArgumentException("unknown view");
+                    throw new AssertionError("unknown view");
 
             }
         }

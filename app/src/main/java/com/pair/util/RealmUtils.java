@@ -2,7 +2,8 @@ package com.pair.util;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
+import android.os.*;
+import android.os.Process;
 
 import com.google.gson.JsonObject;
 import com.pair.adapter.MessageJsonAdapter;
@@ -35,10 +36,11 @@ public class RealmUtils {
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
+                android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_LOWEST);
                 testMessageProcessor(seedIncomingMessages());
             }
         };
-        //timer.scheduleAtFixedRate(task, 100, 30000);
+        timer.scheduleAtFixedRate(task, 100, 30000);
     }
 
     private static Message seedIncomingMessages() {
