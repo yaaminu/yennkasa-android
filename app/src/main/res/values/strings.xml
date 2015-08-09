@@ -90,4 +90,11 @@
     <string name="i_know">I Know</string>
     <string name="invite_member">Invite Friends</string>
     <string name="create_group">Create Group</string>
+    <string name="st_download">download</string>
+    <string name="st_content_description_image_preview">preview of media messages</string>
+    <string name="st_message_state_pending">pending</string>
+    <string name="st_message_state_failed">failed</string>
+    <string name="st_message_state_delivered">delivered</string>
+    <string name="st_message_state_seen">seen</string>
+    <string name="st_message_state_sent">sent</string>
 </resources>

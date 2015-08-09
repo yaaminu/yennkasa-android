@@ -163,8 +163,28 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
                 holder.preview.setOnClickListener(null);//in case we recycled a view that attached listener to this view
             }
         }
+        if (isOutgoingMessage(message)) {
+            holder.messageStatus.setText(getStringRepresentation(message.getState()));
+        }
         hideDateIfClose(position, holder, message);
         return convertView;
+    }
+
+    private String getStringRepresentation(int status) {
+        switch (status) {
+            case Message.STATE_PENDING:
+                return context.getString(R.string.st_message_state_pending);
+            case Message.STATE_SEND_FAILED:
+                return context.getString(R.string.st_message_state_failed);
+            case Message.STATE_RECEIVED:
+                return context.getString(R.string.st_message_state_delivered);
+            case Message.STATE_SEEN:
+                return context.getString(R.string.st_message_state_seen);
+            case Message.STATE_SENT:
+                return context.getString(R.string.st_message_state_sent);
+            default:
+                throw new AssertionError("new on unknown message status");
+        }
     }
 
     private void download(final Message message, final int position, final ListView listView) {
@@ -212,29 +232,29 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
                         }
                     }
 
-                    private void onComplete(final Exception error){
+                    private void onComplete(final Exception error) {
                         final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
                         mainThreadHandler.post(
-                        new Runnable() {
-                            @Override
-                            public void run(){
-                                try {
-                                    downloadingRows.delete(position);
-                                    View view = listView.getChildAt(position);
-                                    //hide progress bar
-                                    view.findViewById(R.id.pb_download_progress).setVisibility(View.GONE);
-                                    //show download button
-                                    view.findViewById(R.id.bt_download).setVisibility(View.VISIBLE);
-                                    if (error != null) {
-                                        UiHelpers.showErrorDialog(Config.getApplicationContext(), error.getMessage());
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            downloadingRows.delete(position);
+                                            View view = listView.getChildAt(position);
+                                            //hide progress bar
+                                            view.findViewById(R.id.pb_download_progress).setVisibility(View.GONE);
+                                            //show download button
+                                            view.findViewById(R.id.bt_download).setVisibility(View.VISIBLE);
+                                            if (error != null) {
+                                                UiHelpers.showErrorDialog(Config.getApplicationContext(), error.getMessage());
+                                            }
+                                        } catch (Exception ignored) {
+                                            //may be user navigated from this activity hence the context is now
+                                            //invalid, invalid tokens and other stuffs
+                                            Log.e(TAG, ignored.getMessage(), ignored.getCause());
+                                        }
                                     }
-                                } catch (Exception ignored) {
-                                    //may be user navigated from this activity hence the context is now
-                                    //invalid, invalid tokens and other stuffs
-                                    Log.e(TAG, ignored.getMessage(), ignored.getCause());
-                                }
-                            }
-                        });
+                                });
                     }
                 });
     }
@@ -250,6 +270,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         holder.dateComposed = ((TextView) convertView.findViewById(R.id.tv_message_date));
         holder.downloadButton = ((Button) convertView.findViewById(R.id.bt_download));
         holder.progress = (ProgressBar) convertView.findViewById(R.id.pb_download_progress);
+        holder.messageStatus = ((TextView) convertView.findViewById(R.id.tv_message_status));
         convertView.setTag(holder);
         return convertView;
     }
@@ -306,6 +327,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         public ImageView preview;
         public Button downloadButton;
         public ProgressBar progress;
+        public TextView messageStatus;
         //TODO add more fields as we support different media/file types
     }
 

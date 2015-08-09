@@ -3,6 +3,7 @@ package com.pair.util;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Build;
 import android.support.v4.util.LruCache;
 import android.util.Base64;
 import android.util.Log;
@@ -50,11 +51,12 @@ public class PicassoWrapper {
     }
 
     private static class DiskCache implements Cache {
+        //all caches share this lru so that we don't leak memory
         final static LruCache<String, Bitmap> inMemoryCache;
 
         static LruCache<String, Bitmap> initCache() {
-            int maxMemory = ((int) (Runtime.getRuntime().maxMemory() / 1024));
-            return new LruCache<>(maxMemory / 8);
+            int maxMemory = figureOutCacheSize();
+            return new MyLRUCache(maxMemory);
         }
 
         static {
@@ -68,19 +70,32 @@ public class PicassoWrapper {
                 throw new IllegalArgumentException("cache directory is invalid");
             }
             this.cacheDirectory = cacheDirectory;
+
+            //re-calculate in memory cache size
+            int currentSize = inMemoryCache.size(),
+                    currentPossibleCacheSize = figureOutCacheSize();
+            if (currentPossibleCacheSize - currentSize > 1024 * 2) {
+                inMemoryCache.resize(currentPossibleCacheSize);
+            }
         }
 
         @Override
         public Bitmap get(String s) {
             final String normalisedString = normalise(s);
-            Log.d(TAG, "retrieving entry: " + normalisedString + " from cache");
+            Log.d(TAG, "retrieving entry: " + normalisedString + " from cache[memory]");
             Bitmap cache = inMemoryCache.get(normalisedString);
             if (cache == null) {
                 Log.d(TAG, "not in memory cache trying to retrieve from file system");
                 File cacheFile = new File(cacheDirectory, normalisedString + ".jpeg");
                 if (cacheFile.exists()) {
                     Log.i(TAG, cacheFile.getAbsolutePath());
-                    cache = BitmapFactory.decodeFile(cacheFile.getAbsolutePath());
+                    try {
+                        cache = BitmapFactory.decodeFile(cacheFile.getAbsolutePath());
+                    } catch (OutOfMemoryError e) { //device out of memory so we resize and return null
+                        int cacheSize = figureOutCacheSize();
+                        inMemoryCache.resize(cacheSize);
+                        return null;
+                    }
                 }
             }
             if (cache == null) {
@@ -89,8 +104,26 @@ public class PicassoWrapper {
             return cache;
         }
 
+        private static int figureOutCacheSize() {
+            return getFreeMemory() / 8;
+        }
+
+        private static int getFreeMemory() {
+            return (int) (Runtime.getRuntime().freeMemory() / 1024);
+        }
+
+        private static boolean cacheAlmostFull(){
+            return inMemoryCache.maxSize() - inMemoryCache.size() < 1024;
+        }
         @Override
         public void set(final String s, Bitmap bitmap) {
+            // TODO: 8/9/2015 schedule this to run async
+            int currentSize = inMemoryCache.size(),
+                    currentPossibleCacheSize = figureOutCacheSize();
+            if (currentPossibleCacheSize - currentSize > 1024 * 2 && cacheAlmostFull()) { //2 MB
+                Log.i(TAG,"cache almost full resizing before storing");
+                inMemoryCache.resize(currentPossibleCacheSize);
+            }
             final String normalisedString = normalise(s);
             inMemoryCache.put(normalisedString, bitmap);
             FileOutputStream out = null;
@@ -126,7 +159,7 @@ public class PicassoWrapper {
 
         @Override
         public int maxSize() {
-            return 10000;
+            return inMemoryCache.maxSize();
         }
 
         @Override
@@ -187,7 +220,36 @@ public class PicassoWrapper {
                 return uri;
             }
         }
+
+        private static class MyLRUCache extends LruCache<String, Bitmap> {
+            /**
+             * @param maxSize for caches that do not override {@link #sizeOf}, this is
+             *                the maximum number of entries in the cache. For all other caches,
+             *                this is the maximum sum of the sizes of the entries in this cache.
+             */
+            public MyLRUCache(int maxSize) {
+                super(maxSize);
+            }
+
+            @Override
+            protected int sizeOf(String key, Bitmap value) {
+                if (value == null) {
+                    this.remove(key);
+                    return 0;
+                }
+                int size = 1;
+                size += key.getBytes().length; //is this important? are strings not shared on the heap?
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+                    //copied from the Bitmap#getByteCount. this was necessary as i was getting a lint error.
+                    size += value.getRowBytes() * value.getHeight();
+                } else {
+                    size += value.getAllocationByteCount();
+                }
+                return size;
+            }
+        }
     }
+
 
     private static void closeQuitely(OutputStream out) {
         if (out != null) {
