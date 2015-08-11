@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_margin="15dp">
+    android:layout_margin="@dimen/message_body_margin">
 
     <LinearLayout
         android:id="@+id/ll_message_body_view"
@@ -21,8 +21,8 @@
             <TextView
                 android:id="@+id/tv_message_content"
                 style="@style/message_outgoing"
-                android:maxWidth="250dp"
-                android:minWidth="150dp"
+                android:maxWidth="@dimen/out_going_message_max_width"
+                android:minWidth="@dimen/message_status_date_width"
                 android:text="hi" />
 
             <ImageView
@@ -53,11 +53,10 @@
                 android:visibility="gone" />
         </FrameLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
+        <RelativeLayout
+            android:layout_width="@dimen/message_status_date_width"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="right">
+            android:layout_gravity="right">
 
             <TextView
                 android:id="@+id/tv_message_status"
@@ -66,6 +65,7 @@
                 android:layout_gravity="bottom"
                 android:layout_marginRight="20dp"
                 android:gravity="left"
+                android:layout_toLeftOf="@+id/tv_message_date"
                 android:singleLine="true"
                 android:text="@string/st_message_state_pending"
                 android:textColor="@color/white" />
@@ -74,7 +74,8 @@
                 android:id="@+id/tv_message_date"
                 style="@style/message_outgoing_date"
                 android:singleLine="true"
+                android:layout_alignParentRight="true"
                 android:text="Date" />
-        </LinearLayout>
+        </RelativeLayout>
     </LinearLayout>
 </RelativeLayout>

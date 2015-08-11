@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Handler;
+import android.os.Process;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
 import android.util.Log;
@@ -52,6 +53,7 @@ public class ContactsManager {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
                 final List<Contact> contacts = findAllContactsSync(filter, comparator);
                 //run on the thread on which clients originally called us
                 handler.post(new Runnable() {

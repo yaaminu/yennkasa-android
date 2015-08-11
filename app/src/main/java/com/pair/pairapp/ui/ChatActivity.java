@@ -13,7 +13,9 @@ import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.text.ClipboardManager;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -60,7 +62,7 @@ import static com.pair.data.Message.TYPE_TYPING_MESSAGE;
 
 
 @SuppressWarnings({"ConstantConditions", "FieldCanBeLocal"})
-public class ChatActivity extends ActionBarActivity implements View.OnClickListener, AbsListView.OnScrollListener {
+public class ChatActivity extends ActionBarActivity implements View.OnClickListener, AbsListView.OnScrollListener, TextWatcher {
     private static final int TAKE_PHOTO_REQUEST = 0x0,
             TAKE_VIDEO_REQUEST = 0x1,
             PICK_PHOTO_REQUEST = 0x2,
@@ -77,7 +79,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private Conversation currConversation;
     private Realm realm;
     private ListView messagesListView;
-    private EditText editText;
+    private EditText messageEt;
     private Button sendButton;
     private TextView dateHeader;
     private Dispatcher<Message> dispatcher;
@@ -99,17 +101,18 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     };
     private boolean sessionSetup = false;
     private static Message selectedMessage;
+    private TextView liveTexView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
         realm = Realm.getInstance(this);
-        editText = ((EditText) findViewById(R.id.et_inputMsg));
+        messageEt = ((EditText) findViewById(R.id.et_inputMsg));
         sendButton = ((Button) findViewById(R.id.btn_send));
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
         dateHeader = ((TextView) findViewById(R.id.tv_header_date));
-        sendButton.setOnClickListener(this);
+        liveTexView = (TextView) findViewById(R.id.tv_currently_typing_message);
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
         peer = realm.where(User.class).equalTo(User.FIELD_ID, peerId).findFirst();
@@ -117,7 +120,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             realm.beginTransaction();
             peer = realm.createObject(User.class);
             peer.set_id(peerId);
-            String[] parts = peerId.split("@");
+            String[] parts = peerId.split("@"); //in case the peer is a group
             peer.setType(parts.length > 1 ? User.TYPE_GROUP : User.TYPE_NORMAL_USER);
             peer.setDP(peerId);
             peer.setName(parts[0]);
@@ -133,6 +136,8 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         setUpCurrentConversation();
         adapter = new MessagesAdapter(this, messages, true);
         messagesListView.setAdapter(adapter);
+        sendButton.setOnClickListener(this);
+        messageEt.addTextChangedListener(this);
         messagesListView.setOnScrollListener(this);
         registerForContextMenu(messagesListView);
     }
@@ -237,7 +242,10 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             unbindService(connection);
         }
         dispatcher = null;
-        adapter = null;
+        if (timer != null) {
+            timer.cancel();
+            timer.purge();
+        }
         super.onStop();
     }
 
@@ -247,9 +255,6 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             realm.beginTransaction();
             currConversation.removeFromRealm();
             realm.commitTransaction();
-        }
-        if (timer != null) {
-            timer.purge();
         }
         realm.close();
         super.onDestroy();
@@ -261,14 +266,13 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     }
 
     private void doSendMessage() {
-        String content = UiHelpers.getFieldContent(editText);
-        editText.setText(""); //clear the text field
+        String content = UiHelpers.getFieldContent(messageEt);
+        messageEt.setText(""); //clear the text field
         //TODO use a regular expression to validate the message body
         if (!TextUtils.isEmpty(content)) {
-            int lastMessagePosition = messages.size();
             Message message = createMessage(content, Message.TYPE_TEXT_MESSAGE);
             sendMessage(message);
-            messagesListView.smoothScrollToPosition(lastMessagePosition);
+            messagesListView.smoothScrollToPosition(messagesListView.getCount() - 1);
         }
     }
 
@@ -642,5 +646,25 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         Intent intent = new Intent(context, MessageProcessor.class);
         intent.putExtras(bundle);
         context.startService(intent);
+    }
+
+    @Override
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+    }
+
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+    }
+
+    @Override
+    public void afterTextChanged(Editable s) {
+        if (!s.toString().trim().isEmpty()) {
+            liveTexView.setVisibility(View.VISIBLE);
+            liveTexView.setText(s);
+        } else {
+            liveTexView.setVisibility(View.GONE);
+        }
     }
 }

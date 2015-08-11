@@ -3,4 +3,10 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="five_dp">5dp</dimen>
+    <dimen name="out_going_message_max_width">300dp</dimen>
+    <dimen name="out_going_message_min_width">150dp</dimen>
+    <dimen name="message_body_margin">15dp</dimen>
+    <dimen name="message_status_date_width">150dp</dimen>
+    <dimen name="live_typing_text_max_height">150dp</dimen>
+    <dimen name="message_text_size">14sp</dimen>
 </resources>
