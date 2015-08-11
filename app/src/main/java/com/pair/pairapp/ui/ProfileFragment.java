@@ -28,10 +28,11 @@ import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.pairapp.UsersActivity;
 import com.pair.util.Config;
-import com.pair.util.PicassoWrapper;
 import com.pair.util.FileUtils;
+import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
+import com.squareup.picasso.Callback;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
@@ -47,17 +48,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     public static final String ARG_USER_ID = "user_id";
     public static final String TAG = ProfileFragment.class.getSimpleName();
     private static final int PICK_PHOTO_REQUEST = 0x3e9;
-    @SuppressWarnings("SpellCheckingInspection")
-    private final View.OnClickListener ONDPCLICKED = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            // TODO: 7/15/2015 fix this
-            Uri uri = Uri.parse(Config.DP_ENDPOINT + "/" + user.getDP());
-            Intent intent = new Intent(getActivity(), ImageViewer.class);
-            intent.setData(uri);
-            startActivity(intent);
-        }
-    };
+    // FIXME: 8/10/2015 watch this field in case we change the default avatar name.
+    public static final String DEFAULT_AVATAR = "avatar_empty";
     private android.widget.ImageView displayPicture;
     private TextView userName, userPhone, listHeading;
     private Button changeDpButton;
@@ -67,6 +59,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private BaseAdapter membersAdapter;
     private Button exitGroupButton;
     private Button callButton;
+    private View progresView;
+    ImageButton imageButton;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -87,7 +81,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         userName = ((TextView) view.findViewById(R.id.tv_user_name));
         userPhone = ((TextView) view.findViewById(R.id.tv_user_phone));
         changeDpButton = ((Button) view.findViewById(R.id.bt_change_dp));
-        ImageButton imageButton = (ImageButton) view.findViewById(R.id.ib_change_name);
+        progresView = view.findViewById(R.id.pb_progress);
+        imageButton = (ImageButton) view.findViewById(R.id.ib_change_name);
         Button sendMessageButton = (Button) view.findViewById(R.id.bt_message);
         sendMessageButton.setOnClickListener(clickListener);
         callButton = ((Button) view.findViewById(R.id.bt_call));
@@ -111,16 +106,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         userName.setText("@" + user.getName());
         displayPicture.setOnClickListener(clickListener);
         // TODO: 8/8/2015 merge these conditions into setupviewsingleuserway or setupviewsgroupway
-        if (userManager.isAdmin(user.get_id(), userManager.getMainUser().get_id())) {
-            changeDpButton.setVisibility(View.VISIBLE);
-            imageButton.setVisibility(View.VISIBLE);
-            imageButton.setOnClickListener(clickListener);
-            changeDpButton.setOnClickListener(clickListener);
-        } else {
-            imageButton.setVisibility(View.GONE);
-            changeDpButton.setVisibility(View.GONE);
-        }
-
         if (user.getType() == User.TYPE_GROUP) {
             setUpViewsGroupWay();
         } else {
@@ -146,8 +131,10 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     }
 
     private void setUpViewSingleUserWay() {
+        changeDpButton.setVisibility(View.GONE);
         userPhone.setVisibility(View.VISIBLE);
         exitGroupButton.setVisibility(View.GONE);
+        imageButton.setVisibility(View.GONE);
         //noinspection ConstantConditions
         callButton.setOnClickListener(clickListener);
         userPhone.append(user.get_id());
@@ -187,8 +174,14 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         callButton.setVisibility(View.GONE);
         if (UserManager.getInstance().isAdmin(user.get_id())) {
             exitGroupButton.setVisibility(View.GONE);
+            changeDpButton.setVisibility(View.VISIBLE);
+            imageButton.setVisibility(View.VISIBLE);
+            imageButton.setOnClickListener(clickListener);
+            changeDpButton.setOnClickListener(clickListener);
         } else {
             exitGroupButton.setOnClickListener(clickListener);
+            changeDpButton.setVisibility(View.GONE);
+            imageButton.setVisibility(View.GONE);
         }
         listHeading.setText(R.string.st_group_members);
         listHeading.setClickable(true);
@@ -268,10 +261,20 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private void showDp() {
         PicassoWrapper.with(getActivity(), Config.APP_PROFILE_PICS_BASE_DIR.getAbsolutePath())
                 .load(Config.DP_ENDPOINT + "/" + user.getDP())
-                .resize(300,120)
+                .resize(300, 120)
                 .placeholder(R.drawable.avatar_empty)
                 .error(R.drawable.avatar_empty)
-                .into(displayPicture);
+                .into(displayPicture, new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        progresView.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onError() {
+                        progresView.setVisibility(View.GONE);
+                    }
+                });
     }
 
 
@@ -336,10 +339,14 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     break;
                 case R.id.bt_call:
                     Intent intent = new Intent(Intent.ACTION_DIAL);
-                    intent.setData(Uri.parse("tel:" + "+"+user.get_id()));
+                    intent.setData(Uri.parse("tel:" + "+" + user.get_id()));
                     startActivity(intent);
                     break;
                 case R.id.iv_display_picture:
+                    if (user.getDP().contains(DEFAULT_AVATAR)) { //dp not downloaded
+                        UiHelpers.showToast(R.string.sorry_no_dp);
+                        return;
+                    }
                     Uri uri = Uri.parse(Config.DP_ENDPOINT + "/" + user.getDP());
                     intent = new Intent(getActivity(), ImageViewer.class);
                     //noinspection ConstantConditions

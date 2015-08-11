@@ -4,7 +4,8 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.*;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Process;
 import android.support.annotation.NonNull;
 import android.text.format.DateUtils;
@@ -25,9 +26,10 @@ import com.pair.pairapp.R;
 import com.pair.pairapp.ui.ImageViewer;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
-import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,13 +51,14 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2, DATE_MESSAGE = 0x0;
     private final SparseIntArray previewsMap;
     private final SparseIntArray downloadingRows = new SparseIntArray();
-
+    private final Picasso PICASSO;
     public MessagesAdapter(Activity context, RealmResults<Message> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
         previewsMap = new SparseIntArray(3);
         previewsMap.put(Message.TYPE_PICTURE_MESSAGE, R.drawable.image_placeholder);
         previewsMap.put(Message.TYPE_VIDEO_MESSAGE, R.drawable.video_placeholder);
         previewsMap.put(Message.TYPE_BIN_MESSAGE, R.drawable.file_placeholder);
+        this.PICASSO = Picasso.with(context);
     }
 
     @Override
@@ -130,21 +133,30 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
             if (messageFile.exists()) {
                 holder.downloadButton.setVisibility(View.GONE);
                 holder.downloadButton.setOnClickListener(null);//in case we recycled a view that attached listener to this view,free it for GC
-                holder.progress.setVisibility(View.GONE);
-                if (message.getType() == Message.TYPE_PICTURE_MESSAGE) {
-                    PicassoWrapper.with(context).load(messageFile)
-                            .placeholder(R.drawable.avatar_empty)
-                            .resize(200, 200)
-                            .centerInside()
-                            .error(R.drawable.avatar_empty).into(holder.preview);
-                } else {
-                    PicassoWrapper.with(context).load(previewsMap.get(message.getType()))
-                            .error(R.drawable.avatar_empty).into(holder.preview);
-                }
                 holder.preview.setVisibility(View.VISIBLE);
                 holder.preview.setOnClickListener(listener);
+                if (message.getType() == Message.TYPE_PICTURE_MESSAGE) {
+                    PICASSO.load(messageFile)
+                            .resize(200, 200)
+                            .centerInside()
+                            .error(R.drawable.avatar_empty).into(holder.preview, new Callback() {
+                        @Override
+                        public void onSuccess() {
+                            holder.progress.setVisibility(View.GONE);
+                        }
+
+                        @Override
+                        public void onError() {
+                            holder.progress.setVisibility(View.GONE);
+                        }
+                    });
+                } else {
+                    holder.progress.setVisibility(View.GONE);
+                    PICASSO.load(previewsMap.get(message.getType()))
+                            .error(R.drawable.avatar_empty).into(holder.preview);
+                }
             } else {
-                PicassoWrapper.with(context).load(previewsMap.get(message.getType()))
+                PICASSO.load(previewsMap.get(message.getType()))
                         .error(R.drawable.avatar_empty).into(holder.preview);
                 if (!isOutgoingMessage(message)) {
                     if (downloadingRows.indexOfKey(position) > -1) {

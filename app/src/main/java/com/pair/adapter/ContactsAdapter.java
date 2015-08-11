@@ -1,5 +1,6 @@
 package com.pair.adapter;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.telephony.SmsManager;
@@ -15,6 +16,7 @@ import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -27,10 +29,12 @@ public class ContactsAdapter extends BaseAdapter {
     private static final String TAG = ContactsAdapter.class.getSimpleName();
     private List<Contact> contacts;
     private boolean isAddOrRemoveFromGroup;
+    private final Picasso PICASSO;
 
-    public ContactsAdapter(List<Contact> contacts, boolean isAddOrRemoveFromGroup) {
+    public ContactsAdapter(Context context, List<Contact> contacts, boolean isAddOrRemoveFromGroup) {
         this.contacts = contacts;
         this.isAddOrRemoveFromGroup = isAddOrRemoveFromGroup;
+        PICASSO = PicassoWrapper.with(context);
     }
 
     @Override
@@ -93,8 +97,7 @@ public class ContactsAdapter extends BaseAdapter {
         }
         if (contact.isRegisteredUser) {
             holder.userStatus.setText(contact.status);
-            PicassoWrapper.with(parent.getContext())
-                    .load(Config.DP_ENDPOINT + "/" + contact.DP)
+            PICASSO.load(Config.DP_ENDPOINT + "/" + contact.DP)
                     .error(R.drawable.avatar_empty)
                     .placeholder(R.drawable.avatar_empty)
                     .resize(150, 150)

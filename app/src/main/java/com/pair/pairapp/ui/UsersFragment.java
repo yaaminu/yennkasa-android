@@ -11,8 +11,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.pair.adapter.UsersAdapter;
@@ -24,6 +24,7 @@ import com.pair.util.Config;
 import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
+import com.squareup.picasso.Picasso;
 
 import io.realm.Realm;
 import io.realm.RealmList;
@@ -57,7 +58,7 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
         String title = getArguments().getString(MainActivity.ARG_TITLE);
         ActionBarActivity activity = (ActionBarActivity) getActivity();
         View view = inflater.inflate(R.layout.fragment_freinds, container, false);
-        GridView usersGrid = ((GridView) view.findViewById(R.id.gv_users));
+        ListView usersList = ((ListView) view.findViewById(R.id.lv_users));
         //noinspection ConstantConditions
         activity.getSupportActionBar().setTitle(title);
         Realm realm = Realm.getInstance(getActivity());
@@ -75,10 +76,11 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
             adapter = new MembersAdapter(group.getMembers(), groupId);
         } else {
             RealmResults<User> results = realm.where(User.class).notEqualTo(User.FIELD_ID, getCurrentUser().get_id()).findAllSorted(User.FIELD_NAME, true);
+            results.sort(User.FIELD_TYPE, false, User.FIELD_NAME, true);
             adapter = new UsersAdapter(getActivity(), results, true);
         }
-        usersGrid.setAdapter(adapter);
-        usersGrid.setOnItemClickListener(this);
+        usersList.setAdapter(adapter);
+        usersList.setOnItemClickListener(this);
         return view;
     }
 
@@ -104,10 +106,12 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
 
         private final RealmList<User> items;
         private final String groupId;
+        private final Picasso PICASSO;
 
         MembersAdapter(RealmList<User> items, String groupId) {
             this.items = items;
             this.groupId = groupId;
+            PICASSO = PicassoWrapper.with(getActivity());
         }
 
         @Override
@@ -154,7 +158,7 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
             if (UserManager.getInstance().isAdmin(groupId, user.get_id())) {
                 holder.username.append(" - " + adminText);
             }
-            PicassoWrapper.with(context)
+            PICASSO
                     .load(Config.DP_ENDPOINT + "/" + holder.userId)
                     .placeholder(R.drawable.avatar_empty)
                     .error(R.drawable.avatar_empty)

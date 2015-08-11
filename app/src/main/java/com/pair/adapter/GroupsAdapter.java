@@ -14,6 +14,7 @@ import com.pair.util.Config;
 import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
+import com.squareup.picasso.Picasso;
 
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmList;
@@ -24,9 +25,11 @@ import io.realm.RealmResults;
  */
 public class GroupsAdapter extends RealmBaseAdapter<User> {
     private static final String TAG = GroupsAdapter.class.getSimpleName();
+    private final Picasso PICASSO;
 
     public GroupsAdapter(Context context, RealmResults<User> realmResults) {
         super(context, realmResults, true);
+        PICASSO = PicassoWrapper.with(context);
     }
 
     @Override
@@ -45,8 +48,7 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
             holder = ((ViewHolder) convertView.getTag());
         }
         holder.groupName.setText(group.getName());
-        PicassoWrapper.with(parent.getContext())
-                .load(Config.DP_ENDPOINT + "/" + group.getDP())
+        PICASSO.load(Config.DP_ENDPOINT + "/" + group.getDP())
                 .placeholder(R.drawable.avatar_empty)
                 .error(R.drawable.avatar_empty)
                 .resize(150, 150)

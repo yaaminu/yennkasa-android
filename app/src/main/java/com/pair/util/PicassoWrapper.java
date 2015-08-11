@@ -3,10 +3,13 @@ package com.pair.util;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.support.v4.util.LruCache;
 import android.util.Base64;
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageView;
 
 import com.pair.pairapp.BuildConfig;
 import com.squareup.picasso.Cache;
@@ -18,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.ref.WeakReference;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
@@ -29,7 +33,6 @@ import java.util.regex.Pattern;
  */
 public class PicassoWrapper {
     private static final String TAG = PicassoWrapper.class.getSimpleName();
-
     private PicassoWrapper() {
         throw new UnsupportedOperationException("cannot instantiate " + PicassoWrapper.class.getSimpleName());
     }
@@ -40,14 +43,17 @@ public class PicassoWrapper {
     }
 
     public static Picasso with(Context context, String cachePath) {
-        Picasso.Builder builder = new Picasso.Builder(context)
-                .indicatorsEnabled(BuildConfig.DEBUG);
+        if (cachePath == null) {
+            throw new IllegalArgumentException("cache path is null!");
+        }
         File file = new File(cachePath);
         if (!file.isDirectory() && !file.mkdirs()) {
             Log.w(TAG, "failed to initialise file based cache, this may be because the cache dir passed is invalid");
-            return builder.build();
         }
-        return builder.memoryCache(new DiskCache(file)).build();
+        return new Picasso.Builder(context)
+                .indicatorsEnabled(BuildConfig.DEBUG)
+                .loggingEnabled(BuildConfig.DEBUG)
+                .memoryCache(new DiskCache(file)).build();
     }
 
     private static class DiskCache implements Cache {
@@ -67,10 +73,10 @@ public class PicassoWrapper {
 
         DiskCache(File cacheDirectory) {
             if (cacheDirectory == null || !cacheDirectory.isDirectory()) {
-                throw new IllegalArgumentException("cache directory is invalid");
+                Log.w(TAG, "passed an invalid file for disk cache ignoring");
+                cacheDirectory = new File(""); //is this safe?
             }
             this.cacheDirectory = cacheDirectory;
-
             //re-calculate in memory cache size
             int currentSize = inMemoryCache.size(),
                     currentPossibleCacheSize = figureOutCacheSize();
@@ -112,16 +118,17 @@ public class PicassoWrapper {
             return (int) (Runtime.getRuntime().freeMemory() / 1024);
         }
 
-        private static boolean cacheAlmostFull(){
+        private static boolean cacheAlmostFull() {
             return inMemoryCache.maxSize() - inMemoryCache.size() < 1024;
         }
+
         @Override
         public void set(final String s, Bitmap bitmap) {
             // TODO: 8/9/2015 schedule this to run async
             int currentSize = inMemoryCache.size(),
                     currentPossibleCacheSize = figureOutCacheSize();
             if (currentPossibleCacheSize - currentSize > 1024 * 2 && cacheAlmostFull()) { //2 MB
-                Log.i(TAG,"cache almost full resizing before storing");
+                Log.i(TAG, "cache almost full resizing before storing");
                 inMemoryCache.resize(currentPossibleCacheSize);
             }
             final String normalisedString = normalise(s);
@@ -165,6 +172,7 @@ public class PicassoWrapper {
         @Override
         public void clear() {
             inMemoryCache.evictAll();
+            //run async if possible
             File[] files = cacheDirectory.listFiles();
             if (files != null) {
                 for (File file : files) {
@@ -250,6 +258,63 @@ public class PicassoWrapper {
         }
     }
 
+    private static class Target implements com.squareup.picasso.Target {
+        //weak reference since this target is likely to be used in adapters
+        private final WeakReference<View> progressView;
+        private final WeakReference<ImageView> target;
+
+        public Target(View loadingProgress, ImageView target) {
+            if (loadingProgress == null || target == null) {
+                throw new IllegalArgumentException("either progress bar or imageview may not be null");
+            }
+            this.progressView = new WeakReference<>(loadingProgress);
+            this.target = new WeakReference<>(target);
+        }
+
+        public Target(ImageView target) {
+            if (target == null) {
+                throw new IllegalArgumentException("image view cannot be null");
+            }
+            progressView = new WeakReference<>(null);
+            this.target = new WeakReference<>(target);
+        }
+
+        @Override
+        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom loadedFrom) {
+            final ImageView imageView = this.target.get();
+            final View progressView = this.progressView.get();
+            if (imageView != null) {
+                imageView.setImageBitmap(bitmap);
+            }
+            if (progressView != null) {
+                progressView.setVisibility(View.GONE);
+            }
+        }
+
+        @Override
+        public void onBitmapFailed(Drawable drawable) {
+            final ImageView imageView = this.target.get();
+            final View progressView = this.progressView.get();
+            if (imageView != null) {
+                imageView.setImageDrawable(drawable);
+            }
+            if (progressView != null) {
+                progressView.setVisibility(View.GONE);
+            }
+        }
+
+        @Override
+        public void onPrepareLoad(Drawable drawable) {
+            final View progressView = this.progressView.get();
+            final ImageView target = this.target.get();
+            if (target != null) {
+                target.setImageDrawable(drawable);
+            }
+            if (progressView != null) {
+                progressView.setVisibility(View.VISIBLE);
+            }
+        }
+    }
 
     private static void closeQuitely(OutputStream out) {
         if (out != null) {

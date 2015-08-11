@@ -2,7 +2,7 @@ package com.pair.util;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.*;
+import android.os.Bundle;
 import android.os.Process;
 
 import com.google.gson.JsonObject;
@@ -40,7 +40,7 @@ public class RealmUtils {
                 testMessageProcessor(seedIncomingMessages());
             }
         };
-        timer.scheduleAtFixedRate(task, 100, 30000);
+        //timer.scheduleAtFixedRate(task, 100, 60000);
     }
 
     private static Message seedIncomingMessages() {
@@ -51,7 +51,7 @@ public class RealmUtils {
         message.setTo(thisUser.get_id());
         message.setFrom(otherUser.get_id());
         message.setType(Message.TYPE_PICTURE_MESSAGE);
-        message.setMessageBody("be90b7214b4d0eb67fa71c87b28898d6");
+        message.setMessageBody("3d89c06a2f21191fcc214a6e4eab5a1f");
         message.setId(Message.generateIdPossiblyUnique());
         message.setState(Message.STATE_PENDING);
         message.setDateComposed(new Date());

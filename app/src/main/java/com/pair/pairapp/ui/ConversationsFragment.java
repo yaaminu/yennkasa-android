@@ -69,21 +69,22 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     }
 
     private void cleanUp() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Realm realm = Realm.getInstance(getActivity());
-                realm.beginTransaction();
-                RealmResults<Conversation> conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
-                for (int i = 0; i < conversations.size(); i++) {
-                    Conversation conversation = conversations.get(i);
-                    if (conversation.getLastMessage() == null) {
-                        conversation.removeFromRealm();
-                    }
-                }
-                realm.commitTransaction();
-            }
-        }).start();
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                Realm realm = Realm.getInstance(getActivity());
+//                realm.beginTransaction();
+//                RealmResults<Conversation> conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
+//                for (int i = 0; i < conversations.size(); i++) {
+//                    Conversation conversation = conversations.get(i);
+//                    if (conversation.getLastMessage() == null) {
+//                        conversation.removeFromRealm();
+//                    }
+//                }
+//                realm.commitTransaction();
+//                realm.close();
+//            }
+//        }).start();
     }
     private void startTimer() {
         if (timer == null) {
@@ -135,7 +136,7 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        String peerId = ((ConversationAdapter.ViewHolder) v.getTag()).peerId;
+        String peerId = ((Conversation) l.getAdapter().getItem(position)).getPeerId();
         UiHelpers.enterChatRoom(getActivity(), peerId);
     }
 

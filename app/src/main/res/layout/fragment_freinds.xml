@@ -4,15 +4,9 @@
              android:layout_height="match_parent"
              tools:context="com.pair.pairapp.ui.UsersFragment">
 
-    <GridView
-        android:id="@+id/gv_users"
+    <ListView
+        android:id="@+id/lv_users"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:columnWidth="100dp"
-        android:horizontalSpacing="5dp"
-        android:numColumns="auto_fit"
-        android:stretchMode="columnWidth"
-        android:verticalSpacing="5dp"
-        />
+        android:layout_height="match_parent" />
 
 </FrameLayout>

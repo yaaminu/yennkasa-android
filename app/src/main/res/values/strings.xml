@@ -97,4 +97,6 @@
     <string name="st_message_state_delivered">delivered</string>
     <string name="st_message_state_seen">seen</string>
     <string name="st_message_state_sent">sent</string>
+    <string name="sorry_no_dp">Sorry, no DP to view</string>
+    <string name="loading">Loading…</string>
 </resources>

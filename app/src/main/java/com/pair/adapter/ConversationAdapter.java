@@ -16,6 +16,7 @@ import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
+import com.squareup.picasso.Picasso;
 
 import java.util.Date;
 
@@ -31,11 +32,13 @@ import static android.text.format.DateUtils.getRelativeTimeSpanString;
  */
 public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
     private static final String TAG = ConversationAdapter.class.getSimpleName();
+    private final Picasso PICASSO;
     final long FIVE_MINUTES = AlarmManager.INTERVAL_FIFTEEN_MINUTES / 3;
 
 
     public ConversationAdapter(Context context, RealmResults<Conversation> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
+        PICASSO = PicassoWrapper.with(context);
     }
 
     @Override
@@ -59,8 +62,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         String peerName = peer.getName();
         holder.peerName.setText(peerName);
         String dpUrl = Config.DP_ENDPOINT + "/" + peer.getDP();
-        PicassoWrapper.with(context)
-                .load(dpUrl)
+        PICASSO.load(dpUrl)
                 .error(R.drawable.avatar_empty)
                 .placeholder(R.drawable.avatar_empty)
                 .resize(150, 150)

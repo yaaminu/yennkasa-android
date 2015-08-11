@@ -12,6 +12,12 @@
         android:scaleType="fitXY"
         android:src="@drawable/avatar_empty" />
 
+    <ProgressBar
+        android:id="@+id/pb_progress"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:indeterminate="true" />
     <Button
         android:id="@+id/bt_change_dp"
         android:layout_width="wrap_content"

@@ -12,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.pair.adapter.ContactsAdapter;
 import com.pair.data.ContactsManager;
@@ -69,10 +70,12 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
     private final ContactsManager.FindCallback<List<Contact>> contactsFindCallback = new ContactsManager.FindCallback<List<Contact>>() {
         @Override
         public void done(List<Contact> freshContacts) {
+            ((TextView) listView.getEmptyView()).setText(R.string.st_empty_contacts);
             contacts = freshContacts;
             adapter.refill(contacts);
         }
     };
+    private ListView listView;
 
     public ContactFragment() {
         // Required empty public constructor
@@ -91,8 +94,12 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         // Inflate the layout for this fragment
         setHasOptionsMenu(true);
         View view = inflater.inflate(R.layout.fragment_contact, container, false);
-        adapter = new ContactsAdapter(contacts, false);
+        adapter = new ContactsAdapter(getActivity(), contacts, false);
         ContactsManager.getInstance().findAllContacts(filter, comparator, contactsFindCallback);
+        //required so that we can operate on it with no fear since calling getListView before onCreateView returns is not safe
+        listView = ((ListView) view.findViewById(android.R.id.list));
+        TextView emptyView = (TextView) view.findViewById(android.R.id.empty);
+        emptyView.setText(R.string.loading);
         setListAdapter(adapter);
         return view;
     }

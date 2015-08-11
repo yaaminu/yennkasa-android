@@ -43,21 +43,19 @@
             android:layout_gravity="center"
             android:indeterminate="true"
             android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_message_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:layout_gravity="bottom"
+            android:textColor="@android:color/white"
+            android:text="seen" />
     </FrameLayout>
 
     <TextView
         android:id="@+id/tv_message_date"
         style="@style/message_outgoing_date"
-        android:singleLine="true"
-        android:text="date sent" />
-
-    <TextView
-        android:id="@+id/tv_message_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@id/tv_message_date"
-        android:layout_marginRight="10dp"
-        android:layout_toLeftOf="@id/tv_message_date"
-        android:text="seen" />
+        android:singleLine="true" />
 </RelativeLayout>
-

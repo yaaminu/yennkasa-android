@@ -11,6 +11,7 @@ import com.pair.data.User;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.PicassoWrapper;
+import com.squareup.picasso.Picasso;
 
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
@@ -19,8 +20,10 @@ import io.realm.RealmResults;
  * @author Null-Pointer on 6/6/2015.
  */
 public class UsersAdapter extends RealmBaseAdapter<User> {
+    private final Picasso PICASSO;
     public UsersAdapter(Context context, RealmResults<User> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
+        PICASSO = PicassoWrapper.with(context);
     }
 
     @Override
@@ -37,8 +40,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> {
         ViewHolder holder = (ViewHolder) convertView.getTag();
         holder.userId = getItem(position).get_id();
         holder.tv.setText(getItem(position).getName());
-        PicassoWrapper.with(context)
-                .load(Config.DP_ENDPOINT + "/" + getItem(position).getDP())
+        PICASSO.load(Config.DP_ENDPOINT + "/" + getItem(position).getDP())
                 .placeholder(R.drawable.avatar_empty)
                 .error(R.drawable.avatar_empty)
                 .resize(150, 150)
