@@ -63,6 +63,7 @@ public class Message extends RealmObject {
         this.messageBody = message.getMessageBody();
         this.state = message.getState();
     }
+
     public void setType(int type) {
         this.type = type;
     }
@@ -128,4 +129,29 @@ public class Message extends RealmObject {
         realm.close();
         return id;
     }
+
+    public static boolean isTextMessage(Message message) {
+        return message.getType() == TYPE_TEXT_MESSAGE;
+    }
+
+    public static boolean isBinMessage(Message message) {
+        return message.getType() == TYPE_BIN_MESSAGE;
+    }
+
+    public static boolean isPictureMessage(Message message) {
+        return message.getType() == TYPE_PICTURE_MESSAGE;
+    }
+
+    public static boolean isVideoMessage(Message message) {
+        return message.getType() == TYPE_VIDEO_MESSAGE;
+    }
+
+    public static boolean isDateMessage(Message message) {
+        return message.getType() == TYPE_DATE_MESSAGE;
+    }
+
+    public static boolean isTypingMessage(Message message) {
+        return message.getType() == TYPE_TYPING_MESSAGE;
+    }
+
 }

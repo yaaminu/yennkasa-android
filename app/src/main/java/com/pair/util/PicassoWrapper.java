@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 /**
  * @author Null-Pointer on 7/17/2015.
  */
+@Deprecated
 public class PicassoWrapper {
     private static final String TAG = PicassoWrapper.class.getSimpleName();
     private PicassoWrapper() {

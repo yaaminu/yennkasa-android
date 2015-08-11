@@ -3,17 +3,15 @@ package com.pair.util;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Process;
 
 import com.google.gson.JsonObject;
 import com.pair.adapter.MessageJsonAdapter;
+import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.messenger.MessageProcessor;
 
 import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import io.realm.Realm;
 import io.realm.RealmList;
@@ -30,35 +28,35 @@ public class RealmUtils {
         Realm realm = Realm.getInstance(context);
         realm.beginTransaction();
         realm.clear(Message.class);
+        realm.clear(Conversation.class);
         realm.commitTransaction();
         realm.close();
-        Timer timer = new Timer(true);
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_LOWEST);
-                testMessageProcessor(seedIncomingMessages());
-            }
-        };
-        //timer.scheduleAtFixedRate(task, 100, 60000);
     }
 
-    private static Message seedIncomingMessages() {
+    public static Message seedIncomingMessages() {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         User thisUser = UserManager.getInstance().getMainUser(),
                 otherUser = realm.where(User.class).notEqualTo(User.FIELD_ID, thisUser.get_id()).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP).findFirst();
+        return seedIncomingMessages(otherUser.get_id(), thisUser.get_id());
+    }
+
+    public static Message seedIncomingMessages(String sender, String recipient) {
+        return seedIncomingMessages(sender, recipient, Message.TYPE_PICTURE_MESSAGE, "3d89c06a2f21191fcc214a6e4eab5a1f");
+    }
+
+    public static Message seedIncomingMessages(String sender, String recipient, int type, String messageBody) {
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
         Message message = new Message();
-        message.setTo(thisUser.get_id());
-        message.setFrom(otherUser.get_id());
-        message.setType(Message.TYPE_PICTURE_MESSAGE);
-        message.setMessageBody("3d89c06a2f21191fcc214a6e4eab5a1f");
+        message.setTo(recipient);
+        message.setFrom(sender);
+        message.setType(type);
+        message.setMessageBody(messageBody);
         message.setId(Message.generateIdPossiblyUnique());
         message.setState(Message.STATE_PENDING);
         message.setDateComposed(new Date());
         realm.close();
         return message;
     }
-
     private static void seedOutgoingMessages() {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         realm.beginTransaction();

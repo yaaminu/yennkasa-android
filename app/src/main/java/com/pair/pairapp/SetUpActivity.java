@@ -77,7 +77,7 @@ public class SetUpActivity extends ActionBarActivity {
         @Override
         protected void onPreExecute() {
             pDialog = new ProgressDialog(SetUpActivity.this);
-            pDialog.setMessage(getString(R.string.st_please_wait));
+            pDialog.setMessage(getString(R.string.initialising));
             pDialog.setCancelable(false);
             pDialog.show();
         }

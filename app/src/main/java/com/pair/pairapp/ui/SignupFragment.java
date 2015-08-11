@@ -94,7 +94,7 @@ public class SignupFragment extends Fragment {
         @SuppressWarnings("ConstantConditions")
         final Spinner spinner = (Spinner) getView().findViewById(R.id.sp_ccc);
         final String ccc = ((Country) spinner.getSelectedItem()).getIso2letterCode();
-        if (!PhoneNumberNormaliser.isIEE_Formatted(phoneNumber, ccc)) {
+        if (!PhoneNumberNormaliser.isValidPhoneNumber(phoneNumber, ccc)) {
             final DialogInterface.OnClickListener okListener = new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {

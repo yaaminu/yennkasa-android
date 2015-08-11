@@ -6,10 +6,13 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.FilenameUtils;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -84,18 +87,27 @@ public class FileUtils {
     }
 
     public static String getExtension(String path) {
-        if (path == null) return "";
-        int extStart = path.lastIndexOf(".");
-        if (extStart == -1 || path.endsWith(".")) return "";
-        return path.substring(extStart + 1);
+        String extension = FilenameUtils.getExtension(path);
+        if (extension == null) return "";
+        return extension;
     }
 
-    public static void save(File profilePicture, InputStream in) throws IOException {
-        byte[] imageBytes = IOUtils.toByteArray(in);
-        if (profilePicture.exists()) {
+    public static void save(File fileToSave, InputStream in) throws IOException {
+        if (fileToSave.exists()) {
             return;
         }
-        org.apache.commons.io.FileUtils.writeByteArrayToFile(profilePicture, imageBytes);
+        byte[] buffer = new byte[1024];
+        BufferedOutputStream bOut = new BufferedOutputStream(new FileOutputStream(fileToSave));
+        BufferedInputStream bIn = new BufferedInputStream(in);
+        int read;
+        try {
+            while ((read = bIn.read(buffer, 0, 1024)) != -1) {
+                bOut.write(buffer, 0, read);
+            }
+        } finally {
+            closeQuietly(bOut);
+            closeQuietly(bIn);
+        }
     }
 
     public static void copyTo(String oldPath, String newPath) throws IOException {
@@ -160,6 +172,25 @@ public class FileUtils {
         };
     }
 
+    private static void closeQuietly(OutputStream out) {
+        if (out != null) {
+            //noinspection EmptyCatchBlock
+            try {
+                out.close();
+            } catch (IOException e) {
+            }
+        }
+    }
+
+    private static void closeQuietly(InputStream in) {
+        if (in != null) {
+            //noinspection EmptyCatchBlock
+            try {
+                in.close();
+            } catch (IOException e) {
+            }
+        }
+    }
     public interface ProgressListener {
         boolean onStart(long expected);
 

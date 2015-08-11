@@ -34,6 +34,15 @@ public class UiHelpers {
                 .show();
     }
 
+    public static void showErrorDialog(Context context, int message) {
+        new AlertDialog.Builder(context)
+                .setTitle(R.string.st_error)
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok, null)
+                .create()
+                .show();
+    }
+
     public static void showErrorDialog(Context context, String message, DialogInterface.OnClickListener listener) {
         new AlertDialog.Builder(context)
                 .setTitle(R.string.st_error)

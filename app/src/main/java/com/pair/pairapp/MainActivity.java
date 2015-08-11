@@ -14,12 +14,14 @@ import android.view.Menu;
 import com.pair.pairapp.ui.ContactFragment;
 import com.pair.pairapp.ui.ConversationsFragment;
 import com.pair.pairapp.ui.GroupsFragment;
+import com.pair.util.RealmUtils;
 import com.pair.util.UserManager;
 
 /**
  * @author Null-Pointer on 6/6/2015.
  */
 public class MainActivity extends ActionBarActivity {
+    private static boolean cleanedMessages = false;
     public static final String TAG = MainActivity.class.getSimpleName();
     public static String groupName;
     public static final String ARG_TITLE = "title";
@@ -41,6 +43,10 @@ public class MainActivity extends ActionBarActivity {
             pager.setAdapter(new MyFragmentStatePagerAdapter(getSupportFragmentManager()));
         } else {
             gotoSetUpActivity();
+        }
+        if (!cleanedMessages) {
+            cleanedMessages = true;
+            RealmUtils.runRealmOperation(this);
         }
     }
 

@@ -27,16 +27,20 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.JsonObject;
+import com.pair.adapter.MessageJsonAdapter;
 import com.pair.adapter.MessagesAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
+import com.pair.messenger.MessageProcessor;
 import com.pair.messenger.PairAppClient;
 import com.pair.net.Dispatcher;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
+import com.pair.util.RealmUtils;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
 
@@ -44,6 +48,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -66,7 +72,6 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private static final String TAG = ChatActivity.class.getSimpleName();
     public static final String EXTRA_PEER_ID = "peer id";
 
-    private int listScrollPosition = 0; // TODO: 8/7/2015 persist this between activity restarts
     private RealmResults<Message> messages;
     private User peer;
     private Conversation currConversation;
@@ -211,6 +216,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     protected void onResume() {
         super.onResume();
         Config.setIsChatRoomOpen(true);
+        testChatActivity();
     }
 
     @Override
@@ -242,6 +248,9 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             currConversation.removeFromRealm();
             realm.commitTransaction();
         }
+        if (timer != null) {
+            timer.purge();
+        }
         realm.close();
         super.onDestroy();
     }
@@ -256,8 +265,10 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         editText.setText(""); //clear the text field
         //TODO use a regular expression to validate the message body
         if (!TextUtils.isEmpty(content)) {
+            int lastMessagePosition = messages.size();
             Message message = createMessage(content, Message.TYPE_TEXT_MESSAGE);
             sendMessage(message);
+            messagesListView.smoothScrollToPosition(lastMessagePosition);
         }
     }
 
@@ -517,12 +528,10 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     public void onScroll(AbsListView view, final int firstVisibleItem, int visibleItemCount, int totalItemCount) {
         //check if the members have filled the screen
         if (firstVisibleItem == 0) { //first item
-            listScrollPosition = firstVisibleItem;
             dateHeader.setVisibility(View.GONE);// TODO: 8/7/2015 fade instead of hiding right away
             return;
         }
         if (visibleItemCount != 0 && visibleItemCount < totalItemCount) {
-            listScrollPosition = firstVisibleItem;
             dateHeader.setVisibility(View.VISIBLE);
             for (int i = firstVisibleItem; i >= 0; i--) { //loop backwards
                 final Message message = messages.get(i);
@@ -603,5 +612,35 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             return true;
         }
         return super.onContextItemSelected(item);
+    }
+
+    /**
+     * code purposely for testing we will take this off in production
+     */
+    private void testChatActivity() {
+        final String senderId = peer.get_id(),
+                recipient = getCurrentUser().get_id();
+        timer = new Timer(true);
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_LOWEST);
+                testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, recipient));
+                testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, recipient, Message.TYPE_TEXT_MESSAGE, "incoming message"));
+            }
+        };
+        timer.scheduleAtFixedRate(task, 100, 30000);
+    }
+
+    Timer timer;
+
+    private void testMessageProcessor(Message messages) {
+        JsonObject object = MessageJsonAdapter.INSTANCE.toJson(messages);
+        Context context = Config.getApplicationContext();
+        Bundle bundle = new Bundle();
+        bundle.putString("message", object.toString());
+        Intent intent = new Intent(context, MessageProcessor.class);
+        intent.putExtras(bundle);
+        context.startService(intent);
     }
 }

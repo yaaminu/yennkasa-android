@@ -2,6 +2,7 @@ package com.pair.adapter;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
@@ -16,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -28,8 +28,8 @@ import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.UiHelpers;
 import com.pair.util.UserManager;
-import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.RequestCreator;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,13 +52,14 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     private final SparseIntArray previewsMap;
     private final SparseIntArray downloadingRows = new SparseIntArray();
     private final Picasso PICASSO;
+
     public MessagesAdapter(Activity context, RealmResults<Message> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
         previewsMap = new SparseIntArray(3);
         previewsMap.put(Message.TYPE_PICTURE_MESSAGE, R.drawable.image_placeholder);
         previewsMap.put(Message.TYPE_VIDEO_MESSAGE, R.drawable.video_placeholder);
         previewsMap.put(Message.TYPE_BIN_MESSAGE, R.drawable.file_placeholder);
-        this.PICASSO = Picasso.with(context);
+        PICASSO = Picasso.with(context);
     }
 
     @Override
@@ -69,7 +70,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     @Override
     public int getItemViewType(int position) {
         Message message = getItem(position);
-        if (message.getType() == Message.TYPE_DATE_MESSAGE) {
+        if (Message.isDateMessage(message)) {
             return DATE_MESSAGE;
         } else {
             if (isOutgoingMessage(message)) {
@@ -85,101 +86,99 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         final ViewHolder holder;
         final Message message = getItem(position);
         if (convertView == null) {
-            convertView = hookupViews(layoutResources[getItemViewType(position)], parent);
+            convertView = hookupViews(messagesLayout[getItemViewType(position)], parent);
         }
         holder = (ViewHolder) convertView.getTag();
 
-        if (isDateMessage(position)) {
-            holder.content.setText(message.getMessageBody());
+        if (Message.isDateMessage(message)) {
+            holder.textMessage.setText(message.getMessageBody());
             return convertView;
         }
 
-        if (message.getType() == Message.TYPE_TEXT_MESSAGE) {
-            //normal message
-            hideViews(holder.preview, holder.downloadButton);
-            holder.preview.setVisibility(View.GONE);
-            holder.downloadButton.setVisibility(View.GONE);
-            holder.progress.setVisibility(View.GONE);
-            holder.content.setVisibility(View.VISIBLE);
-            holder.content.setText(message.getMessageBody());
-        } else {
-            final File messageFile = new File(message.getMessageBody());
-            View.OnClickListener listener = new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (v.getId() == R.id.iv_message_preview && messageFile.exists()) {
-                        try {
-                            Intent intent;
-                            if (message.getType() == Message.TYPE_PICTURE_MESSAGE) {
-                                intent = new Intent(context, ImageViewer.class);
-                            } else {
-                                intent = new Intent(Intent.ACTION_VIEW);
-                            }
-                            intent.setDataAndType(Uri.parse(messageFile.getAbsolutePath()), FileUtils.getMimeType(messageFile.getAbsolutePath()));
-                            context.startActivity(intent);
-                        } catch (ActivityNotFoundException e) {
-                            UiHelpers.showToast(context.getString(R.string.error_sorry_no_application_to_open_file));
-                        }
-                    } else if (v.getId() == R.id.bt_download) {
-                        if (downloadingRows.indexOfKey(position) < 0 && !messageFile.exists()) {
-                            download(message, position, (ListView) parent);
-                            downloadingRows.put(position, position);
-                            holder.progress.setVisibility(View.VISIBLE); //no need to call adapter#notifyDataSetchanged
-                            v.setVisibility(View.GONE);
-                        }
-                    }
-                }
-            };
-            if (messageFile.exists()) {
-                holder.downloadButton.setVisibility(View.GONE);
-                holder.downloadButton.setOnClickListener(null);//in case we recycled a view that attached listener to this view,free it for GC
-                holder.preview.setVisibility(View.VISIBLE);
-                holder.preview.setOnClickListener(listener);
-                if (message.getType() == Message.TYPE_PICTURE_MESSAGE) {
-                    PICASSO.load(messageFile)
-                            .resize(200, 200)
-                            .centerInside()
-                            .error(R.drawable.avatar_empty).into(holder.preview, new Callback() {
-                        @Override
-                        public void onSuccess() {
-                            holder.progress.setVisibility(View.GONE);
-                        }
+        String dateComposed = DateUtils.formatDateTime(context, message.getDateComposed().getTime(), DateUtils.FORMAT_SHOW_TIME);
 
-                        @Override
-                        public void onError() {
-                            holder.progress.setVisibility(View.GONE);
-                        }
-                    });
-                } else {
-                    holder.progress.setVisibility(View.GONE);
-                    PICASSO.load(previewsMap.get(message.getType()))
-                            .error(R.drawable.avatar_empty).into(holder.preview);
-                }
-            } else {
-                PICASSO.load(previewsMap.get(message.getType()))
-                        .error(R.drawable.avatar_empty).into(holder.preview);
-                if (!isOutgoingMessage(message)) {
-                    if (downloadingRows.indexOfKey(position) > -1) {
-                        holder.progress.setVisibility(View.VISIBLE);
-                        holder.downloadButton.setVisibility(View.GONE);
-                    } else {
-                        holder.downloadButton.setVisibility(View.VISIBLE);
-                        holder.downloadButton.setOnClickListener(listener);
-                        holder.progress.setVisibility(View.GONE);
-                    }
-                } else {
-                    holder.progress.setVisibility(View.GONE);
-                    holder.downloadButton.setVisibility(View.GONE);
-                    holder.downloadButton.setOnClickListener(null);
-                }
-                holder.preview.setOnClickListener(null);//in case we recycled a view that attached listener to this view
-            }
-        }
+        //show all views hide if it's not required
+        holder.preview.setVisibility(View.GONE);
+        holder.messageStatus.setVisibility(View.GONE);
+        holder.downloadButton.setVisibility(View.GONE);
+        holder.progress.setVisibility(View.GONE);
+
+        //common to all
+        holder.dateComposed.setVisibility(View.VISIBLE);
+        holder.dateComposed.setText(dateComposed);
+
         if (isOutgoingMessage(message)) {
+            holder.messageStatus.setVisibility(View.VISIBLE);
             holder.messageStatus.setText(getStringRepresentation(message.getState()));
         }
-        hideDateIfClose(position, holder, message);
+
+        if (Message.isTextMessage(message)) {
+            //normal message
+            holder.textMessage.setVisibility(View.VISIBLE);
+            holder.textMessage.setText(message.getMessageBody());
+            return convertView;
+        }
+
+        //if we are here then the message is binary example picture message or video message
+        holder.preview.setVisibility(View.VISIBLE);
+
+        final int placeHolder = previewsMap.get(message.getType());
+        final File messageFile = new File(message.getMessageBody());
+        final View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (v.getId() == R.id.bt_download) {
+                    download(position);
+                } else if (v.getId() == R.id.iv_message_preview) {
+                    attemptToViewFile(v.getContext(), messageFile, message);
+                }
+            }
+        };
+        if (messageFile.exists()) {
+            // this binary message is downloaded
+            final RequestCreator creator;
+            if (Message.isPictureMessage(message)) {
+                creator = PICASSO.load(messageFile)
+                        .resize(250, 200)
+                        .centerCrop()
+                        .error(placeHolder);
+            } else {
+                creator = PICASSO.load(placeHolder);
+            }
+            creator.into(holder.preview);
+            holder.preview.setOnClickListener(listener);
+        } else {
+            if (downloadingRows.indexOfKey(position) < 0) { //not downloaded/downloading
+                holder.downloadButton.setVisibility(View.VISIBLE);
+            }
+            holder.downloadButton.setOnClickListener(listener);
+            PICASSO.load(placeHolder)
+                    .into(holder.preview);
+        }
+
+        if (downloadingRows.indexOfKey(position) > -1) {
+            holder.progress.setVisibility(View.VISIBLE);
+        }
+
         return convertView;
+    }
+
+    private void attemptToViewFile(Context context, File file, Message message) {
+        if (file.exists()) {
+            Intent intent;
+            if (Message.isPictureMessage(message)) {
+                intent = new Intent(context, ImageViewer.class);
+                intent.setData(Uri.fromFile(file));
+            } else {
+                intent = new Intent(Intent.ACTION_VIEW);
+                intent.setDataAndType(Uri.fromFile(file), FileUtils.getMimeType(file.getAbsolutePath()));
+            }
+            try {
+                context.startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                UiHelpers.showErrorDialog(context, R.string.error_sorry_no_application_to_open_file);
+            }
+        }
     }
 
     private String getStringRepresentation(int status) {
@@ -199,23 +198,27 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         }
     }
 
-    private void download(final Message message, final int position, final ListView listView) {
-        File file;
+    private void download(final int position) {
+
+        final Message message = getItem(position);
+        final String messageId = message.getId(),
+                messageBody = message.getMessageBody();
+        final File finalFile;
         switch (message.getType()) {
             case Message.TYPE_VIDEO_MESSAGE:
-                file = new File(Config.APP_VID_MEDIA_BASE_DIR, message.getMessageBody() + ".mp4");
+                finalFile = new File(Config.APP_VID_MEDIA_BASE_DIR, messageBody + ".mp4");
                 break;
             case Message.TYPE_PICTURE_MESSAGE:
-                file = new File(Config.APP_IMG_MEDIA_BASE_DIR, message.getMessageBody() + ".jpeg");
+                finalFile = new File(Config.APP_IMG_MEDIA_BASE_DIR, messageBody + ".jpeg");
                 break;
             case Message.TYPE_BIN_MESSAGE:
-                file = new File(Config.APP_BIN_FILES_BASE_DIR, message.getMessageBody());
+                finalFile = new File(Config.APP_BIN_FILES_BASE_DIR, messageBody);
                 break;
             default:
                 throw new AssertionError("should never happen");
         }
-        final File finalFile = file;
-        final Message copied = new Message(message);
+        downloadingRows.put(position, message.getType());
+        notifyDataSetChanged(); //this will show the progress indicator and hide the download button
         downloader.execute(
                 new Runnable() {
                     @Override
@@ -223,10 +226,10 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
                         android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
                         Realm realm = null;
                         try {
-                            FileUtils.save(finalFile, new URL(Config.MESSAGE_ENDPOINT + "/" + copied.getMessageBody()).openStream());
+                            FileUtils.save(finalFile, new URL(Config.MESSAGE_ENDPOINT + "/" + messageBody).openStream());
                             realm = Realm.getInstance(Config.getApplicationContext());
                             realm.beginTransaction();
-                            Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, copied.getId()).findFirst();
+                            Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
                             toBeUpdated.setMessageBody(finalFile.getAbsolutePath());
                             realm.commitTransaction();
                             onComplete(null);
@@ -252,11 +255,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
                                     public void run() {
                                         try {
                                             downloadingRows.delete(position);
-                                            View view = listView.getChildAt(position);
-                                            //hide progress bar
-                                            view.findViewById(R.id.pb_download_progress).setVisibility(View.GONE);
+                                            notifyDataSetChanged();
                                             //show download button
-                                            view.findViewById(R.id.bt_download).setVisibility(View.VISIBLE);
                                             if (error != null) {
                                                 UiHelpers.showErrorDialog(Config.getApplicationContext(), error.getMessage());
                                             }
@@ -277,7 +277,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         ViewHolder holder;
         convertView = LayoutInflater.from(parent.getContext()).inflate(layoutResource, parent, false);
         holder = new ViewHolder();
-        holder.content = ((TextView) convertView.findViewById(R.id.tv_message_content));
+        holder.textMessage = ((TextView) convertView.findViewById(R.id.tv_message_content));
         holder.preview = (ImageView) convertView.findViewById(R.id.iv_message_preview);
         holder.dateComposed = ((TextView) convertView.findViewById(R.id.tv_message_date));
         holder.downloadButton = ((Button) convertView.findViewById(R.id.bt_download));
@@ -288,37 +288,26 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     }
 
     private void hideDateIfClose(int position, ViewHolder holder, Message message) {
-        String formattedDate = DateUtils.formatDateTime(context, message.getDateComposed().getTime(), DateUtils.FORMAT_SHOW_TIME);
-        boolean hideDate = false;
         //show messages at a particular time together
-        if (!isLast(position)) { //prevents out of bound access
-            Message nextMessage = getItem(position + 1); //safe
-            //ensure they are all from same user
-            if ((isOutgoingMessage(message) && isOutgoingMessage(nextMessage))
-                    || (!isOutgoingMessage(message) && !isOutgoingMessage(nextMessage))) {
-                if (nextMessage.getDateComposed().getTime() - message.getDateComposed().getTime() < TEN_SECONDS) { //close enough!
-                    hideDate = true;
+        if ((message.getType() == Message.TYPE_TEXT_MESSAGE)) {
+            try {
+                Message nextMessage = getItem(position + 1); //might throw
+                //ensure they are all from same user
+                if ((isOutgoingMessage(message) && isOutgoingMessage(nextMessage))
+                        || (!isOutgoingMessage(message) && !isOutgoingMessage(nextMessage))) {
+                    if (nextMessage.getDateComposed().getTime() - message.getDateComposed().getTime() < TEN_SECONDS) { //close enough!
+                        holder.dateComposed.setVisibility(View.GONE);
+                    } else {
+                        holder.dateComposed.setVisibility(View.VISIBLE);
+                    }
                 }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                //this is the last message so don't hide!
+                holder.dateComposed.setVisibility(View.VISIBLE);
             }
         }
-
-        if (hideDate) {
-            hideViews(holder.dateComposed);
-        } else {
-            //noinspection ConstantConditions
-            doNotCollapse(holder, formattedDate);
-        }
-
     }
 
-    private void doNotCollapse(ViewHolder holder, String formattedDate) {
-        holder.dateComposed.setVisibility(View.VISIBLE);
-        holder.dateComposed.setText(formattedDate);
-    }
-
-    private boolean isLast(int position) {
-        return getCount() - 1 == position;
-    }
 
     private boolean isDateMessage(int position) {
         return getItem(position).getType() == Message.TYPE_DATE_MESSAGE;
@@ -328,22 +317,16 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         return (message.getFrom().equals(UserManager.getInstance().getMainUser().get_id()));
     }
 
-    private void hideViews(View... viewsToHide) {
-        for (View view : viewsToHide) {
-            view.setVisibility(View.GONE);
-        }
-    }
-
     private class ViewHolder {
-        TextView content, dateComposed;
-        public ImageView preview;
-        public Button downloadButton;
-        public ProgressBar progress;
-        public TextView messageStatus;
+        private TextView textMessage, dateComposed;
+        private ImageView preview;
+        private Button downloadButton;
+        private ProgressBar progress;
+        private TextView messageStatus;
         //TODO add more fields as we support different media/file types
     }
 
-    private static final int[] layoutResources = {
+    private static final int[] messagesLayout = {
             R.layout.message_item_session_date,
             R.layout.list_item_message_outgoing,
             R.layout.list_item_message_incoming

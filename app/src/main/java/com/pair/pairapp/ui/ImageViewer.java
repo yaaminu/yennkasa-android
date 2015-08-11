@@ -23,6 +23,10 @@ public class ImageViewer extends Activity {
         setContentView(R.layout.activity_view_image);
         // Show the Up button in the action bar.
         imageView = (android.widget.ImageView) findViewById(R.id.imageView);
+        showImage();
+    }
+
+    private void showImage() {
         final Uri imageUri = getIntent().getData();
         File file = new File(imageUri.toString());
         if (file.exists()) {

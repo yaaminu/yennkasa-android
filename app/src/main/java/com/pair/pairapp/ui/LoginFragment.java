@@ -94,7 +94,8 @@ public class LoginFragment extends Fragment{
                 ccc = ((Country) ((Spinner) getView().findViewById(R.id.sp_ccc))
                         .getSelectedItem())
                         .getIso2letterCode();
-        if (!PhoneNumberNormaliser.isIEE_Formatted(phoneNumber, ccc)) {
+        if (!PhoneNumberNormaliser.isValidPhoneNumber(phoneNumber, ccc)) {
+
             final DialogInterface.OnClickListener okListener = new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {

@@ -99,4 +99,5 @@
     <string name="st_message_state_sent">sent</string>
     <string name="sorry_no_dp">Sorry, no DP to view</string>
     <string name="loading">Loading…</string>
+    <string name="initialising">Initialising</string>
 </resources>

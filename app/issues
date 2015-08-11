@@ -1,4 +1,5 @@
 /************* things that can wait ************************************/
+# design interface // working on this now
 # logout users from backend when they choose to logout
 # code our own errorHandler that we will pass to retrofit
 # merge the contact class into the user class
@@ -6,7 +7,9 @@
 # decouple  the notification component from message processor
 # implement a sync adapter once our backend starts giving it support
 # implement synchronous version of all our network calls for background services to use
-# design interface // deferred
+# create an application wide staging area(threadPool) where tasks can be submitted for execution
+# create an application wide settings class where all settings of the app will be persisted
+
 #**************************************************************************************
 # write test for some of the classes. I know it should have been the first thing to do//done
 # code our own cache for picasso //complete
