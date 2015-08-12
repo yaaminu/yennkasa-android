@@ -16,13 +16,14 @@
  * limitations under the License.
  */
 
-package com.pair.swipeDismisUtils;
+package com.pair.util.swipeDismisUtils;
 
 import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+
 import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.AnimatorListenerAdapter;
 import com.nineoldandroids.animation.ValueAnimator;

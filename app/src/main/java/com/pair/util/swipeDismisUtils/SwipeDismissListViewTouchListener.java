@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.pair.swipeDismisUtils;
+package com.pair.util.swipeDismisUtils;
 
 import android.graphics.Rect;
 import android.view.MotionEvent;
@@ -26,6 +26,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.ListView;
+
 import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.AnimatorListenerAdapter;
 import com.nineoldandroids.animation.ValueAnimator;
