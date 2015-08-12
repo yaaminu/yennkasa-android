@@ -8,11 +8,11 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 
 import com.pair.data.Country;
+import com.pair.data.UserManager;
 import com.pair.pairapp.ui.LoginFragment;
 import com.pair.pairapp.ui.SignupFragment;
 import com.pair.pairapp.ui.VerificationFragment;
 import com.pair.util.GcmUtils;
-import com.pair.util.UserManager;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;

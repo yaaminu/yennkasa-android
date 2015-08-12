@@ -5,8 +5,8 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 
 import com.pair.data.Message;
+import com.pair.data.UserManager;
 import com.pair.pairapp.ui.ProfileFragment;
-import com.pair.util.UserManager;
 
 public class ProfileActivity extends ActionBarActivity {
     @Override

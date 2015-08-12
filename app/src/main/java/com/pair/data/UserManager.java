@@ -1,4 +1,4 @@
-package com.pair.util;
+package com.pair.data;
 
 import android.app.Activity;
 import android.content.Context;
@@ -14,14 +14,14 @@ import android.util.Log;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.adapter.BaseJsonAdapter;
 import com.pair.adapter.UserJsonAdapter;
-import com.pair.data.ContactsManager;
-import com.pair.data.Conversation;
-import com.pair.data.Message;
-import com.pair.data.User;
 import com.pair.net.HttpResponse;
 import com.pair.net.api.UserApi;
 import com.pair.pairapp.BuildConfig;
+import com.pair.pairapp.Config;
 import com.pair.pairapp.R;
+import com.pair.util.ConnectionUtils;
+import com.pair.util.GcmUtils;
+import com.pair.util.PhoneNumberNormaliser;
 
 import org.apache.http.HttpStatus;
 

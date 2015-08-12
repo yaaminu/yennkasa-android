@@ -24,11 +24,11 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.adapter.UsersAdapter;
 import com.pair.data.ContactsManager;
 import com.pair.data.User;
+import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
-import com.pair.util.UserManager;
 
 import java.util.ArrayList;
 import java.util.Comparator;

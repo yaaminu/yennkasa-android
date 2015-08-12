@@ -17,13 +17,13 @@ import android.widget.TextView;
 
 import com.pair.adapter.CountriesListAdapter;
 import com.pair.data.Country;
+import com.pair.data.UserManager;
+import com.pair.pairapp.Config;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.pairapp.SetUpActivity;
-import com.pair.util.Config;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
-import com.pair.util.UserManager;
 import com.pair.workers.ContactSyncService;
 
 import io.realm.Realm;

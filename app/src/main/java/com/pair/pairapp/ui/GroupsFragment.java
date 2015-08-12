@@ -17,10 +17,10 @@ import android.widget.ListView;
 import com.pair.adapter.GroupsAdapter;
 import com.pair.data.Message;
 import com.pair.data.User;
+import com.pair.data.UserManager;
 import com.pair.pairapp.CreateGroupActivity;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
-import com.pair.util.UserManager;
 
 import io.realm.Realm;
 import io.realm.RealmResults;

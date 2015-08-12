@@ -3,6 +3,7 @@ package com.pair.util;
 import android.content.Context;
 
 import com.pair.data.User;
+import com.pair.data.UserManager;
 
 import org.junit.After;
 import org.junit.Assert;

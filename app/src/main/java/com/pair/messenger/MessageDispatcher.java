@@ -13,7 +13,7 @@ import com.pair.net.Dispatcher;
 import com.pair.net.HttpResponse;
 import com.pair.net.api.MessageApi;
 import com.pair.pairapp.BuildConfig;
-import com.pair.util.Config;
+import com.pair.pairapp.Config;
 import com.pair.util.ConnectionUtils;
 
 import org.apache.http.HttpStatus;

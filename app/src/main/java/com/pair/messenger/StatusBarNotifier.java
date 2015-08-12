@@ -8,9 +8,9 @@ import android.graphics.Color;
 import android.support.v4.app.NotificationCompat;
 
 import com.pair.data.Message;
+import com.pair.pairapp.Config;
 import com.pair.pairapp.R;
 import com.pair.pairapp.ui.ChatActivity;
-import com.pair.util.Config;
 
 /**
  * @author Null-Pointer on 8/12/2015.

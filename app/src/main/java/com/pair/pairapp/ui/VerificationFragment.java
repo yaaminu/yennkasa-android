@@ -11,11 +11,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
+import com.pair.data.UserManager;
+import com.pair.pairapp.Config;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
-import com.pair.util.Config;
 import com.pair.util.UiHelpers;
-import com.pair.util.UserManager;
 import com.pair.workers.ContactSyncService;
 
 /**

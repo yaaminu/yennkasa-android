@@ -2,8 +2,6 @@ package com.pair.data;
 
 import android.support.annotation.Nullable;
 
-import com.pair.util.UserManager;
-
 import java.util.ArrayList;
 import java.util.List;
 

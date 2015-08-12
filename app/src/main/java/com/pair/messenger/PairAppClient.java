@@ -12,8 +12,8 @@ import android.util.Log;
 
 import com.pair.adapter.MessageJsonAdapter;
 import com.pair.data.Message;
+import com.pair.data.UserManager;
 import com.pair.net.Dispatcher;
-import com.pair.util.UserManager;
 
 import io.realm.Realm;
 import io.realm.RealmResults;

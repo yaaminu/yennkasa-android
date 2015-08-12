@@ -17,9 +17,9 @@ import android.widget.TextView;
 import com.pair.adapter.ContactsAdapter;
 import com.pair.data.ContactsManager;
 import com.pair.data.ContactsManager.Contact;
+import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
-import com.pair.util.UserManager;
 import com.pair.workers.ContactSyncService;
 
 import java.util.ArrayList;

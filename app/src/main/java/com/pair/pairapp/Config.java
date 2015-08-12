@@ -1,4 +1,4 @@
-package com.pair.util;
+package com.pair.pairapp;
 
 import android.app.Application;
 import android.content.ComponentName;

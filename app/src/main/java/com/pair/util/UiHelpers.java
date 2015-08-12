@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.widget.EditText;
 
+import com.pair.pairapp.Config;
 import com.pair.pairapp.ProfileActivity;
 import com.pair.pairapp.R;
 import com.pair.pairapp.ui.ChatActivity;

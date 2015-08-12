@@ -3,6 +3,7 @@ package com.pair.util;
 import android.net.Uri;
 
 import com.pair.pairapp.BuildConfig;
+import com.pair.pairapp.Config;
 
 import junit.framework.TestCase;
 

@@ -2,9 +2,8 @@ package com.pair.pairapp;
 
 import android.app.Application;
 
+import com.pair.data.UserManager;
 import com.pair.messenger.PairAppClient;
-import com.pair.util.Config;
-import com.pair.util.UserManager;
 import com.pair.workers.ContactSyncService;
 
 /**

@@ -31,16 +31,16 @@ import com.pair.adapter.MessagesAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
+import com.pair.data.UserManager;
 import com.pair.messenger.MessageProcessor;
 import com.pair.messenger.PairAppBaseActivity;
 import com.pair.net.Dispatcher;
 import com.pair.pairapp.BuildConfig;
+import com.pair.pairapp.Config;
 import com.pair.pairapp.R;
-import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.RealmUtils;
 import com.pair.util.UiHelpers;
-import com.pair.util.UserManager;
 
 import java.io.File;
 import java.util.ArrayList;

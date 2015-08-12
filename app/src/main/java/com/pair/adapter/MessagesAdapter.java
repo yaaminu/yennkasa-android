@@ -21,13 +21,13 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.pair.data.Message;
+import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
+import com.pair.pairapp.Config;
 import com.pair.pairapp.R;
 import com.pair.pairapp.ui.ImageViewer;
-import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.UiHelpers;
-import com.pair.util.UserManager;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.RequestCreator;
 

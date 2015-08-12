@@ -8,7 +8,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.pair.data.ContactsManager;
-import com.pair.util.UserManager;
+import com.pair.data.UserManager;
 
 import java.util.ArrayList;
 import java.util.List;

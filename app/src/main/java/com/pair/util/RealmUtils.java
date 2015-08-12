@@ -9,7 +9,9 @@ import com.pair.adapter.MessageJsonAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
+import com.pair.data.UserManager;
 import com.pair.messenger.MessageProcessor;
+import com.pair.pairapp.Config;
 
 import java.util.Date;
 

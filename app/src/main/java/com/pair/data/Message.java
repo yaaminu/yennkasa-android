@@ -3,8 +3,7 @@ package com.pair.data;
 import android.app.Application;
 import android.util.Log;
 
-import com.pair.util.Config;
-import com.pair.util.UserManager;
+import com.pair.pairapp.Config;
 
 import java.util.Date;
 

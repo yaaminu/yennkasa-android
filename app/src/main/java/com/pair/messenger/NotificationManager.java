@@ -11,7 +11,7 @@ import android.util.Log;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
-import com.pair.util.Config;
+import com.pair.pairapp.Config;
 
 import io.realm.Realm;
 

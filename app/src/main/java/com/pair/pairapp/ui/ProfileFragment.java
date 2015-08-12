@@ -24,14 +24,14 @@ import android.widget.TextView;
 
 import com.pair.data.Message;
 import com.pair.data.User;
+import com.pair.data.UserManager;
+import com.pair.pairapp.Config;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.pairapp.UsersActivity;
-import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
-import com.pair.util.UserManager;
 import com.squareup.picasso.Callback;
 
 import io.realm.Realm;

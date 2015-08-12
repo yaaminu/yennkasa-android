@@ -11,11 +11,11 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.TypedValue;
 import android.view.Menu;
 
+import com.pair.data.UserManager;
 import com.pair.pairapp.ui.ContactFragment;
 import com.pair.pairapp.ui.ConversationsFragment;
 import com.pair.pairapp.ui.GroupsFragment;
 import com.pair.util.RealmUtils;
-import com.pair.util.UserManager;
 
 /**
  * @author Null-Pointer on 6/6/2015.

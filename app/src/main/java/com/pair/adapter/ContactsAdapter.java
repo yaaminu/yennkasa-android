@@ -12,8 +12,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.pair.pairapp.Config;
 import com.pair.pairapp.R;
-import com.pair.util.Config;
 import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
 import com.squareup.picasso.Picasso;
