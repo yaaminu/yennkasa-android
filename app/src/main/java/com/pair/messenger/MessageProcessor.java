@@ -9,7 +9,6 @@ import android.util.Log;
 import com.pair.adapter.MessageJsonAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
-import com.pair.pairapp.ui.ChatActivity;
 
 import java.util.Date;
 
@@ -46,19 +45,14 @@ public class MessageProcessor extends IntentService {
         Conversation.newSession(realm, conversation);
 
         //force the new message to be older the session start up time
-        message.setDateComposed(new Date(System.currentTimeMillis()+1));
+        message.setDateComposed(new Date(System.currentTimeMillis() + 1));
         conversation.setLastActiveTime(new Date());//now
         conversation.setLastMessage(realm.copyToRealm(message));
         conversation.setSummary("new!->" + message.getMessageBody());
         realm.commitTransaction();
         // TODO: 6/14/2015 send a socket/gcm broadcast to server to notify sender of message state.
-
-        if (!conversation.isActive()) {
-            Message copied = new Message(message);
-            Intent action = new Intent(this, ChatActivity.class);
-            action.putExtra(ChatActivity.EXTRA_PEER_ID, copied.getFrom());
-            NotificationManager.INSTANCE.onNewMessage(copied, action);
-        }
+        Message copied = new Message(message);
+        NotificationManager.INSTANCE.onNewMessage(this, copied);
         realm.close();
     }
 }

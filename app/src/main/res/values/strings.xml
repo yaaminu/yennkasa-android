@@ -100,4 +100,6 @@
     <string name="sorry_no_dp">Sorry, no DP to view</string>
     <string name="loading">Loading…</string>
     <string name="initialising">Initialising</string>
+    <string name="new_message">New Message</string>
+    <string name="message_from">"Message from: %s"</string>
 </resources>

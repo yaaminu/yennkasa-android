@@ -2,16 +2,12 @@ package com.pair.pairapp.ui;
 
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.provider.MediaStore;
-import android.support.v7.app.ActionBarActivity;
 import android.text.ClipboardManager;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -36,7 +32,7 @@ import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.messenger.MessageProcessor;
-import com.pair.messenger.PairAppClient;
+import com.pair.messenger.PairAppBaseActivity;
 import com.pair.net.Dispatcher;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
@@ -62,7 +58,7 @@ import static com.pair.data.Message.TYPE_TYPING_MESSAGE;
 
 
 @SuppressWarnings({"ConstantConditions", "FieldCanBeLocal"})
-public class ChatActivity extends ActionBarActivity implements View.OnClickListener, AbsListView.OnScrollListener, TextWatcher {
+public class ChatActivity extends PairAppBaseActivity implements View.OnClickListener, AbsListView.OnScrollListener, TextWatcher {
     private static final int TAKE_PHOTO_REQUEST = 0x0,
             TAKE_VIDEO_REQUEST = 0x1,
             PICK_PHOTO_REQUEST = 0x2,
@@ -83,22 +79,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
     private Button sendButton;
     private TextView dateHeader;
     private Dispatcher<Message> dispatcher;
-    private boolean bound = false;
     private MessagesAdapter adapter;
-
-    private ServiceConnection connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            dispatcher = ((PairAppClient.PairAppClientInterface) service).getMessageDispatcher();
-            bound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            bound = false;
-            dispatcher = null; //free memory.
-        }
-    };
     private boolean sessionSetup = false;
     private static Message selectedMessage;
     private TextView liveTexView;
@@ -140,18 +121,6 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
         messageEt.addTextChangedListener(this);
         messagesListView.setOnScrollListener(this);
         registerForContextMenu(messagesListView);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        doBind();
-    }
-
-    private void doBind() {
-        Intent intent = new Intent(this, PairAppClient.class);
-        intent.putExtra(PairAppClient.ACTION, PairAppClient.ACTION_SEND_ALL_UNSENT);
-        bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
     private void setUpCurrentConversation() {
@@ -237,16 +206,20 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     protected void onStop() {
-        if (bound) {
-            bound = false;
-            unbindService(connection);
-        }
         dispatcher = null;
-        if (timer != null) {
-            timer.cancel();
-            timer.purge();
-        }
         super.onStop();
+    }
+
+    @Override
+    protected void onBind() {
+        dispatcher = pairAppClientInterface.getMessageDispatcher();
+        pairAppClientInterface.registerNotifier(this);
+    }
+
+    @Override
+    protected void onUnbind() {
+        dispatcher = null;
+        pairAppClientInterface.unRegisterNotifier(this);
     }
 
     @Override
@@ -256,27 +229,31 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             currConversation.removeFromRealm();
             realm.commitTransaction();
         }
+        if (timer != null) {
+//            timer.cancel();
+//            timer.purge();
+        }
         realm.close();
         super.onDestroy();
     }
 
     @Override
     public void onClick(View v) {
-        doSendMessage();
+        sendMessage();
     }
 
-    private void doSendMessage() {
+    private void sendMessage() {
         String content = UiHelpers.getFieldContent(messageEt);
         messageEt.setText(""); //clear the text field
         //TODO use a regular expression to validate the message body
         if (!TextUtils.isEmpty(content)) {
             Message message = createMessage(content, Message.TYPE_TEXT_MESSAGE);
-            sendMessage(message);
+            doSendMessage(message);
             messagesListView.smoothScrollToPosition(messagesListView.getCount() - 1);
         }
     }
 
-    private void sendMessage(Message message) {
+    private void doSendMessage(Message message) {
         if (bound && (dispatcher != null)) {
             dispatcher.dispatch(message);
         } else {
@@ -458,7 +435,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             default:
                 throw new AssertionError("impossible");
         }
-        sendMessage(message);
+        doSendMessage(message);
     }
 
     private void forwardToAll(List<String> recipients) {
@@ -633,7 +610,7 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
                 testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, recipient, Message.TYPE_TEXT_MESSAGE, "incoming message"));
             }
         };
-        timer.scheduleAtFixedRate(task, 100, 30000);
+        timer.scheduleAtFixedRate(task, 100, 10000);
     }
 
     Timer timer;
@@ -667,4 +644,15 @@ public class ChatActivity extends ActionBarActivity implements View.OnClickListe
             liveTexView.setVisibility(View.GONE);
         }
     }
+
+    @Override
+    public void notifyUser(Context context, Message message) {
+        if (message.getFrom().equals(peer.getName())) {
+
+        } else {
+            UiHelpers.showToast(String.format(getString(R.string.message_from), message.getFrom()));
+        }
+    }
+
+
 }

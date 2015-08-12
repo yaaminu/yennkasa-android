@@ -19,7 +19,6 @@
         android:textColor="@color/title_gray"
         android:textSize="12sp" />
 
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

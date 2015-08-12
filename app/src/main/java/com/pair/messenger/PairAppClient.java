@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.Process;
 import android.util.Log;
 
 import com.pair.adapter.MessageJsonAdapter;
@@ -106,6 +107,14 @@ public class PairAppClient extends Service {
         public Dispatcher getCallDispatcher() {
             throw new UnsupportedOperationException("not yet implemented");
         }
+
+        public void registerNotifier(Notifier notifier) {
+            NotificationManager.INSTANCE.registerUI_Notifier(notifier);
+        }
+
+        public void unRegisterNotifier(Notifier notifier) {
+            NotificationManager.INSTANCE.unRegisterUI_Notifier(notifier);
+        }
     }
 
     private final Dispatcher.DispatcherMonitor MONITOR = new Dispatcher.DispatcherMonitor() {
@@ -151,6 +160,7 @@ public class PairAppClient extends Service {
             @Override
             public void run() {
                 Looper.prepare(); //ensure our query is updated while we run
+                android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
                 Realm realm = Realm.getInstance(PairAppClient.this);
                 RealmResults<Message> messages = realm.where(Message.class).notEqualTo(Message.FIELD_TYPE, Message.TYPE_DATE_MESSAGE).equalTo(Message.FIELD_STATE, Message.STATE_PENDING).findAll();
                 if (messages.size() < 1) {
@@ -160,10 +170,11 @@ public class PairAppClient extends Service {
                         Log.i(TAG, "stopping self no unsent message and no bound client");
                         stopSelf();
                     }
-                }else {
+                } else {
                     // ideally copied version of the messages should be passed to dispatcher
-                    // but since we know dispatcher never uses message on a different thread we can
+                    // but since we know dispatcher never uses the message on a different thread we can
                     // confidently pass them
+                    Thread.yield(); //let others run if they want to
                     for (Message message : messages) {
                         DISPATCHER_INSTANCE.dispatch(message);
                     }
