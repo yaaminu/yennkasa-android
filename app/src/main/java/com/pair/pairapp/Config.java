@@ -42,10 +42,6 @@ public class Config {
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
     public static final String APP_USER_AGENT = "pairapp-android-development-version";
     private static String APP_NAME = "PairApp";
-    public static final File APP_BIN_FILES_BASE_DIR = getArbitraryFilesBaseDir();
-    public static final File APP_IMG_MEDIA_BASE_DIR = getImageBasedir();
-    public static final File APP_VID_MEDIA_BASE_DIR = getVideoBaseDir();
-    public static final File APP_PROFILE_PICS_BASE_DIR = getProfilePicsBasedir();
     //shared with message adapter
     public static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
         @Override
@@ -54,38 +50,6 @@ public class Config {
             requestFacade.addHeader("User-Agent", Config.APP_USER_AGENT);
         }
     };
-
-    private static File getProfilePicsBasedir() {
-        if (isExternalStorageAvailable()) {
-            return new File(Environment
-                    .getExternalStoragePublicDirectory(APP_NAME), "profile");
-        }
-        return null;
-    }
-
-
-    private static File getArbitraryFilesBaseDir() {
-        if (isExternalStorageAvailable()) {
-            return new File(Environment
-                    .getExternalStoragePublicDirectory(APP_NAME), "Files");
-        }
-        return null;
-    }
-    private static File getImageBasedir() {
-        if (isExternalStorageAvailable()) {
-            return new File(Environment
-                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), APP_NAME);
-        }
-        return null;
-    }
-
-    private static File getVideoBaseDir() {
-        if (isExternalStorageAvailable()) {
-            return new File(Environment
-                    .getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), APP_NAME);
-        }
-        return null;
-    }
 
     private static boolean isExternalStorageAvailable() {
         String state = Environment.getExternalStorageState();
@@ -100,11 +64,17 @@ public class Config {
         setUpDirs();
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private static void setUpDirs() {
-        //no need to worry calling this several times
-        //if the file is already a directory it will fail silently
-        APP_IMG_MEDIA_BASE_DIR.mkdirs();
-        APP_VID_MEDIA_BASE_DIR.mkdirs();
+        if (isExternalStorageAvailable()) {
+            //no need to worry calling this several times
+            //if the file is already a directory it will fail silently
+            getAppImgMediaBaseDir().mkdirs();
+            getAppVidMediaBaseDir().mkdirs();
+        } else {
+            Log.w(TAG, "This is strange! no sdCard available on this device");
+        }
+
     }
 
     public static boolean isChatRoomOpen() {
@@ -167,6 +137,7 @@ public class Config {
             return DP_API_REAL_PHONE;
         }
     }
+
     private static void enableComponent(Class clazz) {
         Log.d(TAG, "enabling " + clazz.getSimpleName());
         ComponentName receiver = new ComponentName(application, clazz);
@@ -203,8 +174,8 @@ public class Config {
         disableComponent(MessageProcessor.class);
     }
 
-    public static SharedPreferences getApplicationWidePrefs(){
-        if(Config.application == null){
+    public static SharedPreferences getApplicationWidePrefs() {
+        if (Config.application == null) {
             throw new IllegalStateException("application is null,did you forget to call init(Context) ?");
         }
         return getApplication().getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
@@ -217,5 +188,26 @@ public class Config {
             // TODO replace this with real url
             return MESSAGE_API_REAL_PHONE;
         }
+    }
+
+    public static File getAppBinFilesBaseDir() {
+        return new File(Environment
+                .getExternalStoragePublicDirectory(APP_NAME), "Files");
+    }
+
+    public static File getAppImgMediaBaseDir() {
+        return new File(Environment
+                .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), APP_NAME);
+    }
+
+    public static File getAppVidMediaBaseDir() {
+        return new File(Environment
+                .getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), APP_NAME);
+
+    }
+
+    public static File getAppProfilePicsBaseDir() {
+        return new File(Environment
+                .getExternalStoragePublicDirectory(APP_NAME), "profile");
     }
 }

@@ -249,16 +249,16 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         if (!TextUtils.isEmpty(content)) {
             Message message = createMessage(content, Message.TYPE_TEXT_MESSAGE);
             doSendMessage(message);
-            messagesListView.smoothScrollToPosition(messagesListView.getCount() - 1);
         }
     }
 
     private void doSendMessage(Message message) {
-        if (bound && (dispatcher != null)) {
+        if (bound && dispatcher != null) {
             dispatcher.dispatch(message);
         } else {
             doBind(); //after binding dispatcher will smartly dispatch all unsent messages
         }
+
     }
 
     private void trySetupNewSession() {
@@ -293,7 +293,12 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             summary = "You: " + getDescription(type);
         }
         currConversation.setSummary(summary);
-        realm.commitTransaction();
+        //our listview does not by default scroll to bottom to show newly added items
+        // we have to force it to and set it back to the default behaviour when we are done
+        messagesListView.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
+        realm.commitTransaction(); //the adapter will be auto refreshed by realm
+        adapter.notifyDataSetChanged();
+        messagesListView.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_NORMAL);
         return message;
     }
 
@@ -610,7 +615,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
                 testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, recipient, Message.TYPE_TEXT_MESSAGE, "incoming message"));
             }
         };
-        timer.scheduleAtFixedRate(task, 100, 10000);
+        timer.scheduleAtFixedRate(task, 100, 30000);
     }
 
     Timer timer;

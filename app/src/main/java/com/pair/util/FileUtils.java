@@ -37,7 +37,7 @@ public class FileUtils {
             throw new IllegalArgumentException("you can only pass either: " + MEDIA_TYPE_IMAGE + " or " + MEDIA_TYPE_VIDEO);
         }
         StringBuilder pathBuilder = new StringBuilder((mediaType == MEDIA_TYPE_IMAGE) ? "IMG_" : "VID_");
-        File file = (mediaType == MEDIA_TYPE_IMAGE) ? Config.APP_IMG_MEDIA_BASE_DIR : Config.APP_VID_MEDIA_BASE_DIR;
+        File file = (mediaType == MEDIA_TYPE_IMAGE) ? Config.getAppImgMediaBaseDir() : Config.getAppVidMediaBaseDir();
         Date now = new Date();
         pathBuilder.append(new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(now));
         switch (mediaType) {

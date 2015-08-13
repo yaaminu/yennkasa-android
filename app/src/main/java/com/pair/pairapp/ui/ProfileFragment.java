@@ -259,7 +259,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     };
 
     private void showDp() {
-        PicassoWrapper.with(getActivity(), Config.APP_PROFILE_PICS_BASE_DIR.getAbsolutePath())
+        PicassoWrapper.with(getActivity(), Config.getAppProfilePicsBaseDir().getAbsolutePath())
                 .load(Config.DP_ENDPOINT + "/" + user.getDP())
                 .resize(300, 120)
                 .placeholder(R.drawable.avatar_empty)

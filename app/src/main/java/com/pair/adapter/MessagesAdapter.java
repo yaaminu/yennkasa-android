@@ -206,13 +206,13 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         final File finalFile;
         switch (message.getType()) {
             case Message.TYPE_VIDEO_MESSAGE:
-                finalFile = new File(Config.APP_VID_MEDIA_BASE_DIR, messageBody + ".mp4");
+                finalFile = new File(Config.getAppVidMediaBaseDir(), messageBody + ".mp4");
                 break;
             case Message.TYPE_PICTURE_MESSAGE:
-                finalFile = new File(Config.APP_IMG_MEDIA_BASE_DIR, messageBody + ".jpeg");
+                finalFile = new File(Config.getAppImgMediaBaseDir(), messageBody + ".jpeg");
                 break;
             case Message.TYPE_BIN_MESSAGE:
-                finalFile = new File(Config.APP_BIN_FILES_BASE_DIR, messageBody);
+                finalFile = new File(Config.getAppBinFilesBaseDir(), messageBody);
                 break;
             default:
                 throw new AssertionError("should never happen");
