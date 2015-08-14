@@ -110,5 +110,6 @@
     <orderEntry type="library" exported="" name="bolts-android-1.2.0" level="project" />
     <orderEntry type="library" exported="" name="okio-1.4.0" level="project" />
     <orderEntry type="library" exported="" name="play-services-gcm-7.3.0" level="project" />
+    <orderEntry type="module" module-name="lib" exported="" />
   </component>
 </module>

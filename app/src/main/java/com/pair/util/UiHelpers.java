@@ -10,6 +10,8 @@ import com.pair.pairapp.Config;
 import com.pair.pairapp.ProfileActivity;
 import com.pair.pairapp.R;
 import com.pair.pairapp.ui.ChatActivity;
+import com.rey.material.app.DialogFragment;
+import com.rey.material.app.SimpleDialog;
 
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
@@ -36,21 +38,21 @@ public class UiHelpers {
     }
 
     public static void showErrorDialog(Context context, int message) {
-        new AlertDialog.Builder(context)
-                .setTitle(R.string.st_error)
-                .setMessage(message)
-                .setPositiveButton(android.R.string.ok, null)
-                .create()
-                .show();
+        showErrorDialog(context, getString(context, message));
     }
 
-    public static void showErrorDialog(Context context, String message, DialogInterface.OnClickListener listener) {
-        new AlertDialog.Builder(context)
-                .setTitle(R.string.st_error)
-                .setMessage(message)
-                .setPositiveButton(android.R.string.ok, listener)
-                .create()
-                .show();
+    public static void showErrorDialog(Context context, String message, final DialogInterface.OnClickListener listener) {
+        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialog) {
+            @Override
+            public void onPositiveActionClicked(DialogFragment fragment) {
+                if (listener == null) return;
+                listener.onClick(null, AlertDialog.BUTTON_POSITIVE);
+            }
+        };
+        builder.title(getString(context, R.string.st_error));
+        builder.message(message);
+        builder.positiveAction(getString(context, android.R.string.ok));
+        builder.build(context).show();
     }
 
     public static void showErrorDialog(Context context,
@@ -67,20 +69,39 @@ public class UiHelpers {
 
     public static void showErrorDialog(Context context,
                                        int title, int message,
-                                       int okText, int noText, DialogInterface.OnClickListener ok, DialogInterface.OnClickListener no) {
-        new AlertDialog.Builder(context)
-                .setTitle(title)
-                .setMessage(message)
-                .setPositiveButton(okText, ok)
-                .setNegativeButton(noText, no)
-                .create()
-                .show();
+                                       int okText, int noText, final DialogInterface.OnClickListener ok, final DialogInterface.OnClickListener no) {
+        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialog) {
+            @Override
+            public void onPositiveActionClicked(DialogFragment fragment) {
+                if (ok != null) {
+                    ok.onClick(null, AlertDialog.BUTTON_POSITIVE);
+                }
+            }
+
+            @Override
+            public void onNegativeActionClicked(DialogFragment fragment) {
+                if (no != null) {
+                    no.onClick(null, AlertDialog.BUTTON_NEGATIVE);
+                }
+            }
+        };
+        builder.title(getString(context, title));
+        builder.message(getString(context, message));
+        builder.positiveAction(getString(context, okText))
+                .negativeAction(getString((Context) context, (int) noText));
+        builder.build(context).show();
+    }
+
+
+    private static String getString(Context context, int resId) {
+        return getString(context, resId);
     }
 
     @SuppressWarnings("ConstantConditions")
     public static void showToast(String message) {
         makeText(Config.getApplicationContext(), message, LENGTH_SHORT).show();
     }
+
     @SuppressWarnings("ConstantConditions")
     public static void showToast(int message) {
         makeText(Config.getApplicationContext(), message, LENGTH_SHORT).show();
@@ -97,4 +118,5 @@ public class UiHelpers {
         intent.putExtra(ProfileActivity.EXTRA_USER_ID, id);
         context.startActivity(intent);
     }
+
 }

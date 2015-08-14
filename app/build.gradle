@@ -34,6 +34,7 @@ dependencies {
     compile 'io.realm:realm-android:0.80.3'
     compile 'com.google.android.gms:play-services-gcm:7.3.0'
     compile 'com.android.support:support-v4:22.1.1'
-    compile 'com.parse.bolts:bolts-android:1.+'
+    compile 'com.parse.bolts:bolts-android:1.2.0'
     compile files('libs/Parse-1.9.4.jar')
+    compile project(':lib')
 }
