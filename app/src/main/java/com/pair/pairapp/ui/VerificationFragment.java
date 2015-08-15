@@ -1,7 +1,6 @@
 package com.pair.pairapp.ui;
 
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -17,12 +16,13 @@ import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
 import com.pair.workers.ContactSyncService;
+import com.rey.material.app.DialogFragment;
 
 /**
  * A simple {@link Fragment} subclass.
  */
 public class VerificationFragment extends Fragment {
-    ProgressDialog progressDialog;
+    DialogFragment progressDialog;
 
     public VerificationFragment() {
         // Required empty public constructor
@@ -42,7 +42,7 @@ public class VerificationFragment extends Fragment {
     };
 
     private void backToLogin() {
-        progressDialog.show();
+        progressDialog.show(getFragmentManager(), null);
         UserManager.getInstance().reset(new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
@@ -65,9 +65,7 @@ public class VerificationFragment extends Fragment {
         view.findViewById(R.id.bt_verify).setOnClickListener(listener);
         view.findViewById(R.id.bt_resend_token).setOnClickListener(listener);
         view.findViewById(R.id.tv_back_to_login).setOnClickListener(listener);
-        progressDialog = new ProgressDialog(getActivity());
-        progressDialog.setMessage(getString(R.string.st_please_wait));
-        progressDialog.setCancelable(false);
+        progressDialog = UiHelpers.newProgressDialog();
         return view;
     }
 
@@ -78,7 +76,7 @@ public class VerificationFragment extends Fragment {
         if (TextUtils.isEmpty(code)) {
             UiHelpers.showErrorDialog(getActivity(), getString(R.string.token_required));
         } else {
-            progressDialog.show();
+            progressDialog.show(getFragmentManager(), null);
             UserManager.getInstance().verifyUser(code, callBack);
         }
     }

@@ -43,7 +43,7 @@
     <string name="add_peers_title">Add Peers To Chat</string>
     <string name="title_activity_friends_">Select Contacts</string>
     <string name="st_done">Done</string>
-    <string name="st_please_wait">Please Wait</string>
+    <string name="st_please_wait">PLEASE WAIT…</string>
     <string name="st_group_name">Group Name</string>
     <string name="st_mutual_groups">Mutual Groups</string>
     <string name="st_group_members">Group Members</string>
@@ -108,4 +108,5 @@
     <string name="password_too_long">Password too long</string>
     <string name="user_name_format_message">"User Names can only contain alphabets and digits and must be between 5 to 12 characters"</string>
     <string name="token_required">Token is required</string>
+    <string name="invalid_phone_number">%s is not a valid phone number</string>
 </resources>

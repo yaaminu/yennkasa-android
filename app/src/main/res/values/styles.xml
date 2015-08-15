@@ -76,6 +76,7 @@
     </style>
 
     <style name="InOutCircularProgressDrawableStyle" parent="Material.Drawable.CircularProgress">
+        <item name="cpd_strokeColor">@color/colorPrimaryDark</item>
         <item name="cpd_inAnimDuration">800</item>
         <item name="cpd_inStepPercent">0.5</item>
         <item name="cpd_inStepColors">@array/in_colors</item>

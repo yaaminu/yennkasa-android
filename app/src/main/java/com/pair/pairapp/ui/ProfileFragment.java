@@ -2,7 +2,6 @@ package com.pair.pairapp.ui;
 
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -32,6 +31,7 @@ import com.pair.pairapp.UsersActivity;
 import com.pair.util.FileUtils;
 import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
+import com.rey.material.app.DialogFragment;
 import com.squareup.picasso.Callback;
 
 import io.realm.Realm;
@@ -61,6 +61,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private Button callButton;
     private View progresView;
     ImageButton imageButton;
+    private DialogFragment progressDialog;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -90,6 +91,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         listHeading = ((TextView) view.findViewById(R.id.tv_list_heading));
         mutualGroupsList = ((ListView) view.findViewById(R.id.lv_mutual_groups_list));
         mutualGroupsList.setEmptyView(view.findViewById(R.id.empty));
+        progressDialog = UiHelpers.newProgressDialog();
+
         //end view hookup
 
         realm = Realm.getInstance(getActivity());
@@ -235,17 +238,15 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     filePath = uri.getPath();
                 }
                 UserManager userManager = UserManager.getInstance();
-                dpChangeProgress = new ProgressDialog(getActivity());
-                dpChangeProgress.setMessage(getResources().getString(R.string.st_please_wait));
-                dpChangeProgress.setCancelable(false);
-                dpChangeProgress.show();
+                dpChangeProgress = UiHelpers.newProgressDialog();
+                dpChangeProgress.show(getFragmentManager(), null);
                 userManager.changeDp(user.get_id(), filePath, DP_CALLBACK);
 
             }
         }
     }
 
-    private ProgressDialog dpChangeProgress;
+    private DialogFragment dpChangeProgress;
     private final UserManager.CallBack DP_CALLBACK = new UserManager.CallBack() {
         @Override
         public void done(Exception e) {
@@ -311,10 +312,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     UiHelpers.enterChatRoom(v.getContext(), user.get_id());
                     break;
                 case R.id.bt_exit_group:
-                    final ProgressDialog progressDialog = new ProgressDialog(getActivity());
-                    progressDialog.setMessage(getString(R.string.st_please_wait));
-                    progressDialog.setCancelable(false);
-                    progressDialog.show();
+                    progressDialog.show(getFragmentManager(), null);
                     UserManager.getInstance().leaveGroup(user.get_id(), new UserManager.CallBack() {
                         @Override
                         public void done(Exception e) {

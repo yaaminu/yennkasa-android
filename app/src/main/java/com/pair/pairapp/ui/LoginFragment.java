@@ -1,7 +1,6 @@
 package com.pair.pairapp.ui;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -23,6 +22,7 @@ import com.pair.util.FormValidator;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
 import com.pair.workers.ContactSyncService;
+import com.rey.material.app.DialogFragment;
 import com.rey.material.widget.Spinner;
 import com.rey.material.widget.TextView;
 
@@ -38,7 +38,7 @@ public class LoginFragment extends Fragment {
     private Button loginButton;
     public static final String TAG = LoginFragment.class.getSimpleName();
     private EditText passwordEt, usernameEt, phoneNumberEt;
-    private ProgressDialog progressDialog;
+    private DialogFragment progressDialog;
     private Realm realm;
     private boolean isLoggingIn = true;
     private Spinner spinner;
@@ -126,10 +126,8 @@ public class LoginFragment extends Fragment {
     }
 
     private void doAttemptLogin() {
-        progressDialog = new ProgressDialog(getActivity());
-        progressDialog.setMessage(getString(R.string.st_please_wait));
-        progressDialog.setCancelable(false);
-        progressDialog.show();
+        progressDialog = UiHelpers.newProgressDialog();
+        progressDialog.show(getFragmentManager(), null);
         if (isLoggingIn) {
             UserManager.getInstance().logIn(getActivity(), phoneNumber, password, userCountry, loginOrSignUpCallback);
         } else {

@@ -640,11 +640,11 @@ public class UserManager {
             return;
         }
         if (TextUtils.isEmpty(userIso2LetterCode)) {
-            callback.done(new Exception("userIso2LetterCode cannot be null"));
+            callback.done(new Exception("userIso2LetterCode cannot be empty"));
             return;
         }
         if (TextUtils.isEmpty(gcmRegId)) {
-            callback.done(new Exception("GCM registration id cannot be null"));
+            callback.done(new Exception("GCM registration id cannot be empty"));
             return;
         }
 
@@ -658,7 +658,7 @@ public class UserManager {
             } else {
                 Log.e(TAG, e.getMessage());
             }
-            callback.done(new Exception(phoneNumber + " is not a valid phone number"));
+            callback.done(new Exception(String.format(Config.getApplicationContext().getString(R.string.invalid_phone_number), phoneNumber)));
             return;
         }
         user.set_id(phoneNumber);
@@ -744,7 +744,7 @@ public class UserManager {
             } else {
                 Log.e(TAG, e.getMessage());
             }
-            callback.done(e);
+            callback.done(new Exception(String.format(Config.getApplicationContext().getString(R.string.invalid_phone_number), phoneNumber)));
             return;
         }
         user.setPassword(password);

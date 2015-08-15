@@ -1,7 +1,6 @@
 package com.pair.pairapp.ui;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -24,6 +23,7 @@ import com.pair.pairapp.SetUpActivity;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
 import com.pair.workers.ContactSyncService;
+import com.rey.material.app.DialogFragment;
 
 import io.realm.Realm;
 
@@ -45,7 +45,7 @@ public class SignupFragment extends Fragment {
             getFragmentManager().beginTransaction().replace(R.id.container, fragment, SetUpActivity.LOGIN_FRAG).commit();
         }
     };
-    private ProgressDialog pDialog;
+    private DialogFragment pDialog;
 
     public SignupFragment() {
     }
@@ -111,10 +111,8 @@ public class SignupFragment extends Fragment {
     }
 
     private void doAttemptSignUp(String phoneNumber, String name, String password, String ccc) {
-        pDialog = new ProgressDialog(getActivity());
-        pDialog.setMessage(getString(R.string.st_please_wait));
-        pDialog.setCancelable(false);
-        pDialog.show();
+        pDialog = UiHelpers.newProgressDialog();
+        pDialog.show(getFragmentManager(), null);
         UserManager.getInstance().signUp(getActivity(), name, phoneNumber, password, ccc, new UserManager.CallBack() {
             @Override
             public void done(Exception e) {

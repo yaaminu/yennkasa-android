@@ -4,12 +4,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.view.ViewGroup;
 import android.widget.EditText;
 
 import com.pair.pairapp.Config;
 import com.pair.pairapp.ProfileActivity;
 import com.pair.pairapp.R;
 import com.pair.pairapp.ui.ChatActivity;
+import com.rey.material.app.Dialog;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.SimpleDialog;
 
@@ -91,6 +93,24 @@ public class UiHelpers {
         showErrorDialog(context, titleText, messageText, okTxt, noTxt, ok, no);
     }
 
+
+    public static DialogFragment newProgressDialog() {
+        return newProgressDialog(false);
+    }
+
+    public static DialogFragment newProgressDialog(final boolean cancelable) {
+
+        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
+            @Override
+            protected void onBuildDone(Dialog dialog) {
+                dialog.layoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                dialog.setCancelable(cancelable);
+                dialog.setCanceledOnTouchOutside(cancelable);
+            }
+        };
+        builder.contentView(R.layout.progress_dialog_indeterminate);
+        return DialogFragment.newInstance(builder);
+    }
 
     private static String getString(Context context, int resId) {
         return context.getString(resId).toUpperCase();

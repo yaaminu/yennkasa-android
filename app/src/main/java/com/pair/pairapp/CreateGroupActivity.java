@@ -1,6 +1,5 @@
 package com.pair.pairapp;
 
-import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
@@ -26,6 +25,7 @@ import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
+import com.rey.material.app.DialogFragment;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -171,10 +171,8 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
 
     private void completeGroupCreation() {
         if (!selectedUsers.isEmpty()) {
-            final ProgressDialog progressDialog = new ProgressDialog(this);
-            progressDialog.setMessage(getString(R.string.st_please_wait));
-            progressDialog.setCancelable(false);
-            progressDialog.show();
+            final DialogFragment progressDialog = UiHelpers.newProgressDialog();
+            progressDialog.show(getSupportFragmentManager(), null);
             UserManager.getInstance().createGroup(groupName, new ArrayList<>(selectedUsers), new UserManager.CreateGroupCallBack() {
                 @Override
                 public void done(Exception e, String groupId) {

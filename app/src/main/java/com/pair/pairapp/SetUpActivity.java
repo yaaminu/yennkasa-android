@@ -1,8 +1,8 @@
 package com.pair.pairapp;
 
-import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
@@ -13,6 +13,8 @@ import com.pair.pairapp.ui.LoginFragment;
 import com.pair.pairapp.ui.SignupFragment;
 import com.pair.pairapp.ui.VerificationFragment;
 import com.pair.util.GcmUtils;
+import com.pair.util.UiHelpers;
+import com.rey.material.app.DialogFragment;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
@@ -73,20 +75,19 @@ public class SetUpActivity extends ActionBarActivity {
         getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, fTag).commit();
     }
 
-    ProgressDialog pDialog;
+    DialogFragment pDialog;
     private AsyncTask<Void, Void, Void> setUpCountriesTask = new AsyncTask<Void, Void, Void>() {
         @Override
         protected void onPreExecute() {
-            pDialog = new ProgressDialog(SetUpActivity.this);
-            pDialog.setMessage(getString(R.string.initialising));
-            pDialog.setCancelable(false);
-            pDialog.show();
+            pDialog = UiHelpers.newProgressDialog();
+            pDialog.show(getSupportFragmentManager(), null);
         }
 
         @Override
         protected Void doInBackground(Void... params) {
             Realm realm = Realm.getInstance(SetUpActivity.this);
             try {
+                SystemClock.sleep(10000);
                 realm.beginTransaction();
                 // TODO: 8/4/2015 change this and pass the input stream directly to realm
                 realm.clear(Country.class);
