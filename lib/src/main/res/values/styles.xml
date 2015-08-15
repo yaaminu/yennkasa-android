@@ -142,7 +142,7 @@
     </style>
 
     <style name="Material.Drawable.Ripple.Wave.Light" parent="Material.Drawable.Ripple.Wave">
-        <item name="rd_rippleColor">#66999999</item>
+        <item name="rd_rippleColor">@color/primary_text_default_material_light</item>
     </style>
 
     <style name="Material.Drawable.NavigationDrawerIcon">

@@ -1,9 +1,8 @@
 package com.pair.pairapp.ui;
 
-import android.app.Activity;
-import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.widget.ImageView;
 
@@ -14,7 +13,7 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 
-public class ImageViewer extends Activity {
+public class ImageViewer extends FragmentActivity {
     private ImageView imageView;
 
     @Override
@@ -45,9 +44,9 @@ public class ImageViewer extends Activity {
         @Override
         public void onError() {
             findViewById(R.id.pb_progress).setVisibility(View.GONE);
-            UiHelpers.showErrorDialog(imageView.getContext(), "Sorry! Failed to open image", new DialogInterface.OnClickListener() {
+            UiHelpers.showErrorDialog(ImageViewer.this, "Sorry! Failed to open image", new UiHelpers.Listener() {
                 @Override
-                public void onClick(DialogInterface dialog, int which) {
+                public void onClick() {
                     finish();
                 }
             });

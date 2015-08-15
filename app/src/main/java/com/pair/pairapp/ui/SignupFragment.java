@@ -2,7 +2,6 @@ package com.pair.pairapp.ui;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -64,7 +63,7 @@ public class SignupFragment extends Fragment {
         View view = inflater.inflate(R.layout.signup_fragment, container, false);
         passWordEt = (EditText) view.findViewById(R.id.et_passwordField);
         phoneNumberEt = (EditText) view.findViewById(R.id.et_phone_number_field);
-        userNameEt = (EditText) view.findViewById(R.id.usernameField);
+        userNameEt = (EditText) view.findViewById(R.id.et_username);
         Spinner spinner = ((Spinner) view.findViewById(R.id.sp_ccc));
         realm = Realm.getInstance(getActivity());
         final CountriesListAdapter adapter = new CountriesListAdapter(getActivity(), realm.where(Country.class).findAllSorted("name"));
@@ -95,9 +94,9 @@ public class SignupFragment extends Fragment {
         final Spinner spinner = (Spinner) getView().findViewById(R.id.sp_ccc);
         final String ccc = ((Country) spinner.getSelectedItem()).getIso2letterCode();
         if (!PhoneNumberNormaliser.isValidPhoneNumber(phoneNumber, ccc)) {
-            final DialogInterface.OnClickListener okListener = new DialogInterface.OnClickListener() {
+            final UiHelpers.Listener okListener = new UiHelpers.Listener() {
                 @Override
-                public void onClick(DialogInterface dialog, int which) {
+                public void onClick() {
                     doAttemptSignUp(phoneNumber, name, password, ccc);
                 }
             };

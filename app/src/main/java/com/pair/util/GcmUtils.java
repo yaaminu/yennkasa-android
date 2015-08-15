@@ -37,6 +37,10 @@ public class GcmUtils {
 
 
     public static boolean checkPlayServices(Activity context) {
+        // FIXME: 8/14/2015 change this
+        if (true) {
+            return true;
+        }
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
         Log.i(TAG, "results code: " + resultCode);
         if (resultCode != ConnectionResult.SUCCESS && resultCode != ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED) {

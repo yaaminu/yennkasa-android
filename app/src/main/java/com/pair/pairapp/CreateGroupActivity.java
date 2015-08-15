@@ -1,7 +1,6 @@
 package com.pair.pairapp;
 
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
@@ -121,9 +120,9 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
     }
 
 
-    private final DialogInterface.OnClickListener cancelProgress = new DialogInterface.OnClickListener() {
+    private final UiHelpers.Listener cancelProgress = new UiHelpers.Listener() {
         @Override
-        public void onClick(DialogInterface dialog, int which) {
+        public void onClick() {
             finish();
         }
     };

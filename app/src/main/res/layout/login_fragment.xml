@@ -1,50 +1,113 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/fr_login"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin">
-
-    <EditText
-        android:id="@+id/et_passwordField"
-        style="@style/password_editText_style"
-        android:layout_alignLeft="@+id/usernameField"
-        android:layout_below="@+id/et_phone_number_field" />
-
-    <EditText
-        android:id="@+id/et_phone_number_field"
-        style="@style/phone_number_editText_style"
-        android:layout_alignLeft="@+id/et_passwordField"
-        android:layout_below="@+id/sp_ccc">
-
-        <requestFocus />
-    </EditText>
-
-    <Spinner
-        android:id="@+id/sp_ccc"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
-    <Button
-        android:id="@+id/bt_loginButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/et_phone_number_field"
-        android:layout_below="@+id/et_passwordField"
-        android:text="@string/log_in_button_label" />
+    android:background="@color/colorPrimary">
 
     <TextView
-        android:id="@+id/tv_signup"
+        android:id="@+id/tv_app_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/bt_loginButton"
+        android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
+        android:layout_marginTop="@dimen/margin_32dp"
+        android:paddingTop="8dp"
+        android:text="@string/app_name"
+        android:textColor="@android:color/white"
+        android:textSize="48sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_sub_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_app_name"
+        android:layout_centerHorizontal="true"
+        android:text="@string/subtitle"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/login_sign_up_pane"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_sub_title"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="@dimen/margin_32dp"
+        android:background="@android:color/white"
+        android:orientation="vertical"
+        android:paddingTop="10dp"
+        android:paddingRight="10dp"
+        android:paddingLeft="10dp"
+        android:paddingBottom="10dp">
+
+        <com.rey.material.widget.Spinner
+            android:id="@+id/sp_ccc"
+            style="@style/Material.Widget.Spinner.Light"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/spinner_height"
+            app:rd_delayClick="afterRelease"
+            app:rd_enable="true"
+            app:rd_style="@style/selectedListItemStyle"
+            app:spn_arrowAnimDuration="@android:integer/config_shortAnimTime"
+            app:spn_arrowInterpolator="@android:anim/decelerate_interpolator"
+            app:spn_arrowSwitchMode="true">
+
+            <requestFocus />
+        </com.rey.material.widget.Spinner>
+
+        <com.rey.material.widget.EditText
+            android:id="@+id/et_username"
+            style="@style/username_editText_style"
+            android:visibility="visible"
+            app:et_supportMode="none"
+            app:et_supportTextErrorColor="#FFFF0000"
+            android:paddingTop="5dp"></com.rey.material.widget.EditText>
+
+        <com.rey.material.widget.EditText
+            android:id="@+id/et_phone_number_field"
+            style="@style/phone_number_editText_style"
+            app:et_supportMode="none"
+            app:et_supportTextErrorColor="#FFFF0000"
+            android:paddingTop="5dp" />
+
+        <com.rey.material.widget.EditText
+            android:id="@+id/et_passwordField"
+            style="@style/password_editText_style"
+            app:et_supportMode="none"
+            app:et_supportTextErrorColor="#FFFF0000"
+            android:paddingTop="5dp" />
+
+        <com.rey.material.widget.Button
+            android:gravity="center"
+            android:id="@+id/bt_loginButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:background="#2299cc00"
+            android:textSize="16sp"
+            android:textColor="@color/colorPrimary"
+            style="@style/RaiseWaveColorButtonRippleStyle"
+            android:text="@string/log_in_button_label" />
+
+    </LinearLayout>
+
+    <com.rey.material.widget.TextView
+        android:id="@+id/tv_signup"
+        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/login_sign_up_pane"
+        android:layout_centerHorizontal="true"
+        android:padding="12dp"
         android:clickable="true"
-        android:padding="5dp"
-        android:text="Don't have an account? Sign up!"
-        android:textColor="#00f"
-        android:textSize="14sp" />
+        android:text="@string/dont_have_an_account_sign_up"
+        android:textColor="@android:color/white"
+        style="@style/FlatWaveColorButtonRippleStyle"
+        android:textSize="16sp" />
 </RelativeLayout>

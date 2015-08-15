@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.pair.view.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    style="@style/selectedListItemStyle"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    app:rd_delayClick="afterRelease">
+
+    <com.rey.material.widget.TextView
+        android:id="@+id/tv_country_name"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:textColor="#FF000000"
+        android:textSize="16sp" />
+
+    <com.rey.material.widget.TextView
+        android:id="@+id/tv_country_ccc"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:textColor="#FF000000"
+        android:textSize="16sp" />
+</com.pair.view.LinearLayout>
+

@@ -1,14 +1,13 @@
 package com.pair.adapter;
 
-import android.app.Activity;
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Process;
 import android.support.annotation.NonNull;
+import android.support.v4.app.FragmentActivity;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.util.SparseIntArray;
@@ -53,7 +52,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     private final SparseIntArray downloadingRows = new SparseIntArray();
     private final Picasso PICASSO;
 
-    public MessagesAdapter(Activity context, RealmResults<Message> realmResults, boolean automaticUpdate) {
+    public MessagesAdapter(FragmentActivity context, RealmResults<Message> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
         previewsMap = new SparseIntArray(3);
         previewsMap.put(Message.TYPE_PICTURE_MESSAGE, R.drawable.image_placeholder);
@@ -130,7 +129,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
                 if (v.getId() == R.id.bt_download) {
                     download(position);
                 } else if (v.getId() == R.id.iv_message_preview) {
-                    attemptToViewFile(v.getContext(), messageFile, message);
+                    attemptToViewFile(((FragmentActivity) context), messageFile, message);
                 }
             }
         };
@@ -163,7 +162,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         return convertView;
     }
 
-    private void attemptToViewFile(Context context, File file, Message message) {
+    private void attemptToViewFile(FragmentActivity context, File file, Message message) {
         if (file.exists()) {
             Intent intent;
             if (Message.isPictureMessage(message)) {
@@ -258,7 +257,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
                                             notifyDataSetChanged();
                                             //show download button
                                             if (error != null) {
-                                                UiHelpers.showErrorDialog(Config.getApplicationContext(), error.getMessage());
+                                                UiHelpers.showErrorDialog(((FragmentActivity) context), error.getMessage());
                                             }
                                         } catch (Exception ignored) {
                                             //may be user navigated from this activity hence the context is now

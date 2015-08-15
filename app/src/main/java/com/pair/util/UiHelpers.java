@@ -1,9 +1,9 @@
 package com.pair.util;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.widget.EditText;
 
 import com.pair.pairapp.Config;
@@ -28,73 +28,78 @@ public class UiHelpers {
         return content.trim();
     }
 
-    public static void showErrorDialog(Context context, String message) {
-        new AlertDialog.Builder(context)
-                .setTitle(R.string.st_error)
-                .setMessage(message)
-                .setPositiveButton(android.R.string.ok, null)
-                .create()
-                .show();
+    public static void showErrorDialog(FragmentActivity context, String message) {
+        showErrorDialog(context, message, Listener.DUMMY_LISTENER);
     }
 
-    public static void showErrorDialog(Context context, int message) {
+    public static void showErrorDialog(FragmentActivity context, int message) {
         showErrorDialog(context, getString(context, message));
     }
 
-    public static void showErrorDialog(Context context, String message, final DialogInterface.OnClickListener listener) {
-        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialog) {
+    public static void showErrorDialog(FragmentActivity context, String message, final Listener listener) {
+        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
             @Override
             public void onPositiveActionClicked(DialogFragment fragment) {
-                if (listener == null) return;
-                listener.onClick(null, AlertDialog.BUTTON_POSITIVE);
+                listener.onClick();
+                super.onPositiveActionClicked(fragment);
             }
         };
         builder.title(getString(context, R.string.st_error));
         builder.message(message);
         builder.positiveAction(getString(context, android.R.string.ok));
-        builder.build(context).show();
+
+        DialogFragment fragment = DialogFragment.newInstance(builder);
+        fragment.show(context.getSupportFragmentManager(), null);
     }
 
-    public static void showErrorDialog(Context context,
+    private static CharSequence[] getStringArray(FragmentActivity context, int resId) {
+        return context.getResources().getStringArray(resId);
+    }
+
+    public static void showErrorDialog(FragmentActivity context,
                                        String title, String message,
-                                       String okText, String noText, DialogInterface.OnClickListener ok, DialogInterface.OnClickListener no) {
-        new AlertDialog.Builder(context)
-                .setTitle(title)
-                .setMessage(message)
-                .setPositiveButton(okText, ok)
-                .setNegativeButton(noText, no)
-                .create()
-                .show();
-    }
+                                       String okText, String noText, final Listener ok, final Listener no) {
 
-    public static void showErrorDialog(Context context,
-                                       int title, int message,
-                                       int okText, int noText, final DialogInterface.OnClickListener ok, final DialogInterface.OnClickListener no) {
-        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialog) {
+        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
             @Override
             public void onPositiveActionClicked(DialogFragment fragment) {
                 if (ok != null) {
-                    ok.onClick(null, AlertDialog.BUTTON_POSITIVE);
+                    ok.onClick();
                 }
+                super.onPositiveActionClicked(fragment);
             }
 
             @Override
             public void onNegativeActionClicked(DialogFragment fragment) {
                 if (no != null) {
-                    no.onClick(null, AlertDialog.BUTTON_NEGATIVE);
+                    no.onClick();
                 }
+                super.onNegativeActionClicked(fragment);
             }
         };
-        builder.title(getString(context, title));
-        builder.message(getString(context, message));
-        builder.positiveAction(getString(context, okText))
-                .negativeAction(getString((Context) context, (int) noText));
-        builder.build(context).show();
+
+        builder.title(title);
+        builder.message(message);
+        builder.positiveAction(okText)
+                .negativeAction(noText);
+        DialogFragment fragment = DialogFragment.newInstance(builder);
+        final FragmentManager fragmentManager = context.getSupportFragmentManager();
+        fragment.show(fragmentManager, null);
+    }
+
+    public static void showErrorDialog(FragmentActivity context,
+                                       int title, int message,
+                                       int okText, int noText, final Listener ok, final Listener no) {
+        String titleText = getString(context, title),
+                messageText = getString(context, message),
+                okTxt = getString(context, okText),
+                noTxt = getString(context, noText);
+        showErrorDialog(context, titleText, messageText, okTxt, noTxt, ok, no);
     }
 
 
     private static String getString(Context context, int resId) {
-        return getString(context, resId);
+        return context.getString(resId).toUpperCase();
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -119,4 +124,14 @@ public class UiHelpers {
         context.startActivity(intent);
     }
 
+    public interface Listener {
+        Listener DUMMY_LISTENER = new Listener() {
+            @Override
+            public void onClick() {
+                //do nothing
+            }
+        };
+
+        void onClick();
+    }
 }

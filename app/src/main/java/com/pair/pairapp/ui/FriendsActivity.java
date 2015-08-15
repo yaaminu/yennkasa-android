@@ -136,7 +136,7 @@ public class FriendsActivity extends ActionBarActivity implements AdapterView.On
                         } else {
                             Log.e(TAG, e.getMessage());
                         }
-                        UiHelpers.showErrorDialog(getApplicationContext(), e.getMessage());
+                        UiHelpers.showErrorDialog(FriendsActivity.this, e.getMessage());
                         return;
                     }
                     editText.setText("");

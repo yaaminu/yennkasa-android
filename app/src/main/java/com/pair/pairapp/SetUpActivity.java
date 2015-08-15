@@ -20,6 +20,7 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 
 import io.realm.Realm;
+import io.realm.RealmResults;
 
 
 public class SetUpActivity extends ActionBarActivity {
@@ -27,20 +28,20 @@ public class SetUpActivity extends ActionBarActivity {
 
     public static final String ACTION = "ac",
             LOGIN_FRAG = "login",
-            SIGNUP_FRAG = "signup",VERIFICATION_FRAGMENT = "vfrag";
+            SIGNUP_FRAG = "signup", VERIFICATION_FRAGMENT = "vfrag";
     private String TAG = SetUpActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if(GcmUtils.checkPlayServices(this)) {
+        if (GcmUtils.checkPlayServices(this)) {
             setContentView(R.layout.set_up_activity);
             Realm realm = Realm.getInstance(this);
-            boolean countriesSetup = realm.where(Country.class).count() >= 243;
+            boolean countriesSetup = false; //realm.where(Country.class).count() > 0;
             realm.close();
             if (!countriesSetup) {
                 setUpCountriesTask.execute();
-            }else{
+            } else {
                 addFragment();
             }
             //add login fragment
@@ -88,7 +89,12 @@ public class SetUpActivity extends ActionBarActivity {
             try {
                 realm.beginTransaction();
                 // TODO: 8/4/2015 change this and pass the input stream directly to realm
+                realm.clear(Country.class);
                 realm.createAllFromJson(Country.class, IOUtils.toString(getAssets().open("countries.json"), Charsets.UTF_8));
+                realm.commitTransaction();
+                RealmResults<Country> countries = realm.where(Country.class).equalTo("ccc", "").findAll();
+                realm.beginTransaction();
+                countries.clear();
                 realm.commitTransaction();
             } catch (IOException e) {
                 if (BuildConfig.DEBUG) {

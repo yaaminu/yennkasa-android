@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="base_style">
+    <style name="base_style" parent="Material.Widget.EditText.Light">
         <item name="android:ems">10</item>
+        <item name="android:textSize">17sp</item>
         <item name="android:singleLine">true</item>
         <item name="android:maxLength">20</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColorHint">@color/light_gray</item>
+        <item name="android:imeOptions">actionNext</item>
     </style>
 
     <style name="password_editText_style" parent="base_style">

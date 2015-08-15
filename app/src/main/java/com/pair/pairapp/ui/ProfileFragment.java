@@ -321,7 +321,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                             progressDialog.dismiss();
                             if (e != null) {
                                 try {
-                                    UiHelpers.showErrorDialog(getActivity().getApplicationContext(), e.getMessage());
+                                    UiHelpers.showErrorDialog(getActivity(), e.getMessage());
                                 } catch (Exception e2) {
                                     // FIXME: 8/3/2015
                                 }

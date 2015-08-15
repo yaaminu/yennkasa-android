@@ -2,11 +2,11 @@
 <resources>
 
     <style name="Theme.AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimary">@color/color_msg_outgoing</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="colorControlNormal">@color/colorControlNormal</item>
-        <item name="colorControlActivated">@color/colorControlActivated</item>
+        <item name="colorControlNormal">@color/normalControlStates</item>
+        <item name="colorControlActivated">@color/colorPrimaryDark</item>
         <item name="colorSwitchThumbNormal">@color/colorSwitchThumbNormal</item>
     </style>
 
