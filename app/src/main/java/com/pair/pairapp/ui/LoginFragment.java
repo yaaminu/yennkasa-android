@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 
 import com.pair.adapter.CountriesListAdapter;
 import com.pair.data.Country;
@@ -18,12 +19,14 @@ import com.pair.data.UserManager;
 import com.pair.pairapp.Config;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
+import com.pair.util.FormValidator;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
 import com.pair.workers.ContactSyncService;
-import com.rey.material.widget.EditText;
 import com.rey.material.widget.Spinner;
 import com.rey.material.widget.TextView;
+
+import java.util.regex.Pattern;
 
 import io.realm.Realm;
 
@@ -40,6 +43,19 @@ public class LoginFragment extends Fragment {
     private boolean isLoggingIn = true;
     private Spinner spinner;
     private String userName, phoneNumber, password, userCountry;
+    private FormValidator validator;
+    private View.OnClickListener listener = listener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (v.getId() == R.id.bt_loginButton) {
+                validateAndContinue();
+            } else if (v.getId() == R.id.tv_signup) {
+                toggleSignUpLogin(((TextView) v));
+            } else {
+                throw new AssertionError("unknown view");
+            }
+        }
+    };
 
     public LoginFragment() {
     }
@@ -61,64 +77,51 @@ public class LoginFragment extends Fragment {
         loginButton = (Button) view.findViewById(R.id.bt_loginButton);
         usernameEt = (EditText) view.findViewById(R.id.et_username);
         spinner = ((Spinner) view.findViewById(R.id.sp_ccc));
+        validator = new FormValidator();
+        validator.addStrategy(phoneNumberStrategy)
+                .addStrategy(passwordStrategy)
+                .addStrategy(usernameStrategy);
+
         final CountriesListAdapter adapter = new CountriesListAdapter(getActivity(), realm.where(Country.class).findAllSorted("name"));
         adapter.setDropDownViewResource(R.layout.country_spinner_item);
         spinner.setAdapter(adapter);
         spinner.setSelection(0);
         TextView tv = (TextView) view.findViewById(R.id.tv_signup);
-        tv.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (isLoggingIn) {
-                    isLoggingIn = false;
-                    ((TextView) v).setText(R.string.st_already_have_an_account);
-                    usernameEt.setVisibility(View.VISIBLE);
-                    usernameEt.requestFocus();
-                    loginButton.setText(R.string.sign_up_button_label);
-                } else {
-                    isLoggingIn = true;
-                    ((TextView) v).setText(R.string.dont_have_an_account_sign_up);
-                    usernameEt.setVisibility(View.GONE);
-                    phoneNumberEt.requestFocus();
-                    loginButton.setText(R.string.log_in_button_label);
-                }
-            }
-        });
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (TextUtils.isEmpty(passwordEt.getText().toString().trim())
-                        || TextUtils.isEmpty(phoneNumberEt.getText().toString().trim())
-                        || (!isLoggingIn && TextUtils.isEmpty(usernameEt.getText().toString().trim()))
-                        ) {
-                    return;
-                }
-                attemptLoginOrSignUp();
-            }
-        });
+        tv.setOnClickListener(listener);
+        loginButton.setOnClickListener(listener);
         return view;
     }
 
-    private void attemptLoginOrSignUp() {
+    private void validateAndContinue() {
         phoneNumber = phoneNumberEt.getText().toString().trim();
         password = passwordEt.getText().toString().trim();
         userCountry = ((Country) spinner.getSelectedItem()).getIso2letterCode();
         userName = usernameEt.getText().toString().trim();
 
-        if (!PhoneNumberNormaliser.isValidPhoneNumber(phoneNumber, userCountry)) {
-            final UiHelpers.Listener okListener = new UiHelpers.Listener() {
-                @Override
-                public void onClick() {
-                    doAttemptLogin();
-                }
-            };
-            UiHelpers.showErrorDialog(getActivity(),
-                    getString(R.string.st_invalid_phone_number_title).toUpperCase(),
-                    getString(R.string.st_invalid_phone_number_message, phoneNumber).toUpperCase(),
-                    getString(R.string.st_understand).toUpperCase(),
-                    getString(android.R.string.cancel).toUpperCase(), okListener, null);
-            return;
+        if (usernameStrategy.validate() && phoneNumberStrategy.validate()) {
+            //password strategy will be run in phoneNumberStrategy dialog callback see below
+            attemptLoginOrSignUp();
         }
+    }
+
+    private void toggleSignUpLogin(TextView v) {
+        if (isLoggingIn) {
+            isLoggingIn = false;
+            v.setText(R.string.st_already_have_an_account);
+            usernameEt.setVisibility(View.VISIBLE);
+            usernameEt.requestFocus();
+            loginButton.setText(R.string.sign_up_button_label);
+        } else {
+            isLoggingIn = true;
+            v.setText(R.string.dont_have_an_account_sign_up);
+            usernameEt.setVisibility(View.GONE);
+            phoneNumberEt.requestFocus();
+            loginButton.setText(R.string.log_in_button_label);
+        }
+    }
+
+
+    private void attemptLoginOrSignUp() {
         doAttemptLogin();
     }
 
@@ -152,4 +155,76 @@ public class LoginFragment extends Fragment {
             }
         }
     };
+
+    private void showRequiredFieldDialog(String field) {
+        UiHelpers.showErrorDialog(getActivity(), getString(R.string.required_field_error, field));
+    }
+
+    Pattern userNamePattern = Pattern.compile("^[a-zA-Z][a-zA-Z0-9]{4,12}");
+    private FormValidator.ValidationStrategy usernameStrategy = new FormValidator.ValidationStrategy() {
+        @Override
+        public boolean validate() {
+            if (isLoggingIn) return true;
+            if (TextUtils.isEmpty(userName)) {
+                showRequiredFieldDialog(getString(R.string.username_hint));
+                usernameEt.requestFocus();
+                return false;
+            } else if (!userNamePattern.matcher(userName).matches()) {
+                UiHelpers.showErrorDialog(getActivity(), getString(R.string.user_name_format_message).toUpperCase());
+                usernameEt.requestFocus();
+                return false;
+            }
+            return true;
+        }
+    }, passwordStrategy = new FormValidator.ValidationStrategy() {
+        @Override
+        public boolean validate() {
+            password = UiHelpers.getFieldContent(passwordEt);
+            if (TextUtils.isEmpty(password)) {
+                showRequiredFieldDialog(getString(R.string.password_hint));
+                passwordEt.requestFocus();
+                return false;
+            }
+            if (password.length() < 6) {
+                UiHelpers.showErrorDialog(getActivity(), getString(R.string.password_too_short));
+                passwordEt.requestFocus();
+                return false;
+            }
+            if (password.length() > 15) {
+                UiHelpers.showErrorDialog(getActivity(), getString(R.string.password_too_long));
+                passwordEt.requestFocus();
+                return false;
+            }
+            return true;
+        }
+    }, phoneNumberStrategy = new FormValidator.ValidationStrategy() {
+        @Override
+        public boolean validate() {
+            if (TextUtils.isEmpty(phoneNumber)) {
+                showRequiredFieldDialog(getString(R.string.phone_hint));
+                phoneNumberEt.requestFocus();
+                return false;
+            }
+            if (!PhoneNumberNormaliser.
+                    isValidPhoneNumber(phoneNumber, userCountry)) {
+                final UiHelpers.Listener okListener = new UiHelpers.Listener() {
+                    @Override
+                    public void onClick() {
+                        if (passwordStrategy.validate()) {
+                            doAttemptLogin();
+                        }
+                    }
+                };
+                UiHelpers.showErrorDialog(getActivity(),
+                        getString(R.string.st_invalid_phone_number_title).toUpperCase(),
+                        getString(R.string.st_invalid_phone_number_message, phoneNumber).toUpperCase(),
+                        getString(R.string.yes).toUpperCase(),
+                        getString(android.R.string.cancel).toUpperCase(), okListener, null);
+                phoneNumberEt.requestFocus();
+                return false;
+            }
+            return true;
+        }
+    };
+
 }

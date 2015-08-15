@@ -59,27 +59,21 @@
             <requestFocus />
         </com.rey.material.widget.Spinner>
 
-        <com.rey.material.widget.EditText
+        <EditText
             android:id="@+id/et_username"
             style="@style/username_editText_style"
-            android:visibility="visible"
-            app:et_supportMode="none"
-            app:et_supportTextErrorColor="#FFFF0000"
-            android:paddingTop="5dp"></com.rey.material.widget.EditText>
+            android:visibility="gone"
+            android:paddingTop="10dp" />
 
-        <com.rey.material.widget.EditText
+        <EditText
             android:id="@+id/et_phone_number_field"
             style="@style/phone_number_editText_style"
-            app:et_supportMode="none"
-            app:et_supportTextErrorColor="#FFFF0000"
-            android:paddingTop="5dp" />
+            android:paddingTop="10dp" />
 
-        <com.rey.material.widget.EditText
+        <EditText
             android:id="@+id/et_passwordField"
             style="@style/password_editText_style"
-            app:et_supportMode="none"
-            app:et_supportTextErrorColor="#FFFF0000"
-            android:paddingTop="5dp" />
+            android:paddingTop="10dp" />
 
         <com.rey.material.widget.Button
             android:gravity="center"

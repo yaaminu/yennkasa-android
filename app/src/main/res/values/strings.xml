@@ -60,19 +60,20 @@
     <string name="leave">Leave Group</string>
     <string name="call">Call</string>
     <string name="st_verification_notice">@string/st_hint_et_verification</string>
-    <string name="st_hint_et_verification">Verification Code</string>
+    <string name="st_hint_et_verification">Verification Token</string>
     <string name="st_complete_setup">Complete Setup</string>
-    <string name="st_send_verification_notice">Enter the verification code you received. Try again if you don\'t receive the code in 5 minutes</string>
+    <string name="st_send_verification_notice">Enter the verification token you received. Try again if you don\'t receive the token in 5 minutes</string>
     <string name="st_unknown">Unknown</string>
     <string name="st_offline">Offline</string>
     <string name="st_no_mutual_group">You do not share any group with this user</string>
     <string name="st_could_not_create_group">Failed to create group.Add at least two member</string>
-    <string name="st_send_again">Send Again</string>
-    <string name="st_back_login">Back to LogIn</string>
-    <string name="st_invalid_phone_number_message">The phone number, %s  may not be valid in your country. Are you sure you want to continue?</string>
+    <string name="st_send_again">Resend Token</string>
+    <string name="st_back_login">Back To LogIn</string>
+    <string name="st_invalid_phone_number_message">The phone number,<b>%s</b> may not be valid in your country. Are you sure you want to continue?</string>
     <string name="st_understand">I UNDERSTAND</string>
     <string name="st_invalid_phone_number_title">Potentially invalid phone number</string>
     <string name="send">Send</string>
+    <string name="yes">Yes</string>
     <string name="st_forward">Forward</string>
     <string name="select_recipients">Select Recipients</string>
     <string name="no_app_for_content_sharing">You have no application for sharing content</string>
@@ -82,7 +83,6 @@
     <string name="cant_be_empty">This field cannot be empty</string>
     <string name="st_prompt">Prompt</string>
     <string name="st_sure_to_exit">All progress will be lost</string>
-    <string name="st_yes">Yes</string>
     <string name="st_add">Add</string>
     <string name="i_know">I Know</string>
     <string name="invite_member">Invite Friends</string>
@@ -103,4 +103,8 @@
     <string name="select_country">Select Country</string>
     <string name="dont_have_an_account_sign_up">Don\'t have an account? Sign up!</string>
     <string name="st_already_have_an_account">Already have an account? Log In.</string>
+    <string name="required_field_error">%s is required</string>
+    <string name="password_too_short">password too short</string>
+    <string name="password_too_long">Password too long</string>
+    <string name="user_name_format_message">"User Names can only contain alphabets and digits and must be between 5 to 12 characters"</string>
 </resources>

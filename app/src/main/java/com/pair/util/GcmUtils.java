@@ -69,6 +69,10 @@ public class GcmUtils {
         @SuppressLint("CommitPrefEdits")
         @Override
         protected GcmRegResults doInBackground(Void... params) {
+            // FIXME: 8/15/2015
+            if (true) {
+                return new GcmRegResults("kflafkdl;fk", null);
+            }
             SharedPreferences sharedPreferences = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
             String regId = sharedPreferences.getString(GCM_REG_ID, null);
             if (regId != null) {

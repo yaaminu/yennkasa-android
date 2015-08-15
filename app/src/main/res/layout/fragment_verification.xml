@@ -49,4 +49,23 @@
         android:textColor="#0000ff"
         android:layout_below="@+id/bt_resend_token"
         android:layout_centerHorizontal="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:id="@+id/tv_app_name"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="@dimen/margin_32dp"
+        android:textSize="36sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/subtitle"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/textView2"
+        android:layout_below="@+id/tv_app_name"
+        android:textSize="16sp" />
 </RelativeLayout>

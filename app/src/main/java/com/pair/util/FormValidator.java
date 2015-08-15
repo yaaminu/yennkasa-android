@@ -2,8 +2,7 @@ package com.pair.util;
 
 import android.widget.EditText;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,46 +12,41 @@ import java.util.regex.Pattern;
  */
 @SuppressWarnings("unused")
 public class FormValidator {
-    Map<ValidationStrategy,Runnable> fields;
+    Set<ValidationStrategy> strategies;
 
 
     public FormValidator() {
-        this.fields = new HashMap<>();
+        this.strategies = new HashSet<>();
     }
 
-    public void addStrategy(ValidationStrategy strategy, Runnable action) {
-        this.fields.put(strategy,action);
+    public FormValidator addStrategy(ValidationStrategy strategy) {
+        this.strategies.add(strategy);
+        return this;
     }
 
     public void dismissStrategy(ValidationStrategy strategy) {
         //noinspection SuspiciousMethodCalls
-        this.fields.remove(strategy);
+        this.strategies.remove(strategy);
     }
 
     public boolean runValidation() {
-        Set<ValidationStrategy> strategies = this.fields.keySet();
         for (ValidationStrategy strategy : strategies) {
-            if (!strategy.validate()){
-                // On Android callers must make sure they run validation on main thread
-                //if they want to tamper with the views
-                Runnable action = this.fields.get(strategy);
-                if(action != null){
-                    action.run();
-                }
+            if (!strategy.validate()) {
                 return false;
             }
         }
         return true;
     }
 
-    public  interface ValidationStrategy {
+    public interface ValidationStrategy {
         boolean validate();
     }
 
-    public  final class EditTextValidationStrategy  implements ValidationStrategy{
+    public final class EditTextValidationStrategy implements ValidationStrategy {
         private final EditText textField;
         private final Pattern pattern;
-        public EditTextValidationStrategy(EditText editText,Pattern regExp){
+
+        public EditTextValidationStrategy(EditText editText, Pattern regExp) {
             this.textField = editText;
             this.pattern = regExp;
         }

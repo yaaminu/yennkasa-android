@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="base_style" parent="Material.Widget.EditText.Light">
+    <style name="base_style">
         <item name="android:ems">10</item>
-        <item name="android:textSize">17sp</item>
+        <item name="android:textSize">18sp</item>
         <item name="android:singleLine">true</item>
         <item name="android:maxLength">20</item>
         <item name="android:layout_width">match_parent</item>
