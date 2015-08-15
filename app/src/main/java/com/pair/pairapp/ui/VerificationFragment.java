@@ -35,16 +35,27 @@ public class VerificationFragment extends Fragment {
                 doVerifyUser();
             } else if (v.getId() == R.id.bt_resend_token) {
                 resendToken();
-            }else if(v.getId() == R.id.tv_back_to_login){
+            } else if (v.getId() == R.id.tv_back_to_login) {
                 backToLogin();
             }
         }
     };
 
     private void backToLogin() {
-        UserManager.getInstance().reset();
-        startActivity(new Intent(getActivity(),MainActivity.class));
-        getActivity().finish();
+        progressDialog.show();
+        UserManager.getInstance().reset(new UserManager.CallBack() {
+            @Override
+            public void done(Exception e) {
+                progressDialog.dismiss();
+                if (e == null) {
+                    startActivity(new Intent(getActivity(), MainActivity.class));
+                    getActivity().finish();
+                } else {
+                    UiHelpers.showErrorDialog(getActivity(), e.getMessage());
+                }
+            }
+        });
+
     }
 
     @Override
@@ -64,7 +75,9 @@ public class VerificationFragment extends Fragment {
         @SuppressWarnings("ConstantConditions") EditText et = ((EditText) getView().findViewById(R.id.et_verification));
         final String code = et.getText().toString();
         et.setText("");
-        if (!TextUtils.isEmpty(code)) {
+        if (TextUtils.isEmpty(code)) {
+            UiHelpers.showErrorDialog(getActivity(), getString(R.string.token_required));
+        } else {
             progressDialog.show();
             UserManager.getInstance().verifyUser(code, callBack);
         }

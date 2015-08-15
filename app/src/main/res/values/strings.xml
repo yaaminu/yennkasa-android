@@ -107,4 +107,5 @@
     <string name="password_too_short">password too short</string>
     <string name="password_too_long">Password too long</string>
     <string name="user_name_format_message">"User Names can only contain alphabets and digits and must be between 5 to 12 characters"</string>
+    <string name="token_required">Token is required</string>
 </resources>

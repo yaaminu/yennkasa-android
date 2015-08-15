@@ -142,12 +142,12 @@ public class UserManager {
 
     public void createGroup(final String groupName, final List<String> membersId, final CreateGroupCallBack callBack) {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
-            callBack.done(NO_CONNECTION_ERROR,null);
+            callBack.done(NO_CONNECTION_ERROR, null);
             return;
         }
         if (isUser(User.generateGroupId(groupName))) {
             //already exist[
-            callBack.done(new Exception("group with name " + groupName + "already exists"),null);
+            callBack.done(new Exception("group with name " + groupName + "already exists"), null);
             return;
         }
         userApi.createGroup(getMainUser().get_id(), groupName, membersId, new Callback<User>() {
@@ -161,7 +161,7 @@ public class UserManager {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                callBack.done(null,group.get_id());
+                                callBack.done(null, group.get_id());
                             }
                         });
                     }
@@ -175,7 +175,7 @@ public class UserManager {
                     createGroup(groupName, membersId, callBack);
                 } else {
                     Log.i(TAG, "failed to create group");
-                    callBack.done(e,null);
+                    callBack.done(e, null);
                 }
             }
         });
@@ -1049,22 +1049,40 @@ public class UserManager {
         return getMainUser().getCountry();
     }
 
-    public void reset() {
+    public void reset(final CallBack callBack) {
         WORKER.submit(new Runnable() {
             @Override
             public void run() {
                 if (isUserVerified()) {
                     throw new RuntimeException("use logout instead");
                 }
-                Realm realm = Realm.getInstance(Config.getApplicationContext());
-                try {
-                    realm.beginTransaction();
-                    realm.where(User.class).findAll().clear();
-                    realm.commitTransaction();
-                } finally {
-                    realm.close();
+                if (!ConnectionUtils.isConnected()) {
+                    callBack.done(NO_CONNECTION_ERROR);
+                    return;
                 }
-                cleanUp();
+                try {
+                    userApi.resetUnverifiedAccount(getMainUser().get_id());
+                    Realm realm = Realm.getInstance(Config.getApplicationContext());
+                    try {
+                        realm.beginTransaction();
+                        realm.where(User.class).findAll().clear();
+                        realm.commitTransaction();
+                    } finally {
+                        realm.close();
+                    }
+                    cleanUp();
+                    callBack.done(null);
+                } catch (RetrofitError error) {
+                    Exception e;
+                    if (error.getCause() instanceof SocketTimeoutException) {
+                        e = NO_CONNECTION_ERROR;
+                    } else if (error.getKind().equals(RetrofitError.Kind.HTTP)) {
+                        e = new Exception(((HttpResponse) error.getBody()).getMessage());
+                    } else {
+                        e = error;
+                    }
+                    callBack.done(e);
+                }
             }
         });
     }
@@ -1081,7 +1099,7 @@ public class UserManager {
         void done(Exception e);
     }
 
-    public interface CreateGroupCallBack{
-        void done(Exception e,String groupId);
+    public interface CreateGroupCallBack {
+        void done(Exception e, String groupId);
     }
 }

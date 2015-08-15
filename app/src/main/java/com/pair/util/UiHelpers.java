@@ -44,16 +44,11 @@ public class UiHelpers {
                 super.onPositiveActionClicked(fragment);
             }
         };
-        builder.title(getString(context, R.string.st_error));
         builder.message(message);
         builder.positiveAction(getString(context, android.R.string.ok));
 
         DialogFragment fragment = DialogFragment.newInstance(builder);
         fragment.show(context.getSupportFragmentManager(), null);
-    }
-
-    private static CharSequence[] getStringArray(FragmentActivity context, int resId) {
-        return context.getResources().getStringArray(resId);
     }
 
     public static void showErrorDialog(FragmentActivity context,
@@ -78,7 +73,6 @@ public class UiHelpers {
             }
         };
 
-        builder.title(title);
         builder.message(message);
         builder.positiveAction(okText)
                 .negativeAction(noText);

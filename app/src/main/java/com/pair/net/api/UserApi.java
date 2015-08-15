@@ -10,6 +10,7 @@ import java.util.List;
 import retrofit.Callback;
 import retrofit.client.Response;
 import retrofit.http.Body;
+import retrofit.http.DELETE;
 import retrofit.http.Field;
 import retrofit.http.FormUrlEncoded;
 import retrofit.http.GET;
@@ -77,4 +78,7 @@ public interface UserApi {
     @FormUrlEncoded
     @POST("/api/v1/users/{id}/resendToken")
     void resendToken(@Path("id") String userId,@Field("password") String password,Callback<Response> response);
+
+    @DELETE("/api/v1/users/{id}?unverified=1")
+    HttpResponse resetUnverifiedAccount(@Path("id") String userId);
 }

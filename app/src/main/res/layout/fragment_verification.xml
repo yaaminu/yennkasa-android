@@ -2,70 +2,106 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
     tools:context="com.pair.pairapp.ui.VerificationFragment">
 
     <TextView
-        android:id="@+id/tv_verification_notice"
-        android:padding="10dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:textSize="18sp"
-        android:layout_above="@+id/et_verification"
-        android:text="@string/st_send_verification_notice" />
-    <Button
-        android:id="@+id/bt_verify"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="@string/verify"/>
-    <Button
-        android:id="@+id/bt_resend_token"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/st_send_again"
-        android:layout_below="@+id/bt_verify"
-        android:layout_alignRight="@+id/bt_verify"
-        />
-    <EditText
-        android:layout_above="@+id/bt_verify"
-        android:layout_margin="5dp"
-        android:id="@+id/et_verification"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:inputType="number"
-        android:hint="@string/st_hint_et_verification"
-        />
-    <TextView
-        android:id="@+id/tv_back_to_login"
-        android:layout_margin="10dp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="@string/st_back_login"
-        android:clickable="true"
-        android:textSize="18sp"
-        android:textColor="#0000ff"
-        android:layout_below="@+id/bt_resend_token"
-        android:layout_centerHorizontal="true"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/app_name"
         android:id="@+id/tv_app_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="@dimen/margin_32dp"
-        android:textSize="36sp" />
+        android:paddingTop="8dp"
+        android:text="@string/app_name"
+        android:textColor="@android:color/white"
+        android:textSize="48sp"
+        android:textStyle="bold" />
 
     <TextView
+        android:id="@+id/tv_sub_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/subtitle"
-        android:layout_centerHorizontal="true"
-        android:id="@+id/textView2"
         android:layout_below="@+id/tv_app_name"
-        android:textSize="16sp" />
+        android:layout_centerHorizontal="true"
+        android:text="@string/subtitle"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_verification_notice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_sub_title"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="@string/st_send_verification_notice"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/ll_edittext_pane"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_verification_notice"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:background="#eee"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <EditText
+            android:id="@+id/et_verification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:hint="@string/st_hint_et_verification"
+            android:inputType="number" />
+
+        <com.rey.material.widget.Button
+            android:id="@+id/bt_verify"
+            style="@style/RaiseWaveColorButtonRippleStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="#2299cc00"
+            android:gravity="center"
+            android:paddingBottom="10dp"
+            android:paddingTop="10dp"
+            android:text="@string/verify"
+            android:textColor="@color/colorPrimary"
+            android:textSize="16sp" />
+
+        <com.rey.material.widget.Button
+            android:id="@+id/bt_resend_token"
+            style="@style/RaiseWaveColorButtonRippleStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="#2299cc00"
+            android:gravity="center"
+            android:paddingBottom="10dp"
+            android:paddingTop="10dp"
+            android:text="@string/st_send_again"
+            android:textColor="@color/colorPrimary"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <com.rey.material.widget.TextView
+        android:id="@+id/tv_back_to_login"
+        android:gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ll_edittext_pane"
+        android:layout_centerHorizontal="true"
+        android:padding="12dp"
+        android:clickable="true"
+        android:text="@string/st_back_login"
+        android:textColor="@android:color/white"
+        style="@style/FlatWaveColorButtonRippleStyle"
+        android:textStyle="bold"
+        android:textSize="18sp" />
 </RelativeLayout>
