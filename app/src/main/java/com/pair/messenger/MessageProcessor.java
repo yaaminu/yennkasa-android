@@ -34,7 +34,14 @@ public class MessageProcessor extends IntentService {
         Message message = MessageJsonAdapter.INSTANCE.fromJson(messageJson);
         //noinspection ConstantConditions
         message.setState(Message.STATE_RECEIVED);
-        Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, message.getFrom()).findFirst();
+
+        String peerId;
+        if (isGroupMessage(message)) {
+            peerId = message.getTo();
+        } else {
+            peerId = message.getFrom();
+        }
+        Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
         //ensure the conversation and session is set up before persisting the message
         realm.beginTransaction();
         if (conversation == null) { //create a new one
@@ -54,5 +61,9 @@ public class MessageProcessor extends IntentService {
         Message copied = new Message(message);
         NotificationManager.INSTANCE.onNewMessage(this, copied);
         realm.close();
+    }
+
+    private boolean isGroupMessage(Message message) {
+        return message.getTo().contains("@");
     }
 }
