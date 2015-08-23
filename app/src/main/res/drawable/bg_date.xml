@@ -6,10 +6,11 @@
     <solid android:color="@color/color_msg_date">
     </solid>
 
-    <corners
-        android:bottomLeftRadius="5dp"
-        android:bottomRightRadius="5dp"
-        android:topLeftRadius="5dp"
-        android:topRightRadius="5dp"/>
+    <!-- card view will provide us with radius-->
+    <!--<corners-->
+    <!--android:bottomLeftRadius="4dp"-->
+    <!--android:bottomRightRadius="4dp"-->
+    <!--android:topLeftRadius="4dp"-->
+    <!--android:topRightRadius="4dp"/>-->
 
 </shape>

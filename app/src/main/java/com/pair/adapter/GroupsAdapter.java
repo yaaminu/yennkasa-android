@@ -49,8 +49,8 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
         }
         holder.groupName.setText(group.getName());
         PICASSO.load(Config.DP_ENDPOINT + "/" + group.getDP())
-                .placeholder(R.drawable.avatar_empty)
-                .error(R.drawable.avatar_empty)
+                .placeholder(R.drawable.group_avatar)
+                .error(R.drawable.group_avatar)
                 .resize(150, 150)
                 .into(holder.groupIcon);
 

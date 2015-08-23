@@ -37,14 +37,14 @@ import io.realm.Realm;
 public class LoginFragment extends Fragment {
     private Button loginButton;
     public static final String TAG = LoginFragment.class.getSimpleName();
-    private EditText passwordEt, usernameEt, phoneNumberEt;
+    private EditText usernameEt, phoneNumberEt;
     private DialogFragment progressDialog;
     private Realm realm;
     private boolean isLoggingIn = true;
     private Spinner spinner;
-    private String userName, phoneNumber, password, userCountry;
+    private String userName, phoneNumber, userCountry;
     private FormValidator validator;
-    private View.OnClickListener listener = listener = new View.OnClickListener() {
+    private View.OnClickListener listener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             if (v.getId() == R.id.bt_loginButton) {
@@ -52,7 +52,7 @@ public class LoginFragment extends Fragment {
             } else if (v.getId() == R.id.tv_signup) {
                 toggleSignUpLogin(((TextView) v));
             } else {
-                throw new AssertionError("unknown view");
+                throw new AssertionError();
             }
         }
     };
@@ -70,16 +70,15 @@ public class LoginFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
-        realm = Realm.getInstance(getActivity());
+        realm = Country.REALM(getActivity());
         View view = inflater.inflate(R.layout.login_fragment, container, false);
         phoneNumberEt = (EditText) view.findViewById(R.id.et_phone_number_field);
-        passwordEt = (EditText) view.findViewById(R.id.et_passwordField);
         loginButton = (Button) view.findViewById(R.id.bt_loginButton);
         usernameEt = (EditText) view.findViewById(R.id.et_username);
         spinner = ((Spinner) view.findViewById(R.id.sp_ccc));
+
         validator = new FormValidator();
         validator.addStrategy(phoneNumberStrategy)
-                .addStrategy(passwordStrategy)
                 .addStrategy(usernameStrategy);
 
         final CountriesListAdapter adapter = new CountriesListAdapter(getActivity(), realm.where(Country.class).findAllSorted("name"));
@@ -93,13 +92,17 @@ public class LoginFragment extends Fragment {
     }
 
     private void validateAndContinue() {
+//        if(!isLoggingIn) {
+//            phoneNumberEt.setText(("" + System.currentTimeMillis()).substring(0, 10));
+//            passwordEt.setText("1234567");
+//            usernameEt.setText("amean123");
+//        }
+
         phoneNumber = phoneNumberEt.getText().toString().trim();
-        password = passwordEt.getText().toString().trim();
         userCountry = ((Country) spinner.getSelectedItem()).getIso2letterCode();
         userName = usernameEt.getText().toString().trim();
 
         if (usernameStrategy.validate() && phoneNumberStrategy.validate()) {
-            //password strategy will be run in phoneNumberStrategy dialog callback see below
             attemptLoginOrSignUp();
         }
     }
@@ -129,9 +132,9 @@ public class LoginFragment extends Fragment {
         progressDialog = UiHelpers.newProgressDialog();
         progressDialog.show(getFragmentManager(), null);
         if (isLoggingIn) {
-            UserManager.getInstance().logIn(getActivity(), phoneNumber, password, userCountry, loginOrSignUpCallback);
+            UserManager.getInstance().logIn(getActivity(), phoneNumber, userCountry, loginOrSignUpCallback);
         } else {
-            UserManager.getInstance().signUp(getActivity(), userName, phoneNumber, password, userCountry, loginOrSignUpCallback);
+            UserManager.getInstance().signUp(getActivity(), userName, phoneNumber, userCountry, loginOrSignUpCallback);
         }
     }
 
@@ -174,27 +177,6 @@ public class LoginFragment extends Fragment {
             }
             return true;
         }
-    }, passwordStrategy = new FormValidator.ValidationStrategy() {
-        @Override
-        public boolean validate() {
-            password = UiHelpers.getFieldContent(passwordEt);
-            if (TextUtils.isEmpty(password)) {
-                showRequiredFieldDialog(getString(R.string.password_hint));
-                passwordEt.requestFocus();
-                return false;
-            }
-            if (password.length() < 6) {
-                UiHelpers.showErrorDialog(getActivity(), getString(R.string.password_too_short));
-                passwordEt.requestFocus();
-                return false;
-            }
-            if (password.length() > 15) {
-                UiHelpers.showErrorDialog(getActivity(), getString(R.string.password_too_long));
-                passwordEt.requestFocus();
-                return false;
-            }
-            return true;
-        }
     }, phoneNumberStrategy = new FormValidator.ValidationStrategy() {
         @Override
         public boolean validate() {
@@ -208,13 +190,10 @@ public class LoginFragment extends Fragment {
                 final UiHelpers.Listener okListener = new UiHelpers.Listener() {
                     @Override
                     public void onClick() {
-                        if (passwordStrategy.validate()) {
-                            doAttemptLogin();
-                        }
+                        doAttemptLogin();
                     }
                 };
                 UiHelpers.showErrorDialog(getActivity(),
-                        getString(R.string.st_invalid_phone_number_title).toUpperCase(),
                         getString(R.string.st_invalid_phone_number_message, phoneNumber).toUpperCase(),
                         getString(R.string.yes).toUpperCase(),
                         getString(android.R.string.cancel).toUpperCase(), okListener, null);
@@ -224,5 +203,4 @@ public class LoginFragment extends Fragment {
             return true;
         }
     };
-
 }

@@ -6,21 +6,30 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.provider.MediaStore;
+import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
+import android.support.v7.widget.Toolbar;
 import android.text.ClipboardManager;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.Button;
+import android.widget.BaseAdapter;
 import android.widget.EditText;
+import android.widget.Filterable;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,6 +37,7 @@ import android.widget.Toast;
 import com.google.gson.JsonObject;
 import com.pair.adapter.MessageJsonAdapter;
 import com.pair.adapter.MessagesAdapter;
+import com.pair.adapter.UsersAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
@@ -37,20 +47,29 @@ import com.pair.messenger.PairAppBaseActivity;
 import com.pair.net.Dispatcher;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.Config;
+import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.FileUtils;
 import com.pair.util.RealmUtils;
 import com.pair.util.UiHelpers;
+import com.rey.material.app.DialogFragment;
+import com.rey.material.app.ToolbarManager;
+import com.rey.material.widget.CheckBox;
+import com.rey.material.widget.SnackBar;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import io.realm.Realm;
+import io.realm.RealmQuery;
 import io.realm.RealmResults;
+import io.realm.exceptions.RealmException;
 
 import static com.pair.data.Message.TYPE_DATE_MESSAGE;
 import static com.pair.data.Message.TYPE_TEXT_MESSAGE;
@@ -58,15 +77,13 @@ import static com.pair.data.Message.TYPE_TYPING_MESSAGE;
 
 
 @SuppressWarnings({"ConstantConditions", "FieldCanBeLocal"})
-public class ChatActivity extends PairAppBaseActivity implements View.OnClickListener, AbsListView.OnScrollListener, TextWatcher {
+public class ChatActivity extends PairAppBaseActivity implements View.OnClickListener, AbsListView.OnScrollListener, TextWatcher, ItemsSelector.OnFragmentInteractionListener {
     private static final int TAKE_PHOTO_REQUEST = 0x0,
             TAKE_VIDEO_REQUEST = 0x1,
             PICK_PHOTO_REQUEST = 0x2,
             PICK_VIDEO_REQUEST = 0x3,
             PICK_FILE_REQUEST = 0x4,
-            ADD_USERS_REQUEST = 0x5,
-            SELECT_RECIPIENTS_REQUEST = 0x6;
-
+            ADD_USERS_REQUEST = 0x5;
     private static final String TAG = ChatActivity.class.getSimpleName();
     public static final String EXTRA_PEER_ID = "peer id";
 
@@ -76,24 +93,31 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
     private Realm realm;
     private ListView messagesListView;
     private EditText messageEt;
-    private Button sendButton;
+    private View sendButton, attach, dateHeaderViewParent;
     private TextView dateHeader;
     private Dispatcher<Message> dispatcher;
     private MessagesAdapter adapter;
     private boolean sessionSetup = false;
     private static Message selectedMessage;
-    private TextView liveTexView;
+    private ToolbarManager toolbarManager;
+    private Toolbar toolBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        toolBar = (Toolbar) findViewById(R.id.main_toolbar);
+        toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         realm = Realm.getInstance(this);
-        messageEt = ((EditText) findViewById(R.id.et_inputMsg));
-        sendButton = ((Button) findViewById(R.id.btn_send));
+        messageEt = ((EditText) findViewById(R.id.et_message));
+        sendButton = findViewById(R.id.iv_send);
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
         dateHeader = ((TextView) findViewById(R.id.tv_header_date));
-        liveTexView = (TextView) findViewById(R.id.tv_currently_typing_message);
+        snackBar = (SnackBar) findViewById(R.id.notification_bar);
+        attach = findViewById(R.id.iv_attach);
+        dateHeaderViewParent = findViewById(R.id.cv_date_header_parent);
+
+        attach.setOnClickListener(this);
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
         peer = realm.where(User.class).equalTo(User.FIELD_ID, peerId).findFirst();
@@ -105,11 +129,17 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             peer.setType(parts.length > 1 ? User.TYPE_GROUP : User.TYPE_NORMAL_USER);
             peer.setDP(peerId);
             peer.setName(parts[0]);
+            peer.setStatus(getString(R.string.st_offline));
             realm.commitTransaction();
         }
         String peerName = peer.getName();
         //noinspection ConstantConditions
-        getSupportActionBar().setTitle(peerName);
+        final ActionBar actionBar = getSupportActionBar();
+        actionBar.setTitle(peerName);
+        if (!User.isGroup(peer)) {
+            actionBar.setSubtitle(peer.getStatus());
+        }
+        actionBar.setDisplayHomeAsUpEnabled(true);
         messages = realm.where(Message.class).equalTo(Message.FIELD_FROM, peer.get_id())
                 .or()
                 .equalTo(Message.FIELD_TO, peer.get_id())
@@ -121,6 +151,9 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         messageEt.addTextChangedListener(this);
         messagesListView.setOnScrollListener(this);
         registerForContextMenu(messagesListView);
+        ensureDateSet();
+        // TODO: 8/22/2015 in future we will move to the last  un seen message if any
+        messagesListView.setSelection(messages.size()); //move to last
     }
 
     private void setUpCurrentConversation() {
@@ -132,19 +165,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             currConversation = realm.createObject(Conversation.class);
             currConversation.setPeerId(peerId);
             currConversation.setLastActiveTime(new Date());
-            Message message = null;
-            //re-construct the conversation
-            // TODO: 8/2/2015 one day we will take this off if conversation is deleted all messages in that conversation will be deleted as well
-            if (messages.size() > 0) { // i don't no why , but realm throws some exception when i attempt to read from an empty realm results
-                message = messages.last();
-            }
-            if (message == null) {
-                currConversation.setLastMessage(null);
-                currConversation.setSummary("touch to start chatting with " + peer.getName());
-            } else {
-                currConversation.setLastMessage(message);
-                currConversation.setSummary(message.getMessageBody());
-            }
+            currConversation.setSummary(getString(R.string.no_message));
         }
         currConversation.setActive(true);
         realm.commitTransaction();
@@ -152,44 +173,67 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
+        toolbarManager.onPrepareMenu();
+        menu = toolBar.getMenu();
         User mainUser = UserManager.getInstance().getMainUser();
-        menu.findItem(R.id.action_invite_friends).setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().get_id().equals(mainUser.get_id()));
+        menu.findItem(R.id.action_invite_friends)
+                .setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().get_id().equals(mainUser.get_id()) && !isForwarding);
         menu.findItem(R.id.action_view_profile).setTitle((peer.getType() == User.TYPE_GROUP) ? R.string.st_group_info : R.string.st_view_profile);
+        menu.findItem(R.id.action_view_profile).setVisible(!isForwarding);
+        menu.findItem(R.id.action_done).setVisible(isForwarding && !recipientsIds.isEmpty());
         return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.chat_menu, menu);
+        toolbarManager.createMenu(R.menu.chat_menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.action_attach) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setItems(R.array.attach_options, dialogListener);
-            AlertDialog dialog = builder.create();
-            dialog.show();
-            return true;
+        if (id == android.R.id.home) {
+            if (isForwarding) {
+                isForwarding = false;
+                goBack();
+                return true;
+            }
+            return super.onOptionsItemSelected(item);
         } else if (id == R.id.action_invite_friends) {
-            Intent intent = new Intent(this, FriendsActivity.class);
-            intent.putExtra(FriendsActivity.EXTRA_GROUP_ID, peer.get_id());
+            Intent intent = new Intent(this, InviteActivity.class);
+            intent.putExtra(InviteActivity.EXTRA_GROUP_ID, peer.get_id());
             startActivityForResult(intent, ADD_USERS_REQUEST);
             return true;
         } else if (id == R.id.action_view_profile) {
             UiHelpers.gotoProfileActivity(this, peer.get_id());
             return true;
+        } else if (id == R.id.action_done) {
+            forwardToAll(recipientsIds);
+            goBack();
+            return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    boolean wasDateHeaderVisible = false;
+
+    private void goBack() {
+        isForwarding = false;
+        getSupportFragmentManager().popBackStackImmediate();
+        getSupportActionBar().setTitle(peer.getName());
+        findViewById(R.id.ll_list_view_container).setVisibility(View.VISIBLE);
+        dateHeaderViewParent.setVisibility(wasDateHeaderVisible ? View.VISIBLE : View.GONE);
+        getSupportActionBar().setSubtitle(peer.getStatus());
+        supportInvalidateOptionsMenu();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Config.setIsChatRoomOpen(true);
+        Config.appOpen(true);
+        super.clearRecentChat();
         testChatActivity();
     }
 
@@ -200,7 +244,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             currConversation.setActive(false);
             realm.commitTransaction();
         }
-        Config.setIsChatRoomOpen(false);
+        Config.appOpen(false);
         super.onPause();
     }
 
@@ -224,11 +268,6 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
 
     @Override
     protected void onDestroy() {
-        if (currConversation != null && currConversation.isValid() && currConversation.getLastMessage() == null) {
-            realm.beginTransaction();
-            currConversation.removeFromRealm();
-            realm.commitTransaction();
-        }
         if (timer != null) {
 //            timer.cancel();
 //            timer.purge();
@@ -239,7 +278,17 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
 
     @Override
     public void onClick(View v) {
-        sendMessage();
+        int id = v.getId();
+        switch (id) {
+            case R.id.iv_send:
+                sendMessage();
+                break;
+            case R.id.iv_attach:
+                attach();
+                break;
+            default:
+                throw new AssertionError();
+        }
     }
 
     private void sendMessage() {
@@ -247,12 +296,16 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         messageEt.setText(""); //clear the text field
         //TODO use a regular expression to validate the message body
         if (!TextUtils.isEmpty(content)) {
+            if (messages.isEmpty()) {
+                ensureDateSet();
+            }
             Message message = createMessage(content, Message.TYPE_TEXT_MESSAGE);
             doSendMessage(message);
         }
     }
 
     private void doSendMessage(Message message) {
+        messagesListView.setSelection(messages.size() - 1);
         if (bound && dispatcher != null) {
             dispatcher.dispatch(message);
         } else {
@@ -273,7 +326,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
     }
 
     private Message createMessage(String messageBody, int type) {
-        // FIXME: 8/4/2015 run a background thread
+        // FIXME: 8/4/2015 run in a background thread
         realm.beginTransaction();
         trySetupNewSession();
         Message message = realm.createObject(Message.class);
@@ -288,17 +341,12 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         currConversation.setLastActiveTime(message.getDateComposed());
         String summary;
         if (type == Message.TYPE_TEXT_MESSAGE) {
-            summary = "You: " + message.getMessageBody();
+            summary = Message.state(this, message.getState()) + "      " + message.getMessageBody();
         } else {
-            summary = "You: " + getDescription(type);
+            summary = Message.state(this, message.getState()) + "  " + getDescription(type);
         }
         currConversation.setSummary(summary);
-        //our listview does not by default scroll to bottom to show newly added items
-        // we have to force it to and set it back to the default behaviour when we are done
-        messagesListView.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
-        realm.commitTransaction(); //the adapter will be auto refreshed by realm
-        adapter.notifyDataSetChanged();
-        messagesListView.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_NORMAL);
+        realm.commitTransaction();
         return message;
     }
 
@@ -401,17 +449,10 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         if (resultCode != RESULT_OK) {
-            Toast.makeText(this, "request canceled", Toast.LENGTH_LONG).show();
             return;
         }
         Message message;
         switch (requestCode) {
-            case ADD_USERS_REQUEST:
-                addMembersToGroup(data.getStringArrayListExtra(FriendsActivity.SELECTED_USERS));
-                return;
-            case SELECT_RECIPIENTS_REQUEST:
-                forwardToAll(data.getStringArrayListExtra(FriendsActivity.SELECTED_USERS));
-                return;
             case PICK_PHOTO_REQUEST:
                 message = createMessage(getActualPath(data), Message.TYPE_PICTURE_MESSAGE);
                 break;
@@ -443,9 +484,33 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         doSendMessage(message);
     }
 
-    private void forwardToAll(List<String> recipients) {
-        if (recipients == null) return;
-        Message backGroundRealmVersion = new Message(selectedMessage); //copy first
+    private void forwardToAll(final Set<String> recipients) {
+        final DialogFragment fragment = UiHelpers.newProgressDialog();
+        fragment.show(getSupportFragmentManager(), null);
+        if (recipients == null || recipients.isEmpty()) return;
+        final Message backGroundRealmVersion = new Message(selectedMessage); //copy first
+        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+                doForwardMessage(recipients, backGroundRealmVersion);
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                fragment.dismiss();
+            }
+        };
+
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
+            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        } else {
+            task.execute();
+        }
+    }
+
+    private void doForwardMessage(Set<String> recipients, Message backGroundRealmVersion) {
         List<Message> tobeSent = new ArrayList<>(recipients.size());
         Realm realm = Realm.getInstance(this);
         try {
@@ -459,16 +524,18 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
                 conversation.setActive(false);
                 conversation.setLastActiveTime(new Date());
                 Conversation.newSession(realm, conversation);
+                backGroundRealmVersion.setFrom(getCurrentUser().get_id());
                 backGroundRealmVersion.setTo(recipient);
                 backGroundRealmVersion.setDateComposed(new Date());
+                backGroundRealmVersion.setState(Message.STATE_PENDING);
                 backGroundRealmVersion.setId(Message.generateIdPossiblyUnique());
                 Message message = realm.copyToRealm(backGroundRealmVersion);
                 tobeSent.add(message);
                 conversation.setLastMessage(message);
                 if (message.getType() == TYPE_TEXT_MESSAGE) {
-                    conversation.setSummary("You: " + message.getMessageBody());
+                    conversation.setSummary(message.getMessageBody());
                 } else {
-                    conversation.setSummary("You: " + getDescription(message.getType()));
+                    conversation.setSummary(getDescription(message.getType()));
                 }
             }
             realm.commitTransaction();
@@ -513,12 +580,12 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
     @Override
     public void onScroll(AbsListView view, final int firstVisibleItem, int visibleItemCount, int totalItemCount) {
         //check if the members have filled the screen
-        if (firstVisibleItem == 0) { //first item
-            dateHeader.setVisibility(View.GONE);// TODO: 8/7/2015 fade instead of hiding right away
-            return;
-        }
+//        if (firstVisibleItem <= 1) { //first/second item
+//            dateHeaderViewParent.setVisibility(View.GONE);// TODO: 8/7/2015 fade instead of hiding right away
+//            return;
+//        }
         if (visibleItemCount != 0 && visibleItemCount < totalItemCount) {
-            dateHeader.setVisibility(View.VISIBLE);
+            dateHeaderViewParent.setVisibility(View.VISIBLE);
             for (int i = firstVisibleItem; i >= 0; i--) { //loop backwards
                 final Message message = messages.get(i);
                 if (message.getType() == TYPE_DATE_MESSAGE) {
@@ -526,7 +593,38 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
                     return;
                 }
             }
-            throw new AssertionError("impossible");
+            //if we've got here then somehow a  session was not set up correctly.
+            // do we have to clean that mess or
+            //do this: throw new AssertionError("impossible");
+
+            ensureDateSet();
+        }
+    }
+
+    private void ensureDateSet() {
+        Message message;
+        if (!messages.isEmpty() && Message.isDateMessage(messages.get(0))) {
+            return;
+        }
+
+        try {
+            message = new Message();
+            String formatted = DateUtils.formatDateTime(this, new Date().getTime(), DateUtils.FORMAT_NUMERIC_DATE);
+            message.setId(peer.get_id() + formatted);
+            message.setMessageBody(formatted);
+            message.setTo(UserManager.getInstance().getMainUser().get_id());
+            message.setFrom(peer.get_id());
+            Date latestDate = messages.minDate(Message.FIELD_DATE_COMPOSED);
+            //one second older than the oldest message
+            latestDate = latestDate == null ? new Date() : new Date(latestDate.getTime() - 1000);
+            message.setDateComposed(latestDate);
+            message.setType(TYPE_DATE_MESSAGE);
+            realm.beginTransaction();
+            realm.copyToRealm(message);
+            realm.commitTransaction();
+        } catch (RealmException primaryKeyException) {
+            Log.d(TAG, "date already setup");
+            realm.cancelTransaction();
         }
     }
 
@@ -587,14 +685,19 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             realm.commitTransaction();
             return true;
         } else if (itemId == R.id.action_forward) {
-            Intent intent = new Intent(this, FriendsActivity.class);
-            intent.putExtra(FriendsActivity.EXTRA_ACTION, FriendsActivity.ACTION_SELECT_RECIPIENTS);
-            intent.putExtra(FriendsActivity.EXTRA_TITLE, getString(R.string.select_recipients));
-            String[] exclude = {
-                    peer.get_id()
-            };
-            intent.putExtra(FriendsActivity.EXTRA_EXCLUDE, exclude);
-            startActivityForResult(intent, SELECT_RECIPIENTS_REQUEST);
+            Fragment fragment = new ItemsSelector();
+            Bundle bundle = new Bundle(1);
+            bundle.putString(MainActivity.ARG_TITLE, getString(R.string.forward_to));
+            fragment.setArguments(bundle);
+            getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment)
+                    .addToBackStack(null)
+                    .commit();
+            findViewById(R.id.ll_list_view_container).setVisibility(View.GONE);
+            dateHeaderViewParent.setVisibility(View.GONE);
+            wasDateHeaderVisible = (dateHeaderViewParent.getVisibility() == View.VISIBLE);
+            getSupportActionBar().setSubtitle("");
+            isForwarding = true;
+            supportInvalidateOptionsMenu();
             return true;
         }
         return super.onContextItemSelected(item);
@@ -604,18 +707,19 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
      * code purposely for testing we will take this off in production
      */
     private void testChatActivity() {
-        final String senderId = peer.get_id(),
-                recipient = getCurrentUser().get_id();
+        final String senderId = peer.get_id();
         timer = new Timer(true);
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_LOWEST);
-                testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, recipient));
-                testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, recipient, Message.TYPE_TEXT_MESSAGE, "incoming message"));
+                testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, getCurrentUser().get_id(), Message.TYPE_TEXT_MESSAGE, "hello where have you been i really miss you very much will you join me lets have supper to night?"));
+                SystemClock.sleep(2000);
+                testMessageProcessor(RealmUtils.seedIncomingMessages(getCurrentUser().get_id(), senderId, Message.TYPE_TEXT_MESSAGE, "hello where have you been i really miss you very much will you join me lets have supper to night?"));
+//                testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, getCurrentUser().get_id()));
             }
         };
-        timer.scheduleAtFixedRate(task, 100, 30000);
+        timer.scheduleAtFixedRate(task, 5000, 45000);
     }
 
     Timer timer;
@@ -642,22 +746,112 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
 
     @Override
     public void afterTextChanged(Editable s) {
-        if (!s.toString().trim().isEmpty()) {
-            liveTexView.setVisibility(View.VISIBLE);
-            liveTexView.setText(s);
-        } else {
-            liveTexView.setVisibility(View.GONE);
-        }
+//        if (!s.toString().trim().isEmpty()) {
+//            liveTexView.setVisibility(View.VISIBLE);
+//            liveTexView.setText(s);
+//        } else {
+//            liveTexView.setVisibility(View.GONE);
+//        }
     }
 
     @Override
-    public void notifyUser(Context context, Message message) {
-        if (message.getFrom().equals(peer.getName())) {
-
+    public void notifyUser(Context context, final Message message, String sender) {
+        if (sender.equals(peer.getName())) {
+            // TODO: 8/17/2015 give user a tiny hint of new messages and allow fast scroll
         } else {
-            UiHelpers.showToast(String.format(getString(R.string.message_from), message.getFrom()));
+            super.notifyUser(this, message, sender);
         }
     }
 
+    private void attach() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setItems(R.array.attach_options, dialogListener);
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
 
+    @Override
+    public void onBackPressed() {
+        if (isForwarding) {
+            isForwarding = false;
+            goBack();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    private boolean isForwarding = false;
+
+    private RealmQuery<User> getRecipients() {
+        return User.where(this)
+                .notEqualTo(User.FIELD_ID, getCurrentUser().get_id())
+                .notEqualTo(User.FIELD_ID, peer.get_id());
+    }
+
+    private UsersAdapter recipientsAdapter;
+
+    @Override
+    public BaseAdapter getAdapter() {
+        final RealmResults<User> results = getRecipients().findAllSorted(User.FIELD_NAME);
+        recipientsIds.clear();
+        recipientsAdapter = new UsersAdapter(this, results, true) {
+            @Override
+            protected RealmQuery<User> getOriginalQuery() {
+                return getRecipients();
+            }
+
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(recipientsIds.contains(getItem(position).get_id()));
+                return view;
+            }
+        };
+        return recipientsAdapter;
+    }
+
+    @Override
+    public Filterable filter() {
+        return recipientsAdapter;
+    }
+
+    @Override
+    public ItemsSelector.ContainerType preferredContainer() {
+        return ItemsSelector.ContainerType.LIST;
+    }
+
+    @Override
+    public View emptyView() {
+        return null;
+    }
+
+    @Override
+    public boolean multiChoice() {
+        return true;
+    }
+
+    @Override
+    public boolean supportAddCustom() {
+        return false;
+    }
+
+    @Override
+    public void onCustomAdded(String item) {
+
+    }
+
+    private static Set<String> recipientsIds = new HashSet<>();
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        final UsersAdapter adapter = (UsersAdapter) parent.getAdapter();
+        User user = adapter.getItem(position);
+        if (((ListView) parent).isItemChecked(position)) {
+            recipientsIds.add(user.get_id());
+        } else {
+            recipientsIds.remove(user.get_id());
+        }
+        ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(recipientsIds.contains(adapter.getItem(position).get_id()));
+        supportInvalidateOptionsMenu();
+    }
 }

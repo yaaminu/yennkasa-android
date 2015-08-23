@@ -13,7 +13,7 @@ interface Notifier {
         FORE_GROUND
     }
 
-    void notifyUser(Context context, Message message);
+    void notifyUser(Context context, Message message, String sender);
 
     location where();
 }

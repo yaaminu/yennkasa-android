@@ -4,7 +4,6 @@ import android.content.Context;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Looper;
 import android.util.Log;
 
@@ -12,6 +11,10 @@ import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.Config;
+
+import java.lang.ref.WeakReference;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import io.realm.Realm;
 
@@ -22,45 +25,45 @@ final class NotificationManager {
     private static final String TAG = NotificationManager.class.getSimpleName();
 
     public static final NotificationManager INSTANCE = new NotificationManager();
-    private Notifier UI_NOTIFIER;
+    private volatile WeakReference<Notifier> UI_NOTIFIER;
     private final Notifier BACKGROUND_NOTIFIER = new StatusBarNotifier();
-
 
     void onNewMessage(final Context context, final Message message) {
         if (Looper.getMainLooper().getThread() == Thread.currentThread()) {
-            new AsyncTask<Void, Void, Void>() {
+            executorService.submit(new Runnable() {
                 @Override
-                protected Void doInBackground(Void... params) {
-                    message.setFrom(retrieveSendersName(message));
-                    notifyUser(context, message);
-                    return null;
+                public void run() {
+                    notifyUser(context, message, retrieveSendersName(message));
                 }
-            }.execute();
+            });
         } else {
-            message.setFrom(retrieveSendersName(message));
-            notifyUser(context, message);
+            notifyUser(context, message, retrieveSendersName(message));
         }
     }
 
-    private void notifyUser(Context context, final Message message) {
-        if (Config.isChatRoomOpen()) {
-            // TODO: 6/14/2015 give title and description of notification based on type of message
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-            //TODO use a snackbar style notification, for now we show a toast
+    private void notifyUser(Context context, final Message message, final String sendersName) {
+        if (Config.isAppOpen()) {
             //Toast.makeText(Config.getApplicationContext(), message.getFrom() + " : " + message.getMessageBody(), Toast.LENGTH_LONG).show();
             if (UI_NOTIFIER != null) {
                 android.os.Handler handler = new android.os.Handler(Looper.getMainLooper());
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
-                        UI_NOTIFIER.notifyUser(null, message); //the ui notifier is expected to have access to context
+                        if (UI_NOTIFIER != null) {
+                            Notifier notifier = UI_NOTIFIER.get();
+                            if (notifier != null) {
+                                notifier.notifyUser(null, message, sendersName); //the ui notifier is expected to have access to the current context
+                            }
+                        }
                     }
                 });
             } else {
-                BACKGROUND_NOTIFIER.notifyUser(context, message);
+                BACKGROUND_NOTIFIER.notifyUser(context, message, sendersName);
             }
         } else {
-            BACKGROUND_NOTIFIER.notifyUser(context, message);
+            BACKGROUND_NOTIFIER.notifyUser(context, message, sendersName);
         }
     }
 
@@ -94,13 +97,18 @@ final class NotificationManager {
         return sendersName;
     }
 
-    void registerUI_Notifier(Notifier notifier) {
+    synchronized void registerUI_Notifier(Notifier notifier) {
         if (notifier == null) throw new IllegalArgumentException("notifier is null");
-        UI_NOTIFIER = notifier;
+        if (UI_NOTIFIER != null && UI_NOTIFIER.get() == notifier) {
+            return;
+        }
+        UI_NOTIFIER = new WeakReference<>(notifier);
     }
 
-    void unRegisterUI_Notifier(Notifier notifier) {
-        UI_NOTIFIER = null;
+    synchronized void unRegisterUI_Notifier(Notifier notifier) {
+        if (UI_NOTIFIER == notifier) {
+            UI_NOTIFIER = null;
+        }
     }
 
     static CharSequence messageTypeToString(int type) {

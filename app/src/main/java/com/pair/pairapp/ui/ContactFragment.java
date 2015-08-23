@@ -11,6 +11,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -33,7 +34,7 @@ import io.realm.RealmChangeListener;
 /**
  * A simple {@link ListFragment} subclass.
  */
-public class ContactFragment extends ListFragment implements RealmChangeListener {
+public class ContactFragment extends ListFragment implements RealmChangeListener, AbsListView.OnScrollListener {
 
     private static final String TAG = ContactFragment.class.getSimpleName();
     private ContactsAdapter adapter;
@@ -98,6 +99,7 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         ContactsManager.getInstance().findAllContacts(filter, comparator, contactsFindCallback);
         //required so that we can operate on it with no fear since calling getListView before onCreateView returns is not safe
         listView = ((ListView) view.findViewById(android.R.id.list));
+        listView.setOnScrollListener(this);
         TextView emptyView = (TextView) view.findViewById(android.R.id.empty);
         emptyView.setText(R.string.loading);
         setListAdapter(adapter);
@@ -115,7 +117,7 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        Contact contact = ((ContactsAdapter.ViewHolder) v.getTag()).contact; //very safe
+        Contact contact = (Contact) l.getAdapter().getItem(position); //very safe
         if (contact.isRegisteredUser) {
             UiHelpers.enterChatRoom(getActivity(), contact.numberInIEE_Format);
         } else {
@@ -154,5 +156,14 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
     public void onChange() {
         ContactsManager.getInstance().findAllContacts(filter, comparator, contactsFindCallback);
     }
+
+    @Override
+    public void onScrollStateChanged(AbsListView view, int scrollState) {
+    }
+
+    @Override
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+    }
+
 }
 

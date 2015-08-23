@@ -414,7 +414,7 @@ public class ToolbarManager {
     /**
      * A Base Navigation Manager that handle navigation state between fragment changing and navigation drawer.
      * If you want to handle state in another case, you should override isBackState(),  shouldSyncDrawerSlidingProgress(), and call notify notifyStateChanged() if need.
-      */
+     */
     public static class BaseNavigationManager extends NavigationManager{
         protected DrawerLayout mDrawerLayout;
         protected FragmentManager mFragmentManager;

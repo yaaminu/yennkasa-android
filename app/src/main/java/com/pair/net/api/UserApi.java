@@ -81,4 +81,7 @@ public interface UserApi {
 
     @DELETE("/api/v1/users/{id}?unverified=1")
     HttpResponse resetUnverifiedAccount(@Path("id") String userId);
+
+    @POST("/api/v1/users/{id}/resetPassword")
+    HttpResponse requestPasswordReset(String number);
 }

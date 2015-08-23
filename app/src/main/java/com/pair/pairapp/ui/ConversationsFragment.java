@@ -86,6 +86,7 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
 //            }
 //        }).start();
     }
+
     private void startTimer() {
         if (timer == null) {
             Log.i(TAG, "starting timer");
@@ -111,27 +112,36 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
         super.onActivityCreated(savedInstanceState);
         SwipeDismissListViewTouchListener swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(getListView(), new SwipeDismissListViewTouchListener.OnDismissCallback() {
             @Override
-            public void onDismiss(ListView listView, int[] reverseSortedPositions) {
-                realm.beginTransaction();
-                for (int position : reverseSortedPositions) {
-                    try {
-                        Conversation conversation = conversations.get(position);
-                        final String peerId = conversation.getPeerId();
-                        realm.where(Message.class).equalTo(Message.FIELD_FROM, peerId)
-                                .or()
-                                .equalTo(Message.FIELD_TO, peerId)
-                                .findAll().clear();
-                        conversation.removeFromRealm();
-                    } catch (Exception e) {
-                        realm.cancelTransaction();
-                        Log.e(TAG, e.getMessage(), e.getCause());
+            public void onDismiss(ListView listView, final int[] reverseSortedPositions) {
+                UiHelpers.showErrorDialog(getActivity(), R.string.sure_you_want_to_delete_conversation, R.string.yes, R.string.no, new UiHelpers.Listener() {
+                    @Override
+                    public void onClick() {
+                        deleteConversation(reverseSortedPositions);
                     }
-                }
-                realm.commitTransaction();
+                }, null);
             }
         });
         getListView().setOnTouchListener(swipeDismissListViewTouchListener);
         getListView().setOnScrollListener(swipeDismissListViewTouchListener.makeScrollListener());
+    }
+
+    private void deleteConversation(int[] reverseSortedPositions) {
+        realm.beginTransaction();
+        for (int position : reverseSortedPositions) {
+            try {
+                Conversation conversation = conversations.get(position);
+                final String peerId = conversation.getPeerId();
+                realm.where(Message.class).equalTo(Message.FIELD_FROM, peerId)
+                        .or()
+                        .equalTo(Message.FIELD_TO, peerId)
+                        .findAll().clear();
+                conversation.removeFromRealm();
+            } catch (Exception e) {
+                realm.cancelTransaction();
+                Log.e(TAG, e.getMessage(), e.getCause());
+            }
+        }
+        realm.commitTransaction();
     }
 
     @Override
@@ -151,9 +161,9 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
         if (item.getItemId() == R.id.new_message) {
             Bundle args = new Bundle();
             args.putString(MainActivity.ARG_TITLE, getActivity().getString(R.string.title_pick_contact));
-            Intent intent = new Intent(getActivity(), UsersActivity.class);
+            final Intent intent = new Intent(getActivity(), UsersActivity.class);
             intent.putExtras(args);
-            startActivity(intent);
+            getActivity().startActivity(intent);
             return true;
         }
         return super.onOptionsItemSelected(item);

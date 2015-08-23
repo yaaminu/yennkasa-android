@@ -3,6 +3,7 @@
     package="com.pair.pairapp">
 
     <uses-sdk android:minSdkVersion="9" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
@@ -91,14 +92,20 @@
             >
         </activity>
         <activity
-            android:name=".ui.FriendsActivity"
-            android:label="@string/title_activity_friends_" />
+            android:name=".ui.InviteActivity"
+            android:label="@string/title_invite_friends" />
         <activity
             android:name=".UsersActivity"
-            android:label="@string/title_activity_users" />
+            android:label="@string/title_activity_users"
+            android:parentActivityName=".MainActivity">
+
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.pair.pairapp.MainActivity" />
+        </activity>
         <activity
             android:name=".ui.ImageViewer"
-            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" />
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity
             android:name=".CreateGroupActivity"
             android:label="@string/title_activity_create_group"

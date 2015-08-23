@@ -1,9 +1,11 @@
 package com.pair.data;
 
 import android.app.Application;
+import android.content.Context;
 import android.util.Log;
 
 import com.pair.pairapp.Config;
+import com.pair.pairapp.R;
 
 import java.util.Date;
 
@@ -129,6 +131,10 @@ public class Message extends RealmObject {
         return id;
     }
 
+    public static Realm REALM(Context context) {
+        return Realm.getInstance(context);
+    }
+
     public static boolean isTextMessage(Message message) {
         return message.getType() == TYPE_TEXT_MESSAGE;
     }
@@ -153,4 +159,28 @@ public class Message extends RealmObject {
         return message.getType() == TYPE_TYPING_MESSAGE;
     }
 
+    public static boolean isIncoming(Message message) {
+        return !isOutGoing(message);
+    }
+
+    public static boolean isOutGoing(Message message) {
+        return UserManager.getInstance().isMainUser(message.getFrom());
+    }
+
+    public static String state(Context context, int status) {
+        switch (status) {
+            case Message.STATE_PENDING:
+                return context.getString(R.string.st_message_state_pending);
+            case Message.STATE_SEND_FAILED:
+                return context.getString(R.string.st_message_state_failed);
+            case Message.STATE_RECEIVED:
+                return context.getString(R.string.st_message_state_delivered);
+            case Message.STATE_SEEN:
+                return context.getString(R.string.st_message_state_seen);
+            case Message.STATE_SENT:
+                return context.getString(R.string.st_message_state_sent);
+            default:
+                throw new AssertionError("new on unknown message status");
+        }
+    }
 }

@@ -70,7 +70,7 @@ public class ContactSyncService extends IntentService {
         PendingIntent operation = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager manager = ((AlarmManager) context.getSystemService(Context.ALARM_SERVICE));
         //noinspection ConstantConditions
-        manager.setRepeating(AlarmManager.ELAPSED_REALTIME, 1000 * (AlarmManager.INTERVAL_FIFTEEN_MINUTES / 5), AlarmManager.INTERVAL_HOUR, operation); //start now
+        manager.setRepeating(AlarmManager.ELAPSED_REALTIME, 5000, AlarmManager.INTERVAL_HOUR, operation); //start now
     }
 
     public static void syncNow(Context context){

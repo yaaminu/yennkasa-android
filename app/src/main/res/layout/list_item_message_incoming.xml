@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_margin="15dp">
@@ -21,36 +22,38 @@
             <TextView
                 android:id="@+id/tv_message_content"
                 style="@style/message_incoming"
-                android:maxWidth="250dp"
-                android:minWidth="100dp"
-                android:text="hi" />
+                android:maxWidth="@dimen/message_text_item_max_width"
+                android:minWidth="@dimen/message_item_min_width"
+                android:text="hello" />
 
             <ImageView
-                android:visibility="gone"
                 android:id="@+id/iv_message_preview"
                 style="@style/incoming_message_body_root_view"
-                android:layout_width="250dp"
-                android:layout_height="200dp"
+                android:layout_width="@dimen/message_preview_item_width"
+                android:layout_height="@dimen/message_preview_item_height"
                 android:contentDescription="@string/st_content_description_image_preview"
                 android:scaleType="fitXY"
-                android:paddingRight="2dp"
-                android:src="@drawable/image_placeholder" />
+                android:src="@drawable/user_avartar"
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/bt_download"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:background="#3d0f"
+                android:background="@color/white"
                 android:text="@string/st_download"
                 android:visibility="gone" />
 
-            <ProgressBar
+            <com.rey.material.widget.ProgressView
                 android:id="@+id/pb_download_progress"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                app:pv_autostart="true"
+                app:pv_circular="true"
+                app:pv_progressMode="indeterminate"
+                app:pv_progressStyle="@style/base_indeterminate_progress_style"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_gravity="center"
-                android:indeterminate="true"
                 android:visibility="gone" />
         </FrameLayout>
 
@@ -68,7 +71,7 @@
         </LinearLayout>
     </LinearLayout>
     <!-- this textView is useless except that it frees us from checking for
-    null-ness in the @{link MessagesAdapter}-->
+    null-ness in the {@link MessagesAdapter}-->
     <TextView
         android:id="@+id/tv_message_status"
         android:layout_width="wrap_content"
@@ -77,7 +80,7 @@
         android:layout_marginRight="20dp"
         android:gravity="left"
         android:singleLine="true"
-        android:visibility="gone"
         android:text="@string/st_message_state_pending"
-        android:textColor="@color/white" />
+        android:textColor="@color/white"
+        android:visibility="gone" />
 </RelativeLayout>

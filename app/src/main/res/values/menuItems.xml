@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="menuItems">
-        <item>Conversations</item>
-        <item>Contacts</item>
-        <item>Groups</item>
+        <item>CONVERSATIONS</item>
+        <item>CONTACTS</item>
+        <item>GROUPS</item>
     </string-array>
 </resources>

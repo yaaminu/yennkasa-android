@@ -1,7 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:app="http://schemas.android.com/apk/res-auto"
       xmlns:tools="http://schemas.android.com/tools"
-      tools:context="com.pair.pairapp.ui.FriendsActivity">
+    tools:context="com.pair.pairapp.ui.InviteActivity">
     <item
         android:id="@+id/action_ok"
         android:title="@string/st_done"

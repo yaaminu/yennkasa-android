@@ -31,7 +31,7 @@ public class UiHelpers {
     }
 
     public static void showErrorDialog(FragmentActivity context, String message) {
-        showErrorDialog(context, message, Listener.DUMMY_LISTENER);
+        showErrorDialog(context, message, null);
     }
 
     public static void showErrorDialog(FragmentActivity context, int message) {
@@ -42,7 +42,9 @@ public class UiHelpers {
         SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
             @Override
             public void onPositiveActionClicked(DialogFragment fragment) {
-                listener.onClick();
+                if (listener != null) {
+                    listener.onClick();
+                }
                 super.onPositiveActionClicked(fragment);
             }
         };
@@ -54,7 +56,7 @@ public class UiHelpers {
     }
 
     public static void showErrorDialog(FragmentActivity context,
-                                       String title, String message,
+                                       String message,
                                        String okText, String noText, final Listener ok, final Listener no) {
 
         SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
@@ -84,13 +86,12 @@ public class UiHelpers {
     }
 
     public static void showErrorDialog(FragmentActivity context,
-                                       int title, int message,
+                                       int message,
                                        int okText, int noText, final Listener ok, final Listener no) {
-        String titleText = getString(context, title),
-                messageText = getString(context, message),
+        String messageText = getString(context, message),
                 okTxt = getString(context, okText),
                 noTxt = getString(context, noText);
-        showErrorDialog(context, titleText, messageText, okTxt, noTxt, ok, no);
+        showErrorDialog(context, messageText, okTxt, noTxt, ok, no);
     }
 
 
@@ -109,11 +110,24 @@ public class UiHelpers {
             }
         };
         builder.contentView(R.layout.progress_dialog_indeterminate);
-        return DialogFragment.newInstance(builder);
+        DialogFragment fragment = DialogFragment.newInstance(builder);
+        fragment.setCancelable(false);
+        return fragment;
     }
 
     private static String getString(Context context, int resId) {
         return context.getString(resId).toUpperCase();
+    }
+
+
+    public static void promptAndExit(final FragmentActivity activity) {
+        final UiHelpers.Listener cancelProgress = new UiHelpers.Listener() {
+            @Override
+            public void onClick() {
+                activity.finish();
+            }
+        };
+        UiHelpers.showErrorDialog(activity, R.string.st_sure_to_exit, R.string.i_know, android.R.string.no, cancelProgress, null);
     }
 
     @SuppressWarnings("ConstantConditions")
@@ -139,13 +153,6 @@ public class UiHelpers {
     }
 
     public interface Listener {
-        Listener DUMMY_LISTENER = new Listener() {
-            @Override
-            public void onClick() {
-                //do nothing
-            }
-        };
-
         void onClick();
     }
 }

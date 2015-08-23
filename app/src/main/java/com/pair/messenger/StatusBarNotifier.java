@@ -20,7 +20,7 @@ public class StatusBarNotifier implements Notifier {
     private final static int MESSAGE_PENDING_INTENT_REQUEST_CODE = 1002;
 
     @Override
-    public void notifyUser(Context context, Message message) {
+    public void notifyUser(Context context, Message message, String sender) {
         Intent action = new Intent(context, ChatActivity.class);
         action.putExtra(ChatActivity.EXTRA_PEER_ID, message.getFrom());
 
@@ -28,10 +28,9 @@ public class StatusBarNotifier implements Notifier {
                 MESSAGE_PENDING_INTENT_REQUEST_CODE,
                 action,
                 PendingIntent.FLAG_UPDATE_CURRENT);
-        String sendersName = message.getFrom(); //this should be setup fro notification manager
         NotificationCompat.Builder builder = new NotificationCompat.Builder(Config.getApplication());
         builder.setTicker(context.getString(R.string.new_message))
-                .setContentTitle(String.format(context.getString(R.string.message_from), sendersName));
+                .setContentTitle(String.format(context.getString(R.string.message_from), sender));
 
         if (Message.isTextMessage(message)) {
             builder.setContentText(message.getMessageBody());

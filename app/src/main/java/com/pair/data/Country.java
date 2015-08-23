@@ -1,5 +1,8 @@
 package com.pair.data;
 
+import android.content.Context;
+
+import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.annotations.RealmClass;
 
@@ -8,6 +11,9 @@ import io.realm.annotations.RealmClass;
  */
 @RealmClass
 public class Country extends RealmObject {
+    private static final String COUNTRIES_REALM = "countries.realm";
+
+    public static final String FIELD_NAME = "name", FIELD_CCC = "ccc", FIELD_ISO_2_LETTER_CODE = "iso2letterCode";
     private String name;
     private String ccc;
     private String iso2letterCode;
@@ -34,5 +40,9 @@ public class Country extends RealmObject {
 
     public void setIso2letterCode(String iso2letterCode) {
         this.iso2letterCode = iso2letterCode;
+    }
+
+    public static Realm REALM(Context context) {
+        return Realm.getInstance(context, COUNTRIES_REALM);
     }
 }

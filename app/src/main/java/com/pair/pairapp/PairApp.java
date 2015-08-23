@@ -6,7 +6,6 @@ import com.pair.data.UserManager;
 import com.pair.messenger.PairAppClient;
 import com.pair.workers.ContactSyncService;
 import com.parse.Parse;
-import com.parse.ParseObject;
 
 /**
  * @author Null-Pointer on 6/6/2015.
@@ -19,9 +18,6 @@ public class PairApp extends Application {
         Config.init(this);
         Parse.enableLocalDatastore(this);
         Parse.initialize(this, "RcCxnXwO1mpkSNrU9u4zMtxQac4uabLNIFa662ZY", "f1ad1Vfjisr7mVBDSeoFO1DobD6OaLkggHvT2Nk4");
-        ParseObject testObject = new ParseObject("TestObject");
-        testObject.put("foo", "bar");
-        testObject.saveInBackground();
         if (UserManager.getInstance().isUserVerified()) {
             PairAppClient.start(this);
             ContactSyncService.start(this);

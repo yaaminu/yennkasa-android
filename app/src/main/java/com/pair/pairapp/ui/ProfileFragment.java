@@ -108,7 +108,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         //common to all
         userName.setText("@" + user.getName());
         displayPicture.setOnClickListener(clickListener);
-        // TODO: 8/8/2015 merge these conditions into setupviewsingleuserway or setupviewsgroupway
         if (user.getType() == User.TYPE_GROUP) {
             setUpViewsGroupWay();
         } else {
@@ -116,7 +115,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         }
         userManager.refreshUserDetails(user.get_id()); //async
         //noinspection ConstantConditions
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(getString(R.string.title_activity_profile) + "-" + user.getName());
+        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(user.getName());
         return view;
     }
 

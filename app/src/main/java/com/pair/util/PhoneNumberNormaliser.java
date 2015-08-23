@@ -1,8 +1,11 @@
 package com.pair.util;
 
+import android.util.Log;
+
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
+import com.pair.data.UserManager;
 
 import java.util.regex.Pattern;
 
@@ -39,7 +42,7 @@ public class PhoneNumberNormaliser {
             phoneNumber = "+" + phoneNumber; // numbers like 233 20 4441069 will be parsed with no exception.
         }
         try {
-            return util.isValidNumberForRegion(util.parse(phoneNumber, null), region);
+            return util.isValidNumber(util.parse(phoneNumber, null));
         } catch (NumberParseException e) {
             return false;
         }
@@ -48,7 +51,7 @@ public class PhoneNumberNormaliser {
     public static boolean isValidPhoneNumber(String number, String countryIso) {
         PhoneNumberUtil util = PhoneNumberUtil.getInstance();
         try {
-            return util.isValidNumberForRegion(util.parse(number, countryIso), countryIso);
+            return util.isValidNumber(util.parse(number, countryIso));
         } catch (NumberParseException e) {
             return false;
         }
@@ -71,5 +74,15 @@ public class PhoneNumberNormaliser {
         PhoneNumberUtil util = PhoneNumberUtil.getInstance();
         int ccc = util.getCountryCodeForRegion(userCountryISO);
         return ccc + "";
+    }
+
+    public static String toLocalFormat(String id) {
+        final PhoneNumberUtil util = PhoneNumberUtil.getInstance();
+        try {
+            return util.formatOutOfCountryCallingNumber((util.parse("+" + id, null)), UserManager.getInstance().getUserCountryISO());
+        } catch (NumberParseException e) {
+            Log.e(TAG, e.getMessage(), e.getCause());
+            throw new RuntimeException("invalid user id");
+        }
     }
 }

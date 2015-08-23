@@ -1,11 +1,12 @@
 package com.pair.pairapp;
 
 import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,107 +19,83 @@ import android.widget.EditText;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.data.User;
 import com.pair.data.UserManager;
+import com.pair.pairapp.ui.ItemsSelector;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
+import com.rey.material.app.ToolbarManager;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import io.realm.Realm;
 import io.realm.RealmQuery;
 
-public class CreateGroupActivity extends ActionBarActivity implements AdapterView.OnItemClickListener, TextView.OnEditorActionListener {
+public class CreateGroupActivity extends ActionBarActivity implements AdapterView.OnItemClickListener, ItemsSelector.OnFragmentInteractionListener, ToolbarManager.OnToolbarGroupChangedListener {
 
     private Set<String> selectedUsers = new HashSet<>();
-    private ListView listView;
     private String groupName;
     private Realm realm;
     private List<User> users;
     private UsersAdapter adapter;
-    private EditText groupNameEt, filterEt;
+    private EditText groupNameEt;
+    private Toolbar toolBar;
+    private ToolbarManager manager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_group);
-        listView = ((ListView) findViewById(R.id.lv_peers_to_choose));
-        groupNameEt = ((EditText) findViewById(R.id.et_group_name));
-        filterEt = ((EditText) findViewById(R.id.et_filter_input_box));
-        filterEt.addTextChangedListener(ADAPTER_FILTER);
-        filterEt.setOnEditorActionListener(this);
-        groupNameEt.setOnEditorActionListener(this);
-        final View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int id = v.getId();
-                if (id == R.id.bt_proceed) {
-                    proceedToAddMembers();
-                } else if (id == R.id.bt_cancel) {
-                    promptAndExit();
-                } else if (id == R.id.bt_add) {
-                    addMemberFromFilterEditText();
-                }
-            }
-        };
 
-        findViewById(R.id.bt_proceed).setOnClickListener(listener);
-        findViewById(R.id.bt_cancel).setOnClickListener(listener);
-        findViewById(R.id.bt_add).setOnClickListener(listener);
+        toolBar = ((Toolbar) findViewById(R.id.main_toolbar));
+        manager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
+        manager.setCurrentGroup(R.id.setup);
+        manager.registerOnToolbarGroupChangedListener(this);
+        //noinspection ConstantConditions
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        groupNameEt = ((EditText) findViewById(R.id.et_group_name));
         realm = Realm.getInstance(this);
         users = realm.where(User.class).notEqualTo(User.FIELD_ID, UserManager.getInstance()
                 .getMainUser().get_id()).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
                 .findAllSorted(User.FIELD_NAME);
         adapter = new UsersAdapter(users);
-        listView.setAdapter(adapter);
-        listView.setOnItemClickListener(this);
     }
 
     private void proceedToAddMembers() {
-        String name = groupNameEt.getText().toString();
-        if (!TextUtils.isEmpty(name)) {
+        String name = groupNameEt.getText().toString().trim();
+        if (TextUtils.isEmpty(name)) {
             // TODO: 8/5/2015 validate group name
+            UiHelpers.showErrorDialog(this, getString(R.string.cant_be_empty));
+            groupNameEt.requestFocus();
+        } else if (!groupNamePattern.matcher(name).matches()) {
+            UiHelpers.showErrorDialog(this, getString(R.string.group_name_format_message).toUpperCase());
+            groupNameEt.requestFocus();
+        } else if (UserManager.getInstance().isGroup(User.generateGroupId(name))) {
+            UiHelpers.showErrorDialog(this, getString(R.string.group_already_exists, name).toUpperCase());
+            groupNameEt.requestFocus();
+        } else {
+            groupNameEt.setVisibility(View.GONE);
             groupName = name;
-            findViewById(R.id.rl_group_name_panel).setVisibility(View.GONE);
-            findViewById(R.id.add_peers_view).setVisibility(View.VISIBLE);
-        } else {
-            UiHelpers.showErrorDialog(this,getString(R.string.cant_be_empty));
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.rl_main_container, new ItemsSelector())
+                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                    .commit();
+            manager.setCurrentGroup(R.id.empty_group);
+            supportInvalidateOptionsMenu();
         }
     }
 
-    private void addMemberFromFilterEditText() {
-        String phoneNumber = filterEt.getText().toString();
-        if (!TextUtils.isEmpty(phoneNumber)) {
-            String original = phoneNumber; //see usage below
-            final String userCountryISO = UserManager.getInstance().getUserCountryISO();
-            try {
-                phoneNumber = PhoneNumberNormaliser.cleanNonDialableChars(phoneNumber);
-                phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userCountryISO);
-                if (!PhoneNumberNormaliser.isValidPhoneNumber(phoneNumber, userCountryISO)) {
-                    throw new NumberParseException(NumberParseException.ErrorType.NOT_A_NUMBER, "invalid phone number");
-                }
-                selectedUsers.add(phoneNumber);
-                adapter.notifyDataSetChanged();
-            } catch (NumberParseException e) {
-                // FIXME: 8/5/2015 show a better error message
-                final Locale locale = new Locale("", userCountryISO);
-                UiHelpers.showErrorDialog(CreateGroupActivity.this, "Phone number: " + original + " may not be a valid phone number in " + locale.getDisplayName());
-            }
-            filterEt.setText("");
-        } else {
-            // FIXME: 8/5/2015 show a better error message
-            UiHelpers.showErrorDialog(CreateGroupActivity.this, "cannot be empty");
-        }
-    }
-
+    private static final Pattern groupNamePattern = Pattern.compile("^[a-zA-Z][a-zA-Z0-9 ]{4,30}");
 
     private final UiHelpers.Listener cancelProgress = new UiHelpers.Listener() {
         @Override
@@ -128,7 +105,7 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
     };
 
     private void promptAndExit() {
-        UiHelpers.showErrorDialog(this, R.string.st_prompt, R.string.st_sure_to_exit, R.string.i_know, android.R.string.no, cancelProgress, null);
+        UiHelpers.showErrorDialog(this, R.string.st_sure_to_exit, R.string.i_know, android.R.string.no, cancelProgress, null);
     }
 
     @Override
@@ -139,15 +116,29 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_create_group, menu);
+        manager.createMenu(R.menu.menu_create_group);
         return true;
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        menu.findItem(R.id.action_done).
-                setVisible(!(selectedUsers.size() < 2));
-        return true;
+        manager.onPrepareMenu();
+        //there is a bug in the library we are using which causes it duplicate
+        // the menu items so this is a fix for it
+        menu = toolBar.getMenu();
+        int size = menu.size();
+        if (size > 2) {
+            boolean found = false;
+            for (int i = 0; i < size; i++) {
+                MenuItem item = menu.getItem(i);
+                if (found) {
+                    item.setVisible(false);
+                } else if (item.isVisible()) {
+                    found = true;
+                }
+            }
+        }
+        return true;// super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -157,12 +148,18 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
+        if (id == android.R.id.home) {
+            promptAndExit();
+            return true;
+        }
+
+        if (id == R.id.action_proceed) {
+            proceedToAddMembers();
+            return true;
+        }
+
         if (id == R.id.action_done) {
             completeGroupCreation();
-            return true;
-        } else if (id == android.R.id.home) {
-            promptAndExit();
             return true;
         }
 
@@ -196,24 +193,81 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         User user = ((User) parent.getAdapter().getItem(position));
-        if (listView.isItemChecked(position)) {
+        if (((ListView) parent).isItemChecked(position)) {
             selectedUsers.add(user.get_id());
         } else {
             selectedUsers.remove(user.get_id());
         }
-        filterEt.setText("");
+        if (selectedUsers.size() >= 2) {
+            manager.setCurrentGroup(R.id.done_group);
+        } else {
+            manager.setCurrentGroup(R.id.empty_group); //hide all menu items
+        }
         supportInvalidateOptionsMenu();
     }
 
     @Override
-    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-        int id = v.getId();
-        if (id == R.id.et_filter_input_box) {
-            addMemberFromFilterEditText();
-        } else if (id == R.id.et_group_name) {
-            proceedToAddMembers();
-        }
+    public BaseAdapter getAdapter() {
+        return adapter;
+    }
+
+    @Override
+    public Filterable filter() {
+        return adapter;
+    }
+
+    @Override
+    public ItemsSelector.ContainerType preferredContainer() {
+        return ItemsSelector.ContainerType.LIST;
+    }
+
+    @Override
+    public View emptyView() {
+        return null;
+    }
+
+    @Override
+    public boolean multiChoice() {
         return true;
+    }
+
+    @Override
+    public boolean supportAddCustom() {
+        return true;
+    }
+
+    @Override
+    public void onCustomAdded(String item) {
+        String phoneNumber = item;
+        if (!TextUtils.isEmpty(phoneNumber)) {
+            String original = phoneNumber; //see usage below
+            final String userCountryISO = UserManager.getInstance().getUserCountryISO();
+            try {
+                phoneNumber = PhoneNumberNormaliser.cleanNonDialableChars(phoneNumber);
+                phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userCountryISO);
+                if (!PhoneNumberNormaliser.isValidPhoneNumber(phoneNumber, userCountryISO)) {
+                    throw new NumberParseException(NumberParseException.ErrorType.NOT_A_NUMBER, "invalid phone number");
+                }
+                selectedUsers.add(phoneNumber);
+                adapter.notifyDataSetChanged();
+                if (selectedUsers.size() >= 2) {
+                    manager.setCurrentGroup(R.id.done_group);
+                }
+                supportInvalidateOptionsMenu();
+            } catch (NumberParseException e) {
+                // FIXME: 8/5/2015 show a better error message
+                final Locale locale = new Locale("", userCountryISO);
+                UiHelpers.showErrorDialog(CreateGroupActivity.this, "Phone number: " + original + " may not be a valid phone number in " + locale.getDisplayName());
+            }
+        } else {
+            // FIXME: 8/5/2015 show a better error message
+            UiHelpers.showErrorDialog(CreateGroupActivity.this, "cannot be empty");
+        }
+    }
+
+    @Override
+    public void onToolbarGroupChanged(int oldGroupId, int groupId) {
+        manager.notifyNavigationStateChanged();
     }
 
     private class UsersAdapter extends BaseAdapter implements Filterable {
@@ -261,8 +315,6 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
 
         private Filter filter = new Filter() {
             FilterResults results = new FilterResults();
-
-            @Override
             protected FilterResults performFiltering(CharSequence constraint) {
                 Realm realm = Realm.getInstance(CreateGroupActivity.this); //get realm for this background thread
                 List<User> users;
@@ -285,7 +337,7 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
                             .notEqualTo(User.FIELD_ID, UserManager.getInstance()
                                     .getMainUser().get_id());
                     users = query.findAllSorted(User.FIELD_NAME);
-                    //detach the objects from realm. as we want to pass it to background thread
+                    //detach the objects from realm. as we want to pass it to a different thread
                     // TODO: 8/7/2015 this might not scale
                     users = User.copy(users); //in the future if the results is too large copying might not scale!
                 } finally {
@@ -297,7 +349,7 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
             }
 
             private String standardiseConstraintAndContinue(String constraintAsString) {
-                if (constraintAsString.startsWith("+")) { //then its not in in the IEE format. i.e +233XXXXXXXXX (for Ghanaian number)
+                if (constraintAsString.startsWith("+")) { //then its not in in the IEE format. eg +233XXXXXXXXX (for Ghanaian number)
                     if (constraintAsString.length() > 1) //avoid indexOutOfBoundException
                         constraintAsString = constraintAsString.substring(1);
                     else {

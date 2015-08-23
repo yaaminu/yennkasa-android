@@ -1,21 +1,21 @@
 package com.pair.adapter;
 
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.v4.app.FragmentActivity;
 import android.telephony.SmsManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.pair.pairapp.Config;
 import com.pair.pairapp.R;
-import com.pair.util.PicassoWrapper;
+import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
+import com.rey.material.widget.Button;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -30,11 +30,13 @@ public class ContactsAdapter extends BaseAdapter {
     private List<Contact> contacts;
     private boolean isAddOrRemoveFromGroup;
     private final Picasso PICASSO;
+    private FragmentActivity context;
 
-    public ContactsAdapter(Context context, List<Contact> contacts, boolean isAddOrRemoveFromGroup) {
+    public ContactsAdapter(FragmentActivity context, List<Contact> contacts, boolean isAddOrRemoveFromGroup) {
         this.contacts = contacts;
         this.isAddOrRemoveFromGroup = isAddOrRemoveFromGroup;
-        PICASSO = PicassoWrapper.with(context);
+        this.PICASSO = Picasso.with(context);
+        this.context = context;
     }
 
     @Override
@@ -68,7 +70,7 @@ public class ContactsAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, ViewGroup parent) {
         final Contact contact = getItem(position);
 
         final ViewHolder holder;
@@ -82,15 +84,15 @@ public class ContactsAdapter extends BaseAdapter {
             } else {
                 holder.userName = ((TextView) convertView.findViewById(R.id.tv_user_name));
             }
-            holder.userStatus = ((TextView) convertView.findViewById(R.id.tv_user_status));
+            holder.userStatus = ((TextView) convertView.findViewById(R.id.tv_user_phone));
             holder.inviteButton = (Button) convertView.findViewById(R.id.bt_invite);
             holder.userDp = ((ImageView) convertView.findViewById(R.id.iv_display_picture));
+            holder.userPhone = (TextView) convertView.findViewById(R.id.tv_user_phone);
             convertView.setTag(holder);
         } else {
             holder = ((ViewHolder) convertView.getTag());
         }
 
-        holder.contact = contact;
         holder.userName.setText(contact.name);
         if (isAddOrRemoveFromGroup) {
             return convertView;
@@ -98,8 +100,8 @@ public class ContactsAdapter extends BaseAdapter {
         if (contact.isRegisteredUser) {
             holder.userStatus.setText(contact.status);
             PICASSO.load(Config.DP_ENDPOINT + "/" + contact.DP)
-                    .error(R.drawable.avatar_empty)
-                    .placeholder(R.drawable.avatar_empty)
+                    .error(R.drawable.user_avartar)
+                    .placeholder(R.drawable.user_avartar)
                     .resize(150, 150)
                     .centerInside()
                     .into(holder.userDp);
@@ -108,12 +110,13 @@ public class ContactsAdapter extends BaseAdapter {
             final View.OnClickListener listener = new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    UiHelpers.gotoProfileActivity(v.getContext(), holder.contact.numberInIEE_Format);
+                    UiHelpers.gotoProfileActivity(v.getContext(), getItem(position).numberInIEE_Format);
                 }
             };
             holder.userDp.setOnClickListener(listener);
+            holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat(getItem(position).numberInIEE_Format));
         } else {
-            holder.userStatus.setText(contact.phoneNumber);
+            holder.userStatus.setText(PhoneNumberNormaliser.toLocalFormat(contact.numberInIEE_Format));
             final View.OnClickListener listener = new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -135,24 +138,31 @@ public class ContactsAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
-    public class ViewHolder {
+    private class ViewHolder {
         private TextView userName,
                 userStatus;
         private Button inviteButton;
         private ImageView userDp;
-        public Contact contact;
+        private TextView userPhone;
     }
 
     private class InviteContact implements View.OnClickListener {
         Contact contact;
+
         public InviteContact(Contact contact) {
             this.contact = contact;
         }
 
         @Override
         public void onClick(View v) {
-            String message = "Try out PAIRAPP messenger for android . Its free and fast!\\n download here: http://pairapp.com/download";
-            SmsManager.getDefault().sendTextMessage(contact.phoneNumber,null,message,null,null);
+            final UiHelpers.Listener listener = new UiHelpers.Listener() {
+                @Override
+                public void onClick() {
+                    String message = "Try out PAIRAPP messenger for android . Its free and fast!\\n download here: http://pairapp.com/download";
+                    SmsManager.getDefault().sendTextMessage(contact.phoneNumber, null, message, null, null);
+                }
+            };
+            UiHelpers.showErrorDialog(context, R.string.charges_may_apply, android.R.string.ok, android.R.string.cancel, listener, null);
 //            Uri uri = Uri.parse("sms:"+contact.phoneNumber);
 //            Intent intent = new Intent(Intent.ACTION_SENDTO);
 //            intent.setData(uri);

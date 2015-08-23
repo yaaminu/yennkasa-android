@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item name="action_createGroup" type="id"/>
+    <item name="bt_proceed" type="id" />
+    <item name="action_done" type="id" />
+    <item name="latest_message" type="id" />
+    <item name="bt_add" type="id" />
 </resources>

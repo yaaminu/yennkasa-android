@@ -2,7 +2,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimary"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/preferred_primary_color"
     tools:context="com.pair.pairapp.ui.VerificationFragment">
 
     <TextView
@@ -39,69 +40,75 @@
         android:padding="10dp"
         android:text="@string/st_send_verification_notice"
         android:textColor="@color/white"
-        android:textSize="14sp"
-        android:textStyle="bold" />
+        android:textSize="14sp" />
 
-    <LinearLayout
+    <android.support.v7.widget.CardView
         android:id="@+id/ll_edittext_pane"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/tv_verification_notice"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
-        android:background="#eee"
-        android:orientation="vertical"
-        android:padding="10dp">
+        app:cardCornerRadius="@dimen/card_view_corner_radius"
+        app:cardElevation="@dimen/cardview_default_elevation"
+        android:background="@color/white">
 
-        <EditText
-            android:id="@+id/et_verification"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="5dp"
-            android:hint="@string/st_hint_et_verification"
-            android:inputType="number" />
+            android:orientation="vertical"
+            android:background="@color/white"
+            android:padding="10dp">
 
-        <com.rey.material.widget.Button
-            android:id="@+id/bt_verify"
-            style="@style/RaiseWaveColorButtonRippleStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:background="#2299cc00"
-            android:gravity="center"
-            android:paddingBottom="10dp"
-            android:paddingTop="10dp"
-            android:text="@string/verify"
-            android:textColor="@color/colorPrimary"
-            android:textSize="16sp" />
+            <EditText
+                android:id="@+id/et_verification"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:hint="@string/st_hint_et_verification"
+                android:inputType="number" />
 
-        <com.rey.material.widget.Button
-            android:id="@+id/bt_resend_token"
-            style="@style/RaiseWaveColorButtonRippleStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:background="#2299cc00"
-            android:gravity="center"
-            android:paddingBottom="10dp"
-            android:paddingTop="10dp"
-            android:text="@string/st_send_again"
-            android:textColor="@color/colorPrimary"
-            android:textSize="16sp" />
-    </LinearLayout>
+            <com.rey.material.widget.Button
+                android:id="@+id/bt_verify"
+                style="@style/RaiseWaveColorButtonRippleStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="#225eb964"
+                android:gravity="center"
+                android:paddingBottom="10dp"
+                android:paddingTop="10dp"
+                android:text="@string/verify"
+                android:textColor="#000"
+                android:textSize="16sp" />
+
+            <com.rey.material.widget.Button
+                android:id="@+id/bt_resend_token"
+                style="@style/RaiseWaveColorButtonRippleStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="#225eb964"
+                android:gravity="center"
+                android:paddingBottom="10dp"
+                android:paddingTop="10dp"
+                android:text="@string/st_send_again"
+                android:textColor="#000"
+                android:textSize="16sp" />
+        </LinearLayout>
+    </android.support.v7.widget.CardView>
 
     <com.rey.material.widget.TextView
         android:id="@+id/tv_back_to_login"
-        android:gravity="center"
+        style="@style/FlatWaveColorButtonRippleStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/ll_edittext_pane"
         android:layout_centerHorizontal="true"
-        android:padding="12dp"
         android:clickable="true"
+        android:gravity="center"
+        android:padding="12dp"
         android:text="@string/st_back_login"
         android:textColor="@android:color/white"
-        style="@style/FlatWaveColorButtonRippleStyle"
-        android:textStyle="bold"
         android:textSize="18sp" />
 </RelativeLayout>

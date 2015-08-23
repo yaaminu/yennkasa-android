@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_margin="@dimen/message_body_margin">
@@ -26,14 +27,14 @@
                 android:text="hi" />
 
             <ImageView
-                android:visibility="gone"
                 android:id="@+id/iv_message_preview"
                 style="@style/outgoing_message_body_root_view"
-                android:layout_width="250dp"
-                android:layout_height="200dp"
+                android:layout_width="@dimen/message_preview_item_width"
+                android:layout_height="@dimen/message_preview_item_height"
                 android:contentDescription="@string/st_content_description_image_preview"
                 android:scaleType="fitXY"
-                android:src="@drawable/image_placeholder" />
+                android:src="@drawable/image_placeholder"
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/bt_download"
@@ -44,13 +45,17 @@
                 android:text="@string/st_download"
                 android:visibility="gone" />
 
-            <ProgressBar
+            <com.rey.material.widget.ProgressView
                 android:id="@+id/pb_download_progress"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_gravity="center"
-                android:indeterminate="true"
-                android:visibility="gone" />
+                android:visibility="gone"
+                app:pv_autostart="true"
+                app:pv_circular="true"
+                app:pv_progressMode="indeterminate"
+                app:pv_progressStyle="@style/base_indeterminate_progress_style" />
+
         </FrameLayout>
 
         <RelativeLayout
@@ -64,18 +69,19 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:layout_marginRight="20dp"
-                android:gravity="left"
                 android:layout_toLeftOf="@+id/tv_message_date"
+                android:gravity="left"
                 android:singleLine="true"
                 android:text="@string/st_message_state_pending"
-                android:textColor="@color/white" />
+                android:textColor="@color/white"
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/tv_message_date"
                 style="@style/message_outgoing_date"
-                android:singleLine="true"
                 android:layout_alignParentRight="true"
-                android:text="Date" />
+                android:singleLine="true"
+                android:text="12-12-12" />
         </RelativeLayout>
     </LinearLayout>
 </RelativeLayout>

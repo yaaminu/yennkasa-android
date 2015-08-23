@@ -24,7 +24,7 @@ import retrofit.RequestInterceptor;
  */
 public class Config {
 
-    public static final String TAG = Config.class.getSimpleName();
+    private static final String TAG = Config.class.getSimpleName();
     public static final String APP_PREFS = "prefs";
     private static final String HOST_REAL_SERVER = "http://192.168.43.42:3000";
     private static final String LOCAL_HOST_GENYMOTION = "http://10.0.3.2:3000";
@@ -42,6 +42,7 @@ public class Config {
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
     public static final String APP_USER_AGENT = "pairapp-android-development-version";
     private static String APP_NAME = "PairApp";
+
     //shared with message adapter
     public static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
         @Override
@@ -64,6 +65,7 @@ public class Config {
         setUpDirs();
     }
 
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
     private static void setUpDirs() {
         if (isExternalStorageAvailable()) {
@@ -71,17 +73,18 @@ public class Config {
             //if the file is already a directory it will fail silently
             getAppImgMediaBaseDir().mkdirs();
             getAppVidMediaBaseDir().mkdirs();
+            getAppBinFilesBaseDir().mkdirs();
         } else {
             Log.w(TAG, "This is strange! no sdCard available on this device");
         }
 
     }
 
-    public static boolean isChatRoomOpen() {
+    public static boolean isAppOpen() {
         return isChatRoomOpen.get();
     }
 
-    public static void setIsChatRoomOpen(boolean chatRoomOpen) {
+    public static void appOpen(boolean chatRoomOpen) {
         isChatRoomOpen.set(chatRoomOpen);
     }
 

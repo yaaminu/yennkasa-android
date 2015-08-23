@@ -16,7 +16,7 @@
 
     <!-- selected item background-->
     <style name="selectedListItemStyle" parent="Material.Drawable.Ripple.Wave">
-        <item name="rd_rippleColor">@color/colorPrimary</item>
+        <item name="rd_rippleColor">@color/preferred_primary_color</item>
         <item name="rd_rippleAnimDuration">300</item>
         <item name="rd_maskType">rectangle</item>
         <item name="rd_cornerRadius">0dp</item>
@@ -28,7 +28,6 @@
     </style>
 
     <!-- Navigator Drawable -->
-
     <style name="NavigatorDrawableIcon" parent="Material.Drawable.NavigationDrawerIcon">
         <item name="lmd_strokeSize">3dp</item>
         <item name="lmd_padding">18dp</item>
@@ -41,7 +40,7 @@
 
     <style name="ToolbarRippleStyle" parent="Material.Drawable.Ripple.Touch.MatchView.Light">
         <item name="rd_backgroundColor">@android:color/transparent</item>
-        <item name="rd_rippleColor">#33FFFFFF</item>
+        <item name="rd_rippleColor">@color/colorPrimary</item>
     </style>
 
     <!-- TabPageIndicator -->
@@ -50,6 +49,7 @@
         <item name="tpi_tabPadding">12dp</item>
         <item name="tpi_tabRipple">@style/TabRippleStyle</item>
         <item name="tpi_indicatorHeight">3dp</item>
+        <item name="tpi_indicatorColor">@color/white</item>
         <item name="android:textAppearance">@style/TabTextAppearance</item>
         <item name="tpi_mode">scroll</item>
     </style>
@@ -60,7 +60,7 @@
 
     <style name="TabRippleStyle" parent="Material.Drawable.Ripple.Wave">
         <item name="android:background">@null</item>
-        <item name="rd_rippleColor">@color/colorPrimary</item>
+        <item name="rd_rippleColor">@color/colorPrimaryDark</item>
         <item name="rd_rippleAnimDuration">300</item>
         <item name="rd_maskType">rectangle</item>
         <item name="rd_cornerRadius">0dp</item>
@@ -75,12 +75,16 @@
         <item name="cpd_strokeColors">@array/progress_colors</item>
     </style>
 
-    <style name="InOutCircularProgressDrawableStyle" parent="Material.Drawable.CircularProgress">
-        <item name="cpd_strokeColor">@color/colorPrimaryDark</item>
+    <style name="base_indeterminate_progress_style" parent="Material.Drawable.CircularProgress">
+        <item name="cpd_strokeColor">@color/white</item>
         <item name="cpd_inAnimDuration">800</item>
         <item name="cpd_inStepPercent">0.5</item>
         <item name="cpd_inStepColors">@array/in_colors</item>
         <item name="cpd_outAnimDuration">400</item>
+    </style>
+
+    <style name="InOutCircularProgressDrawableStyle" parent="base_indeterminate_progress_style">
+        <item name="cpd_strokeColor">@color/preferred_primary_color</item>
     </style>
 
     <style name="InOutColorsCircularProgressDrawableStyle" parent="Material.Drawable.CircularProgress">
@@ -182,7 +186,7 @@
     </style>
 
     <style name="RaiseWaveColorButtonRippleStyle" parent="Material.Drawable.Ripple.Wave.Light">
-        <item name="rd_rippleColor">@color/colorPrimaryDark</item>
+        <item name="rd_rippleColor">@color/preferred_primary_color</item>
         <item name="rd_leftPadding">1dp</item>
         <item name="rd_topPadding">1dp</item>
         <item name="rd_rightPadding">1dp</item>
@@ -193,7 +197,7 @@
 
     <style name="RadioButtonDrawable" parent="Material.Drawable.RadioButton" />
 
-    <style name="CheckBoxDrawable" parent="Material.Drawable.CheckBox" />
+    <style name="CheckBoxDrawable" parent="Material.Drawable.CheckBox"></style>
 
     <!-- SnackBar Style -->
 

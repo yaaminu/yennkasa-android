@@ -42,20 +42,28 @@ public class VerificationFragment extends Fragment {
     };
 
     private void backToLogin() {
+        doGoBackToLogin();
+    }
+
+    private void doGoBackToLogin() {
         progressDialog.show(getFragmentManager(), null);
         UserManager.getInstance().reset(new UserManager.CallBack() {
             @Override
-            public void done(Exception e) {
-                progressDialog.dismiss();
-                if (e == null) {
-                    startActivity(new Intent(getActivity(), MainActivity.class));
-                    getActivity().finish();
-                } else {
-                    UiHelpers.showErrorDialog(getActivity(), e.getMessage());
-                }
+            public void done(final Exception e) {
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        progressDialog.dismiss();
+                        if (e == null) {
+                            startActivity(new Intent(getActivity(), MainActivity.class));
+                            getActivity().finish();
+                        } else {
+                            UiHelpers.showErrorDialog(getActivity(), e.getMessage());
+                        }
+                    }
+                });
             }
         });
-
     }
 
     @Override
@@ -82,6 +90,7 @@ public class VerificationFragment extends Fragment {
     }
 
     private void resendToken() {
+        progressDialog.show(getFragmentManager(), null);
         UserManager.getInstance().resendToken(new UserManager.CallBack() {
             @Override
             public void done(Exception e) {

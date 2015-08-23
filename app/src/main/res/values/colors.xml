@@ -6,9 +6,10 @@
     <color name="server_status_bar">#2b2b2b</color>
     <color name="title_gray">#434343</color>
     <color name="white">#ffffff</color>
+    <color name="out_going_message_text_color">#000</color>
     <color name="color_msg_outgoing">#5eb964</color>
-    <color name="color_msg_incoming">#b5e7eb</color>
-    <color name="color_msg_date">#e5e7eb</color>
+    <color name="color_msg_incoming">#88bbbbbb</color>
+    <color name="color_msg_date">#cccccc</color>
     <color name="msg_border_color">#a1a1a1</color>
     <color name="bg_btn_join">#1e6258</color>
     <color name="bg_msg_input">#e8e8e8</color>
@@ -36,9 +37,10 @@
         <item>#FFFAFFFE</item>
     </array>
 
-    <color name="rb_checked">#FF4CAF50</color>
+    <color name="rb_checked">@color/preferred_primary_color</color>
     <color name="rb_unchecked">#FF6D6D6D</color>
     <color name="rb_disable">#FFB0B0B0</color>
+
 
     <color name="tpi_checked">#FFFFFFFF</color>
     <color name="tpi_unchecked">#99FFFFFF</color>
@@ -46,5 +48,7 @@
     <color name="et_divider_focused">@color/colorControlActivated</color>
     <color name="et_divider_not_focused">#FF6D6D6D</color>
     <color name="et_divider_disable">#FFC1C1C1</color>
-
+    <color name="preferred_primary_color">#5eb964</color>
+    <color name="list_item_divider">#3d884a</color>
+    <color name="black">#000</color>
 </resources>

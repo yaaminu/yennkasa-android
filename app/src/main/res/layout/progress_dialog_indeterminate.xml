@@ -23,6 +23,6 @@
         android:layout_weight="1.0"
         android:padding="16dp"
         android:text="@string/st_please_wait"
-        android:textColor="@color/colorPrimaryDark"
+        android:textColor="@color/preferred_primary_color"
         android:textSize="18sp" />
 </LinearLayout>

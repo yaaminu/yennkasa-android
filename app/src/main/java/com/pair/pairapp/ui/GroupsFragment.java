@@ -76,14 +76,14 @@ public class GroupsFragment extends ListFragment {
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        menu.add(0, R.id.action_createGroup, 0, R.string.create_group);
+        inflater.inflate(R.menu.menu_group_fragment, menu);
         super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         long id = item.getItemId();
-        if (id == R.id.action_createGroup) {
+        if (id == R.id.action_create_group) {
             startActivity(new Intent(getActivity(), CreateGroupActivity.class));
             return true;
         }

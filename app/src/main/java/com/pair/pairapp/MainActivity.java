@@ -5,42 +5,53 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.PagerTabStrip;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBarActivity;
-import android.util.TypedValue;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
+import android.widget.LinearLayout;
 
 import com.pair.data.UserManager;
+import com.pair.messenger.PairAppBaseActivity;
 import com.pair.pairapp.ui.ContactFragment;
 import com.pair.pairapp.ui.ConversationsFragment;
 import com.pair.pairapp.ui.GroupsFragment;
 import com.pair.util.RealmUtils;
+import com.rey.material.app.ToolbarManager;
+import com.rey.material.widget.SnackBar;
+import com.rey.material.widget.TabPageIndicator;
 
 /**
  * @author Null-Pointer on 6/6/2015.
  */
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends PairAppBaseActivity {
     private static boolean cleanedMessages = false;
     public static final String TAG = MainActivity.class.getSimpleName();
-    public static String groupName;
     public static final String ARG_TITLE = "title";
     private static int savedPosition = -1;
-    public static final int SELECT_USERS_REQUEST = 1001;
     private ViewPager pager;
+    private ToolbarManager toolbarManager;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //user cannot get pass this if there is no gcm support as he will be presented a blocking dialog that cannot be dismissed
         if (UserManager.getInstance().isUserVerified()) {
             setContentView(R.layout.activity_main);
             //noinspection ConstantConditions
             pager = ((ViewPager) findViewById(R.id.vp_pager));
-            PagerTabStrip tabStrip = ((PagerTabStrip) findViewById(R.id.pts_title_strip));
-            tabStrip.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
-            tabStrip.setDrawFullUnderline(true);
+            TabPageIndicator tabStrip = ((TabPageIndicator) findViewById(R.id.pts_title_strip));
+            try {
+                ((LinearLayout) tabStrip.getChildAt(0)).setGravity(Gravity.CENTER_HORIZONTAL);
+            } catch (Exception ignored) { //this could raise an exception
+                Log.e(TAG, ignored.getMessage());
+            }
+            Toolbar toolBar = (Toolbar) findViewById(R.id.main_toolbar);
+            toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
             pager.setAdapter(new MyFragmentStatePagerAdapter(getSupportFragmentManager()));
+            snackBar = ((SnackBar) findViewById(R.id.notification_bar));
+            tabStrip.setViewPager(pager);
         } else {
             gotoSetUpActivity();
         }
@@ -53,9 +64,22 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        Config.appOpen(true);
         if (savedPosition != -1) {
             pager.setCurrentItem(savedPosition);
         }
+        if (pairAppClientInterface != null) {
+            pairAppClientInterface.registerNotifier(this);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        Config.appOpen(false);
+        if (pairAppClientInterface != null) {
+            pairAppClientInterface.unRegisterNotifier(this);
+        }
+        super.onPause();
     }
 
     @Override
@@ -65,9 +89,25 @@ public class MainActivity extends ActionBarActivity {
     }
 
     @Override
+    protected void onBind() {
+        pairAppClientInterface.registerNotifier(this);
+    }
+
+    @Override
+    protected void onUnbind() {
+    }
+
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_pair_app, menu);
+        toolbarManager.createMenu(R.menu.menu_pair_app);
         return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        toolbarManager.onPrepareMenu();
+        return super.onPrepareOptionsMenu(menu);
     }
 
     private void gotoSetUpActivity() {

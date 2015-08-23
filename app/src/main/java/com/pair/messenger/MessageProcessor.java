@@ -47,15 +47,15 @@ public class MessageProcessor extends IntentService {
         if (conversation == null) { //create a new one
             conversation = realm.createObject(Conversation.class);
             conversation.setActive(false);
-            conversation.setPeerId(message.getFrom());
+            conversation.setPeerId(peerId);
         }
         Conversation.newSession(realm, conversation);
 
-        //force the new message to be older the session start up time
+        //force the new message to be newer than the session start up time
         message.setDateComposed(new Date(System.currentTimeMillis() + 1));
         conversation.setLastActiveTime(new Date());//now
         conversation.setLastMessage(realm.copyToRealm(message));
-        conversation.setSummary("new!->" + message.getMessageBody());
+        conversation.setSummary(message.getMessageBody());
         realm.commitTransaction();
         // TODO: 6/14/2015 send a socket/gcm broadcast to server to notify sender of message state.
         Message copied = new Message(message);

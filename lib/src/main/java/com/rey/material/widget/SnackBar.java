@@ -757,7 +757,7 @@ public class SnackBar extends FrameLayout {
 
             params.width = mWidth;
             params.height = mHeight;
-            params.gravity = Gravity.START | Gravity.BOTTOM;
+			params.gravity = Gravity.START;
 			if(mIsRtl)
 				params.rightMargin = mMarginStart;
 			else
@@ -779,8 +779,8 @@ public class SnackBar extends FrameLayout {
         }
 
         if(mInAnimationId != 0 && mState != STATE_SHOWN){
-            Animation anim = AnimationUtils.loadAnimation(getContext(), mInAnimationId);
-            anim.setAnimationListener(new Animation.AnimationListener() {
+			Animation anim = AnimationUtils.loadAnimation(getContext(), R.anim.abc_slide_in_top);
+			anim.setAnimationListener(new Animation.AnimationListener() {
 
                 @Override
                 public void onAnimationStart(Animation animation) {
@@ -822,7 +822,7 @@ public class SnackBar extends FrameLayout {
 		removeCallbacks(mDismissRunnable);
 		
 		if(mOutAnimationId != 0){
-			Animation anim = AnimationUtils.loadAnimation(getContext(), mOutAnimationId);
+			Animation anim = AnimationUtils.loadAnimation(getContext(), R.anim.abc_slide_out_top);
 			anim.setAnimationListener(new Animation.AnimationListener() {
 				
 				@Override

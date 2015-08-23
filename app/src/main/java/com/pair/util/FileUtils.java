@@ -70,7 +70,7 @@ public class FileUtils {
         };
         Cursor cursor = Config.getApplication().getContentResolver().query(uri, projections, null, null, null);
         if (cursor == null || cursor.getCount() < 1) {
-            throw new IllegalArgumentException("uri passed does not point to any resource");
+            return null;
         }
         cursor.moveToFirst();
         String path = cursor.getString(cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA));
@@ -193,6 +193,7 @@ public class FileUtils {
             }
         }
     }
+
     public interface ProgressListener {
         boolean onStart(long expected);
 

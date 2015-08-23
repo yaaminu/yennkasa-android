@@ -14,19 +14,17 @@ import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.pair.data.Message;
-import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.Config;
 import com.pair.pairapp.R;
 import com.pair.pairapp.ui.ImageViewer;
 import com.pair.util.FileUtils;
 import com.pair.util.UiHelpers;
+import com.rey.material.widget.ProgressView;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.RequestCreator;
 
@@ -44,7 +42,7 @@ import io.realm.RealmResults;
  * @author Null-Pointer on 5/31/2015.
  */
 @SuppressWarnings("ConstantConditions")
-public class MessagesAdapter extends RealmBaseAdapter<Message> {
+public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.OnLongClickListener {
     private static final String TAG = MessagesAdapter.class.getSimpleName();
     private static final long TEN_SECONDS = 10000L;
     private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2, DATE_MESSAGE = 0x0;
@@ -84,6 +82,13 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     public View getView(final int position, View convertView, final ViewGroup parent) {
         final ViewHolder holder;
         final Message message = getItem(position);
+        if (Message.isIncoming(message) && message.getState() != Message.STATE_SEEN) {
+            Realm realm = Message.REALM(context);
+            //this will be very expensive if we have a large collection we better find a better way
+            realm.beginTransaction();
+            message.setState(Message.STATE_SEEN);
+            realm.commitTransaction();
+        }
         if (convertView == null) {
             convertView = hookupViews(messagesLayout[getItemViewType(position)], parent);
         }
@@ -101,7 +106,9 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         holder.messageStatus.setVisibility(View.GONE);
         holder.downloadButton.setVisibility(View.GONE);
         holder.progress.setVisibility(View.GONE);
-
+        holder.preview.setOnClickListener(null);
+        holder.downloadButton.setOnClickListener(null);
+        holder.textMessage.setVisibility(View.GONE);
         //common to all
         holder.dateComposed.setVisibility(View.VISIBLE);
         holder.dateComposed.setText(dateComposed);
@@ -120,8 +127,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
 
         //if we are here then the message is binary example picture message or video message
         holder.preview.setVisibility(View.VISIBLE);
-
-        final int placeHolder = previewsMap.get(message.getType());
+        holder.preview.setOnLongClickListener(this);
+        final int placeHolderDrawable = previewsMap.get(message.getType());
         final File messageFile = new File(message.getMessageBody());
         final View.OnClickListener listener = new View.OnClickListener() {
             @Override
@@ -140,9 +147,9 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
                 creator = PICASSO.load(messageFile)
                         .resize(250, 200)
                         .centerCrop()
-                        .error(placeHolder);
+                        .error(placeHolderDrawable);
             } else {
-                creator = PICASSO.load(placeHolder);
+                creator = PICASSO.load(placeHolderDrawable);
             }
             creator.into(holder.preview);
             holder.preview.setOnClickListener(listener);
@@ -151,7 +158,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
                 holder.downloadButton.setVisibility(View.VISIBLE);
             }
             holder.downloadButton.setOnClickListener(listener);
-            PICASSO.load(placeHolder)
+            PICASSO.load(placeHolderDrawable)
                     .into(holder.preview);
         }
 
@@ -181,20 +188,21 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     }
 
     private String getStringRepresentation(int status) {
-        switch (status) {
-            case Message.STATE_PENDING:
-                return context.getString(R.string.st_message_state_pending);
-            case Message.STATE_SEND_FAILED:
-                return context.getString(R.string.st_message_state_failed);
-            case Message.STATE_RECEIVED:
-                return context.getString(R.string.st_message_state_delivered);
-            case Message.STATE_SEEN:
-                return context.getString(R.string.st_message_state_seen);
-            case Message.STATE_SENT:
-                return context.getString(R.string.st_message_state_sent);
-            default:
-                throw new AssertionError("new on unknown message status");
-        }
+//        switch (status) {
+//            case Message.STATE_PENDING:
+//                return context.getString(R.string.st_message_state_pending);
+//            case Message.STATE_SEND_FAILED:
+//                return context.getString(R.string.st_message_state_failed);
+//            case Message.STATE_RECEIVED:
+//                return context.getString(R.string.st_message_state_delivered);
+//            case Message.STATE_SEEN:
+//                return context.getString(R.string.st_message_state_seen);
+//            case Message.STATE_SENT:
+//                return context.getString(R.string.st_message_state_sent);
+//            default:
+//                throw new AssertionError("new on unknown message status");
+//        }
+        return Message.state(context, status);
     }
 
     private void download(final int position) {
@@ -279,8 +287,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
         holder.textMessage = ((TextView) convertView.findViewById(R.id.tv_message_content));
         holder.preview = (ImageView) convertView.findViewById(R.id.iv_message_preview);
         holder.dateComposed = ((TextView) convertView.findViewById(R.id.tv_message_date));
-        holder.downloadButton = ((Button) convertView.findViewById(R.id.bt_download));
-        holder.progress = (ProgressBar) convertView.findViewById(R.id.pb_download_progress);
+        holder.downloadButton = convertView.findViewById(R.id.bt_download);
+        holder.progress = (ProgressView) convertView.findViewById(R.id.pb_download_progress);
         holder.messageStatus = ((TextView) convertView.findViewById(R.id.tv_message_status));
         convertView.setTag(holder);
         return convertView;
@@ -313,14 +321,21 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> {
     }
 
     private boolean isOutgoingMessage(Message message) {
-        return (message.getFrom().equals(UserManager.getInstance().getMainUser().get_id()));
+        return Message.isOutGoing(message);
+    }
+
+    @Override
+    public boolean onLongClick(View v) {
+        //do nothing. just to force the click event to be propagated to its parent
+        //by returning false the containing list will get chance to handle the long click
+        return false;
     }
 
     private class ViewHolder {
         private TextView textMessage, dateComposed;
         private ImageView preview;
-        private Button downloadButton;
-        private ProgressBar progress;
+        private View downloadButton;
+        private ProgressView progress;
         private TextView messageStatus;
         //TODO add more fields as we support different media/file types
     }
