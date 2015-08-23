@@ -160,7 +160,7 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.new_message) {
             Bundle args = new Bundle();
-            args.putString(MainActivity.ARG_TITLE, getActivity().getString(R.string.title_pick_contact));
+            args.putString(MainActivity.ARG_TITLE, getActivity().getString(R.string.title_pick_recipient));
             final Intent intent = new Intent(getActivity(), UsersActivity.class);
             intent.putExtras(args);
             getActivity().startActivity(intent);

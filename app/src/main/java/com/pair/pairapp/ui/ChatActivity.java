@@ -28,6 +28,7 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Filterable;
 import android.widget.ListView;
@@ -716,7 +717,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
                 testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, getCurrentUser().get_id(), Message.TYPE_TEXT_MESSAGE, "hello where have you been i really miss you very much will you join me lets have supper to night?"));
                 SystemClock.sleep(2000);
                 testMessageProcessor(RealmUtils.seedIncomingMessages(getCurrentUser().get_id(), senderId, Message.TYPE_TEXT_MESSAGE, "hello where have you been i really miss you very much will you join me lets have supper to night?"));
-//                testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, getCurrentUser().get_id()));
+                //  testMessageProcessor(RealmUtils.seedIncomingMessages("233201234567", getCurrentUser().get_id()));
             }
         };
         timer.scheduleAtFixedRate(task, 5000, 45000);
@@ -801,9 +802,23 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             }
 
             @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
+            public View getView(final int position, View convertView, final ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(recipientsIds.contains(getItem(position).get_id()));
+                final CheckBox checkBox = (CheckBox) view.findViewById(R.id.cb_checked);
+                final String userId = getItem(position).get_id();
+                checkBox.setChecked(recipientsIds.contains(userId));
+                checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (isChecked) {
+                            recipientsIds.add(userId);
+                        } else {
+                            recipientsIds.remove(userId);
+                        }
+                        ((ListView) parent).setItemChecked(position, isChecked);
+                        supportInvalidateOptionsMenu();
+                    }
+                });
                 return view;
             }
         };

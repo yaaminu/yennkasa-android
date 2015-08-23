@@ -96,7 +96,6 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         setHasOptionsMenu(true);
         View view = inflater.inflate(R.layout.fragment_contact, container, false);
         adapter = new ContactsAdapter(getActivity(), contacts, false);
-        ContactsManager.getInstance().findAllContacts(filter, comparator, contactsFindCallback);
         //required so that we can operate on it with no fear since calling getListView before onCreateView returns is not safe
         listView = ((ListView) view.findViewById(android.R.id.list));
         listView.setOnScrollListener(this);
@@ -138,6 +137,12 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        ContactsManager.getInstance().findAllContacts(filter, comparator, contactsFindCallback);
     }
 
     @Override

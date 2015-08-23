@@ -31,6 +31,16 @@ public class RealmUtils {
         realm.beginTransaction();
         realm.clear(Message.class);
         realm.clear(Conversation.class);
+        //try {
+//            User user = User.copy(UserManager.getInstance().getMainUser());
+//            for(int i=0; i<20;i++) {
+//                user.set_id((2348033557792L + i) + "");
+//                user.setName("New user " + i);
+//                realm.copyToRealm(user);
+//            }
+//        } catch (Exception e) {
+
+        //    }
         realm.commitTransaction();
         realm.close();
     }
@@ -59,6 +69,7 @@ public class RealmUtils {
         realm.close();
         return message;
     }
+
     private static void seedOutgoingMessages() {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         realm.beginTransaction();

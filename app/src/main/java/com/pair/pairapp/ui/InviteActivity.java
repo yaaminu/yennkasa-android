@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.CompoundButton;
 import android.widget.Filterable;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -204,9 +205,23 @@ public class InviteActivity extends ActionBarActivity implements ItemsSelector.O
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(final int position, final View convertView, final ViewGroup parent) {
             View view = super.getView(position, convertView, parent);
-            ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(selectedUsers.contains(getItem(position).get_id()));
+            final String userId = getItem(position).get_id();
+            final CheckBox checkBox = (CheckBox) view.findViewById(R.id.cb_checked);
+            checkBox.setChecked(selectedUsers.contains(userId));
+            checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked) {
+                        selectedUsers.add(userId);
+                    } else {
+                        selectedUsers.remove(userId);
+                    }
+                    ((ListView) parent).setItemChecked(position, isChecked);
+                    supportInvalidateOptionsMenu();
+                }
+            });
             return view;
         }
 

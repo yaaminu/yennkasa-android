@@ -119,7 +119,20 @@ public class UserManager {
     }
 
     public boolean isUserLoggedIn() {
-        return getMainUser() != null;
+        return isEveryThingSetup();
+    }
+
+    private boolean isEveryThingSetup() {
+        final User mainUser = getMainUser();
+        if (mainUser == null || mainUser.get_id().isEmpty() || mainUser.getName().isEmpty() || mainUser.getCountry().isEmpty()) {
+            return false;
+        } else //noinspection ConstantConditions
+            if (getSettings().getString(KEY_SESSION_ID, "").isEmpty()) {
+                return false;
+            } else if (!getSettings().getBoolean(KEY_USER_VERIFIED, false)) {
+                return false;
+            }
+        return true;
     }
 
     public boolean isUserVerified() {
@@ -1081,6 +1094,10 @@ public class UserManager {
                 }
             }
         });
+    }
+
+    public static String getMainUserId() {
+        return getInstance().getMainUser().get_id();
     }
 
     private void cleanUp() {

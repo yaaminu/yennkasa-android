@@ -15,7 +15,7 @@
     <string name="st_empty_contacts">It\'s Lonely Here :-) No Contact To Display</string>
     <string name="action_call_sender">Call sender</string>
     <string name="action_delete_conversation">Delete</string>
-    <string name="title_pick_contact">Pick a contact</string>
+    <string name="title_pick_recipient">Pick a recipient</string>
     <string name="action_attach">Attach</string>
     <string name="error_sorry_no_application_to_open_file">No App to open file type</string>
     <string name="action_refresh">Refresh</string>

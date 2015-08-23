@@ -1,18 +1,18 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_item_height"
-    android:descendantFocusability="afterDescendants"
-    android:padding="@dimen/list_item_padding"
     android:layout_marginBottom="@dimen/list_item_margin_bottom"
-    android:gravity="center_vertical">
+    android:descendantFocusability="afterDescendants"
+    android:gravity="center_vertical"
+    android:padding="@dimen/list_item_padding">
 
     <com.pair.view.RoundedImageView
         android:id="@+id/iv_display_picture"
         android:layout_width="@dimen/thumbnail_width"
         android:layout_height="@dimen/thumbnail_height"
-        android:layout_margin="@dimen/thumbnail_margin"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
+        android:layout_margin="@dimen/thumbnail_margin"
         android:contentDescription="@string/content_desc_user_avatar"
         android:scaleType="fitStart"
         android:src="@drawable/user_avartar" />
@@ -21,8 +21,8 @@
         android:id="@+id/tv_user_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/iv_display_picture"
         android:layout_alignTop="@+id/iv_display_picture"
+        android:layout_toRightOf="@+id/iv_display_picture"
         android:singleLine="true"
         android:text="name"
         android:textSize="@dimen/list_item_heading_size"
@@ -41,11 +41,10 @@
         android:textStyle="italic" />
 
     <TextView
+        android:id="@+id/tv_user_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="online"
-        android:layout_alignTop="@+id/tv_user_name"
         android:layout_alignParentRight="true"
-        android:id="@+id/tv_user_phone" />
-
+        android:layout_alignTop="@+id/tv_user_name"
+        android:text="online" />
 </RelativeLayout>

@@ -57,5 +57,6 @@
         android:layout_alignParentRight="true"
         style="@style/CheckBoxDrawable"
         android:visibility="gone"
+        android:clickable="false"
         android:layout_alignBottom="@+id/tv_user_phone" />
 </RelativeLayout>

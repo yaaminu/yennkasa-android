@@ -20,6 +20,7 @@ import android.widget.ListView;
 
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
+import com.pair.util.ScreenUtility;
 
 /**
  * A simple {@link Fragment} for selecting items.
@@ -33,6 +34,7 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
     private Filter filter;
     private GridView gridContainer;
     private ListView listContainer;
+    private View filterView;
 
 
     public ItemsSelector() {
@@ -69,7 +71,7 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
         filterEditText = ((EditText) view.findViewById(R.id.et_filter_input_box));
         gridContainer = (GridView) view.findViewById(R.id.gv_container);
         listContainer = (ListView) view.findViewById(R.id.lv_container);
-        final View filterView = view.findViewById(R.id.ll_filter_panel);
+        filterView = view.findViewById(R.id.ll_filter_panel);
 
         View emptyView = interactionListener.emptyView();
         final View defaultEmptyView = view.findViewById(R.id.tv_empty);
@@ -112,22 +114,36 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
         } catch (NullPointerException e) {
             //no arguments passed or maybe containing activity has no action bar
         }
+        return view;
+    }
 
+    @Override
+    public void onResume() {
+        super.onResume();
         if (!interactionListener.supportAddCustom()) { //show the filterEditText if clients support adding custom
-            int first, last;
             //we will not show the filter if the content fit on the screen without the need to scroll
-            if (interactionListener.preferredContainer() == ContainerType.LIST) {
-                first = listContainer.getFirstVisiblePosition();
-                last = listContainer.getLastVisiblePosition();
+            float height = new ScreenUtility(getActivity()).getPixelsHeight();
+            float preferredListItemHeight = getActivity().getResources().getDimension(R.dimen.list_item_height);
+
+            //assume the toolbar is 100 pixels in height
+            //noinspection ConstantConditions
+            float actualHeight = height - 100;
+            int numOfMaxItems = ((int) (actualHeight / preferredListItemHeight));
+
+            if (interactionListener.preferredContainer().equals(ContainerType.LIST)) {
+                if (listContainer.getAdapter().getCount() > numOfMaxItems) {
+                    filterView.setVisibility(View.VISIBLE);
+                } else {
+                    filterView.setVisibility(View.GONE);
+                }
             } else {
-                first = gridContainer.getFirstVisiblePosition();
-                last = gridContainer.getLastVisiblePosition();
-            }
-            if (Math.abs(first - last) < listContainer.getCount() + 1) {
-                filterView.setVisibility(View.GONE);
+                if (gridContainer.getAdapter().getCount() > gridContainer.getNumColumns() * numOfMaxItems) {
+                    filterView.setVisibility(View.VISIBLE);
+                } else {
+                    filterView.setVisibility(View.GONE);
+                }
             }
         }
-        return view;
     }
 
     @Override

@@ -22,8 +22,6 @@
             <TextView
                 android:id="@+id/tv_message_content"
                 style="@style/message_incoming"
-                android:maxWidth="@dimen/message_text_item_max_width"
-                android:minWidth="@dimen/message_item_min_width"
                 android:text="hello" />
 
             <ImageView

@@ -1,7 +1,10 @@
 package com.pair.adapter;
 
+import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.provider.ContactsContract;
 import android.support.v4.app.FragmentActivity;
 import android.telephony.SmsManager;
 import android.view.LayoutInflater;
@@ -93,6 +96,12 @@ public class ContactsAdapter extends BaseAdapter {
             holder = ((ViewHolder) convertView.getTag());
         }
 
+        View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                handleClick(v, contact);
+            }
+        };
         holder.userName.setText(contact.name);
         if (isAddOrRemoveFromGroup) {
             return convertView;
@@ -107,35 +116,52 @@ public class ContactsAdapter extends BaseAdapter {
                     .into(holder.userDp);
             holder.userName.setClickable(true);
             holder.userDp.setClickable(true);
-            final View.OnClickListener listener = new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    UiHelpers.gotoProfileActivity(v.getContext(), getItem(position).numberInIEE_Format);
-                }
-            };
             holder.userDp.setOnClickListener(listener);
             holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat(getItem(position).numberInIEE_Format));
+            holder.userPhone.setClickable(true);
+            holder.userPhone.setOnClickListener(listener);
         } else {
             holder.userStatus.setText(PhoneNumberNormaliser.toLocalFormat(contact.numberInIEE_Format));
-            final View.OnClickListener listener = new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent intent = new Intent(Intent.ACTION_DIAL);
-                    intent.setData(Uri.parse("tel:" + contact.phoneNumber));
-                    v.getContext().startActivity(intent);
-                }
-            };
             holder.userStatus.setOnClickListener(listener);
             holder.userName.setOnClickListener(listener);
-            holder.inviteButton.setOnClickListener(new InviteContact(contact));
+            holder.inviteButton.setOnClickListener(listener);
         }
 
         return convertView;
     }
 
+    private void callContact(View v, Contact contact) {
+        Intent intent = new Intent(Intent.ACTION_DIAL);
+        intent.setData(Uri.parse("tel:" + PhoneNumberNormaliser.toLocalFormat(contact.phoneNumber)));
+        v.getContext().startActivity(intent);
+    }
+
     public void refill(List<Contact> contacts) {
         this.contacts = contacts;
         notifyDataSetChanged();
+    }
+
+    private void handleClick(View view, Contact contact) {
+        int id = view.getId();
+
+        if (contact.isRegisteredUser) {
+            if (id == R.id.iv_display_picture) {
+                UiHelpers.gotoProfileActivity(view.getContext(), contact.numberInIEE_Format);
+            } else if (id == R.id.tv_user_phone) {
+                callContact(view, contact);
+            }
+        } else {
+            if (id == R.id.bt_invite) {
+                invite(contact.phoneNumber);
+            } else if (id == R.id.tv_user_status || id == R.id.tv_user_phone) {
+                callContact(view, contact);
+            }
+        }
+    }
+
+    private void invite(String phoneNumber) {
+        String message = "Try out PAIRAPP messenger for android . Its free and fast!\\n download here: http://pairapp.com/download";
+        SmsManager.getDefault().sendTextMessage(phoneNumber, null, message, null, null);
     }
 
     private class ViewHolder {
@@ -146,33 +172,42 @@ public class ContactsAdapter extends BaseAdapter {
         private TextView userPhone;
     }
 
-    private class InviteContact implements View.OnClickListener {
-        Contact contact;
+//    private class InviteContact implements View.OnClickListener {
+//        Contact contact;
+//
+//        public InviteContact(Contact contact) {
+//            this.contact = contact;
+//        }
+//
+//        @Override
+//        public void onClick(View v) {
+//            final UiHelpers.Listener listener = new UiHelpers.Listener() {
+//                @Override
+//                public void onClick() {
+//
+//                }
+//            };
+//            UiHelpers.showErrorDialog(context, R.string.charges_may_apply, android.R.string.ok, android.R.string.cancel, listener, null);
+////            Uri uri = Uri.parse("sms:"+contact.phoneNumber);
+////            Intent intent = new Intent(Intent.ACTION_SENDTO);
+////            intent.setData(uri);
+////            intent.putExtra(Intent.EXTRA_TEXT, message);
+////            v.getContext().startActivity(intent);
+//        }
+//
+//    }
 
-        public InviteContact(Contact contact) {
-            this.contact = contact;
-        }
 
-        @Override
-        public void onClick(View v) {
-            final UiHelpers.Listener listener = new UiHelpers.Listener() {
-                @Override
-                public void onClick() {
-                    String message = "Try out PAIRAPP messenger for android . Its free and fast!\\n download here: http://pairapp.com/download";
-                    SmsManager.getDefault().sendTextMessage(contact.phoneNumber, null, message, null, null);
-                }
-            };
-            UiHelpers.showErrorDialog(context, R.string.charges_may_apply, android.R.string.ok, android.R.string.cancel, listener, null);
-//            Uri uri = Uri.parse("sms:"+contact.phoneNumber);
-//            Intent intent = new Intent(Intent.ACTION_SENDTO);
-//            intent.setData(uri);
-//            intent.putExtra(Intent.EXTRA_TEXT, message);
-//            v.getContext().startActivity(intent);
+    private void addToContacts(Context context, Contact contact) {
+        Intent intent = new Intent(ContactsContract.Intents.SHOW_OR_CREATE_CONTACT);
+        intent.setData(Uri.parse("tel:" + PhoneNumberNormaliser.toLocalFormat(contact.phoneNumber)));
+        try {
+            context.startActivity(intent);
+        } catch (ActivityNotFoundException e) {
+            // TODO: 8/23/2015 should we tell the user or is it that our intent was wrongly targeted?
         }
 
     }
-
-
     private final int[] layoutResource = {
             R.layout.registered_contact_item,
             R.layout.unregistered_contact_item,

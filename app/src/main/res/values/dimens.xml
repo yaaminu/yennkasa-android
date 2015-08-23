@@ -35,6 +35,6 @@
     <dimen name="chat_activity_side_margin">8dp</dimen>
     <dimen name="message_preview_item_width">200dp</dimen>
     <dimen name="message_preview_item_height">180dp</dimen>
-    <dimen name="message_text_item_max_width">250dp</dimen>
+    <dimen name="message_text_item_max_width">300dp</dimen>
     <dimen name="message_item_min_width">100dp</dimen>
 </resources>
