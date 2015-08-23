@@ -77,7 +77,7 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
         } else {
             RealmResults<User> results = realm.where(User.class).notEqualTo(User.FIELD_ID, getCurrentUser().get_id()).findAllSorted(User.FIELD_NAME, true);
             results.sort(User.FIELD_TYPE, false, User.FIELD_NAME, true);
-            adapter = new UsersAdapter(getActivity(), results, true);
+            adapter = new UsersAdapter(getActivity(), results);
         }
         usersList.setAdapter(adapter);
         usersList.setOnItemClickListener(this);
@@ -93,7 +93,7 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
         //navigate to chat activity
         String peerId;
         try {
-            peerId = ((UsersAdapter.ViewHolder) view.getTag()).userId;
+            peerId = ((User) parent.getAdapter().getItem(position)).get_id();
             UiHelpers.enterChatRoom(getActivity(), peerId);
         } catch (ClassCastException e) {
             //noinspection ConstantConditions
