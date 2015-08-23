@@ -21,8 +21,7 @@ public class PhoneNumberNormaliser {
 
     //rough pattern - 00********** or +*********** or 011********** or 166************* (166 is special for dialing us numbers from thailand)
     // any char that is not either + or digit is considered non-dialable
-    private static final Pattern GLOBAL_NUMBER_PATTERN = Pattern.compile("^(00|011|166)"),
-            NON_DIALABLE_PATTERN = Pattern.compile("[^\\d]");
+    private static final Pattern NON_DIALABLE_PATTERN = Pattern.compile("[^\\d]");
 
     public static String toIEE(String phoneNumber, String defaultRegion) throws NumberParseException {
         if (phoneNumber == null) {

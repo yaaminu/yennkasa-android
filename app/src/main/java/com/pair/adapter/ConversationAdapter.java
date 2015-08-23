@@ -102,7 +102,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
                 summary.append(message.getMessageBody());
                 holder.mediaMessageIcon.setVisibility(View.GONE);
             } else {
-                summary.append(getDescription(message.getType()));
+                summary.append(Message.typeToString(context, message.getType()));
                 holder.mediaMessageIcon.setVisibility(View.VISIBLE);
                 holder.mediaMessageIcon.setImageResource(previewIcons.get(message.getType()));
             }
@@ -134,18 +134,18 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         return copy;
     }
 
-    private String getDescription(int messageType) {
-        switch (messageType) {
-            case Message.TYPE_BIN_MESSAGE:
-                return "File";
-            case Message.TYPE_PICTURE_MESSAGE:
-                return "Picture";
-            case Message.TYPE_VIDEO_MESSAGE:
-                return "video";
-            default:
-                throw new AssertionError("unknown message type");
-        }
-    }
+//    private String getDescription(int messageType) {
+//        switch (messageType) {
+//            case Message.TYPE_BIN_MESSAGE:
+//                return "File";
+//            case Message.TYPE_PICTURE_MESSAGE:
+//                return "Picture";
+//            case Message.TYPE_VIDEO_MESSAGE:
+//                return "video";
+//            default:
+//                throw new AssertionError("unknown message type");
+//        }
+//    }
 
     public class ViewHolder {
         public String peerId; //holds current item to be used by callers outside this adapter.

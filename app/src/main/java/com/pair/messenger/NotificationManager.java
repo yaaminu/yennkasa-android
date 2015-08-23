@@ -106,7 +106,8 @@ final class NotificationManager {
     }
 
     synchronized void unRegisterUI_Notifier(Notifier notifier) {
-        if (UI_NOTIFIER == notifier) {
+        if (UI_NOTIFIER.get() == notifier) {
+            UI_NOTIFIER.clear();
             UI_NOTIFIER = null;
         }
     }

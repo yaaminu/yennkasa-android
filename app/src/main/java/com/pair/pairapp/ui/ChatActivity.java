@@ -9,7 +9,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
@@ -655,12 +654,12 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             return true;
         } else if (itemId == R.id.action_share) {
             Intent intent = new Intent(Intent.ACTION_SEND);
-            if (selectedMessage.getType() == TYPE_TEXT_MESSAGE) {
+            if (Message.isTextMessage(selectedMessage)) {
                 intent.setType("text/plain");
                 intent.putExtra(Intent.EXTRA_TEXT, selectedMessage.getMessageBody());
             } else {
-                intent.putExtra(Intent.EXTRA_STREAM, Uri.parse(selectedMessage.getMessageBody()).toString());
                 intent.setType(FileUtils.getMimeType(selectedMessage.getMessageBody()));
+                intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(selectedMessage.getMessageBody())));
             }
             try {
                 startActivity(intent);
@@ -714,10 +713,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             @Override
             public void run() {
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_LOWEST);
-                testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, getCurrentUser().get_id(), Message.TYPE_TEXT_MESSAGE, "hello where have you been i really miss you very much will you join me lets have supper to night?"));
-                SystemClock.sleep(2000);
-                testMessageProcessor(RealmUtils.seedIncomingMessages(getCurrentUser().get_id(), senderId, Message.TYPE_TEXT_MESSAGE, "hello where have you been i really miss you very much will you join me lets have supper to night?"));
-                //  testMessageProcessor(RealmUtils.seedIncomingMessages("233201234567", getCurrentUser().get_id()));
+                testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, getCurrentUser().get_id()));
             }
         };
         timer.scheduleAtFixedRate(task, 5000, 45000);

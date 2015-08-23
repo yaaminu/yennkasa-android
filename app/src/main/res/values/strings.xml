@@ -15,9 +15,9 @@
     <string name="st_empty_contacts">It\'s Lonely Here :-) No Contact To Display</string>
     <string name="action_call_sender">Call sender</string>
     <string name="action_delete_conversation">Delete</string>
-    <string name="title_pick_recipient">Pick a recipient</string>
+    <string name="title_pick_recipient">Pick recipient</string>
     <string name="action_attach">Attach</string>
-    <string name="error_sorry_no_application_to_open_file">No App to open file type</string>
+    <string name="error_sorry_no_application_to_open_file">No App on your phone can open this file type</string>
     <string name="action_refresh">Refresh</string>
     <string name="title_activity_profile">Profile</string>
     <string name="error_occurred">Sorry an error occurred</string>
@@ -122,4 +122,7 @@
     <string name="group">group</string>
     <string name="forward_to">Forward to</string>
     <string name="enter_a_number">Enter a valid phone number</string>
+    <string name="picture">Picture</string>
+    <string name="video">Video</string>
+    <string name="file">File</string>
 </resources>

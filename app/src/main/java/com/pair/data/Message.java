@@ -183,4 +183,19 @@ public class Message extends RealmObject {
                 throw new AssertionError("new on unknown message status");
         }
     }
+
+    public static String typeToString(Context context, int type) {
+        switch (type) {
+            case Message.TYPE_PICTURE_MESSAGE:
+                return context.getString(R.string.picture);
+            case Message.TYPE_VIDEO_MESSAGE:
+                return context.getString(R.string.video);
+            case Message.TYPE_BIN_MESSAGE:
+                return context.getString(R.string.file);
+            case Message.TYPE_TEXT_MESSAGE:
+                return context.getString(R.string.message);
+            default:
+                throw new AssertionError("Unknown message type");
+        }
+    }
 }

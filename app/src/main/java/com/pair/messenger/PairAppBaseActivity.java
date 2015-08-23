@@ -25,8 +25,9 @@ import java.util.List;
  * @author Null-Pointer on 8/12/2015.
  */
 public abstract class PairAppBaseActivity extends ActionBarActivity implements Notifier {
-    static protected List<Pair<String, String>> recentChatList = new ArrayList<>();
-    static private Message latestMessage;
+    static private volatile List<Pair<String, String>> recentChatList = new ArrayList<>();
+    private static volatile int unReadMessages = 0;
+    static private volatile Message latestMessage;
     protected PairAppClient.PairAppClientInterface pairAppClientInterface;
     protected boolean bound = false;
 
@@ -78,30 +79,32 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements N
     }
 
     @NonNull
-    protected String formatNotificationMessage(Message message, String sender) {
+    private String formatNotificationMessage(Message message, String sender) {
+        unReadMessages++;
         String text;
         final int recentCount = recentChatList.size();
         switch (recentCount) {
             case 0:
                 throw new AssertionError();
             case 1:
-                text = sender + ":\n" + message.getMessageBody();
+                String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : Message.typeToString(this, message.getType());
+                text = sender + ":\n" + messageBody;
                 break;
             case 2:
-                text = "2 " + getString(R.string.new_message_from) + " " + recentChatList.get(0).second + getString(R.string.and) + recentChatList.get(1).second;
+                text = unReadMessages + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0).second + getString(R.string.and) + recentChatList.get(1).second;
                 break;
             case 3:
-                text = "3 " + getString(R.string.new_message_from) + " " + recentChatList.get(0).second + ", " + recentChatList.get(1).second + getString(R.string.and) + recentChatList.get(0).second;
+                text = unReadMessages + "  " + getString(R.string.new_message_from) + " " + recentChatList.get(0).second + ", " + recentChatList.get(1).second + getString(R.string.and) + recentChatList.get(2).second;
                 break;
             default:
                 text = "" + recentCount + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0).second + getString(R.string.and) + (recentCount - 1) + getString(R.string.others);
-                break; //redundant but safe
+                break; //redundant
         }
         return text;
     }
 
     @Override
-    public void notifyUser(Context context, final Message message, String sender) {
+    public void notifyUser(Context context, final Message message, final String sender) {
         latestMessage = message;
         final Pair<String, String> tuple = new Pair<>(message.getFrom(), sender);
         if (recentChatList.contains(tuple)) {
@@ -111,8 +114,18 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements N
         recentChatList.add(tuple);
         // TODO: 8/17/2015 vibrate or play short tone
         if (snackBar.getState() == SnackBar.STATE_SHOWN) {
-            snackBar.dismiss();
+            snackBar.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    doNotifyUser(message, sender);
+                }
+            }, 1000);
+        } else {
+            doNotifyUser(message, sender);
         }
+    }
+
+    private void doNotifyUser(Message message, String sender) {
         snackBar.setTag(R.id.latest_message, message.getFrom());
         snackBar.applyStyle(R.style.Material_Widget_SnackBar_Mobile_MultiLine);
         final String text;// = String.format(getString(R.string.message_from_v2), sender) + message.getMessageBody();
@@ -142,6 +155,7 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements N
         public void onClick(View v) {
             if (recentChatList.size() == 1) {
                 recentChatList.clear();
+                unReadMessages = 0;
                 UiHelpers.enterChatRoom(PairAppBaseActivity.this, v.getTag(R.id.latest_message).toString());
             }
         }
@@ -185,5 +199,6 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements N
 
     public void clearRecentChat() {
         recentChatList.clear();
+        unReadMessages = 0;
     }
 }
