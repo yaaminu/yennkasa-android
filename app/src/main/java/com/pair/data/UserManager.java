@@ -9,6 +9,7 @@ import android.os.Looper;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 
 import com.google.i18n.phonenumbers.NumberParseException;
@@ -51,9 +52,12 @@ public class UserManager {
     private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is for security reasons
     private static final String KEY_USER_PASSWORD = "klfiielklaklier"; //and this one too
     public static final String KEY_USER_VERIFIED = "vvlaikkljhf"; // and this
+
+
+    private volatile User mainUser;
+    private final Object mainUserLock = new Object();
     private static final UserManager INSTANCE = new UserManager();
 
-    @SuppressWarnings("ThrowableInstanceNeverThrown")
     private final Exception NO_CONNECTION_ERROR;
     private final BaseJsonAdapter<User> adapter = new UserJsonAdapter();
 
@@ -93,15 +97,24 @@ public class UserManager {
     }
 
     public User getMainUser() {
+        synchronized (mainUserLock) {
+            if (mainUser != null) {
+                return mainUser;
+            }
+        }
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         User user = getMainUser(realm);
         if (user != null) {
             //returning {@link RealmObject} from methods will leak resources since
             // that will prevent us from closing the realm instance. hence we do a shallow copy.
             // downside is changes to this object will not be persisted which is just what we want
-            user = User.copy(user);
+            synchronized (mainUserLock) {
+                mainUser = User.copy(user);
+            }
+            return mainUser;
         }
         realm.close();
+        //noinspection ConstantConditions
         return user;
     }
 
@@ -136,8 +149,11 @@ public class UserManager {
     }
 
     public boolean isMainUser(String userId) {
+        if (TextUtils.isEmpty(userId)) {
+            return false;
+        }
         User thisUser = getMainUser();
-        return ((!(userId == null || thisUser == null)) && thisUser.get_id().equals(userId));
+        return ((thisUser != null)) && thisUser.get_id().equals(userId);
     }
 
     public void createGroup(final String groupName, final List<String> membersId, final CreateGroupCallBack callBack) {
@@ -613,7 +629,7 @@ public class UserManager {
         });
     }
 
-    public void logIn(final Activity context, final String phoneNumber, final String password, final String userIso2LetterCode, final CallBack callback) {
+    public void logIn(final Activity context, final String phoneNumber, final String userIso2LetterCode, final CallBack callback) {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
@@ -622,7 +638,7 @@ public class UserManager {
             @Override
             public void done(Exception e, final String regId) {
                 if (e == null) {
-                    completeLogin(phoneNumber, password, regId, userIso2LetterCode, callback);
+                    completeLogin(phoneNumber, regId, userIso2LetterCode, callback);
                 } else {
                     callback.done(e);
                 }
@@ -630,15 +646,12 @@ public class UserManager {
         });
     }
 
-    private void completeLogin(String phoneNumber, String password, String gcmRegId, String userIso2LetterCode, CallBack callback) {
+    private void completeLogin(String phoneNumber, String gcmRegId, String userIso2LetterCode, CallBack callback) {
         if (TextUtils.isEmpty(phoneNumber)) {
             callback.done(new Exception("invalid phone number"));
             return;
         }
-        if (TextUtils.isEmpty(password)) {
-            callback.done(new Exception("invalid password"));
-            return;
-        }
+
         if (TextUtils.isEmpty(userIso2LetterCode)) {
             callback.done(new Exception("userIso2LetterCode cannot be empty"));
             return;
@@ -649,7 +662,6 @@ public class UserManager {
         }
 
         User user = new User();
-        user.setPassword(password);
         try {
             phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userIso2LetterCode);
         } catch (NumberParseException e) {
@@ -664,6 +676,8 @@ public class UserManager {
         user.set_id(phoneNumber);
         user.setCountry(userIso2LetterCode);
         user.setGcmRegId(gcmRegId);
+        String password = Base64.encodeToString(phoneNumber.getBytes(), Base64.DEFAULT);
+        user.setPassword(password);
         doLogIn(user, userIso2LetterCode, callback);
     }
 
@@ -697,7 +711,7 @@ public class UserManager {
     }
 
 
-    public void signUp(Activity context, final String name, final String phoneNumber, final String password, final String countryIso, final CallBack callback) {
+    public void signUp(Activity context, final String name, final String phoneNumber, final String countryIso, final CallBack callback) {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             callback.done(NO_CONNECTION_ERROR);
             return;
@@ -706,7 +720,7 @@ public class UserManager {
             @Override
             public void done(Exception e, String regId) {
                 if (e == null) {
-                    completeSignUp(name, phoneNumber, password, regId, countryIso, callback);
+                    completeSignUp(name, phoneNumber, regId, countryIso, callback);
                 } else {
                     callback.done(e);
                 }
@@ -714,39 +728,34 @@ public class UserManager {
         });
     }
 
-    private void completeSignUp(final String name, final String phoneNumber, final String password, final String gcmRegId, final String countryIso, final CallBack callback) {
+    private void completeSignUp(final String name, final String phoneNumber, final String gcmRegId, final String countryIso, final CallBack callback) {
         if (TextUtils.isEmpty(name)) {
             callback.done(new Exception("name is invalid"));
         } else if (TextUtils.isEmpty(phoneNumber)) {
             callback.done(new Exception("phone number is invalid"));
-        } else if (TextUtils.isEmpty(password)) {
-            callback.done(new Exception("password is invalid"));
         } else if (TextUtils.isEmpty(countryIso)) {
             callback.done(new Exception("ccc is invalid"));
         } else {
-            doSignup(name, phoneNumber, password, gcmRegId, countryIso, callback);
+            doSignup(name, phoneNumber, gcmRegId, countryIso, callback);
         }
     }
 
     private void doSignup(final String name,
                           final String phoneNumber,
-                          final String password,
                           final String gcmRegId,
                           final String countryIso,
                           final CallBack callback) {
-        final User user = new User();
+        String thePhoneNumber;
         try {
-            String thePhoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, countryIso);
-            user.set_id(thePhoneNumber);
+            thePhoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, countryIso);
         } catch (NumberParseException e) {
-            if (BuildConfig.DEBUG) {
-                Log.e(TAG, e.getMessage(), e.getCause());
-            } else {
-                Log.e(TAG, e.getMessage());
-            }
+            Log.e(TAG, e.getMessage());
             callback.done(new Exception(String.format(Config.getApplicationContext().getString(R.string.invalid_phone_number), phoneNumber)));
             return;
         }
+        final User user = new User();
+        user.set_id(thePhoneNumber);
+        String password = Base64.encodeToString(user.get_id().getBytes(), Base64.DEFAULT);
         user.setPassword(password);
         user.setName(name);
         user.setCountry(countryIso);
@@ -765,7 +774,7 @@ public class UserManager {
                 // TODO: 6/25/2015 handle error
                 Exception e = handleError(retrofitError);
                 if (e == null) {
-                    doSignup(name, phoneNumber, password, gcmRegId, countryIso, callback);
+                    doSignup(name, phoneNumber, gcmRegId, countryIso, callback);
                 } else {
                     callback.done(e);
                 }
@@ -1060,28 +1069,15 @@ public class UserManager {
                     callBack.done(NO_CONNECTION_ERROR);
                     return;
                 }
+                Realm realm = Realm.getInstance(Config.getApplicationContext());
                 try {
-                    userApi.resetUnverifiedAccount(getMainUser().get_id());
-                    Realm realm = Realm.getInstance(Config.getApplicationContext());
-                    try {
-                        realm.beginTransaction();
-                        realm.where(User.class).findAll().clear();
-                        realm.commitTransaction();
-                    } finally {
-                        realm.close();
-                    }
+                    realm.beginTransaction();
+                    realm.clear(User.class);
+                    realm.commitTransaction();
                     cleanUp();
                     callBack.done(null);
-                } catch (RetrofitError error) {
-                    Exception e;
-                    if (error.getCause() instanceof SocketTimeoutException) {
-                        e = NO_CONNECTION_ERROR;
-                    } else if (error.getKind().equals(RetrofitError.Kind.HTTP)) {
-                        e = new Exception(((HttpResponse) error.getBody()).getMessage());
-                    } else {
-                        e = error;
-                    }
-                    callBack.done(e);
+                } finally {
+                    realm.close();
                 }
             }
         });
@@ -1094,6 +1090,7 @@ public class UserManager {
                 .remove(KEY_USER_PASSWORD)
                 .commit();
     }
+
 
     public interface CallBack {
         void done(Exception e);
