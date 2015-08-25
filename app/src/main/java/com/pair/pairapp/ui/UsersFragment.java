@@ -39,6 +39,7 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
     public static final String ARG_ACTION = "action",
             ARG_SHOW_GROUP_MEMBERS = "show_members",
             ARG_GROUP_ID = Message.FIELD_ID;
+    private Realm realm;
 
     public UsersFragment() {
         // Required empty public constructor
@@ -61,7 +62,7 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
         ListView usersList = ((ListView) view.findViewById(R.id.lv_users));
         //noinspection ConstantConditions
         activity.getSupportActionBar().setTitle(title);
-        Realm realm = Realm.getInstance(getActivity());
+        realm = Realm.getInstance(getActivity());
         String action = getArguments().getString(ARG_ACTION);
         BaseAdapter adapter;
         if (action != null && action.equals(ARG_SHOW_GROUP_MEMBERS)) {
@@ -77,7 +78,7 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
         } else {
             RealmResults<User> results = realm.where(User.class).notEqualTo(User.FIELD_ID, getCurrentUser().get_id()).findAllSorted(User.FIELD_NAME, true);
             results.sort(User.FIELD_TYPE, false, User.FIELD_NAME, true);
-            adapter = new UsersAdapter(getActivity(), results);
+            adapter = new UsersAdapter(getActivity(), realm, results);
         }
         usersList.setAdapter(adapter);
         usersList.setOnItemClickListener(this);
@@ -100,6 +101,12 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
             peerId = ((MembersAdapter.ViewHolder) view.getTag()).userId;
             UiHelpers.gotoProfileActivity(getActivity(), peerId);
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        realm.close();
+        super.onDestroy();
     }
 
     private class MembersAdapter extends BaseAdapter {

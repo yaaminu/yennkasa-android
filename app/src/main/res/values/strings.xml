@@ -55,7 +55,7 @@
     <string name="message">Message</string>
     <string name="you">You</string>
     <string name="admin">Admin</string>
-    <string name="leave">Leave Group</string>
+    <string name="leave">Leave</string>
     <string name="call">Call</string>
     <string name="st_verification_notice">@string/st_hint_et_verification</string>
     <string name="st_hint_et_verification">Verification Token</string>
@@ -125,4 +125,5 @@
     <string name="picture">Picture</string>
     <string name="video">Video</string>
     <string name="file">File</string>
+    <string name="dissolve_group">Dissolve</string>
 </resources>

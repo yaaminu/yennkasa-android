@@ -90,12 +90,14 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
                 if (Message.isOutGoing(message)) {
                     summary.append(context.getString(R.string.you)).append(":  ");
                 } else {
-                    User user = User.where(context).equalTo(User.FIELD_ID, message.getFrom()).findFirst();
+                    Realm realm = User.Realm(context);
+                    User user = realm.where(User.class).equalTo(User.FIELD_ID, message.getFrom()).findFirst();
                     if (user == null) {
                         summary.append(message.getFrom()).append(":  ");
                     } else {
                         summary.append(user.getName()).append(":  ");
                     }
+                    realm.close();
                 }
             }
             if (Message.isTextMessage(message)) {

@@ -85,7 +85,6 @@ public class PairAppClient extends Service {
 
     @Override
     public void onRebind(Intent intent) {
-        Log.i(TAG, intent.getComponent().getClassName() + " re-binding");
         boundClients++;
         bound = true;
         super.onRebind(intent);

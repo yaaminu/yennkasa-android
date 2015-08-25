@@ -325,4 +325,9 @@
         <item name="cet_spanSpacing">4dp</item>
     </style>
 
+    <style name="default_list_item_style" parent="selectedListItemStyle">
+        <item name="rd_delayClick">afterRelease</item>
+        <item name="rd_rippleColor">@color/colorPrimaryDark</item>
+    </style>
+
 </resources>

@@ -9,7 +9,6 @@ import java.util.List;
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
-import io.realm.RealmQuery;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.RealmClass;
 
@@ -237,9 +236,5 @@ public class User extends RealmObject {
 
     public static Realm Realm(Context context) {
         return Realm.getInstance(context);
-    }
-
-    public static RealmQuery<User> where(Context context) {
-        return Realm(context).where(User.class);
     }
 }

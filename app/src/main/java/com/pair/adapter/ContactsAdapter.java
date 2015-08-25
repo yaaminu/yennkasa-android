@@ -132,7 +132,7 @@ public class ContactsAdapter extends BaseAdapter {
 
     private void callContact(View v, Contact contact) {
         Intent intent = new Intent(Intent.ACTION_DIAL);
-        intent.setData(Uri.parse("tel:" + PhoneNumberNormaliser.toLocalFormat(contact.phoneNumber)));
+        intent.setData(Uri.parse("tel:" + PhoneNumberNormaliser.toLocalFormat("+" + contact.numberInIEE_Format)));
         v.getContext().startActivity(intent);
     }
 

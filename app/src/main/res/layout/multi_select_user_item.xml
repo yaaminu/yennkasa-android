@@ -1,4 +1,4 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_item_height"
     android:descendantFocusability="beforeDescendants"
@@ -14,7 +14,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:contentDescription="@string/content_desc_user_avatar"
-        android:scaleType="fitStart"
+        android:scaleType="centerCrop"
         android:src="@drawable/user_avartar" />
 
     <TextView
@@ -58,4 +58,4 @@
         android:checked="false"
         android:layout_alignBottom="@+id/tv_user_phone" />
 
-</RelativeLayout>
+</com.pair.view.RelativeLayout>

@@ -201,7 +201,7 @@ public class InviteActivity extends ActionBarActivity implements ItemsSelector.O
     private class CustomUserAdapter extends UsersAdapter {
 
         public CustomUserAdapter(Context context, RealmResults<User> realmResults) {
-            super(context, realmResults, true);
+            super(context, realm, realmResults, true);
         }
 
         @Override

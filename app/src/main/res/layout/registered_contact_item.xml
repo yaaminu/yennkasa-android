@@ -1,4 +1,4 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_item_height"
     android:layout_marginBottom="@dimen/list_item_margin_bottom"
@@ -14,7 +14,7 @@
         android:layout_alignParentTop="true"
         android:layout_margin="@dimen/thumbnail_margin"
         android:contentDescription="@string/content_desc_user_avatar"
-        android:scaleType="fitStart"
+        android:scaleType="centerCrop"
         android:src="@drawable/user_avartar" />
 
     <TextView
@@ -47,4 +47,4 @@
         android:layout_alignParentRight="true"
         android:layout_alignTop="@+id/tv_user_name"
         android:text="online" />
-</RelativeLayout>
+</com.pair.view.RelativeLayout>

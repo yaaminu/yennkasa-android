@@ -49,6 +49,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     private final SparseIntArray previewsMap;
     private final SparseIntArray downloadingRows = new SparseIntArray();
     private final Picasso PICASSO;
+    private final int PREVIEW_WIDTH;
+    private final int PREVIEW_HEIGHT;
 
     public MessagesAdapter(FragmentActivity context, RealmResults<Message> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
@@ -56,6 +58,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         previewsMap.put(Message.TYPE_PICTURE_MESSAGE, R.drawable.image_placeholder);
         previewsMap.put(Message.TYPE_VIDEO_MESSAGE, R.drawable.video_placeholder);
         previewsMap.put(Message.TYPE_BIN_MESSAGE, R.drawable.file_placeholder);
+        PREVIEW_WIDTH = context.getResources().getDimensionPixelSize(R.dimen.message_preview_item_width);
+        PREVIEW_HEIGHT = context.getResources().getDimensionPixelSize(R.dimen.message_preview_item_height);
         PICASSO = Picasso.with(context);
     }
 
@@ -145,7 +149,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             final RequestCreator creator;
             if (Message.isPictureMessage(message)) {
                 creator = PICASSO.load(messageFile)
-                        .resize(250, 200)
+                        .resize(PREVIEW_WIDTH, PREVIEW_HEIGHT)
                         .centerCrop()
                         .error(placeHolderDrawable);
             } else {

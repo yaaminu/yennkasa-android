@@ -50,6 +50,7 @@ import com.pair.pairapp.Config;
 import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.FileUtils;
+import com.pair.util.MediaUtils;
 import com.pair.util.RealmUtils;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
@@ -431,17 +432,14 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
 
     private void takePhoto() {
         try {
-            Intent attachIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             mMediaUri = FileUtils.getOutputUri(FileUtils.MEDIA_TYPE_IMAGE);
-            attachIntent.putExtra(MediaStore.EXTRA_OUTPUT, mMediaUri);
-            startActivityForResult(attachIntent, TAKE_PHOTO_REQUEST);
+            MediaUtils.takePhoto(this, mMediaUri, TAKE_PHOTO_REQUEST);
         } catch (Exception e) {
             if (BuildConfig.DEBUG) {
                 Log.e(TAG, e.getMessage(), e.getCause());
             } else {
                 Log.e(TAG, e.getMessage());
             }
-            Toast.makeText(ChatActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -780,7 +778,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
     private boolean isForwarding = false;
 
     private RealmQuery<User> getRecipients() {
-        return User.where(this)
+        return realm.where(User.class)
                 .notEqualTo(User.FIELD_ID, getCurrentUser().get_id())
                 .notEqualTo(User.FIELD_ID, peer.get_id());
     }
@@ -791,7 +789,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
     public BaseAdapter getAdapter() {
         final RealmResults<User> results = getRecipients().findAllSorted(User.FIELD_NAME);
         recipientsIds.clear();
-        recipientsAdapter = new UsersAdapter(this, results, true) {
+        recipientsAdapter = new UsersAdapter(this, realm, results, true) {
             @Override
             protected RealmQuery<User> getOriginalQuery() {
                 return getRecipients();

@@ -11,6 +11,7 @@ import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.Config;
+import com.pair.util.ThreadUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ExecutorService;
@@ -29,7 +30,7 @@ final class NotificationManager {
     private final Notifier BACKGROUND_NOTIFIER = new StatusBarNotifier();
 
     void onNewMessage(final Context context, final Message message) {
-        if (Looper.getMainLooper().getThread() == Thread.currentThread()) {
+        if (ThreadUtils.isMainThread()) {
             executorService.submit(new Runnable() {
                 @Override
                 public void run() {
@@ -68,7 +69,7 @@ final class NotificationManager {
     }
 
     private String retrieveSendersName(Message message) {
-        if (BuildConfig.DEBUG && Looper.getMainLooper().getThread() == Thread.currentThread()) {
+        if (BuildConfig.DEBUG && ThreadUtils.isMainThread()) {
             throw new IllegalStateException("this method should run in the background");
         }
         final Realm realm = Realm.getInstance(Config.getApplicationContext());

@@ -16,8 +16,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
-import android.widget.Button;
-import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -29,10 +28,15 @@ import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.pairapp.UsersActivity;
 import com.pair.util.FileUtils;
-import com.pair.util.PicassoWrapper;
+import com.pair.util.MediaUtils;
+import com.pair.util.ScreenUtility;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
 import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.RequestCreator;
+
+import java.io.File;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
@@ -42,26 +46,24 @@ import io.realm.RealmResults;
 /**
  * A simple {@link Fragment} subclass.
  */
-@SuppressWarnings("FieldCanBeLocal")
 public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     public static final String ARG_USER_ID = "user_id";
     public static final String TAG = ProfileFragment.class.getSimpleName();
-    private static final int PICK_PHOTO_REQUEST = 0x3e9;
-    // FIXME: 8/10/2015 watch this field in case we change the default avatar name.
-    public static final String DEFAULT_AVATAR = "avatar_empty";
-    private android.widget.ImageView displayPicture;
+    private static final int PICK_PHOTO_REQUEST = 0x3e9,
+            TAKE_PHOTO_REQUEST = 0X3ea;
+
+    private ImageView displayPicture;
     private TextView userName, userPhone, listHeading;
-    private Button changeDpButton;
     private ListView mutualGroupsList;
     private User user;
     private Realm realm;
-    private BaseAdapter membersAdapter;
-    private Button exitGroupButton;
-    private Button callButton;
-    private View progresView;
-    ImageButton imageButton;
+    private View exitGroupButton, callButton, progressView, imageButton, changeDpButton, changeDpButton2;
     private DialogFragment progressDialog;
+    private RequestCreator creator;
+    private Uri image_capture_out_put_uri;
+    private boolean dpChanged = false;
+    private Picasso PICASSO;
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -81,13 +83,14 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         displayPicture = ((android.widget.ImageView) view.findViewById(R.id.iv_display_picture));
         userName = ((TextView) view.findViewById(R.id.tv_user_name));
         userPhone = ((TextView) view.findViewById(R.id.tv_user_phone));
-        changeDpButton = ((Button) view.findViewById(R.id.bt_change_dp));
-        progresView = view.findViewById(R.id.pb_progress);
-        imageButton = (ImageButton) view.findViewById(R.id.ib_change_name);
-        Button sendMessageButton = (Button) view.findViewById(R.id.bt_message);
+        changeDpButton = view.findViewById(R.id.bt_pick_photo_change_dp);
+        changeDpButton2 = view.findViewById(R.id.bt_take_photo_change_dp);
+        progressView = view.findViewById(R.id.pb_progress);
+        imageButton = view.findViewById(R.id.ib_change_name);
+        View sendMessageButton = view.findViewById(R.id.bt_message);
         sendMessageButton.setOnClickListener(clickListener);
-        callButton = ((Button) view.findViewById(R.id.bt_call));
-        exitGroupButton = ((Button) view.findViewById(R.id.bt_exit_group));
+        callButton = view.findViewById(R.id.bt_call);
+        exitGroupButton = view.findViewById(R.id.bt_exit_group);
         listHeading = ((TextView) view.findViewById(R.id.tv_list_heading));
         mutualGroupsList = ((ListView) view.findViewById(R.id.lv_mutual_groups_list));
         mutualGroupsList.setEmptyView(view.findViewById(R.id.empty));
@@ -116,14 +119,15 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         userManager.refreshUserDetails(user.get_id()); //async
         //noinspection ConstantConditions
         ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(user.getName());
+        PICASSO = Picasso.with(getActivity());
         return view;
     }
 
     @Override
     public void onResume() {
+        super.onResume();
         realm.addChangeListener(this);
         showDp();
-        super.onResume();
     }
 
     @Override
@@ -134,6 +138,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     private void setUpViewSingleUserWay() {
         changeDpButton.setVisibility(View.GONE);
+        changeDpButton2.setVisibility(View.GONE);
         userPhone.setVisibility(View.VISIBLE);
         exitGroupButton.setVisibility(View.GONE);
         imageButton.setVisibility(View.GONE);
@@ -151,7 +156,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     }
 
     private void resetAdapter(User[] results) {
-        membersAdapter = new GroupsOrMembersAdapter(getActivity(), results);
+        BaseAdapter membersAdapter = new GroupsOrMembersAdapter(getActivity(), results);
         mutualGroupsList.setAdapter(membersAdapter);
         mutualGroupsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -176,15 +181,17 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         callButton.setVisibility(View.GONE);
         if (UserManager.getInstance().isAdmin(user.get_id())) {
             exitGroupButton.setVisibility(View.GONE);
-            changeDpButton.setVisibility(View.VISIBLE);
             imageButton.setVisibility(View.VISIBLE);
             imageButton.setOnClickListener(clickListener);
-            changeDpButton.setOnClickListener(clickListener);
         } else {
+            exitGroupButton.setVisibility(View.VISIBLE);
             exitGroupButton.setOnClickListener(clickListener);
-            changeDpButton.setVisibility(View.GONE);
             imageButton.setVisibility(View.GONE);
         }
+        changeDpButton.setVisibility(View.VISIBLE);
+        changeDpButton2.setVisibility(View.VISIBLE);
+        changeDpButton2.setOnClickListener(clickListener);
+        changeDpButton.setOnClickListener(clickListener);
         listHeading.setText(R.string.st_group_members);
         listHeading.setClickable(true);
         listHeading.setOnClickListener(new View.OnClickListener() {
@@ -217,7 +224,10 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             if (!UserManager.getInstance().isGroup(user.get_id())) {
                 setUpMutualMembers();
             }
-            showDp();
+            if (dpChanged) {
+                dpChanged = false;
+                showDp();
+            }
             //todo probably change status too and last activity
         } catch (Exception lateUpdate) {//fragment no more in layout or maybe user left group
             Log.e(TAG, lateUpdate.getMessage(), lateUpdate.getCause());
@@ -227,22 +237,28 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == PICK_PHOTO_REQUEST) {
-            if (resultCode == Activity.RESULT_OK) {
-                String filePath;
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == PICK_PHOTO_REQUEST) {
                 Uri uri = data.getData();
-                if (uri.getScheme().equals("content")) {
-                    filePath = FileUtils.resolveContentUriToFilePath(uri);
-                } else {
-                    filePath = uri.getPath();
-                }
-                UserManager userManager = UserManager.getInstance();
-                dpChangeProgress = UiHelpers.newProgressDialog();
-                dpChangeProgress.show(getFragmentManager(), null);
-                userManager.changeDp(user.get_id(), filePath, DP_CALLBACK);
-
+                doChangeDp(uri);
+            } else if (requestCode == TAKE_PHOTO_REQUEST) {
+                doChangeDp(image_capture_out_put_uri);
             }
         }
+    }
+
+    private void doChangeDp(Uri uri) {
+        String filePath;
+        if (uri.getScheme().equals("content")) {
+            filePath = FileUtils.resolveContentUriToFilePath(uri);
+        } else {
+            filePath = uri.getPath();
+        }
+
+        UserManager userManager = UserManager.getInstance();
+        dpChangeProgress = UiHelpers.newProgressDialog();
+        dpChangeProgress.show(getFragmentManager(), null);
+        userManager.changeDp(user.get_id(), filePath, DP_CALLBACK);
     }
 
     private DialogFragment dpChangeProgress;
@@ -251,6 +267,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         public void done(Exception e) {
             dpChangeProgress.dismiss();
             if (e == null) {
+                dpChanged = true;
                 showDp();
             } else {
                 UiHelpers.showErrorDialog(getActivity(), e.getMessage());
@@ -259,22 +276,44 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     };
 
     private void showDp() {
-        PicassoWrapper.with(getActivity(), Config.getAppProfilePicsBaseDir().getAbsolutePath())
-                .load(Config.DP_ENDPOINT + "/" + user.getDP())
-                .resize(300, 120)
-                .placeholder(R.drawable.avatar_empty)
-                .error(R.drawable.avatar_empty)
-                .into(displayPicture, new Callback() {
-                    @Override
-                    public void onSuccess() {
-                        progresView.setVisibility(View.GONE);
-                    }
+        progressView.setVisibility(View.VISIBLE);
+        File localDp = new File(Config.getAppProfilePicsBaseDir(), user.getDP() + ".jpg");
+        if (dpChanged) {
+            dpChanged = false;
+            PICASSO.invalidate(localDp);
+        }
+        if (localDp.exists()) {
+            creator = PICASSO.load(localDp);
+            ScreenUtility utility = new ScreenUtility(getActivity());
+            creator.resize((int) utility.getPixelsWidth(), getResources().getDimensionPixelSize(R.dimen.dp_height));
+            creator.placeholder(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
+                    .error(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
+                    .into(displayPicture, new Callback() {
+                        @Override
+                        public void onSuccess() {
+                            progressView.setVisibility(View.GONE);
+                        }
 
-                    @Override
-                    public void onError() {
-                        progresView.setVisibility(View.GONE);
+                        @Override
+                        public void onError() {
+                            progressView.setVisibility(View.GONE);
+                        }
+                    });
+        } else {
+            //before we proceed to download the image lets show default image there.
+            displayPicture.setImageResource(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar);
+
+            UserManager.getInstance().refreshDp(user.get_id(), new UserManager.CallBack() {
+                @Override
+                public void done(Exception e) {
+                    progressView.setVisibility(View.GONE);
+                    if (e == null) {
+                        dpChanged = true;
+                        showDp();
                     }
-                });
+                }
+            });
+        }
     }
 
 
@@ -311,6 +350,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     UiHelpers.enterChatRoom(v.getContext(), user.get_id());
                     break;
                 case R.id.bt_exit_group:
+                    progressView.setVisibility(View.GONE);
                     progressDialog.show(getFragmentManager(), null);
                     UserManager.getInstance().leaveGroup(user.get_id(), new UserManager.CallBack() {
                         @Override
@@ -328,7 +368,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                         }
                     });
                     break;
-                case R.id.bt_change_dp:
+                case R.id.bt_pick_photo_change_dp:
+                    progressView.setVisibility(View.GONE);
                     choosePicture();
                     break;
                 case R.id.ib_change_name:
@@ -340,15 +381,24 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     startActivity(intent);
                     break;
                 case R.id.iv_display_picture:
-                    if (user.getDP().contains(DEFAULT_AVATAR)) { //dp not downloaded
-                        UiHelpers.showToast(R.string.sorry_no_dp);
-                        return;
-                    }
-                    Uri uri = Uri.parse(Config.DP_ENDPOINT + "/" + user.getDP());
+                    progressView.setVisibility(View.GONE);
+                    File dpFile = new File(Config.getAppProfilePicsBaseDir(), user.getDP() + ".jpg");
                     intent = new Intent(getActivity(), ImageViewer.class);
-                    //noinspection ConstantConditions
-                    intent.setData(uri);
-                    startActivity(intent);
+                    Uri uri;
+                    if (dpFile.exists()) {
+                        uri = Uri.fromFile(dpFile);
+                        //noinspection ConstantConditions
+                        intent.setData(uri);
+                        startActivity(intent);
+                    } else {//dp not downloaded
+//                        uri = Uri.parse(Config.DP_ENDPOINT+"/"+user.getDP());
+                        UiHelpers.showToast(R.string.sorry_no_dp);
+                    }
+                    break;
+                case R.id.bt_take_photo_change_dp:
+                    File file = new File(Config.getTempDir(), user.get_id() + ".jpg.tmp");
+                    image_capture_out_put_uri = Uri.fromFile(file);
+                    MediaUtils.takePhoto(ProfileFragment.this, image_capture_out_put_uri, TAKE_PHOTO_REQUEST);
                     break;
                 default:
                     throw new AssertionError("unknown view");
@@ -356,4 +406,5 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             }
         }
     };
+
 }

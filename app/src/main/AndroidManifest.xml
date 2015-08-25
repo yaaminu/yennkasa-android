@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.pair.pairapp">
 
     <uses-sdk android:minSdkVersion="9" />
@@ -44,7 +45,8 @@
             android:name=".ui.ChatActivity"
             android:label="@string/title_activity_chat"
             android:parentActivityName=".MainActivity"
-            android:windowSoftInputMode="stateHidden|adjustResize">
+            android:windowSoftInputMode="stateHidden|adjustResize"
+            tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.pair.pairapp.MainActivity" />
@@ -85,7 +87,8 @@
         <activity
             android:name=".ProfileActivity"
             android:label="@string/title_activity_profile"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".MainActivity"
+            tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.pair.pairapp.MainActivity" />
@@ -97,7 +100,8 @@
         <activity
             android:name=".UsersActivity"
             android:label="@string/title_activity_users"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".MainActivity"
+            tools:ignore="UnusedAttribute">
 
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -109,7 +113,8 @@
         <activity
             android:name=".CreateGroupActivity"
             android:label="@string/title_activity_create_group"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".MainActivity"
+            tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.pair.pairapp.MainActivity" />

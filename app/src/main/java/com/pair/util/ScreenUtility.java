@@ -6,21 +6,28 @@ import android.view.Display;
 
 public class ScreenUtility {
 
-    private Activity activity;
-    private float dpWidth, dpHeight, pixelsHeight, pixelsWidth;
+    private float dpWidth, dpHeight, pixelsHeight, pixelsWidth, density;
 
     public ScreenUtility(Activity activity) {
-        this.activity = activity;
-
         Display display = activity.getWindowManager().getDefaultDisplay();
         DisplayMetrics outMetrics = new DisplayMetrics();
         display.getMetrics(outMetrics);
 
-        float density = activity.getResources().getDisplayMetrics().density;
-        dpHeight = outMetrics.heightPixels / density;
-        dpWidth = outMetrics.widthPixels / density;
+        density = activity.getResources().getDisplayMetrics().density;
+
         pixelsHeight = outMetrics.heightPixels;
         pixelsWidth = outMetrics.widthPixels;
+
+        dpHeight = pixelsHeight / density;
+        dpWidth = pixelsWidth / density;
+    }
+
+    public float dpToPixels(float dp) {
+        return dp * density;
+    }
+
+    public float pixelsToDp(float pixels) {
+        return pixels / density;
     }
 
     public float getPixelsHeight() {

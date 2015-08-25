@@ -37,4 +37,5 @@
     <dimen name="message_preview_item_height">180dp</dimen>
     <dimen name="message_text_item_max_width">300dp</dimen>
     <dimen name="message_item_min_width">100dp</dimen>
+    <dimen name="dp_height">200dp</dimen>
 </resources>

@@ -74,6 +74,7 @@ public class Config {
             getAppImgMediaBaseDir().mkdirs();
             getAppVidMediaBaseDir().mkdirs();
             getAppBinFilesBaseDir().mkdirs();
+            getTempDir().mkdirs();
         } else {
             Log.w(TAG, "This is strange! no sdCard available on this device");
         }
@@ -206,11 +207,15 @@ public class Config {
     public static File getAppVidMediaBaseDir() {
         return new File(Environment
                 .getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), APP_NAME);
-
     }
 
     public static File getAppProfilePicsBaseDir() {
         return new File(Environment
                 .getExternalStoragePublicDirectory(APP_NAME), "profile");
+    }
+
+    public static File getTempDir() {
+        return new File(Environment
+                .getExternalStoragePublicDirectory(APP_NAME), "TMP");
     }
 }

@@ -6,7 +6,6 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 
-import com.pair.data.Message;
 import com.pair.data.UserManager;
 import com.pair.pairapp.ui.ProfileFragment;
 import com.rey.material.app.ToolbarManager;
@@ -23,12 +22,11 @@ public class ProfileActivity extends ActionBarActivity {
         toolBar = ((Toolbar) findViewById(R.id.main_toolbar));
         manager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
 
+        //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeButtonEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
         String id = bundle.getString(ProfileActivity.EXTRA_USER_ID);
         if (id == null) {
-            throw new IllegalArgumentException("should in user id");
+            throw new IllegalArgumentException("should pass in user id");
         }
         Fragment fragment;
         if (!UserManager.getInstance().isMainUser(id)) {
@@ -55,5 +53,5 @@ public class ProfileActivity extends ActionBarActivity {
         return super.onPrepareOptionsMenu(menu);
     }
 
-    public static final String EXTRA_USER_ID = Message.FIELD_ID;
+    public static final String EXTRA_USER_ID = "user id";
 }

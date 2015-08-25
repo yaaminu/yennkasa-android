@@ -18,6 +18,7 @@ import com.pair.pairapp.ui.ItemsSelector;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.ToolbarManager;
 
+import io.realm.Realm;
 import io.realm.RealmResults;
 
 public class UsersActivity extends ActionBarActivity implements ItemsSelector.OnFragmentInteractionListener {
@@ -25,6 +26,8 @@ public class UsersActivity extends ActionBarActivity implements ItemsSelector.On
     private Toolbar toolBar;
     private ToolbarManager toolbarManager;
     private UsersAdapter usersAdapter;
+    private Realm realm;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,12 +37,13 @@ public class UsersActivity extends ActionBarActivity implements ItemsSelector.On
         toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        RealmResults<User> results = User.where(this)
+        realm = User.Realm(this);
+        RealmResults<User> results = realm.where(User.class)
                 .notEqualTo(User.FIELD_ID, UserManager.getInstance()
                         .getMainUser()
                         .get_id())
                 .findAllSorted(User.FIELD_NAME, true);
-        usersAdapter = new UsersAdapter(this, results);
+        usersAdapter = new UsersAdapter(this, realm, results);
         Bundle bundle = getIntent().getExtras();
         Fragment fragment = new ItemsSelector();
         fragment.setArguments(bundle);

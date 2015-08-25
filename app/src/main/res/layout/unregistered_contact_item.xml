@@ -1,4 +1,4 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="56dp"
     android:layout_margin="8dp"
@@ -39,4 +39,4 @@
         android:drawableRight="@drawable/ic_action_email"
         android:text="Invite" />
 
-</RelativeLayout>
+</com.pair.view.RelativeLayout>

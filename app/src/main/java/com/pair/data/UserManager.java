@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.ContactsContract;
@@ -21,6 +22,7 @@ import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.Config;
 import com.pair.pairapp.R;
 import com.pair.util.ConnectionUtils;
+import com.pair.util.FileUtils;
 import com.pair.util.GcmUtils;
 import com.pair.util.PhoneNumberNormaliser;
 
@@ -28,8 +30,10 @@ import org.apache.http.HttpStatus;
 
 import java.io.EOFException;
 import java.io.File;
+import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -61,13 +65,22 @@ public class UserManager {
     private final Exception NO_CONNECTION_ERROR;
     private final BaseJsonAdapter<User> adapter = new UserJsonAdapter();
 
+    private final Executor EXECUTOR = new Executor() {
+        @Override
+        public void execute(@NonNull Runnable command) {
+            WORKER.submit(command);
+        }
+    };
+
     private final UserApi userApi = new RestAdapter.Builder()
             .setEndpoint(Config.PAIRAPP_ENDPOINT)
             .setRequestInterceptor(Config.INTERCEPTOR)
             .setLogLevel((BuildConfig.DEBUG) ? RestAdapter.LogLevel.FULL : RestAdapter.LogLevel.NONE)
+            .setExecutors(AsyncTask.THREAD_POOL_EXECUTOR, EXECUTOR)
             .setLog(new AndroidLog(TAG))
             .build()
             .create(UserApi.class);
+    private final Handler MAIN_THREAD_HANDLER;
 
     @Deprecated
     public static UserManager getInstance(@SuppressWarnings("UnusedParameters") @NonNull Context context) {
@@ -80,6 +93,7 @@ public class UserManager {
 
     private UserManager() {
         NO_CONNECTION_ERROR = new Exception(Config.getApplicationContext().getString(R.string.st_unable_to_connect));
+        MAIN_THREAD_HANDLER = new Handler(Looper.getMainLooper());
     }
 
     private void saveMainUser(User user) {
@@ -183,18 +197,8 @@ public class UserManager {
             @Override
             public void success(final User group, Response response) {
                 final Handler handler = new Handler(Looper.getMainLooper());
-                WORKER.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        completeGroupCreation(group, membersId);
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                callBack.done(null, group.get_id());
-                            }
-                        });
-                    }
-                });
+                completeGroupCreation(group, membersId);
+                doNotify(callBack, null, group.get_id());
             }
 
             @Override
@@ -236,7 +240,7 @@ public class UserManager {
     public void removeMembers(final String groupId, final List<String> members, final CallBack callBack) {
         final Exception e = checkPermission(groupId);
         if (e != null) { //unauthorised
-            callBack.done(e);
+            doNotify(e, callBack);
             return;
         }
         if (members.contains(getMainUser().get_id())) {
@@ -259,7 +263,7 @@ public class UserManager {
                 group.getMembers().removeAll(membersToDelete);
                 realm.commitTransaction();
                 realm.close();
-                callBack.done(null);
+                doNotify(null, callBack);
             }
 
             @Override
@@ -268,7 +272,7 @@ public class UserManager {
                 if (e == null) {
                     removeMembers(groupId, members, callBack);
                 } else {
-                    callBack.done(e);
+                    doNotify(e, callBack);
                 }
             }
         });
@@ -309,7 +313,7 @@ public class UserManager {
     public void addMembersToGroup(final String groupId, final List<String> membersId, final CallBack callBack) {
         Exception e = checkPermission(groupId);
         if (e != null) {
-            callBack.done(e);
+            doNotify(e, callBack);
             return;
         }
         userApi.addMembersToGroup(groupId, getMainUser().get_id(), membersId, new Callback<Response>() {
@@ -328,7 +332,7 @@ public class UserManager {
                 group.getMembers().addAll(newMembers);
                 realm.commitTransaction();
                 realm.close();
-                callBack.done(null);
+                doNotify(null, callBack);
             }
 
             @Override
@@ -337,7 +341,7 @@ public class UserManager {
                 if (e == null) {
                     addMembersToGroup(groupId, membersId, callBack);
                 } else {
-                    callBack.done(e);
+                    doNotify(e, callBack);
                 }
             }
         });
@@ -476,27 +480,18 @@ public class UserManager {
             userApi.getUser(userId, new Callback<User>() {
                 @Override
                 public void success(final User onlineUser, Response response) {
-                    WORKER.submit(new Runnable() {
-                        @Override
-                        public void run() {
-                            completeRefresh(onlineUser, userId);
-                        }
-                    });
+                    completeRefresh(onlineUser, userId);
+
                 }
 
                 @Override
                 public void failure(final RetrofitError retrofitError) {
-                    WORKER.submit(new Runnable() {
-                        @Override
-                        public void run() {
-                            Exception e = handleError(retrofitError);
-                            if (e == null) {
-                                refreshUserDetails(userId);
-                            } else {
-                                Log.i(TAG, "failed to refresh after 3 attempts");
-                            }
-                        }
-                    });
+                    Exception e = handleError(retrofitError);
+                    if (e == null) {
+                        refreshUserDetails(userId);
+                    } else {
+                        Log.i(TAG, "failed to refresh after 3 attempts");
+                    }
                 }
             });
         }
@@ -539,24 +534,16 @@ public class UserManager {
         userApi.getGroups(mainUser.get_id(), new Callback<List<User>>() {
             @Override
             public void success(final List<User> groups, Response response) {
-                WORKER.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        completeGetGroups(groups);
-                    }
-                });
+                completeGetGroups(groups);
+
             }
 
             @Override
             public void failure(final RetrofitError retrofitError) {
-                WORKER.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (handleError(retrofitError) == null) {
-                            getGroups();
-                        }
-                    }
-                });
+
+                if (handleError(retrofitError) == null) {
+                    getGroups();
+                }
             }
         });
     }
@@ -594,40 +581,32 @@ public class UserManager {
     }
 
     public void changeDp(final String userId, final String imagePath, final CallBack callback) {
-        File imageFile = new File(imagePath);
+        final File imageFile = new File(imagePath);
         if (!imageFile.exists()) {
-            callback.done(new Exception("file " + imagePath + " does not exist"));
+            doNotify(new Exception("file " + imagePath + " does not exist"), callback);
             return;
         }
         if (!ConnectionUtils.isConnectedOrConnecting()) {
-            callback.done(NO_CONNECTION_ERROR);
+            doNotify(NO_CONNECTION_ERROR, callback);
             return;
         }
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         final User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
         if (user == null) {
-            throw new IllegalArgumentException("user does not exist");
+            Log.w(TAG, "can't change dp for user with id " + userId + " because no such user exists");
+            doNotify(null, callback);
+            return;
         }
 
-        String placeHolder = user.getType() == User.TYPE_GROUP ? "groups" : "users";
+        String placeHolder = User.isGroup(user) ? "groups" : "users";
 
         realm.close();
         userApi.changeDp(placeHolder, userId, new TypedFile("image/*", imageFile), new Callback<HttpResponse>() {
             @Override
-            public void success(HttpResponse response, Response response2) {
-                Realm realm = Realm.getInstance(Config.getApplicationContext());
-                try {
-                    realm.beginTransaction();
-                    //noinspection ConstantConditions
-                    User user = realm.where(User.class).equalTo("_id", userId).findFirst();
-                    if (user != null) {
-                        user.setDP(response.getMessage());
-                    }
-                    realm.commitTransaction();
-                } finally {
-                    realm.close();
-                }
-                callback.done(null);
+            public void success(final HttpResponse response, Response response2) {
+                completeDpChangeRequest(response.getMessage(), userId, imageFile);
+                doNotify(null, callback);
+
             }
 
             @Override
@@ -636,15 +615,34 @@ public class UserManager {
                 if (e == null) {
                     changeDp(imagePath, callback); //retry
                 } else {
-                    callback.done(e); //may be our fault but we have reach maximum retries
+                    doNotify(e, callback); //may be our fault but we have reach maximum retries
                 }
             }
         });
     }
 
+    private void completeDpChangeRequest(String dpPath, String userId, File imageFile) {
+        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        try {
+            realm.beginTransaction();
+            //noinspection ConstantConditions
+            User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
+            if (user != null) {
+                user.setDP(dpPath);
+                FileUtils.copyTo(imageFile, new File(Config.getAppProfilePicsBaseDir(), user.getDP() + ".jpg"));
+            }
+            realm.commitTransaction();
+        } catch (IOException e) {
+            //we will not cancel the transaction
+            Log.e(TAG, "failed to save user's profile locally: " + e.getMessage());
+        } finally {
+            realm.close();
+        }
+    }
+
     public void logIn(final Activity context, final String phoneNumber, final String userIso2LetterCode, final CallBack callback) {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
-            callback.done(NO_CONNECTION_ERROR);
+            doNotify(NO_CONNECTION_ERROR, callback);
             return;
         }
         GcmUtils.register(context, new GcmUtils.GCMRegCallback() {
@@ -653,7 +651,7 @@ public class UserManager {
                 if (e == null) {
                     completeLogin(phoneNumber, regId, userIso2LetterCode, callback);
                 } else {
-                    callback.done(e);
+                    doNotify(e, callback);
                 }
             }
         });
@@ -661,16 +659,16 @@ public class UserManager {
 
     private void completeLogin(String phoneNumber, String gcmRegId, String userIso2LetterCode, CallBack callback) {
         if (TextUtils.isEmpty(phoneNumber)) {
-            callback.done(new Exception("invalid phone number"));
+            doNotify(new Exception("invalid phone number"), callback);
             return;
         }
 
         if (TextUtils.isEmpty(userIso2LetterCode)) {
-            callback.done(new Exception("userIso2LetterCode cannot be empty"));
+            doNotify(new Exception("userIso2LetterCode cannot be empty"), callback);
             return;
         }
         if (TextUtils.isEmpty(gcmRegId)) {
-            callback.done(new Exception("GCM registration id cannot be empty"));
+            doNotify(new Exception("GCM registration id cannot be empty"), callback);
             return;
         }
 
@@ -683,7 +681,7 @@ public class UserManager {
             } else {
                 Log.e(TAG, e.getMessage());
             }
-            callback.done(new Exception(String.format(Config.getApplicationContext().getString(R.string.invalid_phone_number), phoneNumber)));
+            doNotify(new Exception(String.format(Config.getApplicationContext().getString(R.string.invalid_phone_number), phoneNumber)), callback);
             return;
         }
         user.set_id(phoneNumber);
@@ -707,7 +705,7 @@ public class UserManager {
                         .putBoolean(KEY_USER_VERIFIED, true)
                         .commit();
                 getGroups(); //async
-                callback.done(null);
+                doNotify(null, callback);
             }
 
             @Override
@@ -717,7 +715,7 @@ public class UserManager {
                     //not our problem lets try again
                     doLogIn(user, countryIso, callback);
                 } else {
-                    callback.done(e); //may be our fault but we have ran out of resources
+                    doNotify(e, callback); //may be our fault but we have ran out of resources
                 }
             }
         });
@@ -726,7 +724,7 @@ public class UserManager {
 
     public void signUp(Activity context, final String name, final String phoneNumber, final String countryIso, final CallBack callback) {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
-            callback.done(NO_CONNECTION_ERROR);
+            doNotify(NO_CONNECTION_ERROR, callback);
             return;
         }
         GcmUtils.register(context, new GcmUtils.GCMRegCallback() {
@@ -735,7 +733,7 @@ public class UserManager {
                 if (e == null) {
                     completeSignUp(name, phoneNumber, regId, countryIso, callback);
                 } else {
-                    callback.done(e);
+                    doNotify(e, callback);
                 }
             }
         });
@@ -743,11 +741,11 @@ public class UserManager {
 
     private void completeSignUp(final String name, final String phoneNumber, final String gcmRegId, final String countryIso, final CallBack callback) {
         if (TextUtils.isEmpty(name)) {
-            callback.done(new Exception("name is invalid"));
+            doNotify(new Exception("name is invalid"), callback);
         } else if (TextUtils.isEmpty(phoneNumber)) {
-            callback.done(new Exception("phone number is invalid"));
+            doNotify(new Exception("phone number is invalid"), callback);
         } else if (TextUtils.isEmpty(countryIso)) {
-            callback.done(new Exception("ccc is invalid"));
+            doNotify(new Exception("ccc is invalid"), callback);
         } else {
             doSignup(name, phoneNumber, gcmRegId, countryIso, callback);
         }
@@ -763,7 +761,7 @@ public class UserManager {
             thePhoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, countryIso);
         } catch (NumberParseException e) {
             Log.e(TAG, e.getMessage());
-            callback.done(new Exception(String.format(Config.getApplicationContext().getString(R.string.invalid_phone_number), phoneNumber)));
+            doNotify(new Exception(String.format(Config.getApplicationContext().getString(R.string.invalid_phone_number), phoneNumber)), callback);
             return;
         }
         final User user = new User();
@@ -778,7 +776,7 @@ public class UserManager {
             public void success(User backEndUser, Response response) {
                 backEndUser.setPassword(user.getPassword());
                 saveMainUser(backEndUser);
-                callback.done(null);
+                doNotify(null, callback);
             }
 
             @Override
@@ -789,7 +787,7 @@ public class UserManager {
                 if (e == null) {
                     doSignup(name, phoneNumber, gcmRegId, countryIso, callback);
                 } else {
-                    callback.done(e);
+                    doNotify(e, callback);
                 }
             }
         });
@@ -797,30 +795,30 @@ public class UserManager {
 
     public void verifyUser(final String token, final CallBack callBack) {
         if (isUserVerified()) {
-            callBack.done(null);
+            doNotify(null, callBack);
             return;
         }
         if (!ConnectionUtils.isConnectedOrConnecting()) {
-            callBack.done(NO_CONNECTION_ERROR);
+            doNotify(NO_CONNECTION_ERROR, callBack);
             return;
         }
         if (TextUtils.isEmpty(token)) {
-            callBack.done(new Exception("invalid token"));
+            doNotify(new Exception("invalid token"), callBack);
             return;
         }
         if (!isUserLoggedIn()) {
-            throw new IllegalArgumentException(new Exception("no user logged for verification"));
+            throw new IllegalStateException(new Exception("no user logged for verification"));
         }
         userApi.verifyUser(getMainUser().get_id(), token, new Callback<String>() {
             @Override
             public void success(String accessToken, Response response) {
                 getSettings().edit().putBoolean(KEY_USER_VERIFIED, true).commit();
-                callBack.done(null);
+                doNotify(null, callBack);
             }
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                callBack.done(retrofitError);
+                doNotify(retrofitError, callBack);
             }
         });
     }
@@ -830,22 +828,22 @@ public class UserManager {
             throw new IllegalArgumentException(new Exception("no user logged for verification"));
         }
         if (isUserVerified()) {
-            callBack.done(null);
+            doNotify(null, callBack);
             return;
         }
         if (!ConnectionUtils.isConnectedOrConnecting()) {
-            callBack.done(NO_CONNECTION_ERROR);
+            doNotify(NO_CONNECTION_ERROR, callBack);
             return;
         }
         userApi.resendToken(getMainUser().get_id(), getUserPassword(), new Callback<Response>() {
             @Override
             public void success(Response response, Response response2) {
-                callBack.done(null);
+                doNotify(null, callBack);
             }
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                callBack.done(retrofitError);
+                doNotify(retrofitError, callBack);
             }
         });
     }
@@ -941,7 +939,7 @@ public class UserManager {
             public void done(Exception e) {
                 //we don't care about gcm regid
                 cleanUpRealm();
-                logOutCallback.done(null);
+                doNotify(null, logOutCallback);
             }
         });
     }
@@ -953,12 +951,7 @@ public class UserManager {
         userApi.syncContacts(array, new Callback<List<User>>() {
             @Override
             public void success(final List<User> users, Response response) {
-                WORKER.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        saveFreshUsers(users);
-                    }
-                });
+                saveFreshUsers(users);
             }
 
             @Override
@@ -985,7 +978,7 @@ public class UserManager {
     }
 
 
-    // FIXME: 6/25/2015 find a sensible place to keep this error handler so that message dispatcher and others can share it
+    // FIXME: 6/25/2015 find a sensible place to keep this error MAIN_THREAD_HANDLER so that message dispatcher and others can share it
     private Exception handleError(RetrofitError retrofitError) {
         if (retrofitError.getCause() instanceof SocketTimeoutException) { //likely that  user turned on data but no plan
             return NO_CONNECTION_ERROR;
@@ -1028,7 +1021,7 @@ public class UserManager {
             throw new IllegalArgumentException("not group or you are the admin");
         }
         if (!ConnectionUtils.isConnectedOrConnecting()) {
-            callBack.done(NO_CONNECTION_ERROR);
+            doNotify(NO_CONNECTION_ERROR, callBack);
         }
         userApi.leaveGroup(id, getMainUser().get_id(), getUserPassword(), new Callback<HttpResponse>() {
             @Override
@@ -1040,7 +1033,7 @@ public class UserManager {
                         realm.beginTransaction();
                         group.removeFromRealm();
                         realm.commitTransaction();
-                        callBack.done(null);
+                        doNotify(null, callBack);
                     }
                 } finally {
                     realm.close();
@@ -1054,7 +1047,7 @@ public class UserManager {
                 if (e == null) {
                     leaveGroup(id, callBack);
                 } else {
-                    callBack.done(e);
+                    doNotify(e, callBack);
                 }
             }
         });
@@ -1079,7 +1072,7 @@ public class UserManager {
                     throw new RuntimeException("use logout instead");
                 }
                 if (!ConnectionUtils.isConnected()) {
-                    callBack.done(NO_CONNECTION_ERROR);
+                    doNotify(NO_CONNECTION_ERROR, callBack);
                     return;
                 }
                 Realm realm = Realm.getInstance(Config.getApplicationContext());
@@ -1088,10 +1081,28 @@ public class UserManager {
                     realm.clear(User.class);
                     realm.commitTransaction();
                     cleanUp();
-                    callBack.done(null);
+                    doNotify(null, callBack);
                 } finally {
                     realm.close();
                 }
+            }
+        });
+    }
+
+    private void doNotify(final Exception e, final CallBack callBack) {
+        MAIN_THREAD_HANDLER.post(new Runnable() {
+            @Override
+            public void run() {
+                callBack.done(e);
+            }
+        });
+    }
+
+    private void doNotify(final CreateGroupCallBack callBack, final Exception e, final String id) {
+        MAIN_THREAD_HANDLER.post(new Runnable() {
+            @Override
+            public void run() {
+                callBack.done(e, id);
             }
         });
     }
@@ -1108,6 +1119,34 @@ public class UserManager {
                 .commit();
     }
 
+    public void refreshDp(final String id, final CallBack callBack) {
+        WORKER.submit(new Runnable() {
+            @Override
+            public void run() {
+                Realm realm = User.Realm(Config.getApplicationContext());
+                try {
+                    User user = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
+                    if (user != null) {
+                        File dpFile = new File(Config.getAppProfilePicsBaseDir(), user.getDP() + ".jpg");
+                        if (!dpFile.exists()) {
+                            try {
+                                FileUtils.save(dpFile, Config.DP_ENDPOINT + "/" + user.getDP());
+                                doNotify(null, callBack);
+                            } catch (IOException e) {
+                                doNotify(new Exception(Config.getApplicationContext().getResources().getString(R.string.error_occurred)), callBack);
+                            }
+                        } else {
+                            doNotify(null, callBack);
+                        }
+                    } else {
+                        doNotify(new Exception("No such user!"), callBack);
+                    }
+                } finally {
+                    realm.close();
+                }
+            }
+        });
+    }
 
     public interface CallBack {
         void done(Exception e);

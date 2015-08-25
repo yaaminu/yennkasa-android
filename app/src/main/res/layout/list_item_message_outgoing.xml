@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    style="@style/default_list_item_style"
     android:layout_margin="@dimen/message_body_margin">
 
-    <LinearLayout
+    <com.pair.view.LinearLayout
         android:id="@+id/ll_message_body_view"
         style="@style/outgoing_message_body_root_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <FrameLayout
+        <com.pair.view.FrameLayout
             android:id="@+id/fl_message_body_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
@@ -32,9 +33,9 @@
                 android:layout_width="@dimen/message_preview_item_width"
                 android:layout_height="@dimen/message_preview_item_height"
                 android:contentDescription="@string/st_content_description_image_preview"
-                android:scaleType="fitXY"
-                android:src="@drawable/image_placeholder"
-                android:visibility="gone" />
+                android:scaleType="centerCrop"
+                android:src="@drawable/user_avartar"
+                android:visibility="visible" />
 
             <Button
                 android:id="@+id/bt_download"
@@ -56,9 +57,9 @@
                 app:pv_progressMode="indeterminate"
                 app:pv_progressStyle="@style/base_indeterminate_progress_style" />
 
-        </FrameLayout>
+        </com.pair.view.FrameLayout>
 
-        <RelativeLayout
+        <com.pair.view.RelativeLayout
             android:layout_width="@dimen/message_status_date_width"
             android:layout_height="wrap_content"
             android:layout_gravity="right">
@@ -82,6 +83,6 @@
                 android:layout_alignParentRight="true"
                 android:singleLine="true"
                 android:text="12-12-12" />
-        </RelativeLayout>
-    </LinearLayout>
-</RelativeLayout>
+        </com.pair.view.RelativeLayout>
+    </com.pair.view.LinearLayout>
+</com.pair.view.RelativeLayout>

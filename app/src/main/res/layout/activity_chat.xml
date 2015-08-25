@@ -1,4 +1,4 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -12,7 +12,7 @@
         android:title="@string/app_name"
         app:theme="@style/AppBar" />
 
-    <RelativeLayout
+    <com.pair.view.RelativeLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -22,7 +22,7 @@
         android:layout_marginTop="2dp"
         android:background="#0000">
 
-        <LinearLayout
+        <com.pair.view.LinearLayout
             android:id="@+id/ll_list_view_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -50,7 +50,7 @@
                 app:cardCornerRadius="2dp"
                 app:cardElevation="4dp">
 
-                <LinearLayout
+                <com.pair.view.LinearLayout
                     android:id="@+id/ll_input_message_panel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -81,12 +81,12 @@
                         android:layout_height="wrap_content"
                         android:layout_gravity="bottom"
                         android:src="@drawable/ic_action_send_now" />
-                </LinearLayout>
+                </com.pair.view.LinearLayout>
 
             </android.support.v7.widget.CardView>
 
 
-        </LinearLayout>
+        </com.pair.view.LinearLayout>
 
 
         <android.support.v7.widget.CardView
@@ -112,7 +112,7 @@
                 android:textSize="@dimen/date_message_text_size" />
         </android.support.v7.widget.CardView>
 
-    </RelativeLayout>
+    </com.pair.view.RelativeLayout>
 
     <com.rey.material.widget.SnackBar
         android:id="@+id/notification_bar"
@@ -124,4 +124,4 @@
         app:sb_actionText="@string/close"
         app:sb_actionTextColor="@color/white" />
 
-</RelativeLayout>
+</com.pair.view.RelativeLayout>

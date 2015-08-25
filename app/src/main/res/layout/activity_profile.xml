@@ -1,4 +1,4 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pair.view.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -15,10 +15,10 @@
         android:title="@string/app_name"
         app:theme="@style/AppBar" />
 
-    <FrameLayout
+    <com.pair.view.FrameLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-    </FrameLayout>
-</LinearLayout>
+    </com.pair.view.FrameLayout>
+</com.pair.view.LinearLayout>

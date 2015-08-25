@@ -1,9 +1,9 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pair.view.FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
+    <com.pair.view.LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
@@ -17,12 +17,12 @@
             android:title="@string/app_name"
             app:theme="@style/AppBar" />
 
-        <FrameLayout
+        <com.pair.view.FrameLayout
             android:id="@+id/container"
             android:layout_width="wrap_content"
             android:layout_height="match_parent">
 
-            <LinearLayout
+            <com.pair.view.LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical">
@@ -43,9 +43,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
 
-            </LinearLayout>
-        </FrameLayout>
-    </LinearLayout>
+            </com.pair.view.LinearLayout>
+        </com.pair.view.FrameLayout>
+    </com.pair.view.LinearLayout>
 
     <com.rey.material.widget.SnackBar
         android:id="@+id/notification_bar"
@@ -56,4 +56,4 @@
         android:visibility="gone"
         app:sb_actionText="@string/close"
         app:sb_actionTextColor="@color/white" />
-</FrameLayout>
+</com.pair.view.FrameLayout>

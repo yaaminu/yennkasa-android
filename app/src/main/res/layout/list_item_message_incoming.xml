@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    style="@style/default_list_item_style"
     android:layout_margin="15dp">
 
-    <LinearLayout
+    <com.pair.view.LinearLayout
         android:id="@+id/ll_message_body_view"
         style="@style/incoming_message_body_root_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <FrameLayout
+        <com.pair.view.FrameLayout
             android:id="@+id/fl_message_body_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
@@ -30,9 +31,9 @@
                 android:layout_width="@dimen/message_preview_item_width"
                 android:layout_height="@dimen/message_preview_item_height"
                 android:contentDescription="@string/st_content_description_image_preview"
-                android:scaleType="fitXY"
+                android:scaleType="centerCrop"
                 android:src="@drawable/user_avartar"
-                android:visibility="gone" />
+                android:visibility="visible" />
 
             <Button
                 android:id="@+id/bt_download"
@@ -41,7 +42,7 @@
                 android:layout_gravity="center"
                 android:background="@color/white"
                 android:text="@string/st_download"
-                android:visibility="gone" />
+                android:visibility="visible" />
 
             <com.rey.material.widget.ProgressView
                 android:id="@+id/pb_download_progress"
@@ -53,9 +54,9 @@
                 android:layout_height="48dp"
                 android:layout_gravity="center"
                 android:visibility="gone" />
-        </FrameLayout>
+        </com.pair.view.FrameLayout>
 
-        <LinearLayout
+        <com.pair.view.LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="left"
@@ -66,8 +67,8 @@
                 style="@style/message_incoming_date"
                 android:singleLine="true"
                 android:text="2/23/12" />
-        </LinearLayout>
-    </LinearLayout>
+        </com.pair.view.LinearLayout>
+    </com.pair.view.LinearLayout>
     <!-- this textView is useless except that it frees us from checking for
     null-ness in the {@link MessagesAdapter}-->
     <TextView
@@ -81,4 +82,4 @@
         android:text="@string/st_message_state_pending"
         android:textColor="@color/white"
         android:visibility="gone" />
-</RelativeLayout>
+</com.pair.view.RelativeLayout>

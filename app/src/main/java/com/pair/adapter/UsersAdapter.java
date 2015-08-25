@@ -20,6 +20,7 @@ import com.squareup.picasso.Picasso;
 
 import java.util.regex.Pattern;
 
+import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
@@ -32,17 +33,19 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
     private RealmResults<User> filterResults;
     private int layoutResource;
     private boolean multiSelect;
+    private Realm realm;
 
-    public UsersAdapter(Context context, RealmResults<User> realmResults) {
-        this(context, realmResults, false);
+    public UsersAdapter(Context context, Realm realm, RealmResults<User> realmResults) {
+        this(context, realm, realmResults, false);
     }
 
-    public UsersAdapter(Context context, RealmResults<User> realmResults, boolean multiChoice) {
+    public UsersAdapter(Context context, Realm realm, RealmResults<User> realmResults, boolean multiChoice) {
         super(context, realmResults, true);
         PICASSO = Picasso.with(context);
         filterResults = realmResults;
         this.layoutResource = multiChoice ? R.layout.multi_select_user_item : R.layout.user_item;
         this.multiSelect = multiChoice;
+        this.realm = realm;
     }
 
     @Override
@@ -125,7 +128,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
                 if (results.values != null) {
                     final RealmQuery<User> originalQuery = getOriginalQuery();
                     if (originalQuery == null) {
-                        filterResults = User.where(context)
+                        filterResults = realm.where(User.class)
                                 .beginGroup()
                                 .contains(User.FIELD_NAME, results.values.toString(), false).or()
                                 .beginGroup()

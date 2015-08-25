@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.pair.pairapp.R;
+import com.pair.util.ScreenUtility;
 import com.pair.util.UiHelpers;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
@@ -16,12 +17,17 @@ import java.io.File;
 public class ImageViewer extends ActionBarActivity {
     private ImageView imageView;
     private Picasso picasso;
+    private int WIDTH, HEIGHT;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_image);
         // Show the Up button in the action bar.
+        final ScreenUtility utility = new ScreenUtility(this);
+
+        WIDTH = ((int) utility.getPixelsWidth());
+        HEIGHT = (int) utility.getPixelsHeight();
         imageView = (android.widget.ImageView) findViewById(R.id.imageView);
         picasso = Picasso.with(this);
         showImage();
@@ -32,10 +38,10 @@ public class ImageViewer extends ActionBarActivity {
         String path = imageUri.getPath();
         File file = new File(path);
         if (file.exists()) {
-            picasso.load(file).into(imageView, callback);
+            picasso.load(file).skipMemoryCache().resize(WIDTH, (int) (HEIGHT / 2)).into(imageView, callback);
         } else {
             if (imageUri.getScheme().equals("http") || imageUri.getScheme().equals("https") || imageUri.getScheme().equals("ftp")) {
-                picasso.load(imageUri.toString()).into(imageView, callback);
+                picasso.load(imageUri.toString()).resize(WIDTH, (int) (HEIGHT / 1.5)).into(imageView, callback);
                 return;
             }
             UiHelpers.showErrorDialog(this, getString(R.string.error_failed_to_open_image), listener);

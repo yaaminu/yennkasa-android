@@ -18,6 +18,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -51,6 +52,7 @@ public class FileUtils {
                 return null;
         }
     }
+
 
     private static Uri doCreateOutputFile(String path, File parentDir) throws Exception {
         if (parentDir != null) {
@@ -94,9 +96,18 @@ public class FileUtils {
         return extension;
     }
 
+    public static void save(File file, String url) throws IOException {
+        if (ThreadUtils.isMainThread()) {
+            throw new IllegalStateException("main thread!");
+        }
+        URL location = new URL(url);
+        save(file, location.openStream()); //the stream will be closed in the other overload
+    }
+
     public static void save(File fileToSave, InputStream in) throws IOException {
         if (fileToSave.exists()) {
-            return;
+            if (!fileToSave.delete())
+                throw new IOException("destination file could not be written to");
         }
         byte[] buffer = new byte[1024];
         BufferedOutputStream bOut = new BufferedOutputStream(new FileOutputStream(fileToSave));
@@ -113,7 +124,28 @@ public class FileUtils {
     }
 
     public static void copyTo(String oldPath, String newPath) throws IOException {
-        org.apache.commons.io.FileUtils.copyFile(new File(oldPath), new File(newPath));
+        if (ThreadUtils.isMainThread()) {
+            throw new IllegalStateException("main thread!");
+        }
+        copyTo(new File(oldPath), new File(newPath));
+    }
+
+    public static void copyTo(File source, File destination) throws IOException {
+        if (ThreadUtils.isMainThread()) {
+            throw new IllegalStateException("main thread");
+        }
+
+        if (source == null || destination == null) {
+            throw new NullPointerException("null!");
+        }
+        if (destination.exists() && destination.isDirectory()) {
+            throw new IllegalArgumentException("destination file is a directory");
+        }
+        if (destination.exists() && !destination.delete()) {
+            throw new IOException("destination file exist and could not be deleted");
+        }
+//        org.apache.commons.io.FileUtils.copyFile(source, destination);
+        save(destination, new FileInputStream(source));
     }
 
     public class CountingTypedFile extends TypedFile {
