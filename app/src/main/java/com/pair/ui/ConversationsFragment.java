@@ -1,4 +1,4 @@
-package com.pair.pairapp.ui;
+package com.pair.ui;
 
 import android.app.Activity;
 import android.app.AlarmManager;
@@ -15,13 +15,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
+import com.pair.Config;
 import com.pair.adapter.ConversationAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
-import com.pair.pairapp.Config;
-import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
-import com.pair.pairapp.UsersActivity;
 import com.pair.util.UiHelpers;
 import com.pair.util.swipeDismisUtils.SwipeDismissListViewTouchListener;
 

@@ -3,7 +3,7 @@ package com.pair.data;
 import android.content.Context;
 import android.text.format.DateUtils;
 
-import com.pair.pairapp.Config;
+import com.pair.Config;
 
 import java.util.Date;
 
@@ -89,10 +89,14 @@ public class Conversation extends RealmObject {
             message = realm.createObject(Message.class);
             message.setId(conversation.getPeerId() + formatted);
             message.setMessageBody(formatted);
-            message.setTo(UserManager.getInstance().getMainUser().get_id());
+            message.setTo(UserManager.getInstance().getMainUser().getUserId());
             message.setFrom(conversation.getPeerId());
             message.setDateComposed(new Date(System.currentTimeMillis()));
             message.setType(TYPE_DATE_MESSAGE);
         }
+    }
+
+    public static Realm Realm(Context context) {
+        return Realm.getInstance(context);
     }
 }

@@ -1,9 +1,8 @@
 <com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.pair.pairapp.ui.ProfileFragment">
+    tools:context="com.pair.ui.ProfileFragment">
 
     <com.pair.view.FrameLayout
         android:id="@+id/fl_dp_panel"
@@ -16,152 +15,133 @@
             android:layout_height="@dimen/dp_height"
             android:contentDescription="@string/display_picture"
             android:scaleType="fitXY"
-            android:src="@drawable/user_avartar" />
+            android:src="@drawable/group_avatar" />
 
-        <com.rey.material.widget.ProgressView
+        <include
             android:id="@+id/pb_progress"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_gravity="center"
-            android:visibility="gone"
-            app:pv_autostart="true"
-            app:pv_circular="true"
-            app:pv_progressMode="indeterminate"
-            app:pv_progressStyle="@style/base_indeterminate_progress_style" />
+            layout="@layout/progressbar"
+            android:visibility="visible" />
 
         <com.pair.view.LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="right|bottom"
+            android:layout_marginRight="16dp"
             android:background="#0000">
+
+
+            <com.pair.view.RoundedImageView
+                android:id="@+id/bt_message"
+                style="@style/profile_fragment_round_button_style"
+                android:contentDescription="@string/message"
+                android:src="@drawable/ic_action_chat" />
+
+            <com.pair.view.RoundedImageView
+                android:id="@+id/bt_call"
+                style="@style/profile_fragment_round_button_style"
+                android:contentDescription="@string/call"
+                android:src="@drawable/ic_action_call"
+                android:visibility="visible" />
+
+            <com.pair.view.RoundedImageView
+                android:id="@+id/bt_dissolve_group"
+
+                style="@style/profile_fragment_round_button_style"
+                android:contentDescription="@string/dissolve_group"
+                android:src="@drawable/ic_action_discard"
+                android:visibility="visible" />
+
+            <com.pair.view.RoundedImageView
+                android:id="@+id/bt_exit_group"
+                style="@style/profile_fragment_round_button_style"
+                android:contentDescription="@string/leave"
+                android:src="@drawable/ic_action_discard"
+                android:visibility="visible" />
 
             <com.pair.view.RoundedImageView
                 android:id="@+id/bt_take_photo_change_dp"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginLeft="5dp"
-                android:background="@drawable/white_round"
+                style="@style/profile_fragment_round_button_style"
                 android:contentDescription="@string/change_dp"
-                style="@style/FlatWaveColorButtonRippleStyle"
-                android:scaleType="fitCenter"
                 android:src="@drawable/ic_action_camera" />
 
             <com.pair.view.RoundedImageView
                 android:id="@+id/bt_pick_photo_change_dp"
-                style="@style/FlatWaveColorButtonRippleStyle"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_marginLeft="5dp"
-                android:background="@drawable/white_round"
+                style="@style/profile_fragment_round_button_style"
                 android:contentDescription="@string/change_dp"
-                android:scaleType="fitCenter"
                 android:src="@drawable/ic_action_picture" />
         </com.pair.view.LinearLayout>
     </com.pair.view.FrameLayout>
 
-    <ScrollView
+
+    <com.pair.view.LinearLayout
+        android:id="@+id/rl_main_button_panel"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/fl_dp_panel">
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/fl_dp_panel"
+        android:layout_marginBottom="@dimen/profile_list_item_padding_top"
+        android:layout_marginLeft="@dimen/profile_list_item_padding_side"
+        android:layout_marginRight="@dimen/profile_list_item_padding_side"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
 
-        <com.pair.view.RelativeLayout
+        <com.pair.view.LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_horizontal">
-
-            <com.pair.view.LinearLayout
-                android:id="@+id/rl_buttons_panel"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="12dp"
-                android:gravity="center">
-
-                <com.rey.material.widget.Button
-                    android:id="@+id/bt_message"
-                    style="@style/round_buttons"
-                    android:drawableRight="@drawable/ic_action_chat_white"
-                    android:text="@string/message" />
-
-                <com.rey.material.widget.Button
-                    android:id="@+id/bt_call"
-                    style="@style/round_buttons"
-                    android:layout_marginLeft="12dp"
-                    android:drawableRight="@drawable/ic_action_call"
-                    android:text="@string/call"
-                    android:visibility="visible" />
-
-                <com.rey.material.widget.Button
-                    android:id="@+id/bt_dissolve_group"
-                    style="@style/round_buttons"
-                    android:layout_marginLeft="12dp"
-                    android:drawableRight="@drawable/ic_action_discard"
-                    android:text="@string/dissolve_group"
-                    android:visibility="gone" />
-
-                <com.rey.material.widget.Button
-                    android:id="@+id/bt_exit_group"
-                    style="@style/round_buttons"
-                    android:layout_marginLeft="12dp"
-                    android:drawableRight="@drawable/ic_action_discard"
-                    android:text="@string/leave"
-                    android:visibility="gone" />
-            </com.pair.view.LinearLayout>
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/profile_list_item_padding_top"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:minHeight="?android:attr/listPreferredItemHeight">
 
             <TextView
                 android:id="@+id/tv_user_name"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/rl_buttons_panel"
+                android:layout_weight="1"
                 android:clickable="true"
-                android:padding="15dp"
+                android:ellipsize="end"
+                android:singleLine="true"
                 android:text="@string/username_placeholder"
                 android:textColor="#000"
                 android:textSize="18sp" />
+
 
             <ImageView
                 android:id="@+id/ib_change_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignRight="@+id/rl_buttons_panel"
+                android:layout_alignParentRight="true"
                 android:layout_alignTop="@+id/tv_user_name"
                 android:background="#0000"
                 android:contentDescription="@string/edit_username"
-                android:paddingTop="4dp"
                 android:src="@drawable/ic_action_edit" />
+        </com.pair.view.LinearLayout>
 
-            <com.pair.view.LinearLayout
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/light_gray" />
 
-                android:id="@+id/ll_details_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/tv_user_name"
-                android:orientation="vertical">
+        <include
+            android:id="@+id/tv_user_phone_group_admin"
+            layout="@layout/title_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/profile_list_item_padding_top"
+            android:layout_weight="1"
+            android:minHeight="?android:attr/listPreferredItemHeight" />
 
-                <TextView
-                    android:id="@+id/tv_user_phone"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:clickable="true"
-                    android:lines="2"
-                    android:padding="15dp"
-                    android:text="Phone\n"
-                    android:textColor="#000"
-                    android:textSize="18sp"
-                    android:visibility="visible" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/light_gray" />
 
-                <TextView
-                    android:id="@+id/tv_list_heading"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingBottom="5dp"
-                    android:paddingLeft="15dp"
-                    android:paddingRight="15dp"
-                    android:paddingTop="15dp"
-                    android:text="@string/st_mutual_groups"
-                    android:textColor="#000"
-                    android:textSize="18sp" />
-
-            </com.pair.view.LinearLayout>
-        </com.pair.view.RelativeLayout>
-    </ScrollView>
+        <include
+            android:id="@+id/tv_shared_groups_or_group_members"
+            layout="@layout/title_subtitle"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="@dimen/profile_list_item_padding_top"
+            android:layout_weight="1"
+            android:minHeight="?android:attr/listPreferredItemHeight" />
+    </com.pair.view.LinearLayout>
 </com.pair.view.RelativeLayout>

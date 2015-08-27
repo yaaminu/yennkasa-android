@@ -1,4 +1,4 @@
-package com.pair.pairapp;
+package com.pair.ui;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -8,8 +8,8 @@ import android.util.Log;
 
 import com.pair.data.Country;
 import com.pair.data.UserManager;
-import com.pair.pairapp.ui.LoginFragment;
-import com.pair.pairapp.ui.VerificationFragment;
+import com.pair.pairapp.BuildConfig;
+import com.pair.pairapp.R;
 import com.pair.util.GcmUtils;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;

@@ -1,4 +1,4 @@
-package com.pair.pairapp.ui;
+package com.pair.ui;
 
 
 import android.app.Activity;
@@ -18,7 +18,6 @@ import com.pair.adapter.GroupsAdapter;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.data.UserManager;
-import com.pair.pairapp.CreateGroupActivity;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
 
@@ -70,7 +69,7 @@ public class GroupsFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        String groupId = ((User) l.getAdapter().getItem(position)).get_id(); //very safe
+        String groupId = ((User) l.getAdapter().getItem(position)).getUserId(); //very safe
         UiHelpers.enterChatRoom(getActivity(), groupId);
     }
 

@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.ContactsContract;
@@ -14,13 +13,14 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.google.i18n.phonenumbers.NumberParseException;
+import com.pair.Config;
 import com.pair.adapter.BaseJsonAdapter;
 import com.pair.adapter.UserJsonAdapter;
 import com.pair.net.HttpResponse;
-import com.pair.net.api.UserApi;
+import com.pair.net.UserApiV2;
 import com.pair.pairapp.BuildConfig;
-import com.pair.pairapp.Config;
 import com.pair.pairapp.R;
+import com.pair.parse_client.ParseClient;
 import com.pair.util.ConnectionUtils;
 import com.pair.util.FileUtils;
 import com.pair.util.GcmUtils;
@@ -33,17 +33,12 @@ import java.io.File;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import io.realm.Realm;
 import io.realm.RealmList;
-import retrofit.Callback;
-import retrofit.RestAdapter;
 import retrofit.RetrofitError;
-import retrofit.android.AndroidLog;
-import retrofit.client.Response;
 import retrofit.mime.TypedFile;
 
 /**
@@ -65,21 +60,8 @@ public class UserManager {
     private final Exception NO_CONNECTION_ERROR;
     private final BaseJsonAdapter<User> adapter = new UserJsonAdapter();
 
-    private final Executor EXECUTOR = new Executor() {
-        @Override
-        public void execute(@NonNull Runnable command) {
-            WORKER.submit(command);
-        }
-    };
 
-    private final UserApi userApi = new RestAdapter.Builder()
-            .setEndpoint(Config.PAIRAPP_ENDPOINT)
-            .setRequestInterceptor(Config.INTERCEPTOR)
-            .setLogLevel((BuildConfig.DEBUG) ? RestAdapter.LogLevel.FULL : RestAdapter.LogLevel.NONE)
-            .setExecutors(AsyncTask.THREAD_POOL_EXECUTOR, EXECUTOR)
-            .setLog(new AndroidLog(TAG))
-            .build()
-            .create(UserApi.class);
+    private final UserApiV2 userApi;
     private final Handler MAIN_THREAD_HANDLER;
 
     @Deprecated
@@ -94,6 +76,7 @@ public class UserManager {
     private UserManager() {
         NO_CONNECTION_ERROR = new Exception(Config.getApplicationContext().getString(R.string.st_unable_to_connect));
         MAIN_THREAD_HANDLER = new Handler(Looper.getMainLooper());
+        userApi = ParseClient.getInstance();
     }
 
     private void saveMainUser(User user) {
@@ -105,7 +88,7 @@ public class UserManager {
         // TODO: 6/25/2015 encrypt the id and password before storing it
         getSettings()
                 .edit()
-                .putString(KEY_SESSION_ID, user.get_id())
+                .putString(KEY_SESSION_ID, user.getUserId())
                 .putString(KEY_USER_PASSWORD, user.getPassword())
                 .commit();
     }
@@ -138,12 +121,10 @@ public class UserManager {
 
     private boolean isEveryThingSetup() {
         final User mainUser = getMainUser();
-        if (mainUser == null || mainUser.get_id().isEmpty() || mainUser.getName().isEmpty() || mainUser.getCountry().isEmpty()) {
+        if (mainUser == null || mainUser.getUserId().isEmpty() || mainUser.getName().isEmpty() || mainUser.getCountry().isEmpty()) {
             return false;
         } else //noinspection ConstantConditions
             if (getSettings().getString(KEY_SESSION_ID, "").isEmpty()) {
-                return false;
-            } else if (!getSettings().getBoolean(KEY_USER_VERIFIED, false)) {
                 return false;
             }
         return true;
@@ -180,7 +161,7 @@ public class UserManager {
             return false;
         }
         User thisUser = getMainUser();
-        return ((thisUser != null)) && thisUser.get_id().equals(userId);
+        return ((thisUser != null)) && thisUser.getUserId().equals(userId);
     }
 
     public void createGroup(final String groupName, final List<String> membersId, final CreateGroupCallBack callBack) {
@@ -193,22 +174,17 @@ public class UserManager {
             callBack.done(new Exception("group with name " + groupName + "already exists"), null);
             return;
         }
-        userApi.createGroup(getMainUser().get_id(), groupName, membersId, new Callback<User>() {
-            @Override
-            public void success(final User group, Response response) {
-                final Handler handler = new Handler(Looper.getMainLooper());
-                completeGroupCreation(group, membersId);
-                doNotify(callBack, null, group.get_id());
-            }
+        membersId.add(getMainUserId());
+        userApi.createGroup(getMainUser().getUserId(), groupName, membersId, new UserApiV2.Callback<User>() {
 
             @Override
-            public void failure(RetrofitError retrofitError) {
-                Exception e = handleError(retrofitError);
+            public void done(Exception e, User group) {
                 if (e == null) {
-                    createGroup(groupName, membersId, callBack);
+                    completeGroupCreation(group, membersId);
+                    doNotify(callBack, null, group.getUserId());
                 } else {
                     Log.i(TAG, "failed to create group");
-                    callBack.done(e, null);
+                    doNotify(callBack, e, null);
                 }
             }
         });
@@ -225,7 +201,7 @@ public class UserManager {
         RealmList<User> members = User.aggregateUsers(realm, membersId, new ContactsManager.Filter<User>() {
             @Override
             public boolean accept(User user) {
-                return user != null && !isGroup(user.get_id());
+                return user != null && !isGroup(user.getUserId());
             }
         });
         group.getMembers().addAll(members);
@@ -243,36 +219,34 @@ public class UserManager {
             doNotify(e, callBack);
             return;
         }
-        if (members.contains(getMainUser().get_id())) {
-            throw new IllegalArgumentException("admin cannot remove him/herself");
+        if (members.contains(getMainUser().getUserId())) {
+            if (BuildConfig.DEBUG) {
+                throw new IllegalArgumentException("admin cannot remove him/herself");
+            }
+            doNotify(new Exception("admin cannot remove him/herself"), callBack);
         }
 
-        userApi.removeMembersFromGroup(groupId, getMainUser().get_id(), members, new Callback<Response>() {
+        userApi.removeMembersFromGroup(groupId, getMainUser().getUserId(), members, new UserApiV2.Callback<HttpResponse>() {
             @Override
-            public void success(Response o, Response response) {
-                Realm realm = Realm.getInstance(Config.getApplicationContext());
-                realm.beginTransaction();
-                final User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
-                final ContactsManager.Filter<User> filter = new ContactsManager.Filter<User>() {
-                    @Override
-                    public boolean accept(User user) {
-                        return (user != null && group.getMembers().contains(user));
-                    }
-                };
-                RealmList<User> membersToDelete = User.aggregateUsers(realm, members, filter);
-                group.getMembers().removeAll(membersToDelete);
-                realm.commitTransaction();
-                realm.close();
-                doNotify(null, callBack);
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-                Exception e = handleError(retrofitError);
+            public void done(Exception e, HttpResponse response) {
                 if (e == null) {
-                    removeMembers(groupId, members, callBack);
+                    Realm realm = Realm.getInstance(Config.getApplicationContext());
+                    realm.beginTransaction();
+                    final User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
+                    final ContactsManager.Filter<User> filter = new ContactsManager.Filter<User>() {
+                        @Override
+                        public boolean accept(User user) {
+                            return (user != null && group.getMembers().contains(user));
+                        }
+                    };
+                    RealmList<User> membersToDelete = User.aggregateUsers(realm, members, filter);
+                    group.getMembers().removeAll(membersToDelete);
+                    realm.commitTransaction();
+                    realm.close();
+                    doNotify(null, callBack);
                 } else {
                     doNotify(e, callBack);
+
                 }
             }
         });
@@ -292,7 +266,7 @@ public class UserManager {
             realm.close();
             throw new IllegalArgumentException("no group with such id");
         }
-        String adminId = group.getAdmin().get_id();
+        String adminId = group.getAdmin().getUserId();
         realm.close();
         return adminId.equals(userId);
     }
@@ -304,7 +278,7 @@ public class UserManager {
         if (!isUser(groupId)) {
             return new IllegalArgumentException("no group with such id");
         }
-        if (!isAdmin(groupId, getMainUser().get_id())) {
+        if (!isAdmin(groupId, getMainUser().getUserId())) {
             return new IllegalAccessException("you don't have the authority to add/remove a member");
         }
         return null;
@@ -316,30 +290,24 @@ public class UserManager {
             doNotify(e, callBack);
             return;
         }
-        userApi.addMembersToGroup(groupId, getMainUser().get_id(), membersId, new Callback<Response>() {
+        userApi.addMembersToGroup(groupId, getMainUser().getUserId(), membersId, new UserApiV2.Callback<HttpResponse>() {
             @Override
-            public void success(Response response, Response response2) {
-                Realm realm = Realm.getInstance(Config.getApplicationContext());
-                realm.beginTransaction();
-                final User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
-                final ContactsManager.Filter<User> filter = new ContactsManager.Filter<User>() {
-                    @Override
-                    public boolean accept(User user) {
-                        return (user != null && !group.getMembers().contains(user) && !isGroup(user.get_id()));
-                    }
-                };
-                RealmList<User> newMembers = User.aggregateUsers(realm, membersId, filter);
-                group.getMembers().addAll(newMembers);
-                realm.commitTransaction();
-                realm.close();
-                doNotify(null, callBack);
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-                Exception e = handleError(retrofitError);
+            public void done(Exception e, HttpResponse httpResponse) {
                 if (e == null) {
-                    addMembersToGroup(groupId, membersId, callBack);
+                    Realm realm = Realm.getInstance(Config.getApplicationContext());
+                    realm.beginTransaction();
+                    final User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
+                    final ContactsManager.Filter<User> filter = new ContactsManager.Filter<User>() {
+                        @Override
+                        public boolean accept(User user) {
+                            return (user != null && !group.getMembers().contains(user) && !isGroup(user.getUserId()));
+                        }
+                    };
+                    RealmList<User> newMembers = User.aggregateUsers(realm, membersId, filter);
+                    group.getMembers().addAll(newMembers);
+                    realm.commitTransaction();
+                    realm.close();
+                    doNotify(null, callBack);
                 } else {
                     doNotify(e, callBack);
                 }
@@ -348,27 +316,17 @@ public class UserManager {
     }
 
     private void getGroupMembers(final String id) {
-        userApi.getGroupMembers(id, new Callback<List<User>>() {
+        userApi.getGroupMembers(id, new UserApiV2.Callback<List<User>>() {
             @Override
-            public void success(final List<User> freshMembers, final Response response) {
-                WORKER.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateLocalGroupMembers(freshMembers, id);
-                    }
-                });
-            }
-
-            @Override
-            public void failure(final RetrofitError retrofitError) {
-                WORKER.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (handleError(retrofitError) == null) {
-                            getGroupMembers(id);
+            public void done(Exception e, final List<User> freshMembers) {
+                if (e == null) {
+                    WORKER.submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            updateLocalGroupMembers(freshMembers, id);
                         }
-                    }
-                });
+                    });
+                }
             }
         });
     }
@@ -416,27 +374,17 @@ public class UserManager {
     }
 
     private void getGroupInfo(final String id) {
-        userApi.getGroup(id, new Callback<User>() {
+        userApi.getGroup(id, new UserApiV2.Callback<User>() {
             @Override
-            public void success(final User group, Response response) {
-                WORKER.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        completeGetGroupInfo(group, id);
-                    }
-                });
-            }
-
-            @Override
-            public void failure(final RetrofitError retrofitError) {
-                WORKER.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (handleError(retrofitError) == null) {
-                            getGroupInfo(id);
+            public void done(Exception e, final User group) {
+                if (e == null) {
+                    WORKER.submit(new Runnable() {
+                        @Override
+                        public void run() {
+                            completeGetGroupInfo(group, id);
                         }
-                    }
-                });
+                    });
+                }
             }
         });
     }
@@ -477,20 +425,11 @@ public class UserManager {
         if (isGroup(userId)) {
             doRefreshGroup(userId);
         } else {
-            userApi.getUser(userId, new Callback<User>() {
+            userApi.getUser(userId, new UserApiV2.Callback<User>() {
                 @Override
-                public void success(final User onlineUser, Response response) {
-                    completeRefresh(onlineUser, userId);
-
-                }
-
-                @Override
-                public void failure(final RetrofitError retrofitError) {
-                    Exception e = handleError(retrofitError);
+                public void done(Exception e, User onlineUser) {
                     if (e == null) {
-                        refreshUserDetails(userId);
-                    } else {
-                        Log.i(TAG, "failed to refresh after 3 attempts");
+                        completeRefresh(onlineUser, userId);
                     }
                 }
             });
@@ -507,7 +446,7 @@ public class UserManager {
         realm.commitTransaction();
         //commit the changes and then
         //check if user is saved locally
-        ContactsManager.Contact contact = ContactsManager.getInstance().findContactByPhoneSync(user.get_id(), getUserCountryISO());
+        ContactsManager.Contact contact = ContactsManager.getInstance().findContactByPhoneSync(user.getUserId(), getUserCountryISO());
         if (contact != null) {
             realm.beginTransaction();
             //change remote name to local name
@@ -531,18 +470,11 @@ public class UserManager {
 
     private void getGroups() {
         User mainUser = getMainUser();
-        userApi.getGroups(mainUser.get_id(), new Callback<List<User>>() {
+        userApi.getGroups(mainUser.getUserId(), new UserApiV2.Callback<List<User>>() {
             @Override
-            public void success(final List<User> groups, Response response) {
-                completeGetGroups(groups);
-
-            }
-
-            @Override
-            public void failure(final RetrofitError retrofitError) {
-
-                if (handleError(retrofitError) == null) {
-                    getGroups();
+            public void done(Exception e, List<User> users) {
+                if (e == null) {
+                    completeGetGroups(users);
                 }
             }
         });
@@ -556,7 +488,7 @@ public class UserManager {
             throw new IllegalStateException("no user logged in");
         }
         for (User group : groups) {
-            User staleGroup = realm.where(User.class).equalTo(User.FIELD_ID, group.get_id()).findFirst();
+            User staleGroup = realm.where(User.class).equalTo(User.FIELD_ID, group.getUserId()).findFirst();
             if (staleGroup != null) { //already exist just update
                 staleGroup.setName(group.getName()); //admin might have changed name
                 staleGroup.setType(User.TYPE_GROUP);
@@ -566,7 +498,7 @@ public class UserManager {
                 group.setType(User.TYPE_GROUP);
                 group.setMembers(new RealmList<User>());
                 group.getMembers().add(group.getAdmin());
-                if (!group.getAdmin().get_id().equals(mainUser.get_id())) {
+                if (!group.getAdmin().getUserId().equals(mainUser.getUserId())) {
                     group.getMembers().add(mainUser);
                 }
                 realm.copyToRealmOrUpdate(group);
@@ -577,7 +509,7 @@ public class UserManager {
     }
 
     public void changeDp(String imagePath, CallBack callBack) {
-        this.changeDp(getMainUser().get_id(), imagePath, callBack);
+        this.changeDp(getMainUser().getUserId(), imagePath, callBack);
     }
 
     public void changeDp(final String userId, final String imagePath, final CallBack callback) {
@@ -601,19 +533,12 @@ public class UserManager {
         String placeHolder = User.isGroup(user) ? "groups" : "users";
 
         realm.close();
-        userApi.changeDp(placeHolder, userId, new TypedFile("image/*", imageFile), new Callback<HttpResponse>() {
+        userApi.changeDp(placeHolder, userId, new TypedFile("image/*", imageFile), new UserApiV2.Callback<HttpResponse>() {
             @Override
-            public void success(final HttpResponse response, Response response2) {
-                completeDpChangeRequest(response.getMessage(), userId, imageFile);
-                doNotify(null, callback);
-
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-                Exception e = handleError(retrofitError);
+            public void done(Exception e, final HttpResponse response) {
                 if (e == null) {
-                    changeDp(imagePath, callback); //retry
+                    completeDpChangeRequest(response.getMessage(), userId, imageFile);
+                    doNotify(null, callback);
                 } else {
                     doNotify(e, callback); //may be our fault but we have reach maximum retries
                 }
@@ -676,7 +601,7 @@ public class UserManager {
         try {
             phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userIso2LetterCode);
         } catch (NumberParseException e) {
-            if (BuildConfig.DEBUG) {
+            if (com.pair.pairapp.BuildConfig.DEBUG) {
                 Log.e(TAG, e.getMessage(), e.getCause());
             } else {
                 Log.e(TAG, e.getMessage());
@@ -684,7 +609,7 @@ public class UserManager {
             doNotify(new Exception(String.format(Config.getApplicationContext().getString(R.string.invalid_phone_number), phoneNumber)), callback);
             return;
         }
-        user.set_id(phoneNumber);
+        user.setUserId(phoneNumber);
         user.setCountry(userIso2LetterCode);
         user.setGcmRegId(gcmRegId);
         String password = Base64.encodeToString(phoneNumber.getBytes(), Base64.DEFAULT);
@@ -694,28 +619,20 @@ public class UserManager {
 
     //this method must be called on the main thread
     private void doLogIn(final User user, final String countryIso, final CallBack callback) {
-        userApi.logIn(adapter.toJson(user), new Callback<User>() {
+        userApi.logIn(user, new UserApiV2.Callback<User>() {
             @Override
-            public void success(User backendUser, Response response) {
-                //our backend deletes password fields so we got to use our copy here
-                backendUser.setPassword(user.getPassword());
-                saveMainUser(backendUser);
-                getSettings()
-                        .edit()
-                        .putBoolean(KEY_USER_VERIFIED, true)
-                        .commit();
-                getGroups(); //async
-                doNotify(null, callback);
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-                Exception e = handleError(retrofitError);
+            public void done(Exception e, User backendUser) {
                 if (e == null) {
-                    //not our problem lets try again
-                    doLogIn(user, countryIso, callback);
+                    backendUser.setPassword(user.getPassword());
+                    saveMainUser(backendUser);
+                    getSettings()
+                            .edit()
+                            .putBoolean(KEY_USER_VERIFIED, true)
+                            .commit();
+                    getGroups(); //async
+                    doNotify(null, callback);
                 } else {
-                    doNotify(e, callback); //may be our fault but we have ran out of resources
+                    doNotify(e, callback);
                 }
             }
         });
@@ -765,31 +682,24 @@ public class UserManager {
             return;
         }
         final User user = new User();
-        user.set_id(thePhoneNumber);
-        String password = Base64.encodeToString(user.get_id().getBytes(), Base64.DEFAULT);
+        user.setUserId(thePhoneNumber);
+        String password = Base64.encodeToString(user.getUserId().getBytes(), Base64.DEFAULT);
         user.setPassword(password);
         user.setName(name);
         user.setCountry(countryIso);
         user.setGcmRegId(gcmRegId);
-        userApi.registerUser(adapter.toJson(user), new Callback<User>() {
+        userApi.registerUser(user, new UserApiV2.Callback<User>() {
             @Override
-            public void success(User backEndUser, Response response) {
-                backEndUser.setPassword(user.getPassword());
-                saveMainUser(backEndUser);
-                doNotify(null, callback);
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-
-                // TODO: 6/25/2015 handle error
-                Exception e = handleError(retrofitError);
+            public void done(Exception e, User backEndUser) {
                 if (e == null) {
-                    doSignup(name, phoneNumber, gcmRegId, countryIso, callback);
+                    backEndUser.setPassword(user.getPassword());
+                    saveMainUser(backEndUser);
+                    doNotify(null, callback);
                 } else {
                     doNotify(e, callback);
                 }
             }
+
         });
     }
 
@@ -809,16 +719,15 @@ public class UserManager {
         if (!isUserLoggedIn()) {
             throw new IllegalStateException(new Exception("no user logged for verification"));
         }
-        userApi.verifyUser(getMainUser().get_id(), token, new Callback<String>() {
+        userApi.verifyUser(getMainUser().getUserId(), token, new UserApiV2.Callback<HttpResponse>() {
             @Override
-            public void success(String accessToken, Response response) {
-                getSettings().edit().putBoolean(KEY_USER_VERIFIED, true).commit();
-                doNotify(null, callBack);
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-                doNotify(retrofitError, callBack);
+            public void done(Exception e, HttpResponse s) {
+                if (e == null) {
+                    getSettings().edit().putBoolean(KEY_USER_VERIFIED, true).commit();
+                    doNotify(null, callBack);
+                } else {
+                    doNotify(e, callBack);
+                }
             }
         });
     }
@@ -835,15 +744,10 @@ public class UserManager {
             doNotify(NO_CONNECTION_ERROR, callBack);
             return;
         }
-        userApi.resendToken(getMainUser().get_id(), getUserPassword(), new Callback<Response>() {
+        userApi.resendToken(getMainUser().getUserId(), getUserPassword(), new UserApiV2.Callback<HttpResponse>() {
             @Override
-            public void success(Response response, Response response2) {
-                doNotify(null, callBack);
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-                doNotify(retrofitError, callBack);
+            public void done(Exception e, HttpResponse response) {
+                doNotify(e, callBack);
             }
         });
     }
@@ -948,21 +852,11 @@ public class UserManager {
         if (!ConnectionUtils.isConnected()) {
             return;
         }
-        userApi.syncContacts(array, new Callback<List<User>>() {
+        userApi.syncContacts(array, new UserApiV2.Callback<List<User>>() {
             @Override
-            public void success(final List<User> users, Response response) {
-                saveFreshUsers(users);
-            }
-
-            @Override
-            public void failure(RetrofitError retrofitError) {
-                if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
-                    if (ConnectionUtils.isConnectedOrConnecting()) {
-                        //try again
-                        syncContacts(array);
-                    }
-                } else if (retrofitError.getKind().equals(RetrofitError.Kind.CONVERSION)) {
-                    throw new AssertionError(retrofitError);
+            public void done(Exception e, List<User> users) {
+                if (e == null) {
+                    saveFreshUsers(users);
                 }
             }
         });
@@ -1023,29 +917,23 @@ public class UserManager {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             doNotify(NO_CONNECTION_ERROR, callBack);
         }
-        userApi.leaveGroup(id, getMainUser().get_id(), getUserPassword(), new Callback<HttpResponse>() {
-            @Override
-            public void success(HttpResponse httpResponse, Response response) {
-                Realm realm = Realm.getInstance(Config.getApplicationContext());
-                try {
-                    User group = realm.where(User.class).equalTo("_id", id).findFirst();
-                    if (group != null) {
-                        realm.beginTransaction();
-                        group.removeFromRealm();
-                        realm.commitTransaction();
-                        doNotify(null, callBack);
-                    }
-                } finally {
-                    realm.close();
-                }
-
-            }
+        userApi.leaveGroup(id, getMainUser().getUserId(), getUserPassword(), new UserApiV2.Callback<HttpResponse>() {
 
             @Override
-            public void failure(RetrofitError retrofitError) {
-                Exception e = handleError(retrofitError);
+            public void done(Exception e, HttpResponse response) {
                 if (e == null) {
-                    leaveGroup(id, callBack);
+                    Realm realm = Realm.getInstance(Config.getApplicationContext());
+                    try {
+                        User group = realm.where(User.class).equalTo("_id", id).findFirst();
+                        if (group != null) {
+                            realm.beginTransaction();
+                            group.removeFromRealm();
+                            realm.commitTransaction();
+                            doNotify(null, callBack);
+                        }
+                    } finally {
+                        realm.close();
+                    }
                 } else {
                     doNotify(e, callBack);
                 }
@@ -1054,7 +942,7 @@ public class UserManager {
     }
 
     public boolean isAdmin(String id) {
-        return isAdmin(id, getMainUser().get_id());
+        return isAdmin(id, getMainUser().getUserId());
     }
 
     public String getUserCountryISO() {
@@ -1108,7 +996,7 @@ public class UserManager {
     }
 
     public static String getMainUserId() {
-        return getInstance().getMainUser().get_id();
+        return getInstance().getMainUser().getUserId();
     }
 
     private void cleanUp() {
@@ -1120,6 +1008,10 @@ public class UserManager {
     }
 
     public void refreshDp(final String id, final CallBack callBack) {
+        if (!ConnectionUtils.isConnected()) {
+            doNotify(NO_CONNECTION_ERROR, callBack);
+            return;
+        }
         WORKER.submit(new Runnable() {
             @Override
             public void run() {
@@ -1128,14 +1020,13 @@ public class UserManager {
                     User user = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
                     if (user != null) {
                         File dpFile = new File(Config.getAppProfilePicsBaseDir(), user.getDP() + ".jpg");
-                        if (!dpFile.exists()) {
-                            try {
-                                FileUtils.save(dpFile, Config.DP_ENDPOINT + "/" + user.getDP());
-                                doNotify(null, callBack);
-                            } catch (IOException e) {
-                                doNotify(new Exception(Config.getApplicationContext().getResources().getString(R.string.error_occurred)), callBack);
-                            }
-                        } else {
+                        if (!dpFile.exists()) try {
+                            FileUtils.save(dpFile, Config.DP_ENDPOINT + "/" + user.getDP());
+                            doNotify(null, callBack);
+                        } catch (IOException e) {
+                            doNotify(new Exception(Config.getApplicationContext().getResources().getString(R.string.error_occurred)), callBack);
+                        }
+                        else {
                             doNotify(null, callBack);
                         }
                     } else {

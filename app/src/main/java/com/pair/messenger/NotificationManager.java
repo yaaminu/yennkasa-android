@@ -7,10 +7,10 @@ import android.net.Uri;
 import android.os.Looper;
 import android.util.Log;
 
+import com.pair.Config;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
-import com.pair.pairapp.Config;
 import com.pair.util.ThreadUtils;
 
 import java.lang.ref.WeakReference;

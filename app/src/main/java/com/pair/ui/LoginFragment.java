@@ -1,4 +1,4 @@
-package com.pair.pairapp.ui;
+package com.pair.ui;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -12,11 +12,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.pair.Config;
 import com.pair.adapter.CountriesListAdapter;
 import com.pair.data.Country;
 import com.pair.data.UserManager;
-import com.pair.pairapp.Config;
-import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.FormValidator;
 import com.pair.util.PhoneNumberNormaliser;

@@ -1,7 +1,7 @@
 package com.pair.net;
 
 /**
- * Created by Null-Pointer on 5/26/2015.
+ * @author by Null-Pointer on 5/26/2015.
  */
 public class HttpResponse {
     private int status;

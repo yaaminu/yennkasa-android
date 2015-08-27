@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.rey.material.widget.ProgressView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="48dp"
+    android:layout_height="48dp"
+    android:layout_gravity="center"
+    android:layout_centerInParent="true"
+    android:visibility="gone"
+    app:pv_autostart="true"
+    app:pv_circular="true"
+    app:pv_progressStyle="@style/base_indeterminate_progress_stroke_white"
+    app:pv_progressMode="indeterminate" />

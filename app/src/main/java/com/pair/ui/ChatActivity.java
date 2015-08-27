@@ -1,4 +1,4 @@
-package com.pair.pairapp.ui;
+package com.pair.ui;
 
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
@@ -35,6 +35,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.JsonObject;
+import com.pair.Config;
+import com.pair.Exceptions.MessageFileTooLargeException;
 import com.pair.adapter.MessageJsonAdapter;
 import com.pair.adapter.MessagesAdapter;
 import com.pair.adapter.UsersAdapter;
@@ -43,11 +45,8 @@ import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.messenger.MessageProcessor;
-import com.pair.messenger.PairAppBaseActivity;
 import com.pair.net.Dispatcher;
 import com.pair.pairapp.BuildConfig;
-import com.pair.pairapp.Config;
-import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.FileUtils;
 import com.pair.util.MediaUtils;
@@ -125,7 +124,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         if (peer == null) {
             realm.beginTransaction();
             peer = realm.createObject(User.class);
-            peer.set_id(peerId);
+            peer.setUserId(peerId);
             String[] parts = peerId.split("@"); //in case the peer is a group
             peer.setType(parts.length > 1 ? User.TYPE_GROUP : User.TYPE_NORMAL_USER);
             peer.setDP(peerId);
@@ -141,9 +140,9 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             actionBar.setSubtitle(peer.getStatus());
         }
         actionBar.setDisplayHomeAsUpEnabled(true);
-        messages = realm.where(Message.class).equalTo(Message.FIELD_FROM, peer.get_id())
+        messages = realm.where(Message.class).equalTo(Message.FIELD_FROM, peer.getUserId())
                 .or()
-                .equalTo(Message.FIELD_TO, peer.get_id())
+                .equalTo(Message.FIELD_TO, peer.getUserId())
                 .findAllSorted(Message.FIELD_DATE_COMPOSED, true);
         setUpCurrentConversation();
         adapter = new MessagesAdapter(this, messages, true);
@@ -158,7 +157,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
     }
 
     private void setUpCurrentConversation() {
-        String peerId = peer.get_id();
+        String peerId = peer.getUserId();
         currConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
         // FIXME: 8/4/2015 move this to a background thread
         realm.beginTransaction();
@@ -178,7 +177,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         menu = toolBar.getMenu();
         User mainUser = UserManager.getInstance().getMainUser();
         menu.findItem(R.id.action_invite_friends)
-                .setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().get_id().equals(mainUser.get_id()) && !isForwarding);
+                .setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().getUserId().equals(mainUser.getUserId()) && !isForwarding);
         menu.findItem(R.id.action_view_profile).setTitle((peer.getType() == User.TYPE_GROUP) ? R.string.st_group_info : R.string.st_view_profile);
         menu.findItem(R.id.action_view_profile).setVisible(!isForwarding);
         menu.findItem(R.id.action_done).setVisible(isForwarding && !recipientsIds.isEmpty());
@@ -204,11 +203,11 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             return super.onOptionsItemSelected(item);
         } else if (id == R.id.action_invite_friends) {
             Intent intent = new Intent(this, InviteActivity.class);
-            intent.putExtra(InviteActivity.EXTRA_GROUP_ID, peer.get_id());
+            intent.putExtra(InviteActivity.EXTRA_GROUP_ID, peer.getUserId());
             startActivityForResult(intent, ADD_USERS_REQUEST);
             return true;
         } else if (id == R.id.action_view_profile) {
-            UiHelpers.gotoProfileActivity(this, peer.get_id());
+            UiHelpers.gotoProfileActivity(this, peer.getUserId());
             return true;
         } else if (id == R.id.action_done) {
             forwardToAll(recipientsIds);
@@ -300,8 +299,12 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             if (messages.isEmpty()) {
                 ensureDateSet();
             }
-            Message message = createMessage(content, Message.TYPE_TEXT_MESSAGE);
-            doSendMessage(message);
+            Message message;
+            try {
+                message = createMessage(content, Message.TYPE_TEXT_MESSAGE);
+                doSendMessage(message);
+            } catch (MessageFileTooLargeException ignored) {
+            }
         }
     }
 
@@ -326,14 +329,20 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         }
     }
 
-    private Message createMessage(String messageBody, int type) {
+    private Message createMessage(String messageBody, int type) throws MessageFileTooLargeException {
         // FIXME: 8/4/2015 run in a background thread
+        if (type != Message.TYPE_TEXT_MESSAGE) {
+            File file = new File(messageBody);
+            if (!validateFile(file)) {
+                throw new MessageFileTooLargeException(getString(R.string.error_file_too_large));
+            }
+        }
         realm.beginTransaction();
         trySetupNewSession();
         Message message = realm.createObject(Message.class);
         message.setMessageBody(messageBody);
-        message.setTo(peer.get_id());
-        message.setFrom(getCurrentUser().get_id());
+        message.setTo(peer.getUserId());
+        message.setFrom(getCurrentUser().getUserId());
         message.setDateComposed(new Date());
         message.setId(Message.generateIdPossiblyUnique());
         message.setState(Message.STATE_PENDING);
@@ -349,6 +358,13 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         currConversation.setSummary(summary);
         realm.commitTransaction();
         return message;
+    }
+
+    private boolean validateFile(File file) {
+        if (file != null && file.exists()) {
+            return ((file.length() > 0 && file.length() < (FileUtils.ONE_MB * 8)));
+        }
+        return false;
     }
 
     private User getCurrentUser() {
@@ -445,41 +461,44 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
         if (resultCode != RESULT_OK) {
             return;
         }
         Message message;
-        switch (requestCode) {
-            case PICK_PHOTO_REQUEST:
-                message = createMessage(getActualPath(data), Message.TYPE_PICTURE_MESSAGE);
-                break;
-            case TAKE_PHOTO_REQUEST:
-                message = createMessage(mMediaUri.getPath(), Message.TYPE_PICTURE_MESSAGE);
-                break;
-            case TAKE_VIDEO_REQUEST:
-                //fall through
-                message = createMessage(mMediaUri.getPath(), Message.TYPE_VIDEO_MESSAGE);
-                break;
-            case PICK_VIDEO_REQUEST:
-                message = createMessage(getActualPath(data), Message.TYPE_VIDEO_MESSAGE);
-                break;
-            case PICK_FILE_REQUEST:
-                String actualPath = getActualPath(data);
-                String extension = FileUtils.getExtension(actualPath);
-                int type = Message.TYPE_BIN_MESSAGE;
-                //some image formats like bmp,gif are considered invalid
-                if (extension.equals("jpeg") || extension.equals("jpg") || extension.equals("png")) {
-                    type = Message.TYPE_PICTURE_MESSAGE;
-                } else if (extension.equals("mp4") || extension.equals("3gp")) {
-                    type = Message.TYPE_VIDEO_MESSAGE;
-                }
-                message = createMessage(actualPath, type);
-                break;
-            default:
-                throw new AssertionError("impossible");
+        try {
+            switch (requestCode) {
+                case PICK_PHOTO_REQUEST:
+                    message = createMessage(getActualPath(data), Message.TYPE_PICTURE_MESSAGE);
+                    break;
+                case TAKE_PHOTO_REQUEST:
+                    message = createMessage(mMediaUri.getPath(), Message.TYPE_PICTURE_MESSAGE);
+                    break;
+                case TAKE_VIDEO_REQUEST:
+                    //fall through
+                    message = createMessage(mMediaUri.getPath(), Message.TYPE_VIDEO_MESSAGE);
+                    break;
+                case PICK_VIDEO_REQUEST:
+                    message = createMessage(getActualPath(data), Message.TYPE_VIDEO_MESSAGE);
+                    break;
+                case PICK_FILE_REQUEST:
+                    String actualPath = getActualPath(data);
+                    String extension = FileUtils.getExtension(actualPath);
+                    int type = Message.TYPE_BIN_MESSAGE;
+                    //some image formats like bmp,gif are considered invalid
+                    if (extension.equals("jpeg") || extension.equals("jpg") || extension.equals("png")) {
+                        type = Message.TYPE_PICTURE_MESSAGE;
+                    } else if (extension.equals("mp4") || extension.equals("3gp")) {
+                        type = Message.TYPE_VIDEO_MESSAGE;
+                    }
+                    message = createMessage(actualPath, type);
+                    break;
+                default:
+                    throw new AssertionError("impossible");
+            }
+            doSendMessage(message);
+        } catch (MessageFileTooLargeException e) {
+            UiHelpers.showToast(e.getMessage());
         }
-        doSendMessage(message);
     }
 
     private void forwardToAll(final Set<String> recipients) {
@@ -522,7 +541,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
                 conversation.setActive(false);
                 conversation.setLastActiveTime(new Date());
                 Conversation.newSession(realm, conversation);
-                backGroundRealmVersion.setFrom(getCurrentUser().get_id());
+                backGroundRealmVersion.setFrom(getCurrentUser().getUserId());
                 backGroundRealmVersion.setTo(recipient);
                 backGroundRealmVersion.setDateComposed(new Date());
                 backGroundRealmVersion.setState(Message.STATE_PENDING);
@@ -547,8 +566,8 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
     private void addMembersToGroup(ArrayList<String> members) {
 
         UserManager userManager = UserManager.getInstance();
-        if (userManager.isGroup(peer.get_id())) {
-            userManager.addMembersToGroup(peer.get_id(), members, new UserManager.CallBack() {
+        if (userManager.isGroup(peer.getUserId())) {
+            userManager.addMembersToGroup(peer.getUserId(), members, new UserManager.CallBack() {
                 @Override
                 public void done(Exception e) {
                     if (e != null) {
@@ -608,10 +627,10 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         try {
             message = new Message();
             String formatted = DateUtils.formatDateTime(this, new Date().getTime(), DateUtils.FORMAT_NUMERIC_DATE);
-            message.setId(peer.get_id() + formatted);
+            message.setId(peer.getUserId() + formatted);
             message.setMessageBody(formatted);
-            message.setTo(UserManager.getInstance().getMainUser().get_id());
-            message.setFrom(peer.get_id());
+            message.setTo(UserManager.getInstance().getMainUser().getUserId());
+            message.setFrom(peer.getUserId());
             Date latestDate = messages.minDate(Message.FIELD_DATE_COMPOSED);
             //one second older than the oldest message
             latestDate = latestDate == null ? new Date() : new Date(latestDate.getTime() - 1000);
@@ -705,13 +724,13 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
      * code purposely for testing we will take this off in production
      */
     private void testChatActivity() {
-        final String senderId = peer.get_id();
+        final String senderId = peer.getUserId();
         timer = new Timer(true);
         TimerTask task = new TimerTask() {
             @Override
             public void run() {
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_LOWEST);
-                testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, getCurrentUser().get_id()));
+                testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, getCurrentUser().getUserId()));
             }
         };
         timer.scheduleAtFixedRate(task, 5000, 45000);
@@ -779,8 +798,8 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
 
     private RealmQuery<User> getRecipients() {
         return realm.where(User.class)
-                .notEqualTo(User.FIELD_ID, getCurrentUser().get_id())
-                .notEqualTo(User.FIELD_ID, peer.get_id());
+                .notEqualTo(User.FIELD_ID, getCurrentUser().getUserId())
+                .notEqualTo(User.FIELD_ID, peer.getUserId());
     }
 
     private UsersAdapter recipientsAdapter;
@@ -799,7 +818,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             public View getView(final int position, View convertView, final ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
                 final CheckBox checkBox = (CheckBox) view.findViewById(R.id.cb_checked);
-                final String userId = getItem(position).get_id();
+                final String userId = getItem(position).getUserId();
                 checkBox.setChecked(recipientsIds.contains(userId));
                 checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
@@ -856,11 +875,11 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         final UsersAdapter adapter = (UsersAdapter) parent.getAdapter();
         User user = adapter.getItem(position);
         if (((ListView) parent).isItemChecked(position)) {
-            recipientsIds.add(user.get_id());
+            recipientsIds.add(user.getUserId());
         } else {
-            recipientsIds.remove(user.get_id());
+            recipientsIds.remove(user.getUserId());
         }
-        ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(recipientsIds.contains(adapter.getItem(position).get_id()));
+        ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(recipientsIds.contains(adapter.getItem(position).getUserId()));
         supportInvalidateOptionsMenu();
     }
 }

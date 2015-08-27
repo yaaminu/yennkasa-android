@@ -11,9 +11,9 @@ import android.util.Log;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.pair.Config;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
-import com.pair.pairapp.Config;
 
 import java.io.IOException;
 

@@ -1,4 +1,4 @@
-package com.pair.pairapp.ui;
+package com.pair.ui;
 
 
 import android.app.Activity;

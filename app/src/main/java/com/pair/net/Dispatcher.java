@@ -3,7 +3,7 @@ package com.pair.net;
 import java.util.Collection;
 
 /**
- * Created by Null-Pointer on 5/26/2015.
+ * @author by Null-Pointer on 5/26/2015.
  */
 public interface Dispatcher<T> {
     void dispatch(T t);
@@ -12,14 +12,15 @@ public interface Dispatcher<T> {
     boolean cancelDispatchMayPossiblyFail(T t);
 
     void addMonitor(DispatcherMonitor monitor);
-    void unregisterMonitor(DispatcherMonitor monitor);
+
+    void removeMonitor(DispatcherMonitor monitor);
     /**
      * Created by Null-Pointer on 5/26/2015.
      */
     interface DispatcherMonitor {
-        void onSendFailed(String reason, String messageId);
+        void onSendFailed(String reason, String objectIdentifier);
 
-        void onSendSucceeded(String messageId);
+        void onSendSucceeded(String objectIdentifier);
 
         void onAllDispatched();
     }

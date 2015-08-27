@@ -1,6 +1,7 @@
 <com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_item_height"
+    android:minHeight="?android:attr/listPreferredItemHeight"
     android:layout_marginBottom="@dimen/list_item_margin_bottom"
     android:descendantFocusability="afterDescendants"
     android:padding="@dimen/list_item_padding">

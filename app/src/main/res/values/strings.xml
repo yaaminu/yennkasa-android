@@ -43,7 +43,7 @@
     <string name="st_done">DONE</string>
     <string name="st_please_wait">PLEASE WAIT…</string>
     <string name="st_group_name">Group Name</string>
-    <string name="st_mutual_groups">Mutual Groups</string>
+    <string name="shared_groups">Shared Groups</string>
     <string name="st_group_members">Group Members</string>
     <string name="st_success">Success</string>
     <string name="st_choose_a_different_image">This image is already your DP.Choose a different one</string>
@@ -85,14 +85,14 @@
     <string name="i_know">I Know</string>
     <string name="invite_member">Invite Friends</string>
     <string name="action_create_group">Create Group</string>
-    <string name="st_download">download</string>
+    `
     <string name="st_content_description_image_preview">preview of media messages</string>
     <string name="st_message_state_pending">pending</string>
     <string name="st_message_state_failed">failed</string>
     <string name="st_message_state_delivered">delivered</string>
     <string name="st_message_state_seen">seen</string>
     <string name="st_message_state_sent">sent</string>
-    <string name="sorry_no_dp">no DP</string>
+    <string name="sorry_no_dp">no photo to display</string>
     <string name="loading">Loading…</string>
     <string name="initialising">Taking care of few things…</string>
     <string name="new_message">New Message</string>
@@ -126,4 +126,9 @@
     <string name="video">Video</string>
     <string name="file">File</string>
     <string name="dissolve_group">Dissolve</string>
+    <string name="phone">Phone</string>
+    <string name="groups_you_share_in_common">Groups you share in common</string>
+    <string name="Members">" Members"</string>
+    <string name="error_file_too_large">File is either too large or invalid</string>
+    <string name="leave_group_prompt">Sure you want to leave group? all messages received from this group will be lost.</string>
 </resources>

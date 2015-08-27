@@ -1,4 +1,4 @@
-package com.pair.pairapp;
+package com.pair;
 
 import android.app.Application;
 import android.content.ComponentName;
@@ -43,14 +43,6 @@ public class Config {
     public static final String APP_USER_AGENT = "pairapp-android-development-version";
     private static String APP_NAME = "PairApp";
 
-    //shared with message adapter
-    public static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
-        @Override
-        public void intercept(RequestFacade requestFacade) {
-            requestFacade.addHeader("Authorization", "kiiboda+=s3cr3te");
-            requestFacade.addHeader("User-Agent", Config.APP_USER_AGENT);
-        }
-    };
 
     private static boolean isExternalStorageAvailable() {
         String state = Environment.getExternalStorageState();
@@ -165,7 +157,7 @@ public class Config {
     }
 
     public static void enableComponents() {
-        enableComponent(BootReceiver.class);
+        // enableComponent(BootReceiver.class);
         enableComponent(ContactSyncService.class);
         enableComponent(PairAppClient.class);
         enableComponent(MessageProcessor.class);
@@ -218,4 +210,13 @@ public class Config {
         return new File(Environment
                 .getExternalStoragePublicDirectory(APP_NAME), "TMP");
     }
+
+    //shared with message adapter
+    public static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
+        @Override
+        public void intercept(RequestFacade requestFacade) {
+            requestFacade.addHeader("Authorization", "kiiboda+=s3cr3te");
+            requestFacade.addHeader("User-Agent", Config.APP_USER_AGENT);
+        }
+    };
 }

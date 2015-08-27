@@ -6,14 +6,14 @@ import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import com.google.gson.JsonObject;
+import com.pair.Config;
 import com.pair.adapter.BaseJsonAdapter;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.net.Dispatcher;
 import com.pair.net.HttpResponse;
-import com.pair.net.api.MessageApi;
+import com.pair.net.MessageApi;
 import com.pair.pairapp.BuildConfig;
-import com.pair.pairapp.Config;
 import com.pair.util.ConnectionUtils;
 
 import org.apache.http.HttpStatus;
@@ -147,7 +147,7 @@ class MessageDispatcher implements Dispatcher<Message> {
     }
 
     @Override
-    public void unregisterMonitor(DispatcherMonitor monitor) {
+    public void removeMonitor(DispatcherMonitor monitor) {
         synchronized (dispatcherMonitorLock) {
             this.monitors.remove(monitor);
         }

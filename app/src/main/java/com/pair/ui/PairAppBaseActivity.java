@@ -1,4 +1,4 @@
-package com.pair.messenger;
+package com.pair.ui;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -13,6 +13,8 @@ import android.text.TextUtils;
 import android.view.View;
 
 import com.pair.data.Message;
+import com.pair.messenger.Notifier;
+import com.pair.messenger.PairAppClient;
 import com.pair.pairapp.R;
 import com.pair.util.ScreenUtility;
 import com.pair.util.UiHelpers;
@@ -153,15 +155,24 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements N
 
         @Override
         public void onClick(View v) {
+            PairAppBaseActivity self = PairAppBaseActivity.this;
             if (recentChatList.size() == 1) {
                 recentChatList.clear();
                 unReadMessages = 0;
-                UiHelpers.enterChatRoom(PairAppBaseActivity.this, v.getTag(R.id.latest_message).toString());
+                UiHelpers.enterChatRoom(self, v.getTag(R.id.latest_message).toString());
+            } else {
+                if (getClass().equals(MainActivity.class)) {
+                    ((MainActivity) self).setPagePosition(MainActivity.MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT);
+                } else {
+                    Intent intent = new Intent(self, MainActivity.class);
+                    intent.putExtra(MainActivity.DEFAULT_FRAGMENT, MainActivity.MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT);
+                    startActivity(intent);
+                    finish(); //better use flags instead
+                }
             }
         }
     };
     protected SnackBar snackBar;
-
 
     protected void setUpScreenDimensions() {
         ScreenUtility utility = new ScreenUtility(this);

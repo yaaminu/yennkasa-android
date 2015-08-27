@@ -1,6 +1,7 @@
 package com.pair.adapter;
 
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
@@ -17,20 +18,21 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.pair.Config;
 import com.pair.data.Message;
 import com.pair.pairapp.BuildConfig;
-import com.pair.pairapp.Config;
 import com.pair.pairapp.R;
-import com.pair.pairapp.ui.ImageViewer;
+import com.pair.ui.ImageViewer;
 import com.pair.util.FileUtils;
 import com.pair.util.UiHelpers;
-import com.rey.material.widget.ProgressView;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.RequestCreator;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -47,10 +49,11 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     private static final long TEN_SECONDS = 10000L;
     private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2, DATE_MESSAGE = 0x0;
     private final SparseIntArray previewsMap;
-    private final SparseIntArray downloadingRows = new SparseIntArray();
+    private static final Map<String, Integer> downloadingRows = new HashMap<>();
     private final Picasso PICASSO;
     private final int PREVIEW_WIDTH;
     private final int PREVIEW_HEIGHT;
+    private final int playIcon = R.drawable.playvideo, downloadIcon = R.drawable.photoload;
 
     public MessagesAdapter(FragmentActivity context, RealmResults<Message> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
@@ -105,13 +108,13 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
 
         String dateComposed = DateUtils.formatDateTime(context, message.getDateComposed().getTime(), DateUtils.FORMAT_SHOW_TIME);
 
-        //show all views hide if it's not required
+        //show all views show if it's required
         holder.preview.setVisibility(View.GONE);
         holder.messageStatus.setVisibility(View.GONE);
-        holder.downloadButton.setVisibility(View.GONE);
         holder.progress.setVisibility(View.GONE);
+        holder.playOrdownload.setVisibility(View.GONE);
         holder.preview.setOnClickListener(null);
-        holder.downloadButton.setOnClickListener(null);
+        holder.playOrdownload.setOnClickListener(null);
         holder.textMessage.setVisibility(View.GONE);
         //common to all
         holder.dateComposed.setVisibility(View.VISIBLE);
@@ -137,8 +140,12 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         final View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (v.getId() == R.id.bt_download) {
-                    download(position);
+                if (v.getId() == R.id.v_download_play) {
+                    if (messageFile.exists()) {
+                        attemptToViewFile((FragmentActivity) context, messageFile, message);
+                    } else {
+                        download(position);
+                    }
                 } else if (v.getId() == R.id.iv_message_preview) {
                     attemptToViewFile(((FragmentActivity) context), messageFile, message);
                 }
@@ -147,26 +154,32 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         if (messageFile.exists()) {
             // this binary message is downloaded
             final RequestCreator creator;
+            if (Message.isVideoMessage(message)) {
+                holder.playOrdownload.setVisibility(View.VISIBLE);
+                holder.playOrdownload.setImageResource(R.drawable.playvideo);
+                holder.playOrdownload.setOnClickListener(listener);
+            }
             if (Message.isPictureMessage(message)) {
-                creator = PICASSO.load(messageFile)
+                PICASSO.load(messageFile)
                         .resize(PREVIEW_WIDTH, PREVIEW_HEIGHT)
                         .centerCrop()
-                        .error(placeHolderDrawable);
+                        .error(placeHolderDrawable)
+                        .into(holder.preview);
+
             } else {
-                creator = PICASSO.load(placeHolderDrawable);
+                holder.preview.setImageResource(placeHolderDrawable);
             }
-            creator.into(holder.preview);
             holder.preview.setOnClickListener(listener);
         } else {
-            if (downloadingRows.indexOfKey(position) < 0) { //not downloaded/downloading
-                holder.downloadButton.setVisibility(View.VISIBLE);
+            if (!downloadingRows.containsKey(message.getId())) {
+                holder.playOrdownload.setVisibility(View.VISIBLE);
+                holder.playOrdownload.setImageResource(R.drawable.photoload);
+                holder.playOrdownload.setOnClickListener(listener);
             }
-            holder.downloadButton.setOnClickListener(listener);
-            PICASSO.load(placeHolderDrawable)
-                    .into(holder.preview);
+            holder.preview.setImageResource(placeHolderDrawable);
         }
 
-        if (downloadingRows.indexOfKey(position) > -1) {
+        if (downloadingRows.containsKey(message.getId())) {
             holder.progress.setVisibility(View.VISIBLE);
         }
 
@@ -228,7 +241,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             default:
                 throw new AssertionError("should never happen");
         }
-        downloadingRows.put(position, message.getType());
+        downloadingRows.put(message.getId(), 0);
         notifyDataSetChanged(); //this will show the progress indicator and hide the download button
         downloader.execute(
                 new Runnable() {
@@ -265,11 +278,11 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                                     @Override
                                     public void run() {
                                         try {
-                                            downloadingRows.delete(position);
+                                            downloadingRows.remove(message.getId());
                                             notifyDataSetChanged();
                                             //show download button
                                             if (error != null) {
-                                                UiHelpers.showErrorDialog(((FragmentActivity) context), error.getMessage());
+                                                UiHelpers.showErrorDialog(((FragmentActivity) getContext()), error.getMessage());
                                             }
                                         } catch (Exception ignored) {
                                             //may be user navigated from this activity hence the context is now
@@ -282,6 +295,10 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                 });
     }
 
+    private Context getContext() {
+        return context;
+    }
+
     @NonNull
     private View hookupViews(int layoutResource, ViewGroup parent) {
         View convertView;
@@ -291,8 +308,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         holder.textMessage = ((TextView) convertView.findViewById(R.id.tv_message_content));
         holder.preview = (ImageView) convertView.findViewById(R.id.iv_message_preview);
         holder.dateComposed = ((TextView) convertView.findViewById(R.id.tv_message_date));
-        holder.downloadButton = convertView.findViewById(R.id.bt_download);
-        holder.progress = (ProgressView) convertView.findViewById(R.id.pb_download_progress);
+        holder.playOrdownload = ((ImageView) convertView.findViewById(R.id.v_download_play));
+        holder.progress = convertView.findViewById(R.id.pb_download_progress);
         holder.messageStatus = ((TextView) convertView.findViewById(R.id.tv_message_status));
         convertView.setTag(holder);
         return convertView;
@@ -337,9 +354,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
 
     private class ViewHolder {
         private TextView textMessage, dateComposed;
-        private ImageView preview;
-        private View downloadButton;
-        private ProgressView progress;
+        private ImageView preview, playOrdownload;
+        private View progress;
         private TextView messageStatus;
         //TODO add more fields as we support different media/file types
     }

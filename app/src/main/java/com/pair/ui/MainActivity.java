@@ -1,4 +1,4 @@
-package com.pair.pairapp;
+package com.pair.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,20 +12,22 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.widget.LinearLayout;
 
+import com.pair.Config;
+import com.pair.data.Conversation;
 import com.pair.data.UserManager;
-import com.pair.messenger.PairAppBaseActivity;
-import com.pair.pairapp.ui.ContactFragment;
-import com.pair.pairapp.ui.ConversationsFragment;
-import com.pair.pairapp.ui.GroupsFragment;
+import com.pair.pairapp.R;
 import com.pair.util.RealmUtils;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
 import com.rey.material.widget.TabPageIndicator;
 
+import io.realm.Realm;
+
 /**
  * @author Null-Pointer on 6/6/2015.
  */
 public class MainActivity extends PairAppBaseActivity {
+    public static final String DEFAULT_FRAGMENT = "default_fragment";
     private static boolean cleanedMessages = false;
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final String ARG_TITLE = "title";
@@ -52,6 +54,16 @@ public class MainActivity extends PairAppBaseActivity {
             pager.setAdapter(new MyFragmentStatePagerAdapter(getSupportFragmentManager()));
             snackBar = ((SnackBar) findViewById(R.id.notification_bar));
             tabStrip.setViewPager(pager);
+            final int default_fragment = getIntent().getIntExtra(DEFAULT_FRAGMENT, -1);
+            if (default_fragment > -1) {
+                savedPosition = default_fragment > pager.getAdapter().getCount() - 1 ? 0 : default_fragment;
+            } else {
+                Realm realm = Conversation.Realm(this);
+                if (realm.where(Conversation.class).count() < 1) {
+                    savedPosition = MyFragmentStatePagerAdapter.POSITION_CONTACTS_FRAGMENT;
+                }
+                realm.close();
+            }
         } else {
             gotoSetUpActivity();
         }
@@ -62,12 +74,17 @@ public class MainActivity extends PairAppBaseActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        if (savedPosition != -1) {
+            setPagePosition(savedPosition);
+        }
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         Config.appOpen(true);
-        if (savedPosition != -1) {
-            pager.setCurrentItem(savedPosition);
-        }
         if (pairAppClientInterface != null) {
             pairAppClientInterface.registerNotifier(this);
         }
@@ -110,13 +127,25 @@ public class MainActivity extends PairAppBaseActivity {
         return super.onPrepareOptionsMenu(menu);
     }
 
+    void setPagePosition(int newPosition) {
+        if (newPosition < 0 || newPosition >= pager.getAdapter().getCount() || pager.getCurrentItem() == newPosition) {
+            //do nothing
+        } else {
+            pager.setCurrentItem(newPosition, true);
+        }
+    }
     private void gotoSetUpActivity() {
         Intent intent = new Intent(this, SetUpActivity.class);
         startActivity(intent);
         finish();
     }
 
-    private class MyFragmentStatePagerAdapter extends FragmentStatePagerAdapter {
+    //package private
+    class MyFragmentStatePagerAdapter extends FragmentStatePagerAdapter {
+        static final int POSITION_CONVERSATION_FRAGMENT = 0,
+                POSITION_CONTACTS_FRAGMENT = 1,
+                POSITION_GROUP_FRAGMENT = 2;
+
         String[] pageTitles;
 
         public MyFragmentStatePagerAdapter(FragmentManager fm) {
@@ -128,13 +157,13 @@ public class MainActivity extends PairAppBaseActivity {
         public Fragment getItem(int position) {
             Fragment fragment;
             switch (position) {
-                case 0:
+                case POSITION_CONVERSATION_FRAGMENT:
                     fragment = new ConversationsFragment();
                     break;
-                case 1:
+                case POSITION_CONTACTS_FRAGMENT:
                     fragment = new ContactFragment();
                     break;
-                case 2:
+                case POSITION_GROUP_FRAGMENT:
                     fragment = new GroupsFragment();
                     break;
                 default:

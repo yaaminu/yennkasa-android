@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    style="@style/default_list_item_style"
     android:layout_margin="15dp">
 
     <com.pair.view.LinearLayout
@@ -33,41 +31,44 @@
                 android:contentDescription="@string/st_content_description_image_preview"
                 android:scaleType="centerCrop"
                 android:src="@drawable/user_avartar"
-                android:visibility="visible" />
+                android:visibility="gone" />
 
-            <Button
-                android:id="@+id/bt_download"
+
+            <ImageView
+                android:id="@+id/v_download_play"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:background="@color/white"
-                android:text="@string/st_download"
-                android:visibility="visible" />
+                android:background="#0000"
+                android:minHeight="@dimen/thumbnail_height"
+                android:minWidth="@dimen/thumbnail_width"
+                android:src="@drawable/playvideo"
+                android:visibility="gone" />
 
-            <com.rey.material.widget.ProgressView
+
+            <!--<com.rey.material.widget.ProgressView-->
+            <!--android:id="@+id/pb_download_progress"-->
+            <!--android:layout_width="48dp"-->
+            <!--android:layout_height="48dp"-->
+            <!--android:layout_gravity="center"-->
+            <!--android:visibility="gone"-->
+            <!--app:pv_autostart="true"-->
+            <!--app:pv_circular="true"-->
+            <!--app:pv_progressMode="indeterminate"-->
+            <!--app:pv_progressStyle="@style/base_indeterminate_progress_style" />-->
+            <include
                 android:id="@+id/pb_download_progress"
-                app:pv_autostart="true"
-                app:pv_circular="true"
-                app:pv_progressMode="indeterminate"
-                app:pv_progressStyle="@style/base_indeterminate_progress_style"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center"
+                layout="@layout/progress_message_list_item"
+                android:indeterminate="true"
                 android:visibility="gone" />
         </com.pair.view.FrameLayout>
 
-        <com.pair.view.LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="left"
-            android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/tv_message_date"
-                style="@style/message_incoming_date"
-                android:singleLine="true"
-                android:text="2/23/12" />
-        </com.pair.view.LinearLayout>
+        <TextView
+            android:id="@+id/tv_message_date"
+            style="@style/message_incoming_date"
+            android:singleLine="true"
+            android:text="2/23/12" />
     </com.pair.view.LinearLayout>
     <!-- this textView is useless except that it frees us from checking for
     null-ness in the {@link MessagesAdapter}-->

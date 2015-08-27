@@ -75,12 +75,20 @@
         <item name="cpd_strokeColors">@array/progress_colors</item>
     </style>
 
-    <style name="base_indeterminate_progress_style" parent="Material.Drawable.CircularProgress">
+    <style name="base_indeterminate_progress_style" parent="CircularProgressDrawableStyle">
+        <item name="cpd_strokeColor">@color/preferred_primary_color</item>
+        <!--<item name="cpd_inAnimDuration">800</item>-->
+        <!--<item name="cpd_inStepPercent">0.5</item>-->
+        <!--<item name="cpd_inStepColors">@array/in_colors</item>-->
+        <!--<item name="cpd_outAnimDuration">400</item>-->
+    </style>
+
+    <style name="base_indeterminate_progress_stroke_white" parent="CircularProgressDrawableStyle">
         <item name="cpd_strokeColor">@color/white</item>
-        <item name="cpd_inAnimDuration">800</item>
-        <item name="cpd_inStepPercent">0.5</item>
-        <item name="cpd_inStepColors">@array/in_colors</item>
-        <item name="cpd_outAnimDuration">400</item>
+    </style>
+
+    <style name="base_indeterminate_progress_stroke_preferred_color" parent="CircularProgressDrawableStyle">
+        <item name="cpd_strokeColor">@color/preferred_primary_color</item>
     </style>
 
     <style name="InOutCircularProgressDrawableStyle" parent="base_indeterminate_progress_style">
@@ -330,4 +338,13 @@
         <item name="rd_rippleColor">@color/colorPrimaryDark</item>
     </style>
 
+    <style name="profile_fragment_round_button_style" parent="FlatWaveColorButtonRippleStyle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginLeft">5dp</item>
+        <item name="android:background">@drawable/white_round</item>
+        <item name="android:scaleType">fitCenter</item>
+    </style>
+
+    <dimen name="profile_fragment_round_icons_padding">8dp</dimen>
 </resources>

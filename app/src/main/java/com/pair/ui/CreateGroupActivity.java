@@ -1,4 +1,4 @@
-package com.pair.pairapp;
+package com.pair.ui;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
@@ -23,7 +23,7 @@ import android.widget.ListView;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.data.User;
 import com.pair.data.UserManager;
-import com.pair.pairapp.ui.ItemsSelector;
+import com.pair.pairapp.R;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
@@ -65,7 +65,7 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
         groupNameEt = ((EditText) findViewById(R.id.et_group_name));
         realm = Realm.getInstance(this);
         users = realm.where(User.class).notEqualTo(User.FIELD_ID, UserManager.getInstance()
-                .getMainUser().get_id()).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
+                .getMainUser().getUserId()).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
                 .findAllSorted(User.FIELD_NAME);
         adapter = new UsersAdapter(users);
     }
@@ -194,9 +194,9 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         User user = ((User) parent.getAdapter().getItem(position));
         if (((ListView) parent).isItemChecked(position)) {
-            selectedUsers.add(user.get_id());
+            selectedUsers.add(user.getUserId());
         } else {
-            selectedUsers.remove(user.get_id());
+            selectedUsers.remove(user.getUserId());
         }
         if (selectedUsers.size() >= 2) {
             manager.setCurrentGroup(R.id.done_group);
@@ -299,7 +299,7 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
             convertView = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_checked, parent, false);
             final CheckedTextView checkedTextView = (CheckedTextView) convertView;
             checkedTextView.setText(getItem(position).getName());
-            ((ListView) parent).setItemChecked(position, selectedUsers.contains(getItem(position).get_id()));
+            ((ListView) parent).setItemChecked(position, selectedUsers.contains(getItem(position).getUserId()));
             return convertView;
         }
 
@@ -335,7 +335,7 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
                             .endGroup()
                             .notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
                             .notEqualTo(User.FIELD_ID, UserManager.getInstance()
-                                    .getMainUser().get_id());
+                                    .getMainUser().getUserId());
                     users = query.findAllSorted(User.FIELD_NAME);
                     //detach the objects from realm. as we want to pass it to a different thread
                     // TODO: 8/7/2015 this might not scale

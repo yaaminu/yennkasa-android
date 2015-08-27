@@ -7,7 +7,7 @@ import com.pair.data.Message;
 /**
  * @author Null-Pointer on 8/12/2015.
  */
-interface Notifier {
+public interface Notifier {
     enum location {
         BACKGROUND,
         FORE_GROUND

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.pair.view.com.pair.view.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pair.view.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     style="@style/selectedListItemStyle"
     android:layout_width="match_parent"
@@ -26,5 +26,5 @@
         android:paddingRight="16dp"
         android:textColor="#FF000000"
         android:textSize="16sp" />
-</com.pair.view.com.pair.view.LinearLayout>
+</com.pair.view.LinearLayout>
 

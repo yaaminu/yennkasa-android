@@ -6,7 +6,7 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
-import com.pair.pairapp.Config;
+import com.pair.Config;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -32,6 +32,7 @@ public class FileUtils {
     public static final String TAG = FileUtils.class.getSimpleName();
     public static final int MEDIA_TYPE_IMAGE = 0x0;
     public static final int MEDIA_TYPE_VIDEO = 0x1;
+    public static final long ONE_MB = org.apache.commons.io.FileUtils.ONE_MB;
 
     public static Uri getOutputUri(int mediaType) throws Exception {
         if (mediaType != MEDIA_TYPE_IMAGE && mediaType != MEDIA_TYPE_VIDEO) {
@@ -110,13 +111,16 @@ public class FileUtils {
                 throw new IOException("destination file could not be written to");
         }
         byte[] buffer = new byte[1024];
-        BufferedOutputStream bOut = new BufferedOutputStream(new FileOutputStream(fileToSave));
+        final File temp = new File(Config.getTempDir(), System.currentTimeMillis() + ".tmp");
+        BufferedOutputStream bOut = new BufferedOutputStream(new FileOutputStream(temp));
         BufferedInputStream bIn = new BufferedInputStream(in);
         int read;
         try {
             while ((read = bIn.read(buffer, 0, 1024)) != -1) {
                 bOut.write(buffer, 0, read);
             }
+            //noinspection ResultOfMethodCallIgnored
+            temp.renameTo(fileToSave);
         } finally {
             closeQuietly(bOut);
             closeQuietly(bIn);

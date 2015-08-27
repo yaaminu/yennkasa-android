@@ -1,4 +1,4 @@
-package com.pair.pairapp.ui;
+package com.pair.ui;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -18,7 +18,6 @@ import android.widget.Filterable;
 import android.widget.GridView;
 import android.widget.ListView;
 
-import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.ScreenUtility;
 
@@ -78,11 +77,12 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
         if (emptyView == null) {
             emptyView = defaultEmptyView;
         } else {
-            //add the view the parent of the collection container(list/grid)
+            //add the view to the parent of the collection container(list/grid)
             final ViewGroup parent = (ViewGroup) defaultEmptyView.getParent();
-            parent.addView(emptyView, 0);
+            parent.addView(emptyView, defaultEmptyView.getLayoutParams());
             parent.removeView(defaultEmptyView);
-            emptyView.setVisibility(View.GONE); //the containers will show them when they need to
+            emptyView.setVisibility(View.GONE); //the containers will show it when it has to
+
         }
         if (interactionListener.preferredContainer() == ContainerType.LIST) {
             listContainer.setEmptyView(emptyView);
@@ -109,8 +109,10 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
 
         try {
             final String title = getArguments().getString(MainActivity.ARG_TITLE);
-            //noinspection ConstantConditions
-            ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(title);
+            if (title != null) {
+                //noinspection ConstantConditions
+                ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(title);
+            }
         } catch (NullPointerException e) {
             //no arguments passed or maybe containing activity has no action bar
         }

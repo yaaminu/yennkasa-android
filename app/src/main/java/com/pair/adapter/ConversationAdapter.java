@@ -1,18 +1,17 @@
 package com.pair.adapter;
 
 import android.content.Context;
-import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.pair.Config;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.data.UserManager;
-import com.pair.pairapp.Config;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
 import com.squareup.picasso.Picasso;
@@ -32,16 +31,11 @@ import static android.text.format.DateUtils.getRelativeTimeSpanString;
 public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
     private static final String TAG = ConversationAdapter.class.getSimpleName();
     private final Picasso PICASSO;
-    private final SparseIntArray previewIcons;
 
 
     public ConversationAdapter(Context context, RealmResults<Conversation> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
         PICASSO = Picasso.with(context);
-        previewIcons = new SparseIntArray(3);
-        previewIcons.put(Message.TYPE_BIN_MESSAGE, R.drawable.ic_action_attachment);
-        previewIcons.put(Message.TYPE_PICTURE_MESSAGE, R.drawable.ic_action_picture);
-        previewIcons.put(Message.TYPE_VIDEO_MESSAGE, R.drawable.ic_action_video);
     }
 
     @Override
@@ -55,7 +49,6 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
             holder.dateLastActive = (TextView) convertView.findViewById(R.id.tv_date_last_active);
             holder.peerName = (TextView) convertView.findViewById(R.id.tv_sender);
             holder.senderAvatar = (ImageView) convertView.findViewById(R.id.iv_user_avatar);
-            holder.mediaMessageIcon = (ImageView) convertView.findViewById(R.id.iv_message_type_preview);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
@@ -84,7 +77,6 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         StringBuilder summary = new StringBuilder();
         if (message == null) {
             summary.append(context.getString(R.string.no_message));
-            holder.mediaMessageIcon.setVisibility(View.GONE);
         } else {
             if (UserManager.getInstance().isGroup(conversation.getPeerId())) {
                 if (Message.isOutGoing(message)) {
@@ -102,11 +94,9 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
             }
             if (Message.isTextMessage(message)) {
                 summary.append(message.getMessageBody());
-                holder.mediaMessageIcon.setVisibility(View.GONE);
+                // holder.mediaMessageIcon.setVisibility(View.GONE);
             } else {
                 summary.append(Message.typeToString(context, message.getType()));
-                holder.mediaMessageIcon.setVisibility(View.VISIBLE);
-                holder.mediaMessageIcon.setImageResource(previewIcons.get(message.getType()));
             }
         }
         if (message != null && Message.isIncoming(message) && message.getState() != Message.STATE_SEEN) {
@@ -152,7 +142,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
     public class ViewHolder {
         public String peerId; //holds current item to be used by callers outside this adapter.
         TextView chatSummary, dateLastActive, peerName;
-        ImageView senderAvatar, mediaMessageIcon;
+        ImageView senderAvatar;
     }
 
 }

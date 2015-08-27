@@ -1,4 +1,4 @@
-package com.pair.pairapp.ui;
+package com.pair.ui;
 
 
 import android.app.Activity;
@@ -15,12 +15,11 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.pair.Config;
 import com.pair.adapter.UsersAdapter;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.data.UserManager;
-import com.pair.pairapp.Config;
-import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
@@ -76,7 +75,7 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
             }
             adapter = new MembersAdapter(group.getMembers(), groupId);
         } else {
-            RealmResults<User> results = realm.where(User.class).notEqualTo(User.FIELD_ID, getCurrentUser().get_id()).findAllSorted(User.FIELD_NAME, true);
+            RealmResults<User> results = realm.where(User.class).notEqualTo(User.FIELD_ID, getCurrentUser().getUserId()).findAllSorted(User.FIELD_NAME, true);
             results.sort(User.FIELD_TYPE, false, User.FIELD_NAME, true);
             adapter = new UsersAdapter(getActivity(), realm, results);
         }
@@ -94,7 +93,7 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
         //navigate to chat activity
         String peerId;
         try {
-            peerId = ((User) parent.getAdapter().getItem(position)).get_id();
+            peerId = ((User) parent.getAdapter().getItem(position)).getUserId();
             UiHelpers.enterChatRoom(getActivity(), peerId);
         } catch (ClassCastException e) {
             //noinspection ConstantConditions
@@ -155,14 +154,14 @@ public class UsersFragment extends Fragment implements AdapterView.OnItemClickLi
             User user = ((User) getItem(position));
             String adminText = context.getResources().getString(R.string.admin);
             ViewHolder holder = (ViewHolder) convertView.getTag();
-            holder.userId = user.get_id();
-            if (UserManager.getInstance().isMainUser(user.get_id())) {
+            holder.userId = user.getUserId();
+            if (UserManager.getInstance().isMainUser(user.getUserId())) {
                 holder.username.setText(context.getResources().getString(R.string.you));
             } else {
                 holder.username.setText(user.getName());
             }
 
-            if (UserManager.getInstance().isAdmin(groupId, user.get_id())) {
+            if (UserManager.getInstance().isAdmin(groupId, user.getUserId())) {
                 holder.username.append(" - " + adminText);
             }
             PICASSO

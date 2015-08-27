@@ -3,7 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    style="@style/default_list_item_style"
     android:layout_margin="@dimen/message_body_margin">
 
     <com.pair.view.LinearLayout
@@ -37,13 +36,15 @@
                 android:src="@drawable/user_avartar"
                 android:visibility="visible" />
 
-            <Button
-                android:id="@+id/bt_download"
+            <ImageView
+                android:id="@+id/v_download_play"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:background="#3d0f"
-                android:text="@string/st_download"
+                android:background="#0000"
+                android:minHeight="@dimen/thumbnail_height"
+                android:minWidth="@dimen/thumbnail_width"
+                android:src="@drawable/playvideo"
                 android:visibility="gone" />
 
             <com.rey.material.widget.ProgressView
@@ -56,7 +57,6 @@
                 app:pv_circular="true"
                 app:pv_progressMode="indeterminate"
                 app:pv_progressStyle="@style/base_indeterminate_progress_style" />
-
         </com.pair.view.FrameLayout>
 
         <com.pair.view.RelativeLayout

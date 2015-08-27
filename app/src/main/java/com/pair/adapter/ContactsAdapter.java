@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.support.v4.app.FragmentActivity;
-import android.telephony.SmsManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +13,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.pair.pairapp.Config;
+import com.pair.Config;
 import com.pair.pairapp.R;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
@@ -87,10 +86,10 @@ public class ContactsAdapter extends BaseAdapter {
             } else {
                 holder.userName = ((TextView) convertView.findViewById(R.id.tv_user_name));
             }
-            holder.userStatus = ((TextView) convertView.findViewById(R.id.tv_user_phone));
+            holder.userStatus = ((TextView) convertView.findViewById(R.id.tv_user_phone_group_admin));
             holder.inviteButton = (Button) convertView.findViewById(R.id.bt_invite);
             holder.userDp = ((ImageView) convertView.findViewById(R.id.iv_display_picture));
-            holder.userPhone = (TextView) convertView.findViewById(R.id.tv_user_phone);
+            holder.userPhone = (TextView) convertView.findViewById(R.id.tv_user_phone_group_admin);
             convertView.setTag(holder);
         } else {
             holder = ((ViewHolder) convertView.getTag());
@@ -147,21 +146,24 @@ public class ContactsAdapter extends BaseAdapter {
         if (contact.isRegisteredUser) {
             if (id == R.id.iv_display_picture) {
                 UiHelpers.gotoProfileActivity(view.getContext(), contact.numberInIEE_Format);
-            } else if (id == R.id.tv_user_phone) {
+            } else if (id == R.id.tv_user_phone_group_admin) {
                 callContact(view, contact);
             }
         } else {
             if (id == R.id.bt_invite) {
-                invite(contact.phoneNumber);
-            } else if (id == R.id.tv_user_status || id == R.id.tv_user_phone) {
+                invite(view.getContext());
+            } else if (id == R.id.tv_user_status || id == R.id.tv_user_phone_group_admin) {
                 callContact(view, contact);
             }
         }
     }
 
-    private void invite(String phoneNumber) {
+    private void invite(Context context) {
         String message = "Try out PAIRAPP messenger for android . Its free and fast!\\n download here: http://pairapp.com/download";
-        SmsManager.getDefault().sendTextMessage(phoneNumber, null, message, null, null);
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_TEXT, message);
+        context.startActivity(intent);
     }
 
     private class ViewHolder {

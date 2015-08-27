@@ -7,10 +7,10 @@ import android.support.v4.app.FragmentManager;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
-import com.pair.pairapp.Config;
-import com.pair.pairapp.ProfileActivity;
+import com.pair.Config;
 import com.pair.pairapp.R;
-import com.pair.pairapp.ui.ChatActivity;
+import com.pair.ui.ChatActivity;
+import com.pair.ui.ProfileActivity;
 import com.rey.material.app.Dialog;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.SimpleDialog;

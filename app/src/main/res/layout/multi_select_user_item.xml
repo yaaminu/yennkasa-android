@@ -1,6 +1,7 @@
 <com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_item_height"
+    android:minHeight="?android:attr/listPreferredItemHeight"
     android:descendantFocusability="beforeDescendants"
     android:padding="@dimen/list_item_padding"
     android:layout_marginBottom="@dimen/list_item_margin_bottom"
@@ -29,7 +30,7 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/tv_user_phone"
+        android:id="@+id/tv_user_phone_group_admin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/iv_display_picture"
@@ -56,6 +57,6 @@
         android:layout_alignParentRight="true"
         style="@style/CheckBoxDrawable"
         android:checked="false"
-        android:layout_alignBottom="@+id/tv_user_phone" />
+        android:layout_alignBottom="@+id/tv_user_phone_group_admin" />
 
 </com.pair.view.RelativeLayout>

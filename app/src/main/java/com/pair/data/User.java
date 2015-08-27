@@ -20,7 +20,7 @@ import io.realm.annotations.RealmClass;
 public class User extends RealmObject {
     public static final int TYPE_GROUP = 0x3e8;
     public static final int TYPE_NORMAL_USER = 0x3e9;
-    public static final String FIELD_ID = "_id",
+    public static final String FIELD_ID = "userId",
             FIELD_NAME = "name",
             FIELD_STATUS = "status",
             FIELD_ADMIN = "admin",
@@ -32,7 +32,7 @@ public class User extends RealmObject {
             FIELD_PASSWORD = "password",
             FIELD_COUNTRY = "country";
     @PrimaryKey
-    private String _id;
+    private String userId;
 
     private String gcmRegId, name, password, status, DP, country;
     private long lastActivity, accountCreated;
@@ -50,7 +50,7 @@ public class User extends RealmObject {
         //realm forces us to use setters and getters everywhere for predictable results
         //null check because is good not to throw in constructors(not so sure if its true)
         if (other != null) {
-            this.set_id(other.get_id());
+            this.setUserId(other.getUserId());
             this.setAccountCreated(other.getAccountCreated());
             this.setGcmRegId(other.getGcmRegId());
             this.setPassword(other.getPassword());
@@ -97,12 +97,12 @@ public class User extends RealmObject {
         this.admin = admin;
     }
 
-    public String get_id() {
-        return _id;
+    public String getUserId() {
+        return userId;
     }
 
-    public void set_id(String _id) {
-        this._id = _id;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getName() {
@@ -170,7 +170,7 @@ public class User extends RealmObject {
         }
 
         User clone = new User();
-        clone.set_id(other.get_id());
+        clone.setUserId(other.getUserId());
         clone.setAccountCreated(other.getAccountCreated());
         clone.setGcmRegId(other.getGcmRegId());
         clone.setPassword(other.getPassword());
@@ -207,7 +207,7 @@ public class User extends RealmObject {
     }
 
     public static String generateGroupId(String groupName) {
-        return groupName + "@" + UserManager.getInstance().getMainUser().get_id();
+        return groupName + "@" + UserManager.getInstance().getMainUser().getUserId();
     }
 
     @Nullable
@@ -226,7 +226,7 @@ public class User extends RealmObject {
     public static List<String> aggregateUserIds(RealmList<User> users, ContactsManager.Filter<User> filter) {
         List<String> members = new ArrayList<>();
         for (User user : users) {
-            String userId = user.get_id();
+            String userId = user.getUserId();
             if (filter == null || filter.accept(user)) {
                 members.add(userId);
             }

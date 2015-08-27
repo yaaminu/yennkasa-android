@@ -6,6 +6,7 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
 import com.pair.data.UserManager;
+import com.pair.pairapp.BuildConfig;
 
 import java.util.regex.Pattern;
 
@@ -76,13 +77,16 @@ public class PhoneNumberNormaliser {
         return ccc + "";
     }
 
-    public static String toLocalFormat(String id) {
+    public static String toLocalFormat(String phoneNumber) {
         final PhoneNumberUtil util = PhoneNumberUtil.getInstance();
         try {
-            return util.formatOutOfCountryCallingNumber((util.parse("+" + id, null)), UserManager.getInstance().getUserCountryISO());
+            return util.formatOutOfCountryCallingNumber((util.parse("+" + phoneNumber, null)), UserManager.getInstance().getUserCountryISO());
         } catch (NumberParseException e) {
             Log.e(TAG, e.getMessage(), e.getCause());
-            throw new RuntimeException("invalid user id");
+            if (BuildConfig.DEBUG) {
+                throw new RuntimeException("invalid user id");
+            }
+            return phoneNumber;
         }
     }
 }

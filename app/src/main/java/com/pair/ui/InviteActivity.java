@@ -1,4 +1,4 @@
-package com.pair.pairapp.ui;
+package com.pair.ui;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -7,6 +7,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -74,10 +75,10 @@ public class InviteActivity extends ActionBarActivity implements ItemsSelector.O
         if (potentiallyGroup != null) {
             RealmQuery<User> userRealmQuery = realm.where(User.class)
                     .notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
-                    .notEqualTo(User.FIELD_ID, userManager.getMainUser().get_id());
+                    .notEqualTo(User.FIELD_ID, userManager.getMainUser().getUserId());
             List<User> existingMembers = potentiallyGroup.getMembers();
             for (User existingMember : existingMembers) {
-                userRealmQuery.notEqualTo(User.FIELD_ID, existingMember.get_id());
+                userRealmQuery.notEqualTo(User.FIELD_ID, existingMember.getUserId());
             }
             return userRealmQuery;
         } else { //is it an anonymous group? not yet supported
@@ -88,7 +89,7 @@ public class InviteActivity extends ActionBarActivity implements ItemsSelector.O
 //    private User createNewGroup() {
 //        User user = new User();
 //        long count = realm.where(User.class).beginsWith(User.FIELD_ID,"$anonymous$",true).count();
-//        user.set_id(User.generateGroupId("$anonymous$"+(count+1)));
+//        user.setUserId(User.generateGroupId("$anonymous$"+(count+1)));
 //        user.setType(User.TYPE_GROUP);
 //        user.setName("Anonymous " + count);
 //        user.setAccountCreated();
@@ -151,8 +152,9 @@ public class InviteActivity extends ActionBarActivity implements ItemsSelector.O
     @Override
     public View emptyView() {
         TextView emptyView = new TextView(this);
-        emptyView.setText("Looks like all your friends are already members of this group.\n" +
-                " You can invite other users who are not in you contact by adding their numbers directly");
+        emptyView.setText("Looks like all your friends are already members of this group." +
+                " You can still invite other users who are not in you contacts by adding their numbers directly");
+        emptyView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         return emptyView;
     }
 
@@ -190,11 +192,11 @@ public class InviteActivity extends ActionBarActivity implements ItemsSelector.O
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         User user = usersAdapter.getItem(position);
         if (((ListView) parent).isItemChecked(position)) {
-            selectedUsers.add(user.get_id());
+            selectedUsers.add(user.getUserId());
         } else {
-            selectedUsers.remove(user.get_id());
+            selectedUsers.remove(user.getUserId());
         }
-        ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(selectedUsers.contains(usersAdapter.getItem(position).get_id()));
+        ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(selectedUsers.contains(usersAdapter.getItem(position).getUserId()));
         supportInvalidateOptionsMenu();
     }
 
@@ -207,7 +209,7 @@ public class InviteActivity extends ActionBarActivity implements ItemsSelector.O
         @Override
         public View getView(final int position, final View convertView, final ViewGroup parent) {
             View view = super.getView(position, convertView, parent);
-            final String userId = getItem(position).get_id();
+            final String userId = getItem(position).getUserId();
             final CheckBox checkBox = (CheckBox) view.findViewById(R.id.cb_checked);
             checkBox.setChecked(selectedUsers.contains(userId));
             checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

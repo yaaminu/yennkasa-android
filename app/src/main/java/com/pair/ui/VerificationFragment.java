@@ -1,4 +1,4 @@
-package com.pair.pairapp.ui;
+package com.pair.ui;
 
 
 import android.content.Intent;
@@ -10,9 +10,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
+import com.pair.Config;
 import com.pair.data.UserManager;
-import com.pair.pairapp.Config;
-import com.pair.pairapp.MainActivity;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
 import com.pair.workers.ContactSyncService;

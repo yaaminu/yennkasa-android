@@ -1,14 +1,11 @@
-package com.pair.net.api;
+package com.pair.net;
 
 import com.google.gson.JsonObject;
 import com.pair.data.Message;
 import com.pair.data.User;
-import com.pair.net.HttpResponse;
 
 import java.util.List;
 
-import retrofit.Callback;
-import retrofit.client.Response;
 import retrofit.http.Body;
 import retrofit.http.DELETE;
 import retrofit.http.Field;
@@ -20,15 +17,21 @@ import retrofit.http.Path;
 import retrofit.mime.TypedFile;
 
 /**
- * Created by Null-Pointer on 5/27/2015.
+ * @author by Null-Pointer on 5/27/2015.
  */
-public interface UserApi {
+public interface UserApiV2 {
 
     @POST("/api/v1/users/register")
     void registerUser(@Body JsonObject user, Callback<User> callback);
 
     @POST("/api/v1/users/login")
     void logIn(@Body JsonObject object, Callback<User> callback);
+
+    @POST("/api/v1/users/register")
+    void registerUser(@Body User user, Callback<User> callback);
+
+    @POST("/api/v1/users/login")
+    void logIn(@Body User object, Callback<User> callback);
 
     @POST("/api/v1/users/")
     void syncContacts(@Body List<String> userIds, Callback<List<User>> response);
@@ -57,14 +60,14 @@ public interface UserApi {
     void addMembersToGroup(@Path(Message.FIELD_ID) String id
             , @Field("by") String by
             , @Field(User.FIELD_MEMBERS) List<String> members
-            , Callback<Response> response);
+            , Callback<HttpResponse> response);
 
     @FormUrlEncoded
     @PUT("/api/v1/groups/{id}/members/remove")
     void removeMembersFromGroup(@Path(Message.FIELD_ID) String id
             , @Field("by") String by
             , @Field(User.FIELD_MEMBERS) List<String> members
-            , Callback<Response> response);
+            , Callback<HttpResponse> response);
 
     // FIXME: 7/19/2015 change this when our backend start using sessions
     @FormUrlEncoded
@@ -73,15 +76,20 @@ public interface UserApi {
 
     @FormUrlEncoded
     @POST("/api/v1/users/{id}/verify")
-    void verifyUser(@Path("id")String userId,@Field("token")String token, Callback<String> callback);
+    void verifyUser(@Path("id") String userId, @Field("token") String token, Callback<HttpResponse> callback);
 
     @FormUrlEncoded
     @POST("/api/v1/users/{id}/resendToken")
-    void resendToken(@Path("id") String userId,@Field("password") String password,Callback<Response> response);
+    void resendToken(@Path("id") String userId, @Field("password") String password, Callback<HttpResponse> response);
 
     @DELETE("/api/v1/users/{id}?unverified=1")
     HttpResponse resetUnverifiedAccount(@Path("id") String userId);
 
     @POST("/api/v1/users/{id}/resetPassword")
     HttpResponse requestPasswordReset(String number);
+
+
+    public interface Callback<T> {
+        void done(Exception e, T t);
+    }
 }

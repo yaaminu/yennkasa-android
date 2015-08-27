@@ -4,8 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.util.Log;
 
-import com.pair.pairapp.Config;
-import com.pair.pairapp.R;
+import com.pair.Config;
 
 import java.util.Date;
 
@@ -125,7 +124,7 @@ public class Message extends RealmObject {
         Application appContext = Config.getApplication();
         Realm realm = Realm.getInstance(appContext);
         long count = realm.where(Message.class).count() + 1;
-        String id = count + "@" + UserManager.getInstance().getMainUser().get_id() + "@" + System.nanoTime();
+        String id = count + "@" + UserManager.getInstance().getMainUser().getUserId() + "@" + System.nanoTime();
         Log.i(TAG, "generated message id: " + id);
         realm.close();
         return id;
@@ -170,15 +169,15 @@ public class Message extends RealmObject {
     public static String state(Context context, int status) {
         switch (status) {
             case Message.STATE_PENDING:
-                return context.getString(R.string.st_message_state_pending);
+                return context.getString(com.pair.pairapp.R.string.st_message_state_pending);
             case Message.STATE_SEND_FAILED:
-                return context.getString(R.string.st_message_state_failed);
+                return context.getString(com.pair.pairapp.R.string.st_message_state_failed);
             case Message.STATE_RECEIVED:
-                return context.getString(R.string.st_message_state_delivered);
+                return context.getString(com.pair.pairapp.R.string.st_message_state_delivered);
             case Message.STATE_SEEN:
-                return context.getString(R.string.st_message_state_seen);
+                return context.getString(com.pair.pairapp.R.string.st_message_state_seen);
             case Message.STATE_SENT:
-                return context.getString(R.string.st_message_state_sent);
+                return context.getString(com.pair.pairapp.R.string.st_message_state_sent);
             default:
                 throw new AssertionError("new on unknown message status");
         }
@@ -187,13 +186,13 @@ public class Message extends RealmObject {
     public static String typeToString(Context context, int type) {
         switch (type) {
             case Message.TYPE_PICTURE_MESSAGE:
-                return context.getString(R.string.picture);
+                return context.getString(com.pair.pairapp.R.string.picture);
             case Message.TYPE_VIDEO_MESSAGE:
-                return context.getString(R.string.video);
+                return context.getString(com.pair.pairapp.R.string.video);
             case Message.TYPE_BIN_MESSAGE:
-                return context.getString(R.string.file);
+                return context.getString(com.pair.pairapp.R.string.file);
             case Message.TYPE_TEXT_MESSAGE:
-                return context.getString(R.string.message);
+                return context.getString(com.pair.pairapp.R.string.message);
             default:
                 throw new AssertionError("Unknown message type");
         }

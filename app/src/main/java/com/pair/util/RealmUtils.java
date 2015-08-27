@@ -5,13 +5,13 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import com.google.gson.JsonObject;
+import com.pair.Config;
 import com.pair.adapter.MessageJsonAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.messenger.MessageProcessor;
-import com.pair.pairapp.Config;
 
 import java.util.Date;
 
@@ -34,7 +34,7 @@ public class RealmUtils {
         //try {
 //            User user = User.copy(UserManager.getInstance().getMainUser());
 //            for(int i=0; i<20;i++) {
-//                user.set_id((2348033557792L + i) + "");
+//                user.setUserId((2348033557792L + i) + "");
 //                user.setName("New user " + i);
 //                realm.copyToRealm(user);
 //            }
@@ -48,8 +48,8 @@ public class RealmUtils {
     public static Message seedIncomingMessages() {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         User thisUser = UserManager.getInstance().getMainUser(),
-                otherUser = realm.where(User.class).notEqualTo(User.FIELD_ID, thisUser.get_id()).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP).findFirst();
-        return seedIncomingMessages(otherUser.get_id(), thisUser.get_id());
+                otherUser = realm.where(User.class).notEqualTo(User.FIELD_ID, thisUser.getUserId()).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP).findFirst();
+        return seedIncomingMessages(otherUser.getUserId(), thisUser.getUserId());
     }
 
     public static Message seedIncomingMessages(String sender, String recipient) {
@@ -78,7 +78,7 @@ public class RealmUtils {
         for (int i = 0; i < 10; i++) {
             Message message = realm.createObject(Message.class);
             message.setTo("0266349205");
-            message.setFrom(user.get_id());
+            message.setFrom(user.getUserId());
             message.setMessageBody("message body " + i);
             message.setType(Message.TYPE_TEXT_MESSAGE);
             message.setId(Message.generateIdPossiblyUnique());

@@ -8,9 +8,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.pair.Config;
 import com.pair.data.User;
 import com.pair.data.UserManager;
-import com.pair.pairapp.Config;
 import com.pair.pairapp.R;
 import com.pair.util.PicassoWrapper;
 import com.pair.util.UiHelpers;
@@ -60,7 +60,7 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
         members.append("You");
         for (int i = 0; i < groupMembers.size(); i++) {
             User groupMember = groupMembers.get(i);
-            if (!groupMember.get_id().equals(mainUser.get_id())) {
+            if (!groupMember.getUserId().equals(mainUser.getUserId())) {
                 members.append(",").append(groupMember.getName());
             }
         }
@@ -68,7 +68,7 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
         View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                UiHelpers.gotoProfileActivity(v.getContext(), group.get_id());
+                UiHelpers.gotoProfileActivity(v.getContext(), group.getUserId());
             }
         };
         holder.groupIcon.setOnClickListener(listener);

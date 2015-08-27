@@ -10,9 +10,9 @@ import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.pair.Config;
 import com.pair.data.User;
 import com.pair.data.UserManager;
-import com.pair.pairapp.Config;
 import com.pair.pairapp.R;
 import com.pair.util.PhoneNumberNormaliser;
 import com.rey.material.widget.CheckBox;
@@ -72,7 +72,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
             ViewHolder holder = new ViewHolder();
             holder.iv = ((ImageView) convertView.findViewById(R.id.iv_display_picture));
             holder.tv = ((TextView) convertView.findViewById(R.id.tv_user_name));
-            holder.userPhone = (TextView) convertView.findViewById(R.id.tv_user_phone);
+            holder.userPhone = (TextView) convertView.findViewById(R.id.tv_user_phone_group_admin);
             holder.usersStatus = (TextView) convertView.findViewById(R.id.tv_user_status);
             holder.checkBox = (CheckBox) convertView.findViewById(R.id.cb_checked);
             convertView.setTag(holder);
@@ -81,11 +81,11 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
         holder.tv.setText(getItem(position).getName());
         User user = getItem(position);
 
-        if (UserManager.getInstance().isGroup(user.get_id())) {
+        if (UserManager.getInstance().isGroup(user.getUserId())) {
             holder.userPhone.setText(R.string.group);
             holder.usersStatus.setVisibility(View.GONE);
         } else {
-            holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat("+" + user.get_id()));
+            holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId()));
             holder.usersStatus.setVisibility(View.VISIBLE);
             holder.usersStatus.setText(user.getStatus());
         }
@@ -138,7 +138,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
                                 .endGroup()
                                 .notEqualTo(User.FIELD_ID, UserManager.getInstance()
                                         .getMainUser()
-                                        .get_id())
+                                        .getUserId())
                                 .findAllSorted(User.FIELD_NAME, false);
                     } else {
                         filterResults = originalQuery

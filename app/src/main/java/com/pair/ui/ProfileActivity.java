@@ -1,4 +1,4 @@
-package com.pair.pairapp;
+package com.pair.ui;
 
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -6,14 +6,14 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 
-import com.pair.data.UserManager;
-import com.pair.pairapp.ui.ProfileFragment;
+import com.pair.pairapp.R;
 import com.rey.material.app.ToolbarManager;
 
 public class ProfileActivity extends ActionBarActivity {
 
     private ToolbarManager manager;
     private Toolbar toolBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,17 +28,15 @@ public class ProfileActivity extends ActionBarActivity {
         if (id == null) {
             throw new IllegalArgumentException("should pass in user id");
         }
-        Fragment fragment;
-        if (!UserManager.getInstance().isMainUser(id)) {
-            fragment = new ProfileFragment();
-            bundle = new Bundle();
-            bundle.putString(ProfileFragment.ARG_USER_ID, id);
-            fragment.setArguments(bundle);
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.container, fragment)
-                    .commit();
-        }
+        Fragment fragment = new ProfileFragment();
+        bundle = new Bundle();
+        bundle.putString(ProfileFragment.ARG_USER_ID, id);
+        fragment.setArguments(bundle);
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.container, fragment)
+                .commit();
+
     }
 
     @Override

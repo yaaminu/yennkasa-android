@@ -1,34 +1,29 @@
-package com.pair.pairapp.ui;
+package com.pair.ui;
 
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
-import com.pair.data.Message;
+import com.pair.Config;
 import com.pair.data.User;
 import com.pair.data.UserManager;
-import com.pair.pairapp.Config;
-import com.pair.pairapp.MainActivity;
+import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
-import com.pair.pairapp.UsersActivity;
 import com.pair.util.FileUtils;
 import com.pair.util.MediaUtils;
+import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.ScreenUtility;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
@@ -40,7 +35,6 @@ import java.io.File;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
-import io.realm.RealmResults;
 
 
 /**
@@ -49,21 +43,25 @@ import io.realm.RealmResults;
 public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     public static final String ARG_USER_ID = "user_id";
-    public static final String TAG = ProfileFragment.class.getSimpleName();
+    private static final String TAG = ProfileFragment.class.getSimpleName();
+
     private static final int PICK_PHOTO_REQUEST = 0x3e9,
             TAKE_PHOTO_REQUEST = 0X3ea;
 
     private ImageView displayPicture;
-    private TextView userName, userPhone, listHeading;
-    private ListView mutualGroupsList;
+    private TextView userName, userPhoneOrAdminName, mutualGroupsOrMembersTv;
     private User user;
     private Realm realm;
-    private View exitGroupButton, callButton, progressView, imageButton, changeDpButton, changeDpButton2;
+    private View exitGroupButton, callButton, progressView, editName, changeDpButton, changeDpButton2, deleteGroup;
     private DialogFragment progressDialog;
-    private RequestCreator creator;
     private Uri image_capture_out_put_uri;
     private boolean dpChanged = false;
     private Picasso PICASSO;
+    private TextView phoneOrAdminTitle, mutualGroupsOrMembersTvTitle;
+    private View sendMessageButton;
+    private UserManager userManager;
+    private String phoneInlocalFormat;
+
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -71,6 +69,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     @Override
     public void onAttach(Activity activity) {
+        setRetainInstance(true);
         super.onAttach(activity);
     }
 
@@ -82,43 +81,59 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
         displayPicture = ((android.widget.ImageView) view.findViewById(R.id.iv_display_picture));
         userName = ((TextView) view.findViewById(R.id.tv_user_name));
-        userPhone = ((TextView) view.findViewById(R.id.tv_user_phone));
         changeDpButton = view.findViewById(R.id.bt_pick_photo_change_dp);
         changeDpButton2 = view.findViewById(R.id.bt_take_photo_change_dp);
         progressView = view.findViewById(R.id.pb_progress);
-        imageButton = view.findViewById(R.id.ib_change_name);
-        View sendMessageButton = view.findViewById(R.id.bt_message);
+        editName = view.findViewById(R.id.ib_change_name);
+        deleteGroup = view.findViewById(R.id.bt_dissolve_group);
+        sendMessageButton = view.findViewById(R.id.bt_message);
         sendMessageButton.setOnClickListener(clickListener);
         callButton = view.findViewById(R.id.bt_call);
         exitGroupButton = view.findViewById(R.id.bt_exit_group);
-        listHeading = ((TextView) view.findViewById(R.id.tv_list_heading));
-        mutualGroupsList = ((ListView) view.findViewById(R.id.lv_mutual_groups_list));
-        mutualGroupsList.setEmptyView(view.findViewById(R.id.empty));
         progressDialog = UiHelpers.newProgressDialog();
 
-        //end view hookup
 
+        View parent = view.findViewById(R.id.tv_user_phone_group_admin);
+        phoneOrAdminTitle = ((TextView) parent.findViewById(R.id.tv_title));
+        userPhoneOrAdminName = ((TextView) parent.findViewById(R.id.tv_subtitle));
+
+        //re-use parent
+        parent = view.findViewById(R.id.tv_shared_groups_or_group_members);
+        mutualGroupsOrMembersTv = ((TextView) parent.findViewById(R.id.tv_subtitle));
+        mutualGroupsOrMembersTvTitle = (TextView) parent.findViewById(R.id.tv_title);
+
+        //end view hookup
         realm = Realm.getInstance(getActivity());
+        userManager = UserManager.getInstance();
+
         String id = getArguments().getString(ARG_USER_ID);
         user = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
 
-        if (user == null || UserManager.getInstance().isMainUser(id)) {
-            Log.wtf(TAG, "invalid user id. program aborting");
-            throw new IllegalArgumentException("invalid user id");
+        if (user == null) {
+            if (BuildConfig.DEBUG) {
+                Log.wtf(TAG, "invalid user id. program aborting");
+                throw new IllegalArgumentException("invalid user id");
+            } else {
+                UiHelpers.showErrorDialog(getActivity(), "No such user");
+            }
+            return null;
         }
-        final UserManager userManager = UserManager.getInstance();
 
         //common to all
-        userName.setText("@" + user.getName());
+        userName.setText(user.getName());
         displayPicture.setOnClickListener(clickListener);
         if (user.getType() == User.TYPE_GROUP) {
             setUpViewsGroupWay();
         } else {
             setUpViewSingleUserWay();
         }
-        userManager.refreshUserDetails(user.get_id()); //async
+        userManager.refreshUserDetails(user.getUserId()); //async
+        final ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
         //noinspection ConstantConditions
-        ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(user.getName());
+        actionBar.setTitle(userManager.isMainUser(user.getUserId()) ? getString(R.string.you) : user.getName());
+        if (!User.isGroup(user) && !userManager.isMainUser(user.getUserId())) {
+            actionBar.setSubtitle(user.getStatus());
+        }
         PICASSO = Picasso.with(getActivity());
         return view;
     }
@@ -137,76 +152,75 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     }
 
     private void setUpViewSingleUserWay() {
-        changeDpButton.setVisibility(View.GONE);
-        changeDpButton2.setVisibility(View.GONE);
-        userPhone.setVisibility(View.VISIBLE);
+        if (userManager.isMainUser(user.getUserId())) {
+            callButton.setVisibility(View.GONE);
+            sendMessageButton.setVisibility(View.GONE);
+            ((View) mutualGroupsOrMembersTvTitle.getParent()).setVisibility(View.GONE);
+            editName.setOnClickListener(clickListener);
+            changeDpButton.setOnClickListener(clickListener);
+            changeDpButton2.setOnClickListener(clickListener);
+        } else {
+            editName.setVisibility(View.GONE);
+            changeDpButton.setVisibility(View.GONE);
+            changeDpButton2.setVisibility(View.GONE);
+            mutualGroupsOrMembersTvTitle.setText(R.string.shared_groups);
+            mutualGroupsOrMembersTv.setText(R.string.groups_you_share_in_common);
+            callButton.setOnClickListener(clickListener);
+        }
         exitGroupButton.setVisibility(View.GONE);
-        imageButton.setVisibility(View.GONE);
+        deleteGroup.setVisibility(View.GONE);
         //noinspection ConstantConditions
-        callButton.setOnClickListener(clickListener);
-        userPhone.append(user.get_id());
-        listHeading.setText(R.string.st_mutual_groups);
-        setUpMutualMembers();
-    }
-
-    private void setUpMutualMembers() {
-        final RealmResults<User> tmp = realm.where(User.class).equalTo(Message.FIELD_TYPE, User.TYPE_GROUP).equalTo("members._id", user.get_id()).findAll();
-        // TODO: 7/12/2015 this might not scale!
-        resetAdapter(realmResultsToArray(tmp));
-    }
-
-    private void resetAdapter(User[] results) {
-        BaseAdapter membersAdapter = new GroupsOrMembersAdapter(getActivity(), results);
-        mutualGroupsList.setAdapter(membersAdapter);
-        mutualGroupsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                UiHelpers.gotoProfileActivity(getActivity(), ((User) view.getTag()).get_id());
-            }
-        });
-    }
-
-    @NonNull
-    private User[] realmResultsToArray(RealmResults<User> tmp) {
-        User[] results = new User[tmp.size()];
-        tmp.toArray(results);
-        return results;
+        phoneOrAdminTitle.setText(R.string.phone);
+        phoneInlocalFormat = PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId());
+        userPhoneOrAdminName.setText(phoneInlocalFormat);
     }
 
     private void setUpViewsGroupWay() {
-        userPhone.setVisibility(View.GONE);
-        mutualGroupsList.setVisibility(View.GONE);
-        mutualGroupsList.getEmptyView().setVisibility(View.GONE);
         //noinspection ConstantConditions
         callButton.setVisibility(View.GONE);
-        if (UserManager.getInstance().isAdmin(user.get_id())) {
+        if (userManager.isAdmin(user.getUserId())) {
+            deleteGroup.setVisibility(View.GONE);
             exitGroupButton.setVisibility(View.GONE);
-            imageButton.setVisibility(View.VISIBLE);
-            imageButton.setOnClickListener(clickListener);
+            editName.setOnClickListener(clickListener);
         } else {
-            exitGroupButton.setVisibility(View.VISIBLE);
             exitGroupButton.setOnClickListener(clickListener);
-            imageButton.setVisibility(View.GONE);
+            deleteGroup.setVisibility(View.GONE);
+            editName.setVisibility(View.GONE);
         }
-        changeDpButton.setVisibility(View.VISIBLE);
-        changeDpButton2.setVisibility(View.VISIBLE);
+        //any member can change dp of a group
         changeDpButton2.setOnClickListener(clickListener);
         changeDpButton.setOnClickListener(clickListener);
-        listHeading.setText(R.string.st_group_members);
-        listHeading.setClickable(true);
-        listHeading.setOnClickListener(new View.OnClickListener() {
+
+        // TODO: 8/25/2015 add a lock drawable to the right of this text view
+        phoneOrAdminTitle.setText(R.string.admin);
+        userPhoneOrAdminName.setText(userManager.isAdmin(user.getUserId())
+                ? getString(R.string.you) : user.getAdmin().getName());
+
+        ((View) phoneOrAdminTitle.getParent()).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Bundle bundle = new Bundle(3);
-                bundle.putString(MainActivity.ARG_TITLE, user.getName() + getResources().getString(R.string.st_group_members_title));
-                bundle.putString(UsersFragment.ARG_GROUP_ID, user.get_id());
-                bundle.putString(UsersFragment.ARG_ACTION, UsersFragment.ARG_SHOW_GROUP_MEMBERS);
+                Fragment fragment = new ProfileFragment();
+                Bundle bundle = new Bundle(1);
+                bundle.putString(ARG_USER_ID, user.getAdmin().getUserId());
+                fragment.setArguments(bundle);
+                getFragmentManager().beginTransaction()
+                        .replace(R.id.container, fragment)
+                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                        .commit();
+            }
+        });
+        mutualGroupsOrMembersTvTitle.setText(R.string.st_group_members);
+        mutualGroupsOrMembersTv.setText(user.getMembers().size() + getString(R.string.Members));
+        ((View) mutualGroupsOrMembersTv.getParent()).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Bundle bundle = new Bundle(1);
+                bundle.putString(UsersActivity.EXTRA_GROUP_ID, user.getUserId());
                 Intent intent = new Intent(getActivity(), UsersActivity.class);
                 intent.putExtras(bundle);
                 startActivity(intent);
             }
         });
-
     }
 
 
@@ -220,8 +234,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     @Override
     public void onChange() {
         try {
-            userName.setText("@" + user.getName());
-            if (!UserManager.getInstance().isGroup(user.get_id())) {
+            userName.setText(user.getName());
+            if (!userManager.isGroup(user.getUserId())) {
                 setUpMutualMembers();
             }
             if (dpChanged) {
@@ -232,6 +246,11 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         } catch (Exception lateUpdate) {//fragment no more in layout or maybe user left group
             Log.e(TAG, lateUpdate.getMessage(), lateUpdate.getCause());
         }
+    }
+
+    private void setUpMutualMembers() {
+        // TODO: 8/25/2015 implement this method
+        throw new UnsupportedOperationException("not implemented");
     }
 
 
@@ -255,10 +274,9 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             filePath = uri.getPath();
         }
 
-        UserManager userManager = UserManager.getInstance();
         dpChangeProgress = UiHelpers.newProgressDialog();
         dpChangeProgress.show(getFragmentManager(), null);
-        userManager.changeDp(user.get_id(), filePath, DP_CALLBACK);
+        userManager.changeDp(user.getUserId(), filePath, DP_CALLBACK);
     }
 
     private DialogFragment dpChangeProgress;
@@ -283,7 +301,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             PICASSO.invalidate(localDp);
         }
         if (localDp.exists()) {
-            creator = PICASSO.load(localDp);
+            RequestCreator creator = PICASSO.load(localDp);
             ScreenUtility utility = new ScreenUtility(getActivity());
             creator.resize((int) utility.getPixelsWidth(), getResources().getDimensionPixelSize(R.dimen.dp_height));
             creator.placeholder(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
@@ -302,14 +320,15 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         } else {
             //before we proceed to download the image lets show default image there.
             displayPicture.setImageResource(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar);
-
-            UserManager.getInstance().refreshDp(user.get_id(), new UserManager.CallBack() {
+            userManager.refreshDp(user.getUserId(), new UserManager.CallBack() {
                 @Override
                 public void done(Exception e) {
-                    progressView.setVisibility(View.GONE);
-                    if (e == null) {
-                        dpChanged = true;
-                        showDp();
+                    if (isResumed()) {
+                        progressView.setVisibility(View.GONE);
+                        if (e == null) {
+                            dpChanged = true;
+                            showDp();
+                        }
                     }
                 }
             });
@@ -323,50 +342,21 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         super.onDestroy();
     }
 
-    private class GroupsOrMembersAdapter extends ArrayAdapter<User> {
-
-        public GroupsOrMembersAdapter(Context context, User[] users) {
-            super(context, android.R.layout.simple_list_item_1, users);
-
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                //noinspection ConstantConditions
-                convertView = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
-            }
-            ((TextView) convertView).setText(getItem(position).getName());
-            convertView.setTag(getItem(position));
-            return convertView;
-        }
-    }
-
     private final View.OnClickListener clickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.bt_message:
-                    UiHelpers.enterChatRoom(v.getContext(), user.get_id());
+                    UiHelpers.enterChatRoom(v.getContext(), user.getUserId());
                     break;
                 case R.id.bt_exit_group:
                     progressView.setVisibility(View.GONE);
-                    progressDialog.show(getFragmentManager(), null);
-                    UserManager.getInstance().leaveGroup(user.get_id(), new UserManager.CallBack() {
+                    UiHelpers.showErrorDialog(getActivity(), R.string.leave_group_prompt, R.string.yes, android.R.string.no, new UiHelpers.Listener() {
                         @Override
-                        public void done(Exception e) {
-                            progressDialog.dismiss();
-                            if (e != null) {
-                                try {
-                                    UiHelpers.showErrorDialog(getActivity(), e.getMessage());
-                                } catch (Exception e2) {
-                                    // FIXME: 8/3/2015
-                                }
-                            } else {
-                                getActivity().finish();
-                            }
+                        public void onClick() {
+                            leaveGroup();
                         }
-                    });
+                    }, null);
                     break;
                 case R.id.bt_pick_photo_change_dp:
                     progressView.setVisibility(View.GONE);
@@ -377,26 +367,25 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     break;
                 case R.id.bt_call:
                     Intent intent = new Intent(Intent.ACTION_DIAL);
-                    intent.setData(Uri.parse("tel:" + "+" + user.get_id()));
+                    intent.setData(Uri.parse("tel:" + phoneInlocalFormat));
                     startActivity(intent);
                     break;
                 case R.id.iv_display_picture:
-                    progressView.setVisibility(View.GONE);
                     File dpFile = new File(Config.getAppProfilePicsBaseDir(), user.getDP() + ".jpg");
                     intent = new Intent(getActivity(), ImageViewer.class);
                     Uri uri;
                     if (dpFile.exists()) {
+                        progressView.setVisibility(View.GONE);
                         uri = Uri.fromFile(dpFile);
                         //noinspection ConstantConditions
                         intent.setData(uri);
                         startActivity(intent);
                     } else {//dp not downloaded
-//                        uri = Uri.parse(Config.DP_ENDPOINT+"/"+user.getDP());
                         UiHelpers.showToast(R.string.sorry_no_dp);
                     }
                     break;
                 case R.id.bt_take_photo_change_dp:
-                    File file = new File(Config.getTempDir(), user.get_id() + ".jpg.tmp");
+                    File file = new File(Config.getTempDir(), user.getUserId() + ".jpg.tmp");
                     image_capture_out_put_uri = Uri.fromFile(file);
                     MediaUtils.takePhoto(ProfileFragment.this, image_capture_out_put_uri, TAKE_PHOTO_REQUEST);
                     break;
@@ -406,5 +395,24 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             }
         }
     };
+
+    private void leaveGroup() {
+        progressDialog.show(getFragmentManager(), null);
+        userManager.leaveGroup(user.getUserId(), new UserManager.CallBack() {
+            @Override
+            public void done(Exception e) {
+                progressDialog.dismiss();
+                if (e != null) {
+                    try {
+                        UiHelpers.showErrorDialog(getActivity(), e.getMessage());
+                    } catch (Exception e2) {
+                        // FIXME: 8/3/2015
+                    }
+                } else {
+                    getActivity().finish();
+                }
+            }
+        });
+    }
 
 }
