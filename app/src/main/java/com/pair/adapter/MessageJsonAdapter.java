@@ -19,7 +19,7 @@ import static com.pair.data.Message.FIELD_TO;
 import static com.pair.data.Message.FIELD_TYPE;
 
 /**
- * @author  by Null-Pointer on 5/27/2015.
+ * @author by Null-Pointer on 5/27/2015.
  */
 public class MessageJsonAdapter implements BaseJsonAdapter<Message> {
     @Override
@@ -34,6 +34,22 @@ public class MessageJsonAdapter implements BaseJsonAdapter<Message> {
         obj.addProperty(FIELD_DATE_COMPOSED, message.getDateComposed().getTime());
         obj.addProperty(FIELD_TYPE, message.getType());
         return obj;
+    }
+
+    public JSONObject toJSON(Message message) {
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put(FIELD_FROM, message.getFrom());
+            obj.put(FIELD_TO, message.getTo());
+            obj.put(FIELD_STATE, message.getState());
+            obj.put(FIELD_ID, message.getId());
+            obj.put(FIELD_MESSAGE_BODY, message.getMessageBody());
+            obj.put(FIELD_DATE_COMPOSED, message.getDateComposed().getTime());
+            obj.put(FIELD_TYPE, message.getType());
+            return obj;
+        } catch (JSONException impossible) {
+            throw new RuntimeException("impossible");
+        }
     }
 
     @Override

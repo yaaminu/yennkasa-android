@@ -15,6 +15,7 @@ import com.pair.workers.BootReceiver;
 import com.pair.workers.ContactSyncService;
 
 import java.io.File;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import retrofit.RequestInterceptor;
@@ -35,8 +36,6 @@ public class Config {
     private static final String ENV_PROD = "prod";
     private static final String ENV_DEV = "dev";
     public static final String PAIRAPP_ENV = getEnvironment();
-    public static final String DP_ENDPOINT = getDpEndpoint();
-    public static final String MESSAGE_ENDPOINT = getMessageApiEndpoint();
     public static final String PAIRAPP_ENDPOINT = getEndPoint();
     private static final String logMessage = "calling getApplication when init has not be called";
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
@@ -219,4 +218,13 @@ public class Config {
             requestFacade.addHeader("User-Agent", Config.APP_USER_AGENT);
         }
     };
+
+    public static String deviceArc() {
+        //noinspection deprecation
+        return System.getProperty("os.arch", Build.CPU_ABI).toLowerCase(Locale.US);
+    }
+
+    public static boolean supportsCalling() {
+        return deviceArc().contains("arm");
+    }
 }

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import io.realm.Realm;
@@ -30,7 +31,8 @@ public class User extends RealmObject {
             FIELD_GCM_REG_ID = "gcmRegId",
             FIELD_ACCOUNT_CREATED = "accountCreated",
             FIELD_PASSWORD = "password",
-            FIELD_COUNTRY = "country";
+            FIELD_COUNTRY = "country",
+            FIELD_HAS_CALL = "hasCall";
     @PrimaryKey
     private String userId;
 
@@ -39,6 +41,7 @@ public class User extends RealmObject {
     private RealmList<User> members; //a group will be a user with its members represented by this field.
     private User admin; // this represents admins for a group
     private int type;
+    private boolean hasCall;
 
     //required no-arg c'tor
     public User() {
@@ -62,7 +65,16 @@ public class User extends RealmObject {
             this.setDP(other.getDP());
             this.setCountry(other.getCountry());
             this.setMembers(other.getMembers());
+            this.setHasCall(other.getHasCall());
         }
+    }
+
+    public boolean getHasCall() {
+        return hasCall;
+    }
+
+    public void setHasCall(boolean hasCall) {
+        this.hasCall = hasCall;
     }
 
     public String getCountry() {
@@ -164,6 +176,7 @@ public class User extends RealmObject {
     public static boolean isGroup(User user) {
         return user.getType() == TYPE_GROUP;
     }
+
     public static User copy(User other) {
         if (other == null) {
             throw new IllegalArgumentException("null!");
@@ -182,6 +195,7 @@ public class User extends RealmObject {
         clone.setMembers(other.getMembers());
         clone.setDP(other.getDP());
         clone.setCountry(other.getCountry());
+        clone.setHasCall(other.getHasCall());
         return clone;
     }
 
@@ -194,11 +208,11 @@ public class User extends RealmObject {
         return copied;
     }
 
-    public static List<User> copy(Iterable<User> users,ContactsManager.Filter<User> filter) {
+    public static List<User> copy(Iterable<User> users, ContactsManager.Filter<User> filter) {
         if (users == null) throw new IllegalArgumentException("users may not be null!");
         List<User> copied = new ArrayList<>(5);
         for (User user : users) {
-            if(filter != null && !filter.accept(user)){
+            if (filter != null && !filter.accept(user)) {
                 continue;
             }
             copied.add(User.copy(user));
@@ -207,11 +221,11 @@ public class User extends RealmObject {
     }
 
     public static String generateGroupId(String groupName) {
-        return groupName + "@" + UserManager.getInstance().getMainUser().getUserId();
+        return groupName + "@" + UserManager.getInstance().getCurrentUser().getUserId();
     }
 
     @Nullable
-    public static RealmList<User> aggregateUsers(Realm realm, List<String> membersId, ContactsManager.Filter<User> filter) {
+    public static RealmList<User> aggregateUsers(Realm realm, Collection<String> membersId, ContactsManager.Filter<User> filter) {
         RealmList<User> members = new RealmList<>();
         for (String id : membersId) {
             User user = realm.where(User.class).equalTo(FIELD_ID, id).findFirst();

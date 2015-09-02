@@ -7,14 +7,13 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.pair.Config;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
+import com.pair.ui.DPLoader;
 import com.pair.util.UiHelpers;
-import com.squareup.picasso.Picasso;
 
 import java.util.Date;
 
@@ -30,12 +29,10 @@ import static android.text.format.DateUtils.getRelativeTimeSpanString;
  */
 public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
     private static final String TAG = ConversationAdapter.class.getSimpleName();
-    private final Picasso PICASSO;
 
 
     public ConversationAdapter(Context context, RealmResults<Conversation> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
-        PICASSO = Picasso.with(context);
     }
 
     @Override
@@ -58,8 +55,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         User peer = getPeer(conversation.getPeerId());
         String peerName = peer.getName();
         holder.peerName.setText(peerName);
-        String dpUrl = Config.DP_ENDPOINT + "/" + peer.getDP();
-        PICASSO.load(dpUrl)
+        DPLoader.load(peer.getUserId(), peer.getDP())
                 .error(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .placeholder(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .resize(150, 150)

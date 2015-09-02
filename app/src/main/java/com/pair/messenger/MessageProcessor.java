@@ -59,8 +59,8 @@ public class MessageProcessor extends IntentService {
         realm.commitTransaction();
         // TODO: 6/14/2015 send a socket/gcm broadcast to server to notify sender of message state.
         Message copied = new Message(message);
-        NotificationManager.INSTANCE.onNewMessage(this, copied);
         realm.close();
+        NotificationManager.INSTANCE.onNewMessage(this, copied);
     }
 
     private boolean isGroupMessage(Message message) {

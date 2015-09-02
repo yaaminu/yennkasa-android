@@ -3,6 +3,9 @@ package com.pair.util;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Base64;
+import android.util.Log;
 
 import com.google.gson.JsonObject;
 import com.pair.Config;
@@ -17,6 +20,7 @@ import java.util.Date;
 
 import io.realm.Realm;
 import io.realm.RealmList;
+import io.realm.RealmResults;
 
 /**
  * @author Null-Pointer on 6/10/2015.
@@ -31,8 +35,17 @@ public class RealmUtils {
         realm.beginTransaction();
         realm.clear(Message.class);
         realm.clear(Conversation.class);
+        RealmResults<User> users = realm.where(User.class).findAll();
+        for (int i = 0; i < users.size(); i++) {
+            User user = users.get(i);
+            if (TextUtils.isEmpty(user.getDP()))
+                user.setDP("avatar_empty");
+        }
+        for (int i = 0; i < 10; i++) {
+            Log.d(TAG, Base64.encodeToString("http://facebook.com/foo/bar/fooo/faa/foo/baflkfa".getBytes(), Base64.URL_SAFE));
+        }
         //try {
-//            User user = User.copy(UserManager.getInstance().getMainUser());
+//            User user = User.copy(UserManager.getInstance().getCurrentUser());
 //            for(int i=0; i<20;i++) {
 //                user.setUserId((2348033557792L + i) + "");
 //                user.setName("New user " + i);
@@ -47,13 +60,14 @@ public class RealmUtils {
 
     public static Message seedIncomingMessages() {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
-        User thisUser = UserManager.getInstance().getMainUser(),
+        User thisUser = UserManager.getInstance().getCurrentUser(),
                 otherUser = realm.where(User.class).notEqualTo(User.FIELD_ID, thisUser.getUserId()).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP).findFirst();
         return seedIncomingMessages(otherUser.getUserId(), thisUser.getUserId());
     }
 
     public static Message seedIncomingMessages(String sender, String recipient) {
-        return seedIncomingMessages(sender, recipient, Message.TYPE_PICTURE_MESSAGE, "3d89c06a2f21191fcc214a6e4eab5a1f");
+        return seedIncomingMessages(sender, recipient, Message.TYPE_PICTURE_MESSAGE,
+                "http://files.parsetfss.com/5b50e395-c58d-4d8e-829a-8d98173a63cd/tfss-ab1fcf5e-6b77-4f1a-a6b2-837cfdc331dc-IMG_20150802_162640.jpeg");
     }
 
     public static Message seedIncomingMessages(String sender, String recipient, int type, String messageBody) {
@@ -73,7 +87,7 @@ public class RealmUtils {
     private static void seedOutgoingMessages() {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         realm.beginTransaction();
-        User user = UserManager.getInstance(Config.getApplication()).getMainUser();
+        User user = UserManager.getInstance(Config.getApplication()).getCurrentUser();
         RealmList<Message> messages = new RealmList<>();
         for (int i = 0; i < 10; i++) {
             Message message = realm.createObject(Message.class);

@@ -80,7 +80,7 @@ public class ContactsManager {
         //noinspection TryFinallyCanBeTryWithResources
         try {
             Set<Contact> contacts = new HashSet<>();
-            String phoneNumber, name, status, DP, standardisedNumber;
+            String phoneNumber, name, status, DP, standardisedNumber = "";
             User user;
             boolean isRegistered;
             while (cursor.moveToNext()) {
@@ -92,11 +92,11 @@ public class ContactsManager {
                 }
                 try {
                     standardisedNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO());
-                } catch (IllegalArgumentException invalidPhoneNumber) {
-                    Log.e(TAG, "failed to format to IEE number: " + invalidPhoneNumber.getMessage());
+                } catch (IllegalArgumentException e) {
+                    Log.e(TAG, "failed to format the number: " + standardisedNumber + "to IEE number: " + e.getMessage());
                     continue;
                 } catch (NumberParseException e) {
-                    Log.e(TAG, "failed to format to IEE number: " + e.getMessage());
+                    Log.e(TAG, "failed to format the number: " + standardisedNumber + "to IEE number: " + e.getMessage());
                     continue;
                 }
                 user = realm.where(User.class)
@@ -113,9 +113,8 @@ public class ContactsManager {
                 }
                 name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
                 if (TextUtils.isEmpty(name)) { //some users can store numbers with no name; am a victim :-P
-                    name = context.getString(R.string.st_unknown);
+                    name = context.getString(R.string.no_name);
                 }
-
                 ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, status, isRegistered, DP, standardisedNumber);
                 if ((filter != null) && !filter.accept(contact)) {
                     continue;
@@ -133,38 +132,6 @@ public class ContactsManager {
         }
     }
 
-    public Contact findContactByPhoneSync(String id, String isoRegionCode) {
-        if (!PhoneNumberNormaliser.isIEE_Formatted(id, isoRegionCode)) {
-            return null;
-        }
-        Cursor cursor = Config.getApplicationContext()
-                .getContentResolver()
-                .query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                        PROJECT_NAME_PHONE, null, null, null
-                );
-        //noinspection ConstantConditions
-        if (cursor == null) {
-            return null;
-        }
-        String name, phoneNumber;
-        while (cursor.moveToNext()) {
-            phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract
-                    .CommonDataKinds.Phone.NUMBER));
-            if (TextUtils.isEmpty(phoneNumber)) continue;
-
-            try {
-                phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, isoRegionCode);
-                if (phoneNumber.equals(id)) {
-                    name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                    return new Contact(name, phoneNumber, null, false, null, null);
-                }
-            } catch (NumberParseException e) {
-            } finally {
-                cursor.close();
-            }
-        }
-        return null;
-    }
 
     public interface FindCallback<T> {
         void done(T t);

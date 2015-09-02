@@ -6,6 +6,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 
+import com.pair.Config;
 import com.pair.data.Country;
 import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
@@ -35,15 +36,8 @@ public class SetUpActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         if (GcmUtils.checkPlayServices(this)) {
             setContentView(R.layout.set_up_activity);
-            Realm realm = Country.REALM(this);
-            boolean countriesSetup = realm.where(Country.class).count() > 0;
-            realm.close();
-            if (!countriesSetup) {
-                setUpCountriesTask.execute();
-            } else {
-                addFragment();
-            }
-            //add login fragment
+            //we need to do all the time to automatically handle configuration changes see setupCountriesTask#doInBackGround
+            setUpCountriesTask.execute();
         }
     }
 
@@ -92,7 +86,10 @@ public class SetUpActivity extends ActionBarActivity {
                     }
                     final String isoCode = cursor.getString(Country.FIELD_ISO_2_LETTER_CODE);
                     locale = new Locale("", isoCode);
-                    final String localisedName = locale.getDisplayCountry().trim();
+                    String localisedName = locale.getDisplayCountry().trim();
+                    if (localisedName.equalsIgnoreCase(isoCode)) {
+                        localisedName = cursor.getString(Country.FIELD_NAME) + " (" + localisedName + ")";
+                    }
                     Country country = new Country();
                     country.setName(localisedName.isEmpty() ? cursor.getString(Country.FIELD_NAME) : localisedName);
                     country.setCcc(cursor.getString(Country.FIELD_CCC));
@@ -119,6 +116,8 @@ public class SetUpActivity extends ActionBarActivity {
         protected void onPostExecute(Void aVoid) {
             pDialog.dismiss();
             addFragment();
+            UiHelpers.showErrorDialog(SetUpActivity.this, Config.deviceArc() + Config.supportsCalling());
+
         }
 
     };

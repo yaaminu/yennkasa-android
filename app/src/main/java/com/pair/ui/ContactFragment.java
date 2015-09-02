@@ -43,7 +43,7 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
     private final ContactsManager.Filter<Contact> filter = new ContactsManager.Filter<Contact>() {
         @Override
         public boolean accept(Contact contact) {
-            return !UserManager.getInstance().isMainUser(contact.numberInIEE_Format);
+            return !UserManager.getInstance().isCurrentUser(contact.numberInIEE_Format);
         }
     };
     private final Comparator<Contact> comparator = new Comparator<Contact>() {

@@ -53,7 +53,7 @@ public class UsersActivity extends ActionBarActivity implements ItemsSelector.On
         if (groupId == null) {
             RealmResults<User> results = realm.where(User.class)
                     .notEqualTo(User.FIELD_ID, UserManager.getInstance()
-                            .getMainUser()
+                            .getCurrentUser()
                             .getUserId())
                     .findAllSorted(User.FIELD_NAME, true);
             usersAdapter = new UsersAdapter(this, realm, results);
@@ -150,7 +150,7 @@ public class UsersActivity extends ActionBarActivity implements ItemsSelector.On
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         User user = (User) parent.getAdapter().getItem(position);
-        if (UserManager.getInstance().isMainUser(user.getUserId())) {
+        if (UserManager.getInstance().isCurrentUser(user.getUserId())) {
             UiHelpers.gotoProfileActivity(this, user.getUserId());
         } else {
             UiHelpers.enterChatRoom(this, user.getUserId());
@@ -184,7 +184,7 @@ public class UsersActivity extends ActionBarActivity implements ItemsSelector.On
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View view = super.getView(position, convertView, parent);
-            if (UserManager.getInstance().isMainUser(getItem(position).getUserId())) {
+            if (UserManager.getInstance().isCurrentUser(getItem(position).getUserId())) {
                 ((TextView) view.findViewById(R.id.tv_user_name)).setText(R.string.you);
                 view.findViewById(R.id.tv_user_status).setVisibility(View.GONE);
             }

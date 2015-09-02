@@ -9,7 +9,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
@@ -36,7 +35,7 @@ import android.widget.Toast;
 
 import com.google.gson.JsonObject;
 import com.pair.Config;
-import com.pair.Exceptions.MessageFileTooLargeException;
+import com.pair.Exceptions.PairappException;
 import com.pair.adapter.MessageJsonAdapter;
 import com.pair.adapter.MessagesAdapter;
 import com.pair.adapter.UsersAdapter;
@@ -45,7 +44,7 @@ import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.messenger.MessageProcessor;
-import com.pair.net.Dispatcher;
+import com.pair.messenger.MessagingUtils;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.FileUtils;
@@ -95,7 +94,6 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
     private EditText messageEt;
     private View sendButton, attach, dateHeaderViewParent;
     private TextView dateHeader;
-    private Dispatcher<Message> dispatcher;
     private MessagesAdapter adapter;
     private boolean sessionSetup = false;
     private static Message selectedMessage;
@@ -127,10 +125,12 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             peer.setUserId(peerId);
             String[] parts = peerId.split("@"); //in case the peer is a group
             peer.setType(parts.length > 1 ? User.TYPE_GROUP : User.TYPE_NORMAL_USER);
+            peer.setHasCall(false); //we cannot tell for now
             peer.setDP(peerId);
             peer.setName(parts[0]);
             peer.setStatus(getString(R.string.st_offline));
             realm.commitTransaction();
+            UserManager.getInstance().refreshUserDetails(peerId); //async
         }
         String peerName = peer.getName();
         //noinspection ConstantConditions
@@ -175,12 +175,14 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
     public boolean onPrepareOptionsMenu(Menu menu) {
         toolbarManager.onPrepareMenu();
         menu = toolBar.getMenu();
-        User mainUser = UserManager.getInstance().getMainUser();
-        menu.findItem(R.id.action_invite_friends)
-                .setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().getUserId().equals(mainUser.getUserId()) && !isForwarding);
-        menu.findItem(R.id.action_view_profile).setTitle((peer.getType() == User.TYPE_GROUP) ? R.string.st_group_info : R.string.st_view_profile);
-        menu.findItem(R.id.action_view_profile).setVisible(!isForwarding);
-        menu.findItem(R.id.action_done).setVisible(isForwarding && !recipientsIds.isEmpty());
+        if (menu != null && menu.size() > 0) { //required for toolbar to behave on older platforms <=10
+            User mainUser = UserManager.getInstance().getCurrentUser();
+            menu.findItem(R.id.action_invite_friends)
+                    .setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().getUserId().equals(mainUser.getUserId()) && !isForwarding);
+            menu.findItem(R.id.action_view_profile).setTitle((peer.getType() == User.TYPE_GROUP) ? R.string.st_group_info : R.string.st_view_profile);
+            menu.findItem(R.id.action_view_profile).setVisible(!isForwarding);
+            menu.findItem(R.id.action_done).setVisible(isForwarding && !recipientsIds.isEmpty());
+        }
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -250,20 +252,17 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
 
     @Override
     protected void onStop() {
-        dispatcher = null;
         super.onStop();
     }
 
     @Override
     protected void onBind() {
-        dispatcher = pairAppClientInterface.getMessageDispatcher();
-        pairAppClientInterface.registerNotifier(this);
+        pairAppClientInterface.registerUINotifier(this);
     }
 
     @Override
     protected void onUnbind() {
-        dispatcher = null;
-        pairAppClientInterface.unRegisterNotifier(this);
+        pairAppClientInterface.unRegisterUINotifier(this);
     }
 
     @Override
@@ -281,7 +280,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         int id = v.getId();
         switch (id) {
             case R.id.iv_send:
-                sendMessage();
+                sendTextMessage();
                 break;
             case R.id.iv_attach:
                 attach();
@@ -291,31 +290,40 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         }
     }
 
-    private void sendMessage() {
-        String content = UiHelpers.getFieldContent(messageEt);
+    private void sendTextMessage() {
+        String content = messageEt.getText().toString().trim();
         messageEt.setText(""); //clear the text field
         //TODO use a regular expression to validate the message body
         if (!TextUtils.isEmpty(content)) {
             if (messages.isEmpty()) {
                 ensureDateSet();
             }
-            Message message;
             try {
-                message = createMessage(content, Message.TYPE_TEXT_MESSAGE);
-                doSendMessage(message);
-            } catch (MessageFileTooLargeException ignored) {
+                enqueueMessage(createMessage(content, Message.TYPE_TEXT_MESSAGE));
+            } catch (PairappException e) {
+                Log.e(TAG, e.getMessage(), e.getCause());
+                UiHelpers.showToast(e.getMessage());
             }
         }
+
+    }
+
+    private void enqueueMessage(Message message) {
+        doSendMessage(message);
     }
 
     private void doSendMessage(Message message) {
-        messagesListView.setSelection(messages.size() - 1);
-        if (bound && dispatcher != null) {
-            dispatcher.dispatch(message);
+        if (bound) {
+            pairAppClientInterface.sendMessage(message);
         } else {
             doBind(); //after binding dispatcher will smartly dispatch all unsent messages
         }
-
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                messagesListView.setSelection(messages.size() - 1);
+            }
+        });
     }
 
     private void trySetupNewSession() {
@@ -329,14 +337,8 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         }
     }
 
-    private Message createMessage(String messageBody, int type) throws MessageFileTooLargeException {
+    private Message createMessage(String messageBody, int type) throws PairappException {
         // FIXME: 8/4/2015 run in a background thread
-        if (type != Message.TYPE_TEXT_MESSAGE) {
-            File file = new File(messageBody);
-            if (!validateFile(file)) {
-                throw new MessageFileTooLargeException(getString(R.string.error_file_too_large));
-            }
-        }
         realm.beginTransaction();
         trySetupNewSession();
         Message message = realm.createObject(Message.class);
@@ -356,19 +358,18 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             summary = Message.state(this, message.getState()) + "  " + getDescription(type);
         }
         currConversation.setSummary(summary);
+        try {
+            MessagingUtils.validate(message);
+        } catch (PairappException e) { //caught for the for the purpose of cleanup
+            realm.cancelTransaction();
+            throw new PairappException(e.getMessage(), "");
+        }
         realm.commitTransaction();
         return message;
     }
 
-    private boolean validateFile(File file) {
-        if (file != null && file.exists()) {
-            return ((file.length() > 0 && file.length() < (FileUtils.ONE_MB * 8)));
-        }
-        return false;
-    }
-
     private User getCurrentUser() {
-        return UserManager.getInstance().getMainUser();
+        return UserManager.getInstance().getCurrentUser();
     }
 
     private static String getDescription(int type) {
@@ -430,12 +431,8 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
 
     private void recordVideo() {
         try {
-            Intent attachIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-            mMediaUri = FileUtils.getOutputUri(FileUtils.MEDIA_TYPE_IMAGE);
-            attachIntent.putExtra(MediaStore.EXTRA_OUTPUT, mMediaUri);
-            attachIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
-            attachIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 60 * 10);
-            startActivityForResult(attachIntent, TAKE_VIDEO_REQUEST);
+            mMediaUri = FileUtils.getOutputUri(FileUtils.MEDIA_TYPE_VIDEO);
+            MediaUtils.recordVideo(this, mMediaUri, TAKE_VIDEO_REQUEST);
         } catch (Exception e) {
             if (BuildConfig.DEBUG) {
                 Log.e(TAG, e.getMessage(), e.getCause());
@@ -474,7 +471,6 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
                     message = createMessage(mMediaUri.getPath(), Message.TYPE_PICTURE_MESSAGE);
                     break;
                 case TAKE_VIDEO_REQUEST:
-                    //fall through
                     message = createMessage(mMediaUri.getPath(), Message.TYPE_VIDEO_MESSAGE);
                     break;
                 case PICK_VIDEO_REQUEST:
@@ -495,8 +491,8 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
                 default:
                     throw new AssertionError("impossible");
             }
-            doSendMessage(message);
-        } catch (MessageFileTooLargeException e) {
+            enqueueMessage(message);
+        } catch (PairappException e) {
             UiHelpers.showToast(e.getMessage());
         }
     }
@@ -556,27 +552,14 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
                 }
             }
             realm.commitTransaction();
-            if (dispatcher != null && bound)
-                dispatcher.dispatch(tobeSent);
+            if (bound) {
+                pairAppClientInterface.sendMessages(tobeSent);
+            }
         } finally {
             realm.close();
         }
     }
 
-    private void addMembersToGroup(ArrayList<String> members) {
-
-        UserManager userManager = UserManager.getInstance();
-        if (userManager.isGroup(peer.getUserId())) {
-            userManager.addMembersToGroup(peer.getUserId(), members, new UserManager.CallBack() {
-                @Override
-                public void done(Exception e) {
-                    if (e != null) {
-                        UiHelpers.showToast(e.getMessage());
-                    }
-                }
-            });
-        }
-    }
 
     private String getActualPath(Intent data) {
         String actualPath;
@@ -597,10 +580,10 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
     @Override
     public void onScroll(AbsListView view, final int firstVisibleItem, int visibleItemCount, int totalItemCount) {
         //check if the members have filled the screen
-//        if (firstVisibleItem <= 1) { //first/second item
-//            dateHeaderViewParent.setVisibility(View.GONE);// TODO: 8/7/2015 fade instead of hiding right away
-//            return;
-//        }
+        if (firstVisibleItem == 0) { //first/second item
+            dateHeaderViewParent.setVisibility(View.GONE);// TODO: 8/7/2015 fade instead of hiding right away
+            return;
+        }
         if (visibleItemCount != 0 && visibleItemCount < totalItemCount) {
             dateHeaderViewParent.setVisibility(View.VISIBLE);
             for (int i = firstVisibleItem; i >= 0; i--) { //loop backwards
@@ -629,7 +612,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             String formatted = DateUtils.formatDateTime(this, new Date().getTime(), DateUtils.FORMAT_NUMERIC_DATE);
             message.setId(peer.getUserId() + formatted);
             message.setMessageBody(formatted);
-            message.setTo(UserManager.getInstance().getMainUser().getUserId());
+            message.setTo(UserManager.getInstance().getCurrentUser().getUserId());
             message.setFrom(peer.getUserId());
             Date latestDate = messages.minDate(Message.FIELD_DATE_COMPOSED);
             //one second older than the oldest message
@@ -733,7 +716,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
                 testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, getCurrentUser().getUserId()));
             }
         };
-        timer.scheduleAtFixedRate(task, 5000, 45000);
+        timer.scheduleAtFixedRate(task, 1000, 45000);
     }
 
     Timer timer;

@@ -111,7 +111,7 @@ public class UiHelpers {
         };
         builder.contentView(R.layout.progress_dialog_indeterminate);
         DialogFragment fragment = DialogFragment.newInstance(builder);
-        fragment.setCancelable(false);
+        fragment.setCancelable(cancelable);
         return fragment;
     }
 

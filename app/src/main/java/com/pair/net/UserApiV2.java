@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.pair.data.Message;
 import com.pair.data.User;
 
+import java.util.Collection;
 import java.util.List;
 
 import retrofit.http.Body;
@@ -47,7 +48,7 @@ public interface UserApiV2 {
 
     @FormUrlEncoded
     @POST("/api/v1/groups/")
-    void createGroup(@Field("createdBy") String by, @Field("name") String name, @Field("starters") List<String> members, Callback<User> response);
+    void createGroup(@Field("createdBy") String by, @Field("name") String name, @Field("starters") Collection<String> members, Callback<User> response);
 
     @GET("/api/v1/groups/{id}")
     void getGroup(@Path(Message.FIELD_ID) String id, Callback<User> group);
@@ -59,7 +60,7 @@ public interface UserApiV2 {
     @PUT("/api/v1/groups/{id}/members/add")
     void addMembersToGroup(@Path(Message.FIELD_ID) String id
             , @Field("by") String by
-            , @Field(User.FIELD_MEMBERS) List<String> members
+            , @Field(User.FIELD_MEMBERS) Collection<String> members
             , Callback<HttpResponse> response);
 
     @FormUrlEncoded
@@ -89,7 +90,7 @@ public interface UserApiV2 {
     HttpResponse requestPasswordReset(String number);
 
 
-    public interface Callback<T> {
+    interface Callback<T> {
         void done(Exception e, T t);
     }
 }

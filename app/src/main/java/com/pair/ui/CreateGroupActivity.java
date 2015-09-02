@@ -7,6 +7,8 @@ import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,6 +21,7 @@ import android.widget.EditText;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.data.User;
@@ -29,10 +32,8 @@ import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -41,6 +42,7 @@ import io.realm.RealmQuery;
 
 public class CreateGroupActivity extends ActionBarActivity implements AdapterView.OnItemClickListener, ItemsSelector.OnFragmentInteractionListener, ToolbarManager.OnToolbarGroupChangedListener {
 
+    public static final String TAG = CreateGroupActivity.class.getSimpleName();
     private Set<String> selectedUsers = new HashSet<>();
     private String groupName;
     private Realm realm;
@@ -65,7 +67,7 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
         groupNameEt = ((EditText) findViewById(R.id.et_group_name));
         realm = Realm.getInstance(this);
         users = realm.where(User.class).notEqualTo(User.FIELD_ID, UserManager.getInstance()
-                .getMainUser().getUserId()).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
+                .getCurrentUser().getUserId()).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
                 .findAllSorted(User.FIELD_NAME);
         adapter = new UsersAdapter(users);
     }
@@ -95,7 +97,7 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
         }
     }
 
-    private static final Pattern groupNamePattern = Pattern.compile("^[a-zA-Z][a-zA-Z0-9 ]{4,30}");
+    private static final Pattern groupNamePattern = Pattern.compile("^[a-zA-Z][a-zA-Z0-9_ ]{3,30}[a-zA-Z]$");
 
     private final UiHelpers.Listener cancelProgress = new UiHelpers.Listener() {
         @Override
@@ -170,14 +172,18 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
         if (!selectedUsers.isEmpty()) {
             final DialogFragment progressDialog = UiHelpers.newProgressDialog();
             progressDialog.show(getSupportFragmentManager(), null);
-            UserManager.getInstance().createGroup(groupName, new ArrayList<>(selectedUsers), new UserManager.CreateGroupCallBack() {
+            UserManager.getInstance().createGroup(groupName, selectedUsers, new UserManager.CreateGroupCallBack() {
                 @Override
                 public void done(Exception e, String groupId) {
-                    progressDialog.dismiss();
-                    if (e != null) {
-                        UiHelpers.showErrorDialog(CreateGroupActivity.this, e.getMessage());
-                    } else {
-                        UiHelpers.enterChatRoom(CreateGroupActivity.this, groupId);
+                    try {
+                        progressDialog.dismiss();
+                        if (e != null) {
+                            UiHelpers.showErrorDialog(CreateGroupActivity.this, e.getMessage());
+                        } else {
+                            UiHelpers.enterChatRoom(CreateGroupActivity.this, groupId);
+                        }
+                    } catch (Exception e2) {
+                        Log.e(TAG, e2.getMessage(), e2.getCause());
                     }
                 }
             });
@@ -223,7 +229,10 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
 
     @Override
     public View emptyView() {
-        return null;
+        TextView emptyView = new TextView(this);
+        emptyView.setText("You can invite other users who are not in your contacts by adding their numbers directly");
+        emptyView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        return emptyView;
     }
 
     @Override
@@ -244,7 +253,6 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
             final String userCountryISO = UserManager.getInstance().getUserCountryISO();
             try {
                 phoneNumber = PhoneNumberNormaliser.cleanNonDialableChars(phoneNumber);
-                phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userCountryISO);
                 if (!PhoneNumberNormaliser.isValidPhoneNumber(phoneNumber, userCountryISO)) {
                     throw new NumberParseException(NumberParseException.ErrorType.NOT_A_NUMBER, "invalid phone number");
                 }
@@ -256,8 +264,7 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
                 supportInvalidateOptionsMenu();
             } catch (NumberParseException e) {
                 // FIXME: 8/5/2015 show a better error message
-                final Locale locale = new Locale("", userCountryISO);
-                UiHelpers.showErrorDialog(CreateGroupActivity.this, "Phone number: " + original + " may not be a valid phone number in " + locale.getDisplayName());
+                UiHelpers.showErrorDialog(CreateGroupActivity.this, "The number: " + original + " is not be a valid phone number");
             }
         } else {
             // FIXME: 8/5/2015 show a better error message
@@ -315,6 +322,7 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
 
         private Filter filter = new Filter() {
             FilterResults results = new FilterResults();
+
             protected FilterResults performFiltering(CharSequence constraint) {
                 Realm realm = Realm.getInstance(CreateGroupActivity.this); //get realm for this background thread
                 List<User> users;
@@ -335,7 +343,7 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
                             .endGroup()
                             .notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
                             .notEqualTo(User.FIELD_ID, UserManager.getInstance()
-                                    .getMainUser().getUserId());
+                                    .getCurrentUser().getUserId());
                     users = query.findAllSorted(User.FIELD_NAME);
                     //detach the objects from realm. as we want to pass it to a different thread
                     // TODO: 8/7/2015 this might not scale
@@ -349,7 +357,7 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
             }
 
             private String standardiseConstraintAndContinue(String constraintAsString) {
-                if (constraintAsString.startsWith("+")) { //then its not in in the IEE format. eg +233XXXXXXXXX (for Ghanaian number)
+                if (constraintAsString.startsWith("+")) { //then its  in in the IEE format. eg +233XXXXXXXXX (for a Ghanaian number)
                     if (constraintAsString.length() > 1) //avoid indexOutOfBoundException
                         constraintAsString = constraintAsString.substring(1);
                     else {
@@ -368,7 +376,7 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
                         return null;
                     }
                     //the next condition will never have to worry about input like "00","011 as they will be sieved off!
-                } else if (constraintAsString.startsWith("0")) { // TODO: 8/7/2015 replace this with trunk digit of current user currently we using Ghana,France,etc.
+                } else if (constraintAsString.startsWith(PhoneNumberNormaliser.getTrunkPrefix(UserManager.getInstance().getUserCountryISO()))) { // TODO: 8/7/2015 replace this with trunk digit of current user currently we using Ghana,France,etc.
                     if (constraintAsString.length() > 1) //avoid indexOutOfBoundException
                         constraintAsString = constraintAsString.substring(1);
                     else {

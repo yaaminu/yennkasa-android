@@ -4,5 +4,6 @@
         <item>CONVERSATIONS</item>
         <item>CONTACTS</item>
         <item>GROUPS</item>
+        <item>SETTINGS</item>
     </string-array>
 </resources>

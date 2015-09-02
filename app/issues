@@ -15,6 +15,7 @@
 # create an application wide staging area(threadPool) where tasks can be submitted for execution
 # create an application wide settings class where all settings of the app will be persisted
 # fix dp changing problem
+# implement exponential backoff for parsedispatcher
 #**************************************************************************************
 # write test for some of the classes. I know it should have been the first thing to do//done
 # code our own cache for picasso //complete

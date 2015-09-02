@@ -5,7 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import com.pair.data.UserManager;
 import com.pair.messenger.PairAppClient;
+import com.parse.PushService;
 
 public class BootReceiver extends BroadcastReceiver {
     public static final String TAG = BootReceiver.class.getSimpleName();
@@ -16,7 +18,10 @@ public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.i(TAG, "booting complete");
-        PairAppClient.start(context);
-        ContactSyncService.start(context);
+        PushService.startServiceIfRequired(context);
+        if (UserManager.getInstance().isUserVerified()) {
+            PairAppClient.start(context);
+            ContactSyncService.start(context);
+        }
     }
 }

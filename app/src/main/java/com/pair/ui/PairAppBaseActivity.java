@@ -23,12 +23,15 @@ import com.rey.material.widget.SnackBar;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.realm.Realm;
+import io.realm.RealmChangeListener;
+
 /**
  * @author Null-Pointer on 8/12/2015.
  */
-public abstract class PairAppBaseActivity extends ActionBarActivity implements Notifier {
+public abstract class PairAppBaseActivity extends ActionBarActivity implements Notifier, RealmChangeListener {
     static private volatile List<Pair<String, String>> recentChatList = new ArrayList<>();
-    private static volatile int unReadMessages = 0;
+    private static volatile long unReadMessages = 0;
     static private volatile Message latestMessage;
     protected PairAppClient.PairAppClientInterface pairAppClientInterface;
     protected boolean bound = false;
@@ -51,11 +54,32 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements N
             pairAppClientInterface = null; //free memory
         }
     };
+    private Realm realm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setUpScreenDimensions();
+        realm = Message.REALM(this);
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        doBind();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        realm.addChangeListener(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        realm.removeChangeListener(this);
     }
 
     @Override
@@ -69,9 +93,9 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements N
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        doBind();
+    protected void onDestroy() {
+        realm.close();
+        super.onDestroy();
     }
 
     protected void doBind() {
@@ -87,7 +111,7 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements N
         final int recentCount = recentChatList.size();
         switch (recentCount) {
             case 0:
-                throw new AssertionError();
+                return getString(R.string.new_message);
             case 1:
                 String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : Message.typeToString(this, message.getType());
                 text = sender + ":\n" + messageBody;
@@ -115,15 +139,14 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements N
 
         recentChatList.add(tuple);
         // TODO: 8/17/2015 vibrate or play short tone
-        if (snackBar.getState() == SnackBar.STATE_SHOWN) {
+        if (snackBar.getState() != SnackBar.STATE_SHOWN) {
             snackBar.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     doNotifyUser(message, sender);
+
                 }
-            }, 1000);
-        } else {
-            doNotifyUser(message, sender);
+            }, 4000);
         }
     }
 
@@ -146,7 +169,7 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements N
                         }
                     }
                 })
-                .duration(10000) //10 secs
+                .duration(6000) //6 secs
                 .setOnClickListener(listener);
         snackBar.removeOnDismiss(true).show(this);
     }
@@ -202,6 +225,16 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements N
     @Override
     public location where() {
         return location.FORE_GROUND;
+    }
+
+    @Override
+    public void onChange() {
+        long newMessageCount = realm.where(Message.class).equalTo(Message.FIELD_STATE, Message.STATE_RECEIVED).count();
+        if (newMessageCount > 0 && newMessageCount >= unReadMessages) {
+            unReadMessages = newMessageCount;
+        } else {
+            clearRecentChat();
+        }
     }
 
     protected abstract void onBind();

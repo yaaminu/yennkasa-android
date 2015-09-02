@@ -20,16 +20,15 @@ import android.widget.TextView;
 
 import com.pair.Config;
 import com.pair.data.Message;
-import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.ui.ImageViewer;
 import com.pair.util.FileUtils;
 import com.pair.util.UiHelpers;
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.RequestCreator;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -153,7 +152,6 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         };
         if (messageFile.exists()) {
             // this binary message is downloaded
-            final RequestCreator creator;
             if (Message.isVideoMessage(message)) {
                 holder.playOrdownload.setVisibility(View.VISIBLE);
                 holder.playOrdownload.setImageResource(R.drawable.playvideo);
@@ -179,8 +177,14 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             holder.preview.setImageResource(placeHolderDrawable);
         }
 
+
         if (downloadingRows.containsKey(message.getId())) {
-            holder.progress.setVisibility(View.VISIBLE);
+            convertView.post(new Runnable() {
+                @Override
+                public void run() {
+                    holder.progress.setVisibility(View.VISIBLE);
+                }
+            });
         }
 
         return convertView;
@@ -250,7 +254,9 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                         android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
                         Realm realm = null;
                         try {
-                            FileUtils.save(finalFile, new URL(Config.MESSAGE_ENDPOINT + "/" + messageBody).openStream());
+                            URL url = new URL(messageBody);
+                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                            FileUtils.save(finalFile, connection.getInputStream());
                             realm = Realm.getInstance(Config.getApplicationContext());
                             realm.beginTransaction();
                             Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
@@ -258,11 +264,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                             realm.commitTransaction();
                             onComplete(null);
                         } catch (IOException e) {
-                            if (BuildConfig.DEBUG) {
-                                Log.e(TAG, e.getMessage(), e.getCause());
-                            } else {
-                                Log.e(TAG, e.getMessage());
-                            }
+                            Log.e(TAG, e.getMessage(), e.getCause());
                             onComplete(e);
                         } finally {
                             if (realm != null) {

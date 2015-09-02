@@ -89,4 +89,9 @@ public class PhoneNumberNormaliser {
             return phoneNumber;
         }
     }
+
+    public static String getTrunkPrefix(String gh) {
+        PhoneNumberUtil util = PhoneNumberUtil.getInstance();
+        return util.getNddPrefixForRegion(gh, true);
+    }
 }

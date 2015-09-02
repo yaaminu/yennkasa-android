@@ -32,6 +32,7 @@ public class PhoneNumberNormaliserTest extends TestCase {
         assertEquals("+233204441069", PhoneNumberNormaliser.cleanNonDialableChars("(+233) 204441069"));
         try {
             PhoneNumberNormaliser.cleanNonDialableChars(null);
+            fail("must throw");
         } catch (Exception e) {
             assertSame(IllegalArgumentException.class, e.getClass());
         }
@@ -81,10 +82,18 @@ public class PhoneNumberNormaliserTest extends TestCase {
         assertTrue(PhoneNumberNormaliser.isValidPhoneNumber("0266349205", "GH"));
         assertTrue(PhoneNumberNormaliser.isValidPhoneNumber("0236349205", "GH"));
         assertFalse(PhoneNumberNormaliser.isValidPhoneNumber("0766349205", "GH"));
-
+        assertTrue(PhoneNumberNormaliser.isValidPhoneNumber("002348033557792", "GH"));
     }
     @Test
     public void testToLocalNumber() throws Exception {
-        System.out.print(PhoneNumberUtil.getInstance().parse("+2330266564229", "GH"));
+        System.out.println(PhoneNumberUtil.getInstance().parse("+2330266564229", "GH"));
+        System.out.print(PhoneNumberNormaliser.getTrunkPrefix("GH"));
+    }
+
+    @Test
+    public void testGetTrunkPrefex() throws Exception {
+        assertEquals("0", PhoneNumberNormaliser.getTrunkPrefix("GH"));
+        assertEquals("1", PhoneNumberNormaliser.getTrunkPrefix("US"));
+        assertEquals("8", PhoneNumberNormaliser.getTrunkPrefix("RU"));
     }
 }

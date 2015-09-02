@@ -10,13 +10,12 @@ import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.pair.Config;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
+import com.pair.ui.DPLoader;
 import com.pair.util.PhoneNumberNormaliser;
 import com.rey.material.widget.CheckBox;
-import com.squareup.picasso.Picasso;
 
 import java.util.regex.Pattern;
 
@@ -29,7 +28,6 @@ import io.realm.RealmResults;
  * @author Null-Pointer on 6/6/2015.
  */
 public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
-    private final Picasso PICASSO;
     private RealmResults<User> filterResults;
     private int layoutResource;
     private boolean multiSelect;
@@ -41,7 +39,6 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
 
     public UsersAdapter(Context context, Realm realm, RealmResults<User> realmResults, boolean multiChoice) {
         super(context, realmResults, true);
-        PICASSO = Picasso.with(context);
         filterResults = realmResults;
         this.layoutResource = multiChoice ? R.layout.multi_select_user_item : R.layout.user_item;
         this.multiSelect = multiChoice;
@@ -77,9 +74,9 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
             holder.checkBox = (CheckBox) convertView.findViewById(R.id.cb_checked);
             convertView.setTag(holder);
         }
-        ViewHolder holder = (ViewHolder) convertView.getTag();
-        holder.tv.setText(getItem(position).getName());
         User user = getItem(position);
+        ViewHolder holder = (ViewHolder) convertView.getTag();
+        holder.tv.setText(user.getName());
 
         if (UserManager.getInstance().isGroup(user.getUserId())) {
             holder.userPhone.setText(R.string.group);
@@ -89,7 +86,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
             holder.usersStatus.setVisibility(View.VISIBLE);
             holder.usersStatus.setText(user.getStatus());
         }
-        PICASSO.load(Config.DP_ENDPOINT + "/" + getItem(position).getDP())
+        DPLoader.load(user.getUserId(), user.getDP())
                 .error(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .placeholder(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .resize(150, 150)
@@ -137,7 +134,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
                                 .endGroup()
                                 .endGroup()
                                 .notEqualTo(User.FIELD_ID, UserManager.getInstance()
-                                        .getMainUser()
+                                        .getCurrentUser()
                                         .getUserId())
                                 .findAllSorted(User.FIELD_NAME, false);
                     } else {

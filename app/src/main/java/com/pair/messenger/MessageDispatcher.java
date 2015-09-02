@@ -11,6 +11,7 @@ import com.pair.adapter.BaseJsonAdapter;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.net.Dispatcher;
+import com.pair.net.FileApi;
 import com.pair.net.HttpResponse;
 import com.pair.net.MessageApi;
 import com.pair.pairapp.BuildConfig;
@@ -34,6 +35,7 @@ import retrofit.mime.TypedFile;
 /**
  * @author by Null-Pointer on 5/26/2015.
  */
+@Deprecated
 class MessageDispatcher implements Dispatcher<Message> {
     private static final String TAG = MessageDispatcher.class.getSimpleName();
     private volatile int NUM_OF_TASKS = 0;
@@ -129,6 +131,16 @@ class MessageDispatcher implements Dispatcher<Message> {
         }
     }
 
+    @Override
+    public void dispatch(Message message, FileApi.ProgressListener listener) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void dispatch(Collection<Message> t, FileApi.ProgressListener listener) {
+        throw new UnsupportedOperationException();
+    }
+
     private void doDispatch(Message message, int isGroupMessage) {
         incrementNumOfTasks();
         if (failedScreening(message)) {
@@ -156,6 +168,11 @@ class MessageDispatcher implements Dispatcher<Message> {
     @Override
     public boolean cancelDispatchMayPossiblyFail(Message message) {
         return false;
+    }
+
+    @Override
+    public void close() {
+        //do nothing
     }
 
     private static class SenderJob {

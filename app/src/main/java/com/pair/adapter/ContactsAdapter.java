@@ -13,12 +13,11 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.pair.Config;
 import com.pair.pairapp.R;
+import com.pair.ui.DPLoader;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
 import com.rey.material.widget.Button;
-import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -31,13 +30,12 @@ public class ContactsAdapter extends BaseAdapter {
     private static final String TAG = ContactsAdapter.class.getSimpleName();
     private List<Contact> contacts;
     private boolean isAddOrRemoveFromGroup;
-    private final Picasso PICASSO;
+    ;
     private FragmentActivity context;
 
     public ContactsAdapter(FragmentActivity context, List<Contact> contacts, boolean isAddOrRemoveFromGroup) {
         this.contacts = contacts;
         this.isAddOrRemoveFromGroup = isAddOrRemoveFromGroup;
-        this.PICASSO = Picasso.with(context);
         this.context = context;
     }
 
@@ -86,7 +84,7 @@ public class ContactsAdapter extends BaseAdapter {
             } else {
                 holder.userName = ((TextView) convertView.findViewById(R.id.tv_user_name));
             }
-            holder.userStatus = ((TextView) convertView.findViewById(R.id.tv_user_phone_group_admin));
+            holder.userStatus = ((TextView) convertView.findViewById(R.id.tv_user_status));
             holder.inviteButton = (Button) convertView.findViewById(R.id.bt_invite);
             holder.userDp = ((ImageView) convertView.findViewById(R.id.iv_display_picture));
             holder.userPhone = (TextView) convertView.findViewById(R.id.tv_user_phone_group_admin);
@@ -107,7 +105,7 @@ public class ContactsAdapter extends BaseAdapter {
         }
         if (contact.isRegisteredUser) {
             holder.userStatus.setText(contact.status);
-            PICASSO.load(Config.DP_ENDPOINT + "/" + contact.DP)
+            DPLoader.load(contact.numberInIEE_Format, contact.DP)
                     .error(R.drawable.user_avartar)
                     .placeholder(R.drawable.user_avartar)
                     .resize(150, 150)
@@ -120,8 +118,8 @@ public class ContactsAdapter extends BaseAdapter {
             holder.userPhone.setClickable(true);
             holder.userPhone.setOnClickListener(listener);
         } else {
-            holder.userStatus.setText(PhoneNumberNormaliser.toLocalFormat(contact.numberInIEE_Format));
-            holder.userStatus.setOnClickListener(listener);
+            holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat(contact.numberInIEE_Format));
+            holder.userPhone.setOnClickListener(listener);
             holder.userName.setOnClickListener(listener);
             holder.inviteButton.setOnClickListener(listener);
         }

@@ -36,7 +36,7 @@ public class UserManagerTest {
 
     @Test
     public void testGetMainUser() throws Exception {
-        User user = UserManager.getInstance().getMainUser();
+        User user = UserManager.getInstance().getCurrentUser();
         Assert.assertNull(user);
 
     }

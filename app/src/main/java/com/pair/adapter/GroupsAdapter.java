@@ -8,13 +8,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.pair.Config;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
-import com.pair.util.PicassoWrapper;
+import com.pair.ui.DPLoader;
 import com.pair.util.UiHelpers;
-import com.squareup.picasso.Picasso;
 
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmList;
@@ -25,11 +23,8 @@ import io.realm.RealmResults;
  */
 public class GroupsAdapter extends RealmBaseAdapter<User> {
     private static final String TAG = GroupsAdapter.class.getSimpleName();
-    private final Picasso PICASSO;
-
     public GroupsAdapter(Context context, RealmResults<User> realmResults) {
         super(context, realmResults, true);
-        PICASSO = PicassoWrapper.with(context);
     }
 
     @Override
@@ -48,14 +43,14 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
             holder = ((ViewHolder) convertView.getTag());
         }
         holder.groupName.setText(group.getName());
-        PICASSO.load(Config.DP_ENDPOINT + "/" + group.getDP())
+        DPLoader.load(group.getUserId(), group.getDP())
                 .placeholder(R.drawable.group_avatar)
                 .error(R.drawable.group_avatar)
                 .resize(150, 150)
                 .into(holder.groupIcon);
 
         RealmList<User> groupMembers = group.getMembers();
-        User mainUser = UserManager.getInstance().getMainUser();
+        User mainUser = UserManager.getInstance().getCurrentUser();
         StringBuilder members = new StringBuilder(groupMembers.size() * 10); //summary
         members.append("You");
         for (int i = 0; i < groupMembers.size(); i++) {

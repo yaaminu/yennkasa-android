@@ -24,12 +24,19 @@ public class CountriesListAdapter extends ArrayAdapter<Country> {
 
     @Override
     public int getCount() {
-        return countries.size();
+        return countries.size() + 1;
     }
 
     @Override
     public Country getItem(int position) {
-        return countries.get(position);
+        if (position == 0) {
+            Country selectCountry = new Country();
+            selectCountry.setName(getContext().getString(R.string.select_country));
+            selectCountry.setCcc("");
+            selectCountry.setCcc("");
+            return selectCountry;
+        }
+        return countries.get(position - 1);
     }
 
     @Override
@@ -53,9 +60,12 @@ public class CountriesListAdapter extends ArrayAdapter<Country> {
         convertView.setTag(holder);
 
         Country country = getItem(position);
-        Locale locale = new Locale("", country.getIso2letterCode());
-        holder.name.setText(locale.getDisplayCountry().trim());
-        holder.CCC.setText("+" + country.getCcc());
+        holder.name.setText(country.getName());
+        if (position == 0) {
+            holder.CCC.setText("");
+        } else {
+            holder.CCC.setText("+" + country.getCcc());
+        }
         return convertView;
     }
 

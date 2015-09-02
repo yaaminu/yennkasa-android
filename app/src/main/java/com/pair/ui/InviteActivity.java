@@ -75,7 +75,7 @@ public class InviteActivity extends ActionBarActivity implements ItemsSelector.O
         if (potentiallyGroup != null) {
             RealmQuery<User> userRealmQuery = realm.where(User.class)
                     .notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
-                    .notEqualTo(User.FIELD_ID, userManager.getMainUser().getUserId());
+                    .notEqualTo(User.FIELD_ID, userManager.getCurrentUser().getUserId());
             List<User> existingMembers = potentiallyGroup.getMembers();
             for (User existingMember : existingMembers) {
                 userRealmQuery.notEqualTo(User.FIELD_ID, existingMember.getUserId());

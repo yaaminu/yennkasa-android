@@ -10,6 +10,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.LinearLayout;
 
 import com.pair.Config;
@@ -17,6 +18,8 @@ import com.pair.data.Conversation;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.RealmUtils;
+import com.pair.util.UiHelpers;
+import com.parse.ParseAnalytics;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
 import com.rey.material.widget.TabPageIndicator;
@@ -38,6 +41,7 @@ public class MainActivity extends PairAppBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ParseAnalytics.trackAppOpenedInBackground(getIntent());
         //user cannot get pass this if there is no gcm support as he will be presented a blocking dialog that cannot be dismissed
         if (UserManager.getInstance().isUserVerified()) {
             setContentView(R.layout.activity_main);
@@ -71,6 +75,8 @@ public class MainActivity extends PairAppBaseActivity {
             cleanedMessages = true;
             RealmUtils.runRealmOperation(this);
         }
+        UiHelpers.showErrorDialog(this, Config.deviceArc());
+
     }
 
     @Override
@@ -86,7 +92,7 @@ public class MainActivity extends PairAppBaseActivity {
         super.onResume();
         Config.appOpen(true);
         if (pairAppClientInterface != null) {
-            pairAppClientInterface.registerNotifier(this);
+            pairAppClientInterface.registerUINotifier(this);
         }
     }
 
@@ -94,7 +100,7 @@ public class MainActivity extends PairAppBaseActivity {
     protected void onPause() {
         Config.appOpen(false);
         if (pairAppClientInterface != null) {
-            pairAppClientInterface.unRegisterNotifier(this);
+            pairAppClientInterface.unRegisterUINotifier(this);
         }
         super.onPause();
     }
@@ -107,7 +113,7 @@ public class MainActivity extends PairAppBaseActivity {
 
     @Override
     protected void onBind() {
-        pairAppClientInterface.registerNotifier(this);
+        pairAppClientInterface.registerUINotifier(this);
     }
 
     @Override
@@ -127,6 +133,17 @@ public class MainActivity extends PairAppBaseActivity {
         return super.onPrepareOptionsMenu(menu);
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.action_settings:
+                UiHelpers.gotoProfileActivity(this, UserManager.getMainUserId());
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     void setPagePosition(int newPosition) {
         if (newPosition < 0 || newPosition >= pager.getAdapter().getCount() || pager.getCurrentItem() == newPosition) {
             //do nothing
@@ -134,6 +151,7 @@ public class MainActivity extends PairAppBaseActivity {
             pager.setCurrentItem(newPosition, true);
         }
     }
+
     private void gotoSetUpActivity() {
         Intent intent = new Intent(this, SetUpActivity.class);
         startActivity(intent);
@@ -142,10 +160,9 @@ public class MainActivity extends PairAppBaseActivity {
 
     //package private
     class MyFragmentStatePagerAdapter extends FragmentStatePagerAdapter {
-        static final int POSITION_CONVERSATION_FRAGMENT = 0,
-                POSITION_CONTACTS_FRAGMENT = 1,
-                POSITION_GROUP_FRAGMENT = 2;
-
+        static final int POSITION_CONVERSATION_FRAGMENT = 0x0,
+                POSITION_CONTACTS_FRAGMENT = 0x1,
+                POSITION_GROUP_FRAGMENT = 0x2;
         String[] pageTitles;
 
         public MyFragmentStatePagerAdapter(FragmentManager fm) {
@@ -166,6 +183,12 @@ public class MainActivity extends PairAppBaseActivity {
                 case POSITION_GROUP_FRAGMENT:
                     fragment = new GroupsFragment();
                     break;
+//                case POSITION_SETTINGS_FRAGMENT:
+//                    fragment = new ProfileFragment();
+//                    Bundle bundle = new Bundle(1);
+//                    bundle.putString(ProfileFragment.ARG_USER_ID,UserManager.getMainUserId());
+//                    fragment.setArguments(bundle);
+//                    break;
                 default:
                     throw new AssertionError("impossible");
             }

@@ -21,7 +21,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    sourceSets { main { java.srcDirs = ['src/main/java'] } }
+    sourceSets {
+        main {
+            java.srcDirs = ['src/main/java']
+            jniLibs.srcDirs = ['libs']
+        }
+    }
 }
 
 dependencies {
@@ -36,4 +41,6 @@ dependencies {
     compile 'com.android.support:support-v4:22.1.1'
     compile 'com.parse.bolts:bolts-android:1.2.0'
     compile 'io.realm:realm-android:0.80.3'
+    compile 'com.github.nkzawa:socket.io-client:0.3.0'
+    compile files('libs/sinch-android-rtc-3.6.0.jar')
 }

@@ -6,7 +6,11 @@ import android.util.Log;
 
 import com.pair.Config;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmObject;
@@ -124,7 +128,7 @@ public class Message extends RealmObject {
         Application appContext = Config.getApplication();
         Realm realm = Realm.getInstance(appContext);
         long count = realm.where(Message.class).count() + 1;
-        String id = count + "@" + UserManager.getInstance().getMainUser().getUserId() + "@" + System.nanoTime();
+        String id = count + "@" + UserManager.getInstance().getCurrentUser().getUserId() + "@" + System.nanoTime();
         Log.i(TAG, "generated message id: " + id);
         realm.close();
         return id;
@@ -163,7 +167,7 @@ public class Message extends RealmObject {
     }
 
     public static boolean isOutGoing(Message message) {
-        return UserManager.getInstance().isMainUser(message.getFrom());
+        return UserManager.getInstance().isCurrentUser(message.getFrom());
     }
 
     public static String state(Context context, int status) {
@@ -181,6 +185,34 @@ public class Message extends RealmObject {
             default:
                 throw new AssertionError("new on unknown message status");
         }
+    }
+
+    public static Message copy(Message message) {
+        if (message == null) {
+            throw new IllegalArgumentException("message is null");
+        }
+
+        Message clone = new Message();
+
+        clone.setId(message.getId());
+        clone.setFrom(message.getFrom());
+        clone.setTo(message.getTo());
+        clone.setDateComposed(message.getDateComposed());
+        clone.setType(message.getType());
+        clone.setMessageBody(message.getMessageBody());
+        clone.setState(message.getState());
+        return clone;
+    }
+
+    public static List<Message> copy(Collection<Message> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Message> copy = new ArrayList<>(messages.size());
+        for (Message message : messages) {
+            copy.add(copy(message));
+        }
+        return copy;
     }
 
     public static String typeToString(Context context, int type) {

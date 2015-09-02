@@ -89,7 +89,7 @@ public class Conversation extends RealmObject {
             message = realm.createObject(Message.class);
             message.setId(conversation.getPeerId() + formatted);
             message.setMessageBody(formatted);
-            message.setTo(UserManager.getInstance().getMainUser().getUserId());
+            message.setTo(UserManager.getInstance().getCurrentUser().getUserId());
             message.setFrom(conversation.getPeerId());
             message.setDateComposed(new Date(System.currentTimeMillis()));
             message.setType(TYPE_DATE_MESSAGE);

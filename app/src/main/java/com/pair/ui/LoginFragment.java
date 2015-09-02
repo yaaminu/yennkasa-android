@@ -87,6 +87,7 @@ public class LoginFragment extends Fragment {
         TextView tv = (TextView) view.findViewById(R.id.tv_signup);
         tv.setOnClickListener(listener);
         loginButton.setOnClickListener(listener);
+        progressDialog = UiHelpers.newProgressDialog();
         return view;
     }
 
@@ -101,7 +102,7 @@ public class LoginFragment extends Fragment {
         userCountry = ((Country) spinner.getSelectedItem()).getIso2letterCode();
         userName = usernameEt.getText().toString().trim();
 
-        if (usernameStrategy.validate() && phoneNumberStrategy.validate()) {
+        if (userCountryStrategy.validate() && usernameStrategy.validate() && phoneNumberStrategy.validate()) {
             attemptLoginOrSignUp();
         }
     }
@@ -128,7 +129,6 @@ public class LoginFragment extends Fragment {
     }
 
     private void doAttemptLogin() {
-        progressDialog = UiHelpers.newProgressDialog();
         progressDialog.show(getFragmentManager(), null);
         if (isLoggingIn) {
             UserManager.getInstance().logIn(getActivity(), phoneNumber, userCountry, loginOrSignUpCallback);
@@ -140,7 +140,13 @@ public class LoginFragment extends Fragment {
     private final UserManager.CallBack loginOrSignUpCallback = new UserManager.CallBack() {
         @Override
         public void done(Exception e) {
-            progressDialog.dismiss();
+            //
+            phoneNumberEt.post(new Runnable() {
+                @Override
+                public void run() {
+                    progressDialog.dismiss();
+                }
+            });
             if (e == null) {
                 Config.enableComponents();
                 ContactSyncService.start(Config.getApplicationContext());
@@ -160,8 +166,19 @@ public class LoginFragment extends Fragment {
         UiHelpers.showErrorDialog(getActivity(), getString(R.string.required_field_error, field));
     }
 
-    Pattern userNamePattern = Pattern.compile("^[a-zA-Z][a-zA-Z0-9]{4,12}");
-    private FormValidator.ValidationStrategy usernameStrategy = new FormValidator.ValidationStrategy() {
+    Pattern userNamePattern = Pattern.compile("^[a-zA-Z][a-zA-Z0-9_]{1,12}");
+    private FormValidator.ValidationStrategy userCountryStrategy = new FormValidator.ValidationStrategy() {
+        @Override
+        public boolean validate() {
+            int position = spinner.getSelectedItemPosition();
+            if (position == 0) {
+                spinner.requestFocus();
+                showRequiredFieldDialog(getString(R.string.country));
+                return false;
+            }
+            return true;
+        }
+    }, usernameStrategy = new FormValidator.ValidationStrategy() {
         @Override
         public boolean validate() {
             if (isLoggingIn) return true;

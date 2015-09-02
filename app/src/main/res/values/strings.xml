@@ -97,14 +97,14 @@
     <string name="initialising">Taking care of few things…</string>
     <string name="new_message">New Message</string>
     <string name="message_from">"New message from %s"</string>
-    <string name="subtitle">Redefining Instant Messaging</string>
-    <string name="select_country">Select Country</string>
+    <string name="subtitle">Stay Never Disconnected!</string>
+    <string name="select_country">Select Your Country</string>
     <string name="dont_have_an_account_sign_up">Don\'t have an account? Sign up!</string>
-    <string name="st_already_have_an_account">Already have an account? Log In.</string>
-    <string name="required_field_error">%s is required</string>
+    <string name="st_already_have_an_account">Already have an account? Log In!</string>
+    <string name="required_field_error">%s can\'t be empty</string>
     <string name="password_too_short">password too short</string>
     <string name="password_too_long">Password too long</string>
-    <string name="user_name_format_message">"User names can only contain alphabets and digits and must be between 5 to 12 characters"</string>
+    <string name="user_name_format_message">"User names can only contain alphabets,underscore and digits and must be between 2 to 12 characters"</string>
     <string name="group_name_format_message">"Group names can only contain alphabets and digits and must be between 5 to 30 characters"</string>
     <string name="token_required">Token is required</string>
     <string name="invalid_phone_number">%s is not a valid phone number</string>
@@ -131,4 +131,8 @@
     <string name="Members">" Members"</string>
     <string name="error_file_too_large">File is either too large or invalid</string>
     <string name="leave_group_prompt">Sure you want to leave group? all messages received from this group will be lost.</string>
+    <string name="busy">busy</string>
+    <string name="country">Your country</string>
+    <string name="no_name">No name</string>
+    <string name="verification_token_message">"Hello the following number is your verification token: "</string>
 </resources>
