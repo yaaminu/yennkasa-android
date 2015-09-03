@@ -107,11 +107,10 @@ public class FileUtils {
 
     public static void save(File fileToSave, InputStream in) throws IOException {
         if (fileToSave.exists()) {
-            if (!fileToSave.delete())
-                throw new IOException("destination file could not be written to");
+            throw new IOException("destination file already exists to");
         }
         byte[] buffer = new byte[1024];
-        final File temp = new File(Config.getTempDir(), System.currentTimeMillis() + ".tmp");
+        final File temp = new File(Config.getTempDir(), fileToSave.getName() + ".tmp");
         BufferedOutputStream bOut = new BufferedOutputStream(new FileOutputStream(temp));
         BufferedInputStream bIn = new BufferedInputStream(in);
         int read;
