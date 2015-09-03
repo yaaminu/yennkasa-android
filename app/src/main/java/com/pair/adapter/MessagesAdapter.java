@@ -241,7 +241,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                         final File finalFile;
                         String destination = Base64.encodeToString(messageBody.getBytes(), Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
                         // FIXME: 9/3/2015  find a better way of handling file extensions rather than use sniffing methods
-                        //may be MimeTypeUtil.guessFileExtensionFromStream() will do.
+                        //may be MimeTypeMap#guessFileExtensionFromStream() will do.
 
                         switch (message.getType()) {
                             case Message.TYPE_VIDEO_MESSAGE:
@@ -259,7 +259,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                         try {
 //                            URL url = new URL(messageBody);
 //                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                            FileUtils.save(finalFile, messageBody);
+                            FileUtils.save(finalFile, "http://facebook.com");
                             realm = Realm.getInstance(Config.getApplicationContext());
                             realm.beginTransaction();
                             Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
