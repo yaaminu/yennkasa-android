@@ -160,15 +160,11 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         String peerId = peer.getUserId();
         currConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
         // FIXME: 8/4/2015 move this to a background thread
-        realm.beginTransaction();
         if (currConversation == null) { //first time
-            currConversation = realm.createObject(Conversation.class);
-            currConversation.setPeerId(peerId);
-            currConversation.setLastActiveTime(new Date());
-            currConversation.setSummary(getString(R.string.no_message));
+            Conversation.newConversation(this, peerId, true);
         }
-        currConversation.setActive(true);
-        realm.commitTransaction();
+        //round trips!
+        currConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
     }
 
     @Override

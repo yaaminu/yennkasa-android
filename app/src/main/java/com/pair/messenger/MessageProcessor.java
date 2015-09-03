@@ -42,23 +42,32 @@ public class MessageProcessor extends IntentService {
             peerId = message.getFrom();
         }
         Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
-        //ensure the conversation and session is set up before persisting the message
-        realm.beginTransaction();
-        if (conversation == null) { //create a new one
-            conversation = realm.createObject(Conversation.class);
-            conversation.setActive(false);
-            conversation.setPeerId(peerId);
-        }
-        Conversation.newSession(realm, conversation);
 
-        //force the new message to be newer than the session start up time
+        //WATCH OUT! don't touch this block except you are careful!
+        //////////////////////////////////////////////////////////////////////////////////////////
+        //ensure the conversation and session is set up
+        // before persisting the message
+        if (conversation == null) { //create a new one
+            Conversation.newConversation(this, peerId);
+            //round trips
+            conversation = realm.where(Conversation.class)
+                    .equalTo(Conversation.FIELD_PEER_ID,
+                            peerId).findFirst();
+            realm.beginTransaction();
+        } else {
+            realm.beginTransaction();
+            Conversation.newSession(realm, conversation);
+        }
+        ///////////////////////////////////////////////////////////////////////////////////////////
+
+        //force the new message to be newer than the session start up time by adding one to it
         message.setDateComposed(new Date(System.currentTimeMillis() + 1));
         conversation.setLastActiveTime(new Date());//now
         conversation.setLastMessage(realm.copyToRealm(message));
         conversation.setSummary(message.getMessageBody());
         realm.commitTransaction();
         // TODO: 6/14/2015 send a socket/gcm broadcast to server to notify sender of message state.
-        Message copied = new Message(message);
+        Message copied = Message.copy(message);
         realm.close();
         NotificationManager.INSTANCE.onNewMessage(this, copied);
     }

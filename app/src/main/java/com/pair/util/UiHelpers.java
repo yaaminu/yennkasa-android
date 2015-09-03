@@ -157,9 +157,13 @@ public class UiHelpers {
 
     public static void pickRecipient(Context context) {
         Bundle args = new Bundle();
-        args.putString(MainActivity.ARG_TITLE, context.getString(R.string.title_pick_recipient));
+        pickRecipient(context, args);
+    }
+
+    public static void pickRecipient(Context context, Bundle bundle) {
+        bundle.putString(MainActivity.ARG_TITLE, context.getString(R.string.title_pick_recipient));
         final Intent intent = new Intent(context, UsersActivity.class);
-        intent.putExtras(args);
+        intent.putExtras(bundle);
         context.startActivity(intent);
     }
 

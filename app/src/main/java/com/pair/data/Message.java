@@ -58,6 +58,7 @@ public class Message extends RealmObject {
     public Message() {
     } //required no-arg c'tor;
 
+    @Deprecated
     public Message(Message message) {
         this.from = message.getFrom();
         this.to = message.getTo();
@@ -124,11 +125,17 @@ public class Message extends RealmObject {
         this.state = state;
     }
 
+    private final static Object idLock = new Object();
+
     public static String generateIdPossiblyUnique() {
+
         Application appContext = Config.getApplication();
         Realm realm = Realm.getInstance(appContext);
         long count = realm.where(Message.class).count() + 1;
-        String id = count + "@" + UserManager.getInstance().getCurrentUser().getUserId() + "@" + System.nanoTime();
+        String id;
+        synchronized (idLock) {
+            id = count + "@" + UserManager.getInstance().getCurrentUser().getUserId() + "@" + System.nanoTime();
+        }
         Log.i(TAG, "generated message id: " + id);
         realm.close();
         return id;

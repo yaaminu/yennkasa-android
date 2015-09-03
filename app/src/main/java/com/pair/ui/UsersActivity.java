@@ -1,10 +1,13 @@
 package com.pair.ui;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,12 +19,17 @@ import android.widget.Filterable;
 import android.widget.TextView;
 
 import com.pair.adapter.UsersAdapter;
+import com.pair.data.Conversation;
+import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
+import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
+
+import java.util.Date;
 
 import io.realm.Realm;
 import io.realm.RealmList;
@@ -30,25 +38,26 @@ import io.realm.RealmResults;
 public class UsersActivity extends ActionBarActivity implements ItemsSelector.OnFragmentInteractionListener {
 
     public static final String EXTRA_GROUP_ID = "GROUPiD";
-    private Toolbar toolBar;
+    public static final String SEND = "send";
+    public static final String ACTION = "action";
     private ToolbarManager toolbarManager;
     private UsersAdapter usersAdapter;
-    private Realm realm;
     private BaseAdapter membersAdapter;
     private String groupId;
-    private String title;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_users);
         //noinspection ConstantConditions
-        toolBar = (Toolbar) findViewById(R.id.main_toolbar);
+        Toolbar toolBar = (Toolbar) findViewById(R.id.main_toolbar);
         toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        realm = User.Realm(this);
+        Realm realm = User.Realm(this);
         Bundle bundle = getIntent().getExtras();
+
+        //where do we go?
         groupId = getIntent().getStringExtra(EXTRA_GROUP_ID);
         if (groupId == null) {
             RealmResults<User> results = realm.where(User.class)
@@ -66,7 +75,7 @@ public class UsersActivity extends ActionBarActivity implements ItemsSelector.On
                 finish();
                 return;
             } else {
-                title = group.getName() + "-" + getString(R.string.Members);
+                String title = group.getName() + "-" + getString(R.string.Members);
                 bundle.putString(MainActivity.ARG_TITLE, title);
                 membersAdapter = new MembersAdapter(this, realm, group.getMembers());
             }
@@ -153,7 +162,66 @@ public class UsersActivity extends ActionBarActivity implements ItemsSelector.On
         if (UserManager.getInstance().isCurrentUser(user.getUserId())) {
             UiHelpers.gotoProfileActivity(this, user.getUserId());
         } else {
-            UiHelpers.enterChatRoom(this, user.getUserId());
+            Intent mission = getIntent();
+            String action = mission.getStringExtra(ACTION);
+            if (action != null && action.equals(SEND)) {
+                String messageToBeSent = mission.getStringExtra(Intent.EXTRA_TEXT);
+                if (TextUtils.isEmpty(messageToBeSent)) {
+                    UiHelpers.enterChatRoom(this, user.getUserId());
+                } else {
+                    createMessageAndEnterChatRoom(messageToBeSent, user.getUserId());
+                }
+            } else {
+                UiHelpers.enterChatRoom(this, user.getUserId());
+            }
+        }
+    }
+
+    private void createMessageAndEnterChatRoom(String messageToBeSent, String to) {
+        new CreateMessageTask().execute(messageToBeSent, to);
+    }
+
+    private class CreateMessageTask extends AsyncTask<String, Void, String> {
+        DialogFragment dialogFragment;
+
+        @Override
+        protected void onPreExecute() {
+            dialogFragment = UiHelpers.newProgressDialog();
+            dialogFragment.show(getSupportFragmentManager(), null);
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            String messageBody = params[0], to = params[1];
+            Realm realm = Message.REALM(UsersActivity.this);
+            Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, to).findFirst();
+            if (conversation == null) {
+                Conversation.newConversation(UsersActivity.this, to);
+            }
+            //round trips!
+            conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, to).findFirst();
+
+            realm.beginTransaction();
+            Message message = realm.createObject(Message.class);
+            message.setTo(to);
+            message.setType(Message.TYPE_TEXT_MESSAGE);
+            message.setId(Message.generateIdPossiblyUnique());
+            message.setMessageBody(messageBody);
+            message.setState(Message.STATE_PENDING);
+            message.setFrom(UserManager.getMainUserId());
+            message.setDateComposed(new Date(System.currentTimeMillis() + 1));
+            conversation.setLastMessage(message);
+            conversation.setActive(true);
+            conversation.setSummary(getString(R.string.you) + ": " + messageBody);
+            realm.commitTransaction();
+            realm.close();
+            return to;
+        }
+
+        @Override
+        protected void onPostExecute(String to) {
+            dialogFragment.dismiss();
+            UiHelpers.enterChatRoom(UsersActivity.this, to);
         }
     }
 

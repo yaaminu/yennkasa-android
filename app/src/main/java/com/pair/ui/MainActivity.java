@@ -41,33 +41,33 @@ public class MainActivity extends PairAppBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ParseAnalytics.trackAppOpenedInBackground(getIntent());
-        //user cannot get pass this if there is no gcm support as he will be presented a blocking dialog that cannot be dismissed
-        if (UserManager.getInstance().isUserVerified()) {
-            setContentView(R.layout.activity_main);
-            //noinspection ConstantConditions
-            pager = ((ViewPager) findViewById(R.id.vp_pager));
-            TabPageIndicator tabStrip = ((TabPageIndicator) findViewById(R.id.pts_title_strip));
-            try {
-                ((LinearLayout) tabStrip.getChildAt(0)).setGravity(Gravity.CENTER_HORIZONTAL);
-            } catch (Exception ignored) { //this could raise an exception
-                Log.e(TAG, ignored.getMessage());
+        final Intent intent = getIntent();
+        ParseAnalytics.trackAppOpenedInBackground(intent);
+        if (notIsMainIntent()) {
+            if (UserManager.getInstance().isUserVerified()) {
+                setupViews();
+                Bundle bundle = intent.getExtras();
+                bundle.putString(UsersActivity.ACTION, UsersActivity.SEND);
+                UiHelpers.pickRecipient(this, bundle);
+            } else {
+                UiHelpers.showErrorDialog(this, "please login/sign up first");
+                gotoSetUpActivity();
             }
-            Toolbar toolBar = (Toolbar) findViewById(R.id.main_toolbar);
-            toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
-            pager.setAdapter(new MyFragmentStatePagerAdapter(getSupportFragmentManager()));
-            snackBar = ((SnackBar) findViewById(R.id.notification_bar));
-            tabStrip.setViewPager(pager);
-            final int default_fragment = getIntent().getIntExtra(DEFAULT_FRAGMENT, -1);
+        } else if (UserManager.getInstance().isUserVerified()) {
+            //noinspection ConstantConditions
+            setupViews();
+            final int default_fragment = intent.getIntExtra(DEFAULT_FRAGMENT, -1);
             if (default_fragment > -1) {
                 savedPosition = default_fragment > pager.getAdapter().getCount() - 1 ? 0 : default_fragment;
-            } else {
+            }
+            if (savedPosition == MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT) {
                 Realm realm = Conversation.Realm(this);
                 if (realm.where(Conversation.class).count() < 1) {
                     savedPosition = MyFragmentStatePagerAdapter.POSITION_CONTACTS_FRAGMENT;
                 }
                 realm.close();
             }
+            UiHelpers.showErrorDialog(this, Config.deviceArc());
         } else {
             gotoSetUpActivity();
         }
@@ -75,8 +75,28 @@ public class MainActivity extends PairAppBaseActivity {
             cleanedMessages = true;
             RealmUtils.runRealmOperation(this);
         }
-        UiHelpers.showErrorDialog(this, Config.deviceArc());
 
+    }
+
+    private void setupViews() {
+        setContentView(R.layout.activity_main);
+        pager = ((ViewPager) findViewById(R.id.vp_pager));
+        TabPageIndicator tabStrip = ((TabPageIndicator) findViewById(R.id.pts_title_strip));
+        try {
+            ((LinearLayout) tabStrip.getChildAt(0)).setGravity(Gravity.CENTER_HORIZONTAL);
+        } catch (Exception ignored) { //this could raise an exception
+            Log.e(TAG, ignored.getMessage());
+        }
+        Toolbar toolBar = (Toolbar) findViewById(R.id.main_toolbar);
+        toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
+        pager.setAdapter(new MyFragmentStatePagerAdapter(getSupportFragmentManager()));
+        snackBar = ((SnackBar) findViewById(R.id.notification_bar));
+        tabStrip.setViewPager(pager);
+    }
+
+    private boolean notIsMainIntent() {
+        String action = getIntent().getAction();
+        return action != null && !action.equals(Intent.ACTION_MAIN);
     }
 
     @Override

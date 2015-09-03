@@ -4,6 +4,7 @@ import android.content.Context;
 import android.text.format.DateUtils;
 
 import com.pair.Config;
+import com.pair.pairapp.R;
 
 import java.util.Date;
 
@@ -11,6 +12,7 @@ import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.RealmClass;
+import io.realm.exceptions.RealmException;
 
 import static com.pair.data.Message.TYPE_DATE_MESSAGE;
 
@@ -96,6 +98,26 @@ public class Conversation extends RealmObject {
         }
     }
 
+    public static void newConversation(Context context, String peerId) {
+        newConversation(context, peerId, false);
+    }
+
+    public static void newConversation(Context context, String peerId, boolean active) {
+        Realm realm = Conversation.Realm(context);
+        try {
+            realm.beginTransaction();
+            Conversation newConversation = realm.createObject(Conversation.class);
+            newConversation.setActive(active);
+            newConversation.setPeerId(peerId);
+            newConversation.setLastActiveTime(new Date());
+            newConversation.setSummary(context.getString(R.string.no_message));
+            newSession(realm, newConversation);
+            realm.commitTransaction();
+        } catch (RealmException primaryKeyViolation) {
+            //TODO should we re-throw?
+        }
+        realm.close();
+    }
     public static Realm Realm(Context context) {
         return Realm.getInstance(context);
     }
