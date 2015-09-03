@@ -7,7 +7,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.pair.data.Message;
-import com.pair.net.Dispatcher;
 import com.pair.parse_client.PARSE_CONSTANTS;
 
 import java.util.List;

@@ -1,4 +1,6 @@
-package com.pair.net;
+package com.pair.messenger;
+
+import com.pair.net.FileApi;
 
 import java.io.Closeable;
 import java.util.Collection;
@@ -6,7 +8,7 @@ import java.util.Collection;
 /**
  * @author by Null-Pointer on 5/26/2015.
  */
-public interface Dispatcher<T> extends Closeable {
+interface Dispatcher<T> extends Closeable {
     void dispatch(T t);
 
     void dispatch(Collection<T> t);

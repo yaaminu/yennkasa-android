@@ -8,7 +8,6 @@ import com.pair.data.ContactsManager;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.data.UserManager;
-import com.pair.net.Dispatcher;
 import com.pair.net.FileApi;
 import com.pair.parse_client.ParseClient;
 import com.pair.util.ConnectionUtils;

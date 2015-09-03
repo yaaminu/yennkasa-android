@@ -13,7 +13,6 @@ import android.util.Log;
 import com.pair.Config;
 import com.pair.data.Message;
 import com.pair.data.UserManager;
-import com.pair.net.Dispatcher;
 import com.pair.pairapp.BuildConfig;
 import com.pair.util.L;
 import com.parse.ParseAnalytics;

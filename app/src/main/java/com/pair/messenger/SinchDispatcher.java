@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import com.pair.Config;
 import com.pair.adapter.MessageJsonAdapter;
 import com.pair.data.Message;
-import com.pair.net.Dispatcher;
 import com.pair.util.L;
 import com.pair.util.ThreadUtils;
 import com.sinch.android.rtc.ErrorType;

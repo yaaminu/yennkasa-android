@@ -10,7 +10,6 @@ import com.pair.Config;
 import com.pair.adapter.BaseJsonAdapter;
 import com.pair.data.Message;
 import com.pair.data.User;
-import com.pair.net.Dispatcher;
 import com.pair.net.FileApi;
 import com.pair.net.HttpResponse;
 import com.pair.net.MessageApi;
