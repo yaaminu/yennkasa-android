@@ -102,7 +102,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         realm.close();
         synchronized (monitors) {
             for (DispatcherMonitor monitor : monitors) {
-                monitor.onSendFailed(reason, message.getId());
+                monitor.onDispatchFailed(reason, message.getId());
             }
         }
     }
@@ -121,7 +121,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         }
         synchronized (monitors) {
             for (DispatcherMonitor monitor : monitors) {
-                monitor.onSendSucceeded(messageId);
+                monitor.onDispatchSucceed(messageId);
             }
         }
     }

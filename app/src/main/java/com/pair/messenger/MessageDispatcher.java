@@ -309,7 +309,7 @@ class MessageDispatcher implements Dispatcher<Message> {
         synchronized (dispatcherMonitorLock) {
             for (DispatcherMonitor dispatcherMonitor : monitors) {
                 if (dispatcherMonitor != null) {
-                    dispatcherMonitor.onSendSucceeded(job.id);
+                    dispatcherMonitor.onDispatchSucceed(job.id);
                 } else {
                     warnAndThrowIfInDevelopment();
                 }
@@ -322,7 +322,7 @@ class MessageDispatcher implements Dispatcher<Message> {
         synchronized (dispatcherMonitorLock) {
             for (DispatcherMonitor monitor : monitors) {
                 if (monitor != null) {
-                    monitor.onSendFailed(reason, jobId);
+                    monitor.onDispatchFailed(reason, jobId);
                 } else {
                     warnAndThrowIfInDevelopment();
                 }
