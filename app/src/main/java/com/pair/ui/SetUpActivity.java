@@ -116,7 +116,7 @@ public class SetUpActivity extends ActionBarActivity {
         protected void onPostExecute(Void aVoid) {
             pDialog.dismiss();
             addFragment();
-            UiHelpers.showErrorDialog(SetUpActivity.this, Config.deviceArc() + Config.supportsCalling());
+            UiHelpers.showToast(Config.deviceArc() + "  " + Config.supportsCalling());
 
         }
 

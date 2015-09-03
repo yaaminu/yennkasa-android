@@ -157,7 +157,7 @@ public class ContactsAdapter extends BaseAdapter {
     }
 
     private void invite(Context context) {
-        String message = "Try out PAIRAPP messenger for android . Its free and fast!\\n download here: http://pairapp.com/download";
+        String message = "Try out PAIRAPP messenger for android. It\'s free and fast! \ndownload here: http://pairapp.com/download";
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
         intent.putExtra(Intent.EXTRA_TEXT, message);

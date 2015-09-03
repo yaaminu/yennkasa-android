@@ -8,6 +8,7 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -18,6 +19,7 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
 
+import com.pair.Exceptions.PairappException;
 import com.pair.adapter.UsersAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
@@ -183,6 +185,7 @@ public class UsersActivity extends ActionBarActivity implements ItemsSelector.On
 
     private class CreateMessageTask extends AsyncTask<String, Void, String> {
         DialogFragment dialogFragment;
+        final String TAG = CreateMessageTask.class.getSimpleName();
 
         @Override
         protected void onPreExecute() {
@@ -200,28 +203,33 @@ public class UsersActivity extends ActionBarActivity implements ItemsSelector.On
             }
             //round trips!
             conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, to).findFirst();
-
             realm.beginTransaction();
-            Message message = realm.createObject(Message.class);
-            message.setTo(to);
-            message.setType(Message.TYPE_TEXT_MESSAGE);
-            message.setId(Message.generateIdPossiblyUnique());
-            message.setMessageBody(messageBody);
-            message.setState(Message.STATE_PENDING);
-            message.setFrom(UserManager.getMainUserId());
-            message.setDateComposed(new Date(System.currentTimeMillis() + 1));
-            conversation.setLastMessage(message);
-            conversation.setActive(true);
-            conversation.setSummary(getString(R.string.you) + ": " + messageBody);
-            realm.commitTransaction();
-            realm.close();
-            return to;
+            Message message;
+            try {
+                message = Message.makeNew(realm, messageBody, to, Message.TYPE_TEXT_MESSAGE);
+                message.setDateComposed(new Date(System.currentTimeMillis() + 1));
+                conversation.setLastMessage(message);
+                conversation.setActive(true);
+                conversation.setSummary(getString(R.string.you) + ": " + messageBody);
+                realm.commitTransaction();
+                return to;
+            } catch (PairappException e) {
+                Log.e(TAG, "error while creating message", e.getCause());
+                realm.cancelTransaction();
+            } finally {
+                realm.close();
+            }
+            return null;
         }
 
         @Override
         protected void onPostExecute(String to) {
             dialogFragment.dismiss();
-            UiHelpers.enterChatRoom(UsersActivity.this, to);
+            if (to == null) {
+                UiHelpers.showErrorDialog(UsersActivity.this, getString(R.string.invalid_message));
+            } else {
+                UiHelpers.enterChatRoom(UsersActivity.this, to);
+            }
         }
     }
 

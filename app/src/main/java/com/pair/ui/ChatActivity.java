@@ -44,7 +44,6 @@ import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.messenger.MessageProcessor;
-import com.pair.messenger.MessagingUtils;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.FileUtils;
@@ -337,31 +336,23 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         // FIXME: 8/4/2015 run in a background thread
         realm.beginTransaction();
         trySetupNewSession();
-        Message message = realm.createObject(Message.class);
-        message.setMessageBody(messageBody);
-        message.setTo(peer.getUserId());
-        message.setFrom(getCurrentUser().getUserId());
-        message.setDateComposed(new Date());
-        message.setId(Message.generateIdPossiblyUnique());
-        message.setState(Message.STATE_PENDING);
-        message.setType(type);
-        currConversation.setLastMessage(message);
-        currConversation.setLastActiveTime(message.getDateComposed());
-        String summary;
-        if (type == Message.TYPE_TEXT_MESSAGE) {
-            summary = Message.state(this, message.getState()) + "      " + message.getMessageBody();
-        } else {
-            summary = Message.state(this, message.getState()) + "  " + getDescription(type);
-        }
-        currConversation.setSummary(summary);
         try {
-            MessagingUtils.validate(message);
+            Message message = Message.makeNew(realm, messageBody, peer.getUserId(), type);
+            currConversation.setLastMessage(message);
+            currConversation.setLastActiveTime(message.getDateComposed());
+            String summary;
+            if (type == Message.TYPE_TEXT_MESSAGE) {
+                summary = Message.state(this, message.getState()) + "      " + message.getMessageBody();
+            } else {
+                summary = Message.state(this, message.getState()) + "  " + getDescription(type);
+            }
+            currConversation.setSummary(summary);
+            realm.commitTransaction();
+            return message;
         } catch (PairappException e) { //caught for the for the purpose of cleanup
             realm.cancelTransaction();
             throw new PairappException(e.getMessage(), "");
         }
-        realm.commitTransaction();
-        return message;
     }
 
     private User getCurrentUser() {
@@ -523,9 +514,9 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         List<Message> tobeSent = new ArrayList<>(recipients.size());
         Realm realm = Realm.getInstance(this);
         try {
-            realm.beginTransaction();
             for (String recipient : recipients) {
                 Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, recipient).findFirst();
+                realm.beginTransaction();
                 if (conversation == null) {
                     conversation = realm.createObject(Conversation.class);
                     conversation.setPeerId(recipient);
@@ -533,9 +524,12 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
                 conversation.setActive(false);
                 conversation.setLastActiveTime(new Date());
                 Conversation.newSession(realm, conversation);
+                realm.commitTransaction();
+
+                realm.beginTransaction();
                 backGroundRealmVersion.setFrom(getCurrentUser().getUserId());
                 backGroundRealmVersion.setTo(recipient);
-                backGroundRealmVersion.setDateComposed(new Date());
+                backGroundRealmVersion.setDateComposed(new Date(System.currentTimeMillis() + 1));
                 backGroundRealmVersion.setState(Message.STATE_PENDING);
                 backGroundRealmVersion.setId(Message.generateIdPossiblyUnique());
                 Message message = realm.copyToRealm(backGroundRealmVersion);
@@ -546,8 +540,8 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
                 } else {
                     conversation.setSummary(getDescription(message.getType()));
                 }
+                realm.commitTransaction();
             }
-            realm.commitTransaction();
             if (bound) {
                 pairAppClientInterface.sendMessages(tobeSent);
             }

@@ -135,4 +135,5 @@
     <string name="country">Your country</string>
     <string name="no_name">No name</string>
     <string name="verification_token_message">"Hello the following number is your verification token: "</string>
+    <string name="invalid_message">Message Invalid, Ensure the message does not exceed the size limit</string>
 </resources>

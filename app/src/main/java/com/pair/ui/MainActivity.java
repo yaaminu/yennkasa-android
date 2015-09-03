@@ -34,7 +34,7 @@ public class MainActivity extends PairAppBaseActivity {
     private static boolean cleanedMessages = false;
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final String ARG_TITLE = "title";
-    private static int savedPosition = -1;
+    private static int savedPosition = MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT;
     private ViewPager pager;
     private ToolbarManager toolbarManager;
 
@@ -56,18 +56,21 @@ public class MainActivity extends PairAppBaseActivity {
         } else if (UserManager.getInstance().isUserVerified()) {
             //noinspection ConstantConditions
             setupViews();
-            final int default_fragment = intent.getIntExtra(DEFAULT_FRAGMENT, -1);
-            if (default_fragment > -1) {
-                savedPosition = default_fragment > pager.getAdapter().getCount() - 1 ? 0 : default_fragment;
+            final int default_fragment = intent.getIntExtra(DEFAULT_FRAGMENT, MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT);
+            if (default_fragment != MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT) {
+                savedPosition = Math.abs(savedPosition);
+                savedPosition = default_fragment > pager.getAdapter().getCount() - 1
+                        ? MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT
+                        : default_fragment;
             }
-            if (savedPosition == MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT) {
+            if (default_fragment == MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT) {
                 Realm realm = Conversation.Realm(this);
                 if (realm.where(Conversation.class).count() < 1) {
                     savedPosition = MyFragmentStatePagerAdapter.POSITION_CONTACTS_FRAGMENT;
                 }
                 realm.close();
             }
-            UiHelpers.showErrorDialog(this, Config.deviceArc());
+            UiHelpers.showToast(Config.deviceArc());
         } else {
             gotoSetUpActivity();
         }

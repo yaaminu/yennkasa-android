@@ -5,7 +5,11 @@ import android.content.Context;
 import android.util.Log;
 
 import com.pair.Config;
+import com.pair.Exceptions.PairappException;
+import com.pair.messenger.MessagingUtils;
+import com.pair.util.FileUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,6 +22,13 @@ import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.RealmClass;
 
 /**
+ * this class represents a particular message sent by a given {@link User}.
+ * it is normally used in conjunction with {@link Conversation}
+ * the message may be attached to {@link Realm} or not.
+ * <p/>
+ * one can detach the message from realm by using its {@link #copy} method
+ * and using the returned message.
+ *
  * @author Null-Pointer on 5/26/2015.
  */
 @SuppressWarnings("unused")
@@ -55,9 +66,18 @@ public class Message extends RealmObject {
     private int state;
     private int type;
 
+    /**
+     * you are strongly advised to use the factory {@link Message#makeNew}
+     * and its siblings instead
+     */
     public Message() {
     } //required no-arg c'tor;
 
+    /**
+     * @param message the message to be used as the basis of the new clone
+     * @see {@link #copy}
+     * @deprecated use {@link #copy}instead
+     */
     @Deprecated
     public Message(Message message) {
         this.from = message.getFrom();
@@ -127,8 +147,10 @@ public class Message extends RealmObject {
 
     private final static Object idLock = new Object();
 
+    /**
+     * @return a new id that is likely unique.there is no guarantee that this will be unique
+     */
     public static String generateIdPossiblyUnique() {
-
         Application appContext = Config.getApplication();
         Realm realm = Realm.getInstance(appContext);
         long count = realm.where(Message.class).count() + 1;
@@ -141,6 +163,12 @@ public class Message extends RealmObject {
         return id;
     }
 
+    /**
+     * this is the best way of acquiring a realm for working with a {@link Message}
+     *
+     * @param context the current context
+     * @return a {@link Realm that is guaranteed to work with messages all the time}
+     */
     public static Realm REALM(Context context) {
         return Realm.getInstance(context);
     }
@@ -177,6 +205,62 @@ public class Message extends RealmObject {
         return UserManager.getInstance().isCurrentUser(message.getFrom());
     }
 
+    /**
+     * creates a new message. callers must ensure they are in
+     * realm transaction.
+     *
+     * @param theRealm the realm to use in creating the message
+     * @param body     the body of the message. the message type will be set
+     *                 automatically to {@link #TYPE_TEXT_MESSAGE}
+     * @param to       the recipient of the {@link Message}
+     * @return the newly createdMessage
+     * @throws com.pair.Exceptions.PairappException if the message is invalid. this could be because
+     *                                              a binary message is too huge, etc
+     * @throws io.realm.exceptions.RealmException   if you are not in a transaction
+     * @see {@link Message#makeNew(Realm, String, String, int)}
+     */
+    public static Message makeNew(Realm theRealm, String body, String to) throws PairappException {
+        return makeNew(theRealm, body, to, TYPE_TEXT_MESSAGE);
+    }
+
+    /**
+     * creates a new {@link Message}. callers must ensure they are in
+     * {@link Realm} transaction. by calling {@link Realm#beginTransaction()}
+     *
+     * @param theRealm the realm to use in creating the message
+     * @param body     the body of the message. the message body
+     *                 be a path to a file if the message is a
+     *                 binary message
+     * @param to       the recipient of the {@code message}
+     * @param type     the type of the message
+     * @return the newly createdMessage
+     * @throws com.pair.Exceptions.PairappException if the message is invalid. this could be because
+     *                                              a binary message is too huge, etc
+     * @throws io.realm.exceptions.RealmException   if you are not in a transaction
+     * @see {@link Message#makeNew(Realm, String, String)}
+     * @see {@link MessagingUtils#validate(Message)}
+     */
+    public static Message makeNew(Realm theRealm, String body, String to, int type) throws PairappException {
+        if (type == TYPE_BIN_MESSAGE || type == TYPE_PICTURE_MESSAGE || type == TYPE_VIDEO_MESSAGE) {
+            File file = new File(body);
+            if (!file.exists()) {
+                throw new PairappException("file does not exists", MessagingUtils.ERROR_FILE_DOES_NOT_EXIST);
+            }
+            if (file.length() > FileUtils.ONE_MB * 8) {
+                throw new PairappException("file is too large", MessagingUtils.ERROR_ATTACHMENT_TOO_LARGE);
+            }
+        }
+        Message message = theRealm.createObject(Message.class);
+        message.setDateComposed(new Date());
+        message.setMessageBody(body);
+        message.setId(generateIdPossiblyUnique());
+        message.setFrom(UserManager.getMainUserId());
+        message.setState(Message.STATE_PENDING);
+        message.setType(type);
+        message.setTo(to);
+        return message;
+    }
+
     public static String state(Context context, int status) {
         switch (status) {
             case Message.STATE_PENDING:
@@ -194,6 +278,15 @@ public class Message extends RealmObject {
         }
     }
 
+    /**
+     * copies the message. This effectively detaches the message from {@link Realm} so
+     * that you can pass it around even between threads with no problem
+     *
+     * @param message the message to be copied
+     * @return a clone of the message passed
+     * @throws IllegalArgumentException if the message is null
+     * @see {@link #Message#copy(Collection) }
+     */
     public static Message copy(Message message) {
         if (message == null) {
             throw new IllegalArgumentException("message is null");
@@ -211,6 +304,16 @@ public class Message extends RealmObject {
         return clone;
     }
 
+
+    /**
+     * copies the message. This effectively detaches the message from {@link Realm} so
+     * that you can pass it around even between threads with no problem
+     *
+     * @param messages the message to be copied
+     * @return a clone of the collection passed as list. if the messages passed is null
+     * or empty an empty collection is returned
+     * @see {@link #copy}
+     */
     public static List<Message> copy(Collection<Message> messages) {
         if (messages == null || messages.isEmpty()) {
             return Collections.emptyList();

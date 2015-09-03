@@ -72,6 +72,7 @@ public class MessageProcessor extends IntentService {
         NotificationManager.INSTANCE.onNewMessage(this, copied);
     }
 
+    // TODO: 9/3/2015 this is not safe!
     private boolean isGroupMessage(Message message) {
         return message.getTo().contains("@");
     }

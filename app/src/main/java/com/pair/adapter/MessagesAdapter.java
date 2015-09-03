@@ -259,7 +259,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                         try {
 //                            URL url = new URL(messageBody);
 //                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                            FileUtils.save(finalFile, "http://facebook.com");
+                            FileUtils.save(finalFile, messageBody);
                             realm = Realm.getInstance(Config.getApplicationContext());
                             realm.beginTransaction();
                             Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
