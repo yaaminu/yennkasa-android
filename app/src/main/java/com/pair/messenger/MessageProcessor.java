@@ -4,6 +4,7 @@ package com.pair.messenger;
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.PowerManager;
 import android.util.Log;
 
 import com.pair.adapter.MessageJsonAdapter;
@@ -14,9 +15,8 @@ import java.util.Date;
 
 import io.realm.Realm;
 
-
 public class MessageProcessor extends IntentService {
-    public static final String TAG = MessageProcessor.class.getSimpleName();
+    private static final String TAG = MessageProcessor.class.getSimpleName();
 
     public MessageProcessor() {
         super(TAG);
@@ -26,16 +26,22 @@ public class MessageProcessor extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
 
+        PowerManager manager = ((PowerManager) getSystemService(POWER_SERVICE));
+
+        PowerManager.WakeLock wakeLock = manager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
+        wakeLock.acquire();
+
         Bundle bundle = intent.getExtras();
-        String messageJson = bundle.getString("message");
+        String messageJson = bundle.getString(MessageCenter.KEY_MESSAGE);
         Log.i(TAG, messageJson);
         Realm realm = Realm.getInstance(this);
 
+        //all other operations are deferred till we set up the conversation
         Message message = MessageJsonAdapter.INSTANCE.fromJson(messageJson);
-        //noinspection ConstantConditions
-        message.setState(Message.STATE_RECEIVED);
 
         String peerId;
+        //for messages sent to groups, the group is always the recipient
+        //and the members the senders
         if (isGroupMessage(message)) {
             peerId = message.getTo();
         } else {
@@ -62,6 +68,7 @@ public class MessageProcessor extends IntentService {
 
         //force the new message to be newer than the session start up time by adding one to it
         message.setDateComposed(new Date(System.currentTimeMillis() + 1));
+        message.setState(Message.STATE_RECEIVED);
         conversation.setLastActiveTime(new Date());//now
         conversation.setLastMessage(realm.copyToRealm(message));
         conversation.setSummary(message.getMessageBody());
@@ -70,9 +77,11 @@ public class MessageProcessor extends IntentService {
         Message copied = Message.copy(message);
         realm.close();
         NotificationManager.INSTANCE.onNewMessage(this, copied);
+        wakeLock.release();
     }
 
     // TODO: 9/3/2015 this is not safe!
+    //we want to avoid round a trip to the database
     private boolean isGroupMessage(Message message) {
         return message.getTo().contains("@");
     }

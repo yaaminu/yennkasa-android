@@ -15,11 +15,17 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
     private static final String EXTRA_MESSAGE = "message";
     private static final String EXTRA_NEW_USER = "user";
     private static final String EXTRA_TYPE = Message.FIELD_TYPE;
+    static final String KEY_MESSAGE = "message";
 
     @Override
     public void onReceive(Context context, Intent intent) {
         L.d(TAG, "push recieved");
-        L.d(TAG, intent.getStringExtra(KEY_PUSH_DATA));
-        super.onReceive(context, intent);
+        final String data = intent.getStringExtra(KEY_PUSH_DATA);
+        L.d(TAG, data);
+        // TODO: 9/3/2015 check the purpose of the push
+        intent = new Intent(context, MessageProcessor.class);
+        intent.putExtra(KEY_MESSAGE, data);
+        context.startService(intent);
     }
+
 }
