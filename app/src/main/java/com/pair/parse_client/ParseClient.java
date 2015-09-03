@@ -50,13 +50,11 @@ import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_ADMIN;
 import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_COUNTRY;
 import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_DP;
 import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_DP_FILE;
-import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_GCM_REG_ID;
 import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_HAS_CALL;
 import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_ID;
 import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_LAST_ACTIVITY;
 import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_MEMBERS;
 import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_NAME;
-import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_PASSWORD;
 import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_STATUS;
 import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_TOKEN;
 import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_VERIFIED;
@@ -84,7 +82,13 @@ public class ParseClient implements UserApiV2, FileApi {
         ParseACL.setDefaultACL(defaultAcl, true);
         Parse.setLogLevel(Parse.LOG_LEVEL_VERBOSE);
         Parse.enableLocalDatastore(application);
+
+        /***************************************KEYS***************************************************************************/
+
         Parse.initialize(application, "RcCxnXwO1mpkSNrU9u4zMtxQac4uabLNIFa662ZY", "f1ad1Vfjisr7mVBDSeoFO1DobD6OaLkggHvT2Nk4");
+
+        /******************************************************************************************************************/
+
         synchronized (ParseClient.class) {
             initialised = true;
         }
@@ -120,20 +124,33 @@ public class ParseClient implements UserApiV2, FileApi {
                 password = user.getPassword(),
                 gcmRegId = user.getGcmRegId(),
                 country = user.getCountry();
+
+        try {
+            ParseObject existing = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, _id).getFirst();
+            if (existing != null) {
+                existing.put(FIELD_HAS_CALL, Config.supportsCalling());
+                cleanExistingInstallation(_id);
+                existing.put(FIELD_TOKEN, genVerificationToken());
+                existing.save();
+                user = parseObjectToUser(existing);
+                registerForPushes(_id);
+                notifyCallback(callback, null, user);
+                return; //important
+            }
+        } catch (ParseException e) {
+            notifyCallback(callback, prepareErrorReport(e), null);
+            return;
+        }
         try {
             ensureFieldsFilled(_id, name, password, gcmRegId, country);
 
             //should we hash passwords?
             String verificationToken = genVerificationToken();
-            Log.d(TAG, verificationToken);
-
             final ParseObject object = ParseObject.create(USER_CLASS_NAME);
             ParseACL acl = makeReadWriteACL();
             object.setACL(acl);
             object.put(FIELD_ID, _id);
             object.put(FIELD_NAME, "@" + name);
-            object.put(FIELD_PASSWORD, password);
-            object.put(FIELD_GCM_REG_ID, gcmRegId);
             object.put(FIELD_COUNTRY, country);
             object.put(FIELD_ACCOUNT_CREATED, new Date());
             object.put(FIELD_STATUS, "offline");
@@ -143,7 +160,7 @@ public class ParseClient implements UserApiV2, FileApi {
             object.put(FIELD_DP, "avatar_empty");
             object.put(PARSE_CONSTANTS.FIELD_HAS_CALL, Config.supportsCalling());
             object.save();
-            registerForPushes(user);
+            registerForPushes(user.getUserId());
             user = parseObjectToUser(object);
             //register user for pushes
             SmsManager.getDefault().
@@ -158,6 +175,11 @@ public class ParseClient implements UserApiV2, FileApi {
         } catch (ParseException e) {
             notifyCallback(callback, prepareErrorReport(e), null);
         }
+    }
+
+    private void cleanExistingInstallation(String _id) throws ParseException {
+        ParseInstallation installation = ParseInstallation.getQuery().whereEqualTo(FIELD_ID, _id).getFirst();
+        installation.delete();
     }
 
     @NonNull
@@ -182,13 +204,12 @@ public class ParseClient implements UserApiV2, FileApi {
     private void doLogIn(User user, Callback<User> callback) {
         ParseQuery<ParseObject> query = makeParseQuery();
         try {
-            ParseObject object = query.whereEqualTo(FIELD_ID, user.getUserId())
-                    .whereEqualTo(FIELD_PASSWORD, user.getPassword()).getFirst();
-
+            ParseObject object = query.whereEqualTo(FIELD_ID, user.getUserId()).getFirst();
             object.put(PARSE_CONSTANTS.FIELD_HAS_CALL, Config.supportsCalling());
+            cleanExistingInstallation(user.getUserId());
             object.save();
             //push
-            registerForPushes(user);
+            registerForPushes(user.getUserId());
             user = parseObjectToUser(object);
             notifyCallback(callback, null, user);
         } catch (ParseException e) {
@@ -196,9 +217,9 @@ public class ParseClient implements UserApiV2, FileApi {
         }
     }
 
-    private void registerForPushes(User user) throws ParseException {
+    private void registerForPushes(String userId) throws ParseException {
         ParseInstallation installation = ParseInstallation.getCurrentInstallation();
-        installation.put(FIELD_ID, user.getUserId());
+        installation.put(FIELD_ID, userId);
         installation.save();
     }
 
@@ -468,7 +489,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     private void doVerifyUser(@Path("id") String userId, @Field("token") String token, Callback<HttpResponse> callback) {
         try {
-            ParseObject object = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, userId).whereEqualTo(FIELD_TOKEN, token).whereEqualTo(FIELD_VERIFIED, false).getFirst();
+            ParseObject object = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, userId).whereEqualTo(FIELD_TOKEN, token).getFirst();
             object.put(FIELD_VERIFIED, true);
             object.save();
             notifyCallback(callback, null, new HttpResponse(200, "user verified successfully"));
@@ -490,7 +511,7 @@ public class ParseClient implements UserApiV2, FileApi {
         String newToken = genVerificationToken();
         Log.d(TAG, newToken);
         try {
-            ParseObject object = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, userId).whereEqualTo(FIELD_PASSWORD, password).whereEqualTo(FIELD_VERIFIED, false).getFirst();
+            ParseObject object = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, userId).getFirst();
             object.put(FIELD_TOKEN, newToken);
             object.save();
             notifyCallback(response, null, new HttpResponse(200, "successfully reset token"));
@@ -551,8 +572,9 @@ public class ParseClient implements UserApiV2, FileApi {
         SecureRandom random = new SecureRandom();
         //maximum of 10000 and minimum of 99999
         int num = (int) Math.abs(random.nextDouble() * (99999 - 10000) + 10000);
-        //we need a 5 digit string
+        //we need an unsigned number
         num = Math.abs(num);
+
         String token = String.valueOf(num);
         Log.d(TAG, token);
         return token;
