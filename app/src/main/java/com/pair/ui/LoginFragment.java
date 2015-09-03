@@ -92,12 +92,6 @@ public class LoginFragment extends Fragment {
     }
 
     private void validateAndContinue() {
-//        if(!isLoggingIn) {
-//            phoneNumberEt.setText(("" + System.currentTimeMillis()).substring(0, 10));
-//            passwordEt.setText("1234567");
-//            usernameEt.setText("amean123");
-//        }
-
         phoneNumber = phoneNumberEt.getText().toString().trim();
         userCountry = ((Country) spinner.getSelectedItem()).getIso2letterCode();
         userName = usernameEt.getText().toString().trim();

@@ -9,6 +9,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 
+import com.pair.messenger.MessageCenter;
 import com.pair.messenger.MessageProcessor;
 import com.pair.messenger.PairAppClient;
 import com.pair.workers.BootReceiver;
@@ -149,17 +150,17 @@ public class Config {
         ComponentName receiver = new ComponentName(application, clazz);
 
         PackageManager pm = application.getPackageManager();
-
         pm.setComponentEnabledSetting(receiver,
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                 PackageManager.DONT_KILL_APP);
     }
 
     public static void enableComponents() {
-        // enableComponent(BootReceiver.class);
+        enableComponent(BootReceiver.class);
         enableComponent(ContactSyncService.class);
         enableComponent(PairAppClient.class);
         enableComponent(MessageProcessor.class);
+        enableComponent(MessageCenter.class);
     }
 
     public static void disableComponents() {
@@ -167,6 +168,7 @@ public class Config {
         disableComponent(ContactSyncService.class);
         disableComponent(PairAppClient.class);
         disableComponent(MessageProcessor.class);
+        disableComponent(MessageCenter.class);
     }
 
     public static SharedPreferences getApplicationWidePrefs() {

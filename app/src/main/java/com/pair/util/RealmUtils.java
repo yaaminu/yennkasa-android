@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Base64;
-import android.util.Log;
 
 import com.google.gson.JsonObject;
 import com.pair.Config;
@@ -40,9 +38,6 @@ public class RealmUtils {
             User user = users.get(i);
             if (TextUtils.isEmpty(user.getDP()))
                 user.setDP("avatar_empty");
-        }
-        for (int i = 0; i < 10; i++) {
-            Log.d(TAG, Base64.encodeToString("http://facebook.com/foo/bar/fooo/faa/foo/baflkfa".getBytes(), Base64.URL_SAFE));
         }
         //try {
 //            User user = User.copy(UserManager.getInstance().getCurrentUser());

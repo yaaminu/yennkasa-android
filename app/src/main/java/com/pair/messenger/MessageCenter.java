@@ -17,9 +17,9 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
     private static final String EXTRA_TYPE = Message.FIELD_TYPE;
 
     @Override
-    protected void onPushReceive(Context context, Intent intent) {
+    public void onReceive(Context context, Intent intent) {
         L.d(TAG, "push recieved");
         L.d(TAG, intent.getStringExtra(KEY_PUSH_DATA));
-
+        super.onReceive(context, intent);
     }
 }

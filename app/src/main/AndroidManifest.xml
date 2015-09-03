@@ -23,8 +23,8 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <permission
-        android:protectionLevel="signature"
-        android:name="com.pair.pairapp.permission.C2D_MESSAGE" />
+        android:name="com.pair.pairapp.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
 
     <application
         android:name="com.pair.PairApp"
@@ -70,14 +70,6 @@
             android:enabled="false"
             android:exported="false" />
 
-        <receiver
-            android:name="com.pair.workers.BootReceiver"
-            android:enabled="false"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
 
         <activity
             android:name="com.pair.ui.ProfileActivity"
@@ -119,14 +111,18 @@
 
         <service android:name="com.parse.PushService" />
 
-        <receiver android:name="com.parse.ParseBroadcastReceiver">
+        <receiver
+            android:name="com.pair.workers.BootReceiver"
+            android:enabled="false"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.USER_PRESENT" />
             </intent-filter>
         </receiver>
+
         <receiver
-            android:name="com.parse.ParsePushBroadcastReceiver"
+            android:name="com.pair.messenger.MessageCenter"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.parse.push.intent.RECEIVE" />
@@ -140,7 +136,6 @@
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
                 <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
-
                 <category android:name="com.pair.pairapp" />
             </intent-filter>
         </receiver>
