@@ -1,7 +1,6 @@
 package com.pair.ui;
 
 import android.app.AlertDialog;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -629,7 +628,6 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             getMenuInflater().inflate(R.menu.message_context_menu, menu);
             menu.findItem(R.id.action_copy).setVisible(selectedMessage.getType() == TYPE_TEXT_MESSAGE);
             if (selectedMessage.getType() != TYPE_TEXT_MESSAGE) {
-                menu.findItem(R.id.action_share).setVisible(new File(selectedMessage.getMessageBody()).exists());
                 menu.findItem(R.id.action_forward).setVisible(new File(selectedMessage.getMessageBody()).exists());
             }
         }
@@ -641,21 +639,6 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
         if (itemId == R.id.action_copy) {
             ClipboardManager manager = ((ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE));
             manager.setText(selectedMessage.getMessageBody());
-            return true;
-        } else if (itemId == R.id.action_share) {
-            Intent intent = new Intent(Intent.ACTION_SEND);
-            if (Message.isTextMessage(selectedMessage)) {
-                intent.setType("text/plain");
-                intent.putExtra(Intent.EXTRA_TEXT, selectedMessage.getMessageBody());
-            } else {
-                intent.setType(FileUtils.getMimeType(selectedMessage.getMessageBody()));
-                intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(new File(selectedMessage.getMessageBody())));
-            }
-            try {
-                startActivity(intent);
-            } catch (ActivityNotFoundException e) {
-                UiHelpers.showToast(getString(R.string.no_app_for_content_sharing));
-            }
             return true;
         } else if (itemId == R.id.action_delete) {
             realm.beginTransaction();

@@ -224,11 +224,23 @@ public class UsersActivity extends ActionBarActivity implements ItemsSelector.On
 
         @Override
         protected void onPostExecute(String to) {
-            dialogFragment.dismiss();
+            findViewById(R.id.main_toolbar).post(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                dialogFragment.dismiss();
+                            } catch (Exception ignored) {
+                                //if user has navigated away
+                            }
+                        }
+                    }
+            );
             if (to == null) {
                 UiHelpers.showErrorDialog(UsersActivity.this, getString(R.string.invalid_message));
             } else {
                 UiHelpers.enterChatRoom(UsersActivity.this, to);
+                finish();
             }
         }
     }

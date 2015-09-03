@@ -10,10 +10,6 @@
         android:title="@android:string/copy"
         pairapp:showAsAction="never"/>
     <item
-        android:id="@+id/action_share"
-        android:title="@string/abc_shareactionprovider_share_with"
-        pairapp:showAsAction="never"/>
-    <item
         android:id="@+id/action_delete"
         android:title="@string/action_delete_conversation"
         pairapp:showAsAction="never"/>

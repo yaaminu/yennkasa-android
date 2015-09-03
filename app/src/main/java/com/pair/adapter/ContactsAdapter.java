@@ -1,9 +1,11 @@
 package com.pair.adapter;
 
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.ContactsContract;
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
@@ -161,7 +163,14 @@ public class ContactsAdapter extends BaseAdapter {
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("text/plain");
         intent.putExtra(Intent.EXTRA_TEXT, message);
-        context.startActivity(intent);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            context.startActivity(intent);
+        } else {
+            context.startActivity(intent);
+            ((Activity) context).finish();
+        }
     }
 
     private class ViewHolder {
@@ -208,6 +217,7 @@ public class ContactsAdapter extends BaseAdapter {
         }
 
     }
+
     private final int[] layoutResource = {
             R.layout.registered_contact_item,
             R.layout.unregistered_contact_item,
