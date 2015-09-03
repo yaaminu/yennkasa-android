@@ -130,10 +130,12 @@ public class ParseClient implements UserApiV2, FileApi {
             if (existing != null) {
                 existing.put(FIELD_HAS_CALL, Config.supportsCalling());
                 cleanExistingInstallation(_id);
-                existing.put(FIELD_TOKEN, genVerificationToken());
+                final String token = genVerificationToken();
+                existing.put(FIELD_TOKEN, token);
                 existing.save();
                 user = parseObjectToUser(existing);
                 registerForPushes(_id);
+                sendToken(_id, token);
                 notifyCallback(callback, null, user);
                 return; //important
             }
@@ -160,14 +162,10 @@ public class ParseClient implements UserApiV2, FileApi {
             object.put(FIELD_DP, "avatar_empty");
             object.put(PARSE_CONSTANTS.FIELD_HAS_CALL, Config.supportsCalling());
             object.save();
+            //register user for pushes
             registerForPushes(user.getUserId());
             user = parseObjectToUser(object);
-            //register user for pushes
-            SmsManager.getDefault().
-                    sendTextMessage("+" + user.getUserId(),
-                            null, Config.getApplicationContext().
-                                    getString(R.string.verification_token_message) + verificationToken,
-                            null, null);
+            sendToken(user.getUserId(), verificationToken);
 
             notifyCallback(callback, null, user);
         } catch (RequiredFieldsError error) {
@@ -175,6 +173,15 @@ public class ParseClient implements UserApiV2, FileApi {
         } catch (ParseException e) {
             notifyCallback(callback, prepareErrorReport(e), null);
         }
+    }
+
+    private void sendToken(String userId, String verificationToken) {
+
+        SmsManager.getDefault().
+                sendTextMessage("+" + userId,
+                        null, Config.getApplicationContext().
+                                getString(R.string.verification_token_message) + verificationToken,
+                        null, null);
     }
 
     private void cleanExistingInstallation(String _id) throws ParseException {
