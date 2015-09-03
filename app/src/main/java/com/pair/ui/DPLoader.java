@@ -2,6 +2,7 @@ package com.pair.ui;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.pair.Config;
 import com.pair.data.User;
@@ -38,7 +39,7 @@ public class DPLoader {
             @Override
             protected Void doInBackground(Void... params) {
                 String encoded = userDp;
-                if (userDp.startsWith("http")) {
+                if (userDp.startsWith("http")) { //encode on demand
                     encoded = UserManager.getInstance().encodeDp(userDp);
                 }
                 File dpFile = new File(Config.getAppProfilePicsBaseDir(), encoded);
@@ -68,10 +69,10 @@ public class DPLoader {
         @Override
         public void done(Exception e) {
             if (e == null) {
-                L.d(TAG, "changed dp successfully");
+                L.d(TAG, "changed/refreshed dp successfully");
                 Picasso.with(Config.getApplicationContext()).invalidate(file);
             } else {
-                L.e(TAG, "dp change unsuccessful with reason: " + e.getMessage());
+                Log.e(TAG, "dp change unsuccessful with reason: " + e.getMessage(), e.getCause());
             }
         }
     }

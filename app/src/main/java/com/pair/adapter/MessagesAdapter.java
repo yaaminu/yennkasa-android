@@ -10,6 +10,7 @@ import android.os.Process;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.text.format.DateUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
@@ -28,8 +29,6 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -111,9 +110,9 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         holder.preview.setVisibility(View.GONE);
         holder.messageStatus.setVisibility(View.GONE);
         holder.progress.setVisibility(View.GONE);
-        holder.playOrdownload.setVisibility(View.GONE);
+        holder.playOrDownload.setVisibility(View.GONE);
         holder.preview.setOnClickListener(null);
-        holder.playOrdownload.setOnClickListener(null);
+        holder.playOrDownload.setOnClickListener(null);
         holder.textMessage.setVisibility(View.GONE);
         //common to all
         holder.dateComposed.setVisibility(View.VISIBLE);
@@ -143,7 +142,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                     if (messageFile.exists()) {
                         attemptToViewFile((FragmentActivity) context, messageFile, message);
                     } else {
-                        download(position);
+                        download(message);
                     }
                 } else if (v.getId() == R.id.iv_message_preview) {
                     attemptToViewFile(((FragmentActivity) context), messageFile, message);
@@ -153,9 +152,9 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         if (messageFile.exists()) {
             // this binary message is downloaded
             if (Message.isVideoMessage(message)) {
-                holder.playOrdownload.setVisibility(View.VISIBLE);
-                holder.playOrdownload.setImageResource(R.drawable.playvideo);
-                holder.playOrdownload.setOnClickListener(listener);
+                holder.playOrDownload.setVisibility(View.VISIBLE);
+                holder.playOrDownload.setImageResource(R.drawable.playvideo);
+                holder.playOrDownload.setOnClickListener(listener);
             }
             if (Message.isPictureMessage(message)) {
                 PICASSO.load(messageFile)
@@ -169,10 +168,10 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             }
             holder.preview.setOnClickListener(listener);
         } else {
-            if (!downloadingRows.containsKey(message.getId())) {
-                holder.playOrdownload.setVisibility(View.VISIBLE);
-                holder.playOrdownload.setImageResource(R.drawable.photoload);
-                holder.playOrdownload.setOnClickListener(listener);
+            if (!downloadingRows.containsKey(message.getId()) && Message.isIncoming(message)) {
+                holder.playOrDownload.setVisibility(View.VISIBLE);
+                holder.playOrDownload.setImageResource(R.drawable.photoload);
+                holder.playOrDownload.setOnClickListener(listener);
             }
             holder.preview.setImageResource(placeHolderDrawable);
         }
@@ -226,25 +225,11 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         return Message.state(context, status);
     }
 
-    private void download(final int position) {
+    private void download(final Message realmMessage) {
 
-        final Message message = getItem(position);
+        final Message message = Message.copy(realmMessage); //detach from realm
         final String messageId = message.getId(),
                 messageBody = message.getMessageBody();
-        final File finalFile;
-        switch (message.getType()) {
-            case Message.TYPE_VIDEO_MESSAGE:
-                finalFile = new File(Config.getAppVidMediaBaseDir(), messageBody + ".mp4");
-                break;
-            case Message.TYPE_PICTURE_MESSAGE:
-                finalFile = new File(Config.getAppImgMediaBaseDir(), messageBody + ".jpeg");
-                break;
-            case Message.TYPE_BIN_MESSAGE:
-                finalFile = new File(Config.getAppBinFilesBaseDir(), messageBody);
-                break;
-            default:
-                throw new AssertionError("should never happen");
-        }
         downloadingRows.put(message.getId(), 0);
         notifyDataSetChanged(); //this will show the progress indicator and hide the download button
         downloader.execute(
@@ -253,10 +238,28 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                     public void run() {
                         android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
                         Realm realm = null;
+                        final File finalFile;
+                        String destination = Base64.encodeToString(messageBody.getBytes(), Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
+                        // FIXME: 9/3/2015  find a better way of handling file extensions rather than use sniffing methods
+                        //may be MimeTypeUtil.guessFileExtensionFromStream() will do.
+
+                        switch (message.getType()) {
+                            case Message.TYPE_VIDEO_MESSAGE:
+                                finalFile = new File(Config.getAppVidMediaBaseDir(), destination + ".mp4");
+                                break;
+                            case Message.TYPE_PICTURE_MESSAGE:
+                                finalFile = new File(Config.getAppImgMediaBaseDir(), destination + ".jpeg");
+                                break;
+                            case Message.TYPE_BIN_MESSAGE:
+                                finalFile = new File(Config.getAppBinFilesBaseDir(), destination);
+                                break;
+                            default:
+                                throw new AssertionError("should never happen");
+                        }
                         try {
-                            URL url = new URL(messageBody);
-                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                            FileUtils.save(finalFile, connection.getInputStream());
+//                            URL url = new URL(messageBody);
+//                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                            FileUtils.save(finalFile, messageBody);
                             realm = Realm.getInstance(Config.getApplicationContext());
                             realm.beginTransaction();
                             Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
@@ -310,7 +313,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         holder.textMessage = ((TextView) convertView.findViewById(R.id.tv_message_content));
         holder.preview = (ImageView) convertView.findViewById(R.id.iv_message_preview);
         holder.dateComposed = ((TextView) convertView.findViewById(R.id.tv_message_date));
-        holder.playOrdownload = ((ImageView) convertView.findViewById(R.id.v_download_play));
+        holder.playOrDownload = ((ImageView) convertView.findViewById(R.id.v_download_play));
         holder.progress = convertView.findViewById(R.id.pb_download_progress);
         holder.messageStatus = ((TextView) convertView.findViewById(R.id.tv_message_status));
         convertView.setTag(holder);
@@ -356,7 +359,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
 
     private class ViewHolder {
         private TextView textMessage, dateComposed;
-        private ImageView preview, playOrdownload;
+        private ImageView preview, playOrDownload;
         private View progress;
         private TextView messageStatus;
         //TODO add more fields as we support different media/file types

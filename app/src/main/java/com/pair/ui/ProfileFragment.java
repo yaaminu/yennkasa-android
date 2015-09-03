@@ -334,7 +334,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 .into(displayPicture, new Callback() {
                     @Override
                     public void onSuccess() {
-                        showProgressView();
+                        hideProgressView();
                     }
 
                     @Override
@@ -386,7 +386,12 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                         intent.setData(uri);
                         startActivity(intent);
                     } else {//dp not downloaded
-                        UiHelpers.showToast(R.string.sorry_no_dp);
+                        if (image_capture_out_put_uri != null) {
+                            intent.setData(image_capture_out_put_uri);
+                            startActivity(intent);
+                        } else {
+                            UiHelpers.showToast(R.string.sorry_no_dp);
+                        }
                     }
                     break;
                 case R.id.bt_take_photo_change_dp:
@@ -413,15 +418,11 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     };
 
     private void showProgressView() {
-        if (!changingDp) {
-            progressView.setVisibility(View.VISIBLE);
-        }
+        progressView.setVisibility(View.VISIBLE);
     }
 
     private void hideProgressView() {
-        if (!changingDp) {
-            progressView.setVisibility(View.GONE);
-        }
+        progressView.setVisibility(View.GONE);
     }
 
     private void leaveGroup() {

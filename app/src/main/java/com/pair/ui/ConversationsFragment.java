@@ -2,7 +2,6 @@ package com.pair.ui;
 
 import android.app.Activity;
 import android.app.AlarmManager;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
@@ -157,15 +156,12 @@ public class ConversationsFragment extends ListFragment implements RealmChangeLi
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.new_message) {
-            Bundle args = new Bundle();
-            args.putString(MainActivity.ARG_TITLE, getActivity().getString(R.string.title_pick_recipient));
-            final Intent intent = new Intent(getActivity(), UsersActivity.class);
-            intent.putExtras(args);
-            getActivity().startActivity(intent);
+            UiHelpers.pickRecipient(getActivity());
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
+
 
     @Override
     public void onResume() {

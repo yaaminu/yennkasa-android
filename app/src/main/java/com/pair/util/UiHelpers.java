@@ -2,6 +2,7 @@ package com.pair.util;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.view.ViewGroup;
@@ -10,7 +11,9 @@ import android.widget.EditText;
 import com.pair.Config;
 import com.pair.pairapp.R;
 import com.pair.ui.ChatActivity;
+import com.pair.ui.MainActivity;
 import com.pair.ui.ProfileActivity;
+import com.pair.ui.UsersActivity;
 import com.rey.material.app.Dialog;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.SimpleDialog;
@@ -149,6 +152,14 @@ public class UiHelpers {
     public static void gotoProfileActivity(Context context, String id) {
         Intent intent = new Intent(context, ProfileActivity.class);
         intent.putExtra(ProfileActivity.EXTRA_USER_ID, id);
+        context.startActivity(intent);
+    }
+
+    public static void pickRecipient(Context context) {
+        Bundle args = new Bundle();
+        args.putString(MainActivity.ARG_TITLE, context.getString(R.string.title_pick_recipient));
+        final Intent intent = new Intent(context, UsersActivity.class);
+        intent.putExtras(args);
         context.startActivity(intent);
     }
 
