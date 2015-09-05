@@ -283,8 +283,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     private void doGetGroups(@Path(Message.FIELD_ID) String id, Callback<List<User>> response) {
         try {
-            ParseQuery<ParseObject> query1 = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, id);
-            List<ParseObject> objects = makeParseQuery(GROUP_CLASS_NAME).whereMatchesQuery(FIELD_MEMBERS, query1).find();
+            List<ParseObject> objects = makeParseQuery(GROUP_CLASS_NAME).whereEqualTo(FIELD_MEMBERS, id).find();
             List<User> groups = new ArrayList<>(objects.size());
             for (ParseObject object : objects) {
                 groups.add(parseObjectToGroup(object));

@@ -1,13 +1,12 @@
 package com.pair.adapter;
 
-import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.provider.ContactsContract;
 import android.support.v4.app.FragmentActivity;
+import android.telephony.SmsManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -151,26 +150,21 @@ public class ContactsAdapter extends BaseAdapter {
             }
         } else {
             if (id == R.id.bt_invite) {
-                invite(view.getContext());
+                invite(view.getContext(), contact);
             } else if (id == R.id.tv_user_status || id == R.id.tv_user_phone_group_admin) {
                 callContact(view, contact);
             }
         }
     }
 
-    private void invite(Context context) {
-        String message = "Try out PAIRAPP messenger for android. It\'s free and fast! \ndownload here: http://pairapp.com/download";
-        Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.setType("text/plain");
-        intent.putExtra(Intent.EXTRA_TEXT, message);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            context.startActivity(intent);
-        } else {
-            context.startActivity(intent);
-            ((Activity) context).finish();
-        }
+    private void invite(final Context context, final Contact contact) {
+        final UiHelpers.Listener listener = new UiHelpers.Listener() {
+            @Override
+            public void onClick() {
+                SmsManager.getDefault().sendTextMessage(contact.phoneNumber, null, context.getString(R.string.invite_message), null, null);
+            }
+        };
+        UiHelpers.showErrorDialog(((FragmentActivity) context), R.string.charges_may_apply, android.R.string.ok, android.R.string.cancel, listener, null);
     }
 
     private class ViewHolder {
