@@ -37,7 +37,7 @@ import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
 
-public class InviteActivity extends ActionBarActivity implements ItemsSelector.OnFragmentInteractionListener {
+public class InviteActivity extends PairAppBaseActivity implements ItemsSelector.OnFragmentInteractionListener {
 
 
     public static final String EXTRA_GROUP_ID = "groupId";

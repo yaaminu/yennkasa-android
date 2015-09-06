@@ -137,4 +137,7 @@
     <string name="verification_token_message">"Hello the following number is your verification token: "</string>
     <string name="invalid_message">Message Invalid, Ensure the message does not exceed the size limit</string>
     <string name="invite_message">\"Try out PAIRAPP messenger for android. It\'s free and fast! \\ndownload here: http://pairapp.com/download\"</string>
+    <string name="sinch_not_available_message">Your device is not completely supported, Call features may not be available on your device</string>
+    <string name="sinch_error_report_message">we are having trouble setting things up,ensure your are connected to the internet and that your date is correct</string>
+    <string name="st_unable_to_connect_version_2">We\'re having trouble connecting you. Please check your internet settings</string>
 </resources>

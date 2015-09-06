@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 
 import com.pair.Config;
+import com.pair.Errors.ErrorCenter;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
@@ -21,6 +22,7 @@ import com.rey.material.app.DialogFragment;
  * A simple {@link Fragment} subclass.
  */
 public class VerificationFragment extends Fragment {
+    private static final String TAG = VerificationFragment.class.getSimpleName();
     DialogFragment progressDialog;
 
     public VerificationFragment() {
@@ -57,7 +59,7 @@ public class VerificationFragment extends Fragment {
                             startActivity(new Intent(getActivity(), MainActivity.class));
                             getActivity().finish();
                         } else {
-                            UiHelpers.showErrorDialog(getActivity(), e.getMessage());
+                            ErrorCenter.reportError(TAG,e.getMessage());
                         }
                     }
                 });
@@ -97,7 +99,7 @@ public class VerificationFragment extends Fragment {
                 if (e == null) {
                     completeSetUp();
                 } else {
-                    UiHelpers.showErrorDialog(getActivity(), e.getMessage());
+                    ErrorCenter.reportError(TAG,e.getMessage());
                 }
             }
         });
@@ -113,7 +115,7 @@ public class VerificationFragment extends Fragment {
                 if ((message == null) || (message.isEmpty())) {
                     message = "an unknown error occurred";
                 }
-                UiHelpers.showErrorDialog(getActivity(), message);
+                ErrorCenter.reportError(TAG,message);
             }
         }
     };

@@ -3,7 +3,7 @@ package com.pair.messenger;
 import android.util.Log;
 
 import com.pair.Config;
-import com.pair.Exceptions.PairappException;
+import com.pair.Errors.PairappException;
 import com.pair.data.ContactsManager;
 import com.pair.data.Message;
 import com.pair.data.User;

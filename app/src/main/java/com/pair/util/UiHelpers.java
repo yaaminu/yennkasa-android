@@ -36,7 +36,7 @@ public class UiHelpers {
 
     public static void showPlainOlDialog(Context context, String message) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setMessage(message).create().show();
+        builder.setMessage(message).setTitle(R.string.error).setPositiveButton(android.R.string.ok,null).create().show();
     }
 
     public static void showErrorDialog(FragmentActivity context, String message) {

@@ -5,7 +5,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.pair.Config;
-import com.pair.Exceptions.PairappException;
+import com.pair.Errors.PairappException;
 import com.pair.messenger.MessagingUtils;
 import com.pair.util.FileUtils;
 
@@ -214,7 +214,7 @@ public class Message extends RealmObject {
      *                 automatically to {@link #TYPE_TEXT_MESSAGE}
      * @param to       the recipient of the {@link Message}
      * @return the newly createdMessage
-     * @throws com.pair.Exceptions.PairappException if the message is invalid. this could be because
+     * @throws com.pair.Errors.PairappException if the message is invalid. this could be because
      *                                              a binary message is too huge, etc
      * @throws io.realm.exceptions.RealmException   if you are not in a transaction
      * @see {@link Message#makeNew(Realm, String, String, int)}
@@ -234,7 +234,7 @@ public class Message extends RealmObject {
      * @param to       the recipient of the {@code message}
      * @param type     the type of the message
      * @return the newly createdMessage
-     * @throws com.pair.Exceptions.PairappException if the message is invalid. this could be because
+     * @throws com.pair.Errors.PairappException if the message is invalid. this could be because
      *                                              a binary message is too huge, etc
      * @throws io.realm.exceptions.RealmException   if you are not in a transaction
      * @see {@link Message#makeNew(Realm, String, String)}

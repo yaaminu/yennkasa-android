@@ -20,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.pair.Config;
+import com.pair.Errors.ErrorCenter;
 import com.pair.data.Message;
 import com.pair.pairapp.R;
 import com.pair.ui.ImageViewer;
@@ -282,26 +283,16 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                                 new Runnable() {
                                     @Override
                                     public void run() {
-                                        try {
-                                            downloadingRows.remove(message.getId());
-                                            notifyDataSetChanged();
-                                            //show download button
-                                            if (error != null) {
-                                                UiHelpers.showErrorDialog(((FragmentActivity) getContext()), error.getMessage());
-                                            }
-                                        } catch (Exception ignored) {
-                                            //may be user navigated from this activity hence the context is now
-                                            //invalid, invalid tokens and other stuffs
-                                            Log.e(TAG, ignored.getMessage(), ignored.getCause());
+                                        downloadingRows.remove(message.getId());
+                                        notifyDataSetChanged();
+                                        //show download button
+                                        if (error != null) {
+                                            ErrorCenter.reportError(TAG, error.getMessage());
                                         }
                                     }
                                 });
                     }
                 });
-    }
-
-    private Context getContext() {
-        return context;
     }
 
     @NonNull

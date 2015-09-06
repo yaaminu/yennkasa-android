@@ -14,7 +14,7 @@ import com.squareup.picasso.Picasso;
 
 import java.io.File;
 
-public class ImageViewer extends ActionBarActivity {
+public class ImageViewer extends PairAppBaseActivity {
     private ImageView imageView;
     private Picasso picasso;
     private int WIDTH, HEIGHT;

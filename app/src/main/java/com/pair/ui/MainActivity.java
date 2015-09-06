@@ -29,7 +29,7 @@ import io.realm.Realm;
 /**
  * @author Null-Pointer on 6/6/2015.
  */
-public class MainActivity extends PairAppBaseActivity {
+public class MainActivity extends PairAppActivity {
     public static final String DEFAULT_FRAGMENT = "default_fragment";
     private static boolean cleanedMessages = false;
     public static final String TAG = MainActivity.class.getSimpleName();

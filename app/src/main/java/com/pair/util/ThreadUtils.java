@@ -12,6 +12,18 @@ public class ThreadUtils {
     }
 
     public static void ensureNotMain() {
-        if (isMainThread()) throw new IllegalStateException("main thread!");
+        if (isMainThread()) {
+            oops("main thread!");
+        }
+    }
+
+    public static void ensureMain() {
+        if (!isMainThread()) {
+            oops("call must be made on the main thread!");
+        }
+    }
+
+    private static void oops(String oops) {
+        throw new IllegalStateException(oops);
     }
 }

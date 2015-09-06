@@ -17,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.pair.Config;
+import com.pair.Errors.ErrorCenter;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
@@ -307,17 +308,12 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     progressDialog.dismiss();
                 }
             });
-            try {
-                changingDp = false;
-                hideProgressView();
-                if (e == null) {
-                    showDp();
-                } else {
-                    UiHelpers.showErrorDialog(getActivity(), e.getMessage());
-                }
-            } catch (Exception ignored) {
-                Log.e(TAG, ignored.getMessage(), ignored.getCause()); //just in case another exception is caught
-                //bad tokens etc.... may be user navigated away and came back later while this operation was ongoing
+            changingDp = false;
+            hideProgressView();
+            if (e == null) {
+                showDp();
+            } else {
+                ErrorCenter.reportError(TAG, e.getMessage());
             }
         }
     };
@@ -327,7 +323,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             return;
         }
         showProgressView();
-        DPLoader.load(getActivity(),user.getUserId(), user.getDP())
+        DPLoader.load(getActivity(), user.getUserId(), user.getDP())
                 .resize(DP_WIDTH, DP_HEIGHT)
                 .placeholder(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .error(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
@@ -432,11 +428,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             public void done(Exception e) {
                 progressDialog.dismiss();
                 if (e != null) {
-                    try {
-                        UiHelpers.showErrorDialog(getActivity(), e.getMessage());
-                    } catch (Exception e2) {
-                        // FIXME: 8/3/2015
-                    }
+                    ErrorCenter.reportError(TAG, e.getMessage());
                 } else {
                     getActivity().finish();
                 }

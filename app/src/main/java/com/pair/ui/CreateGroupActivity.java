@@ -24,6 +24,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.i18n.phonenumbers.NumberParseException;
+import com.pair.Errors.ErrorCenter;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
@@ -40,7 +41,7 @@ import java.util.regex.Pattern;
 import io.realm.Realm;
 import io.realm.RealmQuery;
 
-public class CreateGroupActivity extends ActionBarActivity implements AdapterView.OnItemClickListener, ItemsSelector.OnFragmentInteractionListener, ToolbarManager.OnToolbarGroupChangedListener {
+public class CreateGroupActivity extends PairAppBaseActivity implements AdapterView.OnItemClickListener, ItemsSelector.OnFragmentInteractionListener, ToolbarManager.OnToolbarGroupChangedListener {
 
     public static final String TAG = CreateGroupActivity.class.getSimpleName();
     private Set<String> selectedUsers = new HashSet<>();
@@ -175,15 +176,11 @@ public class CreateGroupActivity extends ActionBarActivity implements AdapterVie
             UserManager.getInstance().createGroup(groupName, selectedUsers, new UserManager.CreateGroupCallBack() {
                 @Override
                 public void done(Exception e, String groupId) {
-                    try {
-                        progressDialog.dismiss();
-                        if (e != null) {
-                            UiHelpers.showErrorDialog(CreateGroupActivity.this, e.getMessage());
-                        } else {
-                            UiHelpers.enterChatRoom(CreateGroupActivity.this, groupId);
-                        }
-                    } catch (Exception e2) {
-                        Log.e(TAG, e2.getMessage(), e2.getCause());
+                    progressDialog.dismiss();
+                    if (e != null) {
+                        ErrorCenter.reportError(TAG, e.getMessage());
+                    } else {
+                        UiHelpers.enterChatRoom(CreateGroupActivity.this, groupId);
                     }
                 }
             });

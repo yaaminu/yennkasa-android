@@ -11,9 +11,11 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.pair.Config;
+import com.pair.Errors.ErrorCenter;
 import com.pair.data.Message;
 import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
+import com.pair.pairapp.R;
 import com.pair.util.L;
 import com.pair.util.UiHelpers;
 import com.parse.ParseAnalytics;
@@ -125,7 +127,7 @@ public class PairAppClient extends Service {
             } catch (SinchUtils.SinchNotFoundException e) {
                 ParseAnalytics.trackEventInBackground("noSinch");
                 Log.wtf(TAG, "user's device does not have complete  support, call features will not be available");
-                //fallback to push
+                ErrorCenter.reportError(TAG, getString(R.string.sinch_not_available_message));
             }
 
         PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance();
@@ -208,19 +210,16 @@ public class PairAppClient extends Service {
         public void onClientFailed(SinchClient sinchClient, SinchError sinchError) {
             Log.e(TAG, "Client failed to start with reason: " + sinchError.getErrorType());
             if (sinchError.getErrorType() == ErrorType.NETWORK) {
+                ErrorCenter.reportError(TAG,getString(R.string.st_unable_to_connect_version_2));
                 //try again // TODO: 9/2/2015 do this exponentially
                 try {
                     startSinchClient();
                 } catch (SinchUtils.SinchNotFoundException ignored) {
-
+                    //impossible
                 }
             } else {
-                // TODO: 8/29/2015 more error handling
-                if (isClientStarted.get()) {
+                ErrorCenter.reportError(TAG, getString(R.string.sinch_error_report_message));
 
-//                    UiHelpers.showPlainOlDialog(PairAppClient.this, "we are having trouble setting things up, " +
-//                            "ensure your are connected to the internet and that your date is correct");
-                }
             }
         }
 

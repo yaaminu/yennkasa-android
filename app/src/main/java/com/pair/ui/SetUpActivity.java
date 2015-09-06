@@ -27,7 +27,7 @@ import java.util.Locale;
 import io.realm.Realm;
 
 
-public class SetUpActivity extends ActionBarActivity {
+public class SetUpActivity extends PairAppBaseActivity {
 
     private String TAG = SetUpActivity.class.getSimpleName();
 

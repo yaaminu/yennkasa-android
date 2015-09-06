@@ -9,7 +9,7 @@ import android.view.Menu;
 import com.pair.pairapp.R;
 import com.rey.material.app.ToolbarManager;
 
-public class ProfileActivity extends ActionBarActivity {
+public class ProfileActivity extends PairAppBaseActivity {
 
     private ToolbarManager manager;
     private Toolbar toolBar;

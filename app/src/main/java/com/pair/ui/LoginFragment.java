@@ -13,6 +13,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.pair.Config;
+import com.pair.Errors.ErrorCenter;
 import com.pair.adapter.CountriesListAdapter;
 import com.pair.data.Country;
 import com.pair.data.UserManager;
@@ -151,11 +152,7 @@ public class LoginFragment extends Fragment {
                 if ((message == null) || (message.isEmpty())) {
                     message = "an unknown error occurred";
                 }
-                if (isResumed()) {
-                    UiHelpers.showErrorDialog(getActivity(), message);
-                } else {
-                    UiHelpers.showPlainOlDialog(getActivity(), message);
-                }
+                ErrorCenter.reportError(TAG,message);
             }
         }
     };

@@ -12,6 +12,5 @@ public class ApplicationTest extends AndroidTestCase {
 
     @SmallTest
     public void testRun() throws Exception {
-        Log.i(TAG, "test running");
     }
 }

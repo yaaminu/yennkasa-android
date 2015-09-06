@@ -34,7 +34,8 @@ import android.widget.Toast;
 
 import com.google.gson.JsonObject;
 import com.pair.Config;
-import com.pair.Exceptions.PairappException;
+import com.pair.Errors.ErrorCenter;
+import com.pair.Errors.PairappException;
 import com.pair.adapter.MessageJsonAdapter;
 import com.pair.adapter.MessagesAdapter;
 import com.pair.adapter.UsersAdapter;
@@ -74,7 +75,7 @@ import static com.pair.data.Message.TYPE_TYPING_MESSAGE;
 
 
 @SuppressWarnings({"ConstantConditions", "FieldCanBeLocal"})
-public class ChatActivity extends PairAppBaseActivity implements View.OnClickListener, AbsListView.OnScrollListener, TextWatcher, ItemsSelector.OnFragmentInteractionListener {
+public class ChatActivity extends PairAppActivity implements View.OnClickListener, AbsListView.OnScrollListener, TextWatcher, ItemsSelector.OnFragmentInteractionListener {
     private static final int TAKE_PHOTO_REQUEST = 0x0,
             TAKE_VIDEO_REQUEST = 0x1,
             PICK_PHOTO_REQUEST = 0x2,
@@ -228,6 +229,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
     @Override
     protected void onResume() {
         super.onResume();
+        Log.i(TAG,"on resume");
         Config.appOpen(true);
         super.clearRecentChat();
         testChatActivity();
@@ -235,6 +237,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
 
     @Override
     protected void onPause() {
+        Log.i(TAG,"onpause");
         if (currConversation != null) {
             realm.beginTransaction();
             currConversation.setActive(false);
@@ -296,7 +299,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
                 enqueueMessage(createMessage(content, Message.TYPE_TEXT_MESSAGE));
             } catch (PairappException e) {
                 Log.e(TAG, e.getMessage(), e.getCause());
-                UiHelpers.showToast(e.getMessage());
+                ErrorCenter.reportError(TAG, e.getMessage());
             }
         }
 
@@ -444,6 +447,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.i(TAG,"onActivityResult");
         if (resultCode != RESULT_OK) {
             return;
         }
@@ -479,7 +483,7 @@ public class ChatActivity extends PairAppBaseActivity implements View.OnClickLis
             }
             enqueueMessage(message);
         } catch (PairappException e) {
-            UiHelpers.showToast(e.getMessage());
+            ErrorCenter.reportError(TAG,e.getMessage());
         }
     }
 

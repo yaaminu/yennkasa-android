@@ -1,4 +1,4 @@
-package com.pair.Exceptions;
+package com.pair.Errors;
 
 /**
  * @author Null-Pointer on 8/25/2015.

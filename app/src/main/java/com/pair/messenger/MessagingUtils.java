@@ -2,7 +2,7 @@ package com.pair.messenger;
 
 import android.util.Log;
 
-import com.pair.Exceptions.PairappException;
+import com.pair.Errors.PairappException;
 import com.pair.data.Message;
 
 import org.apache.commons.io.FileUtils;

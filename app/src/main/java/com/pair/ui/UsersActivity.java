@@ -19,7 +19,8 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
 
-import com.pair.Exceptions.PairappException;
+import com.pair.Errors.ErrorCenter;
+import com.pair.Errors.PairappException;
 import com.pair.adapter.UsersAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
@@ -37,7 +38,7 @@ import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmResults;
 
-public class UsersActivity extends ActionBarActivity implements ItemsSelector.OnFragmentInteractionListener {
+public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.OnFragmentInteractionListener {
 
     public static final String EXTRA_GROUP_ID = "GROUPiD";
     public static final String SEND = "send";
@@ -237,7 +238,7 @@ public class UsersActivity extends ActionBarActivity implements ItemsSelector.On
                     }
             );
             if (to == null) {
-                UiHelpers.showErrorDialog(UsersActivity.this, getString(R.string.invalid_message));
+                ErrorCenter.reportError(TAG,getString(R.string.invalid_message));
             } else {
                 UiHelpers.enterChatRoom(UsersActivity.this, to);
                 finish();
