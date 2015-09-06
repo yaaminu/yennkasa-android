@@ -327,9 +327,9 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             return;
         }
         showProgressView();
-        RequestCreator creator = DPLoader.load(user.getUserId(), user.getDP());
-        creator.resize(DP_WIDTH, DP_HEIGHT);
-        creator.placeholder(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
+        DPLoader.load(getActivity(),user.getUserId(), user.getDP())
+                .resize(DP_WIDTH, DP_HEIGHT)
+                .placeholder(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .error(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .into(displayPicture, new Callback() {
                     @Override

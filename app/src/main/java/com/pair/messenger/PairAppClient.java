@@ -121,17 +121,7 @@ public class PairAppClient extends Service {
     private synchronized void bootClient() {
         if (!isClientStarted.getAndSet(true))
             try {
-                CLIENT = SinchUtils.makeSinchClient(this, UserManager.getMainUserId());
-                CLIENT.setSupportMessaging(true);
-                CLIENT.startListeningOnActiveConnection();
-                CLIENT.addSinchClientListener(sinchClientListener);
-                if (BuildConfig.DEBUG) {
-                    CLIENT.checkManifest();
-                }
-                MessageClient client = CLIENT.getMessageClient();
-                client.addMessageClientListener(messageClientListener);
-                SINCH_MESSAGE_DISPATCHER = SinchDispatcher.getInstance(client);
-                CLIENT.start();
+                startSinchClient();
             } catch (SinchUtils.SinchNotFoundException e) {
                 ParseAnalytics.trackEventInBackground("noSinch");
                 Log.wtf(TAG, "user's device does not have complete  support, call features will not be available");
@@ -145,11 +135,23 @@ public class PairAppClient extends Service {
         isClientStarted.set(true);
     }
 
+    private void startSinchClient() throws SinchUtils.SinchNotFoundException {
+        CLIENT = SinchUtils.makeSinchClient(this, UserManager.getMainUserId());
+        CLIENT.setSupportMessaging(true);
+        CLIENT.startListeningOnActiveConnection();
+        CLIENT.addSinchClientListener(sinchClientListener);
+        if (BuildConfig.DEBUG) {
+            CLIENT.checkManifest();
+        }
+        MessageClient client = CLIENT.getMessageClient();
+        client.addMessageClientListener(messageClientListener);
+        SINCH_MESSAGE_DISPATCHER = SinchDispatcher.getInstance(client);
+        CLIENT.start();
+    }
+
     private synchronized void shutDown() {
         if (isClientStarted.getAndSet(false)) {
-            if (PARSE_MESSAGE_DISPATCHER != null) {
-                PARSE_MESSAGE_DISPATCHER.close();
-            }
+            PARSE_MESSAGE_DISPATCHER.close();
             if (CLIENT != null) { //sinch client may not be available e.g if device arch is x86 or mips
                 SINCH_MESSAGE_DISPATCHER.close();
                 CLIENT.terminateGracefully();
@@ -183,11 +185,7 @@ public class PairAppClient extends Service {
                 realm.close();
             }
         };
-        try {
-            WORKER.submit(task);
-        } catch (Exception e) { //quick fix for a mysterious crash
-            Log.e(TAG, "" + e.getMessage());
-        }
+        WORKER.submit(task);
     }
 
 
@@ -208,12 +206,16 @@ public class PairAppClient extends Service {
 
         @Override
         public void onClientFailed(SinchClient sinchClient, SinchError sinchError) {
-
+            Log.e(TAG, "Client failed to start with reason: " + sinchError.getErrorType());
             if (sinchError.getErrorType() == ErrorType.NETWORK) {
-                bootClient(); //try again // TODO: 9/2/2015 do this exponentially
+                //try again // TODO: 9/2/2015 do this exponentially
+                try {
+                    startSinchClient();
+                } catch (SinchUtils.SinchNotFoundException ignored) {
+
+                }
             } else {
                 // TODO: 8/29/2015 more error handling
-                Log.e(TAG, "Client failed to start with reason: " + sinchError.getErrorType());
                 if (isClientStarted.get()) {
 
 //                    UiHelpers.showPlainOlDialog(PairAppClient.this, "we are having trouble setting things up, " +

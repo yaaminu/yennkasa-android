@@ -106,7 +106,7 @@ public class ContactsAdapter extends BaseAdapter {
         }
         if (contact.isRegisteredUser) {
             holder.userStatus.setText(contact.status);
-            DPLoader.load(contact.numberInIEE_Format, contact.DP)
+            DPLoader.load(context,contact.numberInIEE_Format, contact.DP)
                     .error(R.drawable.user_avartar)
                     .placeholder(R.drawable.user_avartar)
                     .resize(150, 150)

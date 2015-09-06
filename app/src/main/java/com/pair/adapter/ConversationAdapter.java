@@ -55,7 +55,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         User peer = getPeer(conversation.getPeerId());
         String peerName = peer.getName();
         holder.peerName.setText(peerName);
-        DPLoader.load(peer.getUserId(), peer.getDP())
+        DPLoader.load(context,peer.getUserId(), peer.getDP())
                 .error(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .placeholder(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .resize(150, 150)

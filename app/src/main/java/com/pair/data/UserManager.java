@@ -31,7 +31,10 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -992,6 +995,11 @@ public class UserManager {
                 @Override
                 public void done(Exception e, User user) {
                     try {
+                        if (e != null) {
+                            Log.e(TAG, e.getMessage(), e.getCause());
+                            doNotify(e, callBack);
+                            return;
+                        }
                         FileUtils.save(dpPath, user.getDP());
                         updateUserDpInRealm(userId, callBack, encoded);
                     } catch (IOException e2) {
@@ -1008,7 +1016,10 @@ public class UserManager {
     @NonNull
     public String encodeDp(String dp) {
         Log.d(TAG, "raw dp: " + dp);
-        String encoded = Base64.encodeToString(dp.getBytes(), Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING) + ".jpg";
+        String encoded = dp;
+        if (encoded.startsWith("http")) {
+            encoded = Base64.encodeToString(dp.getBytes(), Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING) + ".jpg";
+        }
         Log.d(TAG, "encoded dp: " + encoded);
         return encoded;
     }

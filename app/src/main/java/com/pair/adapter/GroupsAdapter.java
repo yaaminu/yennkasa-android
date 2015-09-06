@@ -43,7 +43,7 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
             holder = ((ViewHolder) convertView.getTag());
         }
         holder.groupName.setText(group.getName());
-        DPLoader.load(group.getUserId(), group.getDP())
+        DPLoader.load(context,group.getUserId(), group.getDP())
                 .placeholder(R.drawable.group_avatar)
                 .error(R.drawable.group_avatar)
                 .resize(150, 150)

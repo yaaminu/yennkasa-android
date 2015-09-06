@@ -12,6 +12,8 @@ import com.squareup.picasso.Picasso;
 import com.squareup.picasso.RequestCreator;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import io.realm.Realm;
 
@@ -22,55 +24,48 @@ public class DPLoader {
     public static final String TAG = DPLoader.class.getSimpleName();
     private static final String DUMMY_URL = "dummyurl";
 
+    private static final Map<String, String> refreshing = new HashMap<>();
 
-    public static RequestCreator load(String userId, String userDp) {
-        Context context = Config.getApplicationContext();
+    public static RequestCreator load(Context context,String userId, String userDp) {
         File dpFile = new File(Config.getAppProfilePicsBaseDir(), userDp);
         if (dpFile.exists()) {
             return Picasso.with(context).load(dpFile);
         } else {
-            attemptToRecoverDp(userId, userDp, context); //async
+            attemptToRecoverDp(userId, userDp); //async
             return Picasso.with(context).load(DUMMY_URL);
         }
     }
 
-    private static void attemptToRecoverDp(final String userId, final String userDp, final Context context) {
+    private static void attemptToRecoverDp(final String userId, final String userDp) {
+        synchronized (refreshing) {
+            if (refreshing.containsKey(userId)) {
+                return;
+            }
+            refreshing.put(userId,userDp);
+        }
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
-                String encoded = userDp;
-                if (userDp.startsWith("http")) { //encode on demand
-                    encoded = UserManager.getInstance().encodeDp(userDp);
-                }
-                File dpFile = new File(Config.getAppProfilePicsBaseDir(), encoded);
-                //has the dp really changed? or just a refresh changed the literal dp string
-                if (dpFile.exists()) {
-                    Realm realm = User.Realm(context);
-                    User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
-                    realm.beginTransaction();
-                    user.setDP(encoded);
-                    realm.commitTransaction();
-                    realm.close();
-                } else {
-                    UserManager.getInstance().refreshDp(userId, new DPLoaderCallback(dpFile));
-                }
+                UserManager.getInstance().refreshDp(userId, new DPLoaderCallback(userId));
                 return null;
             }
         }.execute();
     }
 
     private static class DPLoaderCallback implements UserManager.CallBack {
-        private final File file;
+        String userId;
 
-        public DPLoaderCallback(File file) {
-            this.file = file;
+        public DPLoaderCallback(String userId) {
+            this.userId = userId;
         }
 
         @Override
         public void done(Exception e) {
+            synchronized (refreshing) {
+                refreshing.remove(userId);
+            }
             if (e == null) {
-                L.d(TAG, "changed/refreshed dp successfully");
-                Picasso.with(Config.getApplicationContext()).invalidate(file);
+                L.d(TAG, "successfully changed/refreshed dp of user with id: "+ userId);
             } else {
                 Log.e(TAG, "dp change unsuccessful with reason: " + e.getMessage(), e.getCause());
             }

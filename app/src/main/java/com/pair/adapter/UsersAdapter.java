@@ -86,7 +86,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
             holder.usersStatus.setVisibility(View.VISIBLE);
             holder.usersStatus.setText(user.getStatus());
         }
-        DPLoader.load(user.getUserId(), user.getDP())
+        DPLoader.load(context,user.getUserId(), user.getDP())
                 .error(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .placeholder(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .resize(150, 150)
