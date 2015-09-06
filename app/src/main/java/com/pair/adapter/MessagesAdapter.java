@@ -1,7 +1,6 @@
 package com.pair.adapter;
 
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Handler;
@@ -88,13 +87,6 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     public View getView(final int position, View convertView, final ViewGroup parent) {
         final ViewHolder holder;
         final Message message = getItem(position);
-        if (Message.isIncoming(message) && message.getState() != Message.STATE_SEEN) {
-            Realm realm = Message.REALM(context);
-            //this will be very expensive if we have a large collection we better find a better way
-            realm.beginTransaction();
-            message.setState(Message.STATE_SEEN);
-            realm.commitTransaction();
-        }
         if (convertView == null) {
             convertView = hookupViews(messagesLayout[getItemViewType(position)], parent);
         }
@@ -105,6 +97,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             return convertView;
         }
 
+        attemptToMarkAsSeen(message);
         String dateComposed = DateUtils.formatDateTime(context, message.getDateComposed().getTime(), DateUtils.FORMAT_SHOW_TIME);
 
         //show all views show if it's required
@@ -190,6 +183,26 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         return convertView;
     }
 
+    private void attemptToMarkAsSeen(Message message) {
+
+        if (Message.isIncoming(message) && message.getState() != Message.STATE_SEEN) {
+            final String msgId = message.getId();
+            WORKER.execute(new Runnable() {
+                @Override
+                public void run() {
+                    Realm realm = Message.REALM(context);
+                    realm.beginTransaction();
+                    Message message1 = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
+                    if (message1 != null) {
+                        message1.setState(Message.STATE_SEEN);
+                        realm.commitTransaction();
+                    }
+                    realm.close();
+                }
+            });
+        }
+    }
+
     private void attemptToViewFile(FragmentActivity context, File file, Message message) {
         if (file.exists()) {
             Intent intent;
@@ -233,7 +246,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                 messageBody = message.getMessageBody();
         downloadingRows.put(message.getId(), 0);
         notifyDataSetChanged(); //this will show the progress indicator and hide the download button
-        downloader.execute(
+        WORKER.execute(
                 new Runnable() {
                     @Override
                     public void run() {
@@ -285,7 +298,6 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                                     public void run() {
                                         downloadingRows.remove(message.getId());
                                         notifyDataSetChanged();
-                                        //show download button
                                         if (error != null) {
                                             ErrorCenter.reportError(TAG, error.getMessage());
                                         }
@@ -362,5 +374,5 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             R.layout.list_item_message_incoming
     };
 
-    private final Executor downloader = Executors.newCachedThreadPool();
+    private final Executor WORKER = Executors.newCachedThreadPool();
 }

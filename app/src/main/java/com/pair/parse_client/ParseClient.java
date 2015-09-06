@@ -140,8 +140,8 @@ public class ParseClient implements UserApiV2, FileApi {
                 return; //important
             }
         } catch (ParseException e) {
-            Log.d(TAG,"no account associated with "+_id+" in proceeding to create new account");
-           //continue
+            Log.d(TAG, "no account associated with " + _id + " in proceeding to create new account");
+            //continue
         }
         try {
             ensureFieldsFilled(_id, name, password, gcmRegId, country);
@@ -553,8 +553,14 @@ public class ParseClient implements UserApiV2, FileApi {
     }
 
     @Override
-    public void saveFileToBackend(File file, final FileSaveCallback callback, final ProgressListener listener) throws IOException {
-        final ParseFile parseFile = new ParseFile(file.getName(), FileUtils.readFileToByteArray(file));
+    public void saveFileToBackend(File file, final FileSaveCallback callback, final ProgressListener listener) {
+        final ParseFile parseFile;
+        try {
+            parseFile = new ParseFile(file.getName(), FileUtils.readFileToByteArray(file));
+        } catch (IOException e) {
+            callback.done(e, null);
+            return;
+        }
         parseFile.saveInBackground(new SaveCallback() {
             @Override
             public void done(ParseException e) {

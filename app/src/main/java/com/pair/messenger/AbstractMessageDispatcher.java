@@ -15,7 +15,6 @@ import com.pair.util.L;
 import com.pair.util.ThreadUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -37,24 +36,29 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         this.file_service = ParseClient.getInstance();
     }
 
-    private void uploadFileAndProceed(final Message messageFile, FileApi.ProgressListener listener) {
-        final File actualFile = new File(messageFile.getMessageBody());
-        //if file does not exist, we error will be thrown...
-        try {
+    private void uploadFileAndProceed(final Message message, FileApi.ProgressListener listener) {
+        String messageBody = message.getMessageBody();
+
+        if (messageBody.startsWith("http") || messageBody.startsWith("ftp")) { //we assume the file is uploaded
+            proceedToSend(message);
+        } else {
+            final File actualFile = new File(messageBody);
+            if (!actualFile.exists()) {
+                onFailed(message, MessagingUtils.ERROR_FILE_DOES_NOT_EXIST);
+                return;
+            }
+
             file_service.saveFileToBackend(actualFile, new FileApi.FileSaveCallback() {
                 @Override
                 public void done(Exception e, String locationUrl) {
                     if (e == null) {
-                        messageFile.setMessageBody(locationUrl); //do not persist this change.
-                        proceedToSend(messageFile);
+                        message.setMessageBody(locationUrl); //do not persist this change.
+                        proceedToSend(message);
                     } else {
-                        onFailed(messageFile, MessagingUtils.ERROR_FILE_UPLOAD_FAILED);
+                        onFailed(message, MessagingUtils.ERROR_FILE_UPLOAD_FAILED);
                     }
                 }
             }, listener);
-        } catch (IOException e) {
-            L.e(TAG, e.getMessage());
-            onFailed(messageFile, MessagingUtils.ERROR_FILE_UPLOAD_FAILED);
         }
     }
 
@@ -168,6 +172,10 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             onFailed(message, MessagingUtils.ERROR_NOT_CONNECTED);
             return;
         }
+        //this pattern is not strict it only checks if it starts with http or ftp
+        //even fttp will pass this test but am making a stupid assumption that we
+        // will not receive such an input.
+//        Pattern httpOrFtpPattern = Pattern.compile("^([hf]t{1,2}p)");
         try {
             MessagingUtils.validate(message); //might throw
             //is the message a binary message?
@@ -224,7 +232,6 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     @Override
     public void close() {
         //subclasses should override this if the need to free any resource
-        this.monitors.clear();
     }
 
     protected abstract void dispatchToGroup(Message message, List<String> members);

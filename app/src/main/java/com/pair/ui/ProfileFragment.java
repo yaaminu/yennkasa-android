@@ -30,7 +30,6 @@ import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
-import com.squareup.picasso.RequestCreator;
 
 import java.io.File;
 
@@ -287,7 +286,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             return;
         }
         showProgressView();
-        progressDialog.show(getFragmentManager(), TAG);
         changingDp = true;
         String filePath;
         if (uri.getScheme().equals("content")) {
@@ -302,12 +300,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private final UserManager.CallBack DP_CALLBACK = new UserManager.CallBack() {
         @Override
         public void done(Exception e) {
-            progressView.post(new Runnable() {
-                @Override
-                public void run() {
-                    progressDialog.dismiss();
-                }
-            });
             changingDp = false;
             hideProgressView();
             if (e == null) {

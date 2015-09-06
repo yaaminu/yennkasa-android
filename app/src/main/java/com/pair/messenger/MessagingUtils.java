@@ -46,7 +46,7 @@ public class MessagingUtils {
         }
 
         if (message.getType() != Message.TYPE_TEXT_MESSAGE) { //is it a binary message?
-            if (!new File(message.getMessageBody()).exists()) {
+            if (message.getMessageBody().startsWith("file://") && !new File(message.getMessageBody()).exists()) {
                 String msg = "error: " + message.getMessageBody() + " is not a valid file path";
                 Log.w(TAG, msg);
                 throw new PairappException(msg, ERROR_ATTACHMENT_TOO_LARGE);
