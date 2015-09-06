@@ -10,8 +10,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 
-import com.pair.Config;
 import com.pair.Errors.ErrorCenter;
+import com.pair.PairApp;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
@@ -121,7 +121,7 @@ public class VerificationFragment extends Fragment {
     };
 
     private void completeSetUp() {
-        Config.enableComponents();
+        PairApp.enableComponents();
         ContactSyncService.start(getActivity());
         startActivity(new Intent(getActivity(), MainActivity.class));
         getActivity().finish();

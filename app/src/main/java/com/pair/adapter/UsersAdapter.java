@@ -82,7 +82,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
             holder.userPhone.setText(R.string.group);
             holder.usersStatus.setVisibility(View.GONE);
         } else {
-            holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId()));
+            holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId(), UserManager.getInstance().getUserCountryISO()));
             holder.usersStatus.setVisibility(View.VISIBLE);
             holder.usersStatus.setText(user.getStatus());
         }

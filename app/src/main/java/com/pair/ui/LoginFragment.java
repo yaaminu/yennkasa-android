@@ -14,6 +14,7 @@ import android.widget.EditText;
 
 import com.pair.Config;
 import com.pair.Errors.ErrorCenter;
+import com.pair.PairApp;
 import com.pair.adapter.CountriesListAdapter;
 import com.pair.data.Country;
 import com.pair.data.UserManager;
@@ -143,7 +144,7 @@ public class LoginFragment extends Fragment {
                 }
             });
             if (e == null) {
-                Config.enableComponents();
+                PairApp.enableComponents();
                 ContactSyncService.start(Config.getApplicationContext());
                 startActivity(new Intent(getActivity(), MainActivity.class));
                 getActivity().finish();

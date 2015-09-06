@@ -2,6 +2,7 @@ package com.pair.net;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.pair.data.net.HttpResponse;
 
 import retrofit.Callback;
 import retrofit.http.Body;

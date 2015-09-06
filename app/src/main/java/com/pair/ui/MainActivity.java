@@ -14,10 +14,11 @@ import android.view.MenuItem;
 import android.widget.LinearLayout;
 
 import com.pair.Config;
+import com.pair.PairApp;
 import com.pair.data.Conversation;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
-import com.pair.util.RealmUtils;
+import com.pair.data.RealmUtils;
 import com.pair.util.UiHelpers;
 import com.parse.ParseAnalytics;
 import com.rey.material.app.ToolbarManager;
@@ -72,6 +73,7 @@ public class MainActivity extends PairAppActivity {
             }
             UiHelpers.showToast(Config.deviceArc());
         } else {
+            PairApp.disableComponents();
             gotoSetUpActivity();
         }
         if (!cleanedMessages) {

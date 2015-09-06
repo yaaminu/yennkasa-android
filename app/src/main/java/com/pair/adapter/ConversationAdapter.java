@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.pair.PairApp;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
@@ -92,7 +93,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
                 summary.append(message.getMessageBody());
                 // holder.mediaMessageIcon.setVisibility(View.GONE);
             } else {
-                summary.append(Message.typeToString(context, message.getType()));
+                summary.append(PairApp.typeToString(context, message.getType()));
             }
         }
         if (message != null && Message.isIncoming(message) && message.getState() != Message.STATE_SEEN) {

@@ -20,7 +20,7 @@ import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
-import com.pair.util.swipeDismisUtils.SwipeDismissListViewTouchListener;
+import com.pair.view.SwipeDismissListViewTouchListener;
 
 import java.util.Date;
 import java.util.Timer;

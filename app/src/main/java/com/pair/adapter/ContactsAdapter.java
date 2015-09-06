@@ -14,6 +14,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.ui.DPLoader;
 import com.pair.util.PhoneNumberNormaliser;
@@ -31,13 +32,14 @@ public class ContactsAdapter extends BaseAdapter {
     private static final String TAG = ContactsAdapter.class.getSimpleName();
     private List<Contact> contacts;
     private boolean isAddOrRemoveFromGroup;
-    ;
+    private final String userIsoCountry;
     private FragmentActivity context;
 
     public ContactsAdapter(FragmentActivity context, List<Contact> contacts, boolean isAddOrRemoveFromGroup) {
         this.contacts = contacts;
         this.isAddOrRemoveFromGroup = isAddOrRemoveFromGroup;
         this.context = context;
+        userIsoCountry = UserManager.getInstance().getUserCountryISO();
     }
 
     @Override
@@ -115,11 +117,11 @@ public class ContactsAdapter extends BaseAdapter {
             holder.userName.setClickable(true);
             holder.userDp.setClickable(true);
             holder.userDp.setOnClickListener(listener);
-            holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat(getItem(position).numberInIEE_Format));
+            holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat(getItem(position).numberInIEE_Format, userIsoCountry));
             holder.userPhone.setClickable(true);
             holder.userPhone.setOnClickListener(listener);
         } else {
-            holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat(contact.numberInIEE_Format));
+            holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat(contact.numberInIEE_Format, userIsoCountry));
             holder.userPhone.setOnClickListener(listener);
             holder.userName.setOnClickListener(listener);
             holder.inviteButton.setOnClickListener(listener);
@@ -130,7 +132,7 @@ public class ContactsAdapter extends BaseAdapter {
 
     private void callContact(View v, Contact contact) {
         Intent intent = new Intent(Intent.ACTION_DIAL);
-        intent.setData(Uri.parse("tel:" + PhoneNumberNormaliser.toLocalFormat("+" + contact.numberInIEE_Format)));
+        intent.setData(Uri.parse("tel:" + PhoneNumberNormaliser.toLocalFormat("+" + contact.numberInIEE_Format, userIsoCountry)));
         v.getContext().startActivity(intent);
     }
 
@@ -203,7 +205,7 @@ public class ContactsAdapter extends BaseAdapter {
 
     private void addToContacts(Context context, Contact contact) {
         Intent intent = new Intent(ContactsContract.Intents.SHOW_OR_CREATE_CONTACT);
-        intent.setData(Uri.parse("tel:" + PhoneNumberNormaliser.toLocalFormat(contact.phoneNumber)));
+        intent.setData(Uri.parse("tel:" + PhoneNumberNormaliser.toLocalFormat(contact.phoneNumber, userIsoCountry)));
         try {
             context.startActivity(intent);
         } catch (ActivityNotFoundException e) {

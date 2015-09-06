@@ -8,6 +8,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.pair.Config;
 import com.pair.pairapp.R;
@@ -20,7 +21,6 @@ import com.rey.material.app.DialogFragment;
 import com.rey.material.app.SimpleDialog;
 
 import static android.widget.Toast.LENGTH_SHORT;
-import static android.widget.Toast.makeText;
 
 /**
  * @author by Null-Pointer on 5/28/2015.
@@ -141,12 +141,12 @@ public class UiHelpers {
 
     @SuppressWarnings("ConstantConditions")
     public static void showToast(String message) {
-        makeText(Config.getApplicationContext(), message, LENGTH_SHORT).show();
+        Toast.makeText(Config.getApplicationContext(), message, LENGTH_SHORT).show();
     }
 
     @SuppressWarnings("ConstantConditions")
     public static void showToast(int message) {
-        makeText(Config.getApplicationContext(), message, LENGTH_SHORT).show();
+        Toast.makeText(Config.getApplicationContext(), message, LENGTH_SHORT).show();
     }
 
     public static void enterChatRoom(Context context, String peerId) {

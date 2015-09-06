@@ -186,7 +186,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         deleteGroup.setVisibility(View.GONE);
         //noinspection ConstantConditions
         phoneOrAdminTitle.setText(R.string.phone);
-        phoneInlocalFormat = PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId());
+        phoneInlocalFormat = PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId(), userManager.getUserCountryISO());
         userPhoneOrAdminName.setText(phoneInlocalFormat);
     }
 

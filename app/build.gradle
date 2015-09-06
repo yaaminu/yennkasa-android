@@ -36,11 +36,15 @@ dependencies {
     testCompile fileTree(include: ['*.jar'], dir: 'testLibs')
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile project(':lib')
-    compile 'com.android.support:appcompat-v7:22.1.1'
+    compile project(':config')
+    compile project(':daos')
+    compile project(':error')
+    compile project(':utils')
+    compile project(':messenger')
     compile 'com.google.android.gms:play-services-gcm:7.3.0'
+    compile 'com.android.support:appcompat-v7:22.1.1'
     compile 'com.android.support:support-v4:22.1.1'
     compile 'com.parse.bolts:bolts-android:1.2.0'
-    compile 'io.realm:realm-android:0.80.3'
     compile 'com.github.nkzawa:socket.io-client:0.3.0'
     compile files('libs/sinch-android-rtc-3.6.0.jar')
 }

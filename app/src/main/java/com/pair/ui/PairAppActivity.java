@@ -8,10 +8,10 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
-import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.view.View;
 
+import com.pair.PairApp;
 import com.pair.data.Message;
 import com.pair.messenger.Notifier;
 import com.pair.messenger.PairAppClient;
@@ -113,7 +113,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
             case 0:
                 return getString(R.string.new_message);
             case 1:
-                String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : Message.typeToString(this, message.getType());
+                String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(this, message.getType());
                 text = sender + ":\n" + messageBody;
                 break;
             case 2:
