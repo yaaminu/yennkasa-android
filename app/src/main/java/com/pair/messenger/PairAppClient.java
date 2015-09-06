@@ -15,6 +15,7 @@ import com.pair.data.Message;
 import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
 import com.pair.util.L;
+import com.pair.util.UiHelpers;
 import com.parse.ParseAnalytics;
 import com.sinch.android.rtc.ClientRegistration;
 import com.sinch.android.rtc.ErrorType;
@@ -51,8 +52,7 @@ public class PairAppClient extends Service {
     private WorkerThread WORKER_THREAD;
     private ExecutorService WORKER;
 
-    private static AtomicBoolean isClientShutDown = new AtomicBoolean(false),
-            isClientStarted = new AtomicBoolean(false);
+    private static AtomicBoolean isClientStarted = new AtomicBoolean(false);
 
     public static void start(Context context) {
         if (!UserManager.getInstance().isUserVerified()) {
@@ -114,50 +114,48 @@ public class PairAppClient extends Service {
 
     @Override
     public void onDestroy() {
-        if (!isClientShutDown.get()) {
-            shutDown();
-        }
+        shutDown();
         super.onDestroy();
     }
 
     private synchronized void bootClient() {
-        try {
-            CLIENT = SinchUtils.makeSinchClient(this, UserManager.getMainUserId());
-            CLIENT.setSupportMessaging(true);
-            CLIENT.startListeningOnActiveConnection();
-            CLIENT.addSinchClientListener(sinchClientListener);
-            if (BuildConfig.DEBUG) {
-                CLIENT.checkManifest();
+        if (!isClientStarted.getAndSet(true))
+            try {
+                CLIENT = SinchUtils.makeSinchClient(this, UserManager.getMainUserId());
+                CLIENT.setSupportMessaging(true);
+                CLIENT.startListeningOnActiveConnection();
+                CLIENT.addSinchClientListener(sinchClientListener);
+                if (BuildConfig.DEBUG) {
+                    CLIENT.checkManifest();
+                }
+                MessageClient client = CLIENT.getMessageClient();
+                client.addMessageClientListener(messageClientListener);
+                SINCH_MESSAGE_DISPATCHER = SinchDispatcher.getInstance(client);
+                CLIENT.start();
+            } catch (SinchUtils.SinchNotFoundException e) {
+                ParseAnalytics.trackEventInBackground("noSinch");
+                Log.wtf(TAG, "user's device does not have complete  support, call features will not be available");
+                //fallback to push
             }
-            MessageClient client = CLIENT.getMessageClient();
-            client.addMessageClientListener(messageClientListener);
-            SINCH_MESSAGE_DISPATCHER = SinchDispatcher.getInstance(client);
-            CLIENT.start();
-        } catch (SinchUtils.SinchNotFoundException e) {
-            ParseAnalytics.trackEventInBackground("noSinch");
-            Log.wtf(TAG, "user's device does not have complete  support, call features will not be available");
-            //fallback to push
-        }
 
         PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance();
         WORKER_THREAD = new WorkerThread();
         WORKER_THREAD.start();
         WORKER = Executors.newSingleThreadExecutor();
         isClientStarted.set(true);
-        isClientShutDown.set(false);
     }
 
     private synchronized void shutDown() {
-        if (!isClientShutDown.get()) {
-            PARSE_MESSAGE_DISPATCHER.close();
+        if (isClientStarted.getAndSet(false)) {
+            if (PARSE_MESSAGE_DISPATCHER != null) {
+                PARSE_MESSAGE_DISPATCHER.close();
+            }
             if (CLIENT != null) { //sinch client may not be available e.g if device arch is x86 or mips
                 SINCH_MESSAGE_DISPATCHER.close();
                 CLIENT.terminateGracefully();
             }
             WORKER_THREAD.shutDown(); //the order is important
             WORKER.shutdownNow();
-            isClientShutDown.set(true);
-            isClientStarted.set(false);
             Log.i(TAG, TAG + ": bye");
             return;
         }
@@ -166,12 +164,12 @@ public class PairAppClient extends Service {
 
 
     private void attemptToSendAllUnsentMessages() {
-        WORKER.submit(new Runnable() {
+        if (!isClientStarted.get()) {
+            return;
+        }
+        Runnable task = new Runnable() {
             @Override
             public void run() {
-                if (!isClientStarted.get()) {
-                    return;
-                }
                 Realm realm = Message.REALM(Config.getApplicationContext());
                 RealmResults<Message> messages = realm.where(Message.class).notEqualTo(Message.FIELD_TYPE, Message.TYPE_DATE_MESSAGE)
                         .or().equalTo(Message.FIELD_TYPE, Message.TYPE_TYPING_MESSAGE)
@@ -184,7 +182,12 @@ public class PairAppClient extends Service {
                 }
                 realm.close();
             }
-        });
+        };
+        try {
+            WORKER.submit(task);
+        } catch (Exception e) { //quick fix for a mysterious crash
+            Log.e(TAG, "" + e.getMessage());
+        }
     }
 
 
@@ -197,7 +200,7 @@ public class PairAppClient extends Service {
         @Override
         public void onClientStopped(SinchClient sinchClient) {
             //what caused the client to stop?
-            if (!isClientShutDown.get() && isClientStarted.get()) {
+            if (isClientStarted.get()) {
                 //something is wrong
                 Log.wtf(TAG, "Client stopped surprisingly");
             }
@@ -206,15 +209,16 @@ public class PairAppClient extends Service {
         @Override
         public void onClientFailed(SinchClient sinchClient, SinchError sinchError) {
 
-            if (!isClientShutDown.get()) {
-                stopSelf();
-            }
-
             if (sinchError.getErrorType() == ErrorType.NETWORK) {
                 bootClient(); //try again // TODO: 9/2/2015 do this exponentially
             } else {
                 // TODO: 8/29/2015 more error handling
                 Log.e(TAG, "Client failed to start with reason: " + sinchError.getErrorType());
+                if (isClientStarted.get()) {
+
+//                    UiHelpers.showPlainOlDialog(PairAppClient.this, "we are having trouble setting things up, " +
+//                            "ensure your are connected to the internet and that your date is correct");
+                }
             }
         }
 

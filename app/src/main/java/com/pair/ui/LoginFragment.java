@@ -151,7 +151,11 @@ public class LoginFragment extends Fragment {
                 if ((message == null) || (message.isEmpty())) {
                     message = "an unknown error occurred";
                 }
-                UiHelpers.showErrorDialog(getActivity(), message);
+                if (isResumed()) {
+                    UiHelpers.showErrorDialog(getActivity(), message);
+                } else {
+                    UiHelpers.showPlainOlDialog(getActivity(), message);
+                }
             }
         }
     };

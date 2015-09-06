@@ -1,5 +1,6 @@
 package com.pair.util;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -31,6 +32,11 @@ public class UiHelpers {
     public static String getFieldContent(EditText field) {
         String content = field.getText().toString();
         return content.trim();
+    }
+
+    public static void showPlainOlDialog(Context context, String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setMessage(message).create().show();
     }
 
     public static void showErrorDialog(FragmentActivity context, String message) {

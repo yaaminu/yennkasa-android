@@ -140,8 +140,8 @@ public class ParseClient implements UserApiV2, FileApi {
                 return; //important
             }
         } catch (ParseException e) {
-            notifyCallback(callback, prepareErrorReport(e), null);
-            return;
+            Log.d(TAG,"no account associated with "+_id+" in proceeding to create new account");
+           //continue
         }
         try {
             ensureFieldsFilled(_id, name, password, gcmRegId, country);
@@ -185,8 +185,8 @@ public class ParseClient implements UserApiV2, FileApi {
     }
 
     private void cleanExistingInstallation(String _id) throws ParseException {
-        ParseInstallation installation = ParseInstallation.getQuery().whereEqualTo(FIELD_ID, _id).getFirst();
-        installation.delete();
+//        ParseInstallation installation = ParseInstallation.getQuery().whereEqualTo(FIELD_ID, _id).getFirst();
+//        installation.delete();
     }
 
     @NonNull
