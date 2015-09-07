@@ -192,6 +192,15 @@ public class SocketIoClient implements Closeable {
         return true;
     }
 
+    public boolean unRegisterEvent(String eventName, Listener eventReceiver) {
+        if (!initialised.get()) {
+            Log.w(TAG, "can't unregister  an event. client yet to start");
+            return false;
+        }
+        CLIENT.off(eventName, eventReceiver);
+        return true;
+    }
+
     public boolean registerForEventOnce(String eventName, Listener eventReceiver) {
         if (!initialised.get()) {
             return false;

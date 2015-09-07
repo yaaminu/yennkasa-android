@@ -61,6 +61,7 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
     @Override
     public void close() {
         super.close();
+        socketIoClient.unRegisterEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
         socketIoClient.close();
     }
 
