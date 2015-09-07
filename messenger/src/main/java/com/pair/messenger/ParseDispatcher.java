@@ -16,6 +16,7 @@ import retrofit.Callback;
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
+import retrofit.RetrofitError.Kind;
 import retrofit.android.AndroidLog;
 import retrofit.client.Response;
 
@@ -105,18 +106,18 @@ class ParseDispatcher extends AbstractMessageDispatcher {
 
             @Override
             public void failure(RetrofitError retrofitError) {
-                RetrofitError.Kind kind = retrofitError.getKind();
+                Kind kind = retrofitError.getKind();
                 switch (kind) {
-                    case Kind.CONVERSION:
+                    case CONVERSION:
                         onFailed(message, MessageUtils.ERROR_INVALID_MESSAGE);
                         break;
-                    case Kind.NETWORK:
+                    case NETWORK:
                         onFailed(message, MessageUtils.ERROR_NOT_CONNECTED);
                         break;
-                    case Kind.HTTP:
+                    case HTTP:
                         onFailed(message, MessageUtils.ERROR_UNKNOWN);
                         break;
-                    case Kind.UNEXPECTED:
+                    case UNEXPECTED:
                         onFailed(message, MessageUtils.ERROR_UNKNOWN);
                         break;
                     default:

@@ -13,7 +13,6 @@ import com.pair.data.User;
 import com.pair.data.net.FileApi;
 import com.pair.data.net.HttpResponse;
 import com.pair.net.MessageApi;
-import com.pair.pairapp.BuildConfig;
 import com.pair.util.ConnectionUtils;
 
 import org.apache.http.HttpStatus;

@@ -25,9 +25,8 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile project(':daos')
-    compile project(':error')
-    compile project(':sockets_io_client')
-    compile files('libs/sinch-android-rtc-3.6.0.jar')
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile project(':config')
+    compile 'com.github.nkzawa:socket.io-client:0.3.0'
+    testCompile 'junit:junit:4.12'
 }

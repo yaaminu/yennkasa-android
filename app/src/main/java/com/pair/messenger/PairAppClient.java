@@ -4,30 +4,15 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 
 import com.pair.Config;
-import com.pair.Errors.ErrorCenter;
 import com.pair.data.Message;
 import com.pair.data.UserManager;
-import com.pair.pairapp.BuildConfig;
-import com.pair.pairapp.R;
 import com.pair.util.L;
-import com.parse.ParseAnalytics;
-import com.sinch.android.rtc.ClientRegistration;
-import com.sinch.android.rtc.ErrorType;
-import com.sinch.android.rtc.PushPair;
-import com.sinch.android.rtc.SinchClient;
-import com.sinch.android.rtc.SinchClientListener;
-import com.sinch.android.rtc.SinchError;
-import com.sinch.android.rtc.messaging.MessageClient;
-import com.sinch.android.rtc.messaging.MessageClientListener;
-import com.sinch.android.rtc.messaging.MessageDeliveryInfo;
-import com.sinch.android.rtc.messaging.MessageFailureInfo;
 
 import java.util.Collection;
 import java.util.List;
@@ -46,10 +31,7 @@ public class PairAppClient extends Service {
     public static final String ACTION = "action";
 
     private final PairAppClientInterface INTERFACE = new PairAppClientInterface();
-    private Dispatcher<Message> PARSE_MESSAGE_DISPATCHER, SINCH_MESSAGE_DISPATCHER;
-
-    private SinchClient CLIENT;
-
+    private Dispatcher<Message> PARSE_MESSAGE_DISPATCHER, SOCKETSIO_DISPATCHER;
     private WorkerThread WORKER_THREAD;
     private ExecutorService WORKER;
 
@@ -120,44 +102,25 @@ public class PairAppClient extends Service {
     }
 
     private synchronized void bootClient() {
-        if (!isClientStarted.getAndSet(true))
-            try {
-                startSinchClient();
-            } catch (SinchUtils.SinchNotFoundException e) {
-                ParseAnalytics.trackEventInBackground("noSinch");
-                Log.wtf(TAG, "user's device does not have complete  support, call features will not be available");
-                ErrorCenter.reportError(TAG, getString(R.string.sinch_not_available_message));
-            }
-
-        PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance();
-        WORKER_THREAD = new WorkerThread();
-        WORKER_THREAD.start();
-        WORKER = Executors.newSingleThreadExecutor();
-        isClientStarted.set(true);
-    }
-
-    private void startSinchClient() throws SinchUtils.SinchNotFoundException {
-        CLIENT = SinchUtils.makeSinchClient(this, UserManager.getMainUserId());
-        CLIENT.setSupportMessaging(true);
-        CLIENT.startListeningOnActiveConnection();
-        CLIENT.addSinchClientListener(sinchClientListener);
-        if (BuildConfig.DEBUG) {
-            CLIENT.checkManifest();
+        if (!isClientStarted.getAndSet(true)) {
+            SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance();
+            PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance();
+            WORKER_THREAD = new WorkerThread();
+            WORKER_THREAD.start();
+            WORKER = Executors.newSingleThreadExecutor();
+            isClientStarted.set(true);
         }
-        MessageClient client = CLIENT.getMessageClient();
-        client.addMessageClientListener(messageClientListener);
-        SINCH_MESSAGE_DISPATCHER = SinchDispatcher.getInstance(client);
-        CLIENT.start();
     }
+
 
     private synchronized void shutDown() {
         if (isClientStarted.getAndSet(false)) {
             PARSE_MESSAGE_DISPATCHER.close();
-            if (CLIENT != null) { //sinch client may not be available e.g if device arch is x86 or mips
-                SINCH_MESSAGE_DISPATCHER.close();
-                CLIENT.terminateGracefully();
-            }
-            WORKER_THREAD.shutDown(); //the order is important
+
+            SOCKETSIO_DISPATCHER.close();
+
+            //order is important
+            WORKER_THREAD.shutDown();
             WORKER.shutdownNow();
             Log.i(TAG, TAG + ": bye");
             return;
@@ -173,107 +136,32 @@ public class PairAppClient extends Service {
         Runnable task = new Runnable() {
             @Override
             public void run() {
-                Realm realm = Message.REALM(Config.getApplicationContext());
-                RealmResults<Message> messages = realm.where(Message.class).notEqualTo(Message.FIELD_TYPE, Message.TYPE_DATE_MESSAGE)
-                        .or().equalTo(Message.FIELD_TYPE, Message.TYPE_TYPING_MESSAGE)
-                        .equalTo(Message.FIELD_STATE, Message.STATE_PENDING).findAll();
-                if (messages.isEmpty()) {
-                    Log.d(TAG, "all messages sent");
-                } else {
-                    final List<Message> copy = Message.copy(messages);
-                    WORKER_THREAD.sendMessages(copy);
+                synchronized (PairAppClient.this) {
+                    Realm realm = Message.REALM(Config.getApplicationContext());
+                    RealmResults<Message> messages = realm.where(Message.class).notEqualTo(Message.FIELD_TYPE, Message.TYPE_DATE_MESSAGE)
+                            .or().equalTo(Message.FIELD_TYPE, Message.TYPE_TYPING_MESSAGE)
+                            .equalTo(Message.FIELD_STATE, Message.STATE_PENDING).findAll();
+                    if (messages.isEmpty()) {
+                        Log.d(TAG, "all messages sent");
+                    } else {
+                        final List<Message> copy = Message.copy(messages);
+                        WORKER_THREAD.sendMessages(copy);
+                    }
+                    realm.close();
                 }
-                realm.close();
             }
         };
         WORKER.submit(task);
     }
-
-
-    private final SinchClientListener sinchClientListener = new SinchClientListener() {
-        @Override
-        public void onClientStarted(SinchClient sinchClient) {
-            Log.i(TAG, "call client started, ready  to recieve calls");
-        }
-
-        @Override
-        public void onClientStopped(SinchClient sinchClient) {
-            //what caused the client to stop?
-            if (isClientStarted.get()) {
-                //something is wrong
-                Log.wtf(TAG, "Client stopped surprisingly");
-            }
-        }
-
-        @Override
-        public void onClientFailed(SinchClient sinchClient, SinchError sinchError) {
-            Log.e(TAG, "Client failed to start with reason: " + sinchError.getErrorType());
-            if (sinchError.getErrorType() == ErrorType.NETWORK) {
-                ErrorCenter.reportError(TAG,getString(R.string.st_unable_to_connect_version_2));
-                //try again // TODO: 9/2/2015 do this exponentially
-                try {
-                    startSinchClient();
-                } catch (SinchUtils.SinchNotFoundException ignored) {
-                    //impossible
-                }
-            } else {
-                ErrorCenter.reportError(TAG, getString(R.string.sinch_error_report_message));
-
-            }
-        }
-
-        @Override
-        public void onRegistrationCredentialsRequired(SinchClient sinchClient, ClientRegistration clientRegistration) {
-
-        }
-
-        @Override
-        public void onLogMessage(int i, String s, String s1) {
-            SinchUtils.logMessage(i, s, s1);
-        }
-    };
-
-
-    private final MessageClientListener messageClientListener = new MessageClientListener() {
-        @Override
-        public void onIncomingMessage(MessageClient messageClient, com.sinch.android.rtc.messaging.Message message) {
-            Bundle bundle = new Bundle();
-            bundle.putString("message", message.getTextBody());
-            Intent intent = new Intent(PairAppClient.this, MessageProcessor.class);
-            intent.putExtras(bundle);
-            startService(intent);
-        }
-
-        @Override
-        public void onMessageSent(MessageClient messageClient, com.sinch.android.rtc.messaging.Message message, String s) {
-
-        }
-
-        @Override
-        public void onMessageFailed(MessageClient messageClient, com.sinch.android.rtc.messaging.Message message, MessageFailureInfo messageFailureInfo) {
-
-        }
-
-        @Override
-        public void onMessageDelivered(MessageClient messageClient, MessageDeliveryInfo messageDeliveryInfo) {
-
-        }
-
-        @Override
-        public void onShouldSendPushData(MessageClient messageClient, com.sinch.android.rtc.messaging.Message message, List<PushPair> list) {
-
-        }
-    };
 
     public class PairAppClientInterface extends Binder {
         public void sendMessage(Message message) {
             if (!isClientStarted.get()) {
                 bootClient();
             }
-            if (WORKER_THREAD.isAlive()) //worker thread will send all pending messages immediately it come alive
-                WORKER_THREAD.sendMessage(Message.copy(message)); //detach from realm
+            if (WORKER_THREAD.isAlive()) //worker thread will send all pending messages immediately it comes alive
+                WORKER_THREAD.sendMessage(Message.copy(message)); //detach the message from realm
         }
-
 
         public void sendMessages(Collection<Message> tobeSent) {
             if (!isClientStarted.get()) {
@@ -388,15 +276,14 @@ public class PairAppClient extends Service {
         }
 
         private void sendMessage(Message message) {
-            if (SINCH_MESSAGE_DISPATCHER != null && UserManager.getInstance().supportsCalling(message.getTo())) {
-                SINCH_MESSAGE_DISPATCHER.dispatch(message);
-            } else {
-                PARSE_MESSAGE_DISPATCHER.dispatch(message);
-            }
+            SOCKETSIO_DISPATCHER.dispatch(message);
+            //PARSE_MESSAGE_DISPATCHER.dispatch(message);
         }
 
         private void sendMessages(Collection<Message> messages) {
-            PARSE_MESSAGE_DISPATCHER.dispatch(messages);
+            for (Message message : messages) {
+                sendMessage(message);
+            }
         }
     }
 

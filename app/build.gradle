@@ -45,6 +45,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:22.1.1'
     compile 'com.android.support:support-v4:22.1.1'
     compile 'com.parse.bolts:bolts-android:1.2.0'
-    compile 'com.github.nkzawa:socket.io-client:0.3.0'
     compile files('libs/sinch-android-rtc-3.6.0.jar')
 }

@@ -14,7 +14,6 @@ import java.util.Collection;
  *
  * @author by Null-Pointer on 5/26/2015.
  * @see AbstractMessageDispatcher
- * @see SinchDispatcher
  * @see ParseDispatcher
  */
 interface Dispatcher<T> extends Closeable {

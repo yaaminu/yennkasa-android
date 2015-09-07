@@ -16,7 +16,7 @@ public class ParseDispatcherTest {
     @Test
     public void testDispatchToGroup() throws Exception {
 //        Message message = getMessage();
-//        ((ParseDispatcher) ParseDispatcher.getInstance()).dispatchToUser(message);
+//        ((ParseDispatcher) ParseDispatcher.newInstance()).dispatchToUser(message);
     }
 
     @Test
@@ -40,6 +40,6 @@ public class ParseDispatcherTest {
     @Test
     public void testDispatchToUser() throws Exception {
 //        Message message = getMessage();
-//        ((ParseDispatcher) ParseDispatcher.getInstance()).dispatchToUser(message);
+//        ((ParseDispatcher) ParseDispatcher.newInstance()).dispatchToUser(message);
     }
 }
