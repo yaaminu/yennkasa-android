@@ -237,7 +237,7 @@ public class User extends RealmObject {
     }
 
 
-    public static List<String> aggregateUserIds(RealmList<User> users, ContactsManager.Filter<User> filter) {
+    public static List<String> aggregateUserIds(Collection<User> users, ContactsManager.Filter<User> filter) {
         List<String> members = new ArrayList<>();
         for (User user : users) {
             String userId = user.getUserId();

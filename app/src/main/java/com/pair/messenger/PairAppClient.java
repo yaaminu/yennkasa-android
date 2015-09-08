@@ -1,5 +1,6 @@
 package com.pair.messenger;
 
+import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +17,7 @@ import com.pair.util.L;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Stack;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -31,7 +33,8 @@ public class PairAppClient extends Service {
     public static final String ACTION = "action";
 
     private final PairAppClientInterface INTERFACE = new PairAppClientInterface();
-    private Dispatcher<Message> PARSE_MESSAGE_DISPATCHER, SOCKETSIO_DISPATCHER;
+    private Dispatcher<Message> PARSE_MESSAGE_DISPATCHER;
+    private static Dispatcher<Message> SOCKETSIO_DISPATCHER;
     private WorkerThread WORKER_THREAD;
     private ExecutorService WORKER;
 
@@ -80,13 +83,16 @@ public class PairAppClient extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        if (!isClientStarted.get()) {
-            bootClient();
+        if (UserManager.getInstance().isUserVerified()) {
+            if (!isClientStarted.get()) {
+                bootClient();
+            }
+            if (intent != null && intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
+                attemptToSendAllUnsentMessages();
+            }
+            return INTERFACE;
         }
-        if (intent != null && intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
-            attemptToSendAllUnsentMessages();
-        }
-        return INTERFACE;
+        throw new IllegalStateException("user must be logged in");
     }
 
     @Override
@@ -117,8 +123,11 @@ public class PairAppClient extends Service {
         if (isClientStarted.getAndSet(false)) {
             PARSE_MESSAGE_DISPATCHER.close();
 
-            SOCKETSIO_DISPATCHER.close();
-
+            if (SOCKETSIO_DISPATCHER != null) {
+                SOCKETSIO_DISPATCHER.close();
+            }
+            LiveCenter.stopTrackingActiveUsers();
+            MessageCenter.stopListeningForSocketMessages();
             //order is important
             WORKER_THREAD.shutDown();
             WORKER.shutdownNow();
@@ -154,6 +163,38 @@ public class PairAppClient extends Service {
         WORKER.submit(task);
     }
 
+
+    private static Stack<Activity> backStack = new Stack<>();
+
+    public synchronized static void markUserAsOffline(Activity activity) {
+        if (activity == null) {
+            throw new IllegalArgumentException();
+        }
+        if (backStack.size() > 0) { //avoid empty stack exceptions
+            backStack.pop();
+        }
+
+        if (backStack.isEmpty()) {
+            LiveCenter.stopTrackingActiveUsers();
+            MessageCenter.stopListeningForSocketMessages();
+            if (SOCKETSIO_DISPATCHER != null) {
+                SOCKETSIO_DISPATCHER.close();
+                SOCKETSIO_DISPATCHER = null;
+            }
+        }
+    }
+
+    public synchronized static void markUserAsOnline(Activity activity) {
+        if (activity == null) {
+            throw new IllegalArgumentException();
+        }
+        if (backStack.isEmpty()) {
+            LiveCenter.startTrackingActiveUsers();
+            MessageCenter.startListeningForSocketMessages();
+        }
+        backStack.add(activity);
+    }
+
     public class PairAppClientInterface extends Binder {
         public void sendMessage(Message message) {
             if (!isClientStarted.get()) {
@@ -171,14 +212,17 @@ public class PairAppClient extends Service {
                 WORKER_THREAD.sendMessages(Message.copy(tobeSent)); //detach from realm
         }
 
+        @SuppressWarnings("unused")
         public void disPatchEvent(String eventName) {
             oops();
         }
 
+        @SuppressWarnings("unused")
         public void disPatchEvent(String eventName, String details) {
             oops();
         }
 
+        @SuppressWarnings("unused")
         public void callUser(String userId) {
             oops();
         }
@@ -276,8 +320,18 @@ public class PairAppClient extends Service {
         }
 
         private void sendMessage(Message message) {
+//            if (LiveCenter.isOnline(message.getTo()) && !UserManager.getInstance().isGroup(message.getTo())) {
+//                if (SOCKETSIO_DISPATCHER == null) {
+//                    SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance();
+//                }
+//                SOCKETSIO_DISPATCHER.dispatch(message);
+//            } else {
+//                PARSE_MESSAGE_DISPATCHER.dispatch(message);
+//            }
+            if (SOCKETSIO_DISPATCHER == null) {
+                SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance();
+            }
             SOCKETSIO_DISPATCHER.dispatch(message);
-            //PARSE_MESSAGE_DISPATCHER.dispatch(message);
         }
 
         private void sendMessages(Collection<Message> messages) {

@@ -152,10 +152,10 @@ public class Message extends RealmObject {
      */
     public static String generateIdPossiblyUnique() {
         Application appContext = Config.getApplication();
-        Realm realm = Realm.getInstance(appContext);
-        long count = realm.where(Message.class).count() + 1;
+        Realm realm = REALM(appContext);
         String id;
         synchronized (idLock) {
+            long count = realm.where(Message.class).count() + 1;
             id = count + "@" + UserManager.getInstance().getCurrentUser().getUserId() + "@" + System.nanoTime();
         }
         Log.i(TAG, "generated message id: " + id);

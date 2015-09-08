@@ -36,11 +36,11 @@ import com.google.gson.JsonObject;
 import com.pair.Config;
 import com.pair.Errors.ErrorCenter;
 import com.pair.Errors.PairappException;
-import com.pair.data.MessageJsonAdapter;
 import com.pair.adapter.MessagesAdapter;
 import com.pair.adapter.UsersAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
+import com.pair.data.MessageJsonAdapter;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.messenger.MessageProcessor;
@@ -48,7 +48,6 @@ import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.FileUtils;
 import com.pair.util.MediaUtils;
-import com.pair.data.RealmUtils;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
@@ -62,7 +61,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
-import java.util.TimerTask;
 
 import io.realm.Realm;
 import io.realm.RealmQuery;
@@ -684,16 +682,16 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
      * code purposely for testing we will take this off in production
      */
     private void testChatActivity() {
-        final String senderId = peer.getUserId();
-        timer = new Timer(true);
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_LOWEST);
-                testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, getCurrentUser().getUserId()));
-            }
-        };
-        timer.scheduleAtFixedRate(task, 1000, 45000);
+//        final String senderId = peer.getUserId();
+//        timer = new Timer(true);
+//        TimerTask task = new TimerTask() {
+//            @Override
+//            public void run() {
+//                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_LOWEST);
+//                testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, getCurrentUser().getUserId()));
+//            }
+//        };
+//        timer.scheduleAtFixedRate(task, 1000, 45000);
     }
 
     Timer timer;

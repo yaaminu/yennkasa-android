@@ -9,6 +9,9 @@ import com.pair.data.MessageJsonAdapter;
 import com.pair.data.UserManager;
 import com.pair.net.sockets.SocketIoClient;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.List;
 
 /**
@@ -23,14 +26,20 @@ import java.util.List;
 
 class SocketsIODispatcher extends AbstractMessageDispatcher {
     private static final String TAG = SocketsIODispatcher.class.getSimpleName();
-    private static final Emitter.Listener ON_MESSAGE_STATUS = new Emitter.Listener() {
+
+    private final Emitter.Listener ON_MESSAGE_STATUS = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            Log.i(TAG, "msgStatus event");
+            Log.i(TAG, "message delivered");
+            try {
+                JSONObject object = new JSONObject(args[0].toString());
+                onDelivered(object.getString("messageId"));
+            } catch (JSONException e) {
+                throw new RuntimeException();
+            }
         }
     };
-
-    private final SocketIoClient socketIoClient;
+    private final SocketIoClient socketIoClient, liveClient;
 
     /**
      * create a new an instance of {@link SocketsIODispatcher}.
@@ -44,8 +53,9 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
     }
 
     private SocketsIODispatcher() {
-        socketIoClient = SocketIoClient.getInstance(Config.PAIRAPP_ENDPOINT + "/live", UserManager.getMainUserId());
-        socketIoClient.registerForEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
+        socketIoClient = SocketIoClient.getInstance(Config.PAIRAPP_ENDPOINT + "/message", UserManager.getMainUserId());
+        liveClient = SocketIoClient.getInstance(Config.PAIRAPP_ENDPOINT + "/live", UserManager.getMainUserId());
+        liveClient.registerForEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
     }
 
     @Override
@@ -61,7 +71,8 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
     @Override
     public void close() {
         super.close();
-        socketIoClient.unRegisterEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
+        liveClient.unRegisterEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
+        liveClient.close();
         socketIoClient.close();
     }
 

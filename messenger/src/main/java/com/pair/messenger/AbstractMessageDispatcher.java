@@ -8,8 +8,8 @@ import com.pair.data.ContactsManager;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.data.UserManager;
-import com.pair.data.util.MessageUtils;
 import com.pair.data.net.FileApi;
+import com.pair.data.util.MessageUtils;
 import com.pair.parse_client.ParseClient;
 import com.pair.util.ConnectionUtils;
 import com.pair.util.L;
@@ -19,8 +19,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import io.realm.Realm;
 
@@ -247,6 +245,4 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             L.d(TAG, "dummy progress listener: " + percentComplete);
         }
     };
-
-    protected static final ExecutorService WORKER = Executors.newCachedThreadPool();
 }

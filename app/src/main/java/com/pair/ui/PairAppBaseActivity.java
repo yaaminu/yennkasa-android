@@ -1,16 +1,15 @@
 package com.pair.ui;
 
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.support.v7.app.ActionBarActivity;
 
+import com.pair.messenger.PairAppClient;
 import com.pair.util.NavigationManager;
 
 /**
  * @author by Null-Pointer on 9/6/2015.
  */
 public abstract class PairAppBaseActivity extends ActionBarActivity {
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -27,6 +26,7 @@ public abstract class PairAppBaseActivity extends ActionBarActivity {
     protected void onResume() {
         super.onResume();
         NavigationManager.onResume(this);
+        PairAppClient.markUserAsOnline(this);
     }
 
     @Override
@@ -35,11 +35,14 @@ public abstract class PairAppBaseActivity extends ActionBarActivity {
         NavigationManager.onPause(this);
     }
 
+
     @Override
     protected void onStop() {
         super.onStop();
         NavigationManager.onStop(this);
+        PairAppClient.markUserAsOffline(this);
     }
+
 
     @Override
     protected void onDestroy() {

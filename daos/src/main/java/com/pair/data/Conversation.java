@@ -120,4 +120,14 @@ public class Conversation extends RealmObject {
     public static Realm Realm(Context context) {
         return Realm.getInstance(context);
     }
+
+    public static Conversation copy(Conversation conversation) {
+        Conversation clone = new Conversation();
+        clone.setActive(conversation.isActive());
+        clone.setLastActiveTime(conversation.getLastActiveTime());
+        clone.setPeerId(conversation.getPeerId());
+        clone.setSummary(conversation.getSummary());
+        clone.setLastMessage(conversation.getLastMessage());
+        return clone;
+    }
 }

@@ -12,7 +12,7 @@ import java.util.Collection;
  * it forms the basis for all dispatchers.
  * </p>
  *
- * @author by Null-Pointer on 5/26/2015.
+ * @author Null-Pointer on 5/26/2015.
  * @see AbstractMessageDispatcher
  * @see ParseDispatcher
  */
@@ -37,10 +37,10 @@ interface Dispatcher<T> extends Closeable {
      * an interface to be implemented if one wants to monitor
      * a given dispatcher. Example an analytic class can implement
      * this interface and track all messages sent. or a stats class
-     * can implement this interface and track the bytes sent by a given
+     * can implement this interface and track the number of bytes  transferred by a given
      * dispatcher.
      *
-     * @author by Null-Pointer on 5/26/2015.
+     * @author Null-Pointer on 5/26/2015.
      */
     interface DispatcherMonitor {
         void onDispatchFailed(String reason, String objectIdentifier);

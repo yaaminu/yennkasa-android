@@ -80,8 +80,6 @@ public class ParseClient implements UserApiV2, FileApi {
         defaultAcl.setPublicWriteAccess(true);
         ParseACL.setDefaultACL(defaultAcl, true);
         Parse.setLogLevel(Parse.LOG_LEVEL_VERBOSE);
-        Parse.enableLocalDatastore(application);
-
         /***************************************KEYS***************************************************************************/
 
         Parse.initialize(application, "RcCxnXwO1mpkSNrU9u4zMtxQac4uabLNIFa662ZY", "f1ad1Vfjisr7mVBDSeoFO1DobD6OaLkggHvT2Nk4");

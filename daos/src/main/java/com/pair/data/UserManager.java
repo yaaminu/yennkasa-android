@@ -33,6 +33,7 @@ import java.util.concurrent.Executors;
 
 import io.realm.Realm;
 import io.realm.RealmList;
+import io.realm.RealmResults;
 import retrofit.RetrofitError;
 import retrofit.mime.TypedFile;
 
@@ -1025,6 +1026,18 @@ public class UserManager {
         try {
             User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
             return user != null && user.getHasCall();
+        } finally {
+            realm.close();
+        }
+    }
+
+    public List<String> allUserIds() {
+        Realm realm = User.Realm(Config.getApplicationContext());
+        try {
+            RealmResults<User> users = realm.where(User.class)
+                    .equalTo(User.FIELD_TYPE, User.TYPE_NORMAL_USER)
+                    .notEqualTo(User.FIELD_ID, getMainUserId()).findAll();
+            return User.aggregateUserIds(users, null);
         } finally {
             realm.close();
         }

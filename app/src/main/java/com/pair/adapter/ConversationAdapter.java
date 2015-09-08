@@ -74,6 +74,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         StringBuilder summary = new StringBuilder();
         if (message == null) {
             summary.append(context.getString(R.string.no_message));
+            holder.dateLastActive.setText("");
         } else {
             if (UserManager.getInstance().isGroup(conversation.getPeerId())) {
                 if (Message.isOutGoing(message)) {

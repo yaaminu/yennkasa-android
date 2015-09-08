@@ -14,6 +14,7 @@ import com.pair.data.MessageJsonAdapter;
 import java.util.Date;
 
 import io.realm.Realm;
+import io.realm.exceptions.RealmException;
 
 public class MessageProcessor extends IntentService {
     private static final String TAG = MessageProcessor.class.getSimpleName();
@@ -70,13 +71,20 @@ public class MessageProcessor extends IntentService {
         message.setDateComposed(new Date(System.currentTimeMillis() + 1));
         message.setState(Message.STATE_RECEIVED);
         conversation.setLastActiveTime(new Date());//now
-        conversation.setLastMessage(realm.copyToRealm(message));
+        try {
+            conversation.setLastMessage(realm.copyToRealm(message));
+        } catch (RealmException primaryKey) {
+            realm.cancelTransaction();
+            Log.i(TAG, primaryKey.getMessage());
+            return;
+        }
         conversation.setSummary(message.getMessageBody());
         realm.commitTransaction();
-        // TODO: 6/14/2015 send a socket/gcm broadcast to server to notify sender of message state.
         Message copied = Message.copy(message);
         realm.close();
         NotificationManager.INSTANCE.onNewMessage(this, copied);
+        // TODO: 6/14/2015 send a socket/gcm broadcast to server to notify sender of message state.
+        MessageCenter.notifyReceived(copied);
         wakeLock.release();
     }
 

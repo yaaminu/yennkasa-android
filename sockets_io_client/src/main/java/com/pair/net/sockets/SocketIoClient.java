@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -36,21 +37,21 @@ public class SocketIoClient implements Closeable {
 
     public static final String TAG = "SocketsIOClient";
 
-    private static final AtomicBoolean initialised = new AtomicBoolean(false);
-    private static final AtomicBoolean ready = new AtomicBoolean(false);
+    private final AtomicBoolean initialised = new AtomicBoolean(false);
+    private final AtomicBoolean ready = new AtomicBoolean(false);
     public static final String EVENT_MESSAGE = "message";
     public static final String EVENT_MSG_STATUS = "msgStatus";
 
     private final List<Pair<String, Object>> waitingBroadcasts = new ArrayList<>();
+    private final String userId;
 
     private Socket CLIENT;
-    public static final SocketIoClient INSTANCE = new SocketIoClient();
-
-
+    private static final WeakHashMap<String, SocketIoClient> instances = new WeakHashMap<>();
     private Handler reconnectHandler;
     private Timer reconnectTimer;
+    private String endPoint;
 
-    private static final AtomicInteger referenceCount = new AtomicInteger(0);
+    private final AtomicInteger referenceCount = new AtomicInteger(0);
 
 
     private final Listener ON_RECONNECTING = new Listener() {
@@ -131,7 +132,7 @@ public class SocketIoClient implements Closeable {
         }
     };
 
-    private SocketIoClient() {
+    private SocketIoClient(String endPoint, String userId) {
         //if we are in a testing environment we cannot use handlers
         //more so if we are initialised from a thread with no looper
         try {
@@ -141,46 +142,45 @@ public class SocketIoClient implements Closeable {
             Log.w(TAG, "it is discouraged to create socketIoClient  instance on threads with  no looper attached");
             reconnectTimer = new Timer("reconnect timer");
         }
+        initialise(endPoint, userId);
+        this.endPoint = endPoint;
+        this.userId = userId;
     }
 
-    private void doStart(String endPoint, String userId) {
-        try {
-            URL url = new URL(endPoint); //this is just to ensure urls passed are valid.
-            IO.Options options = new IO.Options();
-            options.query = "userId=" + userId;
-            options.forceNew = true;
-            CLIENT = IO.socket(URI.create(endPoint), options);
-            CLIENT.on(EVENT_CONNECT, ON_CONNECTED);
-            CLIENT.on(EVENT_DISCONNECT, ON_DISCONNECTED);
-            CLIENT.on(EVENT_CONNECT_ERROR, ON_CONNECT_ERROR);
-            CLIENT.on(EVENT_CONNECT_TIMEOUT, ON_CONNECT_TIMEOUT);
-            CLIENT.on(EVENT_RECONNECT, ON_RECONNECT);
-            CLIENT.on(EVENT_RECONNECT_ERROR, ON_CONNECT_ERROR);
-            CLIENT.on(EVENT_ERROR, ON_ERROR);
-            CLIENT.on(EVENT_RECONNECT_FAILED, ON_CONNECT_ERROR);
-            CLIENT.on(EVENT_RECONNECTING, ON_RECONNECTING);
-            CLIENT.connect();
-        } catch (URISyntaxException impossible) {
-            throw new IllegalArgumentException("url passed is invalid");
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException("invalid url passed");
-        }
-    }
-
-    public static SocketIoClient getInstance(String endPoint, String userId) {
+    private void initialise(String endPoint, String userId) {
         if (!initialised.get()) {
-            start(endPoint, userId);
+            try {
+                URL url = new URL(endPoint); //this is just to ensure urls passed are valid.
+                IO.Options options = new IO.Options();
+                options.query = "userId=" + userId;
+                options.forceNew = true;
+                CLIENT = IO.socket(URI.create(endPoint), options);
+                CLIENT.on(EVENT_CONNECT, ON_CONNECTED);
+                CLIENT.on(EVENT_DISCONNECT, ON_DISCONNECTED);
+                CLIENT.on(EVENT_CONNECT_ERROR, ON_CONNECT_ERROR);
+                CLIENT.on(EVENT_CONNECT_TIMEOUT, ON_CONNECT_TIMEOUT);
+                CLIENT.on(EVENT_RECONNECT, ON_RECONNECT);
+                CLIENT.on(EVENT_RECONNECT_ERROR, ON_CONNECT_ERROR);
+                CLIENT.on(EVENT_ERROR, ON_ERROR);
+                CLIENT.on(EVENT_RECONNECT_FAILED, ON_CONNECT_ERROR);
+                CLIENT.on(EVENT_RECONNECTING, ON_RECONNECTING);
+                CLIENT.connect();
+                initialised.set(true);
+            } catch (URISyntaxException impossible) {
+                throw new IllegalArgumentException("url passed is invalid");
+            } catch (MalformedURLException e) {
+                throw new IllegalArgumentException("invalid url passed");
+            }
         }
-        referenceCount.incrementAndGet();
-        return INSTANCE;
     }
 
-    private synchronized static void start(String endPoint, String userId) {
-        if (!initialised.getAndSet(true)) {
-            INSTANCE.doStart(endPoint, userId);
-        } else {
-            Log.w(TAG, "client already started, close client before attempting to start again");
+    public static synchronized SocketIoClient getInstance(String endPoint, String userId) {
+        SocketIoClient client = instances.get(endPoint);
+        if (client == null) {
+            client = new SocketIoClient(endPoint, userId);
+            instances.put(endPoint, client);
         }
+        return client;
     }
 
     public boolean registerForEvent(String eventName, Listener eventReceiver) {
@@ -219,6 +219,7 @@ public class SocketIoClient implements Closeable {
                 waitingBroadcasts.add(new Pair<>(eventName, jsonData));
                 Log.i(TAG, "message queued for sending later client yet to start");
             }
+            attemptReconnect();
         }
     }
 
@@ -227,9 +228,10 @@ public class SocketIoClient implements Closeable {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         if (initialised.get()) {
             if (referenceCount.decrementAndGet() == 0) {
+                instances.remove(getEndPoint());
                 if (CLIENT.connected()) {
                     CLIENT.disconnect();
                 }
@@ -261,5 +263,9 @@ public class SocketIoClient implements Closeable {
                 }
             }, CLIENT.io().reconnectionDelay());
         }
+    }
+
+    public String getEndPoint() {
+        return endPoint;
     }
 }
