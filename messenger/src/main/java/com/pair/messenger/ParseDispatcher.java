@@ -57,7 +57,7 @@ class ParseDispatcher extends AbstractMessageDispatcher {
             parseMessage.save();
             onSent(message.getId());
         } catch (ParseException e) {
-            onFailed(message, prepareReport(e));
+            onFailed(message.getId(), prepareReport(e));
         }
     }
 

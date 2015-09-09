@@ -27,7 +27,7 @@ import io.realm.Realm;
  */
 abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     public static final String TAG = AbstractMessageDispatcher.class.getSimpleName();
-
+    protected static final String ERR_USER_OFFLINE = "user offline";
     private final List<DispatcherMonitor> monitors = new ArrayList<>();
     private final FileApi file_service;
 
@@ -43,7 +43,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         } else {
             final File actualFile = new File(messageBody);
             if (!actualFile.exists()) {
-                onFailed(message, MessageUtils.ERROR_FILE_DOES_NOT_EXIST);
+                onFailed(message.getId(), MessageUtils.ERROR_FILE_DOES_NOT_EXIST);
                 return;
             }
 
@@ -54,7 +54,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                         message.setMessageBody(locationUrl); //do not persist this change.
                         proceedToSend(message);
                     } else {
-                        onFailed(message, MessageUtils.ERROR_FILE_UPLOAD_FAILED);
+                        onFailed(message.getId(), MessageUtils.ERROR_FILE_UPLOAD_FAILED);
                     }
                 }
             }, listener);
@@ -78,12 +78,12 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                         //let the user manager sync the members, flag the message as unsent so that
                         //it will be retried as soon as possible
                         UserManager.getInstance().refreshGroup(message.getTo());
-                        onFailed(message, MessageUtils.ERROR_MEMBERS_NOT_SYNCED);
+                        onFailed(message.getId(), MessageUtils.ERROR_MEMBERS_NOT_SYNCED);
                         return;
                     }
                     dispatchToGroup(message, members);
                 } else {
-                    onFailed(message, MessageUtils.ERROR_RECIPIENT_NOT_FOUND);
+                    onFailed(message.getId(), MessageUtils.ERROR_RECIPIENT_NOT_FOUND);
                 }
             } finally {
                 realm.close();
@@ -94,18 +94,37 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     }
 
 
+    /**
+     * @param message the message whose dispatch failed
+     * @param reason  reason the dispatch failed
+     * @deprecated use {@link #onFailed(String, String)}rather
+     */
+    @Deprecated
     protected final void onFailed(Message message, String reason) {
+        onFailed(message.getId(), reason);
+    }
+
+    /**
+     * reports a failed dispatch
+     *
+     * @param messageId the id of the message whose dispatch failed
+     * @param reason    reason the dispatch failed
+     */
+    protected final void onFailed(String messageId, String reason) {
         Realm realm = Message.REALM(Config.getApplicationContext());
-        Message realmMessage = realm.where(Message.class).equalTo(Message.FIELD_ID, message.getId()).findFirst();
-        if (realmMessage != null) {
-            realm.beginTransaction();
-            realmMessage.setState(Message.STATE_SEND_FAILED);
-            realm.commitTransaction();
+        try {
+            Message realmMessage = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
+            if (realmMessage != null) {
+                realm.beginTransaction();
+                realmMessage.setState(Message.STATE_SEND_FAILED);
+                realm.commitTransaction();
+            }
+        } finally {
+            realm.close();
         }
-        realm.close();
         synchronized (monitors) {
             for (DispatcherMonitor monitor : monitors) {
-                monitor.onDispatchFailed(reason, message.getId());
+                monitor.onDispatchFailed(reason, messageId);
             }
         }
     }
@@ -168,7 +187,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         ThreadUtils.ensureNotMain();
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             Log.w(TAG, "no internet connection, message can not be sent now");
-            onFailed(message, MessageUtils.ERROR_NOT_CONNECTED);
+            onFailed(message.getId(), MessageUtils.ERROR_NOT_CONNECTED);
             return;
         }
         //this pattern is not strict it only checks if it starts with http or ftp
@@ -185,7 +204,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                 proceedToSend(message);
             }
         } catch (PairappException e) {
-            onFailed(message, e.getMessage());
+            onFailed(message.getId(), e.getMessage());
         }
     }
 
