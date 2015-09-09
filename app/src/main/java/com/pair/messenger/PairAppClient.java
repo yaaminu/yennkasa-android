@@ -39,6 +39,7 @@ public class PairAppClient extends Service {
     private ExecutorService WORKER;
 
     private static AtomicBoolean isClientStarted = new AtomicBoolean(false);
+    private static MessagesProvider messageProvider = new ParseMessageProvider();
 
     public static void start(Context context) {
         if (!UserManager.getInstance().isUserVerified()) {
@@ -55,24 +56,43 @@ public class PairAppClient extends Service {
 
     }
 
+    public static MessagesProvider getMessageProvider() {
+        return messageProvider;
+    }
+
 
     @Override
     public void onCreate() {
         super.onCreate();
+        if (WORKER_THREAD == null) {
+            WORKER_THREAD = new WorkerThread();
+            WORKER_THREAD.start();
+        }
+        if (WORKER == null) {
+            WORKER = Executors.newSingleThreadExecutor();
+        }
+
         if (!isClientStarted.get()) {
-            bootClient();
+            WORKER.execute(new Runnable() {
+                @Override
+                public void run() {
+                    if (!isClientStarted.get())
+                        bootClient();
+                }
+            });
         }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
         if (!UserManager.getInstance().isUserVerified()) {
             L.w(TAG, " pariapp client wont start when a user is not logged in");
+            stopSelf();
             return START_NOT_STICKY;
         }
 
         Log.i(TAG, "starting pairapp client");
-        super.onStartCommand(intent, flags, startId);
         if (intent != null && isClientStarted.get()) {
             if (intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
                 attemptToSendAllUnsentMessages();
@@ -104,23 +124,23 @@ public class PairAppClient extends Service {
     @Override
     public void onDestroy() {
         shutDown();
+        //order is important
+        WORKER_THREAD.shutDown();
+        WORKER.shutdownNow();
         super.onDestroy();
     }
 
     private synchronized void bootClient() {
-        if (!isClientStarted.getAndSet(true)) {
+        if (!isClientStarted.get()) {
             SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance();
             PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance();
-            WORKER_THREAD = new WorkerThread();
-            WORKER_THREAD.start();
-            WORKER = Executors.newSingleThreadExecutor();
             isClientStarted.set(true);
         }
     }
 
 
     private synchronized void shutDown() {
-        if (isClientStarted.getAndSet(false)) {
+        if (isClientStarted.get()) {
             PARSE_MESSAGE_DISPATCHER.close();
 
             if (SOCKETSIO_DISPATCHER != null) {
@@ -128,9 +148,7 @@ public class PairAppClient extends Service {
             }
             LiveCenter.stopTrackingActiveUsers();
             MessageCenter.stopListeningForSocketMessages();
-            //order is important
-            WORKER_THREAD.shutDown();
-            WORKER.shutdownNow();
+            isClientStarted.set(false);
             Log.i(TAG, TAG + ": bye");
             return;
         }

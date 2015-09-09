@@ -33,13 +33,19 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
             Log.i(TAG, "message delivered");
             try {
                 JSONObject object = new JSONObject(args[0].toString());
-                onDelivered(object.getString("messageId"));
+                boolean success = object.getBoolean("success");
+                String messageId = object.getString("messageId");
+                if (success) {
+                    onDelivered(messageId);
+                } else {
+                    //onFailed(messageId);
+                }
             } catch (JSONException e) {
                 throw new RuntimeException();
             }
         }
     };
-    private final SocketIoClient socketIoClient, liveClient;
+    private final SocketIoClient socketIoClient;
 
     /**
      * create a new an instance of {@link SocketsIODispatcher}.
@@ -54,8 +60,7 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
 
     private SocketsIODispatcher() {
         socketIoClient = SocketIoClient.getInstance(Config.PAIRAPP_ENDPOINT + "/message", UserManager.getMainUserId());
-        liveClient = SocketIoClient.getInstance(Config.PAIRAPP_ENDPOINT + "/live", UserManager.getMainUserId());
-        liveClient.registerForEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
+        socketIoClient.registerForEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
     }
 
     @Override
@@ -71,8 +76,7 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
     @Override
     public void close() {
         super.close();
-        liveClient.unRegisterEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
-        liveClient.close();
+        socketIoClient.unRegisterEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
         socketIoClient.close();
     }
 

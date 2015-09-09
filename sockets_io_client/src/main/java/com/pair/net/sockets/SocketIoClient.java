@@ -14,6 +14,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -36,9 +37,14 @@ import static com.github.nkzawa.socketio.client.Socket.Listener;
 public class SocketIoClient implements Closeable {
 
     public static final String TAG = "SocketsIOClient";
+    public static final int PING_DELAY = 60000;
+    public static final String PING = "ping";
+    public static final String PONG = "pong";
+    private final AtomicBoolean initialised = new AtomicBoolean(false),
+            ready = new AtomicBoolean(false),
+    //this flag to denote the server ponged back.
+    pongedBack = new AtomicBoolean(false);
 
-    private final AtomicBoolean initialised = new AtomicBoolean(false);
-    private final AtomicBoolean ready = new AtomicBoolean(false);
     public static final String EVENT_MESSAGE = "message";
     public static final String EVENT_MSG_STATUS = "msgStatus";
 
@@ -48,12 +54,20 @@ public class SocketIoClient implements Closeable {
     private Socket CLIENT;
     private static final WeakHashMap<String, SocketIoClient> instances = new WeakHashMap<>();
     private Handler reconnectHandler;
-    private Timer reconnectTimer;
+    private Timer reconnect_OR_PingTimer;
     private String endPoint;
 
     private final AtomicInteger referenceCount = new AtomicInteger(0);
 
 
+    private final Listener ON_PONG = new Listener() {
+        @Override
+        public void call(Object... args) {
+            Log.i(TAG, "pong");
+            ready.set(true);
+            pongedBack.set(true);
+        }
+    };
     private final Listener ON_RECONNECTING = new Listener() {
         @Override
         public void call(Object... args) {
@@ -87,9 +101,11 @@ public class SocketIoClient implements Closeable {
         public void call(Object... args) {
             Log.i(TAG, "connected");
             ready.set(true);
+            pongedBack.set(true);
             sendQueuedMessages();
         }
     };
+    private TimerTask pingTask;
 
     private void sendQueuedMessages() {
         if (CLIENT.connected()) {
@@ -140,11 +156,21 @@ public class SocketIoClient implements Closeable {
             reconnectHandler = new Handler(Looper.myLooper());
         } catch (Exception e) {
             Log.w(TAG, "it is discouraged to create socketIoClient  instance on threads with  no looper attached");
-            reconnectTimer = new Timer("reconnect timer");
         }
         initialise(endPoint, userId);
         this.endPoint = endPoint;
         this.userId = userId;
+    }
+
+    private void ping() {
+        if (initialised.get()) {
+            if (pongedBack.get()) {
+                CLIENT.emit(PING);
+                pongedBack.set(false);
+            } else {
+                attemptReconnect();
+            }
+        }
     }
 
     private void initialise(String endPoint, String userId) {
@@ -164,6 +190,15 @@ public class SocketIoClient implements Closeable {
                 CLIENT.on(EVENT_ERROR, ON_ERROR);
                 CLIENT.on(EVENT_RECONNECT_FAILED, ON_CONNECT_ERROR);
                 CLIENT.on(EVENT_RECONNECTING, ON_RECONNECTING);
+                CLIENT.on(PONG, ON_PONG);
+                reconnect_OR_PingTimer = new Timer("reconnectAndPingTimer timer");
+                pingTask = new TimerTask() {
+                    @Override
+                    public void run() {
+                        ping();
+                    }
+                };
+                reconnect_OR_PingTimer.scheduleAtFixedRate(pingTask, getDelay(), getDelay());
                 CLIENT.connect();
                 initialised.set(true);
             } catch (URISyntaxException impossible) {
@@ -172,6 +207,12 @@ public class SocketIoClient implements Closeable {
                 throw new IllegalArgumentException("invalid url passed");
             }
         }
+    }
+
+    private int getDelay() {
+        SecureRandom random = new SecureRandom();
+        int deviation = (int) Math.abs(random.nextDouble() * (30000 - 1000) + 1000);
+        return PING_DELAY + deviation;
     }
 
     public static synchronized SocketIoClient getInstance(String endPoint, String userId) {
@@ -235,6 +276,10 @@ public class SocketIoClient implements Closeable {
                 if (CLIENT.connected()) {
                     CLIENT.disconnect();
                 }
+                reconnect_OR_PingTimer.cancel();
+                if (reconnectHandler != null) {
+                    reconnectHandler.removeCallbacks(reconnectRunnable);
+                }
                 CLIENT.close();
                 initialised.set(false);
                 ready.set(false);
@@ -243,18 +288,19 @@ public class SocketIoClient implements Closeable {
     }
 
 
+    Runnable reconnectRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!CLIENT.connected()) {
+                CLIENT.connect();
+            }
+        }
+    };
     private void attemptReconnect() {
         try {
-            reconnectHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (!CLIENT.connected()) {
-                        CLIENT.connect();
-                    }
-                }
-            }, CLIENT.io().reconnectionDelay());
+            reconnectHandler.postDelayed(reconnectRunnable, CLIENT.io().reconnectionDelay());
         } catch (Exception noLooperOrInTestEnvironment) {
-            reconnectTimer.schedule(new TimerTask() {
+            reconnect_OR_PingTimer.schedule(new TimerTask() {
                 @Override
                 public void run() {
                     if (!CLIENT.connected()) {

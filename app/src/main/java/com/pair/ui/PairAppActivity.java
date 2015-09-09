@@ -85,7 +85,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     @Override
     protected void onStop() {
         if (bound) {
-            bound = false;
             unbindService(connection);
             onUnbind();
         }
