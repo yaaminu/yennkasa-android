@@ -140,7 +140,9 @@ public class LoginFragment extends Fragment {
             phoneNumberEt.post(new Runnable() {
                 @Override
                 public void run() {
+                    try{
                     progressDialog.dismiss();
+                }catch(Exception ignored){}
                 }
             });
             if (e == null) {

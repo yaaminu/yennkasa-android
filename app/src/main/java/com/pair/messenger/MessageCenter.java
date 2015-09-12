@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import com.github.nkzawa.emitter.Emitter;
 import com.google.gson.JsonObject;
 import com.pair.Config;
@@ -68,11 +71,15 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
     }
 
     static void notifyReceived(Message message) {
-        JsonObject obj = new JsonObject();
-        obj.addProperty("to", message.getFrom());
-        obj.addProperty("messageId", message.getId());
-        obj.addProperty("status", Message.STATE_RECEIVED);
-        messagingClient.broadcast(SocketIoClient.EVENT_MSG_STATUS, obj);
+        JSONObject obj = new JSONObject();
+        try{
+          obj.put("to", message.getFrom());
+          obj.put("messageId", message.getId());
+          obj.put("status", Message.STATE_RECEIVED);
+          messagingClient.broadcast(SocketIoClient.EVENT_MSG_STATUS, obj);
+       }catch(JSONException e){
+        throw new RuntimeException(e.getCause());
+       }
     }
 
     private static void processMessage(Context context, String data) {

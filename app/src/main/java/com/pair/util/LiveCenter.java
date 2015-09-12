@@ -5,6 +5,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
 import android.os.Looper;
+import android.util.Log;
 import com.github.nkzawa.emitter.Emitter;
 import com.pair.Config;
 import com.pair.data.User;
@@ -29,6 +30,7 @@ public class LiveCenter {
     private static final Set<String> activeUsers = new HashSet<>(), typing = new HashSet<>();
     private static final String TAG = "livecenter", TYPING = "typing", TRACK_USER = "trackUser";
     public static final String IS_ONLINE = "isOnline";
+    private static String ACTIVE_PEER = "";
     private static WorkerThread WORKER_THREAD;
     private static SocketIoClient liveClient;
 
@@ -147,6 +149,7 @@ public class LiveCenter {
 
     public static void trackUser(String userId) {
         ThreadUtils.ensureMain();
+        ACTIVE_PEER = userId;
         if (WORKER_THREAD != null && WORKER_THREAD.isAlive()) {
             Message msg = Message.obtain();
             msg.what = WorkerThread.TRACK_USER;
@@ -158,6 +161,7 @@ public class LiveCenter {
     }
 
     public static void doNotTrackUser(String userId) {
+         ACTIVE_PEER = "";
         ThreadUtils.ensureMain();
         if (WORKER_THREAD != null && WORKER_THREAD.isAlive()) {
             Message msg = Message.obtain();
@@ -169,6 +173,13 @@ public class LiveCenter {
 
     public static void notifyTyping(String userId) {
         ThreadUtils.ensureMain();
+        if(ACTIVE_PEER.isEmpty() || !ACTIVE_PEER.equals(userId)){
+            throw new IllegalArgumentException("unknown peer");
+        }
+        if(!isOnline(userId)){
+            Log.i(TAG,"peer offline, not dispatching typing event");
+            return;
+        }
         if (WORKER_THREAD != null && WORKER_THREAD.isAlive()) {
             Message msg = Message.obtain();
             msg.what = WorkerThread.NOTIFY_TYPING;
@@ -181,6 +192,14 @@ public class LiveCenter {
 
     public static void notifyNotTyping(String userId) {
         ThreadUtils.ensureMain();
+        if(!ACTIVE_PEER.equals(userId)){
+           throw new IllegalArgumentException("unknown user");
+        }
+        if(!isOnline(userId)){
+            Log.i(TAG,"peer offline, not dispatching typing event");
+            return;
+        }
+
         if (WORKER_THREAD != null && WORKER_THREAD.isAlive()) {
             Message msg = Message.obtain();
             msg.what = WorkerThread.NOTIFY_NOT_TYPING;
@@ -260,6 +279,10 @@ public class LiveCenter {
         }
 
         private void doNotifyTyping(String to, boolean isTyping) {
+            if(!isOnline(to)){
+              Log.d(TAG,"user offline, typing event not dispatched");
+              return;
+            }
             try {
                 JSONObject object = new JSONObject();
                 object.put("to", to);

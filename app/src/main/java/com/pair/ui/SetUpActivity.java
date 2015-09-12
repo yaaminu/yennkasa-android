@@ -13,6 +13,8 @@ import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.GcmUtils;
 import com.pair.util.UiHelpers;
+import com.pair.util.NavigationManager;
+
 import com.rey.material.app.DialogFragment;
 
 import org.apache.commons.io.Charsets;
@@ -27,7 +29,7 @@ import java.util.Locale;
 import io.realm.Realm;
 
 
-public class SetUpActivity extends PairAppBaseActivity {
+public class SetUpActivity extends ActionBarActivity {
 
     private String TAG = SetUpActivity.class.getSimpleName();
 
@@ -36,17 +38,42 @@ public class SetUpActivity extends PairAppBaseActivity {
         super.onCreate(savedInstanceState);
         if (GcmUtils.checkPlayServices(this)) {
             setContentView(R.layout.set_up_activity);
+            NavigationManager.onCreate(this);
             //we need to do all the time to automatically handle configuration changes see setupCountriesTask#doInBackGround
             setUpCountriesTask.execute();
         }
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        NavigationManager.onStart(this);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
+        NavigationManager.onResume(this);
         GcmUtils.checkPlayServices(this);
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        NavigationManager.onPause(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        NavigationManager.onStop(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        NavigationManager.onStop(this);
+    }
     private void addFragment() {
         Fragment fragment;// = getSupportFragmentManager().findFragmentById(R.id.container);
         if (UserManager.getInstance().isUserLoggedIn()) {

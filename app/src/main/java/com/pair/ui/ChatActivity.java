@@ -137,11 +137,6 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         //noinspection ConstantConditions
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setTitle(peerName);
-        if (!User.isGroup(peer)) {
-            actionBar.setSubtitle(peer.getStatus());
-            LiveCenter.trackUser(peerId);
-            LiveCenter.registerTypingListener(this);
-        }
         actionBar.setDisplayHomeAsUpEnabled(true);
         messages = realm.where(Message.class).equalTo(Message.FIELD_FROM, peer.getUserId())
                 .or()
@@ -237,6 +232,11 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         Config.appOpen(true);
         clearRecentChat();
         realm.addChangeListener(changeListener);
+         if (!User.isGroup(peer)) {
+            getSupportActionBar().setSubtitle(peer.getStatus());
+            LiveCenter.trackUser(peer.getUserId());
+            LiveCenter.registerTypingListener(this);
+        }
         testChatActivity();
     }
 
@@ -251,6 +251,7 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         Config.appOpen(false);
         if (!UserManager.getInstance().isGroup(peer.getUserId())) {
             LiveCenter.notifyNotTyping(peer.getUserId());
+            LiveCenter.doNotTrackUser(peer.getUserId());
             LiveCenter.unRegisterTypingListener(this);
         }
         super.onPause();
@@ -736,17 +737,18 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         }
     };
     boolean wasTyping = false;
-
     @Override
     public void afterTextChanged(Editable s) {
+        handler.removeCallbacks(runnable);
         if (!s.toString().trim().isEmpty()) {
-            if (wasTyping) {
-                return;
+            if(!wasTyping){
+                wasTyping = true;
+                LiveCenter.notifyTyping(peer.getUserId());
             }
-            wasTyping = true;
-            LiveCenter.notifyTyping(peer.getUserId());
-            handler.postDelayed(runnable, 20000);
-        } else {
+            //TODO add some deviation to the timeout
+            handler.postDelayed(runnable,10000);
+        } else 
+            if(wasTyping){
             wasTyping = false;
             LiveCenter.notifyNotTyping(peer.getUserId());
         }
