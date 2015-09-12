@@ -215,13 +215,18 @@ public class SocketIoClient implements Closeable {
         return PING_DELAY + deviation;
     }
 
-    public static synchronized SocketIoClient getInstance(String endPoint, String userId) {
-        SocketIoClient client = instances.get(endPoint);
-        if (client == null) {
-            client = new SocketIoClient(endPoint, userId);
-            instances.put(endPoint, client);
+    public static SocketIoClient getInstance(String endPoint, String userId) {
+        synchronized (instances) {
+            SocketIoClient client = instances.get(endPoint);
+            if (client == null) {
+                client = new SocketIoClient(endPoint, userId);
+                instances.put(endPoint, client);
+                client.referenceCount.set(1);
+            } else {
+                client.referenceCount.incrementAndGet();
+            }
+            return client;
         }
-        return client;
     }
 
     public boolean registerForEvent(String eventName, Listener eventReceiver) {
@@ -269,20 +274,22 @@ public class SocketIoClient implements Closeable {
     }
 
     @Override
-    public synchronized void close() {
-        if (initialised.get()) {
-            if (referenceCount.decrementAndGet() == 0) {
-                instances.remove(getEndPoint());
-                if (CLIENT.connected()) {
-                    CLIENT.disconnect();
+    public void close() {
+        synchronized (instances) {
+            if (initialised.get()) {
+                if (referenceCount.decrementAndGet() == 0) {
+                    instances.remove(getEndPoint());
+                    if (CLIENT.connected()) {
+                        CLIENT.disconnect();
+                    }
+                    reconnect_OR_PingTimer.cancel();
+                    if (reconnectHandler != null) {
+                        reconnectHandler.removeCallbacks(reconnectRunnable);
+                    }
+                    CLIENT.close();
+                    initialised.set(false);
+                    ready.set(false);
                 }
-                reconnect_OR_PingTimer.cancel();
-                if (reconnectHandler != null) {
-                    reconnectHandler.removeCallbacks(reconnectRunnable);
-                }
-                CLIENT.close();
-                initialised.set(false);
-                ready.set(false);
             }
         }
     }
@@ -296,18 +303,20 @@ public class SocketIoClient implements Closeable {
             }
         }
     };
+
     private void attemptReconnect() {
         try {
             reconnectHandler.postDelayed(reconnectRunnable, CLIENT.io().reconnectionDelay());
         } catch (Exception noLooperOrInTestEnvironment) {
-            reconnect_OR_PingTimer.schedule(new TimerTask() {
+            TimerTask task = new TimerTask() {
                 @Override
                 public void run() {
                     if (!CLIENT.connected()) {
                         CLIENT.connect();
                     }
                 }
-            }, CLIENT.io().reconnectionDelay());
+            };
+            reconnect_OR_PingTimer.schedule(task, CLIENT.io().reconnectionDelay());
         }
     }
 

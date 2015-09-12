@@ -63,6 +63,7 @@
     <string name="st_send_verification_notice">Enter the verification token you received. Try again if you don\'t receive the token in 5 minutes</string>
     <string name="st_unknown">Unknown</string>
     <string name="st_offline">Offline</string>
+    <string name="st_online">Online</string>
     <string name="st_no_mutual_group">You do not share any group with this user</string>
     <string name="st_could_not_create_group">Failed to create group.Add at least two member</string>
     <string name="st_send_again">Resend Token</string>

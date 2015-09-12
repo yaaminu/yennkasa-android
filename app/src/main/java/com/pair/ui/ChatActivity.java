@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
@@ -47,6 +48,7 @@ import com.pair.messenger.MessageProcessor;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.FileUtils;
+import com.pair.util.LiveCenter;
 import com.pair.util.MediaUtils;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
@@ -63,6 +65,7 @@ import java.util.Set;
 import java.util.Timer;
 
 import io.realm.Realm;
+import io.realm.RealmChangeListener;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import io.realm.exceptions.RealmException;
@@ -73,7 +76,8 @@ import static com.pair.data.Message.TYPE_TYPING_MESSAGE;
 
 
 @SuppressWarnings({"ConstantConditions", "FieldCanBeLocal"})
-public class ChatActivity extends PairAppActivity implements View.OnClickListener, AbsListView.OnScrollListener, TextWatcher, ItemsSelector.OnFragmentInteractionListener {
+public class ChatActivity extends PairAppActivity implements View.OnClickListener,
+        AbsListView.OnScrollListener, TextWatcher, ItemsSelector.OnFragmentInteractionListener, RealmChangeListener, LiveCenter.TypingListener {
     private static final int TAKE_PHOTO_REQUEST = 0x0,
             TAKE_VIDEO_REQUEST = 0x1,
             PICK_PHOTO_REQUEST = 0x2,
@@ -135,6 +139,8 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         actionBar.setTitle(peerName);
         if (!User.isGroup(peer)) {
             actionBar.setSubtitle(peer.getStatus());
+            LiveCenter.trackUser(peerId);
+            LiveCenter.registerTypingListener(this);
         }
         actionBar.setDisplayHomeAsUpEnabled(true);
         messages = realm.where(Message.class).equalTo(Message.FIELD_FROM, peer.getUserId())
@@ -227,21 +233,26 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
     @Override
     protected void onResume() {
         super.onResume();
-        Log.i(TAG,"on resume");
+        Log.i(TAG, "on resume");
         Config.appOpen(true);
-        super.clearRecentChat();
+        clearRecentChat();
+        realm.addChangeListener(changeListener);
         testChatActivity();
     }
 
     @Override
     protected void onPause() {
-        Log.i(TAG,"onpause");
         if (currConversation != null) {
             realm.beginTransaction();
             currConversation.setActive(false);
             realm.commitTransaction();
         }
+        realm.removeChangeListener(changeListener);
         Config.appOpen(false);
+        if (!UserManager.getInstance().isGroup(peer.getUserId())) {
+            LiveCenter.notifyNotTyping(peer.getUserId());
+            LiveCenter.unRegisterTypingListener(this);
+        }
         super.onPause();
     }
 
@@ -445,7 +456,7 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.i(TAG,"onActivityResult");
+        Log.i(TAG, "onActivityResult");
         if (resultCode != RESULT_OK) {
             return;
         }
@@ -481,7 +492,7 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
             }
             enqueueMessage(message);
         } catch (PairappException e) {
-            ErrorCenter.reportError(TAG,e.getMessage());
+            ErrorCenter.reportError(TAG, e.getMessage());
         }
     }
 
@@ -716,14 +727,29 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
 
     }
 
+    Handler handler = new Handler();
+    Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            wasTyping = false;
+            LiveCenter.notifyNotTyping(peer.getUserId());
+        }
+    };
+    boolean wasTyping = false;
+
     @Override
     public void afterTextChanged(Editable s) {
-//        if (!s.toString().trim().isEmpty()) {
-//            liveTexView.setVisibility(View.VISIBLE);
-//            liveTexView.setText(s);
-//        } else {
-//            liveTexView.setVisibility(View.GONE);
-//        }
+        if (!s.toString().trim().isEmpty()) {
+            if (wasTyping) {
+                return;
+            }
+            wasTyping = true;
+            LiveCenter.notifyTyping(peer.getUserId());
+            handler.postDelayed(runnable, 20000);
+        } else {
+            wasTyping = false;
+            LiveCenter.notifyNotTyping(peer.getUserId());
+        }
     }
 
     @Override
@@ -839,5 +865,33 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         }
         ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(recipientsIds.contains(adapter.getItem(position).getUserId()));
         supportInvalidateOptionsMenu();
+    }
+
+    private final RealmChangeListener changeListener = new RealmChangeListener() {
+        @Override
+        public void onChange() {
+            if (!UserManager.getInstance().isGroup(peer.getUserId())) {
+                String subTitle = String.valueOf(getSupportActionBar().getSubtitle());
+                if (!subTitle.equals(peer.getUserId()))
+                    getSupportActionBar().setSubtitle(peer.getStatus());
+            }
+        }
+    };
+
+    private String userStatus;
+
+    @Override
+    public void onTyping(String userId) {
+        if (peer.getUserId().equals(userId)) {
+            userStatus = peer.getStatus();
+            getSupportActionBar().setSubtitle("Typing...");
+        }
+    }
+
+    @Override
+    public void onStopTyping(String userId) {
+        if (peer.getUserId().equals(userId)) {
+            getSupportActionBar().setSubtitle(userStatus);
+        }
     }
 }

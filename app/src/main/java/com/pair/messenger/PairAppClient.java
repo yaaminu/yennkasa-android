@@ -14,6 +14,7 @@ import com.pair.Config;
 import com.pair.data.Message;
 import com.pair.data.UserManager;
 import com.pair.util.L;
+import com.pair.util.LiveCenter;
 
 import java.util.Collection;
 import java.util.List;
@@ -132,7 +133,6 @@ public class PairAppClient extends Service {
 
     private synchronized void bootClient() {
         if (!isClientStarted.get()) {
-            SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance();
             PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance();
             isClientStarted.set(true);
         }
@@ -146,7 +146,6 @@ public class PairAppClient extends Service {
             if (SOCKETSIO_DISPATCHER != null) {
                 SOCKETSIO_DISPATCHER.close();
             }
-            LiveCenter.stopTrackingActiveUsers();
             MessageCenter.stopListeningForSocketMessages();
             isClientStarted.set(false);
             Log.i(TAG, TAG + ": bye");
@@ -193,7 +192,10 @@ public class PairAppClient extends Service {
         }
 
         if (backStack.isEmpty()) {
-            LiveCenter.stopTrackingActiveUsers();
+            LiveCenter.stop();
+            if(SOCKETSIO_DISPATCHER != null){
+                SOCKETSIO_DISPATCHER.close();
+            }
             MessageCenter.stopListeningForSocketMessages();
             if (SOCKETSIO_DISPATCHER != null) {
                 SOCKETSIO_DISPATCHER.close();
@@ -207,7 +209,7 @@ public class PairAppClient extends Service {
             throw new IllegalArgumentException();
         }
         if (backStack.isEmpty()) {
-            LiveCenter.startTrackingActiveUsers();
+            LiveCenter.start();
             MessageCenter.startListeningForSocketMessages();
         }
         backStack.add(activity);
@@ -338,18 +340,14 @@ public class PairAppClient extends Service {
         }
 
         private void sendMessage(Message message) {
-//            if (LiveCenter.isOnline(message.getTo()) && !UserManager.getInstance().isGroup(message.getTo())) {
-//                if (SOCKETSIO_DISPATCHER == null) {
-//                    SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance();
-//                }
-//                SOCKETSIO_DISPATCHER.dispatch(message);
-//            } else {
-//                PARSE_MESSAGE_DISPATCHER.dispatch(message);
-//            }
-            if (SOCKETSIO_DISPATCHER == null) {
-                SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance();
+            if (LiveCenter.isOnline(message.getTo()) && !UserManager.getInstance().isGroup(message.getTo())) {
+                if (SOCKETSIO_DISPATCHER == null) {
+                    SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance();
+                }
+                SOCKETSIO_DISPATCHER.dispatch(message);
+            } else {
+                PARSE_MESSAGE_DISPATCHER.dispatch(message);
             }
-            SOCKETSIO_DISPATCHER.dispatch(message);
         }
 
         private void sendMessages(Collection<Message> messages) {
