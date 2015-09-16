@@ -52,7 +52,7 @@ import io.realm.RealmResults;
 public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.OnLongClickListener {
     private static final String TAG = MessagesAdapter.class.getSimpleName();
     private static final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
-    private static final long TEN_SECONDS = 10000L;
+    private static final long TEN_SECONDS = 10 * 1000L;
     private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2, DATE_MESSAGE = 0x0, TYPING_MESSAGE = 0x3;
     private final SparseIntArray previewsMap, messageStates;
     private static final Map<String, Integer> downloadingRows = new HashMap<>();
@@ -61,6 +61,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     private final int PREVIEW_HEIGHT;
     private final LruCache<String, Bitmap> thumbnailCache;
     private final ChatActivity chatActivity;
+    private final int height;
 
     public MessagesAdapter(ChatActivity context, RealmResults<Message> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
@@ -74,6 +75,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         messageStates.put(Message.STATE_SEND_FAILED, R.drawable.ic_action_error);
         messageStates.put(Message.STATE_SEEN, R.drawable.ic_visibility_white_24dp);
         messageStates.put(Message.STATE_RECEIVED, R.drawable.ic_done_all_white_24dp);
+        height = context.getResources().getDrawable(R.drawable.ic_action_error).getIntrinsicHeight();
         PREVIEW_WIDTH = context.getResources().getDimensionPixelSize(R.dimen.message_preview_item_width);
         PREVIEW_HEIGHT = context.getResources().getDimensionPixelSize(R.dimen.message_preview_item_height);
         thumbnailCache = new LruCache<>(3);
@@ -133,6 +135,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         if (isOutgoingMessage(message)) {
             if (message.getState() == Message.STATE_PENDING) {
                 holder.dateComposed.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0); //reset every thing
+                holder.dateComposed.setMinHeight(height);
                 holder.dateComposed.setText(Html.fromHtml("<h1><b>...</b></h1>") + dateComposed);
             } else {
                 holder.dateComposed.setText(dateComposed);
@@ -156,7 +159,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
 
         if (Message.isTextMessage(message)) {
             //normal message
-            //TODO use on of the variants of the spannableString classes.
+            //TODO use one of the variants of the spannableString classes.
             holder.textMessage.setVisibility(View.VISIBLE);
             holder.textMessage.setText(message.getMessageBody());
             return convertView;

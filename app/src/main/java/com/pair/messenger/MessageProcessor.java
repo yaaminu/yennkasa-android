@@ -54,6 +54,8 @@ public class MessageProcessor extends IntentService {
     }
 
     private void doProcessMessage(Message message) {
+        Log.i(TAG, message.getDateComposed() + "messageDate");
+        Log.i(TAG, new Date() + " locale");
         Realm realm = Realm.getInstance(this);
         String peerId;
         //for messages sent to groups, the group is always the recipient
@@ -88,7 +90,8 @@ public class MessageProcessor extends IntentService {
         message.setState(Message.STATE_RECEIVED);
         conversation.setLastActiveTime(new Date());//now
         try {
-            conversation.setLastMessage(realm.copyToRealm(message));
+            message = realm.copyToRealm(message);
+            conversation.setLastMessage(message);
         } catch (RealmException primaryKey) {
             realm.cancelTransaction();
             Log.i(TAG, primaryKey.getMessage());
@@ -97,11 +100,16 @@ public class MessageProcessor extends IntentService {
         }
         conversation.setSummary(message.getMessageBody());
         realm.commitTransaction();
-        Message copied = Message.copy(message);
+
+        Log.i(TAG, "after saving");
+        Log.i(TAG, message.getDateComposed() + " messageDate");
+        Log.i(TAG, new Date() + " local date");
+
+        message = Message.copy(message);
         realm.close();
-        NotificationManager.INSTANCE.onNewMessage(this, copied);
+        NotificationManager.INSTANCE.onNewMessage(this, message);
         // TODO: 6/14/2015 send a socket/gcm broadcast to server to notify sender of message state.
-        MessageCenter.notifyReceived(copied);
+        MessageCenter.notifyReceived(message);
     }
 
     // TODO: 9/3/2015 this is not safe!

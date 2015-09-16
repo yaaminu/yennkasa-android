@@ -66,12 +66,9 @@
             android:layout_alignLeft="@+id/fl_message_body_view"
             android:layout_alignStart="@+id/fl_message_body_view"
             android:gravity="center_vertical"
-            android:drawableLeft="@drawable/ic_action_upload"
-            android:drawableStart="@drawable/ic_action_upload"
             android:singleLine="true"
             android:text="@string/sampleDate"/>
-    </com.pair.view.RelativeLayout
-        >
+    </com.pair.view.RelativeLayout>
 
     <com.pair.view.RoundedImageView
         android:id="@+id/iv_retry"
