@@ -3,7 +3,6 @@ package com.pair.data;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.TextUtils;
 
 import com.google.gson.JsonObject;
 import com.pair.Config;
@@ -13,7 +12,6 @@ import java.util.Date;
 
 import io.realm.Realm;
 import io.realm.RealmList;
-import io.realm.RealmResults;
 
 /**
  * @author Null-Pointer on 6/10/2015.
@@ -22,28 +20,29 @@ public class RealmUtils {
     public static final String TAG = RealmUtils.class.getSimpleName();
 
     // FIXME: 6/16/2015 remove this helper class
+
     public static void runRealmOperation(final Context context) {
         //helper method for cleaning up realm and seeding it with data
         Realm realm = Realm.getInstance(context);
         realm.beginTransaction();
-        realm.clear(Message.class);
-        realm.clear(Conversation.class);
-        RealmResults<User> users = realm.where(User.class).findAll();
-        for (int i = 0; i < users.size(); i++) {
-            User user = users.get(i);
-            if (TextUtils.isEmpty(user.getDP()))
-                user.setDP("avatar_empty");
-        }
-        //try {
-//            User user = User.copy(UserManager.getInstance().getCurrentUser());
-//            for(int i=0; i<20;i++) {
-//                user.setUserId((2348033557792L + i) + "");
-//                user.setName("New user " + i);
-//                realm.copyToRealm(user);
-//            }
-//        } catch (Exception e) {
-
-        //    }
+//        realm.clear(Message.class);
+//        realm.clear(Conversation.class);
+//        RealmResults<User> users = realm.where(User.class).findAll();
+//        for (int i = 0; i < users.size(); i++) {
+//            User user = users.get(i);
+//            if (TextUtils.isEmpty(user.getDP()))
+//                user.setDP("avatar_empty");
+//        }
+//        //try {
+////            User user = User.copy(UserManager.getInstance().getCurrentUser());
+////            for(int i=0; i<20;i++) {
+////                user.setUserId((2348033557792L + i) + "");
+////                user.setName("New user " + i);
+////                realm.copyToRealm(user);
+////            }
+////        } catch (Exception e) {
+//
+//        //    }
         realm.commitTransaction();
         realm.close();
     }

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_margin="@dimen/message_body_margin">
+                              xmlns:app="http://schemas.android.com/apk/res-auto"
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:layout_margin="@dimen/message_body_margin">
 
-    <com.pair.view.LinearLayout
+    <com.pair.view.RelativeLayout
         android:id="@+id/ll_message_body_view"
         style="@style/outgoing_message_body_root_view"
         android:layout_width="wrap_content"
@@ -23,18 +23,18 @@
                 android:id="@+id/tv_message_content"
                 style="@style/message_outgoing"
                 android:maxWidth="@dimen/out_going_message_max_width"
-                android:minWidth="@dimen/message_status_date_width"
-                android:text="hi" />
+                android:text="hi"/>
 
             <ImageView
                 android:id="@+id/iv_message_preview"
                 style="@style/outgoing_message_body_root_view"
                 android:layout_width="@dimen/message_preview_item_width"
                 android:layout_height="@dimen/message_preview_item_height"
+                android:background="@android:color/white"
                 android:contentDescription="@string/st_content_description_image_preview"
                 android:scaleType="centerCrop"
                 android:src="@drawable/user_avartar"
-                android:visibility="visible" />
+                android:visibility="gone"/>
 
             <ImageView
                 android:id="@+id/v_download_play"
@@ -44,8 +44,9 @@
                 android:background="#0000"
                 android:minHeight="@dimen/thumbnail_height"
                 android:minWidth="@dimen/thumbnail_width"
+                android:contentDescription="@string/play_download_content_description"
                 android:src="@drawable/playvideo"
-                android:visibility="gone" />
+                android:visibility="gone"/>
 
             <com.rey.material.widget.ProgressView
                 android:id="@+id/pb_download_progress"
@@ -56,33 +57,28 @@
                 app:pv_autostart="true"
                 app:pv_circular="true"
                 app:pv_progressMode="indeterminate"
-                app:pv_progressStyle="@style/base_indeterminate_progress_style" />
+                app:pv_progressStyle="@style/base_indeterminate_progress_style"/>
         </com.pair.view.FrameLayout>
 
-        <com.pair.view.RelativeLayout
-            android:layout_width="@dimen/message_status_date_width"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right">
+        <TextView
+            android:id="@+id/tv_message_date"
+            style="@style/message_outgoing_date"
+            android:layout_alignLeft="@+id/fl_message_body_view"
+            android:layout_alignStart="@+id/fl_message_body_view"
+            android:gravity="center_vertical"
+            android:drawableLeft="@drawable/ic_action_upload"
+            android:drawableStart="@drawable/ic_action_upload"
+            android:singleLine="true"
+            android:text="@string/sampleDate"/>
+    </com.pair.view.RelativeLayout
+        >
 
-            <TextView
-                android:id="@+id/tv_message_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:layout_marginRight="20dp"
-                android:layout_toLeftOf="@+id/tv_message_date"
-                android:gravity="left"
-                android:singleLine="true"
-                android:text="@string/st_message_state_pending"
-                android:textColor="@color/white"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/tv_message_date"
-                style="@style/message_outgoing_date"
-                android:layout_alignParentRight="true"
-                android:singleLine="true"
-                android:text="12-12-12" />
-        </com.pair.view.RelativeLayout>
-    </com.pair.view.LinearLayout>
+    <com.pair.view.RoundedImageView
+        android:id="@+id/iv_retry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@+id/ll_message_body_view"
+        android:layout_toStartOf="@+id/ll_message_body_view"
+        android:layout_centerVertical="true"
+        android:src="@drawable/ic_action_replay"/>
 </com.pair.view.RelativeLayout>

@@ -33,7 +33,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.JsonObject;
 import com.pair.Config;
 import com.pair.Errors.ErrorCenter;
 import com.pair.Errors.PairappException;
@@ -41,10 +40,8 @@ import com.pair.adapter.MessagesAdapter;
 import com.pair.adapter.UsersAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
-import com.pair.data.MessageJsonAdapter;
 import com.pair.data.User;
 import com.pair.data.UserManager;
-import com.pair.messenger.MessageProcessor;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.FileUtils;
@@ -62,7 +59,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Timer;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
@@ -72,7 +68,6 @@ import io.realm.exceptions.RealmException;
 
 import static com.pair.data.Message.TYPE_DATE_MESSAGE;
 import static com.pair.data.Message.TYPE_TEXT_MESSAGE;
-import static com.pair.data.Message.TYPE_TYPING_MESSAGE;
 
 
 @SuppressWarnings({"ConstantConditions", "FieldCanBeLocal"})
@@ -100,7 +95,6 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
     private static Message selectedMessage;
     private ToolbarManager toolbarManager;
     private Toolbar toolBar;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -115,7 +109,6 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         snackBar = (SnackBar) findViewById(R.id.notification_bar);
         attach = findViewById(R.id.iv_attach);
         dateHeaderViewParent = findViewById(R.id.cv_date_header_parent);
-
         attach.setOnClickListener(this);
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
@@ -143,14 +136,55 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
                 .equalTo(Message.FIELD_TO, peer.getUserId())
                 .findAllSorted(Message.FIELD_DATE_COMPOSED, true);
         setUpCurrentConversation();
-        adapter = new MessagesAdapter(this, messages, true);
-        messagesListView.setAdapter(adapter);
         sendButton.setOnClickListener(this);
         messageEt.addTextChangedListener(this);
-        messagesListView.setOnScrollListener(this);
-        registerForContextMenu(messagesListView);
+        setUpListView();
         ensureDateSet();
         // TODO: 8/22/2015 in future we will move to the last  un seen message if any
+    }
+
+    private void setUpListView() {
+        adapter = new MessagesAdapter(this, messages, true);
+        messagesListView.setAdapter(adapter);
+//        SwipeDismissListViewTouchListener touchListener = new SwipeDismissListViewTouchListener(messagesListView, new SwipeDismissListViewTouchListener.OnDismissCallback() {
+//            @Override
+//            public void onDismiss(ListView listView, int[] reverseSortedPositions) {
+//                deleteMessage(reverseSortedPositions[0]);
+//            }
+//        });
+//        messagesListView.setOnTouchListener(touchListener);
+//        final AbsListView.OnScrollListener listener = touchListener.makeScrollListener();
+        messagesListView.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+//                listener.onScrollStateChanged(view,scrollState);
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                //check if the members have filled the screen
+                if (firstVisibleItem == 0) { //first/second item
+                    dateHeaderViewParent.setVisibility(View.GONE);// TODO: 8/7/2015 fade instead of hiding right away
+                    return;
+                }
+                if (visibleItemCount != 0 && visibleItemCount < totalItemCount) {
+                    dateHeaderViewParent.setVisibility(View.VISIBLE);
+                    for (int i = firstVisibleItem; i >= 0; i--) { //loop backwards
+                        final Message message = messages.get(i);
+                        if (message.getType() == TYPE_DATE_MESSAGE) {
+                            dateHeader.setText(message.getMessageBody());
+                            return;
+                        }
+                    }
+                    //if we've got here then somehow a  session was not set up correctly.
+                    // do we have to clean that mess or
+                    //do this: throw new AssertionError("impossible");
+                    ensureDateSet();
+                }
+//                listener.onScroll(view,firstVisibleItem,visibleItemCount,totalItemCount);
+            }
+        });
+        registerForContextMenu(messagesListView);
         messagesListView.setSelection(messages.size()); //move to last
     }
 
@@ -231,13 +265,12 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         Log.i(TAG, "on resume");
         Config.appOpen(true);
         clearRecentChat();
-        realm.addChangeListener(changeListener);
-         if (!User.isGroup(peer)) {
-            getSupportActionBar().setSubtitle(peer.getStatus());
+        if (!User.isGroup(peer)) {
+            updateUserStatus(LiveCenter.isOnline(peer.getUserId()));
             LiveCenter.trackUser(peer.getUserId());
+            LiveCenter.notifyInChatRoom(peer.getUserId());
             LiveCenter.registerTypingListener(this);
         }
-        testChatActivity();
     }
 
     @Override
@@ -247,10 +280,10 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
             currConversation.setActive(false);
             realm.commitTransaction();
         }
-        realm.removeChangeListener(changeListener);
         Config.appOpen(false);
         if (!UserManager.getInstance().isGroup(peer.getUserId())) {
             LiveCenter.notifyNotTyping(peer.getUserId());
+            LiveCenter.notifyLeftChatRoom(peer.getUserId());
             LiveCenter.doNotTrackUser(peer.getUserId());
             LiveCenter.unRegisterTypingListener(this);
         }
@@ -274,10 +307,6 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
 
     @Override
     protected void onDestroy() {
-        if (timer != null) {
-//            timer.cancel();
-//            timer.purge();
-        }
         realm.close();
         super.onDestroy();
     }
@@ -319,7 +348,7 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         doSendMessage(message);
     }
 
-    private void doSendMessage(Message message) {
+    public void doSendMessage(Message message) {
         if (bound) {
             pairAppClientInterface.sendMessage(message);
         } else {
@@ -501,7 +530,7 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         final DialogFragment fragment = UiHelpers.newProgressDialog();
         fragment.show(getSupportFragmentManager(), null);
         if (recipients == null || recipients.isEmpty()) return;
-        final Message backGroundRealmVersion = new Message(selectedMessage); //copy first
+        final Message backGroundRealmVersion = Message.copy(selectedMessage); //copy first
         AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
@@ -582,26 +611,7 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
 
     @Override
     public void onScroll(AbsListView view, final int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-        //check if the members have filled the screen
-        if (firstVisibleItem == 0) { //first/second item
-            dateHeaderViewParent.setVisibility(View.GONE);// TODO: 8/7/2015 fade instead of hiding right away
-            return;
-        }
-        if (visibleItemCount != 0 && visibleItemCount < totalItemCount) {
-            dateHeaderViewParent.setVisibility(View.VISIBLE);
-            for (int i = firstVisibleItem; i >= 0; i--) { //loop backwards
-                final Message message = messages.get(i);
-                if (message.getType() == TYPE_DATE_MESSAGE) {
-                    dateHeader.setText(message.getMessageBody());
-                    return;
-                }
-            }
-            //if we've got here then somehow a  session was not set up correctly.
-            // do we have to clean that mess or
-            //do this: throw new AssertionError("impossible");
 
-            ensureDateSet();
-        }
     }
 
     private void ensureDateSet() {
@@ -655,21 +665,7 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
             manager.setText(selectedMessage.getMessageBody());
             return true;
         } else if (itemId == R.id.action_delete) {
-            realm.beginTransaction();
-            Message next;
-            try {
-                next = messages.get(cursor + 1);
-                if (next.getType() == TYPE_DATE_MESSAGE || next.getType() == TYPE_TYPING_MESSAGE) {
-                    throw new ArrayIndexOutOfBoundsException(null);//jump to catch clause
-                }
-            } catch (ArrayIndexOutOfBoundsException wasLastMessage) { //move up
-                Message previous = messages.get(cursor - 1); //cannot be null and cannot be of type: Message#TYPING_MESSAGE
-                if (previous.getType() == TYPE_DATE_MESSAGE) {
-                    previous.removeFromRealm(); //delete session message
-                }
-            }
-            selectedMessage.removeFromRealm(); // remove the message here so that you ensure the cursor remain valid
-            realm.commitTransaction();
+            deleteMessage(cursor);
             return true;
         } else if (itemId == R.id.action_forward) {
             Fragment fragment = new ItemsSelector();
@@ -690,9 +686,41 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         return super.onContextItemSelected(item);
     }
 
+    private void deleteMessage(int position) {
+        realm.beginTransaction();
+        Message next;
+        Message previous = messages.get(position - 1);
+        boolean removePrevious = false;
+        try {
+            next = messages.get(position + 1);
+            if (Message.isDateMessage(next) || Message.isTypingMessage(next)) {
+                if (Message.isDateMessage(previous)) {
+                    removePrevious = true;
+                }
+                throw new IndexOutOfBoundsException();
+            } else {
+                messages.get(position).removeFromRealm();
+            }
+        } catch (ArrayIndexOutOfBoundsException wasLastMessage) {
+            for (int i = position - 1; i >= 0; i--) {
+                Message message = messages.get(i);
+                if (!Message.isDateMessage(message)) {
+                    currConversation.setLastMessage(message);
+                    break;
+                }
+            }
+            if (removePrevious) {
+                previous.removeFromRealm();
+            }
+            messages.get(position).removeFromRealm();
+        }
+        realm.commitTransaction();
+    }
+
     /**
      * code purposely for testing we will take this off in production
      */
+    @SuppressWarnings("unused")
     private void testChatActivity() {
 //        final String senderId = peer.getUserId();
 //        timer = new Timer(true);
@@ -706,17 +734,17 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
 //        timer.scheduleAtFixedRate(task, 1000, 45000);
     }
 
-    Timer timer;
-
-    private void testMessageProcessor(Message messages) {
-        JsonObject object = MessageJsonAdapter.INSTANCE.toJson(messages);
-        Context context = Config.getApplicationContext();
-        Bundle bundle = new Bundle();
-        bundle.putString("message", object.toString());
-        Intent intent = new Intent(context, MessageProcessor.class);
-        intent.putExtras(bundle);
-        context.startService(intent);
-    }
+//    Timer timer;
+//
+//    private void testMessageProcessor(Message messages) {
+//        JsonObject object = MessageJsonAdapter.INSTANCE.toJson(messages);
+//        Context context = Config.getApplicationContext();
+//        Bundle bundle = new Bundle();
+//        bundle.putString("message", object.toString());
+//        Intent intent = new Intent(context, MessageProcessor.class);
+//        intent.putExtras(bundle);
+//        context.startService(intent);
+//    }
 
     @Override
     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -737,18 +765,18 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         }
     };
     boolean wasTyping = false;
+
     @Override
     public void afterTextChanged(Editable s) {
         handler.removeCallbacks(runnable);
         if (!s.toString().trim().isEmpty()) {
-            if(!wasTyping){
+            if (!wasTyping) {
                 wasTyping = true;
                 LiveCenter.notifyTyping(peer.getUserId());
             }
             //TODO add some deviation to the timeout
-            handler.postDelayed(runnable,10000);
-        } else 
-            if(wasTyping){
+            handler.postDelayed(runnable, 10000);
+        } else if (wasTyping) {
             wasTyping = false;
             LiveCenter.notifyNotTyping(peer.getUserId());
         }
@@ -869,23 +897,9 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         supportInvalidateOptionsMenu();
     }
 
-    private final RealmChangeListener changeListener = new RealmChangeListener() {
-        @Override
-        public void onChange() {
-            if (!UserManager.getInstance().isGroup(peer.getUserId())) {
-                String subTitle = String.valueOf(getSupportActionBar().getSubtitle());
-                if (!subTitle.equals(peer.getUserId()))
-                    getSupportActionBar().setSubtitle(peer.getStatus());
-            }
-        }
-    };
-
-    private String userStatus;
-
     @Override
     public void onTyping(String userId) {
         if (peer.getUserId().equals(userId)) {
-            userStatus = peer.getStatus();
             getSupportActionBar().setSubtitle("Typing...");
         }
     }
@@ -893,7 +907,18 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
     @Override
     public void onStopTyping(String userId) {
         if (peer.getUserId().equals(userId)) {
-            getSupportActionBar().setSubtitle(userStatus);
+            updateUserStatus(LiveCenter.isOnline(userId));
         }
+    }
+
+    @Override
+    public void onUserStatusChanged(String userId, boolean isOnline) {
+        if (userId.equals(peer.getUserId())) {
+            updateUserStatus(isOnline);
+        }
+    }
+
+    private void updateUserStatus(boolean online) {
+        getSupportActionBar().setSubtitle(online ? R.string.st_online : R.string.st_offline);
     }
 }

@@ -9,16 +9,14 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.LinearLayout;
 
 import com.pair.Config;
 import com.pair.PairApp;
 import com.pair.data.Conversation;
+import com.pair.data.RealmUtils;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
-import com.pair.data.RealmUtils;
 import com.pair.util.UiHelpers;
 import com.parse.ParseAnalytics;
 import com.rey.material.app.ToolbarManager;
@@ -80,7 +78,6 @@ public class MainActivity extends PairAppActivity {
             cleanedMessages = true;
             RealmUtils.runRealmOperation(this);
         }
-
     }
 
     private void setupViews() {
@@ -93,6 +90,7 @@ public class MainActivity extends PairAppActivity {
             Log.e(TAG, ignored.getMessage());
         }
         Toolbar toolBar = (Toolbar) findViewById(R.id.main_toolbar);
+        toolBar.setTitle("");
         toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         pager.setAdapter(new MyFragmentStatePagerAdapter(getSupportFragmentManager()));
         snackBar = ((SnackBar) findViewById(R.id.notification_bar));
@@ -146,29 +144,6 @@ public class MainActivity extends PairAppActivity {
     }
 
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        toolbarManager.createMenu(R.menu.menu_pair_app);
-        return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        toolbarManager.onPrepareMenu();
-        return super.onPrepareOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        switch (id) {
-            case R.id.action_settings:
-                UiHelpers.gotoProfileActivity(this, UserManager.getMainUserId());
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
     void setPagePosition(int newPosition) {
         if (newPosition < 0 || newPosition >= pager.getAdapter().getCount() || pager.getCurrentItem() == newPosition) {
             //do nothing
@@ -187,7 +162,7 @@ public class MainActivity extends PairAppActivity {
     class MyFragmentStatePagerAdapter extends FragmentStatePagerAdapter {
         static final int POSITION_CONVERSATION_FRAGMENT = 0x0,
                 POSITION_CONTACTS_FRAGMENT = 0x1,
-                POSITION_GROUP_FRAGMENT = 0x2;
+                POSITION_GROUP_FRAGMENT = 0x2, POSITION_SETTINGS_FRAGMENT = 0x3;
         String[] pageTitles;
 
         public MyFragmentStatePagerAdapter(FragmentManager fm) {
@@ -208,12 +183,12 @@ public class MainActivity extends PairAppActivity {
                 case POSITION_GROUP_FRAGMENT:
                     fragment = new GroupsFragment();
                     break;
-//                case POSITION_SETTINGS_FRAGMENT:
-//                    fragment = new ProfileFragment();
-//                    Bundle bundle = new Bundle(1);
-//                    bundle.putString(ProfileFragment.ARG_USER_ID,UserManager.getMainUserId());
-//                    fragment.setArguments(bundle);
-//                    break;
+                case POSITION_SETTINGS_FRAGMENT:
+                    fragment = new ProfileFragment();
+                    Bundle bundle = new Bundle(1);
+                    bundle.putString(ProfileFragment.ARG_USER_ID, UserManager.getMainUserId());
+                    fragment.setArguments(bundle);
+                    break;
                 default:
                     throw new AssertionError("impossible");
             }
@@ -222,13 +197,14 @@ public class MainActivity extends PairAppActivity {
 
         @Override
         public int getCount() {
-            return 3;
+            return 4;
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
             return pageTitles[position];
         }
+
     }
 
 }

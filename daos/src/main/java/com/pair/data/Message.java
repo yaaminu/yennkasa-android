@@ -8,6 +8,7 @@ import com.pair.Config;
 import com.pair.Errors.PairappException;
 import com.pair.data.util.MessageUtils;
 import com.pair.util.FileUtils;
+import com.pair.util.ThreadUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ import io.realm.annotations.RealmClass;
  * this class represents a particular message sent by a given {@link User}.
  * it is normally used in conjunction with {@link Conversation}
  * the message may be attached to {@link Realm} or not.
- * <p/>
+ * <p>
  * one can detach the message from realm by using its {@link #copy} method
  * and using the returned message.
  *
@@ -214,9 +215,9 @@ public class Message extends RealmObject {
      *                 automatically to {@link #TYPE_TEXT_MESSAGE}
      * @param to       the recipient of the {@link Message}
      * @return the newly createdMessage
-     * @throws com.pair.Errors.PairappException if the message is invalid. this could be because
-     *                                              a binary message is too huge, etc
-     * @throws io.realm.exceptions.RealmException   if you are not in a transaction
+     * @throws com.pair.Errors.PairappException   if the message is invalid. this could be because
+     *                                            a binary message is too huge, etc
+     * @throws io.realm.exceptions.RealmException if you are not in a transaction
      * @see {@link Message#makeNew(Realm, String, String, int)}
      */
     public static Message makeNew(Realm theRealm, String body, String to) throws PairappException {
@@ -229,14 +230,14 @@ public class Message extends RealmObject {
      *
      * @param theRealm the realm to use in creating the message
      * @param body     the body of the message. the message body
-     *                 be a path to a file if the message is a
+     *                 may be a path to a file if the message is a
      *                 binary message
      * @param to       the recipient of the {@code message}
      * @param type     the type of the message
      * @return the newly createdMessage
-     * @throws com.pair.Errors.PairappException if the message is invalid. this could be because
-     *                                              a binary message is too huge, etc
-     * @throws io.realm.exceptions.RealmException   if you are not in a transaction
+     * @throws com.pair.Errors.PairappException   if the message is invalid. this could be because
+     *                                            a binary message is too huge, etc
+     * @throws io.realm.exceptions.RealmException if you are not in a transaction
      * @see {@link Message#makeNew(Realm, String, String)}
      * @see {@link MessageUtils#validate(Message)}
      */
@@ -251,6 +252,39 @@ public class Message extends RealmObject {
             }
         }
         Message message = theRealm.createObject(Message.class);
+        message.setDateComposed(new Date());
+        message.setMessageBody(body);
+        message.setId(generateIdPossiblyUnique());
+        message.setFrom(UserManager.getMainUserId());
+        message.setState(Message.STATE_PENDING);
+        message.setType(type);
+        message.setTo(to);
+        return message;
+    }
+
+    /**
+     * a convenient method for creating a new message that needs not be attached
+     * to a realm
+     *
+     * @param body the message's body, may be a path to a file if its a bin message
+     * @param to   the recipient of the message
+     * @param type the type of the message, one of {@link #TYPE_TEXT_MESSAGE,#TYPE_BIN_MESSAGE,#TYPE_PICTURE_MESSAGE,#TYPE_VIDEO_MESSAGE}
+     * @return the message
+     * @throws PairappException if the message is not a text and is too huge
+     * @see {@link #makeNew(Realm, String, String)}
+     * @see {@link #makeNew(Realm, String, String, int)}
+     */
+    public static Message makeNew(String body, String to, int type) throws PairappException {
+        if (type == TYPE_BIN_MESSAGE || type == TYPE_PICTURE_MESSAGE || type == TYPE_VIDEO_MESSAGE) {
+            File file = new File(body);
+            if (!file.exists()) {
+                throw new PairappException("file does not exists", MessageUtils.ERROR_FILE_DOES_NOT_EXIST);
+            }
+            if (file.length() > FileUtils.ONE_MB * 8) {
+                throw new PairappException("file is too large", MessageUtils.ERROR_ATTACHMENT_TOO_LARGE);
+            }
+        }
+        Message message = new Message();
         message.setDateComposed(new Date());
         message.setMessageBody(body);
         message.setId(generateIdPossiblyUnique());
@@ -325,4 +359,26 @@ public class Message extends RealmObject {
         return copy;
     }
 
+    private static Message typingMessageCache;
+
+    /**
+     * make a typing message. this method may not be called from a thread other than the main thread.
+     * clients must set the date the message was created
+     *
+     * @param peerId the peer ID in the conversation
+     * @return a new typing message
+     * @throws IllegalStateException if it is not called from the main thread
+     */
+    public static Message makeTypingMessage(String peerId) {
+        ThreadUtils.ensureMain();
+        if (typingMessageCache == null) {
+            typingMessageCache = new Message();
+            typingMessageCache.setFrom(UserManager.getMainUserId());
+            typingMessageCache.setType(TYPE_TYPING_MESSAGE);
+        }
+        Message typingMessage = copy(typingMessageCache);
+        typingMessage.setTo(peerId);
+        typingMessage.setId(peerId + "typing");
+        return typingMessage;
+    }
 }

@@ -48,8 +48,8 @@
     <style name="TabPageIndicator" parent="Material.Widget.TabPageIndicator.Light">
         <item name="tpi_tabPadding">12dp</item>
         <item name="tpi_tabRipple">@style/TabRippleStyle</item>
-        <item name="tpi_indicatorHeight">3dp</item>
-        <item name="tpi_indicatorColor">@color/white</item>
+        <item name="tpi_indicatorHeight">0dp</item>
+        <item name="tpi_indicatorColor">@null</item>
         <item name="android:textAppearance">@style/TabTextAppearance</item>
         <item name="tpi_mode">scroll</item>
     </style>

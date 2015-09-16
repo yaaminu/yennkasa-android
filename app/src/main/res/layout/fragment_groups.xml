@@ -1,17 +1,18 @@
 <com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:tools="http://schemas.android.com/tools"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-    tools:context="com.pair.ui.GroupsFragment">
+                              xmlns:tools="http://schemas.android.com/tools"
+                              android:layout_width="match_parent"
+                              android:layout_height="match_parent"
+                              xmlns:app="http://schemas.android.com/apk/res-auto"
+                              tools:context="com.pair.ui.GroupsFragment">
 
     <TextView
         android:id="@android:id/empty"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_centerInParent="true"
         android:gravity="center"
-        android:text="Sorry not yet a member of  any group"
-        android:textSize="36sp"
+        android:text="@string/not_group"
+        android:textSize="14sp"
         />
 
     <ListView
@@ -20,4 +21,15 @@
         android:layout_height="match_parent">
     </ListView>
 
+    <com.rey.material.widget.FloatingActionButton
+        style="@style/Material.Widget.FloatingActionButton.Light"
+        android:id="@+id/fab_new_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:fab_iconSrc="@drawable/ic_action_chat_white"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="16dp"
+        android:layout_marginRight="16dp"
+        app:fab_iconLineMorphing="@style/FloatingActionButtonIcon"/>
 </com.pair.view.RelativeLayout>

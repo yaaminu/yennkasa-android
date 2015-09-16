@@ -4,11 +4,9 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
@@ -20,8 +18,7 @@ import com.pair.data.Message;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
 import com.pair.view.SwipeDismissListViewTouchListener;
-
-import java.util.Timer;
+import com.rey.material.widget.FloatingActionButton;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -35,8 +32,6 @@ public class ConversationsFragment extends ListFragment {
     private Realm realm;
     private RealmResults<Conversation> conversations;
     private ConversationAdapter adapter;
-    private static long currentTimeOut = 0L;
-    private static Timer timer;
 
     public ConversationsFragment() {
     } //required no-arg constructor
@@ -57,6 +52,14 @@ public class ConversationsFragment extends ListFragment {
         realm = Realm.getInstance(Config.getApplicationContext());
         conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
         adapter = new ConversationAdapter(getActivity(), conversations, true);
+        FloatingActionButton actionButton = ((FloatingActionButton) view.findViewById(R.id.fab_new_message));
+        actionButton.setIcon(getResources().getDrawable(R.drawable.ic_action_edit_white), false);
+        actionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                UiHelpers.pickRecipient(getActivity());
+            }
+        });
         setListAdapter(adapter);
         return view;
     }
@@ -103,6 +106,7 @@ public class ConversationsFragment extends ListFragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        ((ActionBarActivity) getActivity()).getSupportActionBar().hide();
         SwipeDismissListViewTouchListener swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(getListView(), new SwipeDismissListViewTouchListener.OnDismissCallback() {
             @Override
             public void onDismiss(ListView listView, final int[] reverseSortedPositions) {
@@ -156,32 +160,6 @@ public class ConversationsFragment extends ListFragment {
     public void onListItemClick(ListView l, View v, int position, long id) {
         String peerId = ((Conversation) l.getAdapter().getItem(position)).getPeerId();
         UiHelpers.enterChatRoom(getActivity(), peerId);
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.new_message_menu, menu);
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.new_message) {
-            UiHelpers.pickRecipient(getActivity());
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
     }
 
     @Override

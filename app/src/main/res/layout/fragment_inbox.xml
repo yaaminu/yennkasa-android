@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center">
+                              android:layout_width="match_parent"
+                              android:layout_height="match_parent"
+                              xmlns:app="http://schemas.android.com/apk/res-auto"
+                              android:gravity="center">
 
     <TextView
         android:id="@android:id/empty"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_centerInParent="true"
+        android:gravity="center"
         android:text="No Messages"
         android:textSize="16sp" />
 
@@ -18,4 +20,16 @@
         android:layout_height="match_parent"
         android:dividerHeight="0.5dp"
         android:transcriptMode="normal" />
+
+    <com.rey.material.widget.FloatingActionButton
+        style="@style/Material.Widget.FloatingActionButton.Light"
+        android:id="@+id/fab_new_message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:fab_iconSrc="@drawable/ic_action_chat_white"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="16dp"
+        android:layout_marginRight="16dp"
+        app:fab_iconLineMorphing="@style/FloatingActionButtonIcon"/>
 </com.pair.view.RelativeLayout>

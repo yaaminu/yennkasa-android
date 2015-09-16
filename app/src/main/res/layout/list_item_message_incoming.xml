@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+                              xmlns:tools="http://schemas.android.com/tools"
+                              android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_margin="15dp">
 
@@ -21,11 +22,12 @@
             <TextView
                 android:id="@+id/tv_message_content"
                 style="@style/message_incoming"
-                android:text="hello" />
+                android:text="@string/new_message"/>
 
             <ImageView
                 android:id="@+id/iv_message_preview"
                 style="@style/incoming_message_body_root_view"
+                android:background="@android:color/white"
                 android:layout_width="@dimen/message_preview_item_width"
                 android:layout_height="@dimen/message_preview_item_height"
                 android:contentDescription="@string/st_content_description_image_preview"
@@ -68,7 +70,7 @@
             android:id="@+id/tv_message_date"
             style="@style/message_incoming_date"
             android:singleLine="true"
-            android:text="2/23/12" />
+            android:text="@string/sample_date"/>
     </com.pair.view.LinearLayout>
     <!-- this textView is useless except that it frees us from checking for
     null-ness in the {@link MessagesAdapter}-->
@@ -83,4 +85,12 @@
         android:text="@string/st_message_state_pending"
         android:textColor="@color/white"
         android:visibility="gone" />
+
+    <!-- a dummy iv to free us from null-checks-->
+    <ImageView
+        android:id="@+id/iv_retry"
+        android:layout_width="wrap_content"
+        android:visibility="gone"
+        android:layout_height="wrap_content"
+        tools:ignore="ContentDescription"/>
 </com.pair.view.RelativeLayout>

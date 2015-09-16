@@ -6,9 +6,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -20,6 +17,7 @@ import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
+import com.rey.material.widget.FloatingActionButton;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -47,6 +45,14 @@ public class GroupsFragment extends ListFragment {
         super.onCreateView(inflater, container, savedInstanceState);
         setHasOptionsMenu(true);
         View view = inflater.inflate(R.layout.fragment_groups, container, false);
+        FloatingActionButton actionButton = ((FloatingActionButton) view.findViewById(R.id.fab_new_group));
+        actionButton.setIcon(getResources().getDrawable(R.drawable.ic_action_add_group_white), false);
+        actionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                gotoCreateGroupActivity();
+            }
+        });
         realm = Realm.getInstance(getActivity());
         UserManager.getInstance().refreshGroups();
         return view;
@@ -73,19 +79,7 @@ public class GroupsFragment extends ListFragment {
         UiHelpers.enterChatRoom(getActivity(), groupId);
     }
 
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_group_fragment, menu);
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        long id = item.getItemId();
-        if (id == R.id.action_create_group) {
-            startActivity(new Intent(getActivity(), CreateGroupActivity.class));
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+    private void gotoCreateGroupActivity() {
+        startActivity(new Intent(getActivity(), CreateGroupActivity.class));
     }
 }

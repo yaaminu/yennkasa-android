@@ -2,12 +2,17 @@ package com.pair.adapter;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Process;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.util.LruCache;
+import android.text.Html;
 import android.text.format.DateUtils;
 import android.util.Base64;
 import android.util.Log;
@@ -22,8 +27,10 @@ import com.pair.Config;
 import com.pair.Errors.ErrorCenter;
 import com.pair.data.Message;
 import com.pair.pairapp.R;
+import com.pair.ui.ChatActivity;
 import com.pair.ui.ImageViewer;
 import com.pair.util.FileUtils;
+import com.pair.util.PreviewsHelper;
 import com.pair.util.UiHelpers;
 import com.squareup.picasso.Picasso;
 
@@ -44,35 +51,47 @@ import io.realm.RealmResults;
 @SuppressWarnings("ConstantConditions")
 public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.OnLongClickListener {
     private static final String TAG = MessagesAdapter.class.getSimpleName();
+    private static final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
     private static final long TEN_SECONDS = 10000L;
-    private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2, DATE_MESSAGE = 0x0;
-    private final SparseIntArray previewsMap;
+    private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2, DATE_MESSAGE = 0x0, TYPING_MESSAGE = 0x3;
+    private final SparseIntArray previewsMap, messageStates;
     private static final Map<String, Integer> downloadingRows = new HashMap<>();
     private final Picasso PICASSO;
     private final int PREVIEW_WIDTH;
     private final int PREVIEW_HEIGHT;
-    private final int playIcon = R.drawable.playvideo, downloadIcon = R.drawable.photoload;
+    private final LruCache<String, Bitmap> thumbnailCache;
+    private final ChatActivity chatActivity;
 
-    public MessagesAdapter(FragmentActivity context, RealmResults<Message> realmResults, boolean automaticUpdate) {
+    public MessagesAdapter(ChatActivity context, RealmResults<Message> realmResults, boolean automaticUpdate) {
         super(context, realmResults, automaticUpdate);
         previewsMap = new SparseIntArray(3);
         previewsMap.put(Message.TYPE_PICTURE_MESSAGE, R.drawable.image_placeholder);
         previewsMap.put(Message.TYPE_VIDEO_MESSAGE, R.drawable.video_placeholder);
         previewsMap.put(Message.TYPE_BIN_MESSAGE, R.drawable.file_placeholder);
+        messageStates = new SparseIntArray(4);
+        messageStates.put(Message.STATE_PENDING, R.drawable.ic_action_upload);
+        messageStates.put(Message.STATE_SENT, R.drawable.ic_action_sent);
+        messageStates.put(Message.STATE_SEND_FAILED, R.drawable.ic_action_error);
+        messageStates.put(Message.STATE_SEEN, R.drawable.ic_visibility_white_24dp);
+        messageStates.put(Message.STATE_RECEIVED, R.drawable.ic_done_all_white_24dp);
         PREVIEW_WIDTH = context.getResources().getDimensionPixelSize(R.dimen.message_preview_item_width);
         PREVIEW_HEIGHT = context.getResources().getDimensionPixelSize(R.dimen.message_preview_item_height);
+        thumbnailCache = new LruCache<>(3);
         PICASSO = Picasso.with(context);
+        chatActivity = context;
     }
 
     @Override
     public int getViewTypeCount() {
-        return 3;
+        return 4;
     }
 
     @Override
     public int getItemViewType(int position) {
         Message message = getItem(position);
-        if (Message.isDateMessage(message)) {
+        if (Message.isTypingMessage(message)) {
+            return TYPING_MESSAGE;
+        } else if (Message.isDateMessage(message)) {
             return DATE_MESSAGE;
         } else {
             if (isOutgoingMessage(message)) {
@@ -95,30 +114,49 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         if (Message.isDateMessage(message)) {
             holder.textMessage.setText(message.getMessageBody());
             return convertView;
+        } else if (Message.isTypingMessage(message)) {
+            return convertView;
         }
 
-        attemptToMarkAsSeen(message);
-        String dateComposed = DateUtils.formatDateTime(context, message.getDateComposed().getTime(), DateUtils.FORMAT_SHOW_TIME);
-
-        //show all views show if it's required
+        //hide all views and show if it's required
         holder.preview.setVisibility(View.GONE);
-        holder.messageStatus.setVisibility(View.GONE);
         holder.progress.setVisibility(View.GONE);
         holder.playOrDownload.setVisibility(View.GONE);
         holder.preview.setOnClickListener(null);
         holder.playOrDownload.setOnClickListener(null);
         holder.textMessage.setVisibility(View.GONE);
+        holder.retry.setVisibility(View.GONE);
         //common to all
         holder.dateComposed.setVisibility(View.VISIBLE);
-        holder.dateComposed.setText(dateComposed);
 
+        String dateComposed = DateUtils.formatDateTime(context, message.getDateComposed().getTime(), DateUtils.FORMAT_SHOW_TIME);
         if (isOutgoingMessage(message)) {
-            holder.messageStatus.setVisibility(View.VISIBLE);
-            holder.messageStatus.setText(getStringRepresentation(message.getState()));
+            if (message.getState() == Message.STATE_PENDING) {
+                holder.dateComposed.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0); //reset every thing
+                holder.dateComposed.setText(Html.fromHtml("<h1><b>...</b></h1>") + dateComposed);
+            } else {
+                holder.dateComposed.setText(dateComposed);
+                holder.dateComposed.setCompoundDrawablesWithIntrinsicBounds(messageStates.get(message.getState()), 0, 0, 0);
+            }
+
+            if (message.getState() == Message.STATE_SEND_FAILED) {
+                holder.retry.setVisibility(View.VISIBLE);
+                holder.retry.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Realm realm = Message.REALM(v.getContext());
+                        realm.beginTransaction();
+                        message.setState(Message.STATE_PENDING);
+                        realm.commitTransaction(); //notifyDataSetChanged will be called implicitly
+                        chatActivity.doSendMessage(Message.copy(message));
+                    }
+                });
+            }
         }
 
         if (Message.isTextMessage(message)) {
             //normal message
+            //TODO use on of the variants of the spannableString classes.
             holder.textMessage.setVisibility(View.VISIBLE);
             holder.textMessage.setText(message.getMessageBody());
             return convertView;
@@ -127,7 +165,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         //if we are here then the message is binary example picture message or video message
         holder.preview.setVisibility(View.VISIBLE);
         holder.preview.setOnLongClickListener(this);
-        final int placeHolderDrawable = previewsMap.get(message.getType());
+        final int placeHolderDrawable = PreviewsHelper.getPreview(message.getMessageBody());
         final File messageFile = new File(message.getMessageBody());
         final View.OnClickListener listener = new View.OnClickListener() {
             @Override
@@ -149,16 +187,30 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                 holder.playOrDownload.setVisibility(View.VISIBLE);
                 holder.playOrDownload.setImageResource(R.drawable.playvideo);
                 holder.playOrDownload.setOnClickListener(listener);
-            }
-            if (Message.isPictureMessage(message)) {
+                //we use the body of the message so that we will not have to
+                //create a thumbnail for the same file twice.
+                Bitmap bitmap = thumbnailCache.get(messageFile.getAbsolutePath());
+                if (bitmap == null) {
+                    makeThumbnail(messageFile.getAbsolutePath());
+                    PICASSO.load(placeHolderDrawable).into(holder.preview);
+                } else {
+                    holder.preview.setImageBitmap(bitmap);
+                }
+//                PICASSO.load(messageFile)
+//                        .placeholder(placeHolderDrawable)
+//                        .error(placeHolderDrawable)
+//                        .centerCrop().resize(PREVIEW_WIDTH, PREVIEW_HEIGHT)
+//                        .into(holder.preview);
+            } else if (Message.isPictureMessage(message)) {
                 PICASSO.load(messageFile)
                         .resize(PREVIEW_WIDTH, PREVIEW_HEIGHT)
                         .centerCrop()
-                        .error(placeHolderDrawable)
+                        .placeholder(placeHolderDrawable)
+                        .error(R.drawable.format_pic_broken)
                         .into(holder.preview);
 
             } else {
-                holder.preview.setImageResource(placeHolderDrawable);
+                PICASSO.load(placeHolderDrawable).into(holder.preview);
             }
             holder.preview.setOnClickListener(listener);
         } else {
@@ -167,7 +219,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                 holder.playOrDownload.setImageResource(R.drawable.photoload);
                 holder.playOrDownload.setOnClickListener(listener);
             }
-            holder.preview.setImageResource(placeHolderDrawable);
+            PICASSO.load(placeHolderDrawable).into(holder.preview);
         }
 
 
@@ -183,24 +235,20 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         return convertView;
     }
 
-    private void attemptToMarkAsSeen(Message message) {
-
-        if (Message.isIncoming(message) && message.getState() != Message.STATE_SEEN) {
-            final String msgId = message.getId();
-            WORKER.execute(new Runnable() {
-                @Override
-                public void run() {
-                    Realm realm = Message.REALM(context);
-                    realm.beginTransaction();
-                    Message message1 = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
-                    if (message1 != null) {
-                        message1.setState(Message.STATE_SEEN);
-                        realm.commitTransaction();
+    private void makeThumbnail(final String uri) {
+        WORKER.execute(new Runnable() {
+            @Override
+            public void run() {
+                Bitmap bitmap = ThumbnailUtils.createVideoThumbnail(uri, MediaStore.Images.Thumbnails.MINI_KIND);
+                thumbnailCache.put(uri, bitmap);
+                mainThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        notifyDataSetChanged();
                     }
-                    realm.close();
-                }
-            });
-        }
+                });
+            }
+        });
     }
 
     private void attemptToViewFile(FragmentActivity context, File file, Message message) {
@@ -221,6 +269,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         }
     }
 
+    @SuppressWarnings("unused")
     private String getStringRepresentation(int status) {
 //        switch (status) {
 //            case Message.STATE_PENDING:
@@ -291,7 +340,6 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                     }
 
                     private void onComplete(final Exception error) {
-                        final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
                         mainThreadHandler.post(
                                 new Runnable() {
                                     @Override
@@ -318,11 +366,12 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         holder.dateComposed = ((TextView) convertView.findViewById(R.id.tv_message_date));
         holder.playOrDownload = ((ImageView) convertView.findViewById(R.id.v_download_play));
         holder.progress = convertView.findViewById(R.id.pb_download_progress);
-        holder.messageStatus = ((TextView) convertView.findViewById(R.id.tv_message_status));
+        holder.retry = convertView.findViewById(R.id.iv_retry);
         convertView.setTag(holder);
         return convertView;
     }
 
+    @SuppressWarnings("unused")
     private void hideDateIfClose(int position, ViewHolder holder, Message message) {
         //show messages at a particular time together
         if ((message.getType() == Message.TYPE_TEXT_MESSAGE)) {
@@ -344,11 +393,6 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         }
     }
 
-
-    private boolean isDateMessage(int position) {
-        return getItem(position).getType() == Message.TYPE_DATE_MESSAGE;
-    }
-
     private boolean isOutgoingMessage(Message message) {
         return Message.isOutGoing(message);
     }
@@ -364,14 +408,15 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         private TextView textMessage, dateComposed;
         private ImageView preview, playOrDownload;
         private View progress;
-        private TextView messageStatus;
+        private View retry;
         //TODO add more fields as we support different media/file types
     }
 
     private static final int[] messagesLayout = {
             R.layout.message_item_session_date,
             R.layout.list_item_message_outgoing,
-            R.layout.list_item_message_incoming
+            R.layout.list_item_message_incoming,
+            R.layout.typing_dots
     };
 
     private final Executor WORKER = Executors.newCachedThreadPool();

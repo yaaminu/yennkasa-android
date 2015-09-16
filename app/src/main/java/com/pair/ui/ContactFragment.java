@@ -6,9 +6,6 @@ import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -22,6 +19,7 @@ import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
 import com.pair.workers.ContactSyncService;
+import com.rey.material.widget.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -102,6 +100,14 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         TextView emptyView = (TextView) view.findViewById(android.R.id.empty);
         emptyView.setText(R.string.loading);
         setListAdapter(adapter);
+        FloatingActionButton actionButton = ((FloatingActionButton) view.findViewById(R.id.fab_refresh));
+        actionButton.setIcon(getResources().getDrawable(R.drawable.ic_action_replay), false);
+        actionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ContactSyncService.start(getActivity());
+            }
+        });
         return view;
     }
 
@@ -122,21 +128,6 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         } else {
             Log.d(TAG, "clicked an unregistered user");
         }
-    }
-
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.contact_fragment_menu, menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.action_refresh) {
-            ContactSyncService.start(getActivity());
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override

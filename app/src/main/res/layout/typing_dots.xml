@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          style="@style/incoming_message_body_root_view"
+          android:contentDescription="@string/typing_message"
+          android:gravity="center"
+          android:layout_gravity="start"
+          android:layout_alignParentLeft="true"
+          android:text="@string/ellipsis"
+          android:textColor="@color/white"
+          android:textSize="24sp"
+    />

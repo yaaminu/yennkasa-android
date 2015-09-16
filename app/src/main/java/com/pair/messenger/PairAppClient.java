@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
@@ -15,6 +16,7 @@ import com.pair.data.Message;
 import com.pair.data.UserManager;
 import com.pair.util.L;
 import com.pair.util.LiveCenter;
+import com.pair.util.ThreadUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -183,7 +185,8 @@ public class PairAppClient extends Service {
 
     private static Stack<Activity> backStack = new Stack<>();
 
-    public synchronized static void markUserAsOffline(Activity activity) {
+    public static void markUserAsOffline(Activity activity) {
+        ThreadUtils.ensureMain();
         if (activity == null) {
             throw new IllegalArgumentException();
         }
@@ -193,9 +196,6 @@ public class PairAppClient extends Service {
 
         if (backStack.isEmpty()) {
             LiveCenter.stop();
-            if(SOCKETSIO_DISPATCHER != null){
-                SOCKETSIO_DISPATCHER.close();
-            }
             MessageCenter.stopListeningForSocketMessages();
             if (SOCKETSIO_DISPATCHER != null) {
                 SOCKETSIO_DISPATCHER.close();
@@ -204,7 +204,8 @@ public class PairAppClient extends Service {
         }
     }
 
-    public synchronized static void markUserAsOnline(Activity activity) {
+    public static void markUserAsOnline(Activity activity) {
+        ThreadUtils.ensureMain();
         if (activity == null) {
             throw new IllegalArgumentException();
         }
@@ -221,7 +222,7 @@ public class PairAppClient extends Service {
                 bootClient();
             }
             if (WORKER_THREAD.isAlive()) //worker thread will send all pending messages immediately it comes alive
-                WORKER_THREAD.sendMessage(Message.copy(message)); //detach the message from realm
+                WORKER_THREAD.sendMessage(message.isValid() ? Message.copy(message) : message); //detach the message from realm
         }
 
         public void sendMessages(Collection<Message> tobeSent) {
@@ -264,18 +265,17 @@ public class PairAppClient extends Service {
     }
 
 
-    private final class WorkerThread extends Thread {
+    private final class WorkerThread extends HandlerThread {
         Handler handler;
 
         public WorkerThread() {
+            super(TAG, NORM_PRIORITY);
         }
 
         @Override
-        public void run() {
-            Looper.prepare();
-            handler = new MessageHandler();
+        protected void onLooperPrepared() {
+            handler = new MessageHandler(getLooper());
             attemptToSendAllUnsentMessages();
-            Looper.loop();
         }
 
         public void sendMessage(Message message) {
@@ -317,7 +317,8 @@ public class PairAppClient extends Service {
     private class MessageHandler extends Handler {
         public static final int SEND_MESSAGE = 0x0, SEND_BATCH = 0x01, SHUT_DOWN = 0x2;
 
-        public MessageHandler() {
+        public MessageHandler(Looper looper) {
+            super(looper);
         }
 
         @Override

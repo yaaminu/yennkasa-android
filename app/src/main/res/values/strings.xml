@@ -141,4 +141,10 @@
     <string name="sinch_not_available_message">Your device is not completely supported, Call features may not be available on your device</string>
     <string name="sinch_error_report_message">we are having trouble setting things up,ensure your are connected to the internet and that your date is correct</string>
     <string name="st_unable_to_connect_version_2">We\'re having trouble connecting you. Please check your internet settings</string>
+    <string name="sample_date">2/23/12</string>
+    <string name="typing_message">typingMessage</string>
+    <string name="ellipsis">...</string>
+    <string name="sampleDate">12-12-12</string>
+    <string name="play_download_content_description">play_or_download</string>
+    <string name="not_group">Sorry not yet a member of any group</string>
 </resources>
