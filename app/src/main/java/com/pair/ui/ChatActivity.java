@@ -95,6 +95,7 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
     private static Message selectedMessage;
     private ToolbarManager toolbarManager;
     private Toolbar toolBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -491,35 +492,35 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
             return;
         }
         Message message;
+        String actualPath;
         try {
+            //we cannot rely on external programs to return the right type of file based on the
+            //intent we fired.
+            //a well-known android app com.estrongs.android.pop-1 (Es File Explorer) allows users
+            //to pick any file type irrespective of the mime type bundle with the intent.
             switch (requestCode) {
-                case PICK_PHOTO_REQUEST:
-                    message = createMessage(getActualPath(data), Message.TYPE_PICTURE_MESSAGE);
-                    break;
                 case TAKE_PHOTO_REQUEST:
-                    message = createMessage(mMediaUri.getPath(), Message.TYPE_PICTURE_MESSAGE);
-                    break;
+                    //fall through
                 case TAKE_VIDEO_REQUEST:
-                    message = createMessage(mMediaUri.getPath(), Message.TYPE_VIDEO_MESSAGE);
+                    actualPath = mMediaUri.getPath();
                     break;
                 case PICK_VIDEO_REQUEST:
-                    message = createMessage(getActualPath(data), Message.TYPE_VIDEO_MESSAGE);
-                    break;
+                    //fall through
+                case PICK_PHOTO_REQUEST:
+                    //fall through
                 case PICK_FILE_REQUEST:
-                    String actualPath = getActualPath(data);
-                    String extension = FileUtils.getExtension(actualPath);
-                    int type = Message.TYPE_BIN_MESSAGE;
-                    //some image formats like bmp,gif are considered invalid
-                    if (extension.equals("jpeg") || extension.equals("jpg") || extension.equals("png")) {
-                        type = Message.TYPE_PICTURE_MESSAGE;
-                    } else if (extension.equals("mp4") || extension.equals("3gp")) {
-                        type = Message.TYPE_VIDEO_MESSAGE;
-                    }
-                    message = createMessage(actualPath, type);
+                    actualPath = getActualPath(data);
                     break;
                 default:
                     throw new AssertionError("impossible");
             }
+            int type = Message.TYPE_BIN_MESSAGE;
+            if (MediaUtils.isImage(actualPath)) {
+                type = Message.TYPE_PICTURE_MESSAGE;
+            } else if (MediaUtils.isVideo(actualPath)) {
+                type = Message.TYPE_VIDEO_MESSAGE;
+            }
+            message = createMessage(actualPath, type);
             enqueueMessage(message);
         } catch (PairappException e) {
             ErrorCenter.reportError(TAG, e.getMessage());

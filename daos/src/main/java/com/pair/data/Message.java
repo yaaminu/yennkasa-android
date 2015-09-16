@@ -359,8 +359,6 @@ public class Message extends RealmObject {
         return copy;
     }
 
-    private static Message typingMessageCache;
-
     /**
      * make a typing message. this method may not be called from a thread other than the main thread.
      * clients must set the date the message was created
@@ -371,12 +369,9 @@ public class Message extends RealmObject {
      */
     public static Message makeTypingMessage(String peerId) {
         ThreadUtils.ensureMain();
-        if (typingMessageCache == null) {
-            typingMessageCache = new Message();
-            typingMessageCache.setFrom(UserManager.getMainUserId());
-            typingMessageCache.setType(TYPE_TYPING_MESSAGE);
-        }
-        Message typingMessage = copy(typingMessageCache);
+        Message typingMessage = new Message();
+        typingMessage.setFrom(UserManager.getMainUserId());
+        typingMessage.setType(TYPE_TYPING_MESSAGE);
         typingMessage.setTo(peerId);
         typingMessage.setId(peerId + "typing");
         return typingMessage;

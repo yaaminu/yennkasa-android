@@ -6,6 +6,9 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import app.test.com.utils.BuildConfig;
 
 
@@ -51,4 +54,27 @@ public class MediaUtils {
         fragment.startActivityForResult(attachIntent, requestCode);
     }
 
+    private static final List<String> pictures = new ArrayList<>(5), videos = new ArrayList<>(5);
+
+    static {
+        pictures.add("png");
+        pictures.add("jpg");
+        pictures.add("jpeg");
+        pictures.add("gif");
+        videos.add("mp4");
+        videos.add("avi");
+        videos.add("flv");
+        videos.add("3gp");
+        videos.add("3gpp");
+    }
+
+    public static boolean isImage(String actualPath) {
+        String extension = FileUtils.getExtension(actualPath);
+        return pictures.contains(extension);
+    }
+
+    public static boolean isVideo(String actualPath) {
+        String extension = FileUtils.getExtension(actualPath);
+        return videos.contains(extension);
+    }
 }

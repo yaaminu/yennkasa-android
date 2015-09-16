@@ -22,7 +22,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.realm.Realm;
@@ -72,7 +74,13 @@ public class PairAppClient extends Service {
             WORKER_THREAD.start();
         }
         if (WORKER == null) {
-            WORKER = Executors.newSingleThreadExecutor();
+
+            //stolen from the android.os.AsyncTask class
+            final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
+            ;
+            WORKER = new ThreadPoolExecutor(CPU_COUNT + 1, CPU_COUNT * 2 + 1, 1000L,
+                    TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(128));
+
         }
 
         if (!isClientStarted.get()) {
@@ -166,16 +174,17 @@ public class PairAppClient extends Service {
             public void run() {
                 synchronized (PairAppClient.this) {
                     Realm realm = Message.REALM(Config.getApplicationContext());
-                    RealmResults<Message> messages = realm.where(Message.class).notEqualTo(Message.FIELD_TYPE, Message.TYPE_DATE_MESSAGE)
-                            .or().equalTo(Message.FIELD_TYPE, Message.TYPE_TYPING_MESSAGE)
-                            .equalTo(Message.FIELD_STATE, Message.STATE_PENDING).findAll();
-                    if (messages.isEmpty()) {
+                    RealmResults<Message> messages = realm.where(Message.class).equalTo(Message.FIELD_STATE, Message.STATE_PENDING).findAll();
+                    final List<Message> copy = Message.copy(messages);
+                    realm.close();
+
+                    if (copy.isEmpty()) {
                         Log.d(TAG, "all messages sent");
                     } else {
-                        final List<Message> copy = Message.copy(messages);
-                        WORKER_THREAD.sendMessages(copy);
+                        for (Message message : copy) {
+                            sendMessageInternal(message);
+                        }
                     }
-                    realm.close();
                 }
             }
         };
@@ -325,11 +334,11 @@ public class PairAppClient extends Service {
         public void handleMessage(android.os.Message msg) {
             switch (msg.what) {
                 case SEND_MESSAGE:
-                    sendMessage((Message) msg.obj);
+                    doSendMessage((Message) msg.obj);
                     break;
                 case SEND_BATCH:
                     //noinspection unchecked
-                    sendMessages((Collection<Message>) msg.obj);
+                    doSendMessages((Collection<Message>) msg.obj);
                     break;
                 case SHUT_DOWN:
                     //noinspection ConstantConditions
@@ -340,22 +349,32 @@ public class PairAppClient extends Service {
             }
         }
 
-        private void sendMessage(Message message) {
-            if (LiveCenter.isOnline(message.getTo()) && !UserManager.getInstance().isGroup(message.getTo())) {
-                if (SOCKETSIO_DISPATCHER == null) {
-                    SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance();
+        private void doSendMessage(final Message message) {
+            WORKER.execute(new Runnable() {
+                @Override
+                public void run() {
+                    sendMessageInternal(message);
                 }
-                SOCKETSIO_DISPATCHER.dispatch(message);
-            } else {
-                PARSE_MESSAGE_DISPATCHER.dispatch(message);
-            }
+            });
         }
 
-        private void sendMessages(Collection<Message> messages) {
+        private void doSendMessages(Collection<Message> messages) {
             for (Message message : messages) {
-                sendMessage(message);
+                doSendMessage(message);
             }
         }
     }
+
+    private void sendMessageInternal(Message message) {
+        if (LiveCenter.isOnline(message.getTo()) && !UserManager.getInstance().isGroup(message.getTo())) {
+            if (SOCKETSIO_DISPATCHER == null) {
+                SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance();
+            }
+            SOCKETSIO_DISPATCHER.dispatch(message);
+        } else {
+            PARSE_MESSAGE_DISPATCHER.dispatch(message);
+        }
+    }
+
 
 }

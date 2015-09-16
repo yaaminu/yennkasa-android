@@ -45,8 +45,8 @@ class ParseDispatcher extends AbstractMessageDispatcher {
 
     private void finallyDispatch(Message message, Object target) {
         Log.d(TAG, "dispatching message: " + message.getMessageBody()
-                + " from" + message.getFrom()
-                + " to" + message.getTo());
+                + " from " + message.getFrom()
+                + " to " + message.getTo());
         finallyDispatch(message, target, false);
     }
 
