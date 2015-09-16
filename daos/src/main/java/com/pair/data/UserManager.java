@@ -12,10 +12,10 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.google.i18n.phonenumbers.NumberParseException;
-import com.pair.Config;
 import com.pair.data.net.HttpResponse;
 import com.pair.data.net.UserApiV2;
 import com.pair.parse_client.ParseClient;
+import com.pair.util.Config;
 import com.pair.util.ConnectionUtils;
 import com.pair.util.FileUtils;
 import com.pair.util.PhoneNumberNormaliser;

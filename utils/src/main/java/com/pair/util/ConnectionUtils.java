@@ -4,8 +4,6 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-import com.pair.Config;
-
 /**
  * @author Null-Pointer on 6/6/2015.
  */

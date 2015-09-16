@@ -5,12 +5,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.pair.Config;
 import com.pair.pairapp.R;
 import com.pair.ui.ChatActivity;
 import com.pair.ui.MainActivity;
@@ -36,7 +35,7 @@ public class UiHelpers {
 
     public static void showPlainOlDialog(Context context, String message) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setMessage(message).setTitle(R.string.error).setPositiveButton(android.R.string.ok,null).create().show();
+        builder.setMessage(message).setTitle(R.string.error).setPositiveButton(android.R.string.ok, null).create().show();
     }
 
     public static void showErrorDialog(FragmentActivity context, String message) {
@@ -61,7 +60,19 @@ public class UiHelpers {
         builder.positiveAction(getString(context, android.R.string.ok));
 
         DialogFragment fragment = DialogFragment.newInstance(builder);
-        fragment.show(context.getSupportFragmentManager(), null);
+        showErrorDialogInternal(context, message, fragment);
+    }
+
+    private static void showErrorDialogInternal(FragmentActivity context, String message, DialogFragment fragment) {
+        try {
+            fragment.show(context.getSupportFragmentManager(), null);
+        } catch (Exception e) { //bad tokens,transaction after onsavedInstanceState, etc
+            try {
+                showPlainOlDialog(context, message);
+            } catch (Exception ignored) { //still bad tokens ets.
+                Log.w(TAG, "failed to show message: " + message);
+            }
+        }
     }
 
     public static void showErrorDialog(FragmentActivity context,
@@ -90,8 +101,7 @@ public class UiHelpers {
         builder.positiveAction(okText)
                 .negativeAction(noText);
         DialogFragment fragment = DialogFragment.newInstance(builder);
-        final FragmentManager fragmentManager = context.getSupportFragmentManager();
-        fragment.show(fragmentManager, null);
+        showErrorDialogInternal(context, message, fragment);
     }
 
     public static void showErrorDialog(FragmentActivity context,

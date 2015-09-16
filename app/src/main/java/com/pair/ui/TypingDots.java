@@ -7,7 +7,7 @@ import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.view.animation.DecelerateInterpolator;
 
-import com.pair.Config;
+import com.pair.util.Config;
 
 
 public class TypingDots extends Drawable {

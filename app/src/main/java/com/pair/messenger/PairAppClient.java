@@ -11,9 +11,9 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 
-import com.pair.Config;
 import com.pair.data.Message;
 import com.pair.data.UserManager;
+import com.pair.util.Config;
 import com.pair.util.L;
 import com.pair.util.LiveCenter;
 import com.pair.util.ThreadUtils;

@@ -6,13 +6,13 @@ import android.telephony.SmsManager;
 import android.util.Log;
 
 import com.google.gson.JsonObject;
-import com.pair.Config;
 import com.pair.data.BuildConfig;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.data.net.FileApi;
 import com.pair.data.net.HttpResponse;
 import com.pair.data.net.UserApiV2;
+import com.pair.util.Config;
 import com.pair.util.L;
 import com.parse.Parse;
 import com.parse.ParseACL;

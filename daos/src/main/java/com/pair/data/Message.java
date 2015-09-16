@@ -4,9 +4,9 @@ import android.app.Application;
 import android.content.Context;
 import android.util.Log;
 
-import com.pair.Config;
 import com.pair.Errors.PairappException;
 import com.pair.data.util.MessageUtils;
+import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.ThreadUtils;
 

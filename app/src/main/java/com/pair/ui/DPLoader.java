@@ -4,9 +4,8 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.pair.Config;
-import com.pair.data.User;
 import com.pair.data.UserManager;
+import com.pair.util.Config;
 import com.pair.util.L;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.RequestCreator;
@@ -14,8 +13,6 @@ import com.squareup.picasso.RequestCreator;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-
-import io.realm.Realm;
 
 /**
  * @author Null-Pointer on 8/31/2015.

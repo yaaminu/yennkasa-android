@@ -6,15 +6,14 @@ import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 
-import com.pair.Config;
 import com.pair.data.Country;
 import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
+import com.pair.util.Config;
 import com.pair.util.GcmUtils;
-import com.pair.util.UiHelpers;
 import com.pair.util.NavigationManager;
-
+import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
 
 import org.apache.commons.io.Charsets;

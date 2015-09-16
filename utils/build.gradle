@@ -21,7 +21,6 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile files('libs/libphonenumber-7.0.8.jar')
-    compile project(':config')
     compile project(':lib')
     compile files('libs/commons-io-2.4.jar')
 }

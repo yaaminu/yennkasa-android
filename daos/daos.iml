@@ -101,7 +101,6 @@
     <orderEntry type="library" exported="" name="bolts-android-1.2.0" level="project" />
     <orderEntry type="library" exported="" name="okio-1.4.0" level="project" />
     <orderEntry type="module" module-name="error" exported="" />
-    <orderEntry type="module" module-name="config" exported="" />
     <orderEntry type="module" module-name="utils" exported="" />
   </component>
 </module>

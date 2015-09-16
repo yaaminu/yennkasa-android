@@ -3,14 +3,16 @@ package com.pair.ui;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 
+import com.pair.Errors.ErrorCenter;
 import com.pair.data.UserManager;
 import com.pair.messenger.PairAppClient;
 import com.pair.util.NavigationManager;
+import com.pair.util.UiHelpers;
 
 /**
  * @author by Null-Pointer on 9/6/2015.
  */
-public abstract class PairAppBaseActivity extends ActionBarActivity {
+public abstract class PairAppBaseActivity extends ActionBarActivity implements ErrorCenter.ErrorShower {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,12 +26,14 @@ public abstract class PairAppBaseActivity extends ActionBarActivity {
     protected void onStart() {
         super.onStart();
         NavigationManager.onStart(this);
+        ErrorCenter.registerErrorShower(this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         NavigationManager.onResume(this);
+        ErrorCenter.showPendingError();
     }
 
     @Override
@@ -43,6 +47,7 @@ public abstract class PairAppBaseActivity extends ActionBarActivity {
     protected void onStop() {
         super.onStop();
         NavigationManager.onStop(this);
+        ErrorCenter.unRegisterErrorShower(this);
     }
 
 
@@ -53,5 +58,10 @@ public abstract class PairAppBaseActivity extends ActionBarActivity {
         if (UserManager.getInstance().isUserVerified()) {
             PairAppClient.markUserAsOffline(this);
         }
+    }
+
+    @Override
+    public void showError(String errorMessage) {
+        UiHelpers.showErrorDialog(this, errorMessage);
     }
 }

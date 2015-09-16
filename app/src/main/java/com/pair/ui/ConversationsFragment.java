@@ -11,11 +11,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListView;
 
-import com.pair.Config;
 import com.pair.adapter.ConversationAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.pairapp.R;
+import com.pair.util.Config;
 import com.pair.util.UiHelpers;
 import com.pair.view.SwipeDismissListViewTouchListener;
 import com.rey.material.widget.FloatingActionButton;

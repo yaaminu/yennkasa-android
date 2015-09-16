@@ -2,7 +2,6 @@ package com.pair.messenger;
 
 import android.util.Log;
 
-import com.pair.Config;
 import com.pair.Errors.PairappException;
 import com.pair.data.ContactsManager;
 import com.pair.data.Message;
@@ -11,6 +10,7 @@ import com.pair.data.UserManager;
 import com.pair.data.net.FileApi;
 import com.pair.data.util.MessageUtils;
 import com.pair.parse_client.ParseClient;
+import com.pair.util.Config;
 import com.pair.util.ConnectionUtils;
 import com.pair.util.L;
 import com.pair.util.ThreadUtils;

@@ -12,13 +12,13 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.pair.Config;
 import com.pair.Errors.ErrorCenter;
 import com.pair.PairApp;
 import com.pair.adapter.CountriesListAdapter;
 import com.pair.data.Country;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
+import com.pair.util.Config;
 import com.pair.util.FormValidator;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;

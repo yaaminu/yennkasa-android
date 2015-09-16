@@ -6,8 +6,6 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
-import com.pair.Config;
-
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.BufferedInputStream;

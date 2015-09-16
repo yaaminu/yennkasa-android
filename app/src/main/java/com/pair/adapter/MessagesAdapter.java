@@ -23,12 +23,12 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.pair.Config;
 import com.pair.Errors.ErrorCenter;
 import com.pair.data.Message;
 import com.pair.pairapp.R;
 import com.pair.ui.ChatActivity;
 import com.pair.ui.ImageViewer;
+import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.PreviewsHelper;
 import com.pair.util.UiHelpers;

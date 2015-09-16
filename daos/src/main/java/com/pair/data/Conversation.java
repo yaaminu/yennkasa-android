@@ -3,7 +3,7 @@ package com.pair.data;
 import android.content.Context;
 import android.text.format.DateUtils;
 
-import com.pair.Config;
+import com.pair.util.Config;
 
 import java.util.Date;
 

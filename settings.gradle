@@ -1,1 +1,1 @@
-include ':app', ':lib', ':config', ':daos', ':error', ':utils', ':messenger', ':sockets_io_client'
+include ':app', ':lib', ':daos', ':error', ':utils', ':messenger', ':sockets_io_client'

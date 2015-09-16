@@ -5,8 +5,8 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import com.google.gson.JsonObject;
-import com.pair.Config;
 import com.pair.messenger.MessageProcessor;
+import com.pair.util.Config;
 
 import java.util.Date;
 

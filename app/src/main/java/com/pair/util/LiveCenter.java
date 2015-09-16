@@ -7,7 +7,6 @@ import android.os.Message;
 import android.util.Log;
 
 import com.github.nkzawa.emitter.Emitter;
-import com.pair.Config;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.net.sockets.SocketIoClient;

@@ -4,17 +4,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import com.github.nkzawa.emitter.Emitter;
-import com.google.gson.JsonObject;
-import com.pair.Config;
 import com.pair.data.Message;
 import com.pair.data.UserManager;
 import com.pair.net.sockets.SocketIoClient;
+import com.pair.util.Config;
 import com.pair.util.L;
 import com.parse.ParsePushBroadcastReceiver;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * @author by Null-Pointer on 5/28/2015.

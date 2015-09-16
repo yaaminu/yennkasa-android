@@ -95,7 +95,6 @@
     <orderEntry type="library" exported="" name="commons-io-2.4" level="project" />
     <orderEntry type="library" exported="" name="libphonenumber-7.0.8" level="project" />
     <orderEntry type="library" exported="" name="support-annotations-22.1.1" level="project" />
-    <orderEntry type="module" module-name="config" exported="" />
     <orderEntry type="module" module-name="lib" exported="" />
   </component>
 </module>

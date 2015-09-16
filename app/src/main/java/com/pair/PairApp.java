@@ -13,6 +13,7 @@ import com.pair.messenger.MessageProcessor;
 import com.pair.messenger.PairAppClient;
 import com.pair.pairapp.R;
 import com.pair.parse_client.ParseClient;
+import com.pair.util.Config;
 import com.pair.workers.BootReceiver;
 import com.pair.workers.ContactSyncService;
 

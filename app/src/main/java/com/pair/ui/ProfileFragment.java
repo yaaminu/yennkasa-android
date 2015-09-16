@@ -16,12 +16,12 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.pair.Config;
 import com.pair.Errors.ErrorCenter;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
+import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.MediaUtils;
 import com.pair.util.PhoneNumberNormaliser;

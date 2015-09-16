@@ -11,12 +11,12 @@ import android.util.Log;
 import android.view.Gravity;
 import android.widget.LinearLayout;
 
-import com.pair.Config;
 import com.pair.PairApp;
 import com.pair.data.Conversation;
 import com.pair.data.RealmUtils;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
+import com.pair.util.Config;
 import com.pair.util.UiHelpers;
 import com.parse.ParseAnalytics;
 import com.rey.material.app.ToolbarManager;

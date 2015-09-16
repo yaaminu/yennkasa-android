@@ -1,5 +1,7 @@
 package com.pair.messenger;
 
+import android.util.Log;
+
 import com.pair.data.Message;
 import com.pair.data.MessageJsonAdapter;
 import com.parse.ParseException;
@@ -42,6 +44,9 @@ class ParseDispatcher extends AbstractMessageDispatcher {
     }
 
     private void finallyDispatch(Message message, Object target) {
+        Log.d(TAG, "dispatching message: " + message.getMessageBody()
+                + " from" + message.getFrom()
+                + " to" + message.getTo());
         finallyDispatch(message, target, false);
     }
 
@@ -52,7 +57,6 @@ class ParseDispatcher extends AbstractMessageDispatcher {
         parseMessage.put(RETRIEVED, Collections.emptyList());
         parseMessage.put(EXPIRES, MAX_AGE);
         parseMessage.put(IS_GROUP_MESSAGE, isGroupMessage);
-
         try {
             parseMessage.save();
             onSent(message.getId());

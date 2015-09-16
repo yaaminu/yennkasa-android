@@ -7,10 +7,10 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.support.v4.app.NotificationCompat;
 
-import com.pair.Config;
 import com.pair.data.Message;
 import com.pair.pairapp.R;
 import com.pair.ui.ChatActivity;
+import com.pair.util.Config;
 
 import java.util.Timer;
 import java.util.TimerTask;

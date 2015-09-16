@@ -3,11 +3,11 @@ package com.pair.messenger;
 import android.util.Log;
 
 import com.github.nkzawa.emitter.Emitter;
-import com.pair.Config;
 import com.pair.data.Message;
 import com.pair.data.MessageJsonAdapter;
 import com.pair.data.UserManager;
 import com.pair.net.sockets.SocketIoClient;
+import com.pair.util.Config;
 
 import org.json.JSONException;
 import org.json.JSONObject;

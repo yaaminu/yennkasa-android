@@ -10,7 +10,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.i18n.phonenumbers.NumberParseException;
-import com.pair.Config;
+import com.pair.util.Config;
 import com.pair.util.PhoneNumberNormaliser;
 
 import java.util.ArrayList;
