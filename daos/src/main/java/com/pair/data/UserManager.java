@@ -592,10 +592,6 @@ public class UserManager {
                 if (e == null) {
                     backendUser.setPassword(user.getPassword());
                     saveMainUser(backendUser);
-                    getSettings()
-                            .edit()
-                            .putBoolean(KEY_USER_VERIFIED, true)
-                            .commit();
                     getGroups(); //async
                     doNotify(null, callback);
                 } else {
@@ -675,7 +671,7 @@ public class UserManager {
             return;
         }
         if (!isUserLoggedIn()) {
-            throw new IllegalStateException(new Exception("no user logged for verification"));
+            throw new IllegalStateException("no user logged for verification");
         }
         userApi.verifyUser(getCurrentUser().getUserId(), token, new UserApiV2.Callback<HttpResponse>() {
             @Override
