@@ -337,6 +337,7 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
             }
             try {
                 enqueueMessage(createMessage(content, Message.TYPE_TEXT_MESSAGE));
+                messagesListView.setSelection(messages.size());
             } catch (PairappException e) {
                 Log.e(TAG, e.getMessage(), e.getCause());
                 ErrorCenter.reportError(TAG, e.getMessage());
@@ -349,18 +350,13 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         doSendMessage(message);
     }
 
+    //public for messages adapter to access
     public void doSendMessage(Message message) {
         if (bound) {
             pairAppClientInterface.sendMessage(message);
         } else {
             doBind(); //after binding dispatcher will smartly dispatch all unsent messages
         }
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                messagesListView.setSelection(messages.size() - 1);
-            }
-        });
     }
 
     private void trySetupNewSession() {
@@ -522,6 +518,7 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
             }
             message = createMessage(actualPath, type);
             enqueueMessage(message);
+            messagesListView.setSelection(messages.size());
         } catch (PairappException e) {
             ErrorCenter.reportError(TAG, e.getMessage());
         }

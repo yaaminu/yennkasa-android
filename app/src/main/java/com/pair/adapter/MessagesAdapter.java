@@ -155,6 +155,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                     }
                 });
             }
+        } else {
+            holder.dateComposed.setText(dateComposed);
         }
 
         if (Message.isTextMessage(message)) {

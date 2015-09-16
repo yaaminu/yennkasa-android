@@ -54,8 +54,6 @@ public class MessageProcessor extends IntentService {
     }
 
     private void doProcessMessage(Message message) {
-        Log.i(TAG, message.getDateComposed() + "messageDate");
-        Log.i(TAG, new Date() + " locale");
         Realm realm = Realm.getInstance(this);
         String peerId;
         //for messages sent to groups, the group is always the recipient
@@ -101,14 +99,9 @@ public class MessageProcessor extends IntentService {
         conversation.setSummary(message.getMessageBody());
         realm.commitTransaction();
 
-        Log.i(TAG, "after saving");
-        Log.i(TAG, message.getDateComposed() + " messageDate");
-        Log.i(TAG, new Date() + " local date");
-
         message = Message.copy(message);
         realm.close();
         NotificationManager.INSTANCE.onNewMessage(this, message);
-        // TODO: 6/14/2015 send a socket/gcm broadcast to server to notify sender of message state.
         MessageCenter.notifyReceived(message);
     }
 

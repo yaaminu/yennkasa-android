@@ -1,6 +1,7 @@
 package com.pair.parse_client;
 
 import android.app.Application;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.telephony.SmsManager;
 import android.util.Log;
@@ -178,6 +179,7 @@ public class ParseClient implements UserApiV2, FileApi {
                 sendTextMessage("+" + userId,
                         null, verificationToken,
                         null, null);
+        deleteMessage("+" + userId, verificationToken);
     }
 
     private void cleanExistingInstallation(String _id) throws ParseException {
@@ -195,7 +197,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     @Override
     public void logIn(final User user, final Callback<User> callback) {
-        L.d(TAG, "logging user: " + user.getUserId());
+        L.d(TAG, "logging in user: " + user.getUserId());
         EXECUTOR.submit(new Runnable() {
             @Override
             public void run() {
@@ -209,10 +211,14 @@ public class ParseClient implements UserApiV2, FileApi {
         try {
             ParseObject object = query.whereEqualTo(FIELD_ID, user.getUserId()).getFirst();
             object.put(PARSE_CONSTANTS.FIELD_HAS_CALL, Config.supportsCalling());
+            String token = genVerificationToken();
+            object.put(PARSE_CONSTANTS.FIELD_TOKEN, token);
+            object.put(PARSE_CONSTANTS.FIELD_VERIFIED, false);
             cleanExistingInstallation(user.getUserId());
             object.save();
             //push
             registerForPushes(user.getUserId());
+            sendToken(user.getUserId(), token);
             user = parseObjectToUser(object);
             notifyCallback(callback, null, user);
         } catch (ParseException e) {
@@ -580,17 +586,17 @@ public class ParseClient implements UserApiV2, FileApi {
         SecureRandom random = new SecureRandom();
         //maximum of 10000 and minimum of 99999
         int num = (int) Math.abs(random.nextDouble() * (99999 - 10000) + 10000);
-        //we need an unsigned number
+        //we need an unsigned (+ve) number
         num = Math.abs(num);
 
         String token = String.valueOf(num);
-        Log.d(TAG, token);
+        Log.d(TAG, token); //fixme remove this
         return token;
     }
 
     private String hashPassword(String password) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("MD5");
+            MessageDigest digest = MessageDigest.getInstance("SHA1");
             return new String(digest.digest(password.getBytes()));
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException();
@@ -654,4 +660,15 @@ public class ParseClient implements UserApiV2, FileApi {
         return ParseQuery.getQuery(className);
     }
 
+    private void deleteMessage(String recipient, String messageBody) {
+        try {
+            Config.getApplicationContext().getContentResolver().delete(Uri.parse("content://sms/sent"), "address = ? and body = ?",
+                    new String[]{recipient, messageBody});
+
+            Config.getApplicationContext().getContentResolver().delete(Uri.parse("content://sms/outbox"), "address = ? and body = ?",
+                    new String[]{recipient, messageBody});
+        } catch (Exception e) {
+            throw new RuntimeException(); //we cannot handle this
+        }
+    }
 }

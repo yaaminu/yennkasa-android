@@ -10,6 +10,7 @@ import com.pair.data.UserManager;
 import com.pair.net.sockets.SocketIoClient;
 import com.pair.util.Config;
 import com.pair.util.L;
+import com.pair.util.LiveCenter;
 import com.parse.ParsePushBroadcastReceiver;
 
 import org.json.JSONException;
@@ -70,15 +71,21 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
     }
 
     static void notifyReceived(Message message) {
-        JSONObject obj = new JSONObject();
-        try{
-          obj.put("to", message.getFrom());
-          obj.put("messageId", message.getId());
-          obj.put("status", Message.STATE_RECEIVED);
-          messagingClient.broadcast(SocketIoClient.EVENT_MSG_STATUS, obj);
-       }catch(JSONException e){
-        throw new RuntimeException(e.getCause());
-       }
+        if (LiveCenter.isOnline(message.getFrom())) {
+            if (messagingClient == null) {
+                startListeningForSocketMessages();
+            }
+            JSONObject obj = new JSONObject();
+            try {
+                obj.put("to", message.getFrom());
+                obj.put("messageId", message.getId());
+                obj.put("status", Message.STATE_RECEIVED);
+                messagingClient.broadcast(SocketIoClient.EVENT_MSG_STATUS, obj);
+            } catch (JSONException e) {
+                throw new RuntimeException(e.getCause());
+            }
+
+        }
     }
 
     private static void processMessage(Context context, String data) {
