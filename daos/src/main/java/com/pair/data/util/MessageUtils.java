@@ -1,9 +1,12 @@
 package com.pair.data.util;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.pair.Errors.PairappException;
 import com.pair.data.Message;
+import com.pair.data.R;
+import com.pair.util.Config;
 
 import org.apache.commons.io.FileUtils;
 
@@ -73,4 +76,17 @@ public class MessageUtils {
         return true;
     }
 
+    public static String getDescription(int type) {
+        Context context = Config.getApplicationContext();
+        switch (type) {
+            case Message.TYPE_BIN_MESSAGE:
+                return context.getString(R.string.File);
+            case Message.TYPE_VIDEO_MESSAGE:
+                return context.getString(R.string.Video);
+            case Message.TYPE_PICTURE_MESSAGE:
+                //fall through
+            default:
+                return context.getString(R.string.Image);
+        }
+    }
 }

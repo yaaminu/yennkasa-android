@@ -41,7 +41,7 @@ public class NavigationManager {
     /**
      * returns the current state of the activity returned by {@link #getCurrentActivity()}.
      *
-     * @return on of the values {@link com.pair.util.NavigationManager.States}
+     * @return one of the values {@link com.pair.util.NavigationManager.States}
      * @throws NoActiveActivityException if there is no active activity
      * @see #getCurrentActivity()
      * @see com.pair.util.NavigationManager.States

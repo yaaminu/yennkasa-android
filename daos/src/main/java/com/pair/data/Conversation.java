@@ -1,9 +1,8 @@
 package com.pair.data;
 
 import android.content.Context;
-import android.text.format.DateUtils;
 
-import com.pair.util.Config;
+import com.pair.util.SimpleDateUtil;
 
 import java.util.Date;
 
@@ -11,7 +10,6 @@ import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.RealmClass;
-import io.realm.exceptions.RealmException;
 
 import static com.pair.data.Message.TYPE_DATE_MESSAGE;
 
@@ -76,13 +74,13 @@ public class Conversation extends RealmObject {
     }
 
     @SuppressWarnings("ConstantConditions")
-    public static void newSession(Realm realm, Conversation conversation) {
+    public static boolean newSession(Realm realm, Conversation conversation) {
         if (conversation == null) {
             throw new IllegalArgumentException("conversation is null");
         }
-        Context context = Config.getApplicationContext();
 
-        String formatted = DateUtils.formatDateTime(context, new Date().getTime(), DateUtils.FORMAT_NUMERIC_DATE);
+        Date now = new Date();
+        String formatted = SimpleDateUtil.formatSessionDate(now);
         Message message = realm.where(Message.class)
                 .equalTo(Message.FIELD_ID, conversation.getPeerId() + formatted)
                 .findFirst();
@@ -92,9 +90,11 @@ public class Conversation extends RealmObject {
             message.setMessageBody(formatted);
             message.setTo(UserManager.getInstance().getCurrentUser().getUserId());
             message.setFrom(conversation.getPeerId());
-            message.setDateComposed(new Date(System.currentTimeMillis()));
+            message.setDateComposed(now);
             message.setType(TYPE_DATE_MESSAGE);
+            return true;
         }
+        return false;
     }
 
     public static void newConversation(Context context, String peerId) {
@@ -102,20 +102,42 @@ public class Conversation extends RealmObject {
     }
 
     public static void newConversation(Context context, String peerId, boolean active) {
-        Realm realm = Conversation.Realm(context);
-        try {
+        Realm realm = Realm(context);
+        newConversation(realm, peerId, active);
+        realm.close();
+    }
+
+    public static Conversation newConversation(Realm realm, String peerId) {
+        return newConversation(realm, peerId, false);
+    }
+
+    public static Conversation newConversation(Realm realm, String peerId, boolean active) {
+        Conversation newConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
+        if (newConversation == null) {
             realm.beginTransaction();
-            Conversation newConversation = realm.createObject(Conversation.class);
+            newConversation = realm.createObject(Conversation.class);
             newConversation.setActive(active);
             newConversation.setPeerId(peerId);
             newConversation.setLastActiveTime(new Date());
-            newConversation.setSummary(context.getString(R.string.no_message));
+            newConversation.setSummary("no message");
             newSession(realm, newConversation);
             realm.commitTransaction();
-        } catch (RealmException primaryKeyViolation) {
-            //TODO should we re-throw?
         }
-        realm.close();
+        return newConversation;
+    }
+
+    public static Conversation newConversationWithoutSession(Realm realm, String peerId, boolean active) {
+        Conversation newConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
+        if (newConversation == null) {
+            realm.beginTransaction();
+            newConversation = realm.createObject(Conversation.class);
+            newConversation.setActive(active);
+            newConversation.setPeerId(peerId);
+            newConversation.setLastActiveTime(new Date());
+            newConversation.setSummary("no message");
+            realm.commitTransaction();
+        }
+        return newConversation;
     }
     public static Realm Realm(Context context) {
         return Realm.getInstance(context);

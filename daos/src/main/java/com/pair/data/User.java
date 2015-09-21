@@ -220,7 +220,7 @@ public class User extends RealmObject {
         return copied;
     }
 
-    public static String generateGroupId(String groupName) {
+    public static synchronized String generateGroupId(String groupName) {
         return groupName + "@" + UserManager.getInstance().getCurrentUser().getUserId();
     }
 

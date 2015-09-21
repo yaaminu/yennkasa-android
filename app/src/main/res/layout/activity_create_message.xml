@@ -1,0 +1,94 @@
+<com.pair.view.RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.pair.ui.CreateMessageActivity">
+
+    <com.pair.view.LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#0000"
+        android:orientation="vertical">
+
+        <include
+            layout="@layout/toolbar"/>
+
+        <FrameLayout
+            android:id="@+id/container"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <android.support.v7.widget.CardView
+            android:id="@+id/cv_input_message_card_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
+            android:animateLayoutChanges="true"
+            app:cardCornerRadius="2dp"
+            app:cardElevation="8dp"
+            tools:ignore="UnusedAttribute">
+
+            <LinearLayout
+                android:id="@+id/attachment_preview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/padding_ll_login_fragment_right"
+                android:layout_marginRight="@dimen/padding_ll_login_fragment_right"
+                android:layout_marginLeft="@dimen/padding_ll_login_fragment_left"
+                android:layout_marginStart="@dimen/padding_ll_login_fragment_left"
+                android:descendantFocusability="afterDescendants"
+                android:background="@color/transparent"
+                android:padding="@dimen/message_input_padding"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/attachment_description"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:maxLines="3"
+                    android:ellipsize="start"
+                    android:text="binary message"
+                    android:textColor="@color/preferred_primary_color"
+                    android:textSize="@dimen/standard_text_size"
+                    android:clickable="false"
+                    tools:ignore="HardcodedText"/>
+
+                <com.pair.view.FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    style="@style/FlatWaveButtonRippleStyle"
+                    android:background="@drawable/green_round_back_ground">
+
+                    <ImageButton
+                        android:id="@+id/cancel_attachment"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@color/transparent"
+                        android:contentDescription="@string/content_description_remove_attachment"
+                        android:src="@drawable/ic_action_cancel"/>
+                </com.pair.view.FrameLayout>
+            </LinearLayout>
+
+            <EditText
+                android:id="@+id/et_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:ems="10"
+                android:hint="@string/message_box_hint"
+                android:inputType="text|textLongMessage|textMultiLine"
+                android:maxHeight="@dimen/multiline_text_box_max_height"
+                android:textSize="@dimen/edit_text_size"
+                android:visibility="gone"
+                tools:ignore="HardcodedText"/>
+        </android.support.v7.widget.CardView>
+    </com.pair.view.LinearLayout>
+
+    <include
+        layout="@layout/snack_bar"/>
+</com.pair.view.RelativeLayout>

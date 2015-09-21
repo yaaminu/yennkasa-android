@@ -3,6 +3,7 @@ package com.pair.util;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
@@ -12,6 +13,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +22,8 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+
+import static org.apache.commons.io.FileUtils.ONE_KB;
 
 
 /**
@@ -31,7 +35,7 @@ public class FileUtils {
     public static final int MEDIA_TYPE_VIDEO = 0x1;
     public static final long ONE_MB = org.apache.commons.io.FileUtils.ONE_MB;
 
-    public static Uri getOutputUri(int mediaType) throws Exception {
+    public static Uri getOutputUri(int mediaType) throws IOException {
         if (mediaType != MEDIA_TYPE_IMAGE && mediaType != MEDIA_TYPE_VIDEO) {
             throw new IllegalArgumentException("you can only pass either: " + MEDIA_TYPE_IMAGE + " or " + MEDIA_TYPE_VIDEO);
         }
@@ -52,11 +56,11 @@ public class FileUtils {
     }
 
 
-    private static Uri doCreateOutputFile(String path, File parentDir) throws Exception {
+    private static Uri doCreateOutputFile(String path, File parentDir) throws IOException {
         if (parentDir != null) {
             if (!parentDir.isDirectory()) {
                 if (!parentDir.mkdirs()) {
-                    throw new Exception("Could not create directory, check you SD card");
+                    throw new IOException("Could not create directory, check you SD card");
                 }
             }
             return Uri.fromFile(new File(parentDir, path));
@@ -64,7 +68,22 @@ public class FileUtils {
         return null;
     }
 
+    public static String resolveContentUriToFilePath(String uri) {
+        if ((TextUtils.isEmpty(uri))) {
+            return null;
+        }
+        return resolveContentUriToFilePath(Uri.parse(uri));
+    }
     public static String resolveContentUriToFilePath(Uri uri) {
+        if (uri.getScheme() == null) {
+            return null;
+        }
+        if (!uri.getScheme().equalsIgnoreCase("content")) {
+            if (uri.getScheme().equalsIgnoreCase("file")) {
+                return uri.getPath();
+            }
+            return null;
+        }
         String[] projections = {
                 MediaStore.Files.FileColumns.DATA
         };
@@ -149,7 +168,6 @@ public class FileUtils {
     }
 
 
-
     private static void closeQuietly(OutputStream out) {
         if (out != null) {
             //noinspection EmptyCatchBlock
@@ -170,11 +188,24 @@ public class FileUtils {
         }
     }
 
-    public interface ProgressListener {
-        boolean onStart(long expected);
-
-        void onProgress(long expected, long received);
-
-        void onComplete();
+    public static String sizeInLowestPrecision(String filePath) throws IOException {
+        File file = new File(filePath);
+        if (!file.exists()) {
+            throw new FileNotFoundException("file does not exist");
+        }
+        final long fileSizeBytes = file.length();
+        if (fileSizeBytes == 0) {
+            throw new IOException("Could not determine file size");
+        }
+        if (fileSizeBytes < ONE_KB) {
+            return (int) fileSizeBytes + " " + Config.getApplicationContext().getString(R.string.Byte);
+        }
+        if (fileSizeBytes < ONE_MB) {
+            return ((int) (fileSizeBytes / ONE_KB)) + Config.getApplicationContext().getString(R.string.kilobytes);
+        }
+        if (fileSizeBytes <= 8 * ONE_MB) {
+            return ((int) (fileSizeBytes / ONE_MB)) + Config.getApplicationContext().getString(R.string.megabytes);
+        }
+        throw new IOException("file too large");
     }
 }

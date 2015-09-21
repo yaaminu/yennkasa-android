@@ -48,9 +48,9 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         @Override
         public int compare(Contact lhs, Contact rhs) {
             if (isBothRegistered(lhs, rhs)) { //both are registered
-                return lhs.name.compareTo(rhs.name);
+                return lhs.name.compareToIgnoreCase(rhs.name);
             } else if (isBothNotRegistered(lhs, rhs)) { //both are not registered
-                return lhs.name.compareTo(rhs.name);
+                return lhs.name.compareToIgnoreCase(rhs.name);
             } else {
                 if (lhs.isRegisteredUser) return -1;
                 return 1;

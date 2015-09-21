@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="@dimen/list_item_height"
-    android:minHeight="?android:attr/listPreferredItemHeight"
-    android:layout_marginBottom="@dimen/list_item_margin_bottom"
-    android:descendantFocusability="afterDescendants"
-    android:gravity="center"
-    android:paddingTop="@dimen/list_item_padding"
-    android:paddingRight="@dimen/list_item_padding"
-    android:paddingLeft="@dimen/list_item_padding">
+                              android:layout_width="match_parent"
+                              android:layout_height="@dimen/list_item_height"
+                              android:layout_marginBottom="@dimen/list_item_margin_bottom"
+                              android:descendantFocusability="afterDescendants"
+                              android:minHeight="?android:attr/listPreferredItemHeight"
+                              android:paddingLeft="@dimen/list_item_padding"
+                              android:paddingRight="@dimen/list_item_padding"
+                              android:paddingTop="@dimen/list_item_padding">
 
     <com.pair.view.RoundedImageView
         android:id="@+id/iv_user_avatar"
         android:layout_width="@dimen/thumbnail_width"
         android:layout_height="@dimen/thumbnail_height"
         android:layout_margin="@dimen/thumbnail_margin"
-        android:clickable="true"
-        android:scaleType="centerCrop"
         android:adjustViewBounds="true"
-        android:src="@drawable/user_avartar" />
+        android:clickable="true"
+        android:layout_centerVertical="true"
+        android:scaleType="centerCrop"
+        android:src="@drawable/user_avartar"/>
 
     <TextView
         android:id="@+id/tv_chat_summary"
@@ -26,11 +26,13 @@
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/iv_user_avatar"
         android:layout_toRightOf="@+id/iv_user_avatar"
-        android:ellipsize="end"
-        android:singleLine="true"
         android:paddingBottom="2dp"
+        android:singleLine="@bool/single_line"
+        android:maxLines="@integer/summary_lines"
+        android:gravity="bottom|start"
+        android:text="Summary of conversation with a very long message"
         android:textColor="@color/light_gray"
-        android:text="Summary of conversation" />
+        android:textSize="@dimen/standard_text_size"/>
 
 
     <com.pair.view.LinearLayout
@@ -38,8 +40,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignTop="@+id/iv_user_avatar"
-        android:layout_toRightOf="@+id/iv_user_avatar"
-        android:layout_marginBottom="4dp">
+        android:layout_marginBottom="4dp"
+        android:layout_toRightOf="@+id/iv_user_avatar">
 
         <TextView
             android:id="@+id/tv_sender"
@@ -50,18 +52,26 @@
             android:gravity="left"
             android:singleLine="true"
             android:text="Sender name"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textSize="@dimen/standard_text_size"
+            android:textStyle="bold"/>
+
         <TextView
             android:id="@+id/tv_date_last_active"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="right"
-            android:paddingRight="4dp"
-            android:textSize="12sp"
+            android:paddingRight="@dimen/padding_ll_login_fragment_right"
+            android:text="2 minutes ago"
             android:singleLine="true"
             android:textColor="@color/light_gray"
-            android:text="Date" />
+            android:textSize="@dimen/standard_text_size_small"/>
     </com.pair.view.LinearLayout>
 
+    <include
+        layout="@layout/divider"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/inbox_preferred_list_item_divider_height"
+        android:layout_alignLeft="@+id/ll_conversation_desc"
+        android:layout_alignParentBottom="true"
+        />
 </com.pair.view.RelativeLayout>

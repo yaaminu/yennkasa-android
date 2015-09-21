@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * an implementation of {@link Dispatcher} that uses web sockets(socketIo) to be
  * precise. clients must remember to {@code close()} it when they are done with it.
- * <p>
+ * <p/>
  * the dispatcher's behaviour is undefined immediately you {@code close()} it and attempt
  * to use it
  *
@@ -32,12 +32,15 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
         public void call(Object... args) {
             try {
                 JSONObject object = new JSONObject(args[0].toString());
-                boolean success = object.getBoolean("success");
-                String messageId = object.getString("messageId");
-                if (success) {
+                int status = object.getInt(SocketIoClient.MSG_STS_STATUS);
+                String messageId = object.getString(SocketIoClient.MSG_STS_MESSAGE_ID);
+                if (status == Message.STATE_SENT) {
+                    Log.i(TAG, "message sent");
+                    onSent(messageId);
+                } else if (status == Message.STATE_RECEIVED) {
                     Log.i(TAG, "message delivered");
                     onDelivered(messageId);
-                } else {
+                } else if (status == Message.STATE_SEND_FAILED) {
                     Log.i(TAG, "message dispatch failed");
                     onFailed(messageId, ERR_USER_OFFLINE);
                 }
@@ -50,7 +53,7 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
 
     /**
      * create a new an instance of {@link SocketsIODispatcher}.
-     * <p>
+     * <p/>
      * remember to close it when you are done.
      *
      * @return an instance of this class.

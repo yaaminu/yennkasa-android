@@ -81,7 +81,7 @@ public class SocketIoClientTest {
     // public void testBroadcast() throws Exception {
     //     client = SocketIoClient.getInstance(END_POINT, "userId");
     //     assertTrue(client.registerForEventOnce("typing", DUMMY_LLISTENER));
-    //     client.broadcast("typing", "\"userId\":\"userId\"");
+    //     client.send("typing", "\"userId\":\"userId\"");
     //     client.close();
     // }
 

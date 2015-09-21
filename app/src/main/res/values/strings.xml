@@ -40,7 +40,7 @@
     <string name="add">ADD</string>
     <string name="add_peers_title">Add Peers To Chat</string>
     <string name="title_invite_friends">Invite Friends</string>
-    <string name="st_done">DONE</string>
+    <string name="st_done">Done</string>
     <string name="st_please_wait">PLEASE WAIT…</string>
     <string name="st_group_name">Group Name</string>
     <string name="shared_groups">Shared Groups</string>
@@ -121,7 +121,7 @@
     <string name="sure_you_want_to_delete_conversation">Sure you want to delete this conversation? All messages will be lost</string>
     <string name="no">No</string>
     <string name="group">group</string>
-    <string name="forward_to">Forward to</string>
+    <string name="forward_to">Forward to…</string>
     <string name="enter_a_number">Enter a valid phone number</string>
     <string name="picture">Picture</string>
     <string name="video">Video</string>
@@ -137,14 +137,32 @@
     <string name="no_name">No name</string>
     <string name="verification_token_message">"Hello the following number is your verification token: "</string>
     <string name="invalid_message">Message Invalid, Ensure the message does not exceed the size limit</string>
-    <string name="invite_message">\"Try out PAIRAPP messenger for android. It\'s free and fast! \\ndownload here: http://pairapp.com/download\"</string>
+    <string name="invite_message">"Try out PAIRAPP messenger for android. It\'s free and fast! \\n download here: http://pairapp.com/download</string>
     <string name="sinch_not_available_message">Your device is not completely supported, Call features may not be available on your device</string>
     <string name="sinch_error_report_message">we are having trouble setting things up,ensure your are connected to the internet and that your date is correct</string>
     <string name="st_unable_to_connect_version_2">We\'re having trouble connecting you. Please check your internet settings</string>
     <string name="sample_date">2/23/12</string>
     <string name="typing_message">typingMessage</string>
-    <string name="ellipsis">...</string>
-    <string name="sampleDate">12-12-12</string>
+    <string name="ellipsis">…</string>
+    <string name="sampleDate">12–12–12</string>
     <string name="play_download_content_description">play_or_download</string>
     <string name="not_group">Sorry not yet a member of any group</string>
+    <string name="invalid_verification_token">Invalid verification token</string>
+    <string name="invite">Invite</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="nothing_to_display">Nothing to display</string>
+    <string name="image_size_too_large">Image size exceeds 8MB </string>
+    <string name="invalid_image">Invalid image</string>
+    <string name="not_a_bitmap">Not a bitmap</string>
+    <string name="add_custom">Add custom number</string>
+    <string name="add_custom_number">You can add other users who are not in your contacts by adding their numbers directly</string>
+    <string name="title_activity_create_message">New Message</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="message_box_hint">message here…</string>
+    <string name="st_group_name_hit">Name, e.g Brothers From One Hood</string>
+    <string name="content_description_remove_attachment">remove attachment</string>
+    <string name="send_to">Send to…</string>
+    <string name="file_not_found">can\'t forward, file not found</string>
 </resources>

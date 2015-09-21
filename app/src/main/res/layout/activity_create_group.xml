@@ -1,18 +1,53 @@
 <com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context="com.pair.ui.CreateGroupActivity">
+                              xmlns:app="http://schemas.android.com/apk/res-auto"
+                              xmlns:tools="http://schemas.android.com/tools"
+                              android:layout_width="match_parent"
+                              android:layout_height="match_parent"
+                              tools:context="com.pair.ui.CreateGroupActivity">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/main_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/action_bar_height"
+        android:animateLayoutChanges="true"
         android:background="?attr/colorPrimary"
         android:minHeight="?attr/actionBarSize"
         android:title="@string/app_name"
-        app:theme="@style/AppBar" />
+        app:theme="@style/AppBar"
+        tools:ignore="UnusedAttribute">
+
+        <com.rey.material.widget.TextView
+            android:id="@+id/tv_menu_item_done"
+            style="@style/FlatWaveColorButtonRippleStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="right"
+            android:clickable="true"
+            android:drawableLeft="@drawable/ic_action_accept"
+            android:drawableStart="@drawable/ic_action_accept"
+            android:gravity="center_vertical"
+            android:text="@string/st_done"
+            android:textAppearance="@style/TabTextAppearance"
+            android:textColor="@color/white"
+            android:visibility="visible"
+            />
+
+        <com.rey.material.widget.TextView
+            android:id="@+id/tv_menu_item_next"
+            style="style/FlatWaveColorButtonRippleStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="right"
+            android:clickable="true"
+            android:drawableEnd="@drawable/ic_action_forward"
+            android:drawableRight="@drawable/ic_action_forward"
+            android:gravity="center_vertical"
+            android:text="@string/next"
+            android:textAppearance="@style/TabTextAppearance"
+            android:textColor="@color/white"
+            android:visibility="visible"
+            />
+    </android.support.v7.widget.Toolbar>
 
     <com.pair.view.RelativeLayout
         android:id="@+id/rl_main_container"
@@ -26,10 +61,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:ems="16"
-            android:hint="@string/st_group_name"
+            android:ems="10"
+            android:hint="@string/st_group_name_hit"
             android:imeActionLabel="@string/next"
-            android:imeActionId="@+id/proceed"
-            android:inputType="text" />
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textSize="@dimen/edit_text_size"
+            android:maxLength="30"
+            android:inputType="text"/>
     </com.pair.view.RelativeLayout>
+
+    <include
+        layout="@layout/snack_bar"/>
 </com.pair.view.RelativeLayout>

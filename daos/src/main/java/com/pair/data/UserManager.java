@@ -285,6 +285,10 @@ public class UserManager {
             doNotify(e, callBack);
             return;
         }
+        if (membersId.isEmpty()) {
+            doNotify(new Exception("No number to add"), callBack);
+            return;
+        }
         userApi.addMembersToGroup(groupId, getCurrentUser().getUserId(), membersId, new UserApiV2.Callback<HttpResponse>() {
             @Override
             public void done(Exception e, HttpResponse httpResponse) {
@@ -559,10 +563,6 @@ public class UserManager {
             doNotify(new Exception("userIso2LetterCode cannot be empty"), callback);
             return;
         }
-        if (TextUtils.isEmpty(gcmRegId)) {
-            doNotify(new Exception("GCM registration id cannot be empty"), callback);
-            return;
-        }
 
         User user = new User();
         try {
@@ -578,7 +578,6 @@ public class UserManager {
         }
         user.setUserId(phoneNumber);
         user.setCountry(userIso2LetterCode);
-        user.setGcmRegId(gcmRegId);
         String password = Base64.encodeToString(phoneNumber.getBytes(), Base64.DEFAULT);
         user.setPassword(password);
         doLogIn(user, userIso2LetterCode, callback);

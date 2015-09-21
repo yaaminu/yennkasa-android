@@ -29,18 +29,13 @@ import io.realm.Realm;
  */
 public class LiveCenter {
 
-    private static final String TAG = "livecenter", TYPING = "typing",
-            TRACK_USER = "trackUser", IS_ONLINE = "isOnline",
-            UN_TRACK_USER = "unTrackUser", PROPERTY_TO = "to",
-            PROPERTY_FROM = "from", PROPERTY_IS_TYPING = "isTyping",
-            EVENT_CHAT_ROOM = "chatRoom";
+    private static final String TAG = "livecenter";
 
 
     private static final Set<String> activeUsers = new HashSet<>(),
             typing = new HashSet<>(),
             PEERS_IN_CHATROOM = new HashSet<>();
 
-    public static final String PROPERTY_IN_CHAT_ROOM = "inChatRoom";
     private static WorkerThread WORKER_THREAD;
     private static SocketIoClient liveClient;
 
@@ -68,8 +63,8 @@ public class LiveCenter {
             Log.i(TAG, "chatroom event: " + args[0]);
             try {
                 JSONObject object = new JSONObject(args[0].toString());
-                String userId = object.getString(PROPERTY_FROM);
-                boolean inChatRoom = object.getBoolean(PROPERTY_IN_CHAT_ROOM);
+                String userId = object.getString(SocketIoClient.PROPERTY_FROM);
+                boolean inChatRoom = object.getBoolean(SocketIoClient.PROPERTY_IN_CHAT_ROOM);
                 synchronized (PEERS_IN_CHATROOM) {
                     if (inChatRoom) {
                         PEERS_IN_CHATROOM.add(userId);
@@ -101,8 +96,8 @@ public class LiveCenter {
     private static void updateTyping(Object obj) {
         try {
             JSONObject object = new JSONObject(obj.toString());
-            String typingUser = object.getString(PROPERTY_FROM);
-            boolean isTyping = object.optBoolean(PROPERTY_IS_TYPING);
+            String typingUser = object.getString(SocketIoClient.PROPERTY_FROM);
+            boolean isTyping = object.optBoolean(SocketIoClient.PROPERTY_IS_TYPING);
             synchronized (TYPING_AND_ACTIVE_USERS_LOCK) {
                 Log.d(TAG, "typing event");
                 if (isTyping) {
@@ -199,13 +194,13 @@ public class LiveCenter {
     //activePeers,typing and peers_in_chatRoom fields.
     private synchronized static void doStart() {
         liveClient = SocketIoClient.getInstance(Config.PAIRAPP_ENDPOINT + "/live", UserManager.getMainUserId());
-        liveClient.registerForEvent(TYPING, TYPING_RECEIVER);
-        liveClient.registerForEvent(IS_ONLINE, ONLINE_RECEIVER);
-        liveClient.registerForEvent(EVENT_CHAT_ROOM, CHAT_ROOM_RECEIVER);
+        liveClient.registerForEvent(SocketIoClient.TYPING, TYPING_RECEIVER);
+        liveClient.registerForEvent(SocketIoClient.IS_ONLINE, ONLINE_RECEIVER);
+        liveClient.registerForEvent(SocketIoClient.EVENT_CHAT_ROOM, CHAT_ROOM_RECEIVER);
         try {
             JSONObject object = new JSONObject();
-            object.put(PROPERTY_TO, UserManager.getMainUserId());
-            liveClient.broadcast(IS_ONLINE, object);
+            object.put(SocketIoClient.PROPERTY_TO, UserManager.getMainUserId());
+            liveClient.send(SocketIoClient.IS_ONLINE, object);
         } catch (JSONException e) {
             throw new RuntimeException(e.getCause());
         }
@@ -215,9 +210,9 @@ public class LiveCenter {
     }
 
     private static void doStop() {
-        liveClient.unRegisterEvent(IS_ONLINE, ONLINE_RECEIVER);
-        liveClient.unRegisterEvent(TYPING, TYPING_RECEIVER);
-        liveClient.unRegisterEvent(EVENT_CHAT_ROOM, CHAT_ROOM_RECEIVER);
+        liveClient.unRegisterEvent(SocketIoClient.IS_ONLINE, ONLINE_RECEIVER);
+        liveClient.unRegisterEvent(SocketIoClient.TYPING, TYPING_RECEIVER);
+        liveClient.unRegisterEvent(SocketIoClient.EVENT_CHAT_ROOM, CHAT_ROOM_RECEIVER);
         liveClient.close();
     }
 
@@ -487,10 +482,10 @@ public class LiveCenter {
             }
             try {
                 JSONObject object = new JSONObject();
-                object.put(PROPERTY_FROM, UserManager.getMainUserId());
-                object.put(PROPERTY_TO, userId);
-                object.put(PROPERTY_IN_CHAT_ROOM, inChatRoom);
-                liveClient.broadcast(EVENT_CHAT_ROOM, object);
+                object.put(SocketIoClient.PROPERTY_FROM, UserManager.getMainUserId());
+                object.put(SocketIoClient.PROPERTY_TO, userId);
+                object.put(SocketIoClient.PROPERTY_IN_CHAT_ROOM, inChatRoom);
+                liveClient.send(SocketIoClient.EVENT_CHAT_ROOM, object);
             } catch (JSONException e) {
                 throw new RuntimeException(e.getCause());
             }
@@ -503,10 +498,10 @@ public class LiveCenter {
             }
             try {
                 JSONObject object = new JSONObject();
-                object.put(PROPERTY_TO, to);
-                object.put(PROPERTY_FROM, UserManager.getMainUserId());
-                object.put(PROPERTY_IS_TYPING, isTyping);
-                liveClient.broadcast(TYPING, object);
+                object.put(SocketIoClient.PROPERTY_TO, to);
+                object.put(SocketIoClient.PROPERTY_FROM, UserManager.getMainUserId());
+                object.put(SocketIoClient.PROPERTY_IS_TYPING, isTyping);
+                liveClient.send(SocketIoClient.TYPING, object);
             } catch (JSONException e) {
                 throw new RuntimeException(e.getCause());
             }
@@ -527,8 +522,8 @@ public class LiveCenter {
                 }
                 realm.close();
                 JSONObject object = new JSONObject();
-                object.put(PROPERTY_TO, userId);
-                liveClient.broadcast(LiveCenter.TRACK_USER, object);
+                object.put(SocketIoClient.PROPERTY_TO, userId);
+                liveClient.send(SocketIoClient.TRACK_USER, object);
             } catch (JSONException e) {
                 throw new RuntimeException(e.getCause());
             }
@@ -537,8 +532,8 @@ public class LiveCenter {
         private void stopTrackingUser(String userId) {
             try {
                 JSONObject object = new JSONObject();
-                object.put(PROPERTY_TO, userId);
-                liveClient.broadcast(UN_TRACK_USER, object);
+                object.put(SocketIoClient.PROPERTY_TO, userId);
+                liveClient.send(SocketIoClient.UN_TRACK_USER, object);
             } catch (JSONException e) {
                 throw new RuntimeException(e.getCause());
             }

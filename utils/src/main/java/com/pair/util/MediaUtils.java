@@ -9,8 +9,6 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-import app.test.com.utils.BuildConfig;
-
 
 /**
  * @author Null-Pointer on 8/24/2015.

@@ -161,7 +161,7 @@ public class LoginFragment extends Fragment {
     };
 
     private void showRequiredFieldDialog(String field) {
-        UiHelpers.showErrorDialog(getActivity(), getString(R.string.required_field_error, field));
+        UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.required_field_error, field));
     }
 
     Pattern userNamePattern = Pattern.compile("^[a-zA-Z][a-zA-Z0-9_]{1,12}");
@@ -185,7 +185,7 @@ public class LoginFragment extends Fragment {
                 usernameEt.requestFocus();
                 return false;
             } else if (!userNamePattern.matcher(userName).matches()) {
-                UiHelpers.showErrorDialog(getActivity(), getString(R.string.user_name_format_message).toUpperCase());
+                UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.user_name_format_message).toUpperCase());
                 usernameEt.requestFocus();
                 return false;
             }
@@ -207,7 +207,7 @@ public class LoginFragment extends Fragment {
                         doAttemptLogin();
                     }
                 };
-                UiHelpers.showErrorDialog(getActivity(),
+                UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(),
                         getString(R.string.st_invalid_phone_number_message, phoneNumber).toUpperCase(),
                         getString(R.string.yes).toUpperCase(),
                         getString(android.R.string.cancel).toUpperCase(), okListener, null);

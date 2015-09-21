@@ -1,0 +1,141 @@
+/************************* cut out from createGroupActivity************************************************
+        private List<User> items;
+
+        public CustomUsersAdapter(List<User> items) {
+            this.items = items;
+        }
+
+        @Override
+        public int getCount() {
+            return items.size();
+        }
+
+        @Override
+        public User getItem(int position) {
+            return items.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return -1;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            //noinspection ConstantConditions
+            convertView = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_checked, parent, false);
+            final CheckedTextView checkedTextView = (CheckedTextView) convertView;
+            checkedTextView.setText(getItem(position).getName());
+            ((ListView) parent).setItemChecked(position, selectedUsers.contains(getItem(position).getUserId()));
+            return convertView;
+        }
+
+        private void refill(List<User> newItems) {
+            this.items = newItems;
+            notifyDataSetChanged();
+        }
+
+        @Override
+        public Filter getFilter() {
+            return filter;
+        }
+
+        private Filter filter = new Filter() {
+            FilterResults results = new FilterResults();
+
+            protected FilterResults performFiltering(CharSequence constraint) {
+                Realm realm = Realm.getInstance(CreateGroupActivity.this); //get realm for this background thread
+                List<User> users;
+                String constraintAsString = constraint.toString().trim();
+                constraintAsString = standardiseConstraintAndContinue(constraintAsString);
+                if (constraintAsString == null) {
+                    //the publish results will check for this negative value and use
+                    // it to detect if it the filter had no effect
+                    results.count = -1;
+                    //no need to set the results.value field as it will not be used
+                    return results;
+                }
+                try {
+                    RealmQuery<User> query = realm.where(User.class)
+                            .beginGroup()
+                            .contains(User.FIELD_ID, constraintAsString)
+                            .or().contains(User.FIELD_NAME, constraintAsString, false) //use contains for name not begins with or equal to
+                            .endGroup()
+                            .notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
+                            .notEqualTo(User.FIELD_ID, UserManager.getInstance()
+                                    .getCurrentUser().getUserId());
+                    users = query.findAllSorted(User.FIELD_NAME);
+                    //detach the objects from realm. as we want to pass it to a different thread
+                    // TODO: 8/7/2015 this might not scale
+                    users = User.copy(users); //in the future if the results is too large copying might not scale!
+                } finally {
+                    realm.close();
+                }
+                results.count = users.size();
+                results.values = users;
+                return results;
+            }
+
+            private String standardiseConstraintAndContinue(String constraintAsString) {
+                if (constraintAsString.startsWith("+")) { //then its  in in the IEE format. eg +233XXXXXXXXX (for a Ghanaian number)
+                    if (constraintAsString.length() > 1) //avoid indexOutOfBoundException
+                        constraintAsString = constraintAsString.substring(1);
+                    else {
+                        return null;
+                    }
+                } else if (constraintAsString.startsWith("00")) {
+                    if (constraintAsString.length() > 2) //avoid indexOutOfBoundException
+                        constraintAsString = constraintAsString.substring(2);
+                    else {
+                        return null;
+                    }
+                } else if (constraintAsString.startsWith("011")) {
+                    if (constraintAsString.length() > 3) //avoid indexOutOfBoundException
+                        constraintAsString = constraintAsString.substring(3);
+                    else {
+                        return null;
+                    }
+                    //the next condition will never have to worry about input like "00","011 as they will be sieved off!
+                } else if (constraintAsString.startsWith(PhoneNumberNormaliser.getTrunkPrefix(UserManager.getInstance().getUserCountryISO()))) { // TODO: 8/7/2015 replace this with trunk digit of current user currently we using Ghana,France,etc.
+                    if (constraintAsString.length() > 1) //avoid indexOutOfBoundException
+                        constraintAsString = constraintAsString.substring(1);
+                    else {
+                        return null;
+                    }
+                }
+
+                return constraintAsString;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                if (results.count < 0) { //the filter the user input cannot be used as filter e.g. "00","0","011",etc so don't do anything
+                    return;
+                }
+                //noinspection unchecked
+                refill(((List<User>) results.values));
+            }
+        };
+    }
+
+    private final TextWatcher ADAPTER_FILTER = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+        }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            if (adapter != null) {
+                if (!TextUtils.isEmpty(s))
+                    adapter.getFilter().filter(s.toString());
+                else
+                    adapter.refill(users);
+            }
+        }
+    };

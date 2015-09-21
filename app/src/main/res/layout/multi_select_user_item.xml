@@ -1,33 +1,37 @@
 <com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="@dimen/list_item_height"
-    android:minHeight="?android:attr/listPreferredItemHeight"
-    android:descendantFocusability="beforeDescendants"
-    android:padding="@dimen/list_item_padding"
-    android:layout_marginBottom="@dimen/list_item_margin_bottom"
-    android:gravity="center_vertical">
+                              xmlns:tools="http://schemas.android.com/tools"
+                              android:layout_width="match_parent"
+                              android:layout_height="@dimen/list_item_height"
+                              android:layout_marginBottom="@dimen/list_item_margin_bottom"
+                              android:descendantFocusability="beforeDescendants"
+                              android:gravity="center_vertical"
+                              android:minHeight="?android:attr/listPreferredItemHeight"
+                              android:padding="@dimen/list_item_padding"
+                              tools:ignore="RtlHardcoded">
 
     <com.pair.view.RoundedImageView
         android:id="@+id/iv_display_picture"
         android:layout_width="@dimen/thumbnail_width"
         android:layout_height="@dimen/thumbnail_height"
-        android:layout_margin="@dimen/thumbnail_margin"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="@dimen/thumbnail_margin"
         android:contentDescription="@string/content_desc_user_avatar"
         android:scaleType="centerCrop"
-        android:src="@drawable/user_avartar" />
+        android:src="@drawable/user_avartar"/>
 
     <TextView
         android:id="@+id/tv_user_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/iv_display_picture"
         android:layout_alignTop="@id/iv_display_picture"
+        android:layout_toRightOf="@+id/iv_display_picture"
         android:singleLine="true"
-        android:text="name"
-        android:textSize="@dimen/list_item_heading_size"
-        android:textStyle="bold" />
+        android:text="@string/username_hint"
+        android:textSize="@dimen/standard_text_size"
+        android:textStyle="bold"
+        tools:ignore="RtlHardcoded"/>
 
     <TextView
         android:id="@+id/tv_user_phone_group_admin"
@@ -37,26 +41,35 @@
         android:layout_alignLeft="@+id/tv_user_name"
         android:ellipsize="end"
         android:singleLine="true"
-        android:text="0204441069"
-        android:textSize="14sp"
-        android:textStyle="italic" />
+        android:text="@string/phone"
+        android:textSize="@dimen/standard_text_size"
+        android:textStyle="italic"/>
 
     <TextView
+        android:id="@+id/tv_user_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/st_offline"
-        android:layout_alignTop="@+id/tv_user_name"
         android:layout_alignParentRight="true"
-        android:visibility="gone"
-        android:id="@+id/tv_user_status" />
+        android:layout_alignTop="@+id/tv_user_name"
+        android:text="@string/st_offline"
+        android:visibility="gone"/>
 
     <com.rey.material.widget.CheckBox
-        android:layout_width="wrap_content"
         android:id="@+id/cb_checked"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
         style="@style/CheckBoxDrawable"
-        android:checked="false"
-        android:layout_alignBottom="@+id/tv_user_phone_group_admin" />
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/tv_user_phone_group_admin"
+        android:layout_alignParentRight="true"
+        android:checked="false"/>
+
+    <include
+        layout="@layout/divider"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/inbox_preferred_list_item_divider_height"
+        android:layout_alignLeft="@+id/tv_user_phone_group_admin"
+        android:layout_alignParentBottom="true"
+        android:layout_alignStart="@+id/tv_user_phone_group_admin"
+        android:layout_marginTop="4dp"/>
 
 </com.pair.view.RelativeLayout>

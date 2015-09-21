@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.provider.ContactsContract;
 import android.support.v4.app.FragmentActivity;
 import android.telephony.SmsManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,11 +18,13 @@ import android.widget.TextView;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.ui.DPLoader;
+import com.pair.ui.PairAppBaseActivity;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
 import com.rey.material.widget.Button;
 
 import java.util.List;
+import java.util.Locale;
 
 import static com.pair.data.ContactsManager.Contact;
 
@@ -91,6 +94,7 @@ public class ContactsAdapter extends BaseAdapter {
             holder.inviteButton = (Button) convertView.findViewById(R.id.bt_invite);
             holder.userDp = ((ImageView) convertView.findViewById(R.id.iv_display_picture));
             holder.userPhone = (TextView) convertView.findViewById(R.id.tv_user_phone_group_admin);
+            holder.initials = (TextView) convertView.findViewById(R.id.tv_initials);
             convertView.setTag(holder);
         } else {
             holder = ((ViewHolder) convertView.getTag());
@@ -108,7 +112,7 @@ public class ContactsAdapter extends BaseAdapter {
         }
         if (contact.isRegisteredUser) {
             holder.userStatus.setText(contact.status);
-            DPLoader.load(context,contact.numberInIEE_Format, contact.DP)
+            DPLoader.load(context, contact.numberInIEE_Format, contact.DP)
                     .error(R.drawable.user_avartar)
                     .placeholder(R.drawable.user_avartar)
                     .resize(150, 150)
@@ -125,6 +129,32 @@ public class ContactsAdapter extends BaseAdapter {
             holder.userPhone.setOnClickListener(listener);
             holder.userName.setOnClickListener(listener);
             holder.inviteButton.setOnClickListener(listener);
+            if (contact.name.equalsIgnoreCase("awale")) {
+                Log.d(TAG, "break");
+            }
+            if (contact.name.length() > 1) {
+                String[] parts = contact.name.trim().split("[\\s[^A-Za-z]]+");
+                if (parts.length > 1) {
+                    StringBuilder builder = new StringBuilder(2);
+                    int chars = 0;
+                    for (int i = 0; i < parts.length && chars < 2; i++) {
+                        if (parts[i].isEmpty()) {
+                            continue;
+                        }
+                        builder.append(parts[i].charAt(0));
+                        chars++;
+                    }
+                    if (chars >= 2) {
+                        holder.initials.setText(builder.toString().toUpperCase(Locale.getDefault()));
+                    } else {
+                        holder.initials.setText(contact.name.substring(0, 1).toUpperCase(Locale.getDefault()));
+                    }
+                } else {
+                    holder.initials.setText(contact.name.substring(0, 2).toUpperCase(Locale.getDefault()));
+                }
+            } else {
+                holder.initials.setText(contact.name.toUpperCase(Locale.getDefault()));
+            }
         }
 
         return convertView;
@@ -166,12 +196,11 @@ public class ContactsAdapter extends BaseAdapter {
                 SmsManager.getDefault().sendTextMessage(contact.phoneNumber, null, context.getString(R.string.invite_message), null, null);
             }
         };
-        UiHelpers.showErrorDialog(((FragmentActivity) context), R.string.charges_may_apply, android.R.string.ok, android.R.string.cancel, listener, null);
+        UiHelpers.showErrorDialog(((PairAppBaseActivity) context), R.string.charges_may_apply, android.R.string.ok, android.R.string.cancel, listener, null);
     }
 
     private class ViewHolder {
-        private TextView userName,
-                userStatus;
+        private TextView userName, initials, userStatus;
         private Button inviteButton;
         private ImageView userDp;
         private TextView userPhone;

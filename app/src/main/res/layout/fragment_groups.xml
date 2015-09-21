@@ -2,7 +2,6 @@
                               xmlns:tools="http://schemas.android.com/tools"
                               android:layout_width="match_parent"
                               android:layout_height="match_parent"
-                              xmlns:app="http://schemas.android.com/apk/res-auto"
                               tools:context="com.pair.ui.GroupsFragment">
 
     <TextView
@@ -17,19 +16,14 @@
 
     <ListView
         android:id="@android:id/list"
+        android:divider="@null"
+        android:dividerHeight="0dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
     </ListView>
 
-    <com.rey.material.widget.FloatingActionButton
-        style="@style/Material.Widget.FloatingActionButton.Light"
+
+    <include
         android:id="@+id/fab_new_group"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:fab_iconSrc="@drawable/ic_action_chat_white"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginBottom="16dp"
-        android:layout_marginRight="16dp"
-        app:fab_iconLineMorphing="@style/FloatingActionButtonIcon"/>
+        layout="@layout/fab_generic"/>
 </com.pair.view.RelativeLayout>

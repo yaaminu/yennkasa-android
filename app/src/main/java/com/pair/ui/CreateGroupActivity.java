@@ -1,30 +1,25 @@
 package com.pair.ui;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.util.Log;
-import android.util.TypedValue;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.CheckedTextView;
 import android.widget.EditText;
-import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.Errors.ErrorCenter;
+import com.pair.adapter.MultiChoiceUsersAdapter;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
@@ -32,45 +27,75 @@ import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
+import com.rey.material.widget.CheckBox;
+import com.rey.material.widget.SnackBar;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import io.realm.Realm;
 import io.realm.RealmQuery;
+import io.realm.RealmResults;
 
-public class CreateGroupActivity extends PairAppBaseActivity implements AdapterView.OnItemClickListener, ItemsSelector.OnFragmentInteractionListener, ToolbarManager.OnToolbarGroupChangedListener {
+public class CreateGroupActivity extends PairAppActivity implements AdapterView.OnItemClickListener, ItemsSelector.OnFragmentInteractionListener, TextWatcher {
 
     public static final String TAG = CreateGroupActivity.class.getSimpleName();
     private Set<String> selectedUsers = new HashSet<>();
     private String groupName;
     private Realm realm;
-    private List<User> users;
-    private UsersAdapter adapter;
+    private CustomUsersAdapter adapter;
     private EditText groupNameEt;
-    private Toolbar toolBar;
-    private ToolbarManager manager;
+    private int stage = 0;
+
+    private final View.OnClickListener listener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.tv_menu_item_done:
+                    completeGroupCreation();
+                    break;
+                case R.id.tv_menu_item_next:
+                    proceedToAddMembers();
+                    break;
+                default:
+                    throw new AssertionError();
+            }
+        }
+    };
+    private View menuItemDone, menuItemNext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_group);
+        Toolbar toolBar = ((Toolbar) findViewById(R.id.main_toolbar));
+        menuItemDone = toolBar.findViewById(R.id.tv_menu_item_done);
+        menuItemNext = toolBar.findViewById(R.id.tv_menu_item_next);
 
-        toolBar = ((Toolbar) findViewById(R.id.main_toolbar));
-        manager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
-        manager.setCurrentGroup(R.id.setup);
-        manager.registerOnToolbarGroupChangedListener(this);
+        menuItemDone.setOnClickListener(listener);
+        menuItemNext.setOnClickListener(listener);
+
+        //noinspection unused
+        ToolbarManager manager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
         groupNameEt = ((EditText) findViewById(R.id.et_group_name));
+        groupNameEt.addTextChangedListener(this);
         realm = Realm.getInstance(this);
-        users = realm.where(User.class).notEqualTo(User.FIELD_ID, UserManager.getInstance()
-                .getCurrentUser().getUserId()).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
-                .findAllSorted(User.FIELD_NAME);
-        adapter = new UsersAdapter(users);
+        RealmResults<User> users = getQuery().findAllSorted(User.FIELD_NAME);
+        adapter = new CustomUsersAdapter(realm, users);
+    }
+
+
+    @Override
+    protected SnackBar getSnackBar() {
+        return ((SnackBar) findViewById(R.id.notification_bar));
+    }
+
+    private RealmQuery<User> getQuery() {
+        return realm.where(User.class).notEqualTo(User.FIELD_ID, UserManager.getInstance()
+                .getCurrentUser().getUserId()).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP);
     }
 
     private void proceedToAddMembers() {
@@ -88,12 +113,12 @@ public class CreateGroupActivity extends PairAppBaseActivity implements AdapterV
         } else {
             groupNameEt.setVisibility(View.GONE);
             groupName = name;
+            stage = 2;
             getSupportFragmentManager()
                     .beginTransaction()
                     .replace(R.id.rl_main_container, new ItemsSelector())
                     .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                     .commit();
-            manager.setCurrentGroup(R.id.empty_group);
             supportInvalidateOptionsMenu();
         }
     }
@@ -117,31 +142,32 @@ public class CreateGroupActivity extends PairAppBaseActivity implements AdapterV
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        manager.createMenu(R.menu.menu_create_group);
-        return true;
-    }
-
-    @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        manager.onPrepareMenu();
-        //there is a bug in the library we are using which causes it duplicate
-        // the menu items so this is a fix for it
-        menu = toolBar.getMenu();
-        int size = menu.size();
-        if (size > 2) {
-            boolean found = false;
-            for (int i = 0; i < size; i++) {
-                MenuItem item = menu.getItem(i);
-                if (found) {
-                    item.setVisible(false);
-                } else if (item.isVisible()) {
-                    found = true;
+        switch (stage) {
+            case 0:
+                menuItemDone.setVisibility(View.GONE);
+                menuItemNext.setVisibility(View.GONE);
+                break;
+            case 1:
+                menuItemDone.setVisibility(View.GONE);
+                if (groupNameEt.getText().length() >= 0) {
+                    menuItemNext.setVisibility(View.VISIBLE);
+                } else {
+                    menuItemNext.setVisibility(View.GONE);
                 }
-            }
+                break;
+            case 2:
+                if (selectedUsers.size() < 2) {
+                    menuItemDone.setVisibility(View.GONE);
+                } else {
+                    menuItemDone.setVisibility(View.VISIBLE);
+                }
+                menuItemNext.setVisibility(View.GONE);
+                break;
+            default:
+                throw new AssertionError();
         }
-        return true;// super.onPrepareOptionsMenu(menu);
+        return true;
     }
 
     @Override
@@ -155,16 +181,16 @@ public class CreateGroupActivity extends PairAppBaseActivity implements AdapterV
             promptAndExit();
             return true;
         }
+//
+//        if (id == R.id.action_proceed) {
+//            proceedToAddMembers();
+//            return true;
+//        }
 
-        if (id == R.id.action_proceed) {
-            proceedToAddMembers();
-            return true;
-        }
-
-        if (id == R.id.action_done) {
-            completeGroupCreation();
-            return true;
-        }
+//        if (id == R.id.action_done) {
+//            completeGroupCreation();
+//            return true;
+//        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -196,16 +222,23 @@ public class CreateGroupActivity extends PairAppBaseActivity implements AdapterV
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         User user = ((User) parent.getAdapter().getItem(position));
+
         if (((ListView) parent).isItemChecked(position)) {
             selectedUsers.add(user.getUserId());
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(true);
+            } else {
+                ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(true);
+            }
         } else {
             selectedUsers.remove(user.getUserId());
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(false);
+            } else {
+                ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(false);
+            }
         }
-        if (selectedUsers.size() >= 2) {
-            manager.setCurrentGroup(R.id.done_group);
-        } else {
-            manager.setCurrentGroup(R.id.empty_group); //hide all menu items
-        }
+
         supportInvalidateOptionsMenu();
     }
 
@@ -227,8 +260,8 @@ public class CreateGroupActivity extends PairAppBaseActivity implements AdapterV
     @Override
     public View emptyView() {
         TextView emptyView = new TextView(this);
-        emptyView.setText("You can invite other users who are not in your contacts by adding their numbers directly");
-        emptyView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        emptyView.setText(R.string.add_custom_number);
+        emptyView.setTextSize(R.dimen.standard_text_size);
         return emptyView;
     }
 
@@ -251,169 +284,49 @@ public class CreateGroupActivity extends PairAppBaseActivity implements AdapterV
             try {
                 phoneNumber = PhoneNumberNormaliser.cleanNonDialableChars(phoneNumber);
                 if (!PhoneNumberNormaliser.isValidPhoneNumber(phoneNumber, userCountryISO)) {
-                    throw new NumberParseException(NumberParseException.ErrorType.NOT_A_NUMBER, "invalid phone number");
+                    throw new NumberParseException(NumberParseException.ErrorType.NOT_A_NUMBER, "");
                 }
                 selectedUsers.add(phoneNumber);
                 adapter.notifyDataSetChanged();
-                if (selectedUsers.size() >= 2) {
-                    manager.setCurrentGroup(R.id.done_group);
-                }
                 supportInvalidateOptionsMenu();
             } catch (NumberParseException e) {
                 // FIXME: 8/5/2015 show a better error message
-                UiHelpers.showErrorDialog(CreateGroupActivity.this, "The number: " + original + " is not be a valid phone number");
+                UiHelpers.showErrorDialog(CreateGroupActivity.this, getString(R.string.invalid_phone_number, original));
             }
         } else {
             // FIXME: 8/5/2015 show a better error message
-            UiHelpers.showErrorDialog(CreateGroupActivity.this, "cannot be empty");
+            UiHelpers.showErrorDialog(CreateGroupActivity.this, R.string.error_field_required);
         }
     }
 
     @Override
-    public void onToolbarGroupChanged(int oldGroupId, int groupId) {
-        manager.notifyNavigationStateChanged();
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
     }
 
-    private class UsersAdapter extends BaseAdapter implements Filterable {
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
 
-        private List<User> items;
-
-        public UsersAdapter(List<User> items) {
-            this.items = items;
-        }
-
-        @Override
-        public int getCount() {
-            return items.size();
-        }
-
-        @Override
-        public User getItem(int position) {
-            return items.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return -1;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            //noinspection ConstantConditions
-            convertView = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_checked, parent, false);
-            final CheckedTextView checkedTextView = (CheckedTextView) convertView;
-            checkedTextView.setText(getItem(position).getName());
-            ((ListView) parent).setItemChecked(position, selectedUsers.contains(getItem(position).getUserId()));
-            return convertView;
-        }
-
-        private void refill(List<User> newItems) {
-            this.items = newItems;
-            notifyDataSetChanged();
-        }
-
-        @Override
-        public Filter getFilter() {
-            return filter;
-        }
-
-        private Filter filter = new Filter() {
-            FilterResults results = new FilterResults();
-
-            protected FilterResults performFiltering(CharSequence constraint) {
-                Realm realm = Realm.getInstance(CreateGroupActivity.this); //get realm for this background thread
-                List<User> users;
-                String constraintAsString = constraint.toString().trim();
-                constraintAsString = standardiseConstraintAndContinue(constraintAsString);
-                if (constraintAsString == null) {
-                    //the publish results will check for this negative value and use
-                    // it to detect if it the filter had no effect
-                    results.count = -1;
-                    //no need to set the results.value field as it will not be used
-                    return results;
-                }
-                try {
-                    RealmQuery<User> query = realm.where(User.class)
-                            .beginGroup()
-                            .contains(User.FIELD_ID, constraintAsString)
-                            .or().contains(User.FIELD_NAME, constraintAsString, false) //use contains for name not begins with or equal to
-                            .endGroup()
-                            .notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
-                            .notEqualTo(User.FIELD_ID, UserManager.getInstance()
-                                    .getCurrentUser().getUserId());
-                    users = query.findAllSorted(User.FIELD_NAME);
-                    //detach the objects from realm. as we want to pass it to a different thread
-                    // TODO: 8/7/2015 this might not scale
-                    users = User.copy(users); //in the future if the results is too large copying might not scale!
-                } finally {
-                    realm.close();
-                }
-                results.count = users.size();
-                results.values = users;
-                return results;
-            }
-
-            private String standardiseConstraintAndContinue(String constraintAsString) {
-                if (constraintAsString.startsWith("+")) { //then its  in in the IEE format. eg +233XXXXXXXXX (for a Ghanaian number)
-                    if (constraintAsString.length() > 1) //avoid indexOutOfBoundException
-                        constraintAsString = constraintAsString.substring(1);
-                    else {
-                        return null;
-                    }
-                } else if (constraintAsString.startsWith("00")) {
-                    if (constraintAsString.length() > 2) //avoid indexOutOfBoundException
-                        constraintAsString = constraintAsString.substring(2);
-                    else {
-                        return null;
-                    }
-                } else if (constraintAsString.startsWith("011")) {
-                    if (constraintAsString.length() > 3) //avoid indexOutOfBoundException
-                        constraintAsString = constraintAsString.substring(3);
-                    else {
-                        return null;
-                    }
-                    //the next condition will never have to worry about input like "00","011 as they will be sieved off!
-                } else if (constraintAsString.startsWith(PhoneNumberNormaliser.getTrunkPrefix(UserManager.getInstance().getUserCountryISO()))) { // TODO: 8/7/2015 replace this with trunk digit of current user currently we using Ghana,France,etc.
-                    if (constraintAsString.length() > 1) //avoid indexOutOfBoundException
-                        constraintAsString = constraintAsString.substring(1);
-                    else {
-                        return null;
-                    }
-                }
-
-                return constraintAsString;
-            }
-
-            @Override
-            protected void publishResults(CharSequence constraint, FilterResults results) {
-                if (results.count < 0) { //the filter the user input cannot be used as filter e.g. "00","0","011",etc so don't do anything
-                    return;
-                }
-                //noinspection unchecked
-                refill(((List<User>) results.values));
-            }
-        };
     }
 
-    private final TextWatcher ADAPTER_FILTER = new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+    @Override
+    public void afterTextChanged(Editable s) {
+        if (s.length() <= 0 && stage == 1) {
+            stage = 0;
+        } else if (s.length() >= 1 && stage == 0) {
+            stage = 1;
+        }
+        invalidateOptionsMenu();
+    }
 
+    private class CustomUsersAdapter extends MultiChoiceUsersAdapter {
+        public CustomUsersAdapter(Realm realm, RealmResults<User> realmResults) {
+            super(CreateGroupActivity.this, realm, realmResults, selectedUsers, R.id.cb_checked);
         }
 
         @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-
+        protected RealmQuery<User> getOriginalQuery() {
+            return getQuery();
         }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-            if (adapter != null) {
-                if (!TextUtils.isEmpty(s))
-                    adapter.getFilter().filter(s.toString());
-                else
-                    adapter.refill(users);
-            }
-        }
-    };
+    }
 }

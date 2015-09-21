@@ -225,6 +225,13 @@ public class PairAppClient extends Service {
         backStack.add(activity);
     }
 
+    public static void notifyMessageSeen(Message message) {
+        if (!UserManager.getInstance().isUserVerified()) {
+            throw new IllegalStateException("no user logged in");
+        }
+        MessageCenter.notifyMessageSeen(message);
+    }
+
     public class PairAppClientInterface extends Binder {
         public void sendMessage(Message message) {
             if (!isClientStarted.get()) {

@@ -13,10 +13,10 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="@dimen/margin_32dp"
-        android:paddingTop="8dp"
+        android:paddingTop="@dimen/tv_app_name_title_padding_top"
         android:text="@string/app_name"
         android:textColor="@android:color/white"
-        android:textSize="48sp"
+        android:textSize="@dimen/app_name_title_size"
         android:textStyle="bold" />
 
     <TextView
@@ -27,7 +27,7 @@
         android:layout_centerHorizontal="true"
         android:text="@string/subtitle"
         android:textColor="@android:color/white"
-        android:textSize="16sp"
+        android:textSize="@dimen/sub_title_app_name_size"
         android:textStyle="bold" />
 
     <TextView
@@ -35,12 +35,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/tv_sub_title"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="@dimen/standard_top_margin"
+        android:padding="@dimen/padding_ll_login_fragment_bottom"
         android:gravity="center"
-        android:padding="10dp"
         android:text="@string/st_send_verification_notice"
         android:textColor="@color/white"
-        android:textSize="14sp" />
+        android:textSize="@dimen/standard_text_size"/>
 
     <android.support.v7.widget.CardView
         android:id="@+id/ll_edittext_pane"
@@ -58,43 +58,37 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:background="@color/white"
-            android:padding="10dp">
+            android:padding="@dimen/padding_ll_login_fragment_bottom">
 
             <EditText
                 android:id="@+id/et_verification"
-                android:layout_width="match_parent"
+                style="@style/phone_number_editText_style"
+                android:paddingTop="@dimen/padding_ll_login_fragment_top"
                 android:layout_height="wrap_content"
-                android:layout_margin="5dp"
                 android:hint="@string/st_hint_et_verification"
-                android:inputType="number" />
+                android:inputType="number"/>
 
             <com.rey.material.widget.Button
                 android:id="@+id/bt_verify"
                 style="@style/RaiseWaveColorButtonRippleStyle"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_height="@dimen/spinner_height"
+                android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
                 android:background="#225eb964"
                 android:gravity="center"
-                android:paddingBottom="10dp"
-                android:paddingTop="10dp"
                 android:text="@string/verify"
-                android:textColor="#000"
-                android:textSize="16sp" />
+                android:textSize="@dimen/standard_text_size"/>
 
             <com.rey.material.widget.Button
                 android:id="@+id/bt_resend_token"
                 style="@style/RaiseWaveColorButtonRippleStyle"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/spinner_height"
                 android:layout_marginTop="10dp"
                 android:background="#225eb964"
                 android:gravity="center"
-                android:paddingBottom="10dp"
-                android:paddingTop="10dp"
                 android:text="@string/st_send_again"
-                android:textColor="#000"
-                android:textSize="16sp" />
+                android:textSize="@dimen/standard_text_size"/>
         </com.pair.view.LinearLayout>
     </android.support.v7.widget.CardView>
 
@@ -110,5 +104,5 @@
         android:padding="12dp"
         android:text="@string/st_back_login"
         android:textColor="@android:color/white"
-        android:textSize="18sp" />
+        android:textSize="@dimen/standard_text_size"/>
 </com.pair.view.RelativeLayout>

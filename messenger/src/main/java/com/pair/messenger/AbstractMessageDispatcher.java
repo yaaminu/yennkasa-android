@@ -75,11 +75,10 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                         }
                     });
                     if (members.size() < 2) {
-                        //let the user manager sync the members, flag the message as unsent so that
-                        //it will be retried as soon as possible
+                        //give the user manager a hint to sync the members.
                         UserManager.getInstance().refreshGroup(message.getTo());
-                        onFailed(message.getId(), MessageUtils.ERROR_MEMBERS_NOT_SYNCED);
-                        return;
+//                        onFailed(message.getId(), MessageUtils.ERROR_MEMBERS_NOT_SYNCED);
+//                        return;
                     }
                     dispatchToGroup(message, members);
                 } else {
@@ -115,9 +114,11 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         try {
             Message realmMessage = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
             if (realmMessage != null) {
-                realm.beginTransaction();
-                realmMessage.setState(Message.STATE_SEND_FAILED);
-                realm.commitTransaction();
+                if (realmMessage.getState() == Message.STATE_PENDING) {
+                    realm.beginTransaction();
+                    realmMessage.setState(Message.STATE_SEND_FAILED);
+                    realm.commitTransaction();
+                }
             }
         } finally {
             realm.close();
@@ -134,9 +135,12 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         try {
             Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
             if (message != null) {
-                realm.beginTransaction();
-                message.setState(Message.STATE_SENT);
-                realm.commitTransaction();
+                int state = message.getState();
+                if (state == Message.STATE_PENDING || state == Message.STATE_SEND_FAILED) {
+                    realm.beginTransaction();
+                    message.setState(Message.STATE_SENT);
+                    realm.commitTransaction();
+                }
             }
         } finally {
             realm.close();

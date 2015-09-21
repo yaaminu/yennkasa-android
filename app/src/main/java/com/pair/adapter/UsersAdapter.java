@@ -70,7 +70,6 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
             holder.iv = ((ImageView) convertView.findViewById(R.id.iv_display_picture));
             holder.tv = ((TextView) convertView.findViewById(R.id.tv_user_name));
             holder.userPhone = (TextView) convertView.findViewById(R.id.tv_user_phone_group_admin);
-            holder.usersStatus = (TextView) convertView.findViewById(R.id.tv_user_status);
             holder.checkBox = (CheckBox) convertView.findViewById(R.id.cb_checked);
             convertView.setTag(holder);
         }
@@ -80,11 +79,8 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
 
         if (UserManager.getInstance().isGroup(user.getUserId())) {
             holder.userPhone.setText(R.string.group);
-            holder.usersStatus.setVisibility(View.GONE);
         } else {
             holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId(), UserManager.getInstance().getUserCountryISO()));
-            holder.usersStatus.setVisibility(View.VISIBLE);
-            holder.usersStatus.setText(user.getStatus());
         }
         DPLoader.load(context,user.getUserId(), user.getDP())
                 .error(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
@@ -100,7 +96,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
 
     private static class ViewHolder {
         private ImageView iv;
-        private TextView tv, userPhone, usersStatus;
+        private TextView tv, userPhone;
         private CheckBox checkBox;
     }
 

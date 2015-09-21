@@ -10,6 +10,7 @@ import android.util.Log;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.MessageJsonAdapter;
+import com.pair.data.UserManager;
 
 import java.util.Date;
 import java.util.List;
@@ -54,6 +55,10 @@ public class MessageProcessor extends IntentService {
     }
 
     private void doProcessMessage(Message message) {
+        if (message.getFrom().equals(UserManager.getMainUserId())) {
+            //how did this happen?
+            return;
+        }
         Realm realm = Realm.getInstance(this);
         String peerId;
         //for messages sent to groups, the group is always the recipient
@@ -71,11 +76,7 @@ public class MessageProcessor extends IntentService {
         //ensure the conversation and session is set up
         // before persisting the message
         if (conversation == null) { //create a new one
-            Conversation.newConversation(this, peerId);
-            //round trips
-            conversation = realm.where(Conversation.class)
-                    .equalTo(Conversation.FIELD_PEER_ID,
-                            peerId).findFirst();
+            conversation = Conversation.newConversation(realm, peerId);
             realm.beginTransaction();
         } else {
             realm.beginTransaction();
@@ -83,20 +84,21 @@ public class MessageProcessor extends IntentService {
         }
         ///////////////////////////////////////////////////////////////////////////////////////////
 
-        //force the new message to be newer than the session start up time by adding one to it
-        message.setDateComposed(new Date(System.currentTimeMillis() + 1));
+        //force the new message to be newer than the session start up time
+        message.setDateComposed(new Date(System.currentTimeMillis() + 10));
         message.setState(Message.STATE_RECEIVED);
         conversation.setLastActiveTime(new Date());//now
         try {
             message = realm.copyToRealm(message);
             conversation.setLastMessage(message);
         } catch (RealmException primaryKey) {
+            //lets eat up this error
             realm.cancelTransaction();
             Log.i(TAG, primaryKey.getMessage());
             Log.d(TAG, "failed to process message");
             return;
         }
-        conversation.setSummary(message.getMessageBody());
+        conversation.setSummary(Message.isTextMessage(message) ? message.getMessageBody() : ""); //ui elements must detect this
         realm.commitTransaction();
 
         message = Message.copy(message);

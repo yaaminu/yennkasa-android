@@ -35,7 +35,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     static private volatile Message latestMessage;
     protected PairAppClient.PairAppClientInterface pairAppClientInterface;
     protected boolean bound = false;
-
     private float dpWidth, dpHeight, pixelsHeight, pixelsWidth;
 
 
@@ -44,14 +43,16 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         public void onServiceConnected(ComponentName name, IBinder service) {
             pairAppClientInterface = ((PairAppClient.PairAppClientInterface) service);
             bound = true;
+            pairAppClientInterface.registerUINotifier(PairAppActivity.this);
             onBind();
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            onUnbind();
             bound = false;
+            pairAppClientInterface.registerUINotifier(PairAppActivity.this);
             pairAppClientInterface = null; //free memory
+            onUnbind();
         }
     };
     private Realm realm;
@@ -67,19 +68,29 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     @Override
     protected void onStart() {
         super.onStart();
-        doBind();
+        bind();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         realm.addChangeListener(this);
+        snackBar = getSnackBar();
+        if (snackBar == null) {
+            throw new IllegalStateException("snack bar cannot be null");
+        }
+        if (bound) {
+            pairAppClientInterface.registerUINotifier(this);
+        }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         realm.removeChangeListener(this);
+        if (bound) {
+            pairAppClientInterface.unRegisterUINotifier(this);
+        }
     }
 
     @Override
@@ -97,7 +108,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         super.onDestroy();
     }
 
-    protected void doBind() {
+    protected void bind() {
         Intent intent = new Intent(this, PairAppClient.class);
         intent.putExtra(PairAppClient.ACTION, PairAppClient.ACTION_SEND_ALL_UNSENT);
         bindService(intent, connection, BIND_AUTO_CREATE);
@@ -194,7 +205,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
             }
         }
     };
-    protected SnackBar snackBar;
+    private SnackBar snackBar;
 
     protected void setUpScreenDimensions() {
         ScreenUtility utility = new ScreenUtility(this);
@@ -236,12 +247,16 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         }
     }
 
-    protected abstract void onBind();
+    protected void onBind() {
+    }
 
-    protected abstract void onUnbind();
+    protected void onUnbind() {
+    }
 
     public void clearRecentChat() {
         recentChatList.clear();
         unReadMessages = 0;
     }
+
+    protected abstract SnackBar getSnackBar();
 }

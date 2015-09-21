@@ -1,86 +1,71 @@
 package com.pair.ui;
 
-import android.app.AlertDialog;
+import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.app.Fragment;
+import android.support.v4.util.Pair;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.text.ClipboardManager;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.text.format.DateUtils;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Filterable;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.pair.Errors.ErrorCenter;
 import com.pair.Errors.PairappException;
 import com.pair.adapter.MessagesAdapter;
+import com.pair.adapter.MultiChoiceUsersAdapter;
 import com.pair.adapter.UsersAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.data.UserManager;
-import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.LiveCenter;
-import com.pair.util.MediaUtils;
+import com.pair.util.SimpleDateUtil;
 import com.pair.util.UiHelpers;
+import com.pair.util.ViewUtils;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.CheckBox;
+import com.rey.material.widget.FloatingActionButton;
 import com.rey.material.widget.SnackBar;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
-import io.realm.exceptions.RealmException;
 
 import static com.pair.data.Message.TYPE_DATE_MESSAGE;
 import static com.pair.data.Message.TYPE_TEXT_MESSAGE;
 
 
 @SuppressWarnings({"ConstantConditions", "FieldCanBeLocal"})
-public class ChatActivity extends PairAppActivity implements View.OnClickListener,
+public class ChatActivity extends MessageActivity implements View.OnClickListener,
         AbsListView.OnScrollListener, TextWatcher, ItemsSelector.OnFragmentInteractionListener, RealmChangeListener, LiveCenter.TypingListener {
-    private static final int TAKE_PHOTO_REQUEST = 0x0,
-            TAKE_VIDEO_REQUEST = 0x1,
-            PICK_PHOTO_REQUEST = 0x2,
-            PICK_VIDEO_REQUEST = 0x3,
-            PICK_FILE_REQUEST = 0x4,
-            ADD_USERS_REQUEST = 0x5;
     private static final String TAG = ChatActivity.class.getSimpleName();
     public static final String EXTRA_PEER_ID = "peer id";
+    private static final int ADD_USERS_REQUEST = 0x5;
 
     private RealmResults<Message> messages;
     private User peer;
@@ -88,13 +73,13 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
     private Realm realm;
     private ListView messagesListView;
     private EditText messageEt;
-    private View sendButton, attach, dateHeaderViewParent;
+    private View sendButton, dateHeaderViewParent;
     private TextView dateHeader;
     private MessagesAdapter adapter;
-    private boolean sessionSetup = false;
     private static Message selectedMessage;
-    private ToolbarManager toolbarManager;
+
     private Toolbar toolBar;
+    private ToolbarManager toolbarManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,12 +90,10 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         realm = Realm.getInstance(this);
         messageEt = ((EditText) findViewById(R.id.et_message));
         sendButton = findViewById(R.id.iv_send);
+        ((FloatingActionButton) sendButton).setIcon(getResources().getDrawable(R.drawable.ic_action_send_now), false);
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
         dateHeader = ((TextView) findViewById(R.id.tv_header_date));
-        snackBar = (SnackBar) findViewById(R.id.notification_bar);
-        attach = findViewById(R.id.iv_attach);
         dateHeaderViewParent = findViewById(R.id.cv_date_header_parent);
-        attach.setOnClickListener(this);
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
         peer = realm.where(User.class).equalTo(User.FIELD_ID, peerId).findFirst();
@@ -135,12 +118,11 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         messages = realm.where(Message.class).equalTo(Message.FIELD_FROM, peer.getUserId())
                 .or()
                 .equalTo(Message.FIELD_TO, peer.getUserId())
-                .findAllSorted(Message.FIELD_DATE_COMPOSED, true);
+                .findAllSorted(Message.FIELD_DATE_COMPOSED, true, Message.FIELD_TYPE, false);
         setUpCurrentConversation();
         sendButton.setOnClickListener(this);
         messageEt.addTextChangedListener(this);
         setUpListView();
-        ensureDateSet();
         // TODO: 8/22/2015 in future we will move to the last  un seen message if any
     }
 
@@ -155,36 +137,7 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
 //        });
 //        messagesListView.setOnTouchListener(touchListener);
 //        final AbsListView.OnScrollListener listener = touchListener.makeScrollListener();
-        messagesListView.setOnScrollListener(new AbsListView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(AbsListView view, int scrollState) {
-//                listener.onScrollStateChanged(view,scrollState);
-            }
-
-            @Override
-            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-                //check if the members have filled the screen
-                if (firstVisibleItem == 0) { //first/second item
-                    dateHeaderViewParent.setVisibility(View.GONE);// TODO: 8/7/2015 fade instead of hiding right away
-                    return;
-                }
-                if (visibleItemCount != 0 && visibleItemCount < totalItemCount) {
-                    dateHeaderViewParent.setVisibility(View.VISIBLE);
-                    for (int i = firstVisibleItem; i >= 0; i--) { //loop backwards
-                        final Message message = messages.get(i);
-                        if (message.getType() == TYPE_DATE_MESSAGE) {
-                            dateHeader.setText(message.getMessageBody());
-                            return;
-                        }
-                    }
-                    //if we've got here then somehow a  session was not set up correctly.
-                    // do we have to clean that mess or
-                    //do this: throw new AssertionError("impossible");
-                    ensureDateSet();
-                }
-//                listener.onScroll(view,firstVisibleItem,visibleItemCount,totalItemCount);
-            }
-        });
+        messagesListView.setOnScrollListener(this);
         registerForContextMenu(messagesListView);
         messagesListView.setSelection(messages.size()); //move to last
     }
@@ -194,10 +147,8 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         currConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
         // FIXME: 8/4/2015 move this to a background thread
         if (currConversation == null) { //first time
-            Conversation.newConversation(this, peerId, true);
+            currConversation = Conversation.newConversationWithoutSession(realm, peerId, true);
         }
-        //round trips!
-        currConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
     }
 
     @Override
@@ -211,6 +162,7 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
             menu.findItem(R.id.action_view_profile).setTitle((peer.getType() == User.TYPE_GROUP) ? R.string.st_group_info : R.string.st_view_profile);
             menu.findItem(R.id.action_view_profile).setVisible(!isForwarding);
             menu.findItem(R.id.action_done).setVisible(isForwarding && !recipientsIds.isEmpty());
+            menu.findItem(R.id.action_attach).setVisible(!isForwarding);
         }
         return super.onPrepareOptionsMenu(menu);
     }
@@ -244,6 +196,9 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
             forwardToAll(recipientsIds);
             goBack();
             return true;
+        } else if (id == R.id.action_attach) {
+            UiHelpers.attach(this);
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -263,7 +218,6 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
     @Override
     protected void onResume() {
         super.onResume();
-        Log.i(TAG, "on resume");
         Config.appOpen(true);
         clearRecentChat();
         if (!User.isGroup(peer)) {
@@ -297,13 +251,8 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
     }
 
     @Override
-    protected void onBind() {
-        pairAppClientInterface.registerUINotifier(this);
-    }
-
-    @Override
-    protected void onUnbind() {
-        pairAppClientInterface.unRegisterUINotifier(this);
+    protected SnackBar getSnackBar() {
+        return (SnackBar) findViewById(R.id.notification_bar);
     }
 
     @Override
@@ -319,9 +268,6 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
             case R.id.iv_send:
                 sendTextMessage();
                 break;
-            case R.id.iv_attach:
-                attach();
-                break;
             default:
                 throw new AssertionError();
         }
@@ -332,192 +278,26 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         messageEt.setText(""); //clear the text field
         //TODO use a regular expression to validate the message body
         if (!TextUtils.isEmpty(content)) {
-            if (messages.isEmpty()) {
-                ensureDateSet();
-            }
-            try {
-                enqueueMessage(createMessage(content, Message.TYPE_TEXT_MESSAGE));
-                messagesListView.setSelection(messages.size());
-            } catch (PairappException e) {
-                Log.e(TAG, e.getMessage(), e.getCause());
-                ErrorCenter.reportError(TAG, e.getMessage());
-            }
+            super.sendMessage(content, peer.getUserId(), Message.TYPE_TEXT_MESSAGE, true);
+            messagesListView.setSelection(messages.size());
         }
 
     }
 
-    private void enqueueMessage(Message message) {
-        doSendMessage(message);
-    }
-
-    //public for messages adapter to access
-    public void doSendMessage(Message message) {
-        if (bound) {
-            pairAppClientInterface.sendMessage(message);
-        } else {
-            doBind(); //after binding dispatcher will smartly dispatch all unsent messages
-        }
-    }
-
-    private void trySetupNewSession() {
-        //set up session
-        if (!sessionSetup) {
-            if (currConversation == null) {
-                setUpCurrentConversation();
-            }
-            Conversation.newSession(realm, currConversation);
-            sessionSetup = true;
-        }
-    }
-
-    private Message createMessage(String messageBody, int type) throws PairappException {
-        // FIXME: 8/4/2015 run in a background thread
-        realm.beginTransaction();
-        trySetupNewSession();
-        try {
-            Message message = Message.makeNew(realm, messageBody, peer.getUserId(), type);
-            currConversation.setLastMessage(message);
-            currConversation.setLastActiveTime(message.getDateComposed());
-            String summary;
-            if (type == Message.TYPE_TEXT_MESSAGE) {
-                summary = Message.state(this, message.getState()) + "      " + message.getMessageBody();
-            } else {
-                summary = Message.state(this, message.getState()) + "  " + getDescription(type);
-            }
-            currConversation.setSummary(summary);
-            realm.commitTransaction();
-            return message;
-        } catch (PairappException e) { //caught for the for the purpose of cleanup
-            realm.cancelTransaction();
-            throw new PairappException(e.getMessage(), "");
-        }
-    }
 
     private User getCurrentUser() {
         return UserManager.getInstance().getCurrentUser();
     }
 
-    private static String getDescription(int type) {
-        switch (type) {
-            case Message.TYPE_BIN_MESSAGE:
-                return "File";
-            case Message.TYPE_PICTURE_MESSAGE:
-                return "Image";
-            case Message.TYPE_VIDEO_MESSAGE:
-                return "video";
-            default:
-                return "Image";
-        }
-    }
-
-    private DialogInterface.OnClickListener dialogListener = new DialogInterface.OnClickListener() {
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-            switch (which) {
-                case TAKE_PHOTO_REQUEST:
-                    //take picture.
-                    takePhoto();
-                    break;
-                case TAKE_VIDEO_REQUEST:
-                    recordVideo();
-                    break;
-                case PICK_PHOTO_REQUEST:
-                    choosePicture();
-                    break;
-                case PICK_VIDEO_REQUEST:
-                    chooseVideo();
-                    break;
-                case PICK_FILE_REQUEST:
-                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                    intent.setType("*/*");
-                    startActivityForResult(intent, PICK_FILE_REQUEST);
-                    break; //safety!
-                default:
-                    break;
-            }
-        }
-    };
-
-
-    private void chooseVideo() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("video/*");
-        startActivityForResult(intent, PICK_VIDEO_REQUEST);
-    }
-
-    private void choosePicture() {
-        Intent attachIntent;
-        attachIntent = new Intent(Intent.ACTION_GET_CONTENT);
-        attachIntent.setType("image/*");
-        startActivityForResult(attachIntent, PICK_PHOTO_REQUEST);
-    }
-
-    private Uri mMediaUri;
-
-    private void recordVideo() {
-        try {
-            mMediaUri = FileUtils.getOutputUri(FileUtils.MEDIA_TYPE_VIDEO);
-            MediaUtils.recordVideo(this, mMediaUri, TAKE_VIDEO_REQUEST);
-        } catch (Exception e) {
-            if (BuildConfig.DEBUG) {
-                Log.e(TAG, e.getMessage(), e.getCause());
-            } else {
-                Log.e(TAG, e.getMessage());
-            }
-            Toast.makeText(ChatActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void takePhoto() {
-        try {
-            mMediaUri = FileUtils.getOutputUri(FileUtils.MEDIA_TYPE_IMAGE);
-            MediaUtils.takePhoto(this, mMediaUri, TAKE_PHOTO_REQUEST);
-        } catch (Exception e) {
-            if (BuildConfig.DEBUG) {
-                Log.e(TAG, e.getMessage(), e.getCause());
-            } else {
-                Log.e(TAG, e.getMessage());
-            }
-        }
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.i(TAG, "onActivityResult");
         if (resultCode != RESULT_OK) {
             return;
         }
-        Message message;
-        String actualPath;
         try {
-            //we cannot rely on external programs to return the right type of file based on the
-            //intent we fired.
-            //a well-known android app com.estrongs.android.pop-1 (Es File Explorer) allows users
-            //to pick any file type irrespective of the mime type bundle with the intent.
-            switch (requestCode) {
-                case TAKE_PHOTO_REQUEST:
-                    //fall through
-                case TAKE_VIDEO_REQUEST:
-                    actualPath = mMediaUri.getPath();
-                    break;
-                case PICK_VIDEO_REQUEST:
-                    //fall through
-                case PICK_PHOTO_REQUEST:
-                    //fall through
-                case PICK_FILE_REQUEST:
-                    actualPath = getActualPath(data);
-                    break;
-                default:
-                    throw new AssertionError("impossible");
-            }
-            int type = Message.TYPE_BIN_MESSAGE;
-            if (MediaUtils.isImage(actualPath)) {
-                type = Message.TYPE_PICTURE_MESSAGE;
-            } else if (MediaUtils.isVideo(actualPath)) {
-                type = Message.TYPE_VIDEO_MESSAGE;
-            }
-            message = createMessage(actualPath, type);
-            enqueueMessage(message);
+            Pair<String, Integer> pathAndType = UiHelpers.completeAttachIntent(requestCode, data);
+            sendMessage(pathAndType.first, peer.getUserId(), pathAndType.second);
             messagesListView.setSelection(messages.size());
         } catch (PairappException e) {
             ErrorCenter.reportError(TAG, e.getMessage());
@@ -528,78 +308,8 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         final DialogFragment fragment = UiHelpers.newProgressDialog();
         fragment.show(getSupportFragmentManager(), null);
         if (recipients == null || recipients.isEmpty()) return;
-        final Message backGroundRealmVersion = Message.copy(selectedMessage); //copy first
-        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(Void... params) {
-                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-                doForwardMessage(recipients, backGroundRealmVersion);
-                return null;
-            }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                fragment.dismiss();
-            }
-        };
-
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
-            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        } else {
-            task.execute();
-        }
-    }
-
-    private void doForwardMessage(Set<String> recipients, Message backGroundRealmVersion) {
-        List<Message> tobeSent = new ArrayList<>(recipients.size());
-        Realm realm = Realm.getInstance(this);
-        try {
-            for (String recipient : recipients) {
-                Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, recipient).findFirst();
-                realm.beginTransaction();
-                if (conversation == null) {
-                    conversation = realm.createObject(Conversation.class);
-                    conversation.setPeerId(recipient);
-                }
-                conversation.setActive(false);
-                conversation.setLastActiveTime(new Date());
-                Conversation.newSession(realm, conversation);
-                realm.commitTransaction();
-
-                realm.beginTransaction();
-                backGroundRealmVersion.setFrom(getCurrentUser().getUserId());
-                backGroundRealmVersion.setTo(recipient);
-                backGroundRealmVersion.setDateComposed(new Date(System.currentTimeMillis() + 1));
-                backGroundRealmVersion.setState(Message.STATE_PENDING);
-                backGroundRealmVersion.setId(Message.generateIdPossiblyUnique());
-                Message message = realm.copyToRealm(backGroundRealmVersion);
-                tobeSent.add(message);
-                conversation.setLastMessage(message);
-                if (message.getType() == TYPE_TEXT_MESSAGE) {
-                    conversation.setSummary(message.getMessageBody());
-                } else {
-                    conversation.setSummary(getDescription(message.getType()));
-                }
-                realm.commitTransaction();
-            }
-            if (bound) {
-                pairAppClientInterface.sendMessages(tobeSent);
-            }
-        } finally {
-            realm.close();
-        }
-    }
-
-
-    private String getActualPath(Intent data) {
-        String actualPath;
-        Uri uri = data.getData();
-        if (uri.getScheme().equals("content")) {
-            actualPath = FileUtils.resolveContentUriToFilePath(uri);
-        } else {
-            actualPath = uri.getPath();
-        }
-        return actualPath;
+        sendMessage(selectedMessage.getMessageBody(), recipients, selectedMessage.getType());
+        fragment.dismiss();
     }
 
     @Override
@@ -609,33 +319,23 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
 
     @Override
     public void onScroll(AbsListView view, final int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-
-    }
-
-    private void ensureDateSet() {
-        Message message;
-        if (!messages.isEmpty() && Message.isDateMessage(messages.get(0))) {
+        if (firstVisibleItem == 0) { //first/second item
+            dateHeaderViewParent.setVisibility(View.GONE);// TODO: 8/7/2015 fade instead of hiding right away
             return;
         }
-
-        try {
-            message = new Message();
-            String formatted = DateUtils.formatDateTime(this, new Date().getTime(), DateUtils.FORMAT_NUMERIC_DATE);
-            message.setId(peer.getUserId() + formatted);
-            message.setMessageBody(formatted);
-            message.setTo(UserManager.getInstance().getCurrentUser().getUserId());
-            message.setFrom(peer.getUserId());
-            Date latestDate = messages.minDate(Message.FIELD_DATE_COMPOSED);
-            //one second older than the oldest message
-            latestDate = latestDate == null ? new Date() : new Date(latestDate.getTime() - 1000);
-            message.setDateComposed(latestDate);
-            message.setType(TYPE_DATE_MESSAGE);
-            realm.beginTransaction();
-            realm.copyToRealm(message);
-            realm.commitTransaction();
-        } catch (RealmException primaryKeyException) {
-            Log.d(TAG, "date already setup");
-            realm.cancelTransaction();
+        if (visibleItemCount != 0 && visibleItemCount < totalItemCount) {
+            dateHeaderViewParent.setVisibility(View.VISIBLE);
+            for (int i = firstVisibleItem; i >= 0; i--) { //loop backwards
+                final Message message = messages.get(i);
+                if (message.getType() == TYPE_DATE_MESSAGE) {
+                    dateHeader.setText(SimpleDateUtil.formatDateRage(this, message.getDateComposed()));
+                    return;
+                }
+            }
+            //if we've got here then somehow a  session was not set up correctly.
+            // do we have to clean that mess or
+            //do this: throw new IllegalStateException("impossible");
+//            ensureDateSet();
         }
     }
 
@@ -646,6 +346,8 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         AdapterView.AdapterContextMenuInfo info = ((AdapterView.AdapterContextMenuInfo) menuInfo);
         selectedMessage = messages.get(info.position);
         cursor = info.position;
+        if (cursor <= 0)
+            return; //thanks to realm long is not precise if a message managed to be first before any date lets return
         if (selectedMessage.getType() != Message.TYPE_DATE_MESSAGE && selectedMessage.getType() != Message.TYPE_TYPING_MESSAGE) {
             getMenuInflater().inflate(R.menu.message_context_menu, menu);
             menu.findItem(R.id.action_copy).setVisible(selectedMessage.getType() == TYPE_TEXT_MESSAGE);
@@ -666,53 +368,59 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
             deleteMessage(cursor);
             return true;
         } else if (itemId == R.id.action_forward) {
-            Fragment fragment = new ItemsSelector();
-            Bundle bundle = new Bundle(1);
-            bundle.putString(MainActivity.ARG_TITLE, getString(R.string.forward_to));
-            fragment.setArguments(bundle);
-            getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment)
-                    .addToBackStack(null)
-                    .commit();
-            findViewById(R.id.ll_list_view_container).setVisibility(View.GONE);
-            dateHeaderViewParent.setVisibility(View.GONE);
-            wasDateHeaderVisible = (dateHeaderViewParent.getVisibility() == View.VISIBLE);
-            getSupportActionBar().setSubtitle("");
-            isForwarding = true;
-            supportInvalidateOptionsMenu();
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setComponent(new ComponentName(this, CreateMessageActivity.class));
+            intent.putExtra(MainActivity.ARG_TITLE, getString(R.string.forward_to));
+            intent.putExtra(CreateMessageActivity.EXTRA_FORWARDED_FROM, peer.getUserId());
+            if (Message.isTextMessage(selectedMessage)) {
+                intent.putExtra(Intent.EXTRA_TEXT, selectedMessage.getMessageBody());
+                intent.setType("text/*");
+                startActivity(intent);
+            } else {
+                final File file = new File(selectedMessage.getMessageBody());
+                if (file.exists()) {
+                    intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+                    intent.setType(FileUtils.getMimeType(file.getAbsolutePath()));
+                    startActivity(intent);
+                } else {
+                    ErrorCenter.reportError(TAG, getString(R.string.file_not_found));
+                }
+            }
             return true;
         }
         return super.onContextItemSelected(item);
     }
 
     private void deleteMessage(int position) {
-        realm.beginTransaction();
-        Message next;
-        Message previous = messages.get(position - 1);
-        boolean removePrevious = false;
-        try {
-            next = messages.get(position + 1);
-            if (Message.isDateMessage(next) || Message.isTypingMessage(next)) {
-                if (Message.isDateMessage(previous)) {
-                    removePrevious = true;
-                }
-                throw new IndexOutOfBoundsException();
-            } else {
-                messages.get(position).removeFromRealm();
-            }
-        } catch (ArrayIndexOutOfBoundsException wasLastMessage) {
-            for (int i = position - 1; i >= 0; i--) {
-                Message message = messages.get(i);
-                if (!Message.isDateMessage(message)) {
-                    currConversation.setLastMessage(message);
+        realm.beginTransaction(); //beginning transaction earlier to force realm to prevent other realms from changing the data set
+        //hook up message to remove.
+        //if it is the only message for the day remove the date message
+        //if it is the last message
+        //if there are other messages set the newest to the just removed message as the last message of the conversation
+        Message currMessage = messages.get(position),
+                previousToCurrMessage = messages.get(position - 1), //at least there will be a date message
+                nextToCurrMessage = (messages.size() - 1 > position ? messages.get(position + 1) : null);
+
+        final boolean wasLastForTheDay = nextToCurrMessage == null || Message.isDateMessage(nextToCurrMessage);
+        currMessage.removeFromRealm();
+        if (Message.isDateMessage(previousToCurrMessage) &&
+                wasLastForTheDay) {
+            previousToCurrMessage.removeFromRealm(); //this will be a date message
+        }
+        realm.commitTransaction(); //let the new changes reflect
+
+        if (currConversation.getLastMessage() == null) {
+            realm.beginTransaction();
+            int allMessages = messages.size() - 1;
+            for (int i = allMessages; i > 0/*0th is the date*/; i--) {
+                final Message cursor = messages.get(i);
+                if (!Message.isDateMessage(cursor) && !Message.isTypingMessage(cursor)) {
+                    currConversation.setLastMessage(cursor);
                     break;
                 }
             }
-            if (removePrevious) {
-                previous.removeFromRealm();
-            }
-            messages.get(position).removeFromRealm();
+            realm.commitTransaction();
         }
-        realm.commitTransaction();
     }
 
     /**
@@ -768,6 +476,7 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
     public void afterTextChanged(Editable s) {
         handler.removeCallbacks(runnable);
         if (!s.toString().trim().isEmpty()) {
+            ViewUtils.showViews(sendButton);
             if (!wasTyping) {
                 wasTyping = true;
                 LiveCenter.notifyTyping(peer.getUserId());
@@ -777,6 +486,7 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         } else if (wasTyping) {
             wasTyping = false;
             LiveCenter.notifyNotTyping(peer.getUserId());
+            ViewUtils.hideViews(sendButton);
         }
     }
 
@@ -787,13 +497,6 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
         } else {
             super.notifyUser(this, message, sender);
         }
-    }
-
-    private void attach() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setItems(R.array.attach_options, dialogListener);
-        AlertDialog dialog = builder.create();
-        dialog.show();
     }
 
     @Override
@@ -820,31 +523,10 @@ public class ChatActivity extends PairAppActivity implements View.OnClickListene
     public BaseAdapter getAdapter() {
         final RealmResults<User> results = getRecipients().findAllSorted(User.FIELD_NAME);
         recipientsIds.clear();
-        recipientsAdapter = new UsersAdapter(this, realm, results, true) {
+        recipientsAdapter = new MultiChoiceUsersAdapter(this, realm, results, recipientsIds, R.id.cb_checked) {
             @Override
             protected RealmQuery<User> getOriginalQuery() {
                 return getRecipients();
-            }
-
-            @Override
-            public View getView(final int position, View convertView, final ViewGroup parent) {
-                View view = super.getView(position, convertView, parent);
-                final CheckBox checkBox = (CheckBox) view.findViewById(R.id.cb_checked);
-                final String userId = getItem(position).getUserId();
-                checkBox.setChecked(recipientsIds.contains(userId));
-                checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        if (isChecked) {
-                            recipientsIds.add(userId);
-                        } else {
-                            recipientsIds.remove(userId);
-                        }
-                        ((ListView) parent).setItemChecked(position, isChecked);
-                        supportInvalidateOptionsMenu();
-                    }
-                });
-                return view;
             }
         };
         return recipientsAdapter;

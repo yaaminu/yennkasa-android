@@ -3,4 +3,7 @@
     <string name="st_unable_to_connect">We\'re having trouble connecting you. Please check your internet settings and try again</string>
     <string name="an_error_occured">sorry an error occured</string>
     <string name="no_message">no messages</string>
+    <string name="File">File</string>
+    <string name="Image">Image</string>
+    <string name="Video">video</string>
 </resources>

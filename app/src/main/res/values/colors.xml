@@ -51,4 +51,6 @@
     <color name="preferred_primary_color">#5eb964</color>
     <color name="list_item_divider">#3d884a</color>
     <color name="black">#000</color>
+    <color name="message_text_box_background">#115eb964</color>
+    <color name="transparent">#0000</color>
 </resources>

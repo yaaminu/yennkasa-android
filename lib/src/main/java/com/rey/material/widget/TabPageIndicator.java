@@ -122,9 +122,9 @@ public class TabPageIndicator extends HorizontalScrollView implements ViewPager.
 
         removeAllViews();
         if(mMode == MODE_SCROLL) {
-            addView(mTabContainer, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
-            setFillViewport(false);
-        }
+			addView(mTabContainer, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+			setFillViewport(true);
+		}
         else if(mMode == MODE_FIXED){
             addView(mTabContainer, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             setFillViewport(true);

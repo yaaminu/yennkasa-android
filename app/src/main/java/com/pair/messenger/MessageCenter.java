@@ -16,6 +16,8 @@ import com.parse.ParsePushBroadcastReceiver;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import io.realm.Realm;
+
 /**
  * @author by Null-Pointer on 5/28/2015.
  */
@@ -36,12 +38,33 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
         processMessage(context, data);
     }
 
-//    private static final Emitter.Listener ON_MESSAGE_STATUS = new Emitter.Listener() {
-//        @Override
-//        public void call(Object... args) {
-//            Log.i(TAG, "msgStatus event");
-//        }
-//    };
+
+    private static final Emitter.Listener MESSAGE_STATUS_RECEIVER = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            Log.i(TAG, "message status report: " + args[0].toString());
+            try {
+                JSONObject object = new JSONObject(args[0].toString());
+                int status = object.getInt(SocketIoClient.MSG_STS_STATUS);
+                String messageId = object.getString(SocketIoClient.MSG_STS_MESSAGE_ID);
+                if (status == Message.STATE_SEEN) {
+                    Log.i(TAG, "message seen");
+                    Realm realm = Message.REALM(Config.getApplicationContext());
+                    Message msg = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
+                    if (msg != null) {
+                        realm.beginTransaction();
+                        msg.setState(Message.STATE_SEEN);
+                        realm.commitTransaction();
+                    } else {
+                        Log.i(TAG, "message not available for update");
+                    }
+                    realm.close();
+                }
+            } catch (JSONException e) {
+                throw new RuntimeException(e.getCause());
+            }
+        }
+    };
 
     private static final Emitter.Listener MESSAGE_RECEIVER = new Emitter.Listener() {
         @Override
@@ -56,35 +79,48 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
     static SocketIoClient messagingClient;
 
     static void startListeningForSocketMessages() {
-        if (messagingClient == null) {
-            messagingClient = SocketIoClient.getInstance(Config.PAIRAPP_ENDPOINT + "/message", UserManager.getMainUserId());
+        initClient();
+    }
+
+    private static void initClient() {
+        synchronized (MessageCenter.class) {
+            if (messagingClient == null) {
+                messagingClient = SocketIoClient.getInstance(Config.PAIRAPP_ENDPOINT + "/message", UserManager.getMainUserId());
+                messagingClient.registerForEvent(SocketIoClient.EVENT_MESSAGE, MESSAGE_RECEIVER);
+                messagingClient.registerForEvent(SocketIoClient.EVENT_MSG_STATUS, MESSAGE_STATUS_RECEIVER);
+            }
         }
-        messagingClient.registerForEvent(SocketIoClient.EVENT_MESSAGE, MESSAGE_RECEIVER);
     }
 
     static void stopListeningForSocketMessages() {
-        if (messagingClient != null) {
-            messagingClient.unRegisterEvent(SocketIoClient.EVENT_MESSAGE, MESSAGE_RECEIVER);
-            messagingClient.close();
-            messagingClient = null;
+        synchronized (MessageCenter.class) {
+            if (messagingClient != null) {
+                messagingClient.unRegisterEvent(SocketIoClient.EVENT_MESSAGE, MESSAGE_RECEIVER);
+                messagingClient.registerForEvent(SocketIoClient.EVENT_MSG_STATUS, MESSAGE_STATUS_RECEIVER);
+                messagingClient.close();
+                messagingClient = null;
+            }
         }
     }
 
     static void notifyReceived(Message message) {
+        //noinspection StatementWithEmptyBody
         if (LiveCenter.isOnline(message.getFrom())) {
             if (messagingClient == null) {
-                startListeningForSocketMessages();
+                initClient();
             }
             JSONObject obj = new JSONObject();
             try {
-                obj.put("to", message.getFrom());
-                obj.put("messageId", message.getId());
-                obj.put("status", Message.STATE_RECEIVED);
-                messagingClient.broadcast(SocketIoClient.EVENT_MSG_STATUS, obj);
+                obj.put(SocketIoClient.PROPERTY_TO, message.getFrom());
+                obj.put(SocketIoClient.MSG_STS_MESSAGE_ID, message.getId());
+                obj.put(SocketIoClient.MSG_STS_STATUS, Message.STATE_RECEIVED);
+                messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
             } catch (JSONException e) {
                 throw new RuntimeException(e.getCause());
             }
-
+        } else {
+            //maybe push.
+            // TODO: 9/18/2015 use push
         }
     }
 
@@ -95,4 +131,26 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
         context.startService(intent);
     }
 
+    static void notifyMessageSeen(final Message message) {
+        //noinspection StatementWithEmptyBody
+        if (LiveCenter.isOnline(message.getFrom())) {
+            //use socketsIO
+            if (messagingClient == null) {
+                initClient();
+            }
+            JSONObject obj = new JSONObject();
+            try {
+                obj.put(SocketIoClient.PROPERTY_TO, message.getFrom());
+                obj.put(SocketIoClient.MSG_STS_MESSAGE_ID, message.getId());
+                obj.put(SocketIoClient.MSG_STS_STATUS, Message.STATE_SEEN);
+                messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
+            } catch (JSONException e) {
+                throw new RuntimeException(e.getCause());
+            }
+        } else {
+            //maybe push
+            // TODO: 9/18/2015 use push
+        }
+
+    }
 }

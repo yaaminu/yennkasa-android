@@ -2,7 +2,6 @@ package com.pair.util;
 
 import android.util.Log;
 
-import app.test.com.utils.BuildConfig;
 
 /**
  * @author Null-Pointer on 8/25/2015.

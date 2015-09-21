@@ -22,14 +22,12 @@
                 <com.rey.material.widget.TabPageIndicator
                     android:id="@+id/pts_title_strip"
                     style="@style/TabPageIndicator"
-                    android:layout_marginTop="8dp"
                     android:layout_marginBottom="8dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:foregroundGravity="center_vertical"
                     android:minHeight="?attr/actionBarSize"
-                    android:background="@drawable/tpi_background"
-                    app:tpi_tabPadding="@dimen/tab_padding"
+                    android:background="?attr/colorPrimary"
                     android:clipToPadding="false" />
 
                 <com.pair.view.CustomViewPager
@@ -48,6 +46,7 @@
             android:minHeight="?attr/actionBarSize"
             android:title=""
             android:gravity="center"
+            android:visibility="gone"
             app:theme="@style/AppBar"/>
     </com.pair.view.LinearLayout>
 

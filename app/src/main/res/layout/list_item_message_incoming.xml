@@ -20,7 +20,7 @@
              take it off and see the outcome
              -->
             <TextView
-                android:id="@+id/tv_message_content"
+                android:id="@+id/tv_log_message"
                 style="@style/message_incoming"
                 android:text="@string/new_message"/>
 

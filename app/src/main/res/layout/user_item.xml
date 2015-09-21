@@ -13,7 +13,7 @@
         android:layout_height="@dimen/thumbnail_height"
         android:layout_margin="@dimen/thumbnail_margin"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
+        android:layout_centerVertical="true"
         android:contentDescription="@string/content_desc_user_avatar"
         android:scaleType="centerCrop"
         android:src="@drawable/user_avartar" />
@@ -26,7 +26,7 @@
         android:layout_alignTop="@id/iv_display_picture"
         android:singleLine="true"
         android:text="name"
-        android:textSize="@dimen/list_item_heading_size"
+        android:textSize="@dimen/standard_text_size"
         android:textStyle="bold" />
 
     <TextView
@@ -38,7 +38,8 @@
         android:ellipsize="end"
         android:singleLine="true"
         android:text="0204441069"
-        android:textSize="14sp"
+        android:gravity="top"
+        android:textSize="@dimen/standard_text_size_small"
         android:textStyle="italic" />
 
     <TextView
@@ -49,6 +50,15 @@
         android:layout_alignParentRight="true"
         android:visibility="gone"
         android:id="@+id/tv_user_status" />
+
+    <include
+        layout="@layout/divider"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/inbox_preferred_list_item_divider_height"
+        android:layout_alignLeft="@+id/tv_user_phone_group_admin"
+        android:layout_alignParentBottom="true"
+        android:layout_alignStart="@+id/tv_user_phone_group_admin"
+        android:layout_marginTop="4dp"/>
 
     <com.rey.material.widget.CheckBox
         android:layout_width="wrap_content"

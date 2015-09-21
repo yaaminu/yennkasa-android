@@ -8,7 +8,6 @@ import com.google.i18n.phonenumbers.Phonenumber;
 
 import java.util.regex.Pattern;
 
-import app.test.com.utils.BuildConfig;
 
 /**
  * @author Null-Pointer on 7/25/2015.

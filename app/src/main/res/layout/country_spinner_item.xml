@@ -16,7 +16,7 @@
         android:paddingLeft="16dp"
         android:paddingRight="16dp"
         android:textColor="#FF000000"
-        android:textSize="16sp" />
+        android:textSize="@dimen/spinner_item_text_size"/>
 
     <com.rey.material.widget.TextView
         android:id="@+id/tv_country_ccc"
@@ -25,6 +25,6 @@
         android:paddingLeft="16dp"
         android:paddingRight="16dp"
         android:textColor="#FF000000"
-        android:textSize="16sp" />
+        android:textSize="@dimen/spinner_item_text_size"/>
 </com.pair.view.LinearLayout>
 

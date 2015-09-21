@@ -37,15 +37,28 @@ public class SocketIoClient implements Closeable {
 
     public static final String TAG = "SocketsIOClient";
     public static final int PING_DELAY = 60000;
-    public static final String PING = "ping";
-    public static final String PONG = "pong";
-    public static final String RECONNECT_AND_PING_TIMER_TIMER = "reconnectAndPingTimer timer";
+    public static final String PING = "ping",
+            PONG = "pong",
+            RECONNECT_AND_PING_TIMER_TIMER = "reconnectAndPingTimer timer",
+            TYPING = "typing",
+            TRACK_USER = "trackUser",
+            IS_ONLINE = "isOnline",
+            UN_TRACK_USER = "unTrackUser",
+            PROPERTY_TO = "to",
+            PROPERTY_FROM = "from",
+            PROPERTY_IS_TYPING = "isTyping",
+            EVENT_CHAT_ROOM = "chatRoom",
+            PROPERTY_IN_CHAT_ROOM = "inChatRoom",
+            EVENT_MESSAGE = "message",
+            EVENT_MSG_STATUS = "msgStatus",
+            MSG_STS_STATUS = "status",
+            MSG_STS_MESSAGE_ID = "messageId";
+
     private final AtomicBoolean initialised = new AtomicBoolean(false),
             ready = new AtomicBoolean(false),
             pongedBack = new AtomicBoolean(false);
     private final AtomicInteger referenceCount = new AtomicInteger(0), retryAttempts = new AtomicInteger(0);
-    public static final String EVENT_MESSAGE = "message";
-    public static final String EVENT_MSG_STATUS = "msgStatus";
+
 
     private final List<Pair<String, Object>> waitingBroadcasts = new ArrayList<>();
 
@@ -258,7 +271,7 @@ public class SocketIoClient implements Closeable {
         return true;
     }
 
-    public void broadcast(String eventName, Object jsonData) {
+    public void send(String eventName, Object jsonData) {
         Log.d(TAG, "emitting: " + eventName + " with data" + jsonData);
         if (ready.get() && CLIENT.connected()) {
             CLIENT.emit(eventName, jsonData);
@@ -274,7 +287,7 @@ public class SocketIoClient implements Closeable {
     }
 
     public void send(Object jsonData) {
-        broadcast(EVENT_MESSAGE, jsonData);
+        send(EVENT_MESSAGE, jsonData);
     }
 
     @Override

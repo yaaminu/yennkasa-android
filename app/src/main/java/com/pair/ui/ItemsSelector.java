@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,6 +18,7 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.GridView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.pair.pairapp.R;
 import com.pair.util.ScreenUtility;
@@ -29,11 +31,12 @@ import com.pair.util.ScreenUtility;
  */
 public class ItemsSelector extends Fragment implements View.OnClickListener, TextWatcher {
 
+    private static final String TAG = ItemsSelector.class.getSimpleName();
     private OnFragmentInteractionListener interactionListener;
     private Filter filter;
     private GridView gridContainer;
     private ListView listContainer;
-    private View filterView;
+    private View addView;
 
 
     public ItemsSelector() {
@@ -59,31 +62,31 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
 
 
     private EditText filterEditText;
-    private View addButton;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_items_selector, container, false);
-        addButton = view.findViewById(R.id.bt_add);
+        addView = view.findViewById(R.id.bt_add);
         filterEditText = ((EditText) view.findViewById(R.id.et_filter_input_box));
         gridContainer = (GridView) view.findViewById(R.id.gv_container);
         listContainer = (ListView) view.findViewById(R.id.lv_container);
-        filterView = view.findViewById(R.id.ll_filter_panel);
 
         View emptyView = interactionListener.emptyView();
         final View defaultEmptyView = view.findViewById(R.id.tv_empty);
         if (emptyView == null) {
             emptyView = defaultEmptyView;
         } else {
-            //add the view to the parent of the collection container(list/grid)
-            final ViewGroup parent = (ViewGroup) defaultEmptyView.getParent();
-            parent.addView(emptyView, defaultEmptyView.getLayoutParams());
-            parent.removeView(defaultEmptyView);
-            emptyView.setVisibility(View.GONE); //the containers will show it when it has to
-
+//            we are having troubles adding the view to the view hierarchy.
+////             TODO: 9/19/2015 fix this
+////            add the view to the parent of the collection container(list/grid)
+//            final ViewGroup parent = (ViewGroup) defaultEmptyView.getParent();
+//            parent.addView(emptyView, 0, defaultEmptyView.getLayoutParams());
+//            parent.removeView(defaultEmptyView);
         }
+        ((TextView) defaultEmptyView).setText(((TextView) emptyView).getText());
+        emptyView = defaultEmptyView;
         if (interactionListener.preferredContainer() == ContainerType.LIST) {
             listContainer.setEmptyView(emptyView);
             listContainer.setOnItemClickListener(interactionListener);
@@ -98,15 +101,16 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
             ((ViewGroup) view).removeView(listContainer);
         }
         if (interactionListener.filter() != null) {
-            filterView.setVisibility(View.VISIBLE);
+            filterEditText.setVisibility(View.VISIBLE);
             filterEditText.addTextChangedListener(this);
             filter = interactionListener.filter().getFilter();
         }
-        if (interactionListener.supportAddCustom()) {
-            addButton.setVisibility(View.VISIBLE);
-            addButton.setOnClickListener(this);
-        }
 
+        if (interactionListener.supportAddCustom()) {
+            addView.setVisibility(View.VISIBLE);
+            addView.setEnabled(filterEditText.getText().length() > 5);
+            addView.setOnClickListener(this);
+        }
         try {
             final String title = getArguments().getString(MainActivity.ARG_TITLE);
             if (title != null) {
@@ -134,15 +138,15 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
 
             if (interactionListener.preferredContainer().equals(ContainerType.LIST)) {
                 if (listContainer.getAdapter().getCount() > numOfMaxItems) {
-                    filterView.setVisibility(View.VISIBLE);
+                    filterEditText.setVisibility(View.VISIBLE);
                 } else {
-                    filterView.setVisibility(View.GONE);
+                    filterEditText.setVisibility(View.GONE);
                 }
             } else {
                 if (gridContainer.getAdapter().getCount() > gridContainer.getNumColumns() * numOfMaxItems) {
-                    filterView.setVisibility(View.VISIBLE);
+                    filterEditText.setVisibility(View.VISIBLE);
                 } else {
-                    filterView.setVisibility(View.GONE);
+                    filterEditText.setVisibility(View.GONE);
                 }
             }
         }
@@ -173,8 +177,9 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
     @Override
     public void afterTextChanged(Editable s) {
         if (filter != null) {
-            filter.filter(s.toString());
+            filter.filter(s);
         }
+        addView.setEnabled(s.length() > 5 && TextUtils.isDigitsOnly(s));
     }
 
 
@@ -199,6 +204,7 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
 
         void onCustomAdded(String item);
 
+//        Collection<String> selectedItems();
     }
 
     public enum ContainerType {

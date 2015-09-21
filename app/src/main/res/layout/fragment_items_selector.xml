@@ -1,41 +1,24 @@
 <com.pair.view.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="8dp"
-    tools:context="com.pair.ui.ItemsSelector">
+                            xmlns:tools="http://schemas.android.com/tools"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:orientation="vertical"
+                            android:padding="8dp"
+                            tools:context="com.pair.ui.ItemsSelector"
+                            tools:ignore="RtlHardcoded">
 
-    <com.pair.view.LinearLayout
-        android:id="@+id/ll_filter_panel"
+    <EditText
+        android:id="@+id/et_filter_input_box"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
-        android:orientation="horizontal"
-        android:visibility="gone">
-
-        <EditText
-            android:id="@+id/et_filter_input_box"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:layout_weight="0.7"
-            android:inputType="textFilter" />
-
-        <com.rey.material.widget.Button
-            android:id="@id/bt_add"
-            android:layout_width="0dp"
-            android:layout_weight="0.3"
-            android:minHeight="36dp"
-            android:layout_height="wrap_content"
-            android:background="@drawable/round_corners"
-            android:padding="2dp"
-            android:layout_marginLeft="2dp"
-            android:textColor="@color/white"
-            android:visibility="gone"
-            style="@style/FlatWaveColorButtonRippleStyle"
-            android:text="ADD" />
-    </com.pair.view.LinearLayout>
+        android:drawableLeft="@drawable/ic_action_search"
+        android:ems="10"
+        android:hint="@string/abc_search_hint"
+        android:inputType="textFilter"
+        android:visibility="gone"
+        android:textSize="@dimen/edit_text_size"
+        />
 
     <com.pair.view.FrameLayout
         android:layout_width="match_parent"
@@ -47,7 +30,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:text="Nothing to display" />
+            android:gravity="center"
+            android:textSize="@dimen/standard_text_size"
+            android:text="@string/nothing_to_display"/>
 
         <GridView
             android:id="@+id/gv_container"
@@ -56,14 +41,30 @@
             android:choiceMode="multipleChoice"
             android:columnWidth="64dp"
             android:numColumns="auto_fit"
-            android:transcriptMode="normal"
-            android:stretchMode="columnWidth" />
+            android:fadingEdge="none"
+            android:stretchMode="columnWidth"
+            android:transcriptMode="disabled"/>
 
         <ListView
             android:id="@+id/lv_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:transcriptMode="normal"
-            android:choiceMode="multipleChoice" />
+            android:fadingEdge="none"
+            android:choiceMode="multipleChoice"
+            android:divider="@null"
+            android:dividerHeight="0dp"
+            android:transcriptMode="disabled"/>
     </com.pair.view.FrameLayout>
+
+    <Button
+        android:id="@id/bt_add"
+        style="@style/FlatWaveColorButtonRippleStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="2dp"
+        android:background="@drawable/round_corners"
+        android:padding="2dp"
+        android:text="@string/add_custom"
+        android:textColor="@color/white"
+        android:visibility="gone"/>
 </com.pair.view.LinearLayout>

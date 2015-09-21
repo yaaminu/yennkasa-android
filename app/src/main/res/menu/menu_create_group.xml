@@ -1,21 +1,4 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<menu
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.pair.ui.CreateGroupActivity">
-
-    <group android:id="@+id/done_group">
-        <item
-            android:id="@+id/action_done"
-            android:title="@string/st_done"
-            app:showAsAction="always" />
-    </group>
-    <group android:id="@+id/setup">
-        <item
-            android:id="@+id/action_proceed"
-            android:title="@string/next"
-            app:showAsAction="always|withText" />
-    </group>
-    <group android:id="@+id/empty_group">
-
-    </group>
 </menu>

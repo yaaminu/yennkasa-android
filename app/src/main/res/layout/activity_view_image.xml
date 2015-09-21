@@ -23,4 +23,16 @@
         app:pv_circular="true"
         app:pv_progressMode="indeterminate"
         app:pv_progressStyle="@style/base_indeterminate_progress_stroke_white" />
+
+    <com.rey.material.widget.SnackBar
+        android:id="@+id/notification_bar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/action_bar_height"
+        android:minHeight="?attr/actionBarSize"
+        app:sb_actionText="@string/close"
+        android:visibility="gone"
+        app:sb_text="You have a new message"
+        app:sb_textColor="@color/preferred_primary_color"
+        app:sb_backgroundColor="@color/white"
+        app:sb_actionTextColor="#9f00"/>
 </com.pair.view.RelativeLayout>

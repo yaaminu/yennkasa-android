@@ -1,5 +1,6 @@
 package com.pair.ui;
 
+import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -35,7 +36,6 @@ public class MainActivity extends PairAppActivity {
     public static final String ARG_TITLE = "title";
     private static int savedPosition = MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT;
     private ViewPager pager;
-    private ToolbarManager toolbarManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,9 +45,8 @@ public class MainActivity extends PairAppActivity {
         if (notIsMainIntent()) {
             if (UserManager.getInstance().isUserVerified()) {
                 setupViews();
-                Bundle bundle = intent.getExtras();
-                bundle.putString(UsersActivity.ACTION, UsersActivity.SEND);
-                UiHelpers.pickRecipient(this, bundle);
+                intent.setComponent(new ComponentName(this, CreateMessageActivity.class));
+                startActivity(intent);
             } else {
                 UiHelpers.showErrorDialog(this, "please login/sign up first");
                 gotoSetUpActivity();
@@ -91,9 +90,9 @@ public class MainActivity extends PairAppActivity {
         }
         Toolbar toolBar = (Toolbar) findViewById(R.id.main_toolbar);
         toolBar.setTitle("");
-        toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
+        //noinspection unused
+        ToolbarManager toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         pager.setAdapter(new MyFragmentStatePagerAdapter(getSupportFragmentManager()));
-        snackBar = ((SnackBar) findViewById(R.id.notification_bar));
         tabStrip.setViewPager(pager);
     }
 
@@ -114,17 +113,11 @@ public class MainActivity extends PairAppActivity {
     protected void onResume() {
         super.onResume();
         Config.appOpen(true);
-        if (pairAppClientInterface != null) {
-            pairAppClientInterface.registerUINotifier(this);
-        }
     }
 
     @Override
     protected void onPause() {
         Config.appOpen(false);
-        if (pairAppClientInterface != null) {
-            pairAppClientInterface.unRegisterUINotifier(this);
-        }
         super.onPause();
     }
 
@@ -132,15 +125,6 @@ public class MainActivity extends PairAppActivity {
     protected void onStop() {
         savedPosition = pager.getCurrentItem();
         super.onStop();
-    }
-
-    @Override
-    protected void onBind() {
-        pairAppClientInterface.registerUINotifier(this);
-    }
-
-    @Override
-    protected void onUnbind() {
     }
 
 
@@ -207,4 +191,8 @@ public class MainActivity extends PairAppActivity {
 
     }
 
+    @Override
+    protected SnackBar getSnackBar() {
+        return ((SnackBar) findViewById(R.id.notification_bar));
+    }
 }

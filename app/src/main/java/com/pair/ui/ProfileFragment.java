@@ -28,6 +28,7 @@ import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.ScreenUtility;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
+import com.rey.material.widget.FloatingActionButton;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
@@ -75,6 +76,12 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     }
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
@@ -93,6 +100,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         exitGroupButton = view.findViewById(R.id.bt_exit_group);
         progressDialog = UiHelpers.newProgressDialog();
 
+        ((FloatingActionButton) changeDpButton2).setIcon(getResources().getDrawable(R.drawable.ic_action_camera), true);
+        ((FloatingActionButton) changeDpButton).setIcon(getResources().getDrawable(R.drawable.ic_action_picture), true);
 
         View parent = view.findViewById(R.id.tv_user_phone_group_admin);
         phoneOrAdminTitle = ((TextView) parent.findViewById(R.id.tv_title));
@@ -115,7 +124,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 Log.wtf(TAG, "invalid user id. program aborting");
                 throw new IllegalArgumentException("invalid user id");
             } else {
-                UiHelpers.showErrorDialog(getActivity(), "No such user");
+                UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), "No such user");
             }
             return null;
         }
@@ -134,6 +143,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         if (userManager.isCurrentUser(user.getUserId())) {
             //noinspection ConstantConditions
             actionBar.setTitle(R.string.you);
+            view.findViewById(R.id.user_action_panel).setVisibility(View.GONE); //we don't need this
         } else {
             //noinspection ConstantConditions
             actionBar.setTitle(user.getName());
@@ -285,16 +295,29 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         if (changingDp) {
             return;
         }
-        showProgressView();
-        changingDp = true;
         String filePath;
         if (uri.getScheme().equals("content")) {
             filePath = FileUtils.resolveContentUriToFilePath(uri);
         } else {
             filePath = uri.getPath();
         }
-        Picasso.with(getActivity()).load(new File(filePath)).resize(DP_WIDTH, DP_HEIGHT).into(displayPicture);
-        userManager.changeDp(user.getUserId(), filePath, DP_CALLBACK);
+
+        File file = new File(filePath);
+
+        if (!file.exists()) {
+            UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.invalid_image));
+        } else if (!MediaUtils.isImage(filePath)) {
+            UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.not_a_bitmap));
+        } else if (file.length() > FileUtils.ONE_MB * 8) {
+            UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.image_size_too_large));
+        } else {
+            Picasso.with(getActivity()).load(file)
+                    .placeholder(UserManager.getInstance().isGroup(user.getUserId()) ? R.drawable.group_avatar : R.drawable.user_avartar)
+                    .resize(DP_WIDTH, DP_HEIGHT).into(displayPicture);
+            showProgressView();
+            changingDp = true;
+            userManager.changeDp(user.getUserId(), filePath, DP_CALLBACK);
+        }
     }
 
     private final UserManager.CallBack DP_CALLBACK = new UserManager.CallBack() {
@@ -348,7 +371,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     break;
                 case R.id.bt_exit_group:
                     hideProgressView();
-                    UiHelpers.showErrorDialog(getActivity(), R.string.leave_group_prompt, R.string.yes, android.R.string.no, new UiHelpers.Listener() {
+                    UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), R.string.leave_group_prompt, R.string.yes, android.R.string.no, new UiHelpers.Listener() {
                         @Override
                         public void onClick() {
                             leaveGroup();

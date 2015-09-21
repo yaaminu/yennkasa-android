@@ -44,7 +44,7 @@ public class ErrorCenter {
      * @param errorId      a unique identifier for this error. this is useful if a component needs to update
      *                     a particular error or cancel it at all..
      * @param errorMessage the message to be shown to the user
-     * @param timeout      when the message should the message must be considered stale. can't be less than 10000 (10 seconds)
+     * @param timeout      when the message should be considered stale. can't be less than 10000 (10 seconds)
      *                     the timeout is only relevant when there is no visible activity. if there is one it will
      *                     be ignored
      * @see {@link #reportError(String, String)} if you don't want to timeout the error.
@@ -93,8 +93,8 @@ public class ErrorCenter {
     }
 
     /**
-     * register a new error shower. We don't hold a strong reference to the argument so
-     * you may not pass an anonymous instances.
+     * register a new error shower. We don't hold a strong reference to the object so
+     * you may not pass an anonymous instance.
      *
      * @param errorShower the error shower to register, may not be null
      * @throws IllegalArgumentException if null is passed
@@ -111,10 +111,12 @@ public class ErrorCenter {
      * @param errorShower the error shower to unregister
      */
     public static synchronized void unRegisterErrorShower(ErrorShower errorShower) {
-        ErrorShower ourErrorShower = ErrorCenter.errorShower.get();
-        if (ourErrorShower != null && ourErrorShower == errorShower) {
-            ErrorCenter.errorShower.clear();
-            ErrorCenter.errorShower = null;
+        if (ErrorCenter.errorShower != null) {
+            ErrorShower ourErrorShower = ErrorCenter.errorShower.get();
+            if (ourErrorShower != null && ourErrorShower == errorShower) {
+                ErrorCenter.errorShower.clear();
+                ErrorCenter.errorShower = null;
+            }
         }
     }
 
@@ -125,7 +127,7 @@ public class ErrorCenter {
      * the {@link NavigationManager} calls this method automatically anytime an {@link Activity}
      * reports itself as resumed.
      *
-     * @throws IllegalStateException when the called from a thread other than the main Thread.
+     * @throws IllegalStateException when  called from a thread other than the main Thread.
      */
     public static void showPendingError() {
         ThreadUtils.ensureMain();

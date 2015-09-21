@@ -123,6 +123,10 @@ public class ParseClient implements UserApiV2, FileApi {
                 gcmRegId = user.getGcmRegId(),
                 country = user.getCountry();
 
+        if (true) {
+            notifyCallback(callback, null, user);
+            return;
+        }
         try {
             ParseObject existing = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, _id).getFirst();
             if (existing != null) {
@@ -198,6 +202,14 @@ public class ParseClient implements UserApiV2, FileApi {
     @Override
     public void logIn(final User user, final Callback<User> callback) {
         L.d(TAG, "logging in user: " + user.getUserId());
+        if (true) {
+            User copy = User.copy(user);
+            copy.setName("@unnamed");
+            copy.setType(User.TYPE_NORMAL_USER);
+            copy.setDP("avarta_empty");
+            notifyCallback(callback, null, copy);
+            return;
+        }
         EXECUTOR.submit(new Runnable() {
             @Override
             public void run() {
@@ -335,6 +347,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     @Override
     public void createGroup(@Field("createdBy") final String by, @Field("name") final String name, @Field("starters") final Collection<String> members, final Callback<User> response) {
+
         EXECUTOR.submit(new Runnable() {
             public void run() {
                 doCreateGroup(by, name, members, response);
@@ -346,6 +359,12 @@ public class ParseClient implements UserApiV2, FileApi {
         try {
             if (members.size() < 3) {
                 notifyCallback(response, new Exception("A group must start with at least 3 or more members"), null);
+                return;
+            }
+            //ensure group does not exist
+            ParseObject group = makeParseQuery(GROUP_CLASS_NAME).whereEqualTo(FIELD_ID, name + "@" + by).getFirst();
+            if (group != null) {
+                notifyCallback(response, new Exception("Group already exists"), null);
                 return;
             }
             final ParseObject admin = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, by).getFirst();
@@ -425,7 +444,7 @@ public class ParseClient implements UserApiV2, FileApi {
     }
 
     private void doAddMembersToGroup(@Path(Message.FIELD_ID) String id, @Field(User.FIELD_MEMBERS) Collection<String> members, Callback<HttpResponse> response) {
-        if (members.size() > 0) {
+        if (members.size() <= 0) {
             notifyCallback(response, new Exception("at least one member is required"), new HttpResponse(400, " bad request"));
             return;
         }
@@ -488,6 +507,10 @@ public class ParseClient implements UserApiV2, FileApi {
 
     @Override
     public void verifyUser(@Path("id") final String userId, @Field("token") final String token, final Callback<HttpResponse> callback) {
+        if (true) {
+            notifyCallback(callback, null, new HttpResponse(200, "user verified successfully"));
+            return;
+        }
         EXECUTOR.submit(new Runnable() {
             public void run() {
                 doVerifyUser(userId, token, callback);

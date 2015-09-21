@@ -20,9 +20,8 @@
              take it off and see the outcome
              -->
             <TextView
-                android:id="@+id/tv_message_content"
+                android:id="@+id/tv_log_message"
                 style="@style/message_outgoing"
-                android:maxWidth="@dimen/out_going_message_max_width"
                 android:text="hi"/>
 
             <ImageView

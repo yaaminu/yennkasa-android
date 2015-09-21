@@ -24,6 +24,7 @@ import com.rey.material.app.DialogFragment;
 public class VerificationFragment extends Fragment {
     private static final String TAG = VerificationFragment.class.getSimpleName();
     DialogFragment progressDialog;
+    private EditText etVerification;
 
     public VerificationFragment() {
         // Required empty public constructor
@@ -59,7 +60,7 @@ public class VerificationFragment extends Fragment {
                             startActivity(new Intent(getActivity(), MainActivity.class));
                             getActivity().finish();
                         } else {
-                            ErrorCenter.reportError(TAG,e.getMessage());
+                            ErrorCenter.reportError(TAG, e.getMessage());
                         }
                     }
                 });
@@ -74,20 +75,21 @@ public class VerificationFragment extends Fragment {
         view.findViewById(R.id.bt_verify).setOnClickListener(listener);
         view.findViewById(R.id.bt_resend_token).setOnClickListener(listener);
         view.findViewById(R.id.tv_back_to_login).setOnClickListener(listener);
+        etVerification = ((EditText) view.findViewById(R.id.et_verification));
         progressDialog = UiHelpers.newProgressDialog();
         return view;
     }
 
     private void doVerifyUser() {
-        @SuppressWarnings("ConstantConditions") EditText et = ((EditText) getView().findViewById(R.id.et_verification));
-        final String code = et.getText().toString();
-        et.setText("");
+        final String code = etVerification.getText().toString();
+        etVerification.setText("");
         if (TextUtils.isEmpty(code)) {
-            UiHelpers.showErrorDialog(getActivity(), getString(R.string.token_required));
+            UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.token_required));
         } else {
             progressDialog.show(getFragmentManager(), null);
             UserManager.getInstance().verifyUser(code, callBack);
         }
+
     }
 
     private void resendToken() {
@@ -99,7 +101,7 @@ public class VerificationFragment extends Fragment {
                 if (e == null) {
                     completeSetUp();
                 } else {
-                    ErrorCenter.reportError(TAG,e.getMessage());
+                    ErrorCenter.reportError(TAG, e.getMessage());
                 }
             }
         });
@@ -115,7 +117,7 @@ public class VerificationFragment extends Fragment {
                 if ((message == null) || (message.isEmpty())) {
                     message = "an unknown error occurred";
                 }
-                ErrorCenter.reportError(TAG,message);
+                ErrorCenter.reportError(TAG, message);
             }
         }
     };

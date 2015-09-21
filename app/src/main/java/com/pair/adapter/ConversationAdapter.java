@@ -56,19 +56,12 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         User peer = getPeer(conversation.getPeerId());
         String peerName = peer.getName();
         holder.peerName.setText(peerName);
-        DPLoader.load(context,peer.getUserId(), peer.getDP())
+        DPLoader.load(context, peer.getUserId(), peer.getDP())
                 .error(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .placeholder(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .resize(150, 150)
                 .into(holder.senderAvatar);
 
-        long now = new Date().getTime();
-        long then = conversation.getLastActiveTime().getTime();
-        CharSequence formattedDate;
-
-        long ONE_MINUTE = 60000;
-        formattedDate = ((now - then) < ONE_MINUTE) ? context.getString(R.string.now) : getRelativeTimeSpanString(then, now, MINUTE_IN_MILLIS);
-        holder.dateLastActive.setText(formattedDate);
 
         Message message = conversation.getLastMessage();
         StringBuilder summary = new StringBuilder();
@@ -76,6 +69,14 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
             summary.append(context.getString(R.string.no_message));
             holder.dateLastActive.setText("");
         } else {
+            long now = new Date().getTime();
+            long then = message.getDateComposed().getTime();
+            CharSequence formattedDate;
+
+            long ONE_MINUTE = 60000;
+            formattedDate = ((now - then) < ONE_MINUTE) ? context.getString(R.string.now) : getRelativeTimeSpanString(then, now, MINUTE_IN_MILLIS);
+            holder.dateLastActive.setText(formattedDate);
+
             if (UserManager.getInstance().isGroup(conversation.getPeerId())) {
                 if (Message.isOutGoing(message)) {
                     summary.append(context.getString(R.string.you)).append(":  ");

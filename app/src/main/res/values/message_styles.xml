@@ -7,9 +7,9 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:maxWidth">@dimen/message_text_item_max_width</item>
         <item name="android:textSize">@dimen/message_text_size</item>
-        <item name="android:paddingLeft">8dp</item>
-        <item name="android:paddingRight">8dp</item>
-        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingLeft">@dimen/message_padding</item>
+        <item name="android:paddingRight">@dimen/message_padding</item>
+        <item name="android:paddingTop">@dimen/what_ever_name_dp</item>
         <item name="android:paddingBottom">2dp</item>
         <item name="android:autoLink">all</item>
     </style>
@@ -41,7 +41,7 @@
         <item name="android:layout_below">@id/fl_message_body_view</item>
         <item name="android:singleLine">true</item>
         <item name="android:textColor">@color/white</item>
-        <item name="android:textSize">12sp</item>
+        <item name="android:textSize">@dimen/standard_text_size_small</item>
     </style>
 
     <style name="message_incoming_date" parent="base_date_style">

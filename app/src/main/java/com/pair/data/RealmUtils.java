@@ -12,6 +12,7 @@ import java.util.Date;
 
 import io.realm.Realm;
 import io.realm.RealmList;
+import io.realm.RealmResults;
 
 /**
  * @author Null-Pointer on 6/10/2015.
@@ -33,16 +34,34 @@ public class RealmUtils {
 //            if (TextUtils.isEmpty(user.getDP()))
 //                user.setDP("avatar_empty");
 //        }
-//        //try {
-////            User user = User.copy(UserManager.getInstance().getCurrentUser());
-////            for(int i=0; i<20;i++) {
-////                user.setUserId((2348033557792L + i) + "");
-////                user.setName("New user " + i);
-////                realm.copyToRealm(user);
-////            }
-////        } catch (Exception e) {
-//
-//        //    }
+        try {
+            User user = User.copy(UserManager.getInstance().getCurrentUser());
+            for (int i = 0; i < 20; i++) {
+                user.setUserId((2348033557792L + i) + "");
+                user.setName("New user " + i);
+                realm.copyToRealm(user);
+            }
+        } catch (Exception e) {
+
+        }
+        try {
+            User group = User.copy(UserManager.getInstance().getCurrentUser());
+            for (int i = 0; i < 20; i++) {
+                group.setUserId("groupName@" + "0" + (204441060L + i));
+                group.setName("New user " + i);
+                group.setType(User.TYPE_GROUP);
+                group = realm.copyToRealm(group);
+                group.setAdmin(realm.where(User.class).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP).findFirst());
+                group.setMembers(new RealmList<User>());
+                RealmResults<User> all = realm.where(User.class).notEqualTo(User.FIELD_TYPE, User.TYPE_NORMAL_USER).findAll();
+                for (User user : all) {
+                    group.getMembers().add(user);
+                }
+                realm.copyToRealm(group);
+            }
+        } catch (Exception e) {
+
+        }
         realm.commitTransaction();
         realm.close();
     }

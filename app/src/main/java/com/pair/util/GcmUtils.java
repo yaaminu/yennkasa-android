@@ -11,10 +11,10 @@ import android.util.Log;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.pair.pairapp.BuildConfig;
 
 import java.io.IOException;
 
-import app.test.com.utils.BuildConfig;
 
 /**
  * @author by Null-Pointer on 5/27/2015.

@@ -42,12 +42,16 @@ public class Message extends RealmObject {
             STATE_SEEN = 0x3ec,
             STATE_SEND_FAILED = 0x3ed;
 
-    public static final int TYPE_TEXT_MESSAGE = 0x3ee,
-            TYPE_BIN_MESSAGE = 0x3ef,
-            TYPE_PICTURE_MESSAGE = 0x3f0,
-            TYPE_VIDEO_MESSAGE = 0x3f1,
-            TYPE_DATE_MESSAGE = 0x3f2,
-            TYPE_TYPING_MESSAGE = 0x3f3;
+    /***********************************
+     * the order of these fields i.e. TYPE_* is relevant to some components for sorting purposes
+     * make sure you don't change the order
+     */
+    public static final int TYPE_TEXT_MESSAGE = 0x3ee, //don't touch me!
+            TYPE_BIN_MESSAGE = 0x3ef,  //don't touch me!
+            TYPE_PICTURE_MESSAGE = 0x3f0,  //don't touch me!
+            TYPE_VIDEO_MESSAGE = 0x3f1, //don't touch me!
+            TYPE_DATE_MESSAGE = 0x3f2, //don't touch me!
+            TYPE_TYPING_MESSAGE = 0x3f3; //don't touch me!
     private static final String TAG = Message.class.getSimpleName();
 
     public static final String FIELD_ID = "id",
@@ -56,7 +60,8 @@ public class Message extends RealmObject {
             FIELD_TYPE = "type",
             FIELD_STATE = "state",
             FIELD_DATE_COMPOSED = "dateComposed",
-            FIELD_MESSAGE_BODY = "messageBody";
+            FIELD_MESSAGE_BODY = "messageBody",
+            FIELD_NANO_TIME = "nanoTime";
     @PrimaryKey
     private String id;
 
@@ -66,6 +71,7 @@ public class Message extends RealmObject {
     private Date dateComposed;
     private int state;
     private int type;
+    private long nanoTime;
 
     /**
      * you are strongly advised to use the factory {@link Message#makeNew}
@@ -74,20 +80,28 @@ public class Message extends RealmObject {
     public Message() {
     } //required no-arg c'tor;
 
-    /**
-     * @param message the message to be used as the basis of the new clone
-     * @see {@link #copy}
-     * @deprecated use {@link #copy}instead
-     */
-    @Deprecated
-    public Message(Message message) {
-        this.from = message.getFrom();
-        this.to = message.getTo();
-        this.id = message.getId();
-        this.type = message.getType();
-        this.dateComposed = message.getDateComposed();
-        this.messageBody = message.getMessageBody();
-        this.state = message.getState();
+//    /**
+//     * @param mesdsage the message to be used as the basis of the new clone
+//     * @see {@link #copy}
+//     * @deprecated use {@link #copy}instead
+//     */
+//    @Deprecated
+//    public Message(Message message) {
+//        this.from = message.getFrom();
+//        this.to = message.getTo();
+//        this.id = message.getId();
+//        this.type = message.getType();
+//        this.dateComposed = message.getDateComposed();
+//        this.messageBody = message.getMessageBody();
+//        this.state = message.getState();
+//    }
+
+    public long getNanoTime() {
+        return this.nanoTime;
+    }
+
+    public void setNanoTime(long nanoTime) {
+        this.nanoTime = nanoTime;
     }
 
     public void setType(int type) {
@@ -292,6 +306,7 @@ public class Message extends RealmObject {
         message.setState(Message.STATE_PENDING);
         message.setType(type);
         message.setTo(to);
+        message.setNanoTime(System.nanoTime());
         return message;
     }
 
@@ -335,6 +350,7 @@ public class Message extends RealmObject {
         clone.setType(message.getType());
         clone.setMessageBody(message.getMessageBody());
         clone.setState(message.getState());
+        clone.setNanoTime(message.getNanoTime());
         return clone;
     }
 

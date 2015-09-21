@@ -12,7 +12,7 @@
         android:singleLine="true"
         android:ellipsize="end"
         android:textColor="#000"
-        android:textSize="18sp" />
+        android:textSize="@dimen/edit_text_size"/>
 
     <TextView
         android:id="@+id/tv_subtitle"
@@ -23,5 +23,5 @@
         android:ellipsize="end"
         android:singleLine="true"
         android:layout_alignLeft="@+id/tv_title"
-        android:textSize="14sp" />
+        android:textSize="@dimen/standard_text_size"/>
 </com.pair.view.RelativeLayout>

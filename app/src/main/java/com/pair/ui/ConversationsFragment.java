@@ -57,7 +57,8 @@ public class ConversationsFragment extends ListFragment {
         actionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                UiHelpers.pickRecipient(getActivity());
+                UiHelpers.gotoCreateMessageActivity((PairAppBaseActivity) getActivity());
+
             }
         });
         setListAdapter(adapter);
@@ -111,7 +112,7 @@ public class ConversationsFragment extends ListFragment {
             @Override
             public void onDismiss(ListView listView, final int[] reverseSortedPositions) {
                 final Conversation deleted = deleteConversation(reverseSortedPositions);
-                UiHelpers.showErrorDialog(getActivity(), R.string.sure_you_want_to_delete_conversation, R.string.yes, R.string.no, new UiHelpers.Listener() {
+                UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), R.string.sure_you_want_to_delete_conversation, R.string.yes, R.string.no, new UiHelpers.Listener() {
                     @Override
                     public void onClick() {
                         cleanMessages(deleted);

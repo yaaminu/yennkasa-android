@@ -13,17 +13,20 @@
         app:cardElevation="4dp">
 
         <TextView
-            android:id="@+id/tv_message_content"
+            android:id="@+id/tv_log_message"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
-            android:maxWidth="@dimen/date_message_max_width"
-            android:padding="@dimen/date_message_padding"
+            android:paddingTop="@dimen/date_message_paddingTop"
+            android:paddingLeft="@dimen/date_message_paddingSides"
+            android:paddingRight="@dimen/date_message_paddingSides"
+            android:paddingBottom="@dimen/date_message_paddingTop"
             android:text="2/2/2015"
             android:background="#0000"
             android:textColor="@color/title_gray"
-            android:textSize="@dimen/date_message_text_size" />
+            android:textSize="@dimen/log_message_text_size"
+            />
     </android.support.v7.widget.CardView>
 
 </com.pair.view.RelativeLayout>

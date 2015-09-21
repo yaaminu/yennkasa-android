@@ -2,19 +2,19 @@ package com.pair.ui;
 
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.widget.ImageView;
 
 import com.pair.pairapp.R;
 import com.pair.util.ScreenUtility;
 import com.pair.util.UiHelpers;
+import com.rey.material.widget.SnackBar;
 import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
 
-public class ImageViewer extends PairAppBaseActivity {
+public class ImageViewer extends PairAppActivity {
     private ImageView imageView;
     private Picasso picasso;
     private int WIDTH, HEIGHT;
@@ -31,6 +31,11 @@ public class ImageViewer extends PairAppBaseActivity {
         imageView = (android.widget.ImageView) findViewById(R.id.imageView);
         picasso = Picasso.with(this);
         showImage();
+    }
+
+    @Override
+    protected SnackBar getSnackBar() {
+        return ((SnackBar) findViewById(R.id.notification_bar));
     }
 
     private void showImage() {
