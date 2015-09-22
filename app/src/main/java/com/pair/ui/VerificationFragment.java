@@ -1,7 +1,6 @@
 package com.pair.ui;
 
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
@@ -49,23 +48,7 @@ public class VerificationFragment extends Fragment {
 
     private void doGoBackToLogin() {
         progressDialog.show(getFragmentManager(), null);
-        UserManager.getInstance().reset(new UserManager.CallBack() {
-            @Override
-            public void done(final Exception e) {
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        progressDialog.dismiss();
-                        if (e == null) {
-                            startActivity(new Intent(getActivity(), MainActivity.class));
-                            getActivity().finish();
-                        } else {
-                            ErrorCenter.reportError(TAG, e.getMessage());
-                        }
-                    }
-                });
-            }
-        });
+        UserManager.getInstance().reset(callBack);
     }
 
     @Override
@@ -94,22 +77,16 @@ public class VerificationFragment extends Fragment {
 
     private void resendToken() {
         progressDialog.show(getFragmentManager(), null);
-        UserManager.getInstance().resendToken(new UserManager.CallBack() {
-            @Override
-            public void done(Exception e) {
-                progressDialog.dismiss();
-                if (e == null) {
-                    completeSetUp();
-                } else {
-                    ErrorCenter.reportError(TAG, e.getMessage());
-                }
-            }
-        });
+        UserManager.getInstance().resendToken(callBack);
     }
 
     private UserManager.CallBack callBack = new UserManager.CallBack() {
         public void done(Exception e) {
-            progressDialog.dismiss();
+            try {
+                progressDialog.dismiss();
+            } catch (Exception ignored) {
+
+            }
             if (e == null) {
                 completeSetUp();
             } else {
@@ -124,8 +101,7 @@ public class VerificationFragment extends Fragment {
 
     private void completeSetUp() {
         PairApp.enableComponents();
-        ContactSyncService.start(getActivity());
-        startActivity(new Intent(getActivity(), MainActivity.class));
-        getActivity().finish();
+        ContactSyncService.startIfRequired(getActivity());
+        UiHelpers.gotoMainActivity((PairAppBaseActivity) getActivity());
     }
 }

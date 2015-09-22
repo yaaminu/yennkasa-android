@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
@@ -275,7 +274,6 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
             View view = super.getView(position, convertView, parent);
             if (UserManager.getInstance().isCurrentUser(getItem(position).getUserId())) {
                 ((TextView) view.findViewById(R.id.tv_user_name)).setText(R.string.you);
-                view.findViewById(R.id.tv_user_status).setVisibility(View.GONE);
             }
 
             return view;

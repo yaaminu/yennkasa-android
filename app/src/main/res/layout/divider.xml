@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <View xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:tools="http://schemas.android.com/tools"
       android:paddingTop="2dp"
       android:background="@color/light_gray"
       android:layout_width="match_parent"
-      android:layout_height="@dimen/inbox_preferred_list_item_divider_height"/>
+      android:layout_marginStart="@dimen/thumbnail_width"
+      android:layout_marginLeft="@dimen/thumbnail_width"
+      android:layout_height="@dimen/inbox_preferred_list_item_divider_height"
+      tools:ignore="RtlSymmetry"/>

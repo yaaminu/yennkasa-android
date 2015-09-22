@@ -156,13 +156,28 @@
     <string name="invalid_image">Invalid image</string>
     <string name="not_a_bitmap">Not a bitmap</string>
     <string name="add_custom">Add custom number</string>
-    <string name="add_custom_number">You can add other users who are not in your contacts by adding their numbers directly</string>
+    <string name="add_custom_number">You can add other users who are not in your contacts by adding their numbers directly.\n They only have to be registered members of PairApp. It\'s that simple! :-)</string>
     <string name="title_activity_create_message">New Message</string>
-
-    <string name="hello_world">Hello world!</string>
     <string name="message_box_hint">message here…</string>
     <string name="st_group_name_hit">Name, e.g Brothers From One Hood</string>
     <string name="content_description_remove_attachment">remove attachment</string>
     <string name="send_to">Send to…</string>
     <string name="file_not_found">can\'t forward, file not found</string>
+    <string name="unknown">Unknown</string>
+    <string name="no_contact_on_pairapp_notice">Listen,You currently don\'t have anyone in your \
+        contacts who uses PairApp.\n\n Quickly invite them to have a nice chat experience</string>
+    <string name="no_contact_on_pairapp_notice_cap">LISTEN, YOU CURRENTLY DON\'T HAVE ANYONE IN YOUR CONTACTS USING PAIRAPP,\n\n QUICKLY INVITE THEM FOR A NICE CHAT EXPERIENCE</string>
+    <string name="search_or_add_custom">Search or Add custom number</string>
+    <string name="title_activity_login_signup_prompt">@string/app_name</string>
+    <string name="added_custom_notice_toast">Number added successfully. click \'done\' when you are done</string>
+    <string name="group_minimum_notice">A group can start with minimum of 3 ( including you ) members</string>
+    <string name="user_adding_him_her_self_notice">You will be a member automatically after creating this group</string>
+    <string name="duplicate_number_notice">This number has already been added</string>
+    <string name="duplicate_group_member">This user is already a member</string>
+    <string name="you_add_already_a_member">You are already a member</string>
+    <string name="group_name_ends_with_no_letter">Group names can only end with a letter</string>
+    <string name="group_name_starts_with_non_letter">Group names can only start with a letter</string>
+    <string name="group_name_too_long">Group names can not be less than 30 letters</string>
+    <string name="group_name_too_short">Group names can not be less than 5 letters</string>
+    <string name="add_number_in_text_box_create_group_invite_members">Would you like to add the number in the text box before proceeding?</string>
 </resources>

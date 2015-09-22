@@ -105,7 +105,7 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         actionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ContactSyncService.start(getActivity());
+                ContactSyncService.startIfRequired(getActivity());
             }
         });
         return view;

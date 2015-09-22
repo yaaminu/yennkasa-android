@@ -8,7 +8,7 @@ import android.widget.ListView;
 import com.pair.data.User;
 import com.pair.pairapp.R;
 import com.pair.ui.PairAppBaseActivity;
-import com.rey.material.widget.CheckBox;
+import com.pair.view.CheckBox;
 
 import java.util.Set;
 

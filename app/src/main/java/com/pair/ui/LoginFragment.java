@@ -1,7 +1,6 @@
 package com.pair.ui;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -147,9 +146,8 @@ public class LoginFragment extends Fragment {
             });
             if (e == null) {
                 PairApp.enableComponents();
-                ContactSyncService.start(Config.getApplicationContext());
-                startActivity(new Intent(getActivity(), MainActivity.class));
-                getActivity().finish();
+                ContactSyncService.startIfRequired(Config.getApplicationContext());
+                UiHelpers.gotoMainActivity((PairAppBaseActivity) getActivity());
             } else {
                 String message = e.getMessage();
                 if ((message == null) || (message.isEmpty())) {

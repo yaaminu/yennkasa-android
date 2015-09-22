@@ -61,7 +61,7 @@ public class ContactSyncService extends IntentService {
         manager.syncContacts(onlyNumbers);
     }
 
-    public static void start(Context context) {
+    public static void startIfRequired(Context context) {
         if(!UserManager.getInstance().isUserVerified()){
             return;
         }

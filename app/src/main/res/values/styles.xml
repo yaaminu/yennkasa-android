@@ -69,7 +69,7 @@
 
     <!-- Progress Style -->
 
-    <style name="CircularProgressDrawableStyle" parent="Material.Drawable.CircularProgress" />
+    <style name="CircularProgressDrawableStyle" parent="Material.Drawable.CircularProgress"/>
 
     <style name="ColorsCircularProgressDrawableStyle" parent="Material.Drawable.CircularProgress">
         <item name="cpd_strokeColors">@array/progress_colors</item>
@@ -203,7 +203,7 @@
 
     <!-- Switch Style -->
 
-    <style name="RadioButtonDrawable" parent="Material.Drawable.RadioButton" />
+    <style name="RadioButtonDrawable" parent="Material.Drawable.RadioButton"/>
 
     <style name="CheckBoxDrawable" parent="Material.Drawable.CheckBox"></style>
 
@@ -346,6 +346,7 @@
         <item name="android:scaleType">fitCenter</item>
         <item name="android:layout_weight">1</item>
     </style>
+
 
     <dimen name="profile_fragment_round_icons_padding">8dp</dimen>
     <dimen name="tab_pager_indicator_height">4dp</dimen>

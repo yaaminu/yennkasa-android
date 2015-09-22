@@ -54,7 +54,7 @@
         android:text="@string/st_offline"
         android:visibility="gone"/>
 
-    <com.rey.material.widget.CheckBox
+    <com.pair.view.CheckBox
         android:id="@+id/cb_checked"
         style="@style/CheckBoxDrawable"
         android:layout_width="wrap_content"
@@ -70,6 +70,8 @@
         android:layout_alignLeft="@+id/tv_user_phone_group_admin"
         android:layout_alignParentBottom="true"
         android:layout_alignStart="@+id/tv_user_phone_group_admin"
+        android:layout_marginEnd="@dimen/divider_right_offset"
+        android:layout_marginRight="@dimen/divider_right_offset"
         android:layout_marginTop="4dp"/>
 
 </com.pair.view.RelativeLayout>

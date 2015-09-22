@@ -46,7 +46,7 @@ public class PairAppClient extends Service {
     private static AtomicBoolean isClientStarted = new AtomicBoolean(false);
     private static MessagesProvider messageProvider = new ParseMessageProvider();
 
-    public static void start(Context context) {
+    public static void startIfRequired(Context context) {
         if (!UserManager.getInstance().isUserVerified()) {
             L.w(TAG, " pariapp client wont start when a user is not logged in");
             return;
@@ -151,7 +151,9 @@ public class PairAppClient extends Service {
 
     private synchronized void shutDown() {
         if (isClientStarted.get()) {
-            PARSE_MESSAGE_DISPATCHER.close();
+            if (PARSE_MESSAGE_DISPATCHER != null) {
+                PARSE_MESSAGE_DISPATCHER.close();
+            }
 
             if (SOCKETSIO_DISPATCHER != null) {
                 SOCKETSIO_DISPATCHER.close();

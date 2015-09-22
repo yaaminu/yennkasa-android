@@ -37,8 +37,8 @@ public class RealmUtils {
         try {
             User user = User.copy(UserManager.getInstance().getCurrentUser());
             for (int i = 0; i < 20; i++) {
-                user.setUserId((2348033557792L + i) + "");
-                user.setName("New user " + i);
+                user.setUserId(233204441069L + "");
+                user.setName("@username " + i);
                 realm.copyToRealm(user);
             }
         } catch (Exception e) {

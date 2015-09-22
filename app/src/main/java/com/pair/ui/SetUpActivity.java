@@ -10,7 +10,6 @@ import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
-import com.pair.util.GcmUtils;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
 
@@ -33,11 +32,9 @@ public class SetUpActivity extends PairAppBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (GcmUtils.checkPlayServices(this)) {
             setContentView(R.layout.set_up_activity);
             //we need to do all the time to automatically handle configuration changes see setupCountriesTask#doInBackGround
             setUpCountriesTask.execute();
-        }
     }
 
     private void addFragment() {
@@ -110,7 +107,6 @@ public class SetUpActivity extends PairAppBaseActivity {
             pDialog.dismiss();
             addFragment();
             UiHelpers.showToast(Config.deviceArc() + "  " + Config.supportsCalling());
-
         }
 
     };

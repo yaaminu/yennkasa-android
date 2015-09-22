@@ -640,7 +640,6 @@ public class UserManager {
         user.setPassword(password);
         user.setName(name);
         user.setCountry(countryIso);
-        user.setGcmRegId(gcmRegId);
         userApi.registerUser(user, new UserApiV2.Callback<User>() {
             @Override
             public void done(Exception e, User backEndUser) {

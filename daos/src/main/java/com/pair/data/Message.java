@@ -60,8 +60,7 @@ public class Message extends RealmObject {
             FIELD_TYPE = "type",
             FIELD_STATE = "state",
             FIELD_DATE_COMPOSED = "dateComposed",
-            FIELD_MESSAGE_BODY = "messageBody",
-            FIELD_NANO_TIME = "nanoTime";
+            FIELD_MESSAGE_BODY = "messageBody";
     @PrimaryKey
     private String id;
 
@@ -71,7 +70,6 @@ public class Message extends RealmObject {
     private Date dateComposed;
     private int state;
     private int type;
-    private long nanoTime;
 
     /**
      * you are strongly advised to use the factory {@link Message#makeNew}
@@ -95,14 +93,6 @@ public class Message extends RealmObject {
 //        this.messageBody = message.getMessageBody();
 //        this.state = message.getState();
 //    }
-
-    public long getNanoTime() {
-        return this.nanoTime;
-    }
-
-    public void setNanoTime(long nanoTime) {
-        this.nanoTime = nanoTime;
-    }
 
     public void setType(int type) {
         this.type = type;
@@ -306,7 +296,6 @@ public class Message extends RealmObject {
         message.setState(Message.STATE_PENDING);
         message.setType(type);
         message.setTo(to);
-        message.setNanoTime(System.nanoTime());
         return message;
     }
 
@@ -350,7 +339,6 @@ public class Message extends RealmObject {
         clone.setType(message.getType());
         clone.setMessageBody(message.getMessageBody());
         clone.setState(message.getState());
-        clone.setNanoTime(message.getNanoTime());
         return clone;
     }
 

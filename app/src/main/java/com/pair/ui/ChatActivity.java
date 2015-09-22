@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.util.Pair;
@@ -19,17 +20,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
 import android.widget.EditText;
-import android.widget.Filterable;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.pair.Errors.ErrorCenter;
 import com.pair.Errors.PairappException;
 import com.pair.adapter.MessagesAdapter;
-import com.pair.adapter.MultiChoiceUsersAdapter;
-import com.pair.adapter.UsersAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
@@ -41,19 +38,15 @@ import com.pair.util.LiveCenter;
 import com.pair.util.SimpleDateUtil;
 import com.pair.util.UiHelpers;
 import com.pair.util.ViewUtils;
-import com.rey.material.app.DialogFragment;
+import com.pair.view.SwipeDismissListViewTouchListener;
 import com.rey.material.app.ToolbarManager;
-import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.FloatingActionButton;
 import com.rey.material.widget.SnackBar;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
-import io.realm.RealmQuery;
 import io.realm.RealmResults;
 
 import static com.pair.data.Message.TYPE_DATE_MESSAGE;
@@ -62,7 +55,7 @@ import static com.pair.data.Message.TYPE_TEXT_MESSAGE;
 
 @SuppressWarnings({"ConstantConditions", "FieldCanBeLocal"})
 public class ChatActivity extends MessageActivity implements View.OnClickListener,
-        AbsListView.OnScrollListener, TextWatcher, ItemsSelector.OnFragmentInteractionListener, RealmChangeListener, LiveCenter.TypingListener {
+        AbsListView.OnScrollListener, TextWatcher, RealmChangeListener, LiveCenter.TypingListener {
     private static final String TAG = ChatActivity.class.getSimpleName();
     public static final String EXTRA_PEER_ID = "peer id";
     private static final int ADD_USERS_REQUEST = 0x5;
@@ -80,12 +73,14 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     private Toolbar toolBar;
     private ToolbarManager toolbarManager;
+    private AbsListView.OnScrollListener swipeScrollListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
         toolBar = (Toolbar) findViewById(R.id.main_toolbar);
+        toolBar.setOnClickListener(this);
         toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         realm = Realm.getInstance(this);
         messageEt = ((EditText) findViewById(R.id.et_message));
@@ -106,7 +101,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             peer.setHasCall(false); //we cannot tell for now
             peer.setDP(peerId);
             peer.setName(parts[0]);
-            peer.setStatus(getString(R.string.st_offline));
             realm.commitTransaction();
             UserManager.getInstance().refreshUserDetails(peerId); //async
         }
@@ -129,14 +123,17 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private void setUpListView() {
         adapter = new MessagesAdapter(this, messages, true);
         messagesListView.setAdapter(adapter);
-//        SwipeDismissListViewTouchListener touchListener = new SwipeDismissListViewTouchListener(messagesListView, new SwipeDismissListViewTouchListener.OnDismissCallback() {
-//            @Override
-//            public void onDismiss(ListView listView, int[] reverseSortedPositions) {
-//                deleteMessage(reverseSortedPositions[0]);
-//            }
-//        });
-//        messagesListView.setOnTouchListener(touchListener);
-//        final AbsListView.OnScrollListener listener = touchListener.makeScrollListener();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            SwipeDismissListViewTouchListener touchListener = new SwipeDismissListViewTouchListener(messagesListView, new SwipeDismissListViewTouchListener.OnDismissCallback() {
+                @Override
+                public void onDismiss(ListView listView, int[] reverseSortedPositions) {
+                    deleteMessage(reverseSortedPositions[0]);
+                }
+            });
+            messagesListView.setOnTouchListener(touchListener);
+            swipeScrollListener = touchListener.makeScrollListener();
+        }
+
         messagesListView.setOnScrollListener(this);
         registerForContextMenu(messagesListView);
         messagesListView.setSelection(messages.size()); //move to last
@@ -158,11 +155,8 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         if (menu != null && menu.size() > 0) { //required for toolbar to behave on older platforms <=10
             User mainUser = UserManager.getInstance().getCurrentUser();
             menu.findItem(R.id.action_invite_friends)
-                    .setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().getUserId().equals(mainUser.getUserId()) && !isForwarding);
+                    .setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().getUserId().equals(mainUser.getUserId()));
             menu.findItem(R.id.action_view_profile).setTitle((peer.getType() == User.TYPE_GROUP) ? R.string.st_group_info : R.string.st_view_profile);
-            menu.findItem(R.id.action_view_profile).setVisible(!isForwarding);
-            menu.findItem(R.id.action_done).setVisible(isForwarding && !recipientsIds.isEmpty());
-            menu.findItem(R.id.action_attach).setVisible(!isForwarding);
         }
         return super.onPrepareOptionsMenu(menu);
     }
@@ -177,24 +171,13 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == android.R.id.home) {
-            if (isForwarding) {
-                isForwarding = false;
-                goBack();
-                return true;
-            }
-            return super.onOptionsItemSelected(item);
-        } else if (id == R.id.action_invite_friends) {
+        if (id == R.id.action_invite_friends) {
             Intent intent = new Intent(this, InviteActivity.class);
             intent.putExtra(InviteActivity.EXTRA_GROUP_ID, peer.getUserId());
             startActivityForResult(intent, ADD_USERS_REQUEST);
             return true;
         } else if (id == R.id.action_view_profile) {
             UiHelpers.gotoProfileActivity(this, peer.getUserId());
-            return true;
-        } else if (id == R.id.action_done) {
-            forwardToAll(recipientsIds);
-            goBack();
             return true;
         } else if (id == R.id.action_attach) {
             UiHelpers.attach(this);
@@ -203,17 +186,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         return super.onOptionsItemSelected(item);
     }
 
-    boolean wasDateHeaderVisible = false;
-
-    private void goBack() {
-        isForwarding = false;
-        getSupportFragmentManager().popBackStackImmediate();
-        getSupportActionBar().setTitle(peer.getName());
-        findViewById(R.id.ll_list_view_container).setVisibility(View.VISIBLE);
-        dateHeaderViewParent.setVisibility(wasDateHeaderVisible ? View.VISIBLE : View.GONE);
-        getSupportActionBar().setSubtitle(peer.getStatus());
-        supportInvalidateOptionsMenu();
-    }
 
     @Override
     protected void onResume() {
@@ -225,6 +197,8 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             LiveCenter.trackUser(peer.getUserId());
             LiveCenter.notifyInChatRoom(peer.getUserId());
             LiveCenter.registerTypingListener(this);
+        } else {
+            getSupportActionBar().setSubtitle(R.string.group);
         }
     }
 
@@ -246,11 +220,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-    @Override
     protected SnackBar getSnackBar() {
         return (SnackBar) findViewById(R.id.notification_bar);
     }
@@ -268,6 +237,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             case R.id.iv_send:
                 sendTextMessage();
                 break;
+            case R.id.main_toolbar:
+                UiHelpers.gotoProfileActivity(this, peer.getUserId());
+                break;
             default:
                 throw new AssertionError();
         }
@@ -284,12 +256,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     }
 
-
-    private User getCurrentUser() {
-        return UserManager.getInstance().getCurrentUser();
-    }
-
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode != RESULT_OK) {
@@ -304,14 +270,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         }
     }
 
-    private void forwardToAll(final Set<String> recipients) {
-        final DialogFragment fragment = UiHelpers.newProgressDialog();
-        fragment.show(getSupportFragmentManager(), null);
-        if (recipients == null || recipients.isEmpty()) return;
-        sendMessage(selectedMessage.getMessageBody(), recipients, selectedMessage.getType());
-        fragment.dismiss();
-    }
-
     @Override
     public void onScrollStateChanged(AbsListView view, int scrollState) {
 
@@ -319,6 +277,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     @Override
     public void onScroll(AbsListView view, final int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+        if (swipeScrollListener != null) {
+            swipeScrollListener.onScroll(view, firstVisibleItem, visibleItemCount, totalItemCount);
+        }
         if (firstVisibleItem == 0) { //first/second item
             dateHeaderViewParent.setVisibility(View.GONE);// TODO: 8/7/2015 fade instead of hiding right away
             return;
@@ -335,14 +296,16 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             //if we've got here then somehow a  session was not set up correctly.
             // do we have to clean that mess or
             //do this: throw new IllegalStateException("impossible");
-//            ensureDateSet();
         }
     }
-
     private static int cursor = -1; //static so that it can resist activity restarts.
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        User user = realm.where(User.class).beginGroup().notEqualTo(User.FIELD_ID, UserManager.getMainUserId()).notEqualTo(User.FIELD_ID, peer.getUserId()).endGroup().findFirst();
+        boolean can4ward = user != null; //no other user apart from peer. cannot forward so lets hide it
+
+
         AdapterView.AdapterContextMenuInfo info = ((AdapterView.AdapterContextMenuInfo) menuInfo);
         selectedMessage = messages.get(info.position);
         cursor = info.position;
@@ -351,6 +314,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         if (selectedMessage.getType() != Message.TYPE_DATE_MESSAGE && selectedMessage.getType() != Message.TYPE_TYPING_MESSAGE) {
             getMenuInflater().inflate(R.menu.message_context_menu, menu);
             menu.findItem(R.id.action_copy).setVisible(selectedMessage.getType() == TYPE_TEXT_MESSAGE);
+            menu.findItem(R.id.action_forward).setVisible(can4ward);
             if (selectedMessage.getType() != TYPE_TEXT_MESSAGE) {
                 menu.findItem(R.id.action_forward).setVisible(new File(selectedMessage.getMessageBody()).exists());
             }
@@ -407,10 +371,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                 wasLastForTheDay) {
             previousToCurrMessage.removeFromRealm(); //this will be a date message
         }
-        realm.commitTransaction(); //let the new changes reflect
-
         if (currConversation.getLastMessage() == null) {
-            realm.beginTransaction();
             int allMessages = messages.size() - 1;
             for (int i = allMessages; i > 0/*0th is the date*/; i--) {
                 final Message cursor = messages.get(i);
@@ -419,8 +380,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                     break;
                 }
             }
-            realm.commitTransaction();
         }
+        realm.commitTransaction();
+        messagesListView.requestLayout();
+        adapter.notifyDataSetChanged();
     }
 
     /**
@@ -497,84 +460,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         } else {
             super.notifyUser(this, message, sender);
         }
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (isForwarding) {
-            isForwarding = false;
-            goBack();
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    private boolean isForwarding = false;
-
-    private RealmQuery<User> getRecipients() {
-        return realm.where(User.class)
-                .notEqualTo(User.FIELD_ID, getCurrentUser().getUserId())
-                .notEqualTo(User.FIELD_ID, peer.getUserId());
-    }
-
-    private UsersAdapter recipientsAdapter;
-
-    @Override
-    public BaseAdapter getAdapter() {
-        final RealmResults<User> results = getRecipients().findAllSorted(User.FIELD_NAME);
-        recipientsIds.clear();
-        recipientsAdapter = new MultiChoiceUsersAdapter(this, realm, results, recipientsIds, R.id.cb_checked) {
-            @Override
-            protected RealmQuery<User> getOriginalQuery() {
-                return getRecipients();
-            }
-        };
-        return recipientsAdapter;
-    }
-
-    @Override
-    public Filterable filter() {
-        return recipientsAdapter;
-    }
-
-    @Override
-    public ItemsSelector.ContainerType preferredContainer() {
-        return ItemsSelector.ContainerType.LIST;
-    }
-
-    @Override
-    public View emptyView() {
-        return null;
-    }
-
-    @Override
-    public boolean multiChoice() {
-        return true;
-    }
-
-    @Override
-    public boolean supportAddCustom() {
-        return false;
-    }
-
-    @Override
-    public void onCustomAdded(String item) {
-
-    }
-
-    private static Set<String> recipientsIds = new HashSet<>();
-
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        final UsersAdapter adapter = (UsersAdapter) parent.getAdapter();
-        User user = adapter.getItem(position);
-        if (((ListView) parent).isItemChecked(position)) {
-            recipientsIds.add(user.getUserId());
-        } else {
-            recipientsIds.remove(user.getUserId());
-        }
-        ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(recipientsIds.contains(adapter.getItem(position).getUserId()));
-        supportInvalidateOptionsMenu();
     }
 
     @Override

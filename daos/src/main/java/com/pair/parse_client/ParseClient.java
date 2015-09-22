@@ -120,7 +120,6 @@ public class ParseClient implements UserApiV2, FileApi {
         String _id = user.getUserId(),
                 name = user.getName(),
                 password = user.getPassword(),
-                gcmRegId = user.getGcmRegId(),
                 country = user.getCountry();
 
         if (true) {
@@ -146,7 +145,7 @@ public class ParseClient implements UserApiV2, FileApi {
             //continue
         }
         try {
-            ensureFieldsFilled(_id, name, password, gcmRegId, country);
+            ensureFieldsFilled(_id, name, password, country);
 
             //should we hash passwords?
             String verificationToken = genVerificationToken();
@@ -646,7 +645,6 @@ public class ParseClient implements UserApiV2, FileApi {
         user.setDP(object.getString(FIELD_DP));
         user.setLastActivity(object.getDate(FIELD_LAST_ACTIVITY).getTime());
         user.setCountry(object.getString(FIELD_COUNTRY));
-        user.setStatus(object.getString(FIELD_STATUS));
         user.setHasCall(object.getBoolean(FIELD_HAS_CALL));
         return user;
     }

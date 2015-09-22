@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.util.Pair;
 import android.util.Log;
@@ -24,6 +25,7 @@ import com.pair.ui.ImageViewer;
 import com.pair.ui.MainActivity;
 import com.pair.ui.PairAppBaseActivity;
 import com.pair.ui.ProfileActivity;
+import com.pair.ui.SetUpActivity;
 import com.pair.ui.UsersActivity;
 import com.rey.material.app.Dialog;
 import com.rey.material.app.DialogFragment;
@@ -32,6 +34,7 @@ import com.rey.material.app.SimpleDialog;
 import java.io.File;
 import java.io.IOException;
 
+import static android.widget.Toast.LENGTH_LONG;
 import static android.widget.Toast.LENGTH_SHORT;
 
 /**
@@ -47,8 +50,20 @@ public class UiHelpers {
     }
 
     public static void showPlainOlDialog(Context context, String message) {
+        showPlainOlDialog(context, message, null);
+    }
+
+    public static void showPlainOlDialog(Context context, String message, boolean cancelable) {
+        showPlainOlDialog(context, message, null, cancelable);
+    }
+
+    public static void showPlainOlDialog(Context context, String message, DialogInterface.OnClickListener listener) {
+        showPlainOlDialog(context, message, listener, true);
+    }
+
+    public static void showPlainOlDialog(Context context, String message, DialogInterface.OnClickListener listener, boolean cancelable) {
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setMessage(message).setTitle(R.string.error).setPositiveButton(android.R.string.ok, null).create().show();
+        builder.setMessage(message).setTitle(R.string.error).setCancelable(cancelable).setPositiveButton(android.R.string.ok, listener).create().show();
     }
 
     public static void showErrorDialog(PairAppBaseActivity context, String message) {
@@ -61,6 +76,12 @@ public class UiHelpers {
 
     public static void showErrorDialog(PairAppBaseActivity context, String message, final Listener listener) {
         SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
+            @Override
+            protected void onBuildDone(Dialog dialog) {
+                super.onBuildDone(dialog);
+                dialog.setCancelable(false);
+            }
+
             @Override
             public void onPositiveActionClicked(DialogFragment fragment) {
                 if (listener != null) {
@@ -93,6 +114,13 @@ public class UiHelpers {
                                        String okText, String noText, final Listener ok, final Listener no) {
 
         SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
+            @Override
+            protected void onBuildDone(Dialog dialog) {
+                super.onBuildDone(dialog);
+                dialog.setCancelable(false);
+                dialog.setCanceledOnTouchOutside(false);
+            }
+
             @Override
             public void onPositiveActionClicked(DialogFragment fragment) {
                 if (ok != null) {
@@ -152,24 +180,31 @@ public class UiHelpers {
     }
 
 
-    public static void promptAndExit(final PairAppBaseActivity activity) {
+    public static void promptAndExit(final PairAppBaseActivity toFinish) {
         final UiHelpers.Listener cancelProgress = new UiHelpers.Listener() {
             @Override
             public void onClick() {
-                activity.finish();
+                toFinish.finish();
             }
         };
-        UiHelpers.showErrorDialog(activity, R.string.st_sure_to_exit, R.string.i_know, android.R.string.no, cancelProgress, null);
+        UiHelpers.showErrorDialog(toFinish, R.string.st_sure_to_exit, R.string.i_know, android.R.string.no, cancelProgress, null);
     }
 
-    @SuppressWarnings("ConstantConditions")
     public static void showToast(String message) {
-        Toast.makeText(Config.getApplicationContext(), message, LENGTH_SHORT).show();
+        showToast(message, Toast.LENGTH_SHORT);
     }
 
+
     @SuppressWarnings("ConstantConditions")
+    public static void showToast(String message, int duration) {
+        if (duration != LENGTH_LONG && duration != LENGTH_SHORT) {
+            duration = LENGTH_SHORT;
+        }
+        Toast.makeText(Config.getApplicationContext(), message, duration).show();
+    }
+
     public static void showToast(int message) {
-        Toast.makeText(Config.getApplicationContext(), message, LENGTH_SHORT).show();
+        showToast(getString(Config.getApplicationContext(), message));
     }
 
     public static void enterChatRoom(Context context, String peerId) {
@@ -230,6 +265,24 @@ public class UiHelpers {
         } else {
             throw new PairappException("File not found", MessageUtils.ERROR_FILE_DOES_NOT_EXIST);
         }
+    }
+
+    public static void gotoMainActivity(PairAppBaseActivity activity) {
+        final Intent intent = new Intent(activity, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        }
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        activity.startActivity(intent);
+    }
+
+    public static void gotoSetUpActivity(PairAppBaseActivity context) {
+        Intent intent = new Intent(context, SetUpActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+        context.finish();
     }
 
     public interface Listener {

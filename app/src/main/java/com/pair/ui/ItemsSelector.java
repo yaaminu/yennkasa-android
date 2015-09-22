@@ -126,6 +126,11 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
     @Override
     public void onResume() {
         super.onResume();
+        onSetupFilterEditText();
+    }
+
+    private void onSetupFilterEditText() {
+        final long itemCount = interactionListener.getAdapter().getCount();
         if (!interactionListener.supportAddCustom()) { //show the filterEditText if clients support adding custom
             //we will not show the filter if the content fit on the screen without the need to scroll
             float height = new ScreenUtility(getActivity()).getPixelsHeight();
@@ -137,17 +142,25 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
             int numOfMaxItems = ((int) (actualHeight / preferredListItemHeight));
 
             if (interactionListener.preferredContainer().equals(ContainerType.LIST)) {
-                if (listContainer.getAdapter().getCount() > numOfMaxItems) {
+                if (itemCount > numOfMaxItems) {
                     filterEditText.setVisibility(View.VISIBLE);
                 } else {
                     filterEditText.setVisibility(View.GONE);
                 }
             } else {
-                if (gridContainer.getAdapter().getCount() > gridContainer.getNumColumns() * numOfMaxItems) {
+                if (itemCount > gridContainer.getNumColumns() * numOfMaxItems) {
                     filterEditText.setVisibility(View.VISIBLE);
                 } else {
                     filterEditText.setVisibility(View.GONE);
                 }
+            }
+        } else {
+            if (itemCount > 0) {
+                filterEditText.setHint(R.string.search_or_add_custom);
+                filterEditText.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_action_search, 0, 0, 0);
+            } else {
+                filterEditText.setHint(R.string.add_custom);
+                filterEditText.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
             }
         }
     }
@@ -179,6 +192,7 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
         if (filter != null) {
             filter.filter(s);
         }
+        onSetupFilterEditText();
         addView.setEnabled(s.length() > 5 && TextUtils.isDigitsOnly(s));
     }
 

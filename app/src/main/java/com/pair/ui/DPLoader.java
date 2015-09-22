@@ -64,7 +64,7 @@ public class DPLoader {
             if (e == null) {
                 L.d(TAG, "successfully changed/refreshed dp of user with id: "+ userId);
             } else {
-                Log.e(TAG, "dp change unsuccessful with reason: " + e.getMessage(), e.getCause());
+                Log.e(TAG, "dp change unsuccessful with reason: " + e.getMessage());
             }
         }
     }

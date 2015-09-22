@@ -72,6 +72,9 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/inbox_preferred_list_item_divider_height"
         android:layout_alignLeft="@+id/ll_conversation_desc"
+        android:layout_alignStart="@+id/ll_conversation_desc"
+        android:layout_marginEnd="@dimen/divider_right_offset"
+        android:layout_marginRight="@dimen/divider_right_offset"
         android:layout_alignParentBottom="true"
         />
 </com.pair.view.RelativeLayout>

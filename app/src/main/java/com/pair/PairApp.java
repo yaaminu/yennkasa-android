@@ -14,7 +14,6 @@ import com.pair.messenger.PairAppClient;
 import com.pair.pairapp.R;
 import com.pair.parse_client.ParseClient;
 import com.pair.util.Config;
-import com.pair.workers.BootReceiver;
 import com.pair.workers.ContactSyncService;
 
 /**
@@ -45,7 +44,7 @@ public class PairApp extends Application {
     }
 
     public static void enableComponents() {
-        enableComponent(BootReceiver.class);
+//        enableComponent(BootReceiver.class);
         enableComponent(ContactSyncService.class);
         enableComponent(PairAppClient.class);
         enableComponent(MessageProcessor.class);
@@ -53,7 +52,7 @@ public class PairApp extends Application {
     }
 
     public static void disableComponents() {
-        disableComponent(BootReceiver.class);
+//        disableComponent(BootReceiver.class);
         disableComponent(ContactSyncService.class);
         disableComponent(PairAppClient.class);
         disableComponent(MessageProcessor.class);
@@ -81,8 +80,8 @@ public class PairApp extends Application {
         Config.init(this);
         ParseClient.init(this);
         if (UserManager.getInstance().isUserVerified()) {
-            PairAppClient.start(this);
-            ContactSyncService.start(this);
+            PairAppClient.startIfRequired(this);
+            ContactSyncService.startIfRequired(this);
         }
     }
 

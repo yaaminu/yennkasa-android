@@ -59,6 +59,8 @@
         android:layout_alignLeft="@+id/tv_user_phone_group_admin"
         android:layout_alignStart="@+id/tv_user_phone_group_admin"
         android:layout_alignParentBottom="true"
+        android:layout_marginEnd="@dimen/divider_right_offset"
+        android:layout_marginRight="@dimen/divider_right_offset"
         android:layout_marginTop="4dp"/>
 
     <com.rey.material.widget.Button

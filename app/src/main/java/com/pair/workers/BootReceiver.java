@@ -19,8 +19,8 @@ public class BootReceiver extends ParseBroadcastReceiver {
         Log.i(TAG, "booting complete");
         super.onReceive(context, intent);
         if (UserManager.getInstance().isUserVerified()) {
-            PairAppClient.start(context);
-            ContactSyncService.start(context);
+            PairAppClient.startIfRequired(context);
+            ContactSyncService.startIfRequired(context);
         }
     }
 }

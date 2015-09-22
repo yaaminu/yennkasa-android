@@ -13,7 +13,6 @@ import static com.pair.data.Message.FIELD_DATE_COMPOSED;
 import static com.pair.data.Message.FIELD_FROM;
 import static com.pair.data.Message.FIELD_ID;
 import static com.pair.data.Message.FIELD_MESSAGE_BODY;
-import static com.pair.data.Message.FIELD_NANO_TIME;
 import static com.pair.data.Message.FIELD_STATE;
 import static com.pair.data.Message.FIELD_TO;
 import static com.pair.data.Message.FIELD_TYPE;
@@ -33,7 +32,6 @@ public class MessageJsonAdapter implements BaseJsonAdapter<Message> {
         obj.addProperty(FIELD_MESSAGE_BODY, message.getMessageBody());
         obj.addProperty(FIELD_DATE_COMPOSED, message.getDateComposed().getTime());
         obj.addProperty(FIELD_TYPE, message.getType());
-        obj.addProperty(FIELD_NANO_TIME, message.getNanoTime());
         return obj;
     }
 
@@ -47,7 +45,6 @@ public class MessageJsonAdapter implements BaseJsonAdapter<Message> {
             obj.put(FIELD_MESSAGE_BODY, message.getMessageBody());
             obj.put(FIELD_DATE_COMPOSED, message.getDateComposed().getTime());
             obj.put(FIELD_TYPE, message.getType());
-            obj.put(FIELD_NANO_TIME, message.getNanoTime());
             return obj;
         } catch (JSONException impossible) {
             throw new RuntimeException("impossible");
@@ -74,7 +71,6 @@ public class MessageJsonAdapter implements BaseJsonAdapter<Message> {
             message.setDateComposed(new Date(obj.getLong(FIELD_DATE_COMPOSED)));
             message.setType(obj.getInt(FIELD_TYPE));
             message.setMessageBody(obj.getString(FIELD_MESSAGE_BODY));
-            message.setNanoTime(obj.getLong(FIELD_NANO_TIME));
             return message;
         } catch (JSONException e) {
             throw new IllegalArgumentException(e.getCause());

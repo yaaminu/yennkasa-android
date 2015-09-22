@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Process;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
@@ -47,13 +48,14 @@ public class ContactsManager {
     }
 
     public void findAllContacts(final Filter<Contact> filter, final Comparator<Contact> comparator, final FindCallback<List<Contact>> callback) {
-        final Handler handler = new Handler();
+        //noinspection ConstantConditions
+        final Handler handler = new Handler(Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper());
         new Thread(new Runnable() {
             @Override
             public void run() {
                 android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
                 final List<Contact> contacts = findAllContactsSync(filter, comparator);
-                //run on the thread on which clients originally called us
+                //run on the thread on which clients originally called us if possible
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -79,7 +81,7 @@ public class ContactsManager {
         //noinspection TryFinallyCanBeTryWithResources
         try {
             Set<Contact> contacts = new HashSet<>();
-            String phoneNumber, name, status, DP, standardisedNumber = "";
+            String phoneNumber, name, DP, standardisedNumber = "";
             User user;
             boolean isRegistered;
             while (cursor.moveToNext()) {
@@ -103,18 +105,16 @@ public class ContactsManager {
                         .findFirst();
                 if (user != null) {
                     isRegistered = true;
-                    status = user.getStatus();
                     DP = user.getDP();
                 } else {
                     isRegistered = false;
-                    status = "";
                     DP = "";
                 }
                 name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
                 if (TextUtils.isEmpty(name)) { //some users can store numbers with no name; am a victim :-P
                     name = phoneNumber.substring(0, 4);
                 }
-                ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, status, isRegistered, DP, standardisedNumber);
+                ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, isRegistered, DP, standardisedNumber);
                 if ((filter != null) && !filter.accept(contact)) {
                     continue;
                 }
@@ -137,11 +137,10 @@ public class ContactsManager {
     }
 
     public static final class Contact {
-        public final String name, phoneNumber, status, DP, numberInIEE_Format;
+        public final String name, phoneNumber, DP, numberInIEE_Format;
         public final boolean isRegisteredUser;
 
-        public Contact(String name, String phoneNumber, String status, boolean isRegisteredUser, String DP, String standardisedPhoneNumber) {
-            Context context = Config.getApplicationContext();
+        public Contact(String name, String phoneNumber, boolean isRegisteredUser, String DP, String standardisedPhoneNumber) {
             if (TextUtils.isEmpty(name)) {
                 name = "unknown";
             }
@@ -149,9 +148,6 @@ public class ContactsManager {
                 throw new IllegalArgumentException("invalid phone number");
             }
 
-            if (TextUtils.isEmpty(status)) {
-                status = "offline";
-            }
             if (isRegisteredUser && standardisedPhoneNumber == null) {
                 throw new IllegalArgumentException("standardised number is null");
             }
@@ -159,7 +155,6 @@ public class ContactsManager {
             this.name = name;
             this.phoneNumber = phoneNumber;
             this.isRegisteredUser = isRegisteredUser;
-            this.status = status;
             this.DP = DP;
         }
 
@@ -167,16 +162,16 @@ public class ContactsManager {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
+
             Contact contact = (Contact) o;
-            return (isRegisteredUser == contact.isRegisteredUser) && name.equals(contact.name) && phoneNumber.equals(contact.phoneNumber);
+
+            return numberInIEE_Format.equals(contact.numberInIEE_Format);
 
         }
 
         @Override
         public int hashCode() {
-            int result = name.hashCode();
-            result = 31 * result + phoneNumber.hashCode();
-            return result;
+            return numberInIEE_Format.hashCode();
         }
 
         @Override

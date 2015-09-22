@@ -52,4 +52,5 @@
     <dimen name="log_message_text_size">20sp</dimen>
     <dimen name="menu_item_text_size">36sp</dimen>
     <dimen name="multiline_text_box_max_height">120dp</dimen>
+    <dimen name="divider_right_offset">16dp</dimen>
 </resources>

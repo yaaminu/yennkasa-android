@@ -1,16 +1,19 @@
 package com.pair.ui;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
 import android.support.v4.util.Pair;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -37,8 +40,8 @@ import com.pair.util.FileUtils;
 import com.pair.util.MediaUtils;
 import com.pair.util.UiHelpers;
 import com.pair.util.ViewUtils;
+import com.pair.view.CheckBox;
 import com.rey.material.app.ToolbarManager;
-import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.SnackBar;
 
 import java.io.File;
@@ -84,14 +87,19 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
         attachemtPreview.setOnClickListener(this);
         cancelAttachment.setOnClickListener(this);
         toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
+
+
+        selectedItems.clear();
+        realm = User.Realm(this);
+        adapter = new CustomAdapter();
         final Intent intent = getIntent();
-        final String intentAction = intent.getAction();
 
         final String title = intent.getStringExtra(MainActivity.ARG_TITLE);
         if (!TextUtils.isEmpty(title)) {
-            String preferred = getIntent().getStringExtra(MainActivity.ARG_TITLE);
-            setActionBArTitle(TextUtils.isEmpty(preferred) ? getString(R.string.send_to) : preferred);
+            setActionBArTitle(title);
         }
+
+        final String intentAction = intent.getAction();
         if (intentAction != null) {
             //we need to validate everything without making an assumption. input coming from other programs
             //cannot be trusted. simple!.
@@ -102,19 +110,19 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
                     messageEt.setText(message);
                     isAttaching = false;
                     isNotDefaultIntent = true;
-                    String preferred = getIntent().getStringExtra(MainActivity.ARG_TITLE);
-                    setActionBArTitle(TextUtils.isEmpty(preferred) ? getString(R.string.send_to) : preferred);
                     ViewUtils.hideViews(attachemtPreview);
                     ViewUtils.showViews(messageEt);
                 } else if (intent.getParcelableExtra(Intent.EXTRA_STREAM) != null) {
                     //binary message
                     //may be content uri i.e content:// style
+                    String uri;
+                    final Parcelable parcelableExtra = intent.getParcelableExtra(Intent.EXTRA_STREAM);
                     try {
-                        final Parcelable parcelableExtra = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-                        String uri = FileUtils.resolveContentUriToFilePath(((Uri) parcelableExtra));
+                        uri = FileUtils.resolveContentUriToFilePath(((Uri) parcelableExtra));
                         completeAttachIntent(uri);
-                    } catch (ClassCastException ignored) { //bad apps exist
-
+                    } catch (ClassCastException notPlayUri) { //bad apps exist
+                        uri = Uri.parse(parcelableExtra.toString()).toString();
+                        completeAttachIntent(uri);
                     }
                 } else if (intent.getData() != null) {
                     //binary message
@@ -132,11 +140,15 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
             setActionBArTitle(null);
         }
 
-        selectedItems.clear();
-        realm = User.Realm(this);
-        adapter = new CustomAdapter();
+        Fragment fragment;
+        if (adapter.getCount() >= 1) {
+            fragment = new ItemsSelector();
+        } else {
+            ViewUtils.hideViews(findViewById(R.id.cv_input_message_card_view));
+            fragment = new NoticeFragment();
+        }
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, new ItemsSelector())
+                .replace(R.id.container, fragment)
                 .commit();
 
     }
@@ -153,12 +165,15 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
             }
             try {
                 doAttach(new Pair<>(path, messageType));
-                String preferred = getIntent().getStringExtra(MainActivity.ARG_TITLE);
-                setActionBArTitle(TextUtils.isEmpty(preferred) ? getString(R.string.send_to) : preferred);
             } catch (IOException e) {
                 // TODO: 9/20/2015 handle this error well.
 //                ErrorCenter.reportError("attachCreateMessage", e.getMessage());
-                UiHelpers.showPlainOlDialog(this, e.getMessage());
+                UiHelpers.showPlainOlDialog(this, e.getMessage(), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        NavUtils.navigateUpFromSameTask(CreateMessageActivity.this);
+                    }
+                }, false);
                 ViewUtils.showViews(messageEt);
                 ViewUtils.hideViews(attachemtPreview);
                 setActionBArTitle(null);
@@ -193,26 +208,28 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         toolbarManager.onPrepareMenu();
-        menu = toolBar.getMenu();
-        if (menu != null) { //required for toolbar to behave on older platforms <=10
-            MenuItem sendMessageMenuItem = menu.findItem(R.id.action_send_message);
-            if (sendMessageMenuItem == null) {
-                sendMessageMenuItem = menu.add(0, R.id.action_send_message, 100, R.string.send);
-                sendMessageMenuItem.setIcon(R.drawable.ic_action_send_now_white);
-                MenuItemCompat.setShowAsAction(sendMessageMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
+        if (adapter.getCount() >= 1) {
+            menu = toolBar.getMenu();
+            if (menu != null) { //required for toolbar to behave on older platforms <=10
+                MenuItem sendMessageMenuItem = menu.findItem(R.id.action_send_message);
+                if (sendMessageMenuItem == null) {
+                    sendMessageMenuItem = menu.add(0, R.id.action_send_message, 100, R.string.send);
+                    sendMessageMenuItem.setIcon(R.drawable.ic_action_send_now_white);
+                    MenuItemCompat.setShowAsAction(sendMessageMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
+                }
+                sendMessageMenuItem.setVisible((!messageEt.getText().toString().isEmpty() || isAttaching)
+                        && !selectedItems.isEmpty());
+                MenuItem attachMenuItem = menu.findItem(R.id.action_attach);
+                if (attachMenuItem == null) {
+                    attachMenuItem = menu.add(0, R.id.action_attach, 100, R.string.action_attach);
+                    attachMenuItem.setIcon(R.drawable.ic_action_new_attachment_white);
+                    MenuItemCompat.setShowAsAction(attachMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
+                }
+                attachMenuItem.setVisible(!selectedItems.isEmpty() && !isAttaching && !isNotDefaultIntent);
             }
-            sendMessageMenuItem.setVisible((!messageEt.getText().toString().isEmpty() || isAttaching)
-                    && !selectedItems.isEmpty());
-            MenuItem attachMenuItem = menu.findItem(R.id.action_attach);
-            if (attachMenuItem == null) {
-                attachMenuItem = menu.add(0, R.id.action_attach, 100, R.string.action_attach);
-                attachMenuItem.setIcon(R.drawable.ic_action_new_attachment_white);
-                MenuItemCompat.setShowAsAction(attachMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
-            }
-            attachMenuItem.setVisible(!selectedItems.isEmpty() && !isAttaching && !isNotDefaultIntent);
+            return super.onPrepareOptionsMenu(menu);
         }
-        toolbarManager.notifyNavigationStateChanged();
-        return super.onPrepareOptionsMenu(menu);
+        return false; //don't show this menu
     }
 
     @Override
@@ -328,14 +345,14 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                 ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(true);
             } else {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(true);
+                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(true);
             }
         } else {
             selectedItems.remove(user.getUserId());
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                 ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(false);
             } else {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(false);
+                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(false);
             }
         }
         supportInvalidateOptionsMenu();
@@ -386,6 +403,27 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
         }
     }
 
+    @Override
+    public Spanned getNoticeText() {
+        return null;
+    }
+
+    @Override
+    public CharSequence getActionText() {
+        return null;
+    }
+
+    @Override
+    public void onAction() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra(MainActivity.DEFAULT_FRAGMENT, MainActivity.MyFragmentStatePagerAdapter.POSITION_CONTACTS_FRAGMENT);
+        NavUtils.navigateUpTo(this, intent);
+    }
+
+    @Override
+    public void onBackPressed() {
+        onAction();
+    }
 
     private class CustomAdapter extends MultiChoiceUsersAdapter {
         private CustomAdapter() {

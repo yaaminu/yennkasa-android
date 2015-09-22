@@ -1,6 +1,7 @@
 package com.pair.ui;
 
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
@@ -23,6 +24,7 @@ import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
+import com.pair.util.LiveCenter;
 import com.pair.util.MediaUtils;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.ScreenUtility;
@@ -81,6 +83,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         setHasOptionsMenu(true);
     }
 
+    @SuppressLint("CutPasteId")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -148,7 +151,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             //noinspection ConstantConditions
             actionBar.setTitle(user.getName());
             if (!User.isGroup(user)) {
-                actionBar.setSubtitle(user.getStatus());
+                actionBar.setSubtitle(LiveCenter.isOnline(user.getUserId()) ? R.string.st_online : R.string.st_offline);
             }
         }
 
@@ -441,7 +444,10 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         userManager.leaveGroup(user.getUserId(), new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
-                progressDialog.dismiss();
+                try {
+                    progressDialog.dismiss();
+                } catch (Exception ignored) {
+                }
                 if (e != null) {
                     ErrorCenter.reportError(TAG, e.getMessage());
                 } else {

@@ -34,5 +34,4 @@ dependencies {
     compile project(':daos')
     compile project(':error')
     compile project(':sockets_io_client')
-    compile files('libs/sinch-android-rtc-3.6.0.jar')
 }

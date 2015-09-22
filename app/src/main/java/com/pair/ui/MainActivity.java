@@ -13,7 +13,6 @@ import android.view.Gravity;
 import android.widget.LinearLayout;
 
 import com.pair.PairApp;
-import com.pair.data.Conversation;
 import com.pair.data.RealmUtils;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
@@ -24,13 +23,12 @@ import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
 import com.rey.material.widget.TabPageIndicator;
 
-import io.realm.Realm;
-
 /**
  * @author Null-Pointer on 6/6/2015.
  */
 public class MainActivity extends PairAppActivity {
     public static final String DEFAULT_FRAGMENT = "default_fragment";
+    public static final int PROMPT_ACTIVITY_REQUEST_CODE = 0x1;
     private static boolean cleanedMessages = false;
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final String ARG_TITLE = "title";
@@ -41,41 +39,48 @@ public class MainActivity extends PairAppActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         final Intent intent = getIntent();
+        handleIntent(intent);
+        if (!cleanedMessages) {
+            cleanedMessages = true;
+            RealmUtils.runRealmOperation(this);
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleIntent(intent);
+
+    }
+
+    private void handleIntent(Intent intent) {
         ParseAnalytics.trackAppOpenedInBackground(intent);
-        if (notIsMainIntent()) {
+        if (notIsMainIntent(intent)) {
             if (UserManager.getInstance().isUserVerified()) {
                 setupViews();
+
+                intent.putExtra(MainActivity.ARG_TITLE, getString(R.string.send_to));
                 intent.setComponent(new ComponentName(this, CreateMessageActivity.class));
                 startActivity(intent);
             } else {
-                UiHelpers.showErrorDialog(this, "please login/sign up first");
-                gotoSetUpActivity();
+//                UiHelpers.showPlainOlDialog(this, getString(R.string.login_signup_notice), new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        UiHelpers.gotoSetUpActivity(MainActivity.this);
+//                    }
+//                }, false);
+                intent = new Intent(this, LoginSignupPrompt.class);
+                startActivityForResult(intent, PROMPT_ACTIVITY_REQUEST_CODE);
             }
         } else if (UserManager.getInstance().isUserVerified()) {
             //noinspection ConstantConditions
             setupViews();
-            final int default_fragment = intent.getIntExtra(DEFAULT_FRAGMENT, MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT);
-            if (default_fragment != MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT) {
-                savedPosition = Math.abs(savedPosition);
-                savedPosition = default_fragment > pager.getAdapter().getCount() - 1
-                        ? MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT
-                        : default_fragment;
-            }
-            if (default_fragment == MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT) {
-                Realm realm = Conversation.Realm(this);
-                if (realm.where(Conversation.class).count() < 1) {
-                    savedPosition = MyFragmentStatePagerAdapter.POSITION_CONTACTS_FRAGMENT;
-                }
-                realm.close();
-            }
-            UiHelpers.showToast(Config.deviceArc());
+            final int default_fragment = intent.getIntExtra(DEFAULT_FRAGMENT, savedPosition);
+            savedPosition = Math.min(default_fragment, MyFragmentStatePagerAdapter.POSITION_SETTINGS_FRAGMENT);
+            savedPosition = Math.max(MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT, default_fragment);
         } else {
             PairApp.disableComponents();
-            gotoSetUpActivity();
-        }
-        if (!cleanedMessages) {
-            cleanedMessages = true;
-            RealmUtils.runRealmOperation(this);
+            UiHelpers.gotoSetUpActivity(MainActivity.this);
         }
     }
 
@@ -96,37 +101,53 @@ public class MainActivity extends PairAppActivity {
         tabStrip.setViewPager(pager);
     }
 
-    private boolean notIsMainIntent() {
-        String action = getIntent().getAction();
-        return action != null && !action.equals(Intent.ACTION_MAIN);
+    private boolean notIsMainIntent(Intent intent) {
+        return intent != null && intent.getAction() != null && !intent.getAction().equals(Intent.ACTION_MAIN);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        if (savedPosition != -1) {
-            setPagePosition(savedPosition);
+        if (UserManager.getInstance().isUserVerified()) {
+            if (savedPosition != -1) {
+                setPagePosition(savedPosition);
+            }
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Config.appOpen(true);
+        if (UserManager.getInstance().isUserVerified()) {
+            Config.appOpen(true);
+        }
     }
 
     @Override
     protected void onPause() {
-        Config.appOpen(false);
+        if (UserManager.getInstance().isUserVerified()) {
+            Config.appOpen(false);
+        }
         super.onPause();
     }
 
     @Override
     protected void onStop() {
-        savedPosition = pager.getCurrentItem();
+        if (UserManager.getInstance().isUserVerified()) {
+            savedPosition = pager.getCurrentItem();
+        }
         super.onStop();
     }
 
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == PROMPT_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
+            UiHelpers.gotoSetUpActivity(this);
+            return;
+        }
+        finish();
+    }
 
     void setPagePosition(int newPosition) {
         if (newPosition < 0 || newPosition >= pager.getAdapter().getCount() || pager.getCurrentItem() == newPosition) {
@@ -134,12 +155,6 @@ public class MainActivity extends PairAppActivity {
         } else {
             pager.setCurrentItem(newPosition, true);
         }
-    }
-
-    private void gotoSetUpActivity() {
-        Intent intent = new Intent(this, SetUpActivity.class);
-        startActivity(intent);
-        finish();
     }
 
     //package private

@@ -14,6 +14,7 @@ import android.util.Base64;
 import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -115,16 +116,24 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         holder = (ViewHolder) convertView.getTag();
 
         Date messageDateComposed = message.getDateComposed();
+        View.OnTouchListener touchListener = new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return true;
+            }
+        };
         if (Message.isDateMessage(message)) {
             // TODO: 9/18/2015 improve this
             String formattedDate = SimpleDateUtil.formatDateRage(context, messageDateComposed);
             holder.textMessage.setText(formattedDate);
+            convertView.setOnTouchListener(touchListener);
             return convertView;
         } else if (Message.isTypingMessage(message)) {
+            convertView.setOnTouchListener(touchListener);
             return convertView;
         }
 
-        //hide all views and show if it's required. live will be easier this way
+        //hide all views and show only if it's required. life will be easier this way
         holder.preview.setVisibility(View.GONE);
         holder.progress.setVisibility(View.GONE);
         holder.playOrDownload.setVisibility(View.GONE);
@@ -140,7 +149,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             if (message.getState() == Message.STATE_PENDING) {
                 holder.dateComposed.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0); //reset every thing
                 holder.dateComposed.setMinHeight(height);
-                holder.dateComposed.setText(Html.fromHtml("<h1><b>...</b></h1>") + dateComposed);
+                holder.dateComposed.setText(Html.fromHtml("<h1><b>...</b></h1>") + dateComposed, TextView.BufferType.SPANNABLE);
             } else {
                 holder.dateComposed.setText(dateComposed);
                 holder.dateComposed.setCompoundDrawablesWithIntrinsicBounds(messageStates.get(message.getState()), 0, 0, 0);

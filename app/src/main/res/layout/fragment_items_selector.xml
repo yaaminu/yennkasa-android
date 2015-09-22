@@ -54,17 +54,22 @@
             android:divider="@null"
             android:dividerHeight="0dp"
             android:transcriptMode="disabled"/>
-    </com.pair.view.FrameLayout>
 
-    <Button
-        android:id="@id/bt_add"
-        style="@style/FlatWaveColorButtonRippleStyle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="2dp"
-        android:background="@drawable/round_corners"
-        android:padding="2dp"
-        android:text="@string/add_custom"
-        android:textColor="@color/white"
-        android:visibility="gone"/>
+        <Button
+            android:id="@id/bt_add"
+            style="@style/TabRippleStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:layout_marginStart="@dimen/activity_horizontal_margin"
+            android:background="@drawable/round_corners"
+            android:padding="2dp"
+            android:layout_gravity="bottom"
+            android:text="@string/add_custom"
+            android:minHeight="@dimen/action_bar_height"
+            android:textColor="@color/white"
+            android:visibility="gone"/>
+    </com.pair.view.FrameLayout>
 </com.pair.view.LinearLayout>

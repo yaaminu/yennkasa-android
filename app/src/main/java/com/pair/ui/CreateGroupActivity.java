@@ -1,8 +1,11 @@
 package com.pair.ui;
 
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -16,6 +19,7 @@ import android.widget.EditText;
 import android.widget.Filterable;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.Errors.ErrorCenter;
@@ -25,14 +29,13 @@ import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
+import com.pair.view.CheckBox;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
-import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.SnackBar;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import io.realm.Realm;
 import io.realm.RealmQuery;
@@ -99,36 +102,91 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     }
 
     private void proceedToAddMembers() {
-        String name = groupNameEt.getText().toString().trim();
-        if (TextUtils.isEmpty(name)) {
+
+        final String proposedName = groupNameEt.getText().toString().trim();
+
+        if (TextUtils.isEmpty(proposedName)) {
             // TODO: 8/5/2015 validate group name
             UiHelpers.showErrorDialog(this, getString(R.string.cant_be_empty));
             groupNameEt.requestFocus();
-        } else if (!groupNamePattern.matcher(name).matches()) {
-            UiHelpers.showErrorDialog(this, getString(R.string.group_name_format_message).toUpperCase());
-            groupNameEt.requestFocus();
-        } else if (UserManager.getInstance().isGroup(User.generateGroupId(name))) {
-            UiHelpers.showErrorDialog(this, getString(R.string.group_already_exists, name).toUpperCase());
-            groupNameEt.requestFocus();
+            return;
+        }
+        AsyncTask<Void, Void, Boolean> task = new AsyncTask<Void, Void, Boolean>() {
+            DialogFragment dialog;
+            String errorMessage, finalName;
+
+            @Override
+            protected void onPreExecute() {
+                dialog = UiHelpers.newProgressDialog(false);
+                dialog.show(getSupportFragmentManager(), "");
+                finalName = groupNameEt.getText().toString();
+                groupNameEt.setText("");
+            }
+
+            @Override
+            protected void onPostExecute(Boolean aBoolean) {
+                try {
+                    dialog.dismiss();
+                } catch (Exception ignored) {
+                }
+                if (aBoolean) {
+                    proceedToNextStage(finalName);
+                } else {
+                    UiHelpers.showErrorDialog(CreateGroupActivity.this, errorMessage);
+                    groupNameEt.requestFocus();
+                }
+            }
+
+            @Override
+            protected Boolean doInBackground(Void... params) {
+                errorMessage = null;
+                finalName = finalName.replaceAll("\\p{Space}+", " ").replaceAll("_+", "_");
+                if (finalName.length() < 5) {
+                    errorMessage = getString(R.string.group_name_too_short);
+                } else if (finalName.length() > 30) {
+                    errorMessage = getString(R.string.group_name_too_long);
+                } else if (!Character.isLetter(finalName.codePointAt(0))) {
+                    errorMessage = getString(R.string.group_name_starts_with_non_letter);
+                } else if (!Character.isLetter(finalName.codePointAt(finalName.length() - 1))) {
+                    errorMessage = getString(R.string.group_name_ends_with_no_letter);
+                } else if (UserManager.getInstance().isGroup(User.generateGroupId(finalName))) {
+                    errorMessage = getString(R.string.group_already_exists, finalName).toUpperCase();
+                }
+                return errorMessage == null;
+            }
+        };
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
         } else {
-            groupNameEt.setVisibility(View.GONE);
-            groupName = name;
-            stage = 2;
-            getSupportFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.rl_main_container, new ItemsSelector())
-                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                    .commit();
-            supportInvalidateOptionsMenu();
+            task.execute();
         }
     }
 
-    private static final Pattern groupNamePattern = Pattern.compile("^[a-zA-Z][a-zA-Z0-9_ ]{3,30}[a-zA-Z]$");
+    private void proceedToNextStage(String name) {
+        groupNameEt.setVisibility(View.GONE);
+        groupName = name;
+        stage = 2;
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.rl_main_container, new ItemsSelector())
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                .commit();
+        supportInvalidateOptionsMenu();
+    }
+
+    //pattern is locale insensitive
+//    private static final Pattern groupNamePattern = Pattern.compile("^[\\p{Alpha}][A-Za-z_\\p{Space}]{3,30}[\\p{Alpha}]$");
 
     private final UiHelpers.Listener cancelProgress = new UiHelpers.Listener() {
         @Override
         public void onClick() {
-            finish();
+            new Handler(getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    NavUtils.navigateUpFromSameTask(CreateGroupActivity.this);
+                }
+            });
         }
     };
 
@@ -157,11 +215,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
                 }
                 break;
             case 2:
-                if (selectedUsers.size() < 2) {
-                    menuItemDone.setVisibility(View.GONE);
-                } else {
-                    menuItemDone.setVisibility(View.VISIBLE);
-                }
+                menuItemDone.setVisibility(View.VISIBLE);
                 menuItemNext.setVisibility(View.GONE);
                 break;
             default:
@@ -196,13 +250,21 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     }
 
     private void completeGroupCreation() {
-        if (!selectedUsers.isEmpty()) {
+        continueProcess();
+    }
+
+    private void continueProcess() {
+        if (selectedUsers.size() >= 2) {
             final DialogFragment progressDialog = UiHelpers.newProgressDialog();
             progressDialog.show(getSupportFragmentManager(), null);
             UserManager.getInstance().createGroup(groupName, selectedUsers, new UserManager.CreateGroupCallBack() {
                 @Override
                 public void done(Exception e, String groupId) {
-                    progressDialog.dismiss();
+                    try {
+                        progressDialog.dismiss();
+                    } catch (Exception ignored) {
+
+                    }
                     if (e != null) {
                         ErrorCenter.reportError(TAG, e.getMessage());
                     } else {
@@ -210,6 +272,8 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
                     }
                 }
             });
+        } else {
+            UiHelpers.showErrorDialog(this, getString(R.string.group_minimum_notice));
         }
     }
 
@@ -228,17 +292,16 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                 ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(true);
             } else {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(true);
+                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(true);
             }
         } else {
             selectedUsers.remove(user.getUserId());
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                 ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(false);
             } else {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(false);
+                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(false);
             }
         }
-
         supportInvalidateOptionsMenu();
     }
 
@@ -283,12 +346,11 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
             final String userCountryISO = UserManager.getInstance().getUserCountryISO();
             try {
                 phoneNumber = PhoneNumberNormaliser.cleanNonDialableChars(phoneNumber);
+                phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userCountryISO);
                 if (!PhoneNumberNormaliser.isValidPhoneNumber(phoneNumber, userCountryISO)) {
                     throw new NumberParseException(NumberParseException.ErrorType.NOT_A_NUMBER, "");
                 }
-                selectedUsers.add(phoneNumber);
-                adapter.notifyDataSetChanged();
-                supportInvalidateOptionsMenu();
+                finallyAddMember(phoneNumber);
             } catch (NumberParseException e) {
                 // FIXME: 8/5/2015 show a better error message
                 UiHelpers.showErrorDialog(CreateGroupActivity.this, getString(R.string.invalid_phone_number, original));
@@ -296,6 +358,19 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         } else {
             // FIXME: 8/5/2015 show a better error message
             UiHelpers.showErrorDialog(CreateGroupActivity.this, R.string.error_field_required);
+        }
+    }
+
+    private void finallyAddMember(String phoneNumber) {
+        if (phoneNumber.equals(UserManager.getMainUserId())) {
+            UiHelpers.showErrorDialog(this, getString(R.string.user_adding_him_her_self_notice));
+        } else if (selectedUsers.contains(phoneNumber)) {
+            UiHelpers.showErrorDialog(this, getString(R.string.duplicate_number_notice));
+        } else {
+            selectedUsers.add(phoneNumber);
+            adapter.notifyDataSetChanged();
+            supportInvalidateOptionsMenu();
+            UiHelpers.showToast(getString(R.string.added_custom_notice_toast), Toast.LENGTH_LONG);
         }
     }
 

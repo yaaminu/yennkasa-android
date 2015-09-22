@@ -7,10 +7,8 @@ import android.os.Message;
 import android.util.Log;
 
 import com.github.nkzawa.emitter.Emitter;
-import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.net.sockets.SocketIoClient;
-import com.pair.pairapp.R;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,8 +16,6 @@ import org.json.JSONObject;
 import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.Set;
-
-import io.realm.Realm;
 
 /**
  * This class is the heart of all real-time events of the program.
@@ -509,18 +505,6 @@ public class LiveCenter {
 
         private void doTrackUser(String userId) {
             try {
-                Realm realm = User.Realm(Config.getApplicationContext());
-                User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
-                if (user != null) {
-                    realm.beginTransaction();
-                    if (isOnline(userId)) {
-                        user.setStatus(Config.getApplicationContext().getString(R.string.st_online));
-                    } else {
-                        user.setStatus(Config.getApplicationContext().getString(R.string.st_offline));
-                    }
-                    realm.commitTransaction();
-                }
-                realm.close();
                 JSONObject object = new JSONObject();
                 object.put(SocketIoClient.PROPERTY_TO, userId);
                 liveClient.send(SocketIoClient.TRACK_USER, object);

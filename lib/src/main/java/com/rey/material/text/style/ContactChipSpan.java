@@ -10,15 +10,11 @@ import android.graphics.Shader;
 import android.graphics.Typeface;
 import android.text.BoringLayout;
 import android.text.Layout;
-import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.style.ReplacementSpan;
 import android.util.FloatMath;
 
-/**
- * Created by Rey on 1/21/2015.
- */
 public class ContactChipSpan extends ReplacementSpan {
 
     private Paint mPaint;

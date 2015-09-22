@@ -15,7 +15,7 @@ import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.ui.DPLoader;
 import com.pair.util.PhoneNumberNormaliser;
-import com.rey.material.widget.CheckBox;
+import com.pair.view.CheckBox;
 
 import java.util.regex.Pattern;
 

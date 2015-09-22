@@ -3,6 +3,7 @@ package com.pair.ui;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
@@ -14,6 +15,7 @@ import android.widget.BaseAdapter;
 import android.widget.Filterable;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.Errors.ErrorCenter;
@@ -21,12 +23,13 @@ import com.pair.adapter.MultiChoiceUsersAdapter;
 import com.pair.adapter.UsersAdapter;
 import com.pair.data.User;
 import com.pair.data.UserManager;
+import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
+import com.pair.view.CheckBox;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
-import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.SnackBar;
 
 import java.util.HashSet;
@@ -88,6 +91,8 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
         return ((SnackBar) findViewById(R.id.notification_bar));
     }
 
+    private final Set<String> existingGroupMembers = new HashSet<>();
+
     private RealmQuery<User> prepareQuery() {
         User potentiallyGroup = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
         if (potentiallyGroup != null) {
@@ -97,11 +102,16 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
             List<User> existingMembers = potentiallyGroup.getMembers();
             for (User existingMember : existingMembers) {
                 userRealmQuery.notEqualTo(User.FIELD_ID, existingMember.getUserId());
+                existingGroupMembers.add(existingMember.getUserId());
             }
             return userRealmQuery;
         } else { //is it an anonymous group? not yet supported
-            throw new RuntimeException("anonymous groups are not supported yet");
+            if (BuildConfig.DEBUG) {
+                throw new RuntimeException("anonymous groups are not supported yet");
+            }
+            NavUtils.navigateUpFromSameTask(this);
         }
+        return realm.where(User.class).equalTo(User.FIELD_ID, " "); //empty results because we are exiting
     }
 
 //    private User createNewGroup() {
@@ -204,11 +214,24 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
             if (!PhoneNumberNormaliser.isValidPhoneNumber("+" + formattedText, userManager.getUserCountryISO())) {
                 throw new NumberParseException(NumberParseException.ErrorType.NOT_A_NUMBER, "invalid phone number");
             }
-            selectedUsers.add(formattedText);
-            usersAdapter.notifyDataSetChanged();
-            supportInvalidateOptionsMenu();
+            finallyAddNumber(formattedText);
         } catch (NumberParseException e) {
             UiHelpers.showErrorDialog(this, getString(R.string.invalid_phone_number, text));
+        }
+    }
+
+    private void finallyAddNumber(String phoneNumber) {
+        if (existingGroupMembers.contains(phoneNumber)) {
+            UiHelpers.showErrorDialog(this, getString(R.string.duplicate_group_member));
+        } else if (phoneNumber.equals(UserManager.getMainUserId())) {
+            UiHelpers.showErrorDialog(this, getString(R.string.you_add_already_a_member));
+        } else if (selectedUsers.contains(phoneNumber)) {
+            UiHelpers.showErrorDialog(this, getString(R.string.duplicate_number_notice));
+        } else {
+            selectedUsers.add(phoneNumber);
+            usersAdapter.notifyDataSetChanged();
+            supportInvalidateOptionsMenu();
+            UiHelpers.showToast(getString(R.string.added_custom_notice_toast), Toast.LENGTH_LONG);
         }
     }
 
@@ -220,14 +243,14 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                 ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(true);
             } else {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(true);
+                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(true);
             }
         } else {
             selectedUsers.remove(user.getUserId());
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                 ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(false);
             } else {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setChecked(false);
+                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(false);
             }
         }
 

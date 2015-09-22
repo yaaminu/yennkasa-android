@@ -2,7 +2,6 @@ package com.pair.util;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -23,7 +22,6 @@ public class GcmUtils {
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
     private static final String TAG = GcmUtils.class.getSimpleName();
     public static final String GCM_REG_ID = "gcmRegId";
-    private static Dialog errorDialog;
 
     public static void register(Activity context, GCMRegCallback callback) {
         String gcmRegId = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE).getString(GCM_REG_ID, null);
@@ -37,20 +35,10 @@ public class GcmUtils {
 
     public static boolean checkPlayServices(Activity context) {
         // FIXME: 8/14/2015 change this
-        if (true) {
-            return true;
-        }
+
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
         Log.i(TAG, "results code: " + resultCode);
         if (resultCode != ConnectionResult.SUCCESS && resultCode != ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED) {
-            if (GooglePlayServicesUtil.isUserRecoverableError(resultCode)) {
-                errorDialog = GooglePlayServicesUtil.getErrorDialog(resultCode, context,
-                        PLAY_SERVICES_RESOLUTION_REQUEST);
-                errorDialog.setCancelable(false);
-                errorDialog.show();
-            } else {
-                Log.i(TAG, "This device is not supported.");
-            }
             return false;
         }
         return true;

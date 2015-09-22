@@ -8,11 +8,13 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.View;
 
 import com.pair.PairApp;
 import com.pair.data.Message;
+import com.pair.data.UserManager;
 import com.pair.messenger.Notifier;
 import com.pair.messenger.PairAppClient;
 import com.pair.pairapp.R;
@@ -29,7 +31,7 @@ import io.realm.RealmChangeListener;
 /**
  * @author Null-Pointer on 8/12/2015.
  */
-public abstract class PairAppActivity extends PairAppBaseActivity implements Notifier, RealmChangeListener {
+public abstract class PairAppActivity extends PairAppBaseActivity implements Notifier, RealmChangeListener, NoticeFragment.NoticeFragmentCallback {
     static private volatile List<Pair<String, String>> recentChatList = new ArrayList<>();
     private static volatile long unReadMessages = 0;
     static private volatile Message latestMessage;
@@ -56,55 +58,70 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         }
     };
     private Realm realm;
+    private UserManager userManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setUpScreenDimensions();
-        realm = Message.REALM(this);
+        userManager = UserManager.getInstance();
+
+        if (userManager.isUserVerified()) {
+            realm = Message.REALM(this);
+        }
     }
 
 
     @Override
     protected void onStart() {
         super.onStart();
-        bind();
+        if (userManager.isUserVerified()) {
+            bind();
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        realm.addChangeListener(this);
-        snackBar = getSnackBar();
-        if (snackBar == null) {
-            throw new IllegalStateException("snack bar cannot be null");
-        }
-        if (bound) {
-            pairAppClientInterface.registerUINotifier(this);
+        if (userManager.isUserVerified()) {
+            realm.addChangeListener(this);
+            snackBar = getSnackBar();
+            if (snackBar == null) {
+                throw new IllegalStateException("snack bar cannot be null");
+            }
+            if (bound) {
+                pairAppClientInterface.registerUINotifier(this);
+            }
         }
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        realm.removeChangeListener(this);
-        if (bound) {
-            pairAppClientInterface.unRegisterUINotifier(this);
+        if (userManager.isUserVerified()) {
+            realm.removeChangeListener(this);
+            if (bound) {
+                pairAppClientInterface.unRegisterUINotifier(this);
+            }
         }
     }
 
     @Override
     protected void onStop() {
-        if (bound) {
-            unbindService(connection);
-            onUnbind();
+        if (userManager.isUserVerified()) {
+            if (bound) {
+                unbindService(connection);
+                onUnbind();
+            }
         }
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        realm.close();
+        if (userManager.isUserVerified()) {
+            realm.close();
+        }
         super.onDestroy();
     }
 
@@ -245,6 +262,21 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         } else {
             clearRecentChat();
         }
+    }
+
+    @Override
+    public CharSequence getActionText() {
+        return null;
+    }
+
+    @Override
+    public Spanned getNoticeText() {
+        return null;
+    }
+
+    @Override
+    public void onAction() {
+
     }
 
     protected void onBind() {

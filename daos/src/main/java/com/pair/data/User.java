@@ -23,20 +23,17 @@ public class User extends RealmObject {
     public static final int TYPE_NORMAL_USER = 0x3e9;
     public static final String FIELD_ID = "userId",
             FIELD_NAME = "name",
-            FIELD_STATUS = "status",
             FIELD_ADMIN = "admin",
             FIELD_MEMBERS = "members",
             FIELD_TYPE = Message.FIELD_TYPE,
             FIELD_LAST_ACTIVITY = "lastActivity",
-            FIELD_GCM_REG_ID = "gcmRegId",
-            FIELD_ACCOUNT_CREATED = "accountCreated",
             FIELD_PASSWORD = "password",
             FIELD_COUNTRY = "country",
             FIELD_HAS_CALL = "hasCall";
     @PrimaryKey
     private String userId;
 
-    private String gcmRegId, name, password, status, DP, country;
+    private String name, password, DP, country;
     private long lastActivity, accountCreated;
     private RealmList<User> members; //a group will be a user with its members represented by this field.
     private User admin; // this represents admins for a group
@@ -55,9 +52,7 @@ public class User extends RealmObject {
         if (other != null) {
             this.setUserId(other.getUserId());
             this.setAccountCreated(other.getAccountCreated());
-            this.setGcmRegId(other.getGcmRegId());
             this.setPassword(other.getPassword());
-            this.setStatus(other.getStatus());
             this.setLastActivity(other.getLastActivity());
             this.setName(other.getName());
             this.setType(other.getType());
@@ -133,13 +128,6 @@ public class User extends RealmObject {
         this.password = password;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
 
     public long getLastActivity() {
         return lastActivity;
@@ -157,13 +145,6 @@ public class User extends RealmObject {
         this.accountCreated = accountCreated;
     }
 
-    public String getGcmRegId() {
-        return gcmRegId;
-    }
-
-    public void setGcmRegId(String gcmRegId) {
-        this.gcmRegId = gcmRegId;
-    }
 
     public RealmList<User> getMembers() {
         return members;
@@ -185,9 +166,7 @@ public class User extends RealmObject {
         User clone = new User();
         clone.setUserId(other.getUserId());
         clone.setAccountCreated(other.getAccountCreated());
-        clone.setGcmRegId(other.getGcmRegId());
         clone.setPassword(other.getPassword());
-        clone.setStatus(other.getStatus());
         clone.setLastActivity(other.getLastActivity());
         clone.setName(other.getName());
         clone.setType(other.getType());

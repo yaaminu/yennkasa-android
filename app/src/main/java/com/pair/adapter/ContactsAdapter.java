@@ -67,12 +67,12 @@ public class ContactsAdapter extends BaseAdapter {
 
     @Override
     public int getItemViewType(int position) {
-        return (isAddOrRemoveFromGroup) ? 2 : getItem(position).isRegisteredUser ? 0 : 1;
+        return getItem(position).isRegisteredUser ? 0 : 1;
     }
 
     @Override
     public int getViewTypeCount() {
-        return 3;
+        return 2;
     }
 
     @Override
@@ -90,7 +90,6 @@ public class ContactsAdapter extends BaseAdapter {
             } else {
                 holder.userName = ((TextView) convertView.findViewById(R.id.tv_user_name));
             }
-            holder.userStatus = ((TextView) convertView.findViewById(R.id.tv_user_status));
             holder.inviteButton = (Button) convertView.findViewById(R.id.bt_invite);
             holder.userDp = ((ImageView) convertView.findViewById(R.id.iv_display_picture));
             holder.userPhone = (TextView) convertView.findViewById(R.id.tv_user_phone_group_admin);
@@ -111,7 +110,6 @@ public class ContactsAdapter extends BaseAdapter {
             return convertView;
         }
         if (contact.isRegisteredUser) {
-            holder.userStatus.setText(contact.status);
             DPLoader.load(context, contact.numberInIEE_Format, contact.DP)
                     .error(R.drawable.user_avartar)
                     .placeholder(R.drawable.user_avartar)
@@ -200,7 +198,7 @@ public class ContactsAdapter extends BaseAdapter {
     }
 
     private class ViewHolder {
-        private TextView userName, initials, userStatus;
+        private TextView userName, initials;
         private Button inviteButton;
         private ImageView userDp;
         private TextView userPhone;
@@ -246,7 +244,6 @@ public class ContactsAdapter extends BaseAdapter {
     private final int[] layoutResource = {
             R.layout.registered_contact_item,
             R.layout.unregistered_contact_item,
-            android.R.layout.simple_list_item_checked
     };
 
 }
