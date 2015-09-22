@@ -69,20 +69,17 @@ public class PairAppClient extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (WORKER_THREAD == null) {
+        if (WORKER_THREAD == null || !WORKER_THREAD.isAlive()) {
             WORKER_THREAD = new WorkerThread();
             WORKER_THREAD.start();
         }
-        if (WORKER == null) {
-
+        if (WORKER == null || WORKER.isShutdown()) {
             //stolen from the android.os.AsyncTask class
             final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
-            ;
             WORKER = new ThreadPoolExecutor(CPU_COUNT + 1, CPU_COUNT * 2 + 1, 1000L,
                     TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(128));
 
         }
-
         if (!isClientStarted.get()) {
             WORKER.execute(new Runnable() {
                 @Override
@@ -198,6 +195,7 @@ public class PairAppClient extends Service {
 
     public static void markUserAsOffline(Activity activity) {
         ThreadUtils.ensureMain();
+        ensureUserLoggedIn();
         if (activity == null) {
             throw new IllegalArgumentException();
         }
@@ -217,6 +215,7 @@ public class PairAppClient extends Service {
 
     public static void markUserAsOnline(Activity activity) {
         ThreadUtils.ensureMain();
+        ensureUserLoggedIn();
         if (activity == null) {
             throw new IllegalArgumentException();
         }
@@ -228,10 +227,14 @@ public class PairAppClient extends Service {
     }
 
     public static void notifyMessageSeen(Message message) {
+        ensureUserLoggedIn();
+        MessageCenter.notifyMessageSeen(message);
+    }
+
+    private static void ensureUserLoggedIn() {
         if (!UserManager.getInstance().isUserVerified()) {
             throw new IllegalStateException("no user logged in");
         }
-        MessageCenter.notifyMessageSeen(message);
     }
 
     public class PairAppClientInterface extends Binder {
@@ -245,6 +248,7 @@ public class PairAppClient extends Service {
 
         public void sendMessages(Collection<Message> tobeSent) {
             if (!isClientStarted.get()) {
+
                 bootClient();
             }
             if (WORKER_THREAD.isAlive()) //worker thread will send all pending messages immediately it come alive
@@ -266,11 +270,18 @@ public class PairAppClient extends Service {
             oops();
         }
 
-        public void registerUINotifier(Notifier notifier) {
+        public void registerUINotifier(final Notifier notifier) {
             if (!isClientStarted.get()) {
-                bootClient();
+                WORKER.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        bootClient();
+                        NotificationManager.INSTANCE.registerUI_Notifier(notifier);
+                    }
+                });
+            } else {
+                NotificationManager.INSTANCE.registerUI_Notifier(notifier);
             }
-            NotificationManager.INSTANCE.registerUI_Notifier(notifier);
         }
 
         public void unRegisterUINotifier(Notifier notifier) {

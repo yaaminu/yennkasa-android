@@ -94,7 +94,7 @@ public class MessageProcessor extends IntentService {
         } catch (RealmException primaryKey) {
             //lets eat up this error
             realm.cancelTransaction();
-            Log.i(TAG, primaryKey.getMessage());
+            Log.d(TAG, primaryKey.getMessage());
             Log.d(TAG, "failed to process message");
             return;
         }

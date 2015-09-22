@@ -293,21 +293,21 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     private void attemptToMarkAsSeen(Message message) {
 
         if (Message.isIncoming(message) && message.getState() != Message.STATE_SEEN) {
-            final String msgId = message.getId(), recipient = message.getTo();
+            final String msgId = message.getId();
             WORKER.execute(new Runnable() {
                 @Override
                 public void run() {
                     Realm realm = Message.REALM(context);
-                    realm.beginTransaction();
-                    Message message1 = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
-                    if (message1 != null) {
-                        message1.setState(Message.STATE_SEEN);
+                    Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
+                    if (message != null && message.isValid()) {
+                        realm.beginTransaction();
+                        message.setState(Message.STATE_SEEN);
                         realm.commitTransaction();
-                        message1 = Message.copy(message1);
+                        message = Message.copy(message);
                     }
                     realm.close();
-                    if (message1 != null) {
-                        PairAppClient.notifyMessageSeen(message1);
+                    if (message != null) {
+                        PairAppClient.notifyMessageSeen(message);
                     }
                 }
             });

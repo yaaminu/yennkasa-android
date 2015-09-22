@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.pair.data.Message;
 import com.pair.data.User;
+import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.ThreadUtils;
 
@@ -24,7 +25,7 @@ import io.realm.Realm;
 final class NotificationManager {
     private static final String TAG = NotificationManager.class.getSimpleName();
 
-    public static final NotificationManager INSTANCE = new NotificationManager();
+    static final NotificationManager INSTANCE = new NotificationManager();
     private volatile WeakReference<Notifier> UI_NOTIFIER;
     private final Notifier BACKGROUND_NOTIFIER = new StatusBarNotifier();
 
@@ -43,7 +44,7 @@ final class NotificationManager {
 
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    private void notifyUser(Context context, final Message message, final String sendersName) {
+    private void notifyUser(final Context context, final Message message, final String sendersName) {
         if (Config.isAppOpen()) {
             //Toast.makeText(Config.getApplicationContext(), message.getFrom() + " : " + message.getMessageBody(), Toast.LENGTH_LONG).show();
             if (UI_NOTIFIER != null) {
@@ -54,7 +55,7 @@ final class NotificationManager {
                         if (UI_NOTIFIER != null) {
                             Notifier notifier = UI_NOTIFIER.get();
                             if (notifier != null) {
-                                notifier.notifyUser(null, message, sendersName); //the ui notifier is expected to have access to the current context
+                                notifier.notifyUser(context, message, sendersName);
                             }
                         }
                     }
@@ -68,9 +69,7 @@ final class NotificationManager {
     }
 
     private String retrieveSendersName(Message message) {
-        if (BuildConfig.DEBUG && ThreadUtils.isMainThread()) {
-            throw new IllegalStateException("this method should run in the background");
-        }
+        ThreadUtils.ensureNotMain();
         final Realm realm = Realm.getInstance(Config.getApplicationContext());
         String sendersName;
         try {
@@ -106,7 +105,7 @@ final class NotificationManager {
     }
 
     synchronized void unRegisterUI_Notifier(Notifier notifier) {
-        if (UI_NOTIFIER.get() == notifier) {
+        if (UI_NOTIFIER != null && UI_NOTIFIER.get() == notifier) {
             UI_NOTIFIER.clear();
             UI_NOTIFIER = null;
         }
@@ -115,13 +114,16 @@ final class NotificationManager {
     static CharSequence messageTypeToString(int type) {
         switch (type) {
             case Message.TYPE_PICTURE_MESSAGE:
-                return "Image";
+                return Config.getApplicationContext().getString(R.string.picture);
             case Message.TYPE_VIDEO_MESSAGE:
-                return "Video";
+                return Config.getApplicationContext().getString(R.string.video);
             case Message.TYPE_BIN_MESSAGE:
-                return "File";
+                return Config.getApplicationContext().getString(R.string.file);
             default:
-                throw new AssertionError("Unknown message type");
+                if (com.pair.pairapp.BuildConfig.DEBUG) {
+                    throw new AssertionError("Unknown message type");
+                }
+                return "";
         }
     }
 

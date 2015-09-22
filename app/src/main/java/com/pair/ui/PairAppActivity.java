@@ -166,7 +166,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
         recentChatList.add(tuple);
         // TODO: 8/17/2015 vibrate or play short tone
-        if (snackBar.getState() != SnackBar.STATE_SHOWN) {
+        if (snackBar.getState() != SnackBar.STATE_SHOWN) { //we only notify when there is no ongoing notification
             snackBar.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -255,7 +255,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     }
 
     @Override
-    public void onChange() {
+    public final void onChange() {
         long newMessageCount = realm.where(Message.class).equalTo(Message.FIELD_STATE, Message.STATE_RECEIVED).count();
         if (newMessageCount > 0 && newMessageCount >= unReadMessages) {
             unReadMessages = newMessageCount;

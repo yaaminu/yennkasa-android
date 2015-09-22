@@ -81,7 +81,6 @@ public class PairApp extends Application {
         ParseClient.init(this);
         if (UserManager.getInstance().isUserVerified()) {
             PairAppClient.startIfRequired(this);
-            ContactSyncService.startIfRequired(this);
         }
     }
 

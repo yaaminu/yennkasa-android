@@ -46,16 +46,14 @@ import com.rey.material.widget.SnackBar;
 import java.io.File;
 
 import io.realm.Realm;
-import io.realm.RealmChangeListener;
 import io.realm.RealmResults;
 
-import static com.pair.data.Message.TYPE_DATE_MESSAGE;
 import static com.pair.data.Message.TYPE_TEXT_MESSAGE;
 
 
 @SuppressWarnings({"ConstantConditions", "FieldCanBeLocal"})
 public class ChatActivity extends MessageActivity implements View.OnClickListener,
-        AbsListView.OnScrollListener, TextWatcher, RealmChangeListener, LiveCenter.TypingListener {
+        AbsListView.OnScrollListener, TextWatcher, LiveCenter.TypingListener {
     private static final String TAG = ChatActivity.class.getSimpleName();
     public static final String EXTRA_PEER_ID = "peer id";
     private static final int ADD_USERS_REQUEST = 0x5;
@@ -73,7 +71,8 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     private Toolbar toolBar;
     private ToolbarManager toolbarManager;
-    private AbsListView.OnScrollListener swipeScrollListener;
+    private SwipeDismissListViewTouchListener swipeDismissListViewTouchListener;
+    private UserManager instance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +82,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         toolBar.setOnClickListener(this);
         toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         realm = Realm.getInstance(this);
+        instance = UserManager.getInstance();
         messageEt = ((EditText) findViewById(R.id.et_message));
         sendButton = findViewById(R.id.iv_send);
         ((FloatingActionButton) sendButton).setIcon(getResources().getDrawable(R.drawable.ic_action_send_now), false);
@@ -102,7 +102,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             peer.setDP(peerId);
             peer.setName(parts[0]);
             realm.commitTransaction();
-            UserManager.getInstance().refreshUserDetails(peerId); //async
+            instance.refreshUserDetails(peerId); //async
         }
         String peerName = peer.getName();
         //noinspection ConstantConditions
@@ -124,14 +124,13 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         adapter = new MessagesAdapter(this, messages, true);
         messagesListView.setAdapter(adapter);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            SwipeDismissListViewTouchListener touchListener = new SwipeDismissListViewTouchListener(messagesListView, new SwipeDismissListViewTouchListener.OnDismissCallback() {
+            swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(messagesListView, new SwipeDismissListViewTouchListener.OnDismissCallback() {
                 @Override
                 public void onDismiss(ListView listView, int[] reverseSortedPositions) {
                     deleteMessage(reverseSortedPositions[0]);
                 }
             });
-            messagesListView.setOnTouchListener(touchListener);
-            swipeScrollListener = touchListener.makeScrollListener();
+            messagesListView.setOnTouchListener(swipeDismissListViewTouchListener);
         }
 
         messagesListView.setOnScrollListener(this);
@@ -153,7 +152,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         toolbarManager.onPrepareMenu();
         menu = toolBar.getMenu();
         if (menu != null && menu.size() > 0) { //required for toolbar to behave on older platforms <=10
-            User mainUser = UserManager.getInstance().getCurrentUser();
+            User mainUser = instance.getCurrentUser();
             menu.findItem(R.id.action_invite_friends)
                     .setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().getUserId().equals(mainUser.getUserId()));
             menu.findItem(R.id.action_view_profile).setTitle((peer.getType() == User.TYPE_GROUP) ? R.string.st_group_info : R.string.st_view_profile);
@@ -210,7 +209,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             realm.commitTransaction();
         }
         Config.appOpen(false);
-        if (!UserManager.getInstance().isGroup(peer.getUserId())) {
+        if (!instance.isGroup(peer.getUserId())) {
             LiveCenter.notifyNotTyping(peer.getUserId());
             LiveCenter.notifyLeftChatRoom(peer.getUserId());
             LiveCenter.doNotTrackUser(peer.getUserId());
@@ -272,23 +271,20 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     @Override
     public void onScrollStateChanged(AbsListView view, int scrollState) {
-
+        enableSwipeDismiss(scrollState != AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL);
     }
 
     @Override
     public void onScroll(AbsListView view, final int firstVisibleItem, int visibleItemCount, int totalItemCount) {
-        if (swipeScrollListener != null) {
-            swipeScrollListener.onScroll(view, firstVisibleItem, visibleItemCount, totalItemCount);
-        }
         if (firstVisibleItem == 0) { //first/second item
             dateHeaderViewParent.setVisibility(View.GONE);// TODO: 8/7/2015 fade instead of hiding right away
             return;
         }
         if (visibleItemCount != 0 && visibleItemCount < totalItemCount) {
             dateHeaderViewParent.setVisibility(View.VISIBLE);
-            for (int i = firstVisibleItem; i >= 0; i--) { //loop backwards
+            for (int i = firstVisibleItem + visibleItemCount - 1; i >= 0; i--) { //loop backwards
                 final Message message = messages.get(i);
-                if (message.getType() == TYPE_DATE_MESSAGE) {
+                if (Message.isDateMessage(message)) {
                     dateHeader.setText(SimpleDateUtil.formatDateRage(this, message.getDateComposed()));
                     return;
                 }
@@ -356,6 +352,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     }
 
     private void deleteMessage(int position) {
+        enableSwipeDismiss(false);
         realm.beginTransaction(); //beginning transaction earlier to force realm to prevent other realms from changing the data set
         //hook up message to remove.
         //if it is the only message for the day remove the date message
@@ -382,8 +379,16 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             }
         }
         realm.commitTransaction();
-        messagesListView.requestLayout();
         adapter.notifyDataSetChanged();
+        enableSwipeDismiss(true);
+
+    }
+
+    private void enableSwipeDismiss(boolean enabled) {
+        if (swipeDismissListViewTouchListener != null) {
+            swipeDismissListViewTouchListener.setEnabled(enabled);
+
+        }
     }
 
     /**
@@ -465,7 +470,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     public void onTyping(String userId) {
         if (peer.getUserId().equals(userId)) {
-            getSupportActionBar().setSubtitle("Typing...");
+            getSupportActionBar().setSubtitle(getString(R.string.writing));
         }
     }
 

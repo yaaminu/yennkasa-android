@@ -116,7 +116,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             if (realmMessage != null) {
                 if (realmMessage.getState() == Message.STATE_PENDING) {
                     realm.beginTransaction();
-                    realmMessage.setState(Message.STATE_SEND_FAILED);
+                    updateMessageStatus(realmMessage, Message.STATE_PENDING);
                     realm.commitTransaction();
                 }
             }
@@ -138,7 +138,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                 int state = message.getState();
                 if (state == Message.STATE_PENDING || state == Message.STATE_SEND_FAILED) {
                     realm.beginTransaction();
-                    message.setState(Message.STATE_SENT);
+                    updateMessageStatus(message, Message.STATE_SENT);
                     realm.commitTransaction();
                 }
             }
@@ -158,11 +158,17 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, ourMessageId).findFirst();
             if (message != null) {
                 realm.beginTransaction();
-                message.setState(Message.STATE_RECEIVED);
+                updateMessageStatus(message, Message.STATE_RECEIVED);
                 realm.commitTransaction();
             }
         } finally {
             realm.close();
+        }
+    }
+
+    private void updateMessageStatus(Message message, int state) {
+        if (message.isValid()) {
+            message.setState(state);
         }
     }
 

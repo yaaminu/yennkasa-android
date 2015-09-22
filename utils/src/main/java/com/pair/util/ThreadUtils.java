@@ -12,14 +12,18 @@ public class ThreadUtils {
     }
 
     public static void ensureNotMain() {
-        if (isMainThread()) {
-            oops("main thread!");
+        if (BuildConfig.DEBUG) {
+            if (isMainThread()) {
+                oops("main thread!");
+            }
         }
     }
 
     public static void ensureMain() {
-        if (!isMainThread()) {
-            oops("call must be made on the main thread!");
+        if (BuildConfig.DEBUG) {
+            if (!isMainThread()) {
+                oops("call must be made on the main thread!");
+            }
         }
     }
 

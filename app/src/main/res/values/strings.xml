@@ -180,4 +180,7 @@
     <string name="group_name_too_long">Group names can not be less than 30 letters</string>
     <string name="group_name_too_short">Group names can not be less than 5 letters</string>
     <string name="add_number_in_text_box_create_group_invite_members">Would you like to add the number in the text box before proceeding?</string>
+    <string name="writing">Writing…</string>
+    <string name="image">Image</string>
+    <string name="vidieo">Video</string>
 </resources>
