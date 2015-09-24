@@ -183,4 +183,19 @@
     <string name="writing">Writing…</string>
     <string name="image">Image</string>
     <string name="vidieo">Video</string>
+    <string name="pick_an_optional_dp">Pick an optional display picture for the group</string>
+    <string name="camera">Camera</string>
+    <string name="gallery">Gallery</string>
+    <string name="invalid_name_format_error">names cannot contain the \"@\" character</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="later">Later</string>
+    <string name="choose_dp_help_friends_recognise_you">Add an optional display picture to help your friends recognise you</string>
+    <string name="refreshing">Refreshing...</string>
+    <string name="release_to_refresh">Release to refresh</string>
+    <string name="pull_to_refresh">Pull to refresh</string>
+    <string name="refresh_contacts">Refresh Contacts</string>
+    <string name="permanently_disconnected">You seem to be permanently disconnected from the internet. Please Check your internet setting and try again later</string>
+    <string name="try_again">Try Again</string>
 </resources>

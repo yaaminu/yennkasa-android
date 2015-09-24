@@ -1,25 +1,30 @@
 package com.pair.ui;
 
 
-import android.app.Activity;
+import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
-import android.widget.ListView;
+import android.widget.AdapterView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.handmark.pulltorefresh.library.ILoadingLayout;
+import com.handmark.pulltorefresh.library.PullToRefreshBase;
+import com.handmark.pulltorefresh.library.PullToRefreshListView;
 import com.pair.adapter.ContactsAdapter;
 import com.pair.data.ContactsManager;
 import com.pair.data.ContactsManager.Contact;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
+import com.pair.util.ViewUtils;
 import com.pair.workers.ContactSyncService;
-import com.rey.material.widget.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -32,12 +37,13 @@ import io.realm.RealmChangeListener;
 /**
  * A simple {@link ListFragment} subclass.
  */
-public class ContactFragment extends ListFragment implements RealmChangeListener, AbsListView.OnScrollListener {
+public class ContactFragment extends Fragment implements RealmChangeListener, AdapterView.OnItemClickListener, PullToRefreshBase.OnRefreshListener {
 
     private static final String TAG = ContactFragment.class.getSimpleName();
     private ContactsAdapter adapter;
     private Realm realm;
     private static List<Contact> contacts = new ArrayList<>();
+
     private final ContactsManager.Filter<Contact> filter = new ContactsManager.Filter<Contact>() {
         @Override
         public boolean accept(Contact contact) {
@@ -69,19 +75,39 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
     private final ContactsManager.FindCallback<List<Contact>> contactsFindCallback = new ContactsManager.FindCallback<List<Contact>>() {
         @Override
         public void done(List<Contact> freshContacts) {
-            ((TextView) listView.getEmptyView()).setText(R.string.st_empty_contacts);
+            synchronized (this) {
+                safeToStopPullRefreshAnimation = true;
+            }
+            emptyView.setText(R.string.st_empty_contacts);
+            if (freshContacts.size() < 1) {
+                ViewUtils.showViews(refreshButton);
+                refreshButton.setOnClickListener(listener);
+            } else {
+                ViewUtils.hideViews(refreshButton);
+                refreshButton.setOnClickListener(null);
+            }
             contacts = freshContacts;
             adapter.refill(contacts);
         }
     };
-    private ListView listView;
+    private TextView emptyView;
+    private PullToRefreshListView listView;
+    private View refreshButton;
+
+    private final View.OnClickListener listener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            refresh();
+            UiHelpers.showToast(getString(R.string.refreshing), Toast.LENGTH_LONG);
+        }
+    };
 
     public ContactFragment() {
         // Required empty public constructor
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Context activity) {
         setRetainInstance(true);
         super.onAttach(activity);
     }
@@ -95,19 +121,20 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
         View view = inflater.inflate(R.layout.fragment_contact, container, false);
         adapter = new ContactsAdapter(getActivity(), contacts, false);
         //required so that we can operate on it with no fear since calling getListView before onCreateView returns is not safe
-        listView = ((ListView) view.findViewById(android.R.id.list));
-        listView.setOnScrollListener(this);
-        TextView emptyView = (TextView) view.findViewById(android.R.id.empty);
+        listView = ((PullToRefreshListView) view.findViewById(R.id.list));
+        ILoadingLayout proxy = listView.getLoadingLayoutProxy();
+        proxy.setRefreshingLabel(getString(R.string.refreshing));
+        proxy.setReleaseLabel(getString(R.string.release_to_refresh));
+        proxy.setPullLabel(getString(R.string.pull_to_refresh));
+        refreshButton = view.findViewById(R.id.refresh_button);
+        ViewUtils.hideViews(refreshButton);
+        listView.setScrollEmptyView(false);
+        listView.setOnRefreshListener(this);
+        emptyView = ((TextView) view.findViewById(android.R.id.empty));
         emptyView.setText(R.string.loading);
-        setListAdapter(adapter);
-        FloatingActionButton actionButton = ((FloatingActionButton) view.findViewById(R.id.fab_refresh));
-        actionButton.setIcon(getResources().getDrawable(R.drawable.ic_action_replay), false);
-        actionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ContactSyncService.startIfRequired(getActivity());
-            }
-        });
+        listView.setEmptyView(emptyView);
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(this);
         return view;
     }
 
@@ -121,8 +148,8 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
     }
 
     @Override
-    public void onListItemClick(ListView l, View v, int position, long id) {
-        Contact contact = (Contact) l.getAdapter().getItem(position); //very safe
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Contact contact = (Contact) parent.getAdapter().getItem(position);
         if (contact.isRegisteredUser) {
             UiHelpers.enterChatRoom(getActivity(), contact.numberInIEE_Format);
         } else {
@@ -133,7 +160,7 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
     @Override
     public void onResume() {
         super.onResume();
-        ContactsManager.getInstance().findAllContacts(filter, comparator, contactsFindCallback);
+        refreshLocalContacts();
     }
 
     @Override
@@ -150,16 +177,47 @@ public class ContactFragment extends ListFragment implements RealmChangeListener
 
     @Override
     public void onChange() {
+        refreshLocalContacts();
+    }
+
+    private void refreshLocalContacts() {
         ContactsManager.getInstance().findAllContacts(filter, comparator, contactsFindCallback);
     }
 
-    @Override
-    public void onScrollStateChanged(AbsListView view, int scrollState) {
-    }
+    boolean safeToStopPullRefreshAnimation = false;
 
     @Override
-    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+    public void onRefresh(PullToRefreshBase refreshView) {
+        synchronized (this) {
+            safeToStopPullRefreshAnimation = false;
+        }
+        refresh();
+        new StopPullRefreshTask().execute();
     }
 
+    private void refresh() {
+        ContactSyncService.syncIfRequired(getActivity());
+        refreshLocalContacts();
+    }
+
+    private class StopPullRefreshTask extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            long endMillis = System.currentTimeMillis() + 10 * 1000;
+            while (true) {
+                synchronized (ContactFragment.this) {
+                    if (safeToStopPullRefreshAnimation && System.currentTimeMillis() >= endMillis) {
+                        break;
+                    }
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            listView.onRefreshComplete();
+        }
+    }
 }
 

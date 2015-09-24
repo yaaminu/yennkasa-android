@@ -1,6 +1,7 @@
 package com.pair.ui;
 
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
@@ -10,11 +11,9 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 
 import com.pair.Errors.ErrorCenter;
-import com.pair.PairApp;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
-import com.pair.workers.ContactSyncService;
 import com.rey.material.app.DialogFragment;
 
 /**
@@ -22,8 +21,9 @@ import com.rey.material.app.DialogFragment;
  */
 public class VerificationFragment extends Fragment {
     private static final String TAG = VerificationFragment.class.getSimpleName();
-    DialogFragment progressDialog;
+    private DialogFragment progressDialog;
     private EditText etVerification;
+    private Callbacks callback;
 
     public VerificationFragment() {
         // Required empty public constructor
@@ -37,18 +37,19 @@ public class VerificationFragment extends Fragment {
             } else if (v.getId() == R.id.bt_resend_token) {
                 resendToken();
             } else if (v.getId() == R.id.tv_back_to_login) {
-                backToLogin();
+                callback.onBackToLogIn();
             }
         }
     };
 
-    private void backToLogin() {
-        doGoBackToLogin();
-    }
-
-    private void doGoBackToLogin() {
-        progressDialog.show(getFragmentManager(), null);
-        UserManager.getInstance().reset(callBack);
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try {
+            callback = (Callbacks) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.getClass().getName() + " must implement Callbacks interface");
+        }
     }
 
     @Override
@@ -70,38 +71,37 @@ public class VerificationFragment extends Fragment {
             UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.token_required));
         } else {
             progressDialog.show(getFragmentManager(), null);
-            UserManager.getInstance().verifyUser(code, callBack);
+            UserManager.getInstance().verifyUser(code, new UserManager.CallBack() {
+                @Override
+                public void done(Exception e) {
+                    UiHelpers.dismissProgressDialog(progressDialog);
+                    if (e != null) {
+                        ErrorCenter.reportError(TAG, e.getMessage());
+                    } else {
+                        callback.onVerified();
+                    }
+                }
+            });
         }
 
     }
 
     private void resendToken() {
         progressDialog.show(getFragmentManager(), null);
-        UserManager.getInstance().resendToken(callBack);
+        UserManager.getInstance().resendToken(new UserManager.CallBack() {
+            @Override
+            public void done(Exception e) {
+                UiHelpers.dismissProgressDialog(progressDialog);
+                if (e != null) {
+                    ErrorCenter.reportError(TAG, e.getMessage());
+                }
+            }
+        });
     }
 
-    private UserManager.CallBack callBack = new UserManager.CallBack() {
-        public void done(Exception e) {
-            try {
-                progressDialog.dismiss();
-            } catch (Exception ignored) {
+    public interface Callbacks {
+        void onVerified();
 
-            }
-            if (e == null) {
-                completeSetUp();
-            } else {
-                String message = e.getMessage();
-                if ((message == null) || (message.isEmpty())) {
-                    message = "an unknown error occurred";
-                }
-                ErrorCenter.reportError(TAG, message);
-            }
-        }
-    };
-
-    private void completeSetUp() {
-        PairApp.enableComponents();
-        ContactSyncService.startIfRequired(getActivity());
-        UiHelpers.gotoMainActivity((PairAppBaseActivity) getActivity());
+        void onBackToLogIn();
     }
 }

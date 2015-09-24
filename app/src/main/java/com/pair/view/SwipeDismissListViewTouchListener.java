@@ -357,4 +357,8 @@ public class SwipeDismissListViewTouchListener implements View.OnTouchListener {
         mPendingDismisses.add(new PendingDismissData(dismissPosition, dismissView));
         animator.start();
     }
+
+    public boolean isSwiping() {
+        return mSwiping;
+    }
 }

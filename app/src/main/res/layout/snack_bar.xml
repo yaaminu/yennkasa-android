@@ -5,7 +5,7 @@
     android:id="@+id/notification_bar"
     android:layout_width="match_parent"
     android:layout_height="@dimen/action_bar_height"
-    android:minHeight="?attr/actionBarSize"
+    android:minHeight="@dimen/action_bar_height"
     app:sb_actionText="@string/close"
     android:visibility="gone"
     app:sb_actionTextColor="@color/white"/>

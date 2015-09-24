@@ -237,7 +237,7 @@ public class LiveCenter {
     /**
      * gives the {@link LiveCenter} a hint that this user is not active to the user
      * at our end here and that {@link LiveCenter} should stop monitoring this user for typing events, etc.This is
-     * different from the user been online this may be called after a call to {@link #start()}
+     * different from the user been offline this may be called after a call to {@link #start()}
      * and never before also one may not call this method after call to {@link #stop()}.
      * in all such situations,this method will fail silently
      *
@@ -299,8 +299,6 @@ public class LiveCenter {
      *
      * @param userId the id of the recipient of the message
      * @throws IllegalStateException    if the call is not made on the main thread
-     * @throws IllegalArgumentException if this {@code LiveCenter} is unaware this
-     *                                  particular user is in the chat room.
      */
     public static void notifyTyping(String userId) {
         ThreadUtils.ensureMain();
@@ -333,8 +331,6 @@ public class LiveCenter {
      *
      * @param userId the ID of the recipient of the message
      * @throws IllegalStateException    if the call is not made on the main thread
-     * @throws IllegalArgumentException if this {@code LiveCenter} is unaware this
-     *                                  particular user is in the chat room.
      */
     public static void notifyNotTyping(String userId) {
         ThreadUtils.ensureMain();
@@ -362,7 +358,7 @@ public class LiveCenter {
 
     /**
      * registers a typing listener. listeners are stored internally as weakReferences so
-     * you may not pass an anonymous classes.
+     * you may not pass anonymous classes.
      *
      * @param listener the listener to be registered, may not be {@code null}
      * @throws IllegalStateException    if the call is not made on the UI thread
@@ -382,7 +378,6 @@ public class LiveCenter {
      * @param listener the listener to be unregistered, may not be {@code null}
      * @throws IllegalStateException    if the call is not made on the UI thread
      * @throws IllegalArgumentException if the listener to be unregistered is null
-     *                                  or the listener is not already registered
      */
     public static void unRegisterTypingListener(TypingListener listener) {
         ThreadUtils.ensureMain();
@@ -391,7 +386,7 @@ public class LiveCenter {
         }
         if (typingListener != null && typingListener.get() != null) {
             if (typingListener.get() != listener) {
-                throw new IllegalArgumentException("listener not registered");
+                return;
             }
         }
         typingListener = null;

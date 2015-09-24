@@ -1,6 +1,5 @@
 package com.pair.data;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
@@ -10,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
+import android.util.Pair;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.data.net.HttpResponse;
@@ -168,6 +168,12 @@ public class UserManager {
         if (isUser(User.generateGroupId(groupName))) {
             //already exist[
             callBack.done(new Exception("group with name " + groupName + "already exists"), null);
+            return;
+        }
+
+        Pair<String, String> errorNamePair = isValidUserName(groupName);
+        if (errorNamePair.second != null) {
+            doNotify(callBack, new Exception(errorNamePair.second), null);
             return;
         }
         membersId.add(getMainUserId());
@@ -545,7 +551,7 @@ public class UserManager {
         doNotify(null, callback);
     }
 
-    public void logIn(final Activity context, final String phoneNumber, final String userIso2LetterCode, final CallBack callback) {
+    public void logIn(final String phoneNumber, final String userIso2LetterCode, final CallBack callback) {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             doNotify(NO_CONNECTION_ERROR, callback);
             return;
@@ -563,7 +569,6 @@ public class UserManager {
             doNotify(new Exception("userIso2LetterCode cannot be empty"), callback);
             return;
         }
-
         User user = new User();
         try {
             phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userIso2LetterCode);
@@ -601,7 +606,7 @@ public class UserManager {
     }
 
 
-    public void signUp(Activity context, final String name, final String phoneNumber, final String countryIso, final CallBack callback) {
+    public void signUp(final String name, final String phoneNumber, final String countryIso, final CallBack callback) {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             doNotify(NO_CONNECTION_ERROR, callback);
             return;
@@ -616,8 +621,14 @@ public class UserManager {
             doNotify(new Exception("phone number is invalid"), callback);
         } else if (TextUtils.isEmpty(countryIso)) {
             doNotify(new Exception("ccc is invalid"), callback);
+
         } else {
-            doSignup(name, phoneNumber, gcmRegId, countryIso, callback);
+            Pair<String, String> errorNamePair = isValidUserName(name);
+            if (errorNamePair.second != null) {
+                doNotify(new Exception(errorNamePair.second), callback);
+            } else {
+                doSignup(name, phoneNumber, gcmRegId, countryIso, callback);
+            }
         }
     }
 
@@ -976,7 +987,7 @@ public class UserManager {
                         FileUtils.save(dpPath, user.getDP());
                         updateUserDpInRealm(userId, callBack, encoded);
                     } catch (IOException e2) {
-                        doNotify(new Exception(Config.getApplicationContext().getString(R.string.an_error_occured)), callBack);
+                        doNotify(new Exception(Config.getApplicationContext().getString(R.string.an_error_occurred)), callBack);
                     }
                 }
             });
@@ -1023,6 +1034,25 @@ public class UserManager {
         } finally {
             realm.close();
         }
+    }
+
+    public Pair<String, String> isValidUserName(String proposedName) {
+        String errorMessage = null;
+        proposedName = proposedName.replaceAll("\\p{Space}+", " ");
+        if (proposedName.length() < 5) {
+            errorMessage = Config.getApplicationContext().getString(R.string.group_name_too_short);
+        } else if (proposedName.length() > 30) {
+            errorMessage = Config.getApplicationContext().getString(R.string.group_name_too_long);
+        } else if (!Character.isLetter(proposedName.codePointAt(0))) {
+            errorMessage = Config.getApplicationContext().getString(R.string.group_name_starts_with_non_letter);
+        } else if (!Character.isLetter(proposedName.codePointAt(proposedName.length() - 1))) {
+            errorMessage = Config.getApplicationContext().getString(R.string.group_name_ends_with_no_letter);
+        } else if (getCurrentUser() != null && UserManager.getInstance().isGroup(User.generateGroupId(proposedName))) {
+            errorMessage = Config.getApplicationContext().getString(R.string.group_already_exists, proposedName).toUpperCase();
+        } else if (proposedName.contains("@")) {
+            errorMessage = Config.getApplicationContext().getString(R.string.invalid_name_format_error);
+        }
+        return new Pair<>(proposedName, errorMessage);
     }
 
     public List<String> allUserIds() {

@@ -53,9 +53,14 @@ public class RoundedImageView extends ImageView {
         if (drawable == null || getWidth() == 0 || getHeight() == 0) return;
 
         Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
-        Bitmap roundedBitmap = getCroppedBitmap(bitmap.copy(Bitmap.Config.ARGB_8888, true),
-                getWidth());
-
+        final Bitmap copy = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        if (copy == null) {
+            return;
+        }
+        Bitmap roundedBitmap = getCroppedBitmap(copy, getWidth());
+        if (roundedBitmap == null) {
+            return;
+        }
         canvas.drawBitmap(roundedBitmap, 0, 0, null);
     }
 
@@ -63,6 +68,9 @@ public class RoundedImageView extends ImageView {
         Bitmap newBmp;
         if (bmp.getWidth() != size || bmp.getHeight() != size) {
             newBmp = Bitmap.createScaledBitmap(bmp, size, size, false);
+            if (newBmp == null) {
+                return null;
+            }
         } else newBmp = bmp;
 
         Rect rect = new Rect(0, 0, newBmp.getWidth(), newBmp.getHeight());

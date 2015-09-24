@@ -36,6 +36,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/Theme.AppTheme"
+        android:largeHeap="true"
         tools:ignore="UnusedAttribute">
         <activity
             android:name="com.pair.ui.MainActivity"
@@ -87,6 +88,7 @@
             android:label="@string/title_activity_profile"
             android:parentActivityName="com.pair.ui.MainActivity"
             android:screenOrientation="portrait"
+            android:launchMode="singleTop"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

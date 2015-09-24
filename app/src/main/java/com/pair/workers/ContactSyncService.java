@@ -43,9 +43,10 @@ public class ContactSyncService extends IntentService {
             List<ContactsManager.Contact> numbers = ContactsManager.getInstance().findAllContactsSync(filter, null);
 
             if (numbers.isEmpty()) { //all contacts fetched.. this should rarely happen
-                Log.i(TAG, "all friends synced");
+                Log.i(TAG, "all contacts synced");
                 return;
             }
+
             List<String> onlyNumbers = new ArrayList<>(numbers.size() + 1);
             for (ContactsManager.Contact contact : numbers) {
                 //we need to convert contacts to the format our backend understands so that it can
@@ -61,7 +62,7 @@ public class ContactSyncService extends IntentService {
         manager.syncContacts(onlyNumbers);
     }
 
-    public static void startIfRequired(Context context) {
+    public static void syncIfRequired(Context context) {
         if(!UserManager.getInstance().isUserVerified()){
             return;
         }

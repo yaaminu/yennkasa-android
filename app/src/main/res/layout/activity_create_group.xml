@@ -21,7 +21,7 @@
             style="@style/FlatWaveColorButtonRippleStyle"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:layout_gravity="right"
+            android:layout_gravity="end"
             android:clickable="true"
             android:drawableLeft="@drawable/ic_action_accept"
             android:drawableStart="@drawable/ic_action_accept"
@@ -54,23 +54,37 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/main_toolbar"
-        android:layout_margin="8dp">
+        android:layout_margin="8dp"
+        android:gravity="center">
 
         <EditText
             android:id="@+id/et_group_name"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
+            android:ellipsize="end"
             android:ems="10"
             android:hint="@string/st_group_name_hit"
             android:imeActionLabel="@string/next"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:textSize="@dimen/edit_text_size"
+            android:inputType="text"
             android:maxLength="30"
-            android:inputType="text"/>
-    </com.pair.view.RelativeLayout>
+            android:singleLine="true"
+            android:textSize="@dimen/edit_text_size"/>
 
-    <include
-        layout="@layout/snack_bar"/>
+        <fragment
+            android:id="@+id/rl_group_dp_preview"
+            android:name="com.pair.ui.ChooseDisplayPictureFragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/et_group_name"
+            android:layout_centerHorizontal="true"
+            android:layout_centerInParent="true"
+            android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
+            tools:layout="@layout/fragment_choose_display_picture"
+            >
+        </fragment>
+
+        <include
+            layout="@layout/snack_bar"/>
+    </com.pair.view.RelativeLayout>
 </com.pair.view.RelativeLayout>

@@ -60,7 +60,7 @@ public class FileUtils {
         if (parentDir != null) {
             if (!parentDir.isDirectory()) {
                 if (!parentDir.mkdirs()) {
-                    throw new IOException("Could not create directory, check you SD card");
+                    throw new IOException("Could not create directory");
                 }
             }
             return Uri.fromFile(new File(parentDir, path));

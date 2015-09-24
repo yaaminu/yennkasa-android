@@ -10,6 +10,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,6 +35,7 @@ import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -41,7 +43,9 @@ import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
 
-public class CreateGroupActivity extends PairAppActivity implements AdapterView.OnItemClickListener, ItemsSelector.OnFragmentInteractionListener, TextWatcher {
+public class CreateGroupActivity extends PairAppActivity implements AdapterView.OnItemClickListener,
+        ItemsSelector.OnFragmentInteractionListener, TextWatcher,
+        ChooseDisplayPictureFragment.Callbacks {
 
     public static final String TAG = CreateGroupActivity.class.getSimpleName();
     private Set<String> selectedUsers = new HashSet<>();
@@ -50,7 +54,10 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     private CustomUsersAdapter adapter;
     private EditText groupNameEt;
     private int stage = 0;
+    private String dp;
 
+
+    private View menuItemDone, menuItemNext, dpPreview;
     private final View.OnClickListener listener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -66,7 +73,8 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
             }
         }
     };
-    private View menuItemDone, menuItemNext;
+    private DialogFragment progressDialog;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,12 +92,19 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         groupNameEt = ((EditText) findViewById(R.id.et_group_name));
+        dpPreview = findViewById(R.id.rl_group_dp_preview);
         groupNameEt.addTextChangedListener(this);
         realm = Realm.getInstance(this);
         RealmResults<User> users = getQuery().findAllSorted(User.FIELD_NAME);
         adapter = new CustomUsersAdapter(realm, users);
+        progressDialog = UiHelpers.newProgressDialog();
     }
 
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
 
     @Override
     protected SnackBar getSnackBar() {
@@ -97,7 +112,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     }
 
     private RealmQuery<User> getQuery() {
-        return realm.where(User.class).notEqualTo(User.FIELD_ID, UserManager.getInstance()
+        return realm.where(User.class).notEqualTo(User.FIELD_ID, userManager
                 .getCurrentUser().getUserId()).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP);
     }
 
@@ -119,16 +134,13 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
             protected void onPreExecute() {
                 dialog = UiHelpers.newProgressDialog(false);
                 dialog.show(getSupportFragmentManager(), "");
-                finalName = groupNameEt.getText().toString();
+                finalName = groupNameEt.getText().toString().trim();
                 groupNameEt.setText("");
             }
 
             @Override
             protected void onPostExecute(Boolean aBoolean) {
-                try {
-                    dialog.dismiss();
-                } catch (Exception ignored) {
-                }
+                UiHelpers.dismissProgressDialog(dialog);
                 if (aBoolean) {
                     proceedToNextStage(finalName);
                 } else {
@@ -139,19 +151,9 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
 
             @Override
             protected Boolean doInBackground(Void... params) {
-                errorMessage = null;
-                finalName = finalName.replaceAll("\\p{Space}+", " ").replaceAll("_+", "_");
-                if (finalName.length() < 5) {
-                    errorMessage = getString(R.string.group_name_too_short);
-                } else if (finalName.length() > 30) {
-                    errorMessage = getString(R.string.group_name_too_long);
-                } else if (!Character.isLetter(finalName.codePointAt(0))) {
-                    errorMessage = getString(R.string.group_name_starts_with_non_letter);
-                } else if (!Character.isLetter(finalName.codePointAt(finalName.length() - 1))) {
-                    errorMessage = getString(R.string.group_name_ends_with_no_letter);
-                } else if (UserManager.getInstance().isGroup(User.generateGroupId(finalName))) {
-                    errorMessage = getString(R.string.group_already_exists, finalName).toUpperCase();
-                }
+                Pair<String, String> errorNamePair = userManager.isValidUserName(finalName);
+                finalName = errorNamePair.first;
+                errorMessage = errorNamePair.second;
                 return errorMessage == null;
             }
         };
@@ -165,6 +167,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
 
     private void proceedToNextStage(String name) {
         groupNameEt.setVisibility(View.GONE);
+        dpPreview.setVisibility(View.GONE);
         groupName = name;
         stage = 2;
         getSupportFragmentManager()
@@ -255,27 +258,43 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
 
     private void continueProcess() {
         if (selectedUsers.size() >= 2) {
-            final DialogFragment progressDialog = UiHelpers.newProgressDialog();
             progressDialog.show(getSupportFragmentManager(), null);
-            UserManager.getInstance().createGroup(groupName, selectedUsers, new UserManager.CreateGroupCallBack() {
+            userManager.createGroup(groupName, selectedUsers, new UserManager.CreateGroupCallBack() {
                 @Override
                 public void done(Exception e, String groupId) {
-                    try {
-                        progressDialog.dismiss();
-                    } catch (Exception ignored) {
-
-                    }
-                    if (e != null) {
-                        ErrorCenter.reportError(TAG, e.getMessage());
-                    } else {
-                        UiHelpers.enterChatRoom(CreateGroupActivity.this, groupId);
-                    }
+                    onGroupCreated(e, groupId);
                 }
             });
         } else {
             UiHelpers.showErrorDialog(this, getString(R.string.group_minimum_notice));
         }
     }
+
+    private void onGroupCreated(Exception e, final String groupId) {
+        if (e != null) {
+            UiHelpers.dismissProgressDialog(progressDialog);
+            ErrorCenter.reportError(TAG, e.getMessage());
+        } else {
+            if (dp != null && new File(dp).exists()) {
+                userManager.changeDp(groupId, dp, new UserManager.CallBack() {
+                    @Override
+                    public void done(Exception e) {
+                        UiHelpers.dismissProgressDialog(progressDialog);
+                        if (e == null) {
+                            //hurray we changed dp successfully
+                            UiHelpers.enterChatRoom(CreateGroupActivity.this, groupId);
+                        } else {
+                            ErrorCenter.reportError(TAG, e.getMessage());
+                        }
+                    }
+                });
+            } else {
+                UiHelpers.dismissProgressDialog(progressDialog);
+                UiHelpers.enterChatRoom(CreateGroupActivity.this, groupId);
+            }
+        }
+    }
+
 
     @Override
     protected void onDestroy() {
@@ -343,7 +362,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         String phoneNumber = item;
         if (!TextUtils.isEmpty(phoneNumber)) {
             String original = phoneNumber; //see usage below
-            final String userCountryISO = UserManager.getInstance().getUserCountryISO();
+            final String userCountryISO = userManager.getUserCountryISO();
             try {
                 phoneNumber = PhoneNumberNormaliser.cleanNonDialableChars(phoneNumber);
                 phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userCountryISO);
@@ -362,7 +381,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     }
 
     private void finallyAddMember(String phoneNumber) {
-        if (phoneNumber.equals(UserManager.getMainUserId())) {
+        if (phoneNumber.equals(getMainUserId())) {
             UiHelpers.showErrorDialog(this, getString(R.string.user_adding_him_her_self_notice));
         } else if (selectedUsers.contains(phoneNumber)) {
             UiHelpers.showErrorDialog(this, getString(R.string.duplicate_number_notice));
@@ -392,6 +411,31 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
             stage = 1;
         }
         invalidateOptionsMenu();
+    }
+
+    @Override
+    public void onDp(String newDp) {
+        dp = newDp;
+    }
+
+    @Override
+    public boolean allowCancelling() {
+        return false;
+    }
+
+    @Override
+    public void onCancelled() {
+        //do nothing
+    }
+
+    @Override
+    public CharSequence noDpNotice() {
+        return null;
+    }
+
+    @Override
+    public String defaultDp() {
+        return null;
     }
 
     private class CustomUsersAdapter extends MultiChoiceUsersAdapter {

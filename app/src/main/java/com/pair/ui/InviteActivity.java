@@ -50,7 +50,6 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
     private Set<String> selectedUsers;
     private ToolbarManager toolbarManager;
     private Toolbar toolBar;
-    private UserManager userManager;
     private String groupId;
     private View menuItemDone;
     private final View.OnClickListener listener = new View.OnClickListener() {
@@ -76,7 +75,6 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
 
         groupId = getIntent().getStringExtra(EXTRA_GROUP_ID);
         selectedUsers = new HashSet<>();
-        userManager = UserManager.getInstance();
         realm = User.Realm(this);
         usersAdapter = new CustomUserAdapter(this, prepareQuery().findAllSorted(User.FIELD_NAME));
         Fragment fragment = new ItemsSelector();
@@ -98,7 +96,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
         if (potentiallyGroup != null) {
             RealmQuery<User> userRealmQuery = realm.where(User.class)
                     .notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
-                    .notEqualTo(User.FIELD_ID, userManager.getCurrentUser().getUserId());
+                    .notEqualTo(User.FIELD_ID, getMainUserId());
             List<User> existingMembers = potentiallyGroup.getMembers();
             for (User existingMember : existingMembers) {
                 userRealmQuery.notEqualTo(User.FIELD_ID, existingMember.getUserId());
@@ -223,7 +221,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
     private void finallyAddNumber(String phoneNumber) {
         if (existingGroupMembers.contains(phoneNumber)) {
             UiHelpers.showErrorDialog(this, getString(R.string.duplicate_group_member));
-        } else if (phoneNumber.equals(UserManager.getMainUserId())) {
+        } else if (phoneNumber.equals(getMainUserId())) {
             UiHelpers.showErrorDialog(this, getString(R.string.you_add_already_a_member));
         } else if (selectedUsers.contains(phoneNumber)) {
             UiHelpers.showErrorDialog(this, getString(R.string.duplicate_number_notice));

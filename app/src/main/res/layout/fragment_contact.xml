@@ -4,25 +4,36 @@
                               android:layout_height="match_parent"
                               tools:context="com.pair.ui.ContactFragment">
 
-    <ListView
-        android:id="@android:id/list"
+    <com.handmark.pulltorefresh.library.PullToRefreshListView
+        android:id="@+id/list"
         android:divider="@null"
         android:dividerHeight="0dp"
         android:layout_width="match_parent"
+        android:fadingEdge="none"
+        android:descendantFocusability="afterDescendants"
+        android:transcriptMode="normal"
         android:layout_height="match_parent"/>
 
     <TextView
         android:id="@android:id/empty"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:gravity="center"
         android:text="@string/st_empty_contacts"
         android:textSize="24sp"
         android:textStyle="italic" />
 
-
-    <include
-        android:id="@+id/fab_refresh"
-        layout="@layout/fab_generic"/>
+    <com.rey.material.widget.Button
+        android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        style="@style/TabPageIndicator"
+        android:background="@color/preferred_primary_color"
+        android:textSize="@dimen/standard_text_size"
+        android:id="@+id/refresh_button"
+        android:layout_below="@android:id/empty"
+        android:visibility="gone"
+        android:text="@string/refresh_contacts"/>
 </com.pair.view.RelativeLayout>

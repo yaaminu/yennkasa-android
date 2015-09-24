@@ -1,32 +1,26 @@
 package com.pair.ui;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.pair.Errors.ErrorCenter;
-import com.pair.PairApp;
 import com.pair.adapter.CountriesListAdapter;
 import com.pair.data.Country;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
-import com.pair.util.Config;
 import com.pair.util.FormValidator;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.UiHelpers;
-import com.pair.workers.ContactSyncService;
-import com.rey.material.app.DialogFragment;
 import com.rey.material.widget.Spinner;
 import com.rey.material.widget.TextView;
-
-import java.util.regex.Pattern;
 
 import io.realm.Realm;
 
@@ -38,12 +32,12 @@ public class LoginFragment extends Fragment {
     private Button loginButton;
     public static final String TAG = LoginFragment.class.getSimpleName();
     private EditText usernameEt, phoneNumberEt;
-    private DialogFragment progressDialog;
     private Realm realm;
     private boolean isLoggingIn = true;
     private Spinner spinner;
     private String userName, phoneNumber, userCountry;
     private FormValidator validator;
+    private Callbacks callback;
     private View.OnClickListener listener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -61,9 +55,15 @@ public class LoginFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        setRetainInstance(true);
+    public void onAttach(Context activity) {
         super.onAttach(activity);
+        setRetainInstance(true);
+
+        try {
+            callback = (Callbacks) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException("Activity" + activity.getClass().getSimpleName() + " must implement interface" + Callbacks.class.getName());
+        }
     }
 
     @Nullable
@@ -88,7 +88,6 @@ public class LoginFragment extends Fragment {
         TextView tv = (TextView) view.findViewById(R.id.tv_signup);
         tv.setOnClickListener(listener);
         loginButton.setOnClickListener(listener);
-        progressDialog = UiHelpers.newProgressDialog();
         return view;
     }
 
@@ -124,45 +123,18 @@ public class LoginFragment extends Fragment {
     }
 
     private void doAttemptLogin() {
-        progressDialog.show(getFragmentManager(), null);
         if (isLoggingIn) {
-            UserManager.getInstance().logIn(getActivity(), phoneNumber, userCountry, loginOrSignUpCallback);
+            callback.onLogin(phoneNumber, userCountry);
         } else {
-            UserManager.getInstance().signUp(getActivity(), userName, phoneNumber, userCountry, loginOrSignUpCallback);
+            callback.onSignUp(userName, phoneNumber, userCountry);
         }
     }
-
-    private final UserManager.CallBack loginOrSignUpCallback = new UserManager.CallBack() {
-        @Override
-        public void done(Exception e) {
-            //
-            phoneNumberEt.post(new Runnable() {
-                @Override
-                public void run() {
-                    try{
-                    progressDialog.dismiss();
-                }catch(Exception ignored){}
-                }
-            });
-            if (e == null) {
-                PairApp.enableComponents();
-                ContactSyncService.startIfRequired(Config.getApplicationContext());
-                UiHelpers.gotoMainActivity((PairAppBaseActivity) getActivity());
-            } else {
-                String message = e.getMessage();
-                if ((message == null) || (message.isEmpty())) {
-                    message = "an unknown error occurred";
-                }
-                ErrorCenter.reportError(TAG,message);
-            }
-        }
-    };
 
     private void showRequiredFieldDialog(String field) {
         UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.required_field_error, field));
     }
 
-    Pattern userNamePattern = Pattern.compile("^[a-zA-Z][a-zA-Z0-9_]{1,12}");
+    //    Pattern userNamePattern = Pattern.compile("^[a-zA-Z][a-zA-Z0-9_]{1,12}");
     private FormValidator.ValidationStrategy userCountryStrategy = new FormValidator.ValidationStrategy() {
         @Override
         public boolean validate() {
@@ -182,12 +154,16 @@ public class LoginFragment extends Fragment {
                 showRequiredFieldDialog(getString(R.string.username_hint));
                 usernameEt.requestFocus();
                 return false;
-            } else if (!userNamePattern.matcher(userName).matches()) {
-                UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.user_name_format_message).toUpperCase());
-                usernameEt.requestFocus();
-                return false;
+            } else {
+                Pair<String, String> errorNamePair = UserManager.getInstance().isValidUserName(userName);
+                if (errorNamePair.second != null) {
+                    UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), errorNamePair.second);
+                    usernameEt.requestFocus();
+                    return false;
+                }
+                userName = errorNamePair.first;
+                return true;
             }
-            return true;
         }
     }, phoneNumberStrategy = new FormValidator.ValidationStrategy() {
         @Override
@@ -215,4 +191,11 @@ public class LoginFragment extends Fragment {
             return true;
         }
     };
+
+    interface Callbacks {
+        void onLogin(String phoneNumber, String userIsoCountry);
+
+        void onSignUp(String userName, String phoneNumber, String userIsoCountry);
+    }
 }
+

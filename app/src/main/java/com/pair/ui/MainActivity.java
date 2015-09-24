@@ -56,7 +56,7 @@ public class MainActivity extends PairAppActivity {
     private void handleIntent(Intent intent) {
         ParseAnalytics.trackAppOpenedInBackground(intent);
         if (notIsMainIntent(intent)) {
-            if (UserManager.getInstance().isUserVerified()) {
+            if (isUserVerified()) {
                 setupViews();
 
                 intent.putExtra(MainActivity.ARG_TITLE, getString(R.string.send_to));
@@ -72,7 +72,7 @@ public class MainActivity extends PairAppActivity {
                 intent = new Intent(this, LoginSignupPrompt.class);
                 startActivityForResult(intent, PROMPT_ACTIVITY_REQUEST_CODE);
             }
-        } else if (UserManager.getInstance().isUserVerified()) {
+        } else if (isUserVerified()) {
             //noinspection ConstantConditions
             setupViews();
             final int default_fragment = intent.getIntExtra(DEFAULT_FRAGMENT, savedPosition);
@@ -108,7 +108,7 @@ public class MainActivity extends PairAppActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (UserManager.getInstance().isUserVerified()) {
+        if (isUserVerified()) {
             if (savedPosition != -1) {
                 setPagePosition(savedPosition);
             }
@@ -118,14 +118,14 @@ public class MainActivity extends PairAppActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (UserManager.getInstance().isUserVerified()) {
+        if (isUserVerified()) {
             Config.appOpen(true);
         }
     }
 
     @Override
     protected void onPause() {
-        if (UserManager.getInstance().isUserVerified()) {
+        if (isUserVerified()) {
             Config.appOpen(false);
         }
         super.onPause();
@@ -133,7 +133,7 @@ public class MainActivity extends PairAppActivity {
 
     @Override
     protected void onStop() {
-        if (UserManager.getInstance().isUserVerified()) {
+        if (isUserVerified()) {
             savedPosition = pager.getCurrentItem();
         }
         super.onStop();

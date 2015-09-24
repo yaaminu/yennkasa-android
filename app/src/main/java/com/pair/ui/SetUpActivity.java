@@ -1,16 +1,21 @@
 package com.pair.ui;
 
+import android.content.res.Configuration;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 
+import com.pair.Errors.ErrorCenter;
+import com.pair.PairApp;
 import com.pair.data.Country;
 import com.pair.data.UserManager;
+import com.pair.messenger.PairAppClient;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.UiHelpers;
+import com.pair.workers.ContactSyncService;
 import com.rey.material.app.DialogFragment;
 
 import org.apache.commons.io.Charsets;
@@ -19,43 +24,67 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 
 import io.realm.Realm;
 
 
-public class SetUpActivity extends PairAppBaseActivity {
+public class SetUpActivity extends PairAppBaseActivity implements VerificationFragment.Callbacks,
+        ChooseDisplayPictureFragment.Callbacks, LoginFragment.Callbacks {
 
     private String TAG = SetUpActivity.class.getSimpleName();
+    DialogFragment progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-            setContentView(R.layout.set_up_activity);
-            //we need to do all the time to automatically handle configuration changes see setupCountriesTask#doInBackGround
+        setContentView(R.layout.set_up_activity);
+        progressDialog = UiHelpers.newProgressDialog();
+
+        //we need to do all the time to automatically handle configuration changes see setupCountriesTask#doInBackGround
+        setUpCountries();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        setUpCountries();
+    }
+
+    private void setUpCountries() {
+        Realm realm = Country.REALM(this);
+        long countries = realm.where(Country.class).count();
+        realm.close();
+        if (countries < 240) {
             setUpCountriesTask.execute();
+        } else {
+            addFragment();
+        }
     }
 
     private void addFragment() {
         Fragment fragment;// = getSupportFragmentManager().findFragmentById(R.id.container);
-        if (UserManager.getInstance().isUserLoggedIn()) {
-            if (UserManager.getInstance().isUserVerified()) {
+        if (isUserLoggedIn()) {
+            if (isUserVerified()) {
                 throw new RuntimeException("user logged and verified "); // FIXME: 7/31/2015 remove this
             }
             fragment = new VerificationFragment();
         } else {
             fragment = new LoginFragment();
         }
+        addFragment(fragment);
+    }
+
+    private void addFragment(Fragment fragment) {
         getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, null).commit();
     }
 
-    DialogFragment pDialog;
     private AsyncTask<Void, Void, Void> setUpCountriesTask = new AsyncTask<Void, Void, Void>() {
         @Override
         protected void onPreExecute() {
-            pDialog = UiHelpers.newProgressDialog();
-            pDialog.show(getSupportFragmentManager(), null);
+            progressDialog.show(getSupportFragmentManager(), null);
         }
 
         @Override
@@ -99,15 +128,131 @@ public class SetUpActivity extends PairAppBaseActivity {
             } finally {
                 realm.close();
             }
+//            SystemClock.sleep(10000);
             return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            pDialog.dismiss();
+            progressDialog.dismiss();
             addFragment();
             UiHelpers.showToast(Config.deviceArc() + "  " + Config.supportsCalling());
         }
 
+    };
+
+    private void doGoBackToLogin() {
+        progressDialog.show(getSupportFragmentManager(), null);
+        UserManager.getInstance().reset(new UserManager.CallBack() {
+            @Override
+            public void done(Exception e) {
+                UiHelpers.dismissProgressDialog(progressDialog);
+                if (e == null) {
+                    addFragment(new LoginFragment());
+                } else {
+                    ErrorCenter.reportError(TAG, e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onVerified() {
+        addFragment(new ChooseDisplayPictureFragment());
+        PairApp.enableComponents();
+        ContactSyncService.syncIfRequired(this);
+        PairAppClient.startIfRequired(this);
+    }
+
+    @Override
+    public void onBackToLogIn() {
+        doGoBackToLogin();
+    }
+
+    private void completeSetUp() {
+        UiHelpers.gotoMainActivity(this);
+    }
+
+    int attempts = 0;
+
+    @Override
+    public void onDp(final String newDp) {
+        if (attempts++ > 3) {
+            ErrorCenter.reportError(TAG, getString(R.string.permanently_disconnected));
+            return;
+        }
+        if (newDp != null && new File(newDp).exists()) {
+            progressDialog.show(getSupportFragmentManager(), null);
+            userManager.changeDp(newDp, new UserManager.CallBack() {
+                @Override
+                public void done(Exception e) {
+                    UiHelpers.dismissProgressDialog(progressDialog);
+                    if (e != null) {
+                        try {
+                            UiHelpers.
+                                    showErrorDialog(SetUpActivity.this, e.getMessage(),
+                                            getString(R.string.try_again), getString(R.string.later), new UiHelpers.Listener() {
+                                                @Override
+                                                public void onClick() {
+                                                    onDp(newDp);
+                                                }
+                                            }, null);
+                        } catch (Exception ignored) {
+
+                        }
+                    } else {
+                        completeSetUp();
+                    }
+                }
+            });
+        }
+    }
+
+    @Override
+    public void onCancelled() {
+        completeSetUp();
+    }
+
+    @Override
+    public boolean allowCancelling() {
+        return true;
+    }
+
+    @Override
+    public CharSequence noDpNotice() {
+        return getString(R.string.choose_dp_help_friends_recognise_you);
+    }
+
+    @Override
+    public String defaultDp() {
+        return isUserLoggedIn() ? getCurrentUser().getDP() : null;
+    }
+
+    @Override
+    public void onLogin(String phoneNumber, String userIsoCountry) {
+        progressDialog.show(getSupportFragmentManager(), "");
+        userManager.logIn(phoneNumber, userIsoCountry, loginOrSignUpCallback);
+    }
+
+    @Override
+    public void onSignUp(String userName, String phoneNumber, String userIsoCountry) {
+        progressDialog.show(getSupportFragmentManager(), "");
+        userManager.signUp(userName, phoneNumber, userIsoCountry, loginOrSignUpCallback);
+    }
+
+    private final UserManager.CallBack loginOrSignUpCallback = new UserManager.CallBack() {
+        @Override
+        public void done(Exception e) {
+            UiHelpers.dismissProgressDialog(progressDialog);
+            if (e == null) {
+                addFragment(new VerificationFragment());
+            } else {
+                String message = e.getMessage();
+                if ((message == null) || (message.isEmpty())) {
+                    message = getString(R.string.an_error_occurred);
+                }
+                ErrorCenter.reportError(TAG, message);
+            }
+        }
     };
 }

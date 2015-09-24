@@ -116,7 +116,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             if (realmMessage != null) {
                 if (realmMessage.getState() == Message.STATE_PENDING) {
                     realm.beginTransaction();
-                    updateMessageStatus(realmMessage, Message.STATE_PENDING);
+                    updateMessageStatus(realmMessage, Message.STATE_SEND_FAILED);
                     realm.commitTransaction();
                 }
             }

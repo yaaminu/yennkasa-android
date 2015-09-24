@@ -15,6 +15,7 @@
             <option value="$PROJECT_DIR$/error" />
             <option value="$PROJECT_DIR$/lib" />
             <option value="$PROJECT_DIR$/messenger" />
+            <option value="$PROJECT_DIR$/pullToRefresh" />
             <option value="$PROJECT_DIR$/sockets_io_client" />
             <option value="$PROJECT_DIR$/utils" />
           </set>

@@ -3,6 +3,7 @@ package com.pair.ui;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -27,7 +28,6 @@ import com.pair.util.FileUtils;
 import com.pair.util.LiveCenter;
 import com.pair.util.MediaUtils;
 import com.pair.util.PhoneNumberNormaliser;
-import com.pair.util.ScreenUtility;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.widget.FloatingActionButton;
@@ -63,8 +63,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private View sendMessageButton;
     private UserManager userManager;
     private String phoneInlocalFormat;
-    private int DP_HEIGHT;
-    private int DP_WIDTH;
+//    private int DP_HEIGHT;
+//    private int DP_WIDTH;
 
 
     public ProfileFragment() {
@@ -72,7 +72,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Context activity) {
         setRetainInstance(true);
         super.onAttach(activity);
     }
@@ -155,9 +155,9 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             }
         }
 
-        ScreenUtility utility = new ScreenUtility(getActivity());
-        DP_HEIGHT = getResources().getDimensionPixelSize(R.dimen.dp_height);
-        DP_WIDTH = (int) utility.getPixelsWidth();
+//        ScreenUtility utility = new ScreenUtility(getActivity());
+////        DP_HEIGHT = getResources().getDimensionPixelSize(R.dimen.dp_height);
+////        DP_WIDTH = (int) utility.getPixelsWidth();
         return view;
     }
 
@@ -316,7 +316,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         } else {
             Picasso.with(getActivity()).load(file)
                     .placeholder(UserManager.getInstance().isGroup(user.getUserId()) ? R.drawable.group_avatar : R.drawable.user_avartar)
-                    .resize(DP_WIDTH, DP_HEIGHT).into(displayPicture);
+                    .into(displayPicture);
             showProgressView();
             changingDp = true;
             userManager.changeDp(user.getUserId(), filePath, DP_CALLBACK);
@@ -342,7 +342,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         }
         showProgressView();
         DPLoader.load(getActivity(), user.getUserId(), user.getDP())
-                .resize(DP_WIDTH, DP_HEIGHT)
                 .placeholder(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .error(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .into(displayPicture, new Callback() {
@@ -371,6 +370,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             switch (v.getId()) {
                 case R.id.bt_message:
                     UiHelpers.enterChatRoom(v.getContext(), user.getUserId());
+                    getActivity().finish();
                     break;
                 case R.id.bt_exit_group:
                     hideProgressView();

@@ -1,7 +1,7 @@
 package com.pair.ui;
 
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
@@ -34,7 +34,7 @@ public class GroupsFragment extends ListFragment {
     }
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Context activity) {
         setRetainInstance(true);
         super.onAttach(activity);
     }
@@ -65,7 +65,6 @@ public class GroupsFragment extends ListFragment {
         BaseAdapter adapter = new GroupsAdapter(getActivity(), groups);
         setListAdapter(adapter);
     }
-
 
     @Override
     public void onDestroy() {

@@ -1,0 +1,79 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:gravity="center_horizontal"
+              android:orientation="vertical"
+              tools:context="com.pair.ui.ChooseDisplayPictureFragment">
+
+    <com.pair.view.RoundedImageView
+        android:id="@+id/riv_group_avatar_preview"
+        android:layout_width="@dimen/dp_thumbnail_width_large"
+        android:layout_height="@dimen/dp_thumbnail_height_large"
+        android:adjustViewBounds="true"
+        android:clickable="true"
+        android:contentDescription="@string/display_picture"
+        android:scaleType="centerCrop"
+        android:src="@drawable/group_avatar"/>
+
+    <TextView
+        android:id="@+id/tv_dp_preview_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:maxLines="3"
+        android:text="@string/pick_an_optional_dp"
+        android:textSize="@dimen/standard_text_size"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+
+        <com.rey.material.widget.Button
+            android:id="@+id/bt_take_photo_change_dp"
+            style="@style/TabRippleStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/abc_action_bar_subtitle_bottom_margin_material"
+            android:layout_weight="1"
+            android:background="@color/preferred_primary_color"
+            android:drawableEnd="@drawable/ic_action_camera_white"
+            android:drawableRight="@drawable/ic_action_camera_white"
+            android:minHeight="@dimen/action_bar_height"
+            android:paddingLeft="@dimen/abc_button_padding_horizontal_material"
+            android:paddingRight="@dimen/abc_button_padding_horizontal_material"
+            android:text="@string/camera"
+            android:textColor="@color/white"
+            android:textSize="@dimen/standard_text_size"/>
+
+        <com.rey.material.widget.Button
+            android:id="@+id/bt_pick_photo_change_dp"
+            style="@style/TabRippleStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/abc_action_bar_subtitle_bottom_margin_material"
+            android:layout_weight="1"
+            android:background="@color/preferred_primary_color"
+            android:drawableEnd="@drawable/ic_action_picture_white"
+            android:drawableRight="@drawable/ic_action_picture_white"
+            android:minHeight="@dimen/action_bar_height"
+            android:paddingLeft="@dimen/abc_button_padding_horizontal_material"
+            android:paddingRight="@dimen/abc_button_padding_horizontal_material"
+            android:text="@string/gallery"
+            android:textColor="@color/white"
+            android:textSize="@dimen/standard_text_size"/>
+    </LinearLayout>
+
+    <com.rey.material.widget.Button
+        android:id="@+id/choose_dp_later"
+        style="@style/TabRippleStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/abc_action_bar_subtitle_bottom_margin_material"
+        android:background="@color/preferred_primary_color"
+        android:minHeight="@dimen/action_bar_height"
+        android:text="@string/later"
+        android:textColor="@color/white"
+        android:textSize="@dimen/standard_text_size"/>
+</LinearLayout>

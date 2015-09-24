@@ -33,7 +33,6 @@ import com.pair.adapter.MultiChoiceUsersAdapter;
 import com.pair.adapter.UsersAdapter;
 import com.pair.data.Message;
 import com.pair.data.User;
-import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.FileUtils;
@@ -59,7 +58,7 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
 
     private EditText messageEt;
     private TextView tvAttachmentDescription;
-    private View attachemtPreview;
+    private View attachmentPreview;
 
     private final Set<String> selectedItems = new HashSet<>();
     private String attachmentBody;
@@ -81,10 +80,10 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
         messageEt = ((EditText) findViewById(R.id.et_message));
         messageEt.addTextChangedListener(this);
 
-        attachemtPreview = findViewById(R.id.attachment_preview);
+        attachmentPreview = findViewById(R.id.attachment_preview);
         View cancelAttachment = findViewById(R.id.cancel_attachment);
         tvAttachmentDescription = (TextView) findViewById(R.id.attachment_description);
-        attachemtPreview.setOnClickListener(this);
+        attachmentPreview.setOnClickListener(this);
         cancelAttachment.setOnClickListener(this);
         toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
 
@@ -95,9 +94,7 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
         final Intent intent = getIntent();
 
         final String title = intent.getStringExtra(MainActivity.ARG_TITLE);
-        if (!TextUtils.isEmpty(title)) {
-            setActionBArTitle(title);
-        }
+        setActionBArTitle(title);
 
         final String intentAction = intent.getAction();
         if (intentAction != null) {
@@ -110,7 +107,7 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
                     messageEt.setText(message);
                     isAttaching = false;
                     isNotDefaultIntent = true;
-                    ViewUtils.hideViews(attachemtPreview);
+                    ViewUtils.hideViews(attachmentPreview);
                     ViewUtils.showViews(messageEt);
                 } else if (intent.getParcelableExtra(Intent.EXTRA_STREAM) != null) {
                     //binary message
@@ -134,10 +131,9 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
                 }
             }
         } else {
-            ViewUtils.hideViews(attachemtPreview);
+            ViewUtils.hideViews(attachmentPreview);
             ViewUtils.showViews(messageEt);
             isNotDefaultIntent = false;
-            setActionBArTitle(null);
         }
 
         Fragment fragment;
@@ -175,7 +171,7 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
                     }
                 }, false);
                 ViewUtils.showViews(messageEt);
-                ViewUtils.hideViews(attachemtPreview);
+                ViewUtils.hideViews(attachmentPreview);
                 setActionBArTitle(null);
             }
         }
@@ -192,7 +188,7 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
 
     private RealmQuery<User> prepareQuery() {
         RealmQuery<User> query = realm.where(User.class)
-                .notEqualTo(User.FIELD_ID, UserManager.getMainUserId());
+                .notEqualTo(User.FIELD_ID, getMainUserId());
         final String forwardedFrom = getIntent().getStringExtra(EXTRA_FORWARDED_FROM);
         if (forwardedFrom != null) {
             query.notEqualTo(User.FIELD_ID, forwardedFrom);
@@ -208,28 +204,26 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         toolbarManager.onPrepareMenu();
-        if (adapter.getCount() >= 1) {
-            menu = toolBar.getMenu();
-            if (menu != null) { //required for toolbar to behave on older platforms <=10
-                MenuItem sendMessageMenuItem = menu.findItem(R.id.action_send_message);
-                if (sendMessageMenuItem == null) {
-                    sendMessageMenuItem = menu.add(0, R.id.action_send_message, 100, R.string.send);
-                    sendMessageMenuItem.setIcon(R.drawable.ic_action_send_now_white);
-                    MenuItemCompat.setShowAsAction(sendMessageMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
-                }
-                sendMessageMenuItem.setVisible((!messageEt.getText().toString().isEmpty() || isAttaching)
-                        && !selectedItems.isEmpty());
-                MenuItem attachMenuItem = menu.findItem(R.id.action_attach);
-                if (attachMenuItem == null) {
-                    attachMenuItem = menu.add(0, R.id.action_attach, 100, R.string.action_attach);
-                    attachMenuItem.setIcon(R.drawable.ic_action_new_attachment_white);
-                    MenuItemCompat.setShowAsAction(attachMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
-                }
-                attachMenuItem.setVisible(!selectedItems.isEmpty() && !isAttaching && !isNotDefaultIntent);
+        final boolean showMenu = adapter.getCount() >= 1;
+        menu = toolBar.getMenu();
+        if (menu != null) { //required for toolbar to behave on older platforms <=10
+            MenuItem sendMessageMenuItem = menu.findItem(R.id.action_send_message);
+            if (sendMessageMenuItem == null) {
+                sendMessageMenuItem = menu.add(0, R.id.action_send_message, 100, R.string.send);
+                sendMessageMenuItem.setIcon(R.drawable.ic_action_send_now_white);
+                MenuItemCompat.setShowAsAction(sendMessageMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
             }
-            return super.onPrepareOptionsMenu(menu);
+            sendMessageMenuItem.setVisible((!messageEt.getText().toString().isEmpty() || isAttaching)
+                    && !selectedItems.isEmpty() && showMenu);
+            MenuItem attachMenuItem = menu.findItem(R.id.action_attach);
+            if (attachMenuItem == null) {
+                attachMenuItem = menu.add(0, R.id.action_attach, 100, R.string.action_attach);
+                attachMenuItem.setIcon(R.drawable.ic_action_new_attachment_white);
+                MenuItemCompat.setShowAsAction(attachMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
+            }
+            attachMenuItem.setVisible(!selectedItems.isEmpty() && !isAttaching && !isNotDefaultIntent && showMenu);
         }
-        return false; //don't show this menu
+        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
@@ -281,7 +275,7 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
                 ErrorCenter.reportError("attachError", e.getMessage());
             } catch (IOException e) {
                 isAttaching = false;
-                ErrorCenter.reportError("attachError", getString(R.string.an_error_occured));
+                ErrorCenter.reportError("attachError", getString(R.string.an_error_occurred));
             }
         }
     }
@@ -293,7 +287,7 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
         isAttaching = true;
         tvAttachmentDescription.setText(attachmentDescription);
         ViewUtils.hideViews(messageEt);
-        ViewUtils.showViews(attachemtPreview);
+        ViewUtils.showViews(attachmentPreview);
     }
 
     @Override
@@ -394,7 +388,7 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
                 isAttaching = false;
                 attachmentBody = null;
                 attachmentType = -1;
-                ViewUtils.hideViews(attachemtPreview);
+                ViewUtils.hideViews(attachmentPreview);
                 ViewUtils.showViews(messageEt);
                 supportInvalidateOptionsMenu();
                 break;

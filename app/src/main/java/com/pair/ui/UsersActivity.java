@@ -24,7 +24,6 @@ import com.pair.adapter.UsersAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
-import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
@@ -63,9 +62,7 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
         groupId = getIntent().getStringExtra(EXTRA_GROUP_ID);
         if (groupId == null) {
             RealmResults<User> results = realm.where(User.class)
-                    .notEqualTo(User.FIELD_ID, UserManager.getInstance()
-                            .getCurrentUser()
-                            .getUserId())
+                    .notEqualTo(User.FIELD_ID, getMainUserId())
                     .findAllSorted(User.FIELD_NAME, true);
             usersAdapter = new UsersAdapter(this, realm, results);
         } else {
@@ -161,7 +158,7 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         User user = (User) parent.getAdapter().getItem(position);
-        if (UserManager.getInstance().isCurrentUser(user.getUserId())) {
+        if (userManager.isCurrentUser(user.getUserId())) {
             UiHelpers.gotoProfileActivity(this, user.getUserId());
         } else {
             Intent mission = getIntent();
@@ -272,7 +269,7 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View view = super.getView(position, convertView, parent);
-            if (UserManager.getInstance().isCurrentUser(getItem(position).getUserId())) {
+            if (userManager.isCurrentUser(getItem(position).getUserId())) {
                 ((TextView) view.findViewById(R.id.tv_user_name)).setText(R.string.you);
             }
 

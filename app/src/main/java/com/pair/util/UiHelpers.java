@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.util.Pair;
 import android.util.Log;
 import android.view.ViewGroup;
@@ -275,6 +277,7 @@ public class UiHelpers {
         }
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         activity.startActivity(intent);
+        activity.finish();
     }
 
     public static void gotoSetUpActivity(PairAppBaseActivity context) {
@@ -337,7 +340,7 @@ public class UiHelpers {
         }
     }
 
-    private static void choosePicture() {
+    public static void choosePicture() {
         Intent attachIntent;
         attachIntent = new Intent(Intent.ACTION_GET_CONTENT);
         attachIntent.setType("image/*");
@@ -370,21 +373,15 @@ public class UiHelpers {
         }
     }
 
-    private static void takePhoto() {
+    public static void takePhoto() {
         try {
-            if (mMediaUri != null) {
-                //something is wrong more than one activity firing intent for results.
-                if (BuildConfig.DEBUG) {
-                    throw new AssertionError();
-                }
-                return;
-            }
             mMediaUri = FileUtils.getOutputUri(FileUtils.MEDIA_TYPE_IMAGE);
             MediaUtils.takePhoto(NavigationManager.getCurrentActivity(), mMediaUri, TAKE_PHOTO_REQUEST);
         } catch (NavigationManager.NoActiveActivityException | IOException e) {
             crashAndBurn(e);
         }
     }
+
 
     private static String getActualPath(Intent data) {
         String actualPath;
@@ -428,4 +425,19 @@ public class UiHelpers {
         return new Pair<>(actualPath, type);
     }
 
+
+    public static void dismissProgressDialog(final DialogFragment dialogFragment) {
+        if (dialogFragment != null) {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    //noinspection EmptyCatchBlock
+                    try {
+                        dialogFragment.dismiss();
+                    } catch (Exception e) {
+                    }
+                }
+            });
+        }
+    }
 }

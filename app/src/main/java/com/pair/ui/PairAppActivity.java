@@ -14,7 +14,6 @@ import android.view.View;
 
 import com.pair.PairApp;
 import com.pair.data.Message;
-import com.pair.data.UserManager;
 import com.pair.messenger.Notifier;
 import com.pair.messenger.PairAppClient;
 import com.pair.pairapp.R;
@@ -58,15 +57,12 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         }
     };
     private Realm realm;
-    private UserManager userManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setUpScreenDimensions();
-        userManager = UserManager.getInstance();
-
-        if (userManager.isUserVerified()) {
+        if (isUserVerified()) {
             realm = Message.REALM(this);
         }
     }
@@ -75,7 +71,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     @Override
     protected void onStart() {
         super.onStart();
-        if (userManager.isUserVerified()) {
+        if (isUserVerified()) {
             bind();
         }
     }
@@ -83,7 +79,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     @Override
     protected void onResume() {
         super.onResume();
-        if (userManager.isUserVerified()) {
+        if (isUserVerified()) {
             realm.addChangeListener(this);
             snackBar = getSnackBar();
             if (snackBar == null) {
@@ -98,7 +94,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     @Override
     protected void onPause() {
         super.onPause();
-        if (userManager.isUserVerified()) {
+        if (isUserVerified()) {
             realm.removeChangeListener(this);
             if (bound) {
                 pairAppClientInterface.unRegisterUINotifier(this);
@@ -108,7 +104,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
     @Override
     protected void onStop() {
-        if (userManager.isUserVerified()) {
+        if (isUserVerified()) {
             if (bound) {
                 unbindService(connection);
                 onUnbind();
@@ -119,7 +115,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
     @Override
     protected void onDestroy() {
-        if (userManager.isUserVerified()) {
+        if (isUserVerified()) {
             realm.close();
         }
         super.onDestroy();

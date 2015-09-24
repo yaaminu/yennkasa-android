@@ -1,7 +1,9 @@
 package com.pair.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.NavUtils;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -20,10 +22,21 @@ public class ProfileActivity extends PairAppActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
-        Bundle bundle = getIntent().getExtras();
         toolBar = ((Toolbar) findViewById(R.id.main_toolbar));
         manager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
 
+        handleIntent(getIntent());
+    }
+
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleIntent(intent);
+    }
+
+    void handleIntent(Intent intent) {
+        Bundle bundle = intent.getExtras();
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         String id = bundle.getString(ProfileActivity.EXTRA_USER_ID);
@@ -38,9 +51,7 @@ public class ProfileActivity extends PairAppActivity {
                 .beginTransaction()
                 .replace(R.id.container, fragment)
                 .commit();
-
     }
-
     @Override
     protected SnackBar getSnackBar() {
         return ((SnackBar) findViewById(R.id.notification_bar));
@@ -62,6 +73,14 @@ public class ProfileActivity extends PairAppActivity {
         item.setVisible(true);
         super.onPrepareOptionsMenu(menu);
         return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            NavUtils.navigateUpFromSameTask(this);
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     public static final String EXTRA_USER_ID = "user id";

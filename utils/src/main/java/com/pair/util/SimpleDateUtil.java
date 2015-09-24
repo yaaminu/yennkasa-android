@@ -3,7 +3,6 @@ package com.pair.util;
 import android.content.Context;
 import android.text.format.DateUtils;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Formatter;
@@ -13,6 +12,8 @@ import java.util.Locale;
  * @author _2am on 9/18/2015.
  */
 public class SimpleDateUtil {
+
+    private static SimpleDateFormat dayPrecisionFormatter = new SimpleDateFormat("yyyy/MM/dd", Locale.US), secondsPrecissionFormatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
 
     public static String formatDateRage(Context context, Date fromWhen) {
         return formatInternal(context, fromWhen);
@@ -49,11 +50,21 @@ public class SimpleDateUtil {
 //        if (time.getTime() > System.currentTimeMillis() + 24 * 60 * 60 * 1000) {
 //            throw new IllegalArgumentException("date in the future");
 //        }
-        DateFormat format = new SimpleDateFormat("yyyy/MM/dd", Locale.US);
-        return format.format(time); //this will be unique for every day
+        return dayPrecisionFormatter.format(time); //this will be unique for every day
     }
 
     public static String formatSessionDate() {
         return formatSessionDate(new Date());
+    }
+
+    public static String timeStampNow() {
+        return timeStampNow(new Date());
+    }
+
+    public static String timeStampNow(Date date) {
+        if (date == null) {
+            throw new IllegalArgumentException("null!");
+        }
+        return secondsPrecissionFormatter.format(date);
     }
 }

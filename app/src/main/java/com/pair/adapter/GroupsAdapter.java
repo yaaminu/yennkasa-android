@@ -14,8 +14,9 @@ import com.pair.pairapp.R;
 import com.pair.ui.DPLoader;
 import com.pair.util.UiHelpers;
 
+import java.util.List;
+
 import io.realm.RealmBaseAdapter;
-import io.realm.RealmList;
 import io.realm.RealmResults;
 
 /**
@@ -49,17 +50,8 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
                 .resize(150, 150)
                 .into(holder.groupIcon);
 
-        RealmList<User> groupMembers = group.getMembers();
-        User mainUser = UserManager.getInstance().getCurrentUser();
-        StringBuilder members = new StringBuilder(groupMembers.size() * 10); //summary
-        members.append("You");
-        for (int i = 0; i < groupMembers.size(); i++) {
-            User groupMember = groupMembers.get(i);
-            if (!groupMember.getUserId().equals(mainUser.getUserId())) {
-                members.append(",").append(groupMember.getName());
-            }
-        }
-        holder.groupMembers.setText(members.toString());
+        String users = join(context, ",", group.getMembers());
+        holder.groupMembers.setText(users);
         View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -70,6 +62,21 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
         holder.groupName.setOnClickListener(listener);
         Log.i(TAG, "Display Picture: " + group.getDP());
         return convertView;
+    }
+
+    public static String join(Context context, CharSequence delimiter, List<User> users) {
+        StringBuilder sb = new StringBuilder(users.size() * 10);
+        String mainUserId = UserManager.getMainUserId();
+
+        sb.append(context.getString(R.string.you));
+        for (User user : users) {
+            if (mainUserId.equals(user.getUserId())) {
+                continue;
+            }
+            sb.append(delimiter);
+            sb.append(user.getName());
+        }
+        return sb.toString();
     }
 
     public class ViewHolder {

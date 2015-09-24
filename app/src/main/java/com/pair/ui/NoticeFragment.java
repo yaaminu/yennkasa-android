@@ -1,7 +1,7 @@
 package com.pair.ui;
 
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.Spanned;
@@ -27,7 +27,7 @@ public class NoticeFragment extends Fragment implements View.OnClickListener {
 
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Context activity) {
         super.onAttach(activity);
         if (activity instanceof NoticeFragmentCallback) {
             callback = ((NoticeFragmentCallback) activity);

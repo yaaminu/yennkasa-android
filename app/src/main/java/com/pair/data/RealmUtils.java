@@ -9,6 +9,7 @@ import com.pair.messenger.MessageProcessor;
 import com.pair.util.Config;
 
 import java.util.Date;
+import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmList;
@@ -36,9 +37,11 @@ public class RealmUtils {
 //        }
         try {
             User user = User.copy(UserManager.getInstance().getCurrentUser());
-            for (int i = 0; i < 20; i++) {
-                user.setUserId(233204441069L + "");
+            int i = 0;
+            while (i++ < 20) {
+                user.setUserId(23326656422L + "" + i);
                 user.setName("@username " + i);
+                user.setType(User.TYPE_NORMAL_USER);
                 realm.copyToRealm(user);
             }
         } catch (Exception e) {
@@ -46,21 +49,22 @@ public class RealmUtils {
         }
         try {
             User group = User.copy(UserManager.getInstance().getCurrentUser());
-            for (int i = 0; i < 20; i++) {
-                group.setUserId("groupName@" + "0" + (204441060L + i));
-                group.setName("New user " + i);
+            int i = 0;
+            while (i++ < 20) {
+                group.setUserId("groupName@" + "233204441069");
+                group.setName("group " + i);
                 group.setType(User.TYPE_GROUP);
-                group = realm.copyToRealm(group);
                 group.setAdmin(realm.where(User.class).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP).findFirst());
                 group.setMembers(new RealmList<User>());
-                RealmResults<User> all = realm.where(User.class).notEqualTo(User.FIELD_TYPE, User.TYPE_NORMAL_USER).findAll();
-                for (User user : all) {
+                RealmResults<User> all = realm.where(User.class).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP).findAll();
+                List<User> users = User.copy(all);
+                for (User user : users) {
                     group.getMembers().add(user);
                 }
-                realm.copyToRealm(group);
+                realm.copyToRealmOrUpdate(group);
             }
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
         realm.commitTransaction();
         realm.close();

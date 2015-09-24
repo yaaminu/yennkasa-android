@@ -12,6 +12,7 @@ import com.pair.Errors.PairappException;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.util.MessageUtils;
+import com.pair.messenger.PairAppClient;
 import com.pair.pairapp.BuildConfig;
 
 import java.util.Date;
@@ -30,7 +31,7 @@ public abstract class MessageActivity extends PairAppActivity {
     private Worker worker;
 
     //public for MessagesAdapter to access
-    public void resendMessage(String messageId) {
+    protected final void resendMessage(String messageId) {
         android.os.Message msg = android.os.Message.obtain();
         msg.what = Worker.RESEND_MESSAGE;
         msg.obj = messageId;
@@ -61,17 +62,17 @@ public abstract class MessageActivity extends PairAppActivity {
         super.onDestroy();
     }
 
-    protected void sendMessage(String messageBody, Set<String> recipientIds, int type) {
+    protected final void sendMessage(String messageBody, Set<String> recipientIds, int type) {
         for (String recipientId : recipientIds) {
             sendMessage(messageBody, recipientId, type);
         }
     }
 
-    protected void sendMessage(String messageBody, String recipient, int type) {
+    protected final void sendMessage(String messageBody, String recipient, int type) {
         sendMessage(messageBody, recipient, type, false);
     }
 
-    protected void sendMessage(String messageBody, String recipient, int type, boolean active) {
+    protected final void sendMessage(String messageBody, String recipient, int type, boolean active) {
         android.os.Message message = android.os.Message.obtain();
         message.what = Worker.SEND_MESSAGE;
         Bundle bundle = new Bundle(4);
@@ -83,10 +84,19 @@ public abstract class MessageActivity extends PairAppActivity {
         worker.sendMessage(message);
     }
 
+    protected final void onMessageSeen(Message message) {
+        if (message.getState() != Message.STATE_SEEN) {
+            android.os.Message msg = android.os.Message.obtain();
+            msg.what = Worker.MARK_AS_SEEN;
+            msg.obj = message.getId();
+            worker.sendMessage(msg);
+        }
+    }
+
     private final class Worker extends HandlerThread implements Handler.Callback, Thread.UncaughtExceptionHandler {
         @SuppressWarnings("unused")
         final static int START = 0x1,
-                STOP = 0x2, SEND_MESSAGE = 0x3, SEND_MESSAGE_TO_MANY = 0x4, RESEND_MESSAGE = 0x5;
+                STOP = 0x2, SEND_MESSAGE = 0x3, SEND_MESSAGE_TO_MANY = 0x4, RESEND_MESSAGE = 0x5, MARK_AS_SEEN = 0x6;
         public static final String TAG = "dispatchThread";
         private final Context context;
         private Handler handler;
@@ -132,6 +142,17 @@ public abstract class MessageActivity extends PairAppActivity {
                         break;
                     }
                     Log.w(MessageActivity.TAG, "failed to resend message, reason: message deleted");
+                    break;
+                case MARK_AS_SEEN:
+                    String id = ((String) msg.obj);
+                    message = realm.where(Message.class).equalTo(Message.FIELD_ID, id).findFirst();
+                    if (message != null && message.isValid()) {
+                        realm.beginTransaction();
+                        message.setState(Message.STATE_SEEN);
+                        realm.commitTransaction();
+                        message = Message.copy(message);
+                        PairAppClient.notifyMessageSeen(message);
+                    }
                     break;
                 default:
                     throw new AssertionError();
@@ -234,4 +255,6 @@ public abstract class MessageActivity extends PairAppActivity {
 //            }
         }
     }
+
+
 }

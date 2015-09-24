@@ -1,6 +1,6 @@
 package com.pair.ui;
 
-import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
@@ -37,10 +37,10 @@ public class ConversationsFragment extends ListFragment {
     } //required no-arg constructor
 
     @Override
-    public void onAttach(Activity activity) {
+    public void onAttach(Context activity) {
+        super.onAttach(activity);
         setHasOptionsMenu(true);
         setRetainInstance(true);
-        super.onAttach(activity);
     }
 
     @Nullable
@@ -48,7 +48,6 @@ public class ConversationsFragment extends ListFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_inbox, container, false);
-        cleanUp();
         realm = Realm.getInstance(Config.getApplicationContext());
         conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
         adapter = new ConversationAdapter(getActivity(), conversations, true);
@@ -65,48 +64,10 @@ public class ConversationsFragment extends ListFragment {
         return view;
     }
 
-    private void cleanUp() {
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                Realm realm = Realm.getInstance(getActivity());
-//                realm.beginTransaction();
-//                RealmResults<Conversation> conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
-//                for (int i = 0; i < conversations.size(); i++) {
-//                    Conversation conversation = conversations.get(i);
-//                    if (conversation.getLastMessage() == null) {
-//                        conversation.removeFromRealm();
-//                    }
-//                }
-//                realm.commitTransaction();
-//                realm.close();
-//            }
-//        }).start();
-    }
-
-//    private void startTimer() {
-//        if (timer == null) {
-//            Log.i(TAG, "starting timer");
-//            timer = newTimer(null);
-//            currentTimeOut = AlarmManager.INTERVAL_FIFTEEN_MINUTES / 15;
-//            timer.scheduleAtFixedRate(task, 0L, currentTimeOut);
-//        }
-//    }
-
-//    private void scheduleTimer(long interval) {
-//        try {
-//            timer.purge();
-//            timer = newTimer("uiRefresher");
-//            timer.scheduleAtFixedRate(task, 0L, interval);
-//            currentTimeOut = interval;
-//        } catch (Exception ignored) { //timer is already scheduled!
-//
-//        }
-//    }
-
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        //noinspection ConstantConditions
         ((ActionBarActivity) getActivity()).getSupportActionBar().hide();
         SwipeDismissListViewTouchListener swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(getListView(), new SwipeDismissListViewTouchListener.OnDismissCallback() {
             @Override
@@ -169,56 +130,4 @@ public class ConversationsFragment extends ListFragment {
         super.onDestroy();
     }
 
-//    private TimerTask task = new TimerTask() {
-//        @Override
-//        public void run() {
-//            getActivity().runOnUiThread(doRefreshDisplay);
-//        }
-//    };
-//
-//    @Override
-//    public void onChange() {
-//        doRefreshDisplay.run();
-//    }
-//
-//    private Runnable doRefreshDisplay = new Runnable() {
-//        @Override
-//        public void run() {
-//            refreshDisplay();
-//            setUpTimerIfPossible();
-//        }
-//    };
-//
-//    private void setUpTimerIfPossible() {
-//        Date then = (realm.where(Conversation.class).maximumDate(Conversation.FIELD_LAST_ACTIVE_TIME));
-//        if (then != null && then.getTime()>0) {
-//            long elapsed = new Date().getTime() - then.getTime();
-//            if (elapsed < AlarmManager.INTERVAL_HOUR) {
-//                if (currentTimeOut != 60000 /*one minute*/) {
-//                    //reset timer.
-//                    Log.i(TAG, "rescheduling time to one minute");
-//                    scheduleTimer(60000);
-//                }
-//            } else if (elapsed < AlarmManager.INTERVAL_DAY) {
-//                //reschedule timer
-//                if (currentTimeOut != AlarmManager.INTERVAL_HOUR) {
-//                    Log.i(TAG, "rescheduling time to one hour");
-//                    scheduleTimer(AlarmManager.INTERVAL_HOUR);
-//                }
-//            } else {//one day or more interval is too long
-//                Log.i(TAG, "canceling timer");
-//                if (timer != null) timer.cancel();
-//            }
-//        }
-//    }
-//
-//    private void refreshDisplay() {
-//        adapter.notifyDataSetChanged();
-//        Log.i(TAG, "refreshing");
-//    }
-//
-//    private Timer newTimer(String id) {
-//        id = (id == null) ? "defaultName" : id;
-//        return new Timer(id, true);
-//    }
 }

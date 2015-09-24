@@ -59,6 +59,7 @@ public class Config {
             getAppImgMediaBaseDir().mkdirs();
             getAppVidMediaBaseDir().mkdirs();
             getAppBinFilesBaseDir().mkdirs();
+            getAppProfilePicsBaseDir().mkdirs();
             getTempDir().mkdirs();
         } else {
             Log.w(TAG, "This is strange! no sdCard available on this device");
