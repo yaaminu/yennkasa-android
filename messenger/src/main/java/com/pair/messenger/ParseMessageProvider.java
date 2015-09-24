@@ -12,9 +12,7 @@ import com.parse.ParseQuery;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -34,23 +32,20 @@ class ParseMessageProvider implements MessagesProvider {
 
 
     @Override
-    public List<Message> retrieveMessages() {
+    public synchronized List<Message> retrieveMessages() {
         String recipient = UserManager.getMainUserId();
         List<Message> messages = new ArrayList<>();
-        final Set<ParseObject> toBeDeleted = new HashSet<>(),
-                toBeUpdated = new HashSet<>();
-
+        final List<ParseObject> toBeDeleted = new ArrayList<>(), toBeUpdated = new ArrayList<>();
         ParseQuery<ParseObject> query = ParseQuery.getQuery(MESSAGE_CLASS_NAME);
         try {
-            List<ParseObject> objects = query.whereEqualTo(TARGET, recipient)
-                    .whereNotEqualTo(RETRIEVED, recipient).find();
+            List<ParseObject> objects = query.whereEqualTo(TARGET, recipient).whereNotEqualTo(RETRIEVED, recipient).find();
             for (ParseObject object : objects) {
-                Message message = MessageJsonAdapter.INSTANCE.fromJson(object.getString(MESSAGE));
-                if (!object.getBoolean(IS_GROUP_MESSAGE) || object.getList(RETRIEVED).size() + 1 >= object.getList(TARGET).size()) {
+                if (!object.getBoolean(IS_GROUP_MESSAGE) || (object.getList(RETRIEVED).size() == object.getList(TARGET).size())) {
                     toBeDeleted.add(object);
                 } else {
                     toBeUpdated.add(object);
                 }
+                Message message = MessageJsonAdapter.INSTANCE.fromJson(object.getString(MESSAGE));
                 messages.add(message);
             }
             worker.execute(new Runnable() {
@@ -61,18 +56,19 @@ class ParseMessageProvider implements MessagesProvider {
             });
             return messages;
         } catch (ParseException e) {
-            Log.e(TAG, e.getMessage());
+            Log.e(TAG, "error retrieving messages: " + e.getMessage());
         }
         return Collections.emptyList();
     }
 
-    private void runUpdates(Set<ParseObject> toBeDeleted, Set<ParseObject> toBeUpdated) {
+    private void runUpdates(List<ParseObject> toBeDeleted, List<ParseObject> toBeUpdated) {
         for (ParseObject object : toBeDeleted) {
             object.deleteEventually();
         }
 
+        final String mainUserId = UserManager.getMainUserId();
         for (ParseObject object : toBeUpdated) {
-            object.addUnique(RETRIEVED, UserManager.getMainUserId());
+            object.addUnique(RETRIEVED, mainUserId);
             object.saveEventually();
         }
     }

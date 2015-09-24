@@ -277,7 +277,10 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     }
 
     private void attemptToMarkAsSeen(Message message) {
-        if (message.getState() != Message.STATE_SEEN && Message.isIncoming(message)) {
+        if (message.getState() != Message.STATE_SEEN &&
+                !Message.isDateMessage(message) &&
+                !Message.isTypingMessage(message)
+                && Message.isIncoming(message)) {
             delegate.onMessageSeen(message);
         }
     }

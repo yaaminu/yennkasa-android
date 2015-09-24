@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.pair.data.Message;
 import com.pair.data.MessageJsonAdapter;
+import com.pair.util.Config;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 
@@ -60,12 +61,16 @@ class ParseDispatcher extends AbstractMessageDispatcher {
         try {
             parseMessage.save();
             onSent(message.getId());
+            // STOPSHIP: 9/24/2015 call a cloud function to send push to all recipients.
         } catch (ParseException e) {
             onFailed(message.getId(), prepareReport(e));
         }
     }
 
     private String prepareReport(ParseException e) {
-        return e.getMessage();
+        if (e.getCode() == ParseException.CONNECTION_FAILED) {
+            return Config.getApplicationContext().getString(R.string.st_unable_to_connect);
+        }
+        return Config.getApplicationContext().getString(R.string.an_error_occurred);
     }
 }

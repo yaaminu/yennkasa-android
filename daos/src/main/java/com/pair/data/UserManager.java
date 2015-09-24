@@ -40,13 +40,12 @@ import retrofit.mime.TypedFile;
 /**
  * @author by Null-Pointer on 5/27/2015.
  */
-@SuppressWarnings({"ThrowableResultOfMethodCallIgnored", "TryFinallyCanBeTryWithResources", "unused"})
 public class UserManager {
 
     private static final String TAG = UserManager.class.getSimpleName();
     private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is for security reasons
     private static final String KEY_USER_PASSWORD = "klfiielklaklier"; //and this one too
-    public static final String KEY_USER_VERIFIED = "vvlaikkljhf"; // and this
+    private static final String KEY_USER_VERIFIED = "vvlaikkljhf"; // and this
 
 
     private volatile User mainUser;

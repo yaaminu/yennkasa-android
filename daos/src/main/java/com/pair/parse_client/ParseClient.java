@@ -9,6 +9,7 @@ import android.util.Log;
 import com.google.gson.JsonObject;
 import com.pair.data.BuildConfig;
 import com.pair.data.Message;
+import com.pair.data.R;
 import com.pair.data.User;
 import com.pair.data.net.FileApi;
 import com.pair.data.net.HttpResponse;
@@ -626,7 +627,13 @@ public class ParseClient implements UserApiV2, FileApi {
     }
 
     private Exception prepareErrorReport(ParseException e) {
-        return e;
+        String message;
+        if (e.getCode() == ParseException.CONNECTION_FAILED) {
+            message = Config.getApplicationContext().getString(R.string.st_unable_to_connect);
+        } else {
+            message = Config.getApplicationContext().getString(R.string.an_error_occurred);
+        }
+        return new Exception(message, e.getCause());
     }
 
     private void ensureFieldsFilled(String... fields) throws RequiredFieldsError {

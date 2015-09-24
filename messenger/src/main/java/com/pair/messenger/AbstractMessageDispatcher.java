@@ -1,5 +1,6 @@
 package com.pair.messenger;
 
+import android.app.AlarmManager;
 import android.util.Log;
 
 import com.pair.Errors.PairappException;
@@ -19,6 +20,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import io.realm.Realm;
 
@@ -28,6 +31,12 @@ import io.realm.Realm;
 abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     public static final String TAG = AbstractMessageDispatcher.class.getSimpleName();
     protected static final String ERR_USER_OFFLINE = "user offline";
+    public static final ContactsManager.Filter<User> USER_FILTER = new ContactsManager.Filter<User>() {
+        @Override
+        public boolean accept(User user) {
+            return !UserManager.getInstance().isCurrentUser(user.getUserId());
+        }
+    };
     private final List<DispatcherMonitor> monitors = new ArrayList<>();
     private final FileApi file_service;
 
@@ -61,37 +70,45 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         }
     }
 
-    private void proceedToSend(Message message) {
+    private void proceedToSend(final Message message) {
         //is this message to a group?
         if (UserManager.getInstance().isGroup(message.getTo())) {
-            Realm realm = User.Realm(Config.getApplicationContext());
-            try {
-                User user = realm.where(User.class).equalTo(User.FIELD_ID, message.getTo()).findFirst();
-                if (user != null) {
-                    List<String> members = User.aggregateUserIds(user.getMembers(), new ContactsManager.Filter<User>() {
+            final Realm realm = User.Realm(Config.getApplicationContext());
+            User user = realm.where(User.class).equalTo(User.FIELD_ID, message.getTo()).findFirst();
+            if (user != null) {
+                if (user.getMembers().size() < 3) {
+                    //give the user manager a hint to sync the members.
+                    UserManager.getInstance().refreshGroup(message.getTo());
+                    //we are going to run some minutes later hoping that the members are 'sync'ed'.
+                    timer.schedule(new TimerTask() {
                         @Override
-                        public boolean accept(User user) {
-                            return !UserManager.getInstance().isCurrentUser(user.getUserId());
+                        public void run() {
+                            //after 5 minutes we must have synced the members otherwise we mark the message as failed
+                            Realm realm = User.Realm(Config.getApplicationContext());
+                            User user = realm.where(User.class).equalTo(User.FIELD_ID, message.getTo()).findFirst();
+                            if (user == null || user.getMembers().size() < 3) {
+                                onFailed(message.getId(), MessageUtils.ERROR_MEMBERS_NOT_SYNCED);
+                            } else {
+                                dispatchToGroup(message, User.aggregateUserIds(user.getMembers(), USER_FILTER));
+                            }
+                            realm.close();
                         }
-                    });
-                    if (members.size() < 2) {
-                        //give the user manager a hint to sync the members.
-                        UserManager.getInstance().refreshGroup(message.getTo());
-//                        onFailed(message.getId(), MessageUtils.ERROR_MEMBERS_NOT_SYNCED);
-//                        return;
-                    }
-                    dispatchToGroup(message, members);
+                    }, AlarmManager.INTERVAL_FIFTEEN_MINUTES / 3);
                 } else {
-                    onFailed(message.getId(), MessageUtils.ERROR_RECIPIENT_NOT_FOUND);
+                    List<String> members = User.aggregateUserIds(user.getMembers(), USER_FILTER);
+                    dispatchToGroup(message, members);
                 }
-            } finally {
-                realm.close();
+            } else {
+                onFailed(message.getId(), MessageUtils.ERROR_RECIPIENT_NOT_FOUND);
             }
+            realm.close();
         } else { //to a single user
             dispatchToUser(message);
         }
     }
 
+
+    private Timer timer = new Timer(TAG, false);
 
     /**
      * @param message the message whose dispatch failed
