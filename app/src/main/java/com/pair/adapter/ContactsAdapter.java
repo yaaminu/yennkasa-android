@@ -33,9 +33,13 @@ import static com.pair.data.ContactsManager.Contact;
  */
 public class ContactsAdapter extends BaseAdapter {
     private static final String TAG = ContactsAdapter.class.getSimpleName();
+    private final String userIsoCountry;
+    private final int[] layoutResource = {
+            R.layout.registered_contact_item,
+            R.layout.unregistered_contact_item,
+    };
     private List<Contact> contacts;
     private boolean isAddOrRemoveFromGroup;
-    private final String userIsoCountry;
     private FragmentActivity context;
 
     public ContactsAdapter(FragmentActivity context, List<Contact> contacts, boolean isAddOrRemoveFromGroup) {
@@ -181,7 +185,7 @@ public class ContactsAdapter extends BaseAdapter {
         } else {
             if (id == R.id.bt_invite) {
                 invite(view.getContext(), contact);
-            } else if (id == R.id.tv_user_status || id == R.id.tv_user_phone_group_admin) {
+            } else if (id == R.id.tv_user_phone_group_admin) {
                 callContact(view, contact);
             }
         }
@@ -195,13 +199,6 @@ public class ContactsAdapter extends BaseAdapter {
             }
         };
         UiHelpers.showErrorDialog(((PairAppBaseActivity) context), R.string.charges_may_apply, android.R.string.ok, android.R.string.cancel, listener, null);
-    }
-
-    private class ViewHolder {
-        private TextView userName, initials;
-        private Button inviteButton;
-        private ImageView userDp;
-        private TextView userPhone;
     }
 
 //    private class InviteContact implements View.OnClickListener {
@@ -229,7 +226,6 @@ public class ContactsAdapter extends BaseAdapter {
 //
 //    }
 
-
     private void addToContacts(Context context, Contact contact) {
         Intent intent = new Intent(ContactsContract.Intents.SHOW_OR_CREATE_CONTACT);
         intent.setData(Uri.parse("tel:" + PhoneNumberNormaliser.toLocalFormat(contact.phoneNumber, userIsoCountry)));
@@ -241,9 +237,11 @@ public class ContactsAdapter extends BaseAdapter {
 
     }
 
-    private final int[] layoutResource = {
-            R.layout.registered_contact_item,
-            R.layout.unregistered_contact_item,
-    };
+    private class ViewHolder {
+        private TextView userName, initials;
+        private Button inviteButton;
+        private ImageView userDp;
+        private TextView userPhone;
+    }
 
 }

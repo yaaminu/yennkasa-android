@@ -60,7 +60,7 @@
     <string name="st_verification_notice">@string/st_hint_et_verification</string>
     <string name="st_hint_et_verification">Verification Token</string>
     <string name="st_complete_setup">Complete Setup</string>
-    <string name="st_send_verification_notice">Enter the verification token you received. Try again if you don\'t receive the token in 5 minutes</string>
+    <string name="st_send_verification_notice">Enter the verification token you received.\nYou may try again if you don\'t receive the token after 5 minutes</string>
     <string name="st_unknown">Unknown</string>
     <string name="st_offline">Offline</string>
     <string name="st_online">Online</string>
@@ -165,7 +165,7 @@
     <string name="file_not_found">can\'t forward, file not found</string>
     <string name="unknown">Unknown</string>
     <string name="no_contact_on_pairapp_notice">Listen,You currently don\'t have anyone in your \
-        contacts who uses PairApp.\n\n Quickly invite them to have a nice chat experience</string>
+        contacts who uses PairApp.\n\n Quickly invite them to have a nice experience</string>
     <string name="no_contact_on_pairapp_notice_cap">LISTEN, YOU CURRENTLY DON\'T HAVE ANYONE IN YOUR CONTACTS USING PAIRAPP,\n\n QUICKLY INVITE THEM FOR A NICE CHAT EXPERIENCE</string>
     <string name="search_or_add_custom">Search or Add custom number</string>
     <string name="title_activity_login_signup_prompt">@string/app_name</string>
@@ -194,4 +194,7 @@
     <string name="refresh_contacts">Refresh Contacts</string>
     <string name="permanently_disconnected">You seem to be permanently disconnected from the internet. Please Check your internet setting and try again later</string>
     <string name="try_again">Try Again</string>
+    <string name="dp_prompt">Are you sure you want to use this picture as the DP?</string>
+    <string name="get_started_noitce"><![CDATA[<p>Hi there! thanks for installing PairApp.<br/>Please take a few seconds to set things up.</p>]]></string>
+    <string name="complete"><![CDATA[<p>Please take time to complete the set up process.</p>]]></string>
 </resources>

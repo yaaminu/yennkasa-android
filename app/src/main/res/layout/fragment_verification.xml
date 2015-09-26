@@ -52,8 +52,8 @@
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
         android:background="@color/white"
-        app:cardCornerRadius="@dimen/card_view_corner_radius"
-        app:cardElevation="@dimen/cardview_default_elevation">
+        app:cardCornerRadius="0dp"
+        app:cardElevation="0dp">
 
         <com.pair.view.LinearLayout
             android:layout_width="match_parent"
@@ -74,7 +74,7 @@
                 android:id="@+id/bt_verify"
                 style="@style/RaiseWaveColorButtonRippleStyle"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/spinner_height"
+                android:layout_height="@dimen/big_button_height"
                 android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
                 android:background="#225eb964"
                 android:gravity="center"
@@ -85,7 +85,7 @@
                 android:id="@+id/bt_resend_token"
                 style="@style/RaiseWaveColorButtonRippleStyle"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/spinner_height"
+                android:layout_height="@dimen/big_button_height"
                 android:layout_marginTop="10dp"
                 android:background="#225eb964"
                 android:gravity="center"

@@ -5,6 +5,7 @@ import android.text.Html;
 import android.text.Spanned;
 
 import com.pair.pairapp.R;
+import com.pair.util.UiHelpers;
 
 public class LoginSignupPrompt extends PairAppBaseActivity implements NoticeFragment.NoticeFragmentCallback {
 
@@ -16,18 +17,31 @@ public class LoginSignupPrompt extends PairAppBaseActivity implements NoticeFrag
 
     @Override
     public Spanned getNoticeText() {
-        return Html.fromHtml("<p>" + "Hi there! thanks for installing PairApp.".toUpperCase() + "<br/>" + "Please take a few seconds to set things up".toUpperCase() + "</p>");
+
+        if (SetUpActivity.getStage() == SetUpActivity.UNKNOWN) {
+            return Html.fromHtml(getString(R.string.get_started_noitce).toUpperCase());
+        } else {
+            return Html.fromHtml(getString(R.string.complete).toUpperCase());
+        }
     }
 
     @Override
     public CharSequence getActionText() {
-        return "Get Started".toUpperCase();
+        if (SetUpActivity.getStage() == SetUpActivity.UNKNOWN) {
+            return getString(R.string.title_activity_set_up);
+        } else {
+            return getString(R.string.st_complete_setup);
+        }
     }
 
     @Override
     public void onAction() {
-        setResult(RESULT_OK);
+        UiHelpers.gotoSetUpActivity(this);
         finish();
     }
 
+    @Override
+    public void onBackPressed() {
+        onAction();
+    }
 }

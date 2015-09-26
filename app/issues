@@ -1,12 +1,5 @@
 /************* things that can wait ************************************/
-# design interface // working on this now
-# validate content of the spinner
-# fix the live notifier problem where duplicate names are shown
-# fix the menu problems 
-# improve the way we handle sessions
-# handle situations where unverified users are able to make into the app
 # logout users from backend when they choose to logout
-# code our own errorHandler that we will pass to retrofit
 # merge the contact class into the user class
 # add call support
 # decouple  the notification component from message processor
@@ -15,7 +8,6 @@
 # create an application wide staging area(threadPool) where tasks can be submitted for execution
 # create an application wide settings class where all settings of the app will be persisted
 # fix dp changing problem
-# implement exponential backoff for parsedispatcher
 #**************************************************************************************
 # write test for some of the classes. I know it should have been the first thing to do//done
 # code our own cache for picasso //complete
@@ -28,3 +20,10 @@
 # fix group problem with profile fragment //fixed
 # fix group fragment //fixed
 # change the copy constructor of the user DTO //fixed
+# design interface // working on this now
+# improve the way we handle sessions
+# fix the live notifier problem where duplicate names are shown
+# fix the menu problems
+
+
+

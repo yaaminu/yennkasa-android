@@ -15,7 +15,7 @@
     <dimen name="title_text">16sp</dimen>
     <dimen name="bt_height">36dp</dimen>
     <dimen name="margin_32dp">48dp</dimen>
-    <dimen name="spinner_height">64dp</dimen>
+    <dimen name="spinner_height">48dp</dimen>
     <dimen name="tv_app_name_title_padding_top">16dp</dimen>
     <dimen name="sub_title_app_name_size">32sp</dimen>
     <dimen name="padding_ll_login_fragment_bottom">16dp</dimen>
@@ -58,4 +58,5 @@
     <dimen name="title_text_size">48sp</dimen>
     <dimen name="sub_title_text_size">24sp</dimen>
     <dimen name="login_in_fragment_margin_top">48dp</dimen>
+    <dimen name="big_button_height">64dp</dimen>
 </resources>

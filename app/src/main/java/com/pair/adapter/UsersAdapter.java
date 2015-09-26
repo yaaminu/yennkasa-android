@@ -28,6 +28,7 @@ import io.realm.RealmResults;
  * @author Null-Pointer on 6/6/2015.
  */
 public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
+    Pattern alphabet = Pattern.compile("\\p{Alpha}");
     private RealmResults<User> filterResults;
     private int layoutResource;
     private boolean multiSelect;
@@ -82,25 +83,19 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
         } else {
             holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId(), UserManager.getInstance().getUserCountryISO()));
         }
-        DPLoader.load(context,user.getUserId(), user.getDP())
-                .error(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
-                .placeholder(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
-                .resize(150, 150)
-                .into(holder.iv);
+        if (!multiSelect) {
+            DPLoader.load(context, user.getUserId(), user.getDP())
+                    .error(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
+                    .placeholder(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
+                    .resize(150, 150)
+                    .into(holder.iv);
+        }
         return convertView;
     }
 
     protected RealmQuery<User> getOriginalQuery() {
         return null;
     }
-
-    private static class ViewHolder {
-        private ImageView iv;
-        private TextView tv, userPhone;
-        private CheckBox checkBox;
-    }
-
-    Pattern alphabet = Pattern.compile("[a-zA-Z]");
 
     @Override
     public Filter getFilter() {
@@ -183,6 +178,12 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
                 return constraintAsString;
             }
         };
+    }
+
+    private static class ViewHolder {
+        private ImageView iv;
+        private TextView tv, userPhone;
+        private CheckBox checkBox;
     }
 
 }

@@ -1,48 +1,40 @@
 package com.pair.ui;
 
-import android.content.res.Configuration;
-import android.os.AsyncTask;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 
 import com.pair.Errors.ErrorCenter;
 import com.pair.PairApp;
-import com.pair.data.Country;
 import com.pair.data.UserManager;
 import com.pair.messenger.PairAppClient;
-import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.UiHelpers;
 import com.pair.workers.ContactSyncService;
 import com.rey.material.app.DialogFragment;
 
-import org.apache.commons.io.Charsets;
-import org.apache.commons.io.IOUtils;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.File;
-import java.io.IOException;
-import java.util.Locale;
-
-import io.realm.Realm;
 
 
 public class SetUpActivity extends PairAppBaseActivity implements VerificationFragment.Callbacks,
         ChooseDisplayPictureFragment.Callbacks, LoginFragment.Callbacks {
 
-    DialogFragment progressDialog;
+    static final int UNKNOWN = -1, LOGIN_STAGE = 0, VERIFICATION_STAGE = 1, DP_STAGE = 2, COMPLETE = 3;
+    private static final String STAGE = "staSKDFDge", SETUP_PREFS_KEY = "setuSLFKA", OUR_TAG = "ourTag";
     int attempts = 0;
+    private int stage = UNKNOWN;
+    private DialogFragment progressDialog;
     private String TAG = SetUpActivity.class.getSimpleName();
     private final UserManager.CallBack loginOrSignUpCallback = new UserManager.CallBack() {
         @Override
         public void done(Exception e) {
             UiHelpers.dismissProgressDialog(progressDialog);
             if (e == null) {
-                addFragment(new VerificationFragment());
+                stage = VERIFICATION_STAGE;
+                next();
             } else {
                 String message = e.getMessage();
                 if ((message == null) || (message.isEmpty())) {
@@ -52,108 +44,80 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
             }
         }
     };
-    private AsyncTask<Void, Void, Void> setUpCountriesTask = new AsyncTask<Void, Void, Void>() {
-        @Override
-        protected void onPreExecute() {
-            progressDialog.show(getSupportFragmentManager(), null);
-        }
 
-        @Override
-        protected Void doInBackground(Void... params) {
-            Realm realm = Country.REALM(SetUpActivity.this);
-            try {
-                // TODO: 8/4/2015 change this and pass the input stream directly to realm
-                JSONArray array = new JSONArray(IOUtils.toString(getAssets().open("countries.json"), Charsets.UTF_8));
-                JSONObject cursor;
-                Locale locale;
-                realm.beginTransaction();
-                realm.clear(Country.class);
+    private static SharedPreferences getSharedPreferences() {
+        return Config.getApplicationContext().getSharedPreferences(SETUP_PREFS_KEY, Context.MODE_PRIVATE);
+    }
 
-                for (int i = 0; i < array.length(); i++) {
-                    cursor = array.getJSONObject(i);
-                    if (cursor.optString(Country.FIELD_CCC, "").isEmpty()) {
-                        continue; //cleans up the assets file
-                    }
-                    final String isoCode = cursor.getString(Country.FIELD_ISO_2_LETTER_CODE);
-                    locale = new Locale("", isoCode);
-                    String localisedName = locale.getDisplayCountry().trim();
-                    if (localisedName.equalsIgnoreCase(isoCode)) {
-                        localisedName = cursor.getString(Country.FIELD_NAME) + " (" + localisedName + ")";
-                    }
-                    Country country = new Country();
-                    country.setName(localisedName.isEmpty() ? cursor.getString(Country.FIELD_NAME) : localisedName);
-                    country.setCcc(cursor.getString(Country.FIELD_CCC));
-                    country.setIso2letterCode(isoCode);
-                    realm.copyToRealm(country);
-                }
-                realm.commitTransaction();
-                for (Country country : realm.where(Country.class).findAll()) {
-                    Log.i(TAG, country.toString());
-                }
-            } catch (IOException | JSONException e) {
-                if (BuildConfig.DEBUG) {
-                    Log.e(TAG, e.getMessage(), e.getCause());
-                } else {
-                    Log.e(TAG, e.getMessage());
-                }
-            } finally {
-                realm.close();
-            }
-//            SystemClock.sleep(10000);
-            return null;
-        }
+    protected static boolean isEveryThingOk() {
+        return getStage() == COMPLETE;
+    }
 
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            progressDialog.dismiss();
-            addFragment();
-            UiHelpers.showToast(Config.deviceArc() + "  " + Config.supportsCalling());
-        }
-
-    };
+    protected static int getStage() {
+        return getSharedPreferences().getInt(STAGE, UNKNOWN);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.set_up_activity);
         progressDialog = UiHelpers.newProgressDialog();
-
-        //we need to do all the time to automatically handle configuration changes see setupCountriesTask#doInBackGround
-        setUpCountries();
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        setUpCountries();
+    protected void onResume() {
+        super.onResume();
+        stage = getActivityPreferences().getInt(STAGE, UNKNOWN);
+        next();
     }
 
-    private void setUpCountries() {
-        Realm realm = Country.REALM(this);
-        long countries = realm.where(Country.class).count();
-        realm.close();
-        if (countries < 240) {
-            setUpCountriesTask.execute();
-        } else {
-            addFragment();
-        }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        getActivityPreferences().edit().putInt(STAGE, stage).commit();
     }
 
-    private void addFragment() {
+    private void next() {
         Fragment fragment;// = getSupportFragmentManager().findFragmentById(R.id.container);
-        if (isUserLoggedIn()) {
-            if (isUserVerified()) {
-                throw new RuntimeException("user logged and verified "); // FIXME: 7/31/2015 remove this
+        if (stage == UNKNOWN) {
+            if (isUserLoggedIn()) {
+                if (isUserVerified()) {
+                    stage = DP_STAGE;
+                } else {
+                    stage = VERIFICATION_STAGE;
+                }
+            } else {
+                stage = LOGIN_STAGE;
             }
-            fragment = new VerificationFragment();
-        } else {
-            fragment = new LoginFragment();
         }
+        fragment = findFragment();
         addFragment(fragment);
     }
 
+    @NonNull
+    private Fragment findFragment() {
+        Fragment fragment = getSupportFragmentManager().findFragmentByTag(OUR_TAG + stage);
+        if (fragment != null) {
+            return fragment;
+        }
+        switch (stage) {
+            case DP_STAGE:
+                fragment = new ChooseDisplayPictureFragment();
+                break;
+            case VERIFICATION_STAGE:
+                fragment = new VerificationFragment();
+                break;
+            case LOGIN_STAGE:
+                //fall through
+            default:
+                fragment = new LoginFragment();
+                break; //redundant but safe
+        }
+        return fragment;
+    }
+
     private void addFragment(Fragment fragment) {
-        getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, null).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, OUR_TAG + stage).commit();
     }
 
     private void doGoBackToLogin() {
@@ -163,7 +127,8 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
             public void done(Exception e) {
                 UiHelpers.dismissProgressDialog(progressDialog);
                 if (e == null) {
-                    addFragment(new LoginFragment());
+                    stage = LOGIN_STAGE;
+                    next();
                 } else {
                     ErrorCenter.reportError(TAG, e.getMessage());
                 }
@@ -173,10 +138,8 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
 
     @Override
     public void onVerified() {
-        addFragment(new ChooseDisplayPictureFragment());
-        PairApp.enableComponents();
-        ContactSyncService.syncIfRequired(this);
-        PairAppClient.startIfRequired(this);
+        stage = DP_STAGE;
+        next();
     }
 
     @Override
@@ -185,6 +148,14 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     }
 
     private void completeSetUp() {
+        if (stage != COMPLETE) {
+            next();
+            return;
+        }
+        getActivityPreferences().edit().putInt(STAGE, COMPLETE).commit();
+        PairApp.enableComponents();
+        ContactSyncService.syncIfRequired(this);
+        PairAppClient.startIfRequired(this);
         UiHelpers.gotoMainActivity(this);
     }
 
@@ -197,35 +168,39 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
             ErrorCenter.reportError(TAG, getString(R.string.permanently_disconnected));
             return;
         }
-        if (newDp != null && new File(newDp).exists()) {
-            progressDialog.show(getSupportFragmentManager(), null);
-            userManager.changeDp(newDp, new UserManager.CallBack() {
-                @Override
-                public void done(Exception e) {
-                    UiHelpers.dismissProgressDialog(progressDialog);
-                    if (e != null) {
-                        try {
-                            UiHelpers.
-                                    showErrorDialog(SetUpActivity.this, e.getMessage(),
-                                            getString(R.string.try_again), getString(android.R.string.ok), new UiHelpers.Listener() {
-                                                @Override
-                                                public void onClick() {
-                                                    onDp(newDp);
-                                                }
-                                            }, null);
-                        } catch (Exception ignored) {
+        doChangeDp(newDp);
+    }
 
-                        }
-                    } else {
-                        completeSetUp();
+    private void doChangeDp(final String newDp) {
+        progressDialog.show(getSupportFragmentManager(), null);
+        userManager.changeDp(newDp, new UserManager.CallBack() {
+            @Override
+            public void done(Exception e) {
+                UiHelpers.dismissProgressDialog(progressDialog);
+                if (e != null) {
+                    try {
+                        UiHelpers.
+                                showErrorDialog(SetUpActivity.this, e.getMessage(),
+                                        getString(R.string.try_again), getString(android.R.string.ok), new UiHelpers.Listener() {
+                                            @Override
+                                            public void onClick() {
+                                                onDp(newDp);
+                                            }
+                                        }, null);
+                    } catch (Exception ignored) {
+
                     }
+                } else {
+                    stage = COMPLETE;
+                    completeSetUp();
                 }
-            });
-        }
+            }
+        });
     }
 
     @Override
     public void onCancelled() {
+        stage = COMPLETE;
         completeSetUp();
     }
 
@@ -254,5 +229,10 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     public void onSignUp(String userName, String phoneNumber, String userIsoCountry) {
         progressDialog.show(getSupportFragmentManager(), "");
         userManager.signUp(userName, phoneNumber, userIsoCountry, loginOrSignUpCallback);
+    }
+
+    @Override
+    public SharedPreferences getActivityPreferences() {
+        return SetUpActivity.getSharedPreferences();
     }
 }

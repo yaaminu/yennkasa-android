@@ -24,11 +24,6 @@ public class VerificationFragment extends Fragment {
     private DialogFragment progressDialog;
     private EditText etVerification;
     private Callbacks callback;
-
-    public VerificationFragment() {
-        // Required empty public constructor
-    }
-
     private final View.OnClickListener listener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -42,9 +37,14 @@ public class VerificationFragment extends Fragment {
         }
     };
 
+    public VerificationFragment() {
+        // Required empty public constructor
+    }
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        setRetainInstance(true);
         try {
             callback = (Callbacks) context;
         } catch (ClassCastException e) {

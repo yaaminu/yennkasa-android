@@ -55,7 +55,7 @@ public class MainActivity extends PairAppActivity {
     private void handleIntent(Intent intent) {
         ParseAnalytics.trackAppOpenedInBackground(intent);
         if (notIsMainIntent(intent)) {
-            if (isUserVerified()) {
+            if (isUserVerified() && SetUpActivity.isEveryThingOk()) {
                 setupViews();
 
                 intent.putExtra(MainActivity.ARG_TITLE, getString(R.string.send_to));
@@ -69,14 +69,19 @@ public class MainActivity extends PairAppActivity {
 //                    }
 //                }, false);
                 intent = new Intent(this, LoginSignupPrompt.class);
-                startActivityForResult(intent, PROMPT_ACTIVITY_REQUEST_CODE);
+                startActivity(intent);
+                finish();
             }
         } else if (isUserVerified()) {
             //noinspection ConstantConditions
-            setupViews();
-            final int default_fragment = intent.getIntExtra(DEFAULT_FRAGMENT, savedPosition);
-            savedPosition = Math.min(default_fragment, MyFragmentStatePagerAdapter.POSITION_SETTINGS_FRAGMENT);
-            savedPosition = Math.max(MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT, default_fragment);
+            if (SetUpActivity.isEveryThingOk()) {
+                setupViews();
+                final int default_fragment = intent.getIntExtra(DEFAULT_FRAGMENT, savedPosition);
+                savedPosition = Math.min(default_fragment, MyFragmentStatePagerAdapter.POSITION_SETTINGS_FRAGMENT);
+                savedPosition = Math.max(MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT, default_fragment);
+            } else {
+                UiHelpers.gotoSetUpActivity(MainActivity.this);
+            }
         } else {
             PairApp.disableComponents();
             UiHelpers.gotoSetUpActivity(MainActivity.this);
@@ -122,15 +127,6 @@ public class MainActivity extends PairAppActivity {
         super.onStop();
     }
 
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == PROMPT_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
-            UiHelpers.gotoSetUpActivity(this);
-            return;
-        }
-        finish();
-    }
 
     void setPagePosition(int newPosition) {
         if (newPosition < 0 || newPosition >= pager.getAdapter().getCount() || pager.getCurrentItem() == newPosition) {

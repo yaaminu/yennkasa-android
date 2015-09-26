@@ -43,8 +43,8 @@
         android:layout_marginStart="@dimen/login_fragment_cardview_margin_left"
         android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
         android:background="@android:color/white"
-        app:cardCornerRadius="@dimen/card_view_corner_radius"
-        app:cardElevation="@dimen/cardview_default_elevation">
+        app:cardCornerRadius="0dp"
+        app:cardElevation="0dp">
 
         <com.pair.view.LinearLayout
             android:layout_width="match_parent"
@@ -63,14 +63,14 @@
                 style="@style/Material.Widget.Spinner.Light"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/spinner_height"
+                android:gravity="center"
                 app:rd_delayClick="afterRelease"
                 app:rd_enable="true"
                 app:rd_style="@style/selectedListItemStyle"
                 app:spn_arrowAnimDuration="@android:integer/config_shortAnimTime"
                 app:spn_arrowInterpolator="@android:anim/decelerate_interpolator"
                 app:spn_arrowSwitchMode="true"
-                app:spn_labelTextSize="@dimen/edit_text_size">
-
+                app:spn_labelTextSize="@dimen/standard_text_size">
                 <requestFocus/>
             </com.rey.material.widget.Spinner>
 
@@ -91,7 +91,7 @@
                 android:id="@+id/bt_loginButton"
                 style="@style/RaiseWaveColorButtonRippleStyle"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="@dimen/big_button_height"
                 android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
                 android:background="#225eb964"
                 android:gravity="center"

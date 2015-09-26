@@ -36,7 +36,6 @@ public class PhoneNumberNormaliser {
     }
 
     public static boolean isIEE_Formatted(String phoneNumber, String region) {
-        // FIXME: 8/23/2015 test this `if condition`. this could be a bug!
         PhoneNumberUtil util = PhoneNumberUtil.getInstance();
         phoneNumber = cleanNonDialableChars(phoneNumber);
         if (!phoneNumber.startsWith("+") && phoneNumber.startsWith("00") && phoneNumber.startsWith("011")) {

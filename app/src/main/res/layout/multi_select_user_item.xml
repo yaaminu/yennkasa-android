@@ -1,77 +1,53 @@
-<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                              xmlns:tools="http://schemas.android.com/tools"
-                              android:layout_width="match_parent"
-                              android:layout_height="@dimen/list_item_height"
-                              android:layout_marginBottom="@dimen/list_item_margin_bottom"
-                              android:descendantFocusability="beforeDescendants"
-                              android:gravity="center_vertical"
-                              android:minHeight="?android:attr/listPreferredItemHeight"
-                              android:padding="@dimen/list_item_padding"
-                              tools:ignore="RtlHardcoded">
+<com.pair.view.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                            xmlns:tools="http://schemas.android.com/tools"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:descendantFocusability="beforeDescendants"
+                            android:gravity="center_vertical"
+                            android:minHeight="?android:attr/listPreferredItemHeight"
+                            android:orientation="vertical"
+                            android:padding="@dimen/list_item_padding"
+                            tools:ignore="RtlHardcoded">
 
-    <com.pair.view.RoundedImageView
-        android:id="@+id/iv_display_picture"
-        android:layout_width="@dimen/thumbnail_width"
-        android:layout_height="@dimen/thumbnail_height"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_centerVertical="true"
-        android:layout_margin="@dimen/thumbnail_margin"
-        android:contentDescription="@string/content_desc_user_avatar"
-        android:scaleType="centerCrop"
-        android:src="@drawable/user_avartar"/>
-
-    <TextView
-        android:id="@+id/tv_user_name"
-        android:layout_width="wrap_content"
+    <com.pair.view.LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignTop="@id/iv_display_picture"
-        android:layout_toRightOf="@+id/iv_display_picture"
-        android:singleLine="true"
-        android:text="@string/username_hint"
-        android:textSize="@dimen/standard_text_size"
-        android:textStyle="bold"
-        tools:ignore="RtlHardcoded"/>
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tv_user_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:singleLine="true"
+            android:text="@string/username_hint"
+            android:textSize="@dimen/standard_text_size"
+            android:textStyle="bold"
+            tools:ignore="RtlHardcoded"/>
+
+        <com.pair.view.CheckBox
+            android:id="@+id/cb_checked"
+            style="@style/CheckBoxDrawable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="false"/>
+    </com.pair.view.LinearLayout>
 
     <TextView
         android:id="@+id/tv_user_phone_group_admin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/iv_display_picture"
-        android:layout_alignLeft="@+id/tv_user_name"
         android:ellipsize="end"
         android:singleLine="true"
         android:text="@string/phone"
-        android:textSize="@dimen/standard_text_size"
+        android:textSize="@dimen/standard_text_size_small"
         android:textStyle="italic"/>
 
-    <TextView
-        android:id="@+id/tv_user_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:layout_alignTop="@+id/tv_user_name"
-        android:text="@string/st_offline"
-        android:visibility="gone"/>
-
-    <com.pair.view.CheckBox
-        android:id="@+id/cb_checked"
-        style="@style/CheckBoxDrawable"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/tv_user_phone_group_admin"
-        android:layout_alignParentRight="true"
-        android:checked="false"/>
-
     <include
+        android:id="@+id/divider"
         layout="@layout/divider"
         android:layout_width="match_parent"
         android:layout_height="@dimen/inbox_preferred_list_item_divider_height"
-        android:layout_alignLeft="@+id/tv_user_phone_group_admin"
-        android:layout_alignParentBottom="true"
-        android:layout_alignStart="@+id/tv_user_phone_group_admin"
-        android:layout_marginEnd="@dimen/divider_right_offset"
-        android:layout_marginRight="@dimen/divider_right_offset"
-        android:layout_marginTop="4dp"/>
-
-</com.pair.view.RelativeLayout>
+        android:layout_margin="@dimen/divider_right_offset"
+        />
+</com.pair.view.LinearLayout>

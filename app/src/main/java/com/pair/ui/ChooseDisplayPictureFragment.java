@@ -22,6 +22,7 @@ import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.MediaUtils;
 import com.pair.util.SimpleDateUtil;
+import com.pair.util.UiHelpers;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
@@ -36,9 +37,9 @@ public class ChooseDisplayPictureFragment extends Fragment {
     public static final int TAKE_PHOTO_REQUEST = 1001;
     public static final int PICK_PHOTO_REQUEST = 1002;
     public static final String TAG = ChooseDisplayPictureFragment.class.getSimpleName();
+    private static String dp;
     private Callbacks callback;
     private TextView previewLabel;
-    private String dp;
     private Picasso picasso;
     private ImageView displayPicture;
     private Uri outPutUri;
@@ -101,7 +102,13 @@ public class ChooseDisplayPictureFragment extends Fragment {
                 displayPicture.setImageResource(R.drawable.group_avatar);
             } else {
                 displayPicture.setImageBitmap(bitmap);
-                callback.onDp(dp);
+                UiHelpers.showErrorDialog(((PairAppBaseActivity) getActivity()), getString(R.string.dp_prompt),
+                        getString(R.string.yes), getString(R.string.no), new UiHelpers.Listener() {
+                            @Override
+                            public void onClick() {
+                                callback.onDp(dp);
+                            }
+                        }, null);
             }
         }
 
@@ -129,6 +136,7 @@ public class ChooseDisplayPictureFragment extends Fragment {
     @Override
     public void onAttach(Context activity) {
         super.onAttach(activity);
+        setRetainInstance(true);
         try {
             callback = (Callbacks) activity;
         } catch (ClassCastException e) {
