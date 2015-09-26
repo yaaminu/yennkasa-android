@@ -197,4 +197,7 @@
     <string name="dp_prompt">Are you sure you want to use this picture as the DP?</string>
     <string name="get_started_noitce"><![CDATA[<p>Hi there! thanks for installing PairApp.<br/>Please take a few seconds to set things up.</p>]]></string>
     <string name="complete"><![CDATA[<p>Please take time to complete the set up process.</p>]]></string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

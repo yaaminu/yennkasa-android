@@ -27,7 +27,6 @@ import com.rey.material.widget.TabPageIndicator;
  */
 public class MainActivity extends PairAppActivity {
     public static final String DEFAULT_FRAGMENT = "default_fragment";
-    public static final int PROMPT_ACTIVITY_REQUEST_CODE = 0x1;
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final String ARG_TITLE = "title";
     private static boolean cleanedMessages = false;
@@ -167,7 +166,7 @@ public class MainActivity extends PairAppActivity {
                     fragment = new GroupsFragment();
                     break;
                 case POSITION_SETTINGS_FRAGMENT:
-                    fragment = new ProfileFragment();
+                    fragment = new SettingsFragment();
                     Bundle bundle = new Bundle(1);
                     bundle.putString(ProfileFragment.ARG_USER_ID, UserManager.getMainUserId());
                     fragment.setArguments(bundle);
