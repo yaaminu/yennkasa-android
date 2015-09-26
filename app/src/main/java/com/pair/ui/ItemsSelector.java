@@ -20,8 +20,13 @@ import android.widget.GridView;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.jmpergar.awesometext.AwesomeTextHandler;
+import com.jmpergar.awesometext.MentionSpanRenderer;
 import com.pair.pairapp.R;
 import com.pair.util.ScreenUtility;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A simple {@link Fragment} for selecting items.
@@ -29,15 +34,22 @@ import com.pair.util.ScreenUtility;
  * {@link ItemsSelector.OnFragmentInteractionListener} interface
  * to handle interaction events.
  */
-public class ItemsSelector extends Fragment implements View.OnClickListener, TextWatcher {
+public class ItemsSelector extends Fragment implements View.OnClickListener, TextWatcher, AdapterView.OnItemClickListener {
 
-    private static final String TAG = ItemsSelector.class.getSimpleName();
+//    private static final String TAG = ItemsSelector.class.getSimpleName();
+
+
+    //    private static final String HASHTAG_PATTERN = "(#[\\p{L}0-9-_]+)";
+    private static final String MENTION_PATTERN = "(@[\\p{L}0-9-_ ]+)";
     private OnFragmentInteractionListener interactionListener;
     private Filter filter;
     private GridView gridContainer;
+    @SuppressWarnings("FieldCanBeLocal")
     private ListView listContainer;
     private View addView;
-
+    private Set<String> selectedItems = new HashSet<>();
+    private AwesomeTextHandler awesomeTextViewHandler;
+    private EditText filterEditText;
 
     public ItemsSelector() {
         // Required empty public constructor
@@ -60,9 +72,6 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
         interactionListener = null;
     }
 
-
-    private EditText filterEditText;
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -72,9 +81,15 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
         filterEditText = ((EditText) view.findViewById(R.id.et_filter_input_box));
         gridContainer = (GridView) view.findViewById(R.id.gv_container);
         listContainer = (ListView) view.findViewById(R.id.lv_container);
-
+        selectedItems.clear();
+        awesomeTextViewHandler = new AwesomeTextHandler();
+        awesomeTextViewHandler
+                .addViewSpanRenderer(MENTION_PATTERN, new MentionSpanRenderer())
+                .setView(((TextView) view.findViewById(R.id.tv_selected_tems)));
+        awesomeTextViewHandler.hide();
         View emptyView = interactionListener.emptyView();
         final View defaultEmptyView = view.findViewById(R.id.tv_empty);
+        //noinspection StatementWithEmptyBody
         if (emptyView == null) {
             emptyView = defaultEmptyView;
         } else {
@@ -89,15 +104,15 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
         emptyView = defaultEmptyView;
         if (interactionListener.preferredContainer() == ContainerType.LIST) {
             listContainer.setEmptyView(emptyView);
-            listContainer.setOnItemClickListener(interactionListener);
+            listContainer.setOnItemClickListener(this);
             listContainer.setChoiceMode(interactionListener.multiChoice() ? AbsListView.CHOICE_MODE_MULTIPLE : AbsListView.CHOICE_MODE_SINGLE);
             listContainer.setAdapter(interactionListener.getAdapter());
             ((ViewGroup) view).removeView(gridContainer);
         } else {
             gridContainer.setEmptyView(emptyView);
             gridContainer.setAdapter(interactionListener.getAdapter());
-            gridContainer.setOnItemClickListener(interactionListener);
-            gridContainer.setChoiceMode(interactionListener.multiChoice() ? AbsListView.CHOICE_MODE_MULTIPLE : AbsListView.CHOICE_MODE_SINGLE);
+            gridContainer.setOnItemClickListener(this);
+//            gridContainer.setChoiceMode(interactionListener.multiChoice() ? AbsListView.CHOICE_MODE_MULTIPLE : AbsListView.CHOICE_MODE_SINGLE);
             ((ViewGroup) view).removeView(listContainer);
         }
         if (interactionListener.filter() != null) {
@@ -114,7 +129,7 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
         try {
             final String title = getArguments().getString(MainActivity.ARG_TITLE);
             if (title != null) {
-                //noinspection ConstantConditions
+                //noinspection ConstantConditions,deprecation
                 ((ActionBarActivity) getActivity()).getSupportActionBar().setTitle(title);
             }
         } catch (NullPointerException e) {
@@ -148,7 +163,7 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
                     filterEditText.setVisibility(View.GONE);
                 }
             } else {
-                if (itemCount > gridContainer.getNumColumns() * numOfMaxItems) {
+                if (itemCount > gridContainer.getAdapter().getCount() * 3) { //we assume the gridview has 3 columns
                     filterEditText.setVisibility(View.VISIBLE);
                 } else {
                     filterEditText.setVisibility(View.GONE);
@@ -196,6 +211,25 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
         addView.setEnabled(s.length() > 5 && TextUtils.isDigitsOnly(s));
     }
 
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        interactionListener.onItemClick(parent, view, position, id);
+        if (interactionListener.multiChoice()) {
+            selectedItems = interactionListener.selectedItems();
+            if (selectedItems.isEmpty()) {
+                awesomeTextViewHandler.hide();
+            } else {
+                awesomeTextViewHandler.show();
+                CharSequence sequence = TextUtils.join("", selectedItems);
+                awesomeTextViewHandler.setText(sequence);
+            }
+        }
+    }
+
+
+    public enum ContainerType {
+        LIST, GRID
+    }
 
     /**
      * This interface must be implemented by activities that contain this
@@ -203,7 +237,7 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
      * to the activity and potentially other fragments contained in that
      * activity.
      */
-    public interface OnFragmentInteractionListener extends AdapterView.OnItemClickListener {
+    public interface OnFragmentInteractionListener {
         BaseAdapter getAdapter();
 
         Filterable filter();
@@ -216,12 +250,12 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
 
         boolean supportAddCustom();
 
+        Set<String> selectedItems();
+
         void onCustomAdded(String item);
 
-//        Collection<String> selectedItems();
-    }
+        void onItemClick(AdapterView<?> parent, View view, int position, long id);
 
-    public enum ContainerType {
-        LIST, GRID
+//        Collection<String> selectedItems();
     }
 }

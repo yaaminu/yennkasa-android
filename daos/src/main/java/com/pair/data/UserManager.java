@@ -950,30 +950,42 @@ public final class UserManager {
     }
 
     public Pair<String, String> isValidGroupName(String proposedName) {
-        Pair<String, String> nameAndErrorPair = isValidUserName(proposedName);
-        String errorMessage = nameAndErrorPair.second;
-        if (errorMessage == null) {
-            if (getCurrentUser() != null && UserManager.getInstance().isGroup(User.generateGroupId(proposedName))) {
-                errorMessage = Config.getApplicationContext().getString(R.string.group_already_exists, proposedName).toUpperCase();
-            }
+        Context applicationContext = Config.getApplicationContext();
+        String errorMessage = null;
+        proposedName = proposedName.replaceAll("\\p{Space}+", " ");
+        if (proposedName.length() < 5) {
+            errorMessage = applicationContext.getString(R.string.name_too_short);
+        } else if (proposedName.length() > 30) {
+            errorMessage = applicationContext.getString(R.string.group_name_too_long);
+        } else if (!Character.isLetter(proposedName.codePointAt(0))) {
+            errorMessage = applicationContext.getString(R.string.name_starts_with_non_letter);
+        } else if (!Character.isLetter(proposedName.codePointAt(proposedName.length() - 1))) {
+            errorMessage = applicationContext.getString(R.string.name_ends_with_no_letter);
+        } else if (proposedName.contains("@")) {
+            errorMessage = applicationContext.getString(R.string.invalid_name_format_error);
+        } else if (getCurrentUser() != null && UserManager.getInstance().isGroup(User.generateGroupId(proposedName))) {
+            errorMessage = Config.getApplicationContext().getString(R.string.group_already_exists, proposedName).toUpperCase();
         }
-        return new Pair<>(nameAndErrorPair.first, errorMessage);
+        return new Pair<>(proposedName, errorMessage);
     }
 
     public Pair<String, String> isValidUserName(String proposedName) {
         String errorMessage = null;
-        proposedName = proposedName.replaceAll("\\p{Space}+", " ");
-        if (proposedName.length() < 5) {
-            errorMessage = Config.getApplicationContext().getString(R.string.name_too_short);
-        } else if (proposedName.length() > 30) {
-            errorMessage = Config.getApplicationContext().getString(R.string.name_too_long);
+        Context applicationContext = Config.getApplicationContext();
+        if (proposedName.matches(".*\\p{Space}+.*")) {
+            errorMessage = applicationContext.getString(R.string.error_space_in_name);
+        } else if (proposedName.length() < 5) {
+            errorMessage = applicationContext.getString(R.string.name_too_short);
+        } else if (proposedName.length() > 15) {
+            errorMessage = applicationContext.getString(R.string.name_too_long);
         } else if (!Character.isLetter(proposedName.codePointAt(0))) {
-            errorMessage = Config.getApplicationContext().getString(R.string.name_starts_with_non_letter);
+            errorMessage = applicationContext.getString(R.string.name_starts_with_non_letter);
         } else if (!Character.isLetter(proposedName.codePointAt(proposedName.length() - 1))) {
-            errorMessage = Config.getApplicationContext().getString(R.string.name_ends_with_no_letter);
+            errorMessage = applicationContext.getString(R.string.name_ends_with_no_letter);
         } else if (proposedName.contains("@")) {
-            errorMessage = Config.getApplicationContext().getString(R.string.invalid_name_format_error);
+            errorMessage = applicationContext.getString(R.string.invalid_name_format_error);
         }
+
         return new Pair<>(proposedName, errorMessage);
     }
 

@@ -35,6 +35,7 @@ import com.rey.material.widget.SnackBar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import io.realm.Realm;
 import io.realm.RealmQuery;
@@ -44,6 +45,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
 
 
     public static final String EXTRA_GROUP_ID = "groupId";
+    private final Set<String> existingGroupMembers = new HashSet<>();
     private String TAG = InviteActivity.class.getSimpleName();
     private Realm realm;
     private UsersAdapter usersAdapter;
@@ -51,7 +53,6 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
     private ToolbarManager toolbarManager;
     private Toolbar toolBar;
     private String groupId;
-    private View menuItemDone;
     private final View.OnClickListener listener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -60,6 +61,8 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
             }
         }
     };
+    private View menuItemDone;
+    private Set<String> selectedUserNames = new TreeSet<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,7 +92,14 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
         return ((SnackBar) findViewById(R.id.notification_bar));
     }
 
-    private final Set<String> existingGroupMembers = new HashSet<>();
+//    private User createNewGroup() {
+//        User user = new User();
+//        long count = realm.where(User.class).beginsWith(User.FIELD_ID,"$anonymous$",true).count();
+//        user.setUserId(User.generateGroupId("$anonymous$"+(count+1)));
+//        user.setType(User.TYPE_GROUP);
+//        user.setName("Anonymous " + count);
+//        user.setAccountCreated();
+//    }
 
     private RealmQuery<User> prepareQuery() {
         User potentiallyGroup = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
@@ -111,16 +121,6 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
         }
         return realm.where(User.class).equalTo(User.FIELD_ID, " "); //empty results because we are exiting
     }
-
-//    private User createNewGroup() {
-//        User user = new User();
-//        long count = realm.where(User.class).beginsWith(User.FIELD_ID,"$anonymous$",true).count();
-//        user.setUserId(User.generateGroupId("$anonymous$"+(count+1)));
-//        user.setType(User.TYPE_GROUP);
-//        user.setName("Anonymous " + count);
-//        user.setAccountCreated();
-//    }
-
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
@@ -200,6 +200,11 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
     }
 
     @Override
+    public Set<String> selectedItems() {
+        return selectedUserNames;
+    }
+
+    @Override
     public void onCustomAdded(String text) {
         if (TextUtils.isEmpty(text)) {
             UiHelpers.showErrorDialog(this, getString(R.string.enter_a_number));
@@ -227,6 +232,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
             UiHelpers.showErrorDialog(this, getString(R.string.duplicate_number_notice));
         } else {
             selectedUsers.add(phoneNumber);
+            selectedUserNames.add(PhoneNumberNormaliser.toLocalFormat(phoneNumber, getCurrentUser().getCountry()));
             usersAdapter.notifyDataSetChanged();
             supportInvalidateOptionsMenu();
             UiHelpers.showToast(getString(R.string.added_custom_notice_toast), Toast.LENGTH_LONG);
@@ -238,6 +244,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
         User user = usersAdapter.getItem(position);
         if (((ListView) parent).isItemChecked(position)) {
             selectedUsers.add(user.getUserId());
+            selectedUserNames.add(user.getName());
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                 ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(true);
             } else {
@@ -245,6 +252,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
             }
         } else {
             selectedUsers.remove(user.getUserId());
+            selectedUserNames.remove(user.getName());
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                 ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(false);
             } else {

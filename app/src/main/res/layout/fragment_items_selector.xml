@@ -8,16 +8,28 @@
                             tools:ignore="RtlHardcoded">
 
     <EditText
+        android:id="@+id/tv_selected_tems"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@null"
+        android:cursorVisible="false"
+        android:editable="false"
+        android:fadingEdge="none"
+        android:gravity="center"
+        android:maxHeight="@dimen/selected_items_view"
+        android:textIsSelectable="false"
+        />
+
+    <EditText
         android:id="@+id/et_filter_input_box"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
         android:drawableLeft="@drawable/ic_action_search"
         android:ems="10"
         android:hint="@string/abc_search_hint"
         android:inputType="textFilter"
-        android:visibility="gone"
         android:textSize="@dimen/edit_text_size"
+        android:visibility="visible"
         />
 
     <com.pair.view.FrameLayout
@@ -31,8 +43,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:gravity="center"
-            android:textSize="@dimen/standard_text_size"
-            android:text="@string/nothing_to_display"/>
+            android:text="@string/nothing_to_display"
+            android:textSize="@dimen/standard_text_size"/>
 
         <GridView
             android:id="@+id/gv_container"
@@ -40,8 +52,8 @@
             android:layout_height="match_parent"
             android:choiceMode="multipleChoice"
             android:columnWidth="64dp"
-            android:numColumns="auto_fit"
             android:fadingEdge="none"
+            android:numColumns="auto_fit"
             android:stretchMode="columnWidth"
             android:transcriptMode="disabled"/>
 
@@ -49,10 +61,10 @@
             android:id="@+id/lv_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:fadingEdge="none"
             android:choiceMode="multipleChoice"
             android:divider="@null"
             android:dividerHeight="0dp"
+            android:fadingEdge="none"
             android:transcriptMode="disabled"/>
 
         <Button
@@ -60,15 +72,15 @@
             style="@style/TabRippleStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:layout_gravity="bottom"
             android:layout_marginEnd="@dimen/activity_horizontal_margin"
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:layout_marginRight="@dimen/activity_horizontal_margin"
             android:layout_marginStart="@dimen/activity_horizontal_margin"
             android:background="@drawable/round_corners"
-            android:padding="2dp"
-            android:layout_gravity="bottom"
-            android:text="@string/add_custom"
             android:minHeight="@dimen/action_bar_height"
+            android:padding="2dp"
+            android:text="@string/add_custom"
             android:textColor="@color/white"
             android:visibility="gone"/>
     </com.pair.view.FrameLayout>

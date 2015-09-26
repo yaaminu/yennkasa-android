@@ -47,20 +47,19 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import io.realm.Realm;
 import io.realm.RealmQuery;
 
 public class CreateMessageActivity extends MessageActivity implements ItemsSelector.OnFragmentInteractionListener, TextWatcher, View.OnClickListener {
 
-    private static final String TAG = CreateMessageActivity.class.getSimpleName();
     static final String EXTRA_FORWARDED_FROM = "fLKDFAJKAom"; //reduce the likeliness of conflict
-
+    private static final String TAG = CreateMessageActivity.class.getSimpleName();
+    private final Set<String> selectedItems = new HashSet<>();
     private EditText messageEt;
     private TextView tvAttachmentDescription;
     private View attachmentPreview;
-
-    private final Set<String> selectedItems = new HashSet<>();
     private String attachmentBody;
     private int attachmentType;
 
@@ -70,6 +69,7 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
     private ToolbarManager toolbarManager;
     private boolean isAttaching = false;
     private boolean isNotDefaultIntent = false;
+    private Set<String> selectedUserNames = new TreeSet<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -327,6 +327,11 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
     }
 
     @Override
+    public Set<String> selectedItems() {
+        return selectedUserNames;
+    }
+
+    @Override
     public void onCustomAdded(String item) {
 
     }
@@ -336,6 +341,7 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
         User user = adapter.getItem(position);
         if (((ListView) parent).isItemChecked(position)) {
             selectedItems.add(user.getUserId());
+            selectedUserNames.add(user.getName());
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                 ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(true);
             } else {
@@ -343,6 +349,7 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
             }
         } else {
             selectedItems.remove(user.getUserId());
+            selectedUserNames.remove(user.getName());
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                 ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(false);
             } else {

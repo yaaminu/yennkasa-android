@@ -38,6 +38,7 @@ import com.rey.material.widget.SnackBar;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import io.realm.Realm;
 import io.realm.RealmQuery;
@@ -59,6 +60,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
             });
         }
     };
+    private Set<String> selectedUsersNames = new TreeSet<>();
     private Set<String> selectedUsers = new HashSet<>();
     private String groupName;
     private Realm realm;
@@ -303,6 +305,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
 
         if (((ListView) parent).isItemChecked(position)) {
             selectedUsers.add(user.getUserId());
+            selectedUsersNames.add(user.getName());
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                 ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(true);
             } else {
@@ -310,6 +313,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
             }
         } else {
             selectedUsers.remove(user.getUserId());
+            selectedUsersNames.remove(user.getName());
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
                 ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(false);
             } else {
@@ -353,8 +357,13 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     }
 
     @Override
+    public Set<String> selectedItems() {
+        return selectedUsersNames;
+    }
+
+    @Override
     public void onCustomAdded(String item) {
-        String phoneNumber = item;
+        String phoneNumber = item.trim();
         if (!TextUtils.isEmpty(phoneNumber)) {
             String original = phoneNumber; //see usage below
             final String userCountryISO = userManager.getUserCountryISO();
@@ -371,7 +380,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
             }
         } else {
             // FIXME: 8/5/2015 show a better error message
-            UiHelpers.showErrorDialog(CreateGroupActivity.this, R.string.error_field_required);
+            UiHelpers.showToast(R.string.cant_be_empty);
         }
     }
 
@@ -382,6 +391,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
             UiHelpers.showErrorDialog(this, getString(R.string.duplicate_number_notice));
         } else {
             selectedUsers.add(phoneNumber);
+            selectedUsersNames.add(PhoneNumberNormaliser.toLocalFormat(phoneNumber, getCurrentUser().getCountry()));
             adapter.notifyDataSetChanged();
             supportInvalidateOptionsMenu();
             UiHelpers.showToast(getString(R.string.added_custom_notice_toast), Toast.LENGTH_LONG);

@@ -81,4 +81,6 @@
     <dimen name="sub_title_text_size">14sp</dimen>
     <dimen name="login_in_fragment_margin_top">20dp</dimen>
     <dimen name="big_button_height">48dp</dimen>
+    <dimen name="selected_item_text_size">18dp</dimen>
+    <dimen name="selected_items_view">100dp</dimen>
 </resources>

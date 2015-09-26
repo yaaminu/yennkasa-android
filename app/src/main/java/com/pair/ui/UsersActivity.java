@@ -30,7 +30,9 @@ import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.Set;
 
 import io.realm.Realm;
 import io.realm.RealmList;
@@ -151,6 +153,11 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
     }
 
     @Override
+    public Set<String> selectedItems() {
+        return Collections.emptySet();
+    }
+
+    @Override
     public void onCustomAdded(String item) {
 
     }
@@ -181,8 +188,8 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
     }
 
     private class CreateMessageTask extends AsyncTask<String, Void, String> {
-        DialogFragment dialogFragment;
         final String TAG = CreateMessageTask.class.getSimpleName();
+        DialogFragment dialogFragment;
 
         @Override
         protected void onPreExecute() {
