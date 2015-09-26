@@ -20,12 +20,8 @@ import com.pair.util.ConnectionUtils;
 import com.pair.util.FileUtils;
 import com.pair.util.PhoneNumberNormaliser;
 
-import org.apache.http.HttpStatus;
-
-import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
-import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -34,30 +30,30 @@ import java.util.concurrent.Executors;
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmResults;
-import retrofit.RetrofitError;
 import retrofit.mime.TypedFile;
 
 /**
  * @author by Null-Pointer on 5/27/2015.
  */
-public class UserManager {
+public final class UserManager {
 
     private static final String TAG = UserManager.class.getSimpleName();
     private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is for security reasons
     private static final String KEY_USER_PASSWORD = "klfiielklaklier"; //and this one too
     private static final String KEY_USER_VERIFIED = "vvlaikkljhf"; // and this
-
-
-    private volatile User mainUser;
-    private final Object mainUserLock = new Object();
     private static final UserManager INSTANCE = new UserManager();
-
+    private final Object mainUserLock = new Object();
     private final Exception NO_CONNECTION_ERROR;
-    private final BaseJsonAdapter<User> adapter = new UserJsonAdapter();
-
-
     private final UserApiV2 userApi;
     private final Handler MAIN_THREAD_HANDLER;
+    private final ExecutorService WORKER = Executors.newSingleThreadExecutor();
+    private volatile User mainUser;
+
+    private UserManager() {
+        NO_CONNECTION_ERROR = new Exception(Config.getApplicationContext().getString(R.string.st_unable_to_connect));
+        MAIN_THREAD_HANDLER = new Handler(Looper.getMainLooper());
+        userApi = ParseClient.getInstance();
+    }
 
     @Deprecated
     public static UserManager getInstance(@SuppressWarnings("UnusedParameters") @NonNull Context context) {
@@ -68,10 +64,8 @@ public class UserManager {
         return INSTANCE;
     }
 
-    private UserManager() {
-        NO_CONNECTION_ERROR = new Exception(Config.getApplicationContext().getString(R.string.st_unable_to_connect));
-        MAIN_THREAD_HANDLER = new Handler(Looper.getMainLooper());
-        userApi = ParseClient.getInstance();
+    public static String getMainUserId() {
+        return getInstance().getCurrentUser().getUserId();
     }
 
     private void saveMainUser(User user) {
@@ -170,7 +164,7 @@ public class UserManager {
             return;
         }
 
-        Pair<String, String> errorNamePair = isValidUserName(groupName);
+        Pair<String, String> errorNamePair = isValidGroupName(groupName);
         if (errorNamePair.second != null) {
             doNotify(callBack, new Exception(errorNamePair.second), null);
             return;
@@ -213,6 +207,7 @@ public class UserManager {
         realm.close();
     }
 
+    @SuppressWarnings("unused")
     public void removeMembers(final String groupId, final List<String> members, final CallBack callBack) {
         final Exception e = checkPermission(groupId);
         if (e != null) { //unauthorised
@@ -357,12 +352,6 @@ public class UserManager {
     }
 
     public void refreshGroup(final String id) {
-        if (!isUser(id)) {
-            if (BuildConfig.DEBUG) {
-                throw new IllegalArgumentException("passed id is invalid");
-            }
-            return;
-        }
         doRefreshGroup(id);
     }
 
@@ -440,8 +429,6 @@ public class UserManager {
         }
     }
 
-    private final ExecutorService WORKER = Executors.newSingleThreadExecutor();
-
     public boolean isGroup(String userId) {
         Realm realm = User.Realm(Config.getApplicationContext());
         User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).equalTo(User.FIELD_TYPE, User.TYPE_GROUP).findFirst();
@@ -481,6 +468,7 @@ public class UserManager {
                 //his is not the admin.this is avoid adding a duplicate user as
                 //without this check we can add main user twice sinch we have already
                 //added the admin
+                //noinspection ConstantConditions
                 if (!group.getAdmin().getUserId().equals(mainUser.getUserId())) {
                     group.getMembers().add(mainUser);
                 }
@@ -520,7 +508,7 @@ public class UserManager {
             @Override
             public void done(Exception e, final HttpResponse response) {
                 if (e == null) {
-                    completeDpChangeRequest(response.getMessage(), userId, imageFile, callback);
+                    completeDpChangeRequest(userId, imageFile, callback);
                 } else {
                     doNotify(e, callback); //may be our fault but we have reach maximum retries
                 }
@@ -528,7 +516,7 @@ public class UserManager {
         });
     }
 
-    private void completeDpChangeRequest(String dpPath, String userId, File imageFile, CallBack callback) {
+    private void completeDpChangeRequest(String userId, File imageFile, CallBack callback) {
         final File dpFile = new File(Config.getAppProfilePicsBaseDir(), imageFile.getName());
         try {
             //noinspection ConstantConditions
@@ -555,10 +543,10 @@ public class UserManager {
             doNotify(NO_CONNECTION_ERROR, callback);
             return;
         }
-        completeLogin(phoneNumber, "dummy gcm regid", userIso2LetterCode, callback);
+        completeLogin(phoneNumber, userIso2LetterCode, callback);
     }
 
-    private void completeLogin(String phoneNumber, String gcmRegId, String userIso2LetterCode, CallBack callback) {
+    private void completeLogin(String phoneNumber, String userIso2LetterCode, CallBack callback) {
         if (TextUtils.isEmpty(phoneNumber)) {
             doNotify(new Exception("invalid phone number"), callback);
             return;
@@ -584,11 +572,11 @@ public class UserManager {
         user.setCountry(userIso2LetterCode);
         String password = Base64.encodeToString(phoneNumber.getBytes(), Base64.DEFAULT);
         user.setPassword(password);
-        doLogIn(user, userIso2LetterCode, callback);
+        doLogIn(user, callback);
     }
 
     //this method must be called on the main thread
-    private void doLogIn(final User user, final String countryIso, final CallBack callback) {
+    private void doLogIn(final User user, final CallBack callback) {
         userApi.logIn(user, new UserApiV2.Callback<User>() {
             @Override
             public void done(Exception e, User backendUser) {
@@ -604,16 +592,15 @@ public class UserManager {
         });
     }
 
-
     public void signUp(final String name, final String phoneNumber, final String countryIso, final CallBack callback) {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             doNotify(NO_CONNECTION_ERROR, callback);
             return;
         }
-        completeSignUp(name, phoneNumber, "kaklfakjfakf", countryIso, callback);
+        completeSignUp(name, phoneNumber, countryIso, callback);
     }
 
-    private void completeSignUp(final String name, final String phoneNumber, final String gcmRegId, final String countryIso, final CallBack callback) {
+    private void completeSignUp(final String name, final String phoneNumber, final String countryIso, final CallBack callback) {
         if (TextUtils.isEmpty(name)) {
             doNotify(new Exception("name is invalid"), callback);
         } else if (TextUtils.isEmpty(phoneNumber)) {
@@ -626,14 +613,13 @@ public class UserManager {
             if (errorNamePair.second != null) {
                 doNotify(new Exception(errorNamePair.second), callback);
             } else {
-                doSignup(name, phoneNumber, gcmRegId, countryIso, callback);
+                doSignup(name, phoneNumber, countryIso, callback);
             }
         }
     }
 
     private void doSignup(final String name,
                           final String phoneNumber,
-                          final String gcmRegId,
                           final String countryIso,
                           final CallBack callback) {
         String thePhoneNumber;
@@ -714,26 +700,6 @@ public class UserManager {
         });
     }
 
-//    public void generateAndSendVerificationToken(final String number) {
-//        new Thread() {
-//            @Override
-//            public void run() {
-//                SecureRandom random = new SecureRandom();
-//                int num = random.nextInt() / 10000;
-//                num = (num > 0) ? num : num * -1; //convert negative ints to positive ones
-//                synchronized (this) {
-//                    VERIFICATION_TOKEN = String.valueOf(num);
-//                }
-//                Log.d(TAG, VERIFICATION_TOKEN);
-//                SmsManager.getDefault().sendTextMessage(number, null, VERIFICATION_TOKEN, null, null);
-//            }
-//        }.start();
-//    }
-//
-//    private synchronized String getVERIFICATION_TOKEN() {
-//        return VERIFICATION_TOKEN;
-//    }
-
     public void LogOut(Context context, final CallBack logOutCallback) {
         //TODO logout user from backend
         String userId = getSettings().getString(KEY_SESSION_ID, null);
@@ -766,54 +732,6 @@ public class UserManager {
                 }
             }
         });
-    }
-
-    private void cleanUpRealm() {
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
-        realm.beginTransaction();
-        realm.clear(User.class);
-        realm.clear(Message.class);
-        realm.clear(Conversation.class);
-        realm.commitTransaction();
-    }
-
-
-    // FIXME: 6/25/2015 find a sensible place to keep this error MAIN_THREAD_HANDLER so that message dispatcher and others can share it
-    private Exception handleError(RetrofitError retrofitError) {
-        if (retrofitError.getCause() instanceof SocketTimeoutException) { //likely that  user turned on data but no plan
-            return NO_CONNECTION_ERROR;
-        } else if (retrofitError.getCause() instanceof EOFException) { //usual error when we try to connect first time after server startup
-            Log.w(TAG, "EOF_EXCEPTION trying again");
-            return null;
-        }
-        if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
-            Log.w(TAG, "unexpected error, trying again");
-            return null;
-        } else if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)) {
-            int statusCode = retrofitError.getResponse().getStatus();
-            if (statusCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
-                Log.w(TAG, "internal server error, trying again");
-                return null;
-            }
-            //crash early
-            // as far as we know, our backend will only return other status code if its is our fault and that normally should not happen
-            Log.wtf(TAG, "internal error, exiting");
-            throw new RuntimeException("An unknown internal error occurred");
-        } else if (retrofitError.getKind().equals(RetrofitError.Kind.CONVERSION)) { //crash early
-            Log.wtf(TAG, "internal error ");
-            throw new RuntimeException("poorly encoded json data");
-        } else if (retrofitError.getKind().equals(RetrofitError.Kind.NETWORK)) {
-            if (ConnectionUtils.isConnectedOrConnecting()) {
-                return null;
-            }
-            //bubble up error and empty
-            Log.w(TAG, "no network connection, aborting");
-            return NO_CONNECTION_ERROR;
-        }
-
-        //may be retrofit added some error kinds in a new version we are not aware of so lets crash to ensure that
-        //we find out
-        throw new AssertionError("unknown error kind");
     }
 
     public void leaveGroup(final String id, final CallBack callBack) {
@@ -921,10 +839,6 @@ public class UserManager {
                 callBack.done(e, id);
             }
         });
-    }
-
-    public static String getMainUserId() {
-        return getInstance().getCurrentUser().getUserId();
     }
 
     private void cleanUp() {
@@ -1035,23 +949,60 @@ public class UserManager {
         }
     }
 
+    public Pair<String, String> isValidGroupName(String proposedName) {
+        Pair<String, String> nameAndErrorPair = isValidUserName(proposedName);
+        String errorMessage = nameAndErrorPair.second;
+        if (errorMessage == null) {
+            if (getCurrentUser() != null && UserManager.getInstance().isGroup(User.generateGroupId(proposedName))) {
+                errorMessage = Config.getApplicationContext().getString(R.string.group_already_exists, proposedName).toUpperCase();
+            }
+        }
+        return new Pair<>(nameAndErrorPair.first, errorMessage);
+    }
+
     public Pair<String, String> isValidUserName(String proposedName) {
         String errorMessage = null;
         proposedName = proposedName.replaceAll("\\p{Space}+", " ");
         if (proposedName.length() < 5) {
-            errorMessage = Config.getApplicationContext().getString(R.string.group_name_too_short);
+            errorMessage = Config.getApplicationContext().getString(R.string.name_too_short);
         } else if (proposedName.length() > 30) {
-            errorMessage = Config.getApplicationContext().getString(R.string.group_name_too_long);
+            errorMessage = Config.getApplicationContext().getString(R.string.name_too_long);
         } else if (!Character.isLetter(proposedName.codePointAt(0))) {
-            errorMessage = Config.getApplicationContext().getString(R.string.group_name_starts_with_non_letter);
+            errorMessage = Config.getApplicationContext().getString(R.string.name_starts_with_non_letter);
         } else if (!Character.isLetter(proposedName.codePointAt(proposedName.length() - 1))) {
-            errorMessage = Config.getApplicationContext().getString(R.string.group_name_ends_with_no_letter);
-        } else if (getCurrentUser() != null && UserManager.getInstance().isGroup(User.generateGroupId(proposedName))) {
-            errorMessage = Config.getApplicationContext().getString(R.string.group_already_exists, proposedName).toUpperCase();
+            errorMessage = Config.getApplicationContext().getString(R.string.name_ends_with_no_letter);
         } else if (proposedName.contains("@")) {
             errorMessage = Config.getApplicationContext().getString(R.string.invalid_name_format_error);
         }
         return new Pair<>(proposedName, errorMessage);
+    }
+
+    public User fetchUserIfNeeded(String userId) {
+        Realm realm = User.Realm(Config.getApplicationContext());
+        User user = fetchUserIfNeeded(realm, userId);
+        realm.close();
+        return User.copy(user);
+    }
+
+    public User fetchUserIfNeeded(Realm realm, String userId) {
+        User peer = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
+        if (peer == null) {
+            realm.beginTransaction();
+            peer = realm.createObject(User.class);
+            peer.setUserId(userId);
+            String[] parts = userId.split("@"); //in case the peer is a group
+            peer.setType(parts.length > 1 ? User.TYPE_GROUP : User.TYPE_NORMAL_USER);
+            peer.setHasCall(false); //we cannot tell for now
+            peer.setDP(userId);
+            if (parts.length > 1) { //its a group
+                peer.setName(parts[0]);
+            } else {
+                peer.setName(PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO()));
+            }
+            realm.commitTransaction();
+            refreshUserDetails(userId);
+        }
+        return peer;
     }
 
     public List<String> allUserIds() {

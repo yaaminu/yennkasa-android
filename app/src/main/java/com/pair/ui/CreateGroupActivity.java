@@ -48,6 +48,17 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         ChooseDisplayPictureFragment.Callbacks {
 
     public static final String TAG = CreateGroupActivity.class.getSimpleName();
+    private final UiHelpers.Listener cancelProgress = new UiHelpers.Listener() {
+        @Override
+        public void onClick() {
+            new Handler(getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    NavUtils.navigateUpFromSameTask(CreateGroupActivity.this);
+                }
+            });
+        }
+    };
     private Set<String> selectedUsers = new HashSet<>();
     private String groupName;
     private Realm realm;
@@ -55,9 +66,8 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     private EditText groupNameEt;
     private int stage = 0;
     private String dp;
-
-
     private View menuItemDone, menuItemNext, dpPreview;
+    private DialogFragment progressDialog;
     private final View.OnClickListener listener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -73,8 +83,6 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
             }
         }
     };
-    private DialogFragment progressDialog;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,7 +107,6 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         adapter = new CustomUsersAdapter(realm, users);
         progressDialog = UiHelpers.newProgressDialog();
     }
-
 
     @Override
     protected void onResume() {
@@ -151,7 +158,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
 
             @Override
             protected Boolean doInBackground(Void... params) {
-                Pair<String, String> errorNamePair = userManager.isValidUserName(finalName);
+                Pair<String, String> errorNamePair = userManager.isValidGroupName(finalName);
                 finalName = errorNamePair.first;
                 errorMessage = errorNamePair.second;
                 return errorMessage == null;
@@ -165,6 +172,9 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         }
     }
 
+    //pattern is locale insensitive
+//    private static final Pattern groupNamePattern = Pattern.compile("^[\\p{Alpha}][A-Za-z_\\p{Space}]{3,30}[\\p{Alpha}]$");
+
     private void proceedToNextStage(String name) {
         groupNameEt.setVisibility(View.GONE);
         dpPreview.setVisibility(View.GONE);
@@ -177,21 +187,6 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
                 .commit();
         supportInvalidateOptionsMenu();
     }
-
-    //pattern is locale insensitive
-//    private static final Pattern groupNamePattern = Pattern.compile("^[\\p{Alpha}][A-Za-z_\\p{Space}]{3,30}[\\p{Alpha}]$");
-
-    private final UiHelpers.Listener cancelProgress = new UiHelpers.Listener() {
-        @Override
-        public void onClick() {
-            new Handler(getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    NavUtils.navigateUpFromSameTask(CreateGroupActivity.this);
-                }
-            });
-        }
-    };
 
     private void promptAndExit() {
         UiHelpers.showErrorDialog(this, R.string.st_sure_to_exit, R.string.i_know, android.R.string.no, cancelProgress, null);

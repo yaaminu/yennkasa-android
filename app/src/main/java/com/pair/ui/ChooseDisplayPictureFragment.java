@@ -42,12 +42,89 @@ public class ChooseDisplayPictureFragment extends Fragment {
     private Picasso picasso;
     private ImageView displayPicture;
     private Uri outPutUri;
+    private final View.OnClickListener listener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.bt_pick_photo_change_dp:
+                    changeDp(0);
+                    break;
+                case R.id.bt_take_photo_change_dp:
+                    changeDp(1);
+                    break;
+                case R.id.riv_group_avatar_preview:
+                    viewImage();
+                    break;
+                case R.id.choose_dp_later:
+                    callback.onCancelled();
+                    break;
+                default:
+                    throw new AssertionError();
+            }
+        }
+
+        private void viewImage() {
+
+            if (dp != null) {
+                final File dpFile = new File(dp);
+                if (dpFile.exists()) {
+                    Intent intent = new Intent(getActivity(), ImageViewer.class);
+                    intent.setData(Uri.fromFile(dpFile));
+                    startActivity(intent);
+                }
+            }
+        }
+
+        private void changeDp(int i) {
+            Intent intent = new Intent();
+            if (i == 0) {
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                intent.setType("image/*");
+                startActivityForResult(intent, PICK_PHOTO_REQUEST);
+            } else if (i == 1) {
+                outPutUri = Uri.fromFile(new File(Config.getAppProfilePicsBaseDir(),
+                        SimpleDateUtil.timeStampNow() + ".jpg"));
+                MediaUtils.takePhoto(ChooseDisplayPictureFragment.this,
+                        outPutUri, TAKE_PHOTO_REQUEST);
+            }
+        }
+    };
     private CharSequence noDpNotice;
+    Target target = new Target() {
+
+        @Override
+        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom loadedFrom) {
+            Log.d(TAG, "loaded");
+            previewLabel.setText("");
+            if (bitmap.getHeight() == 0) {
+                ErrorCenter.reportError(TAG, getString(R.string.error_failed_to_open_image));
+                displayPicture.setImageResource(R.drawable.group_avatar);
+            } else {
+                displayPicture.setImageBitmap(bitmap);
+                callback.onDp(dp);
+            }
+        }
+
+        @Override
+        public void onBitmapFailed(Drawable drawable) {
+            Log.d(TAG, "failed");
+            previewLabel.setText(noDpNotice);
+            displayPicture.setImageDrawable(drawable);
+        }
+
+        @Override
+        public void onPrepareLoad(Drawable drawable) {
+            Log.d(TAG, "before load");
+            displayPicture.setImageDrawable(drawable);
+            previewLabel.setText(R.string.loading);
+        }
+    };
+    private boolean dpShown = false;
+
 
     public ChooseDisplayPictureFragment() {
         // Required empty public constructor
     }
-
 
     @Override
     public void onAttach(Context activity) {
@@ -82,7 +159,6 @@ public class ChooseDisplayPictureFragment extends Fragment {
         picasso = Picasso.with(getActivity());
         return view;
     }
-
 
     @Override
     public void onResume() {
@@ -131,43 +207,10 @@ public class ChooseDisplayPictureFragment extends Fragment {
             dpChanged = true;
             dp = newDp;
         }
-
         if (dpChanged) {
-            callback.onDp(dp);
+            loadDp();
         }
-        loadDp();
     }
-
-    Target target = new Target() {
-
-        @Override
-        public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom loadedFrom) {
-            Log.d(TAG, "loaded");
-            previewLabel.setText("");
-            if (bitmap.getHeight() == 0) {
-                ErrorCenter.reportError(TAG, getString(R.string.error_failed_to_open_image));
-                displayPicture.setImageResource(R.drawable.group_avatar);
-            } else {
-                displayPicture.setImageBitmap(bitmap);
-            }
-        }
-
-        @Override
-        public void onBitmapFailed(Drawable drawable) {
-            Log.d(TAG, "failed");
-            previewLabel.setText(noDpNotice);
-            displayPicture.setImageDrawable(drawable);
-        }
-
-        @Override
-        public void onPrepareLoad(Drawable drawable) {
-            Log.d(TAG, "before load");
-            displayPicture.setImageDrawable(drawable);
-            previewLabel.setText(R.string.loading);
-        }
-    };
-
-    private boolean dpShown = false;
 
     private void loadDp() {
         if (dp != null && !dpShown) {
@@ -193,54 +236,6 @@ public class ChooseDisplayPictureFragment extends Fragment {
 //            displayPicture.setImageBitmap(BitmapFactory.decodeFile(dp,options));
         }
     }
-
-    private final View.OnClickListener listener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            switch (v.getId()) {
-                case R.id.bt_pick_photo_change_dp:
-                    changeDp(0);
-                    break;
-                case R.id.bt_take_photo_change_dp:
-                    changeDp(1);
-                    break;
-                case R.id.riv_group_avatar_preview:
-                    viewImage();
-                    break;
-                case R.id.choose_dp_later:
-                    callback.onCancelled();
-                    break;
-                default:
-                    throw new AssertionError();
-            }
-        }
-
-        private void viewImage() {
-
-            if (dp != null) {
-                final File dpFile = new File(dp);
-                if (dpFile.exists()) {
-                    Intent intent = new Intent(getActivity(), ImageViewer.class);
-                    intent.setData(Uri.fromFile(dpFile));
-                    startActivity(intent);
-                }
-            }
-        }
-
-        private void changeDp(int i) {
-            Intent intent = new Intent();
-            if (i == 0) {
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                intent.setType("image/*");
-                startActivityForResult(intent, PICK_PHOTO_REQUEST);
-            } else if (i == 1) {
-                outPutUri = Uri.fromFile(new File(Config.getAppProfilePicsBaseDir(),
-                        SimpleDateUtil.timeStampNow() + ".jpg"));
-                MediaUtils.takePhoto(ChooseDisplayPictureFragment.this,
-                        outPutUri, TAKE_PHOTO_REQUEST);
-            }
-        }
-    };
 
     public interface Callbacks {
         void onDp(String newDp);

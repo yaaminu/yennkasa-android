@@ -22,12 +22,12 @@ import java.lang.ref.WeakReference;
  */
 public class ErrorCenter {
 
-    private static final String TAG = ErrorCenter.class.getSimpleName();
     public static final int INDEFINITE = -1;
-    private static Error waitingError;
+    private static final String TAG = ErrorCenter.class.getSimpleName();
     private static final long DEFAULT_TIMEOUT = 1000L;
-    private static WeakReference<ErrorShower> errorShower = new WeakReference<>(null);//to free us from null-checks
     private static final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
+    private static Error waitingError;
+    private static WeakReference<ErrorShower> errorShower = new WeakReference<>(null);//to free us from null-checks
 
     /**
      * @param errorId      a unique identifier for this error. this is useful if a component needs to update
@@ -65,18 +65,13 @@ public class ErrorCenter {
                             errorShower.showError(errorMessage);
                         }
                     });
-                } else {
-                    throw new Exception(); //jump to catch clause
+                    return;
                 }
-                waitingError = null;
-
-            } else {
-                throw new Exception(); //jump to catch clause
             }
-        } catch (Exception e) {
+        } catch (NavigationManager.NoActiveActivityException e) {
             Log.d(TAG, "no visible activity. waiting till an activity shows up");
-            waitingError = new Error(errorId, errorMessage, timeout);
         }
+        waitingError = new Error(errorId, errorMessage, timeout);
     }
 
     /**
@@ -140,6 +135,10 @@ public class ErrorCenter {
         Log.d(TAG, "no error to show either they have time out or there is none at all");
     }
 
+    public interface ErrorShower {
+        void showError(String errorMessage);
+    }
+
     public static class Error {
         String message, id;
         long timeout;
@@ -149,9 +148,5 @@ public class ErrorCenter {
             this.message = message;
             this.timeout = System.currentTimeMillis() + timeout;
         }
-    }
-
-    public interface ErrorShower {
-        void showError(String errorMessage);
     }
 }

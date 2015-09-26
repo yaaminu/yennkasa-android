@@ -21,7 +21,6 @@ import android.widget.TextView;
 import com.pair.Errors.ErrorCenter;
 import com.pair.data.User;
 import com.pair.data.UserManager;
-import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
@@ -59,13 +58,90 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private DialogFragment progressDialog;
     private Uri image_capture_out_put_uri;
     private boolean changingDp = false;
+    private final UserManager.CallBack DP_CALLBACK = new UserManager.CallBack() {
+        @Override
+        public void done(Exception e) {
+            changingDp = false;
+            hideProgressView();
+            if (e == null) {
+                showDp();
+            } else {
+                ErrorCenter.reportError(TAG, e.getMessage());
+            }
+        }
+    };
     private TextView phoneOrAdminTitle, mutualGroupsOrMembersTvTitle;
     private View sendMessageButton;
     private UserManager userManager;
-    private String phoneInlocalFormat;
 //    private int DP_HEIGHT;
 //    private int DP_WIDTH;
+private String phoneInlocalFormat;
+    private final View.OnClickListener clickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.bt_message:
+                    UiHelpers.enterChatRoom(v.getContext(), user.getUserId());
+                    getActivity().finish();
+                    break;
+                case R.id.bt_exit_group:
+                    hideProgressView();
+                    UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), R.string.leave_group_prompt, R.string.yes, android.R.string.no, new UiHelpers.Listener() {
+                        @Override
+                        public void onClick() {
+                            leaveGroup();
+                        }
+                    }, null);
+                    break;
+                case R.id.ib_change_name:
+                    UiHelpers.showToast("not implemented");
+                    break;
+                case R.id.bt_call:
+                    Intent intent = new Intent(Intent.ACTION_DIAL);
+                    intent.setData(Uri.parse("tel:" + phoneInlocalFormat));
+                    startActivity(intent);
+                    break;
+                case R.id.iv_display_picture:
+                    File dpFile = new File(Config.getAppProfilePicsBaseDir(), user.getDP());
+                    intent = new Intent(getActivity(), ImageViewer.class);
+                    Uri uri;
+                    if (dpFile.exists()) {
+                        hideProgressView();
+                        uri = Uri.fromFile(dpFile);
+                        //noinspection ConstantConditions
+                        intent.setData(uri);
+                        startActivity(intent);
+                    } else {//dp not downloaded
+                        if (image_capture_out_put_uri != null) {
+                            intent.setData(image_capture_out_put_uri);
+                            startActivity(intent);
+                        } else {
+                            UiHelpers.showToast(R.string.sorry_no_dp);
+                        }
+                    }
+                    break;
+                case R.id.bt_take_photo_change_dp:
+                    if (changingDp) {
+                        UiHelpers.showToast(getString(R.string.busy));
+                        return;
+                    }
+                    File file = new File(Config.getTempDir(), user.getUserId() + ".jpg.tmp");
+                    image_capture_out_put_uri = Uri.fromFile(file);
+                    MediaUtils.takePhoto(ProfileFragment.this, image_capture_out_put_uri, TAKE_PHOTO_REQUEST);
+                    break;
+                case R.id.bt_pick_photo_change_dp:
+                    if (changingDp) {
+                        UiHelpers.showToast(getString(R.string.busy));
+                        return;
+                    }
+                    choosePicture();
+                    break;
+                default:
+                    throw new AssertionError("unknown view");
 
+            }
+        }
+    };
 
     public ProfileFragment() {
         // Required empty public constructor
@@ -120,17 +196,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         userManager = UserManager.getInstance();
 
         String id = getArguments().getString(ARG_USER_ID);
-        user = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
-
-        if (user == null) {
-            if (BuildConfig.DEBUG) {
-                Log.wtf(TAG, "invalid user id. program aborting");
-                throw new IllegalArgumentException("invalid user id");
-            } else {
-                UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), "No such user");
-            }
-            return null;
-        }
+        user = UserManager.getInstance().fetchUserIfNeeded(realm, id);
 
         //common to all
         userName.setText(user.getName());
@@ -251,7 +317,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         });
     }
 
-
     private void choosePicture() {
         Intent attachIntent;
         attachIntent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -280,7 +345,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         // TODO: 8/25/2015 implement this method
         throw new UnsupportedOperationException("not implemented");
     }
-
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -323,19 +387,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         }
     }
 
-    private final UserManager.CallBack DP_CALLBACK = new UserManager.CallBack() {
-        @Override
-        public void done(Exception e) {
-            changingDp = false;
-            hideProgressView();
-            if (e == null) {
-                showDp();
-            } else {
-                ErrorCenter.reportError(TAG, e.getMessage());
-            }
-        }
-    };
-
     private void showDp() {
         if (changingDp) {
             return;
@@ -357,79 +408,11 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 });
     }
 
-
     @Override
     public void onDestroy() {
         realm.close();
         super.onDestroy();
     }
-
-    private final View.OnClickListener clickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            switch (v.getId()) {
-                case R.id.bt_message:
-                    UiHelpers.enterChatRoom(v.getContext(), user.getUserId());
-                    getActivity().finish();
-                    break;
-                case R.id.bt_exit_group:
-                    hideProgressView();
-                    UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), R.string.leave_group_prompt, R.string.yes, android.R.string.no, new UiHelpers.Listener() {
-                        @Override
-                        public void onClick() {
-                            leaveGroup();
-                        }
-                    }, null);
-                    break;
-                case R.id.ib_change_name:
-                    UiHelpers.showToast("not implemented");
-                    break;
-                case R.id.bt_call:
-                    Intent intent = new Intent(Intent.ACTION_DIAL);
-                    intent.setData(Uri.parse("tel:" + phoneInlocalFormat));
-                    startActivity(intent);
-                    break;
-                case R.id.iv_display_picture:
-                    File dpFile = new File(Config.getAppProfilePicsBaseDir(), user.getDP());
-                    intent = new Intent(getActivity(), ImageViewer.class);
-                    Uri uri;
-                    if (dpFile.exists()) {
-                        hideProgressView();
-                        uri = Uri.fromFile(dpFile);
-                        //noinspection ConstantConditions
-                        intent.setData(uri);
-                        startActivity(intent);
-                    } else {//dp not downloaded
-                        if (image_capture_out_put_uri != null) {
-                            intent.setData(image_capture_out_put_uri);
-                            startActivity(intent);
-                        } else {
-                            UiHelpers.showToast(R.string.sorry_no_dp);
-                        }
-                    }
-                    break;
-                case R.id.bt_take_photo_change_dp:
-                    if (changingDp) {
-                        UiHelpers.showToast(getString(R.string.busy));
-                        return;
-                    }
-                    File file = new File(Config.getTempDir(), user.getUserId() + ".jpg.tmp");
-                    image_capture_out_put_uri = Uri.fromFile(file);
-                    MediaUtils.takePhoto(ProfileFragment.this, image_capture_out_put_uri, TAKE_PHOTO_REQUEST);
-                    break;
-                case R.id.bt_pick_photo_change_dp:
-                    if (changingDp) {
-                        UiHelpers.showToast(getString(R.string.busy));
-                        return;
-                    }
-                    choosePicture();
-                    break;
-                default:
-                    throw new AssertionError("unknown view");
-
-            }
-        }
-    };
 
     private void showProgressView() {
         progressView.setVisibility(View.VISIBLE);

@@ -6,10 +6,10 @@
     <string name="File">File</string>
     <string name="Image">Image</string>
     <string name="Video">video</string>
-    <string name="group_name_too_short">name cannot be less than 5 characters</string>
-    <string name="group_name_too_long">name cannot be longer than 30 characters</string>
-    <string name="group_name_starts_with_non_letter">name can only start with a letter</string>
-    <string name="group_name_ends_with_no_letter">name can only end with a letter</string>
+    <string name="name_too_short">name cannot be less than 5 characters</string>
+    <string name="name_too_long">name cannot be longer than 30 characters</string>
+    <string name="name_starts_with_non_letter">name can only start with a letter</string>
+    <string name="name_ends_with_no_letter">name can only end with a letter</string>
     <string name="group_already_exists">You already have group with this name, Choose a different one</string>
     <string name="invalid_name_format_error">name cannot contain the \"@\" character</string>
 </resources>

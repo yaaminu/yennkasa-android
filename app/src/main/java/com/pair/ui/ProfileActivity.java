@@ -15,6 +15,7 @@ import com.rey.material.widget.SnackBar;
 
 public class ProfileActivity extends PairAppActivity {
 
+    public static final String EXTRA_USER_ID = "user id";
     private ToolbarManager manager;
     private Toolbar toolBar;
 
@@ -27,7 +28,6 @@ public class ProfileActivity extends PairAppActivity {
 
         handleIntent(getIntent());
     }
-
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -52,6 +52,7 @@ public class ProfileActivity extends PairAppActivity {
                 .replace(R.id.container, fragment)
                 .commit();
     }
+
     @Override
     protected SnackBar getSnackBar() {
         return ((SnackBar) findViewById(R.id.notification_bar));
@@ -82,6 +83,4 @@ public class ProfileActivity extends PairAppActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
-    public static final String EXTRA_USER_ID = "user id";
 }

@@ -1,23 +1,24 @@
-<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pair.view.RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/preferred_primary_color"
+    android:gravity="center_horizontal|top"
+    android:paddingTop="@dimen/login_in_fragment_margin_top"
     tools:context="com.pair.ui.VerificationFragment">
 
     <TextView
         android:id="@+id/tv_app_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="@dimen/margin_32dp"
         android:paddingTop="@dimen/tv_app_name_title_padding_top"
         android:text="@string/app_name"
         android:textColor="@android:color/white"
-        android:textSize="@dimen/app_name_title_size"
-        android:textStyle="bold" />
+        android:textSize="@dimen/title_text_size"
+        android:textStyle="bold"/>
 
     <TextView
         android:id="@+id/tv_sub_title"
@@ -27,20 +28,21 @@
         android:layout_centerHorizontal="true"
         android:text="@string/subtitle"
         android:textColor="@android:color/white"
-        android:textSize="@dimen/sub_title_app_name_size"
-        android:textStyle="bold" />
+        android:textSize="@dimen/sub_title_text_size"
+        android:textStyle="bold|italic"/>
 
     <TextView
         android:id="@+id/tv_verification_notice"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/tv_sub_title"
-        android:layout_marginTop="@dimen/standard_top_margin"
-        android:padding="@dimen/padding_ll_login_fragment_bottom"
+        android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
         android:gravity="center"
+        android:padding="@dimen/padding_ll_login_fragment_bottom"
         android:text="@string/st_send_verification_notice"
         android:textColor="@color/white"
-        android:textSize="@dimen/standard_text_size"/>
+        android:textSize="@dimen/sub_title_text_size"
+        />
 
     <android.support.v7.widget.CardView
         android:id="@+id/ll_edittext_pane"
@@ -49,24 +51,24 @@
         android:layout_below="@+id/tv_verification_notice"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:background="@color/white"
         app:cardCornerRadius="@dimen/card_view_corner_radius"
-        app:cardElevation="@dimen/cardview_default_elevation"
-        android:background="@color/white">
+        app:cardElevation="@dimen/cardview_default_elevation">
 
         <com.pair.view.LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:background="@color/white"
+            android:orientation="vertical"
             android:padding="@dimen/padding_ll_login_fragment_bottom">
 
             <EditText
                 android:id="@+id/et_verification"
                 style="@style/phone_number_editText_style"
-                android:paddingTop="@dimen/padding_ll_login_fragment_top"
                 android:layout_height="wrap_content"
                 android:hint="@string/st_hint_et_verification"
-                android:inputType="number"/>
+                android:inputType="number"
+                android:paddingTop="@dimen/padding_ll_login_fragment_top"/>
 
             <com.rey.material.widget.Button
                 android:id="@+id/bt_verify"

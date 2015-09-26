@@ -17,6 +17,7 @@ import com.pair.data.Message;
 import com.pair.messenger.Notifier;
 import com.pair.messenger.PairAppClient;
 import com.pair.pairapp.R;
+import com.pair.util.Config;
 import com.pair.util.ScreenUtility;
 import com.pair.util.UiHelpers;
 import com.rey.material.widget.SnackBar;
@@ -57,6 +58,28 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         }
     };
     private Realm realm;
+    private View.OnClickListener listener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View v) {
+            PairAppActivity self = PairAppActivity.this;
+            if (recentChatList.size() == 1) {
+                recentChatList.clear();
+                unReadMessages = 0;
+                UiHelpers.enterChatRoom(self, v.getTag(R.id.latest_message).toString());
+            } else {
+                if (getClass().equals(MainActivity.class)) {
+                    ((MainActivity) self).setPagePosition(MainActivity.MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT);
+                } else {
+                    Intent intent = new Intent(self, MainActivity.class);
+                    intent.putExtra(MainActivity.DEFAULT_FRAGMENT, MainActivity.MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT);
+                    startActivity(intent);
+                    finish(); //better use flags instead
+                }
+            }
+        }
+    };
+    private SnackBar snackBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +89,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
             realm = Message.REALM(this);
         }
     }
-
 
     @Override
     protected void onStart() {
@@ -80,6 +102,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     protected void onResume() {
         super.onResume();
         if (isUserVerified()) {
+            Config.appOpen(true);
             realm.addChangeListener(this);
             snackBar = getSnackBar();
             if (snackBar == null) {
@@ -95,6 +118,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     protected void onPause() {
         super.onPause();
         if (isUserVerified()) {
+            Config.appOpen(false);
             realm.removeChangeListener(this);
             if (bound) {
                 pairAppClientInterface.unRegisterUINotifier(this);
@@ -196,29 +220,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 .setOnClickListener(listener);
         snackBar.removeOnDismiss(true).show(this);
     }
-
-    private View.OnClickListener listener = new View.OnClickListener() {
-
-        @Override
-        public void onClick(View v) {
-            PairAppActivity self = PairAppActivity.this;
-            if (recentChatList.size() == 1) {
-                recentChatList.clear();
-                unReadMessages = 0;
-                UiHelpers.enterChatRoom(self, v.getTag(R.id.latest_message).toString());
-            } else {
-                if (getClass().equals(MainActivity.class)) {
-                    ((MainActivity) self).setPagePosition(MainActivity.MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT);
-                } else {
-                    Intent intent = new Intent(self, MainActivity.class);
-                    intent.putExtra(MainActivity.DEFAULT_FRAGMENT, MainActivity.MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT);
-                    startActivity(intent);
-                    finish(); //better use flags instead
-                }
-            }
-        }
-    };
-    private SnackBar snackBar;
 
     protected void setUpScreenDimensions() {
         ScreenUtility utility = new ScreenUtility(this);

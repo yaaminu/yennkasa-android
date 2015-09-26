@@ -93,6 +93,7 @@ public class FileUtils {
         }
         cursor.moveToFirst();
         String path = cursor.getString(cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA));
+        // STOPSHIP: 9/24/2015 fix this problem that arises on android 5 and up
         Log.i(TAG, path);
         cursor.close();
         return path;

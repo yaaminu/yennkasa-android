@@ -1,6 +1,7 @@
 package com.pair.adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +19,6 @@ import com.pair.util.UiHelpers;
 
 import java.util.Date;
 
-import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
 
@@ -53,7 +53,8 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         }
         final Conversation conversation = getItem(position);
         holder.chatSummary.setText(conversation.getSummary());
-        User peer = getPeer(conversation.getPeerId());
+        Log.d(TAG, conversation.toString());
+        User peer = UserManager.getInstance().fetchUserIfNeeded(conversation.getPeerId());
         String peerName = peer.getName();
         holder.peerName.setText(peerName);
         DPLoader.load(context, peer.getUserId(), peer.getDP())
@@ -61,8 +62,6 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
                 .placeholder(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .resize(150, 150)
                 .into(holder.senderAvatar);
-
-
         Message message = conversation.getLastMessage();
         StringBuilder summary = new StringBuilder();
         if (message == null) {
@@ -81,14 +80,8 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
                 if (Message.isOutGoing(message)) {
                     summary.append(context.getString(R.string.you)).append(":  ");
                 } else {
-                    Realm realm = User.Realm(context);
-                    User user = realm.where(User.class).equalTo(User.FIELD_ID, message.getFrom()).findFirst();
-                    if (user == null) {
-                        summary.append(message.getFrom()).append(":  ");
-                    } else {
-                        summary.append(user.getName()).append(":  ");
-                    }
-                    realm.close();
+                    User user = UserManager.getInstance().fetchUserIfNeeded(message.getFrom());
+                    summary.append(user.getName()).append(":  ");
                 }
             }
             if (Message.isTextMessage(message)) {
@@ -116,27 +109,6 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
 
         return convertView;
     }
-
-    private User getPeer(String peerId) {
-        Realm realm = Realm.getInstance(context);
-        User peer = realm.where(User.class).equalTo(User.FIELD_ID, peerId).findFirst();
-        User copy = User.copy(peer); //shallow copy
-        realm.close();
-        return copy;
-    }
-
-//    private String getDescription(int messageType) {
-//        switch (messageType) {
-//            case Message.TYPE_BIN_MESSAGE:
-//                return "File";
-//            case Message.TYPE_PICTURE_MESSAGE:
-//                return "Picture";
-//            case Message.TYPE_VIDEO_MESSAGE:
-//                return "video";
-//            default:
-//                throw new AssertionError("unknown message type");
-//        }
-//    }
 
     public class ViewHolder {
         public String peerId; //holds current item to be used by callers outside this adapter.

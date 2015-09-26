@@ -16,7 +16,6 @@ import com.pair.PairApp;
 import com.pair.data.RealmUtils;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
-import com.pair.util.Config;
 import com.pair.util.UiHelpers;
 import com.parse.ParseAnalytics;
 import com.rey.material.app.ToolbarManager;
@@ -29,9 +28,9 @@ import com.rey.material.widget.TabPageIndicator;
 public class MainActivity extends PairAppActivity {
     public static final String DEFAULT_FRAGMENT = "default_fragment";
     public static final int PROMPT_ACTIVITY_REQUEST_CODE = 0x1;
-    private static boolean cleanedMessages = false;
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final String ARG_TITLE = "title";
+    private static boolean cleanedMessages = false;
     private static int savedPosition = MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT;
     private ViewPager pager;
 
@@ -116,22 +115,6 @@ public class MainActivity extends PairAppActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        if (isUserVerified()) {
-            Config.appOpen(true);
-        }
-    }
-
-    @Override
-    protected void onPause() {
-        if (isUserVerified()) {
-            Config.appOpen(false);
-        }
-        super.onPause();
-    }
-
-    @Override
     protected void onStop() {
         if (isUserVerified()) {
             savedPosition = pager.getCurrentItem();
@@ -155,6 +138,11 @@ public class MainActivity extends PairAppActivity {
         } else {
             pager.setCurrentItem(newPosition, true);
         }
+    }
+
+    @Override
+    protected SnackBar getSnackBar() {
+        return ((SnackBar) findViewById(R.id.notification_bar));
     }
 
     //package private
@@ -204,10 +192,5 @@ public class MainActivity extends PairAppActivity {
             return pageTitles[position];
         }
 
-    }
-
-    @Override
-    protected SnackBar getSnackBar() {
-        return ((SnackBar) findViewById(R.id.notification_bar));
     }
 }

@@ -31,7 +31,6 @@ import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.R;
-import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.LiveCenter;
 import com.pair.util.SimpleDateUtil;
@@ -52,23 +51,55 @@ import static com.pair.data.Message.TYPE_TEXT_MESSAGE;
 @SuppressWarnings({"ConstantConditions"})
 public class ChatActivity extends MessageActivity implements View.OnClickListener,
         AbsListView.OnScrollListener, TextWatcher, LiveCenter.TypingListener {
-    private static final String TAG = ChatActivity.class.getSimpleName();
     public static final String EXTRA_PEER_ID = "peer id";
+    private static final String TAG = ChatActivity.class.getSimpleName();
     private static final int ADD_USERS_REQUEST = 0x5;
+    private static Message selectedMessage;
+    private static int cursor = -1; //static so that it can resist activity restarts.
+    Handler handler = new Handler();
+    boolean wasTyping = false;
+    boolean outOfSync = false;
+    private final MessagesAdapter.Delegate delegate = new MessagesAdapter.Delegate() {
+        @Override
+        public boolean onDateSetChanged() {
+            return !outOfSync;
+        }
 
+        @Override
+        public void onMessageSeen(Message message) {
+            ChatActivity.this.onMessageSeen(message);
+        }
+
+        @Override
+        public void onSendMessage(Message message) {
+            resendMessage(message.getId());
+        }
+
+        @Override
+        public PairAppBaseActivity getContext() {
+            return ChatActivity.this;
+        }
+    };
+    boolean inContextualMode;
     private RealmResults<Message> messages;
     private User peer;
+    Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            wasTyping = false;
+            LiveCenter.notifyNotTyping(peer.getUserId());
+        }
+    };
     private Conversation currConversation;
     private Realm realm;
+    //    private SwipeDismissListViewTouchListener swipeDismissListViewTouchListener;
     private ListView messagesListView;
     private EditText messageEt;
     private View sendButton, dateHeaderViewParent;
     private TextView dateHeader;
     private MessagesAdapter adapter;
-    private static Message selectedMessage;
     private Toolbar toolBar;
     private ToolbarManager toolbarManager;
-//    private SwipeDismissListViewTouchListener swipeDismissListViewTouchListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,28 +108,17 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         toolBar = (Toolbar) findViewById(R.id.main_toolbar);
         toolBar.setOnClickListener(this);
         toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
-        realm = Realm.getInstance(this);
         messageEt = ((EditText) findViewById(R.id.et_message));
         sendButton = findViewById(R.id.iv_send);
         ((FloatingActionButton) sendButton).setIcon(getResources().getDrawable(R.drawable.ic_action_send_now), false);
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
         dateHeader = ((TextView) findViewById(R.id.tv_header_date));
         dateHeaderViewParent = findViewById(R.id.cv_date_header_parent);
+
+        realm = Realm.getInstance(this);
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
-        peer = realm.where(User.class).equalTo(User.FIELD_ID, peerId).findFirst();
-        if (peer == null) {
-            realm.beginTransaction();
-            peer = realm.createObject(User.class);
-            peer.setUserId(peerId);
-            String[] parts = peerId.split("@"); //in case the peer is a group
-            peer.setType(parts.length > 1 ? User.TYPE_GROUP : User.TYPE_NORMAL_USER);
-            peer.setHasCall(false); //we cannot tell for now
-            peer.setDP(peerId);
-            peer.setName(parts[0]);
-            realm.commitTransaction();
-            userManager.refreshUserDetails(peerId); //async
-        }
+        peer = userManager.fetchUserIfNeeded(realm, peerId);
         String peerName = peer.getName();
         //noinspection ConstantConditions
         final ActionBar actionBar = getSupportActionBar();
@@ -183,11 +203,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         return super.onOptionsItemSelected(item);
     }
 
-
     @Override
     protected void onResume() {
         super.onResume();
-        Config.appOpen(true);
         clearRecentChat();
         if (!User.isGroup(peer)) {
             updateUserStatus(LiveCenter.isOnline(peer.getUserId()));
@@ -206,7 +224,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             currConversation.setActive(false);
             realm.commitTransaction();
         }
-        Config.appOpen(false);
         if (!userManager.isGroup(peer.getUserId())) {
             LiveCenter.notifyNotTyping(peer.getUserId());
             LiveCenter.notifyLeftChatRoom(peer.getUserId());
@@ -244,7 +261,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     private void sendTextMessage() {
         String content = messageEt.getText().toString().trim();
-        messageEt.setText(""); //clear the text field
+        messageEt.setText("");
         //TODO use a regular expression to validate the message body
         if (!TextUtils.isEmpty(content)) {
             super.sendMessage(content, peer.getUserId(), Message.TYPE_TEXT_MESSAGE, true);
@@ -291,8 +308,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             //do this: throw new IllegalStateException("impossible");
         }
     }
-
-    private static int cursor = -1; //static so that it can resist activity restarts.
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
@@ -384,7 +399,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     }
 
-
     @Override
     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -394,16 +408,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public void onTextChanged(CharSequence s, int start, int before, int count) {
 
     }
-
-    Handler handler = new Handler();
-    Runnable runnable = new Runnable() {
-        @Override
-        public void run() {
-            wasTyping = false;
-            LiveCenter.notifyNotTyping(peer.getUserId());
-        }
-    };
-    boolean wasTyping = false;
 
     @Override
     public void afterTextChanged(Editable s) {
@@ -457,28 +461,4 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private void updateUserStatus(boolean isOnline) {
         getSupportActionBar().setSubtitle(isOnline ? R.string.st_online : R.string.st_offline);
     }
-
-    boolean outOfSync = false;
-    boolean inContextualMode;
-    private final MessagesAdapter.Delegate delegate = new MessagesAdapter.Delegate() {
-        @Override
-        public boolean onDateSetChanged() {
-            return !outOfSync;
-        }
-
-        @Override
-        public void onMessageSeen(Message message) {
-            ChatActivity.this.onMessageSeen(message);
-        }
-
-        @Override
-        public void onSendMessage(Message message) {
-            resendMessage(message.getId());
-        }
-
-        @Override
-        public PairAppBaseActivity getContext() {
-            return ChatActivity.this;
-        }
-    };
 }

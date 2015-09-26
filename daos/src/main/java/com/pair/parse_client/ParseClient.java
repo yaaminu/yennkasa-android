@@ -73,6 +73,10 @@ public class ParseClient implements UserApiV2, FileApi {
     private static ParseClient INSTANCE = new ParseClient();
     private final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
 
+    private ParseClient() {
+
+    }
+
     public static void init(Application application) {
         if (application == null) {
             throw new IllegalArgumentException("application is null!");
@@ -102,8 +106,16 @@ public class ParseClient implements UserApiV2, FileApi {
         return INSTANCE;
     }
 
-    private ParseClient() {
+    public static String genVerificationToken() {
+        SecureRandom random = new SecureRandom();
+        //maximum of 10000 and minimum of 99999
+        int num = (int) Math.abs(random.nextDouble() * (99999 - 10000) + 10000);
+        //we need an unsigned (+ve) number
+        num = Math.abs(num);
 
+        String token = String.valueOf(num);
+        Log.d(TAG, token); //fixme remove this
+        return token;
     }
 
     @Override
@@ -142,6 +154,11 @@ public class ParseClient implements UserApiV2, FileApi {
                 return; //important
             }
         } catch (ParseException e) {
+            if (e.getCode() != ParseException.OBJECT_NOT_FOUND) {
+                Log.d(TAG, "encountered error while registering user, message: " + e.getMessage());
+                notifyCallback(callback, prepareErrorReport(e), null);
+                return;
+            }
             Log.d(TAG, "no account associated with " + _id + " in proceeding to create new account");
             //continue
         }
@@ -307,7 +324,6 @@ public class ParseClient implements UserApiV2, FileApi {
             notifyCallback(response, prepareErrorReport(e), null);
         }
     }
-
 
     @Override
     public void changeDp(@Path("placeHolder") final String userOrGroup, @Path(Message.FIELD_ID) final String id, @Body final TypedFile file, final Callback<HttpResponse> response) {
@@ -599,24 +615,6 @@ public class ParseClient implements UserApiV2, FileApi {
         });
     }
 
-    private class RequiredFieldsError extends Exception {
-        public RequiredFieldsError(String message) {
-            super(message);
-        }
-    }
-
-    public static String genVerificationToken() {
-        SecureRandom random = new SecureRandom();
-        //maximum of 10000 and minimum of 99999
-        int num = (int) Math.abs(random.nextDouble() * (99999 - 10000) + 10000);
-        //we need an unsigned (+ve) number
-        num = Math.abs(num);
-
-        String token = String.valueOf(num);
-        Log.d(TAG, token); //fixme remove this
-        return token;
-    }
-
     private String hashPassword(String password) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA1");
@@ -655,7 +653,6 @@ public class ParseClient implements UserApiV2, FileApi {
         user.setHasCall(object.getBoolean(FIELD_HAS_CALL));
         return user;
     }
-
 
     @NonNull
     private User parseObjectToGroup(ParseObject object) {
@@ -697,6 +694,12 @@ public class ParseClient implements UserApiV2, FileApi {
                     new String[]{recipient, messageBody});
         } catch (Exception e) {
             throw new RuntimeException(); //we cannot handle this
+        }
+    }
+
+    private class RequiredFieldsError extends Exception {
+        public RequiredFieldsError(String message) {
+            super(message);
         }
     }
 }

@@ -19,8 +19,8 @@ import io.realm.Realm;
 import io.realm.exceptions.RealmException;
 
 public class MessageProcessor extends IntentService {
-    private static final String TAG = MessageProcessor.class.getSimpleName();
     public static final String SYNC_MESSAGES = "syncMessages";
+    private static final String TAG = MessageProcessor.class.getSimpleName();
 
     public MessageProcessor() {
         super(TAG);
@@ -68,6 +68,7 @@ public class MessageProcessor extends IntentService {
         } else {
             peerId = message.getFrom();
         }
+        UserManager.getInstance().fetchUserIfNeeded(peerId);
         //all other operations are deferred till we set up the conversation
         Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
 

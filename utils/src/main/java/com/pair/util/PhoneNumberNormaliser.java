@@ -13,15 +13,14 @@ import java.util.regex.Pattern;
  * @author Null-Pointer on 7/25/2015.
  */
 public class PhoneNumberNormaliser {
+    //rough pattern - 00********** or +*********** or 011********** or 166************* (166 is special for dialing us numbers from thailand)
+    // any char that is not either + or digit is considered non-dialable
+    private static final Pattern NON_DIALABLE_PATTERN = Pattern.compile("[^\\d]");
     private static String TAG = PhoneNumberNormaliser.class.getSimpleName();
 
     private PhoneNumberNormaliser() {
         throw new IllegalStateException("cannot instantiate");
     }
-
-    //rough pattern - 00********** or +*********** or 011********** or 166************* (166 is special for dialing us numbers from thailand)
-    // any char that is not either + or digit is considered non-dialable
-    private static final Pattern NON_DIALABLE_PATTERN = Pattern.compile("[^\\d]");
 
     public static String toIEE(String phoneNumber, String defaultRegion) throws NumberParseException {
         if (phoneNumber == null) {
@@ -30,6 +29,7 @@ public class PhoneNumberNormaliser {
         if (defaultRegion == null) {
             throw new IllegalArgumentException("defaultRegion is null!");
         }
+        phoneNumber = cleanNonDialableChars(phoneNumber);
         PhoneNumberUtil utils = PhoneNumberUtil.getInstance();
         Phonenumber.PhoneNumber number = utils.parse(phoneNumber, defaultRegion);
         return number.getCountryCode() + "" /*convert to  string*/ + number.getNationalNumber();
@@ -38,8 +38,10 @@ public class PhoneNumberNormaliser {
     public static boolean isIEE_Formatted(String phoneNumber, String region) {
         // FIXME: 8/23/2015 test this `if condition`. this could be a bug!
         PhoneNumberUtil util = PhoneNumberUtil.getInstance();
+        phoneNumber = cleanNonDialableChars(phoneNumber);
         if (!phoneNumber.startsWith("+") && phoneNumber.startsWith("00") && phoneNumber.startsWith("011")) {
-            phoneNumber = "+" + phoneNumber; // numbers like 233 20 4441069 will be parsed with no exception.
+            if (!phoneNumber.startsWith(util.getNddPrefixForRegion(region, true)))
+                phoneNumber = "+" + phoneNumber; // numbers like 233 20 4441069 will be parsed with no exception.
         }
         try {
             return util.isValidNumber(util.parse(phoneNumber, null));
@@ -50,6 +52,7 @@ public class PhoneNumberNormaliser {
 
     public static boolean isValidPhoneNumber(String number, String countryIso) {
         PhoneNumberUtil util = PhoneNumberUtil.getInstance();
+        number = cleanNonDialableChars(number);
         try {
             return util.isValidNumber(util.parse(number, countryIso));
         } catch (NumberParseException e) {
@@ -62,11 +65,17 @@ public class PhoneNumberNormaliser {
             throw new IllegalArgumentException("phone number is null!");
         }
         boolean wasIEEFormatted = phoneNumber.indexOf('+') != -1;
-        String ret = NON_DIALABLE_PATTERN.matcher(phoneNumber).replaceAll("");
-        if (wasIEEFormatted) {
-            ret = "+" + ret;
+        StringBuilder ret = new StringBuilder(phoneNumber.length());
+        for (int i = 0; i < phoneNumber.length(); i++) {
+            char theChar = phoneNumber.charAt(i);
+            if (Character.isDigit(theChar)) {
+                ret.append(theChar);
+            }
         }
-        return ret;
+        if (wasIEEFormatted) {
+            ret = ret.insert(0, '+');
+        }
+        return ret.toString();
     }
 
     public static String getCCC(String userCountryISO) {
@@ -78,6 +87,7 @@ public class PhoneNumberNormaliser {
 
     public static String toLocalFormat(String phoneNumber, String userCountry) {
         final PhoneNumberUtil util = PhoneNumberUtil.getInstance();
+        phoneNumber = cleanNonDialableChars(phoneNumber);
         try {
             return util.formatOutOfCountryCallingNumber((util.parse("+" + phoneNumber, null)), userCountry);
         } catch (NumberParseException e) {
@@ -89,8 +99,8 @@ public class PhoneNumberNormaliser {
         }
     }
 
-    public static String getTrunkPrefix(String gh) {
+    public static String getTrunkPrefix(String countryCode) {
         PhoneNumberUtil util = PhoneNumberUtil.getInstance();
-        return util.getNddPrefixForRegion(gh, true);
+        return util.getNddPrefixForRegion(countryCode, true);
     }
 }

@@ -1,1 +1,4 @@
 /build
+/libs
+/*.iml
+*.navigation/

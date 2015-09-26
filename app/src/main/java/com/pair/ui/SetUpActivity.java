@@ -34,53 +34,24 @@ import io.realm.Realm;
 public class SetUpActivity extends PairAppBaseActivity implements VerificationFragment.Callbacks,
         ChooseDisplayPictureFragment.Callbacks, LoginFragment.Callbacks {
 
-    private String TAG = SetUpActivity.class.getSimpleName();
     DialogFragment progressDialog;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.set_up_activity);
-        progressDialog = UiHelpers.newProgressDialog();
-
-        //we need to do all the time to automatically handle configuration changes see setupCountriesTask#doInBackGround
-        setUpCountries();
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        setUpCountries();
-    }
-
-    private void setUpCountries() {
-        Realm realm = Country.REALM(this);
-        long countries = realm.where(Country.class).count();
-        realm.close();
-        if (countries < 240) {
-            setUpCountriesTask.execute();
-        } else {
-            addFragment();
-        }
-    }
-
-    private void addFragment() {
-        Fragment fragment;// = getSupportFragmentManager().findFragmentById(R.id.container);
-        if (isUserLoggedIn()) {
-            if (isUserVerified()) {
-                throw new RuntimeException("user logged and verified "); // FIXME: 7/31/2015 remove this
+    int attempts = 0;
+    private String TAG = SetUpActivity.class.getSimpleName();
+    private final UserManager.CallBack loginOrSignUpCallback = new UserManager.CallBack() {
+        @Override
+        public void done(Exception e) {
+            UiHelpers.dismissProgressDialog(progressDialog);
+            if (e == null) {
+                addFragment(new VerificationFragment());
+            } else {
+                String message = e.getMessage();
+                if ((message == null) || (message.isEmpty())) {
+                    message = getString(R.string.an_error_occurred);
+                }
+                ErrorCenter.reportError(TAG, message);
             }
-            fragment = new VerificationFragment();
-        } else {
-            fragment = new LoginFragment();
         }
-        addFragment(fragment);
-    }
-
-    private void addFragment(Fragment fragment) {
-        getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, null).commit();
-    }
-
+    };
     private AsyncTask<Void, Void, Void> setUpCountriesTask = new AsyncTask<Void, Void, Void>() {
         @Override
         protected void onPreExecute() {
@@ -141,6 +112,50 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
 
     };
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.set_up_activity);
+        progressDialog = UiHelpers.newProgressDialog();
+
+        //we need to do all the time to automatically handle configuration changes see setupCountriesTask#doInBackGround
+        setUpCountries();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        setUpCountries();
+    }
+
+    private void setUpCountries() {
+        Realm realm = Country.REALM(this);
+        long countries = realm.where(Country.class).count();
+        realm.close();
+        if (countries < 240) {
+            setUpCountriesTask.execute();
+        } else {
+            addFragment();
+        }
+    }
+
+    private void addFragment() {
+        Fragment fragment;// = getSupportFragmentManager().findFragmentById(R.id.container);
+        if (isUserLoggedIn()) {
+            if (isUserVerified()) {
+                throw new RuntimeException("user logged and verified "); // FIXME: 7/31/2015 remove this
+            }
+            fragment = new VerificationFragment();
+        } else {
+            fragment = new LoginFragment();
+        }
+        addFragment(fragment);
+    }
+
+    private void addFragment(Fragment fragment) {
+        getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, null).commit();
+    }
+
     private void doGoBackToLogin() {
         progressDialog.show(getSupportFragmentManager(), null);
         UserManager.getInstance().reset(new UserManager.CallBack() {
@@ -173,10 +188,11 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
         UiHelpers.gotoMainActivity(this);
     }
 
-    int attempts = 0;
-
     @Override
     public void onDp(final String newDp) {
+        if (!new File(newDp).exists()) {
+            return;
+        }
         if (attempts++ > 3) {
             ErrorCenter.reportError(TAG, getString(R.string.permanently_disconnected));
             return;
@@ -191,7 +207,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
                         try {
                             UiHelpers.
                                     showErrorDialog(SetUpActivity.this, e.getMessage(),
-                                            getString(R.string.try_again), getString(R.string.later), new UiHelpers.Listener() {
+                                            getString(R.string.try_again), getString(android.R.string.ok), new UiHelpers.Listener() {
                                                 @Override
                                                 public void onClick() {
                                                     onDp(newDp);
@@ -239,20 +255,4 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
         progressDialog.show(getSupportFragmentManager(), "");
         userManager.signUp(userName, phoneNumber, userIsoCountry, loginOrSignUpCallback);
     }
-
-    private final UserManager.CallBack loginOrSignUpCallback = new UserManager.CallBack() {
-        @Override
-        public void done(Exception e) {
-            UiHelpers.dismissProgressDialog(progressDialog);
-            if (e == null) {
-                addFragment(new VerificationFragment());
-            } else {
-                String message = e.getMessage();
-                if ((message == null) || (message.isEmpty())) {
-                    message = getString(R.string.an_error_occurred);
-                }
-                ErrorCenter.reportError(TAG, message);
-            }
-        }
-    };
 }

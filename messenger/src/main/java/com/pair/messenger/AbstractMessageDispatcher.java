@@ -30,15 +30,23 @@ import io.realm.Realm;
  */
 abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     public static final String TAG = AbstractMessageDispatcher.class.getSimpleName();
-    protected static final String ERR_USER_OFFLINE = "user offline";
     public static final ContactsManager.Filter<User> USER_FILTER = new ContactsManager.Filter<User>() {
         @Override
         public boolean accept(User user) {
             return !UserManager.getInstance().isCurrentUser(user.getUserId());
         }
     };
+    protected static final String ERR_USER_OFFLINE = "user offline";
+    protected static final FileApi.ProgressListener DUMMY_LISTENER = new FileApi.ProgressListener() {
+        @Override
+        public void onProgress(int percentComplete) {
+            //do nothing
+            L.d(TAG, "dummy progress listener: " + percentComplete);
+        }
+    };
     private final List<DispatcherMonitor> monitors = new ArrayList<>();
     private final FileApi file_service;
+    private Timer timer = new Timer(TAG, false);
 
     AbstractMessageDispatcher() {
         this.file_service = ParseClient.getInstance();
@@ -74,41 +82,23 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         //is this message to a group?
         if (UserManager.getInstance().isGroup(message.getTo())) {
             final Realm realm = User.Realm(Config.getApplicationContext());
-            User user = realm.where(User.class).equalTo(User.FIELD_ID, message.getTo()).findFirst();
-            if (user != null) {
-                if (user.getMembers().size() < 3) {
+            try {
+                User user = realm.where(User.class).equalTo(User.FIELD_ID, message.getTo()).findFirst();
+                if (user != null && user.getMembers().size() > 3) {
+                    dispatchToGroup(message, User.aggregateUserIds(user.getMembers(), USER_FILTER));
+                } else {
                     //give the user manager a hint to sync the members.
                     UserManager.getInstance().refreshGroup(message.getTo());
                     //we are going to run some minutes later hoping that the members are 'sync'ed'.
-                    timer.schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            //after 5 minutes we must have synced the members otherwise we mark the message as failed
-                            Realm realm = User.Realm(Config.getApplicationContext());
-                            User user = realm.where(User.class).equalTo(User.FIELD_ID, message.getTo()).findFirst();
-                            if (user == null || user.getMembers().size() < 3) {
-                                onFailed(message.getId(), MessageUtils.ERROR_MEMBERS_NOT_SYNCED);
-                            } else {
-                                dispatchToGroup(message, User.aggregateUserIds(user.getMembers(), USER_FILTER));
-                            }
-                            realm.close();
-                        }
-                    }, AlarmManager.INTERVAL_FIFTEEN_MINUTES / 3);
-                } else {
-                    List<String> members = User.aggregateUserIds(user.getMembers(), USER_FILTER);
-                    dispatchToGroup(message, members);
+                    timer.schedule(new SendLaterTimerTask(message), AlarmManager.INTERVAL_FIFTEEN_MINUTES / 3);
                 }
-            } else {
-                onFailed(message.getId(), MessageUtils.ERROR_RECIPIENT_NOT_FOUND);
+            } finally {
+                realm.close();
             }
-            realm.close();
         } else { //to a single user
             dispatchToUser(message);
         }
     }
-
-
-    private Timer timer = new Timer(TAG, false);
 
     /**
      * @param message the message whose dispatch failed
@@ -131,11 +121,11 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         try {
             Message realmMessage = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
             if (realmMessage != null) {
+                realm.beginTransaction();
                 if (realmMessage.getState() == Message.STATE_PENDING) {
-                    realm.beginTransaction();
                     updateMessageStatus(realmMessage, Message.STATE_SEND_FAILED);
-                    realm.commitTransaction();
                 }
+                realm.commitTransaction();
             }
         } finally {
             realm.close();
@@ -153,11 +143,11 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
             if (message != null) {
                 int state = message.getState();
+                realm.beginTransaction();
                 if (state == Message.STATE_PENDING || state == Message.STATE_SEND_FAILED) {
-                    realm.beginTransaction();
                     updateMessageStatus(message, Message.STATE_SENT);
-                    realm.commitTransaction();
                 }
+                realm.commitTransaction();
             }
         } finally {
             realm.close();
@@ -175,7 +165,9 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, ourMessageId).findFirst();
             if (message != null) {
                 realm.beginTransaction();
-                updateMessageStatus(message, Message.STATE_RECEIVED);
+                if (message.getState() != Message.STATE_SEEN) {
+                    updateMessageStatus(message, Message.STATE_RECEIVED);
+                }
                 realm.commitTransaction();
             }
         } finally {
@@ -243,7 +235,6 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         }
     }
 
-
     @Override
     public boolean cancelDispatchMayPossiblyFail(Message message) {
         //not implemented
@@ -283,12 +274,23 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
 
     protected abstract void dispatchToUser(Message message);
 
+    private class SendLaterTimerTask extends TimerTask {
+        final Message message;
 
-    protected static final FileApi.ProgressListener DUMMY_LISTENER = new FileApi.ProgressListener() {
-        @Override
-        public void onProgress(int percentComplete) {
-            //do nothing
-            L.d(TAG, "dummy progress listener: " + percentComplete);
+        public SendLaterTimerTask(Message message) {
+            this.message = message;
         }
-    };
+
+        @Override
+        public void run() {
+            final Realm realm = User.Realm(Config.getApplicationContext());
+            User user = realm.where(User.class).equalTo(User.FIELD_ID, message.getTo()).findFirst();
+            if (user != null && user.getMembers().size() > 3) {
+                dispatchToGroup(message, User.aggregateUserIds(user.getMembers(), USER_FILTER));
+            } else {
+                onFailed(message.getId(), MessageUtils.ERROR_RECIPIENT_NOT_FOUND);
+            }
+            realm.close();
+        }
+    }
 }
