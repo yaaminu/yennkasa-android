@@ -98,7 +98,7 @@ public final class UserManager {
         return user;
     }
 
-    public boolean isUserCLoggedIn() {
+    public boolean isUserLoggedIn() {
         return isEveryThingSetup();
     }
 
@@ -114,12 +114,13 @@ public final class UserManager {
     }
 
     public boolean isUserVerified() {
-        return isUserCLoggedIn() && getSettings().getBoolean(KEY_USER_VERIFIED, false);
+        return isUserLoggedIn() && getSettings().getBoolean(KEY_USER_VERIFIED, false);
     }
 
     private SharedPreferences getSettings() {
         return Config.getApplicationWidePrefs();
     }
+
 
     private User getCurrentUser(Realm realm) {
         String currUserId = getSettings().getString(KEY_SESSION_ID, null);
@@ -537,10 +538,10 @@ public final class UserManager {
             doNotify(NO_CONNECTION_ERROR, callback);
             return;
         }
-        completeCLogin(phoneNumber, userIso2LetterCode, callback);
+        completeLogin(phoneNumber, userIso2LetterCode, callback);
     }
 
-    private void completeCLogin(String phoneNumber, String userIso2LetterCode, CallBack callback) {
+    private void completeLogin(String phoneNumber, String userIso2LetterCode, CallBack callback) {
         if (TextUtils.isEmpty(phoneNumber)) {
             doNotify(new Exception("invalid phone number"), callback);
             return;
@@ -566,11 +567,11 @@ public final class UserManager {
         user.setCountry(userIso2LetterCode);
         String password = Base64.encodeToString(phoneNumber.getBytes(), Base64.DEFAULT);
         user.setPassword(password);
-        doCLogIn(user, callback);
+        doLogIn(user, callback);
     }
 
     //this method must be called on the main thread
-    private void doCLogIn(final User user, final CallBack callback) {
+    private void doLogIn(final User user, final CallBack callback) {
         userApi.logIn(user, new UserApiV2.Callback<User>() {
             @Override
             public void done(Exception e, User backendUser) {
@@ -658,7 +659,7 @@ public final class UserManager {
             doNotify(new Exception("invalid token"), callBack);
             return;
         }
-        if (!isUserCLoggedIn()) {
+        if (!isUserLoggedIn()) {
             throw new IllegalStateException("no user logged for verification");
         }
         userApi.verifyUser(getCurrentUser().getUserId(), token, new UserApiV2.Callback<HttpResponse>() {
@@ -675,7 +676,7 @@ public final class UserManager {
     }
 
     public void resendToken(final CallBack callBack) {
-        if (!isUserCLoggedIn()) {
+        if (!isUserLoggedIn()) {
             throw new IllegalArgumentException(new Exception("no user logged for verification"));
         }
         if (isUserVerified()) {
@@ -694,7 +695,7 @@ public final class UserManager {
         });
     }
 
-    public void CLogOut(Context context, final CallBack logOutCallback) {
+    public void logOut(Context context, final CallBack logOutCallback) {
         //TODO logout user from backend
         String userId = getSettings().getString(KEY_SESSION_ID, null);
         if ((userId == null)) {
@@ -786,7 +787,7 @@ public final class UserManager {
     }
 
     public String getUserCountryISO() {
-        if (!isUserCLoggedIn()) {
+        if (!isUserLoggedIn()) {
             throw new IllegalStateException("no user logged in");
         }
         return getCurrentUser().getCountry();
@@ -1021,6 +1022,13 @@ public final class UserManager {
         } finally {
             realm.close();
         }
+    }
+
+    public SharedPreferences getUserPreference() {
+        if (!isUserVerified()) {
+            throw new IllegalStateException("no user logged in");
+        }
+        return Config.getApplicationContext().getSharedPreferences("Userpreference",Context.MODE_PRIVATE);
     }
 
     public interface CallBack {

@@ -160,7 +160,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Ad
     @Override
     public void onResume() {
         super.onResume();
-        //refreshLocalContacts();
+        refreshLocalContacts();
     }
 
     @Override

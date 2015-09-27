@@ -70,7 +70,7 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
     }
 
     protected final boolean isUserCLoggedIn() {
-        return userManager.isUserCLoggedIn();
+        return userManager.isUserLoggedIn();
     }
 
     protected final boolean isUserVerified() {

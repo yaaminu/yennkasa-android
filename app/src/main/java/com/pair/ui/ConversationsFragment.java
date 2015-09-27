@@ -14,6 +14,7 @@ import android.widget.ListView;
 import com.pair.adapter.ConversationAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
+import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.CLog;
 import com.pair.util.Config;
@@ -34,6 +35,7 @@ import io.realm.RealmResults;
 public class ConversationsFragment extends ListFragment {
 
     private static final String TAG = ConversationsFragment.class.getSimpleName();
+    public static final String STOP_ANNOYING_ME = TAG + "askmeOndelete";
     private Realm realm;
     private RealmResults<Conversation> conversations;
     private ConversationAdapter adapter;
@@ -79,6 +81,11 @@ public class ConversationsFragment extends ListFragment {
             @Override
             public void onDismiss(ListView listView, final int[] reverseSortedPositions) {
                 deleted = deleteConversation(reverseSortedPositions);
+                boolean stopAnnoyingMe = UserManager.getInstance().getUserPreference().getBoolean(STOP_ANNOYING_ME, false);
+                if (stopAnnoyingMe) {
+                    cleanMessages(deleted);
+                    return;
+                }
                 showAlertDialog();
             }
         });
@@ -127,9 +134,12 @@ public class ConversationsFragment extends ListFragment {
     private void showAlertDialog() {
 
         SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
+            boolean touchedCheckBox = false,checkBoxValue;
             public CompoundButton.OnCheckedChangeListener listener = new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    touchedCheckBox = true;
+                    checkBoxValue = isChecked;
                     UiHelpers.showToast(String.valueOf(isChecked));
                 }
             };
@@ -145,6 +155,7 @@ public class ConversationsFragment extends ListFragment {
             public void onPositiveActionClicked(DialogFragment fragment) {
                 cleanMessages(deleted);
                 super.onPositiveActionClicked(fragment);
+                updateStopAnnoyingMe(checkBoxValue);
             }
 
             @Override
@@ -154,13 +165,18 @@ public class ConversationsFragment extends ListFragment {
                 realm.commitTransaction();
                 super.onNegativeActionClicked(fragment);
             }
+
+            private void updateStopAnnoyingMe(boolean newValue) {
+                if(touchedCheckBox) {
+                    UserManager.getInstance().getUserPreference().edit().putBoolean(STOP_ANNOYING_ME, newValue).apply();
+                }
+            }
         };
         builder.contentView(R.layout.delete_conversation_prompt);
         builder.positiveAction(getString(android.R.string.ok))
                 .negativeAction(getString(R.string.no));
         DialogFragment fragment = DialogFragment.newInstance(builder);
         fragment.show(getFragmentManager(), null);
-
     }
 
 }
