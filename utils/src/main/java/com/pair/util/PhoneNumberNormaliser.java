@@ -88,7 +88,7 @@ public class PhoneNumberNormaliser {
         try {
             return util.formatOutOfCountryCallingNumber((util.parse("+" + phoneNumber, null)), userCountry);
         } catch (NumberParseException e) {
-            CLog.e(TAG, e.getMessage(), e.getCause());
+            PLog.e(TAG, e.getMessage(), e.getCause());
             if (BuildConfig.DEBUG) {
                 throw new RuntimeException("invalid user id");
             }

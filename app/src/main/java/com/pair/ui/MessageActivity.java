@@ -13,7 +13,7 @@ import com.pair.data.Message;
 import com.pair.data.util.MessageUtils;
 import com.pair.messenger.PairAppClient;
 import com.pair.pairapp.BuildConfig;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -139,10 +139,10 @@ public abstract class MessageActivity extends PairAppActivity {
                         if (BuildConfig.DEBUG) {
                             throw new IllegalArgumentException("attempted to resend a non-failed message");
                         }
-                        CLog.w(MessageActivity.TAG, "message cannot be resent because its dispatch has not failed");
+                        PLog.w(MessageActivity.TAG, "message cannot be resent because its dispatch has not failed");
                         break;
                     }
-                    CLog.w(MessageActivity.TAG, "failed to resend message, reason: message deleted");
+                    PLog.w(MessageActivity.TAG, "failed to resend message, reason: message deleted");
                     break;
                 case MARK_AS_SEEN:
                     String id = ((String) msg.obj);
@@ -242,7 +242,7 @@ public abstract class MessageActivity extends PairAppActivity {
 
         @Override
         public void uncaughtException(Thread thread, Throwable ex) {
-            CLog.w(TAG, " uncaught exception : " + ex);
+            PLog.w(TAG, " uncaught exception : " + ex);
             throw new RuntimeException(ex);
 //            if(ex instanceof RuntimeException){
 //                throw new RuntimeException(ex);

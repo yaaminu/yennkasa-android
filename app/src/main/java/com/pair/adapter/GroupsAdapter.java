@@ -11,7 +11,7 @@ import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.ui.DPLoader;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.UiHelpers;
 
 import java.util.List;
@@ -75,7 +75,7 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
         };
         holder.groupIcon.setOnClickListener(listener);
         holder.groupName.setOnClickListener(listener);
-        CLog.i(TAG, "Display Picture: " + group.getDP());
+        PLog.i(TAG, "Display Picture: " + group.getDP());
         return convertView;
     }
 

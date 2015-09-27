@@ -8,7 +8,7 @@ import android.net.Uri;
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.R;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.TaskManager;
 import com.pair.util.ThreadUtils;
@@ -50,7 +50,7 @@ final class NotificationManager {
         if (ringtone != null) {
             ringtone.play();
         } else {
-            CLog.d(TAG, "unable to play ringtone");
+            PLog.d(TAG, "unable to play ringtone");
             // TODO: 6/15/2015 fallback to default tone for app if available
         }
     }

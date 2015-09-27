@@ -144,7 +144,7 @@ public class UiHelpers {
             try {
                 showPlainOlDialog(context, message);
             } catch (Exception ignored) { //still bad tokens ets.
-                CLog.w(TAG, "failed to show message: " + message);
+                PLog.w(TAG, "failed to show message: " + message);
             }
         }
     }

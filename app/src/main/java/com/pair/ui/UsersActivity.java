@@ -25,7 +25,7 @@ import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
@@ -218,7 +218,7 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
                 realm.commitTransaction();
                 return to;
             } catch (PairappException e) {
-                CLog.e(TAG, "error while creating message", e.getCause());
+                PLog.e(TAG, "error while creating message", e.getCause());
                 realm.cancelTransaction();
             } finally {
                 realm.close();

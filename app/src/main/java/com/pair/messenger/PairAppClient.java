@@ -12,7 +12,7 @@ import android.os.Looper;
 
 import com.pair.data.Message;
 import com.pair.data.UserManager;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.L;
 import com.pair.util.LiveCenter;
@@ -52,7 +52,7 @@ public class PairAppClient extends Service {
             pairAppClient.putExtra(PairAppClient.ACTION, PairAppClient.ACTION_SEND_ALL_UNSENT);
             context.startService(pairAppClient);
         } else {
-            CLog.d(TAG, "already running");
+            PLog.d(TAG, "already running");
         }
 
     }
@@ -133,7 +133,7 @@ public class PairAppClient extends Service {
             return START_NOT_STICKY;
         }
 
-        CLog.i(TAG, "starting pairapp client");
+        PLog.i(TAG, "starting pairapp client");
         if (intent != null && isClientStarted.get()) {
             if (intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
                 attemptToSendAllUnsentMessages();
@@ -187,7 +187,7 @@ public class PairAppClient extends Service {
             }
             MessageCenter.stopListeningForSocketMessages();
             isClientStarted.set(false);
-            CLog.i(TAG, TAG + ": bye");
+            PLog.i(TAG, TAG + ": bye");
             return;
         }
         L.w(TAG, "shutting down pairapp client when it is already shut down");
@@ -207,7 +207,7 @@ public class PairAppClient extends Service {
                     realm.close();
 
                     if (copy.isEmpty()) {
-                        CLog.d(TAG, "all messages sent");
+                        PLog.d(TAG, "all messages sent");
                     } else {
                         for (Message message : copy) {
                             sendMessageInternal(message);
@@ -328,7 +328,7 @@ public class PairAppClient extends Service {
                 if (BuildConfig.DEBUG) {
                     throw new IllegalStateException("thread yet to run");
                 }
-                CLog.w(TAG, "sending message when worker is yet to start");
+                PLog.w(TAG, "sending message when worker is yet to start");
                 return false;
             }
             return true;

@@ -5,7 +5,7 @@ import android.content.Context;
 import com.pair.Errors.PairappException;
 import com.pair.data.Message;
 import com.pair.data.R;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 
 import org.apache.commons.io.FileUtils;
@@ -38,38 +38,38 @@ public class MessageUtils {
 
         if (message.getType() == Message.TYPE_DATE_MESSAGE) {
             final String msg = "attempted to send a date message,but will not be sent";
-            CLog.w(TAG, msg);
+            PLog.w(TAG, msg);
             throw new PairappException(msg, ERROR_IS_DATE_MESSAGE);
         }
         if (message.getType() == Message.TYPE_TYPING_MESSAGE) {
             final String msg = "attempted to send a typing message,but will not be sent";
-            CLog.w(TAG, msg);
+            PLog.w(TAG, msg);
             throw new PairappException(msg, ERROR_IS_TYPING_MESSAGE);
         }
 
         if (message.getType() != Message.TYPE_TEXT_MESSAGE) { //is it a binary message?
             if (message.getMessageBody().startsWith("file://") && !new File(message.getMessageBody()).exists()) {
                 String msg = "error: " + message.getMessageBody() + " is not a valid file path";
-                CLog.w(TAG, msg);
+                PLog.w(TAG, msg);
                 throw new PairappException(msg, ERROR_ATTACHMENT_TOO_LARGE);
 
             } else { //file exists lets check the size
                 if (new File(message.getMessageBody()).length() > FileUtils.ONE_MB * 8) {//larger
                     final String msg = "error: " + message.getMessageBody() + " is too large. max allowed size is  8MB";
-                    CLog.w(TAG, msg);
+                    PLog.w(TAG, msg);
                     throw new PairappException(msg, ERROR_ATTACHMENT_TOO_LARGE);
                 }
             }
         } else { //text message
             if (message.getMessageBody().getBytes().length > FileUtils.ONE_KB * 3) { //3KB so that we can accommodate other fields which stays pretty constant
                 final String msg = "error " + message.getMessageBody() + " is too large. max allowed size is than 4KB";
-                CLog.w(TAG, msg);
+                PLog.w(TAG, msg);
                 throw new PairappException(msg, ERROR_MESSAGE_BODY_TOO_LARGE);
             }
         }
         if ((message.getState() != Message.STATE_PENDING) && (message.getState() != Message.STATE_SEND_FAILED)) {
             final String msg = "attempted to send a sent message, but will not be sent";
-            CLog.w(TAG, msg);
+            PLog.w(TAG, msg);
             throw new PairappException(msg, ERROR_MESSAGE_ALREADY_SENT);
         }
         return true;

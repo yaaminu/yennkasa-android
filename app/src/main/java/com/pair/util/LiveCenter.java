@@ -27,7 +27,7 @@ public class LiveCenter {
     public static final Emitter.Listener CHAT_ROOM_RECEIVER = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            CLog.i(TAG, "chatroom event: " + args[0]);
+            PLog.i(TAG, "chatroom event: " + args[0]);
             try {
                 JSONObject object = new JSONObject(args[0].toString());
                 String userId = object.getString(SocketIoClient.PROPERTY_FROM);
@@ -54,13 +54,13 @@ public class LiveCenter {
     private static final Emitter.Listener ONLINE_RECEIVER = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            CLog.d(TAG, "online reciever: " + args[0].toString());
+            PLog.d(TAG, "online reciever: " + args[0].toString());
             updateUserStatus(args[0]);
         }
     }, TYPING_RECEIVER = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            CLog.d(TAG, "typing reciever: " + args[0].toString());
+            PLog.d(TAG, "typing reciever: " + args[0].toString());
             //mark user as typing
             updateTyping(args[0]);
         }
@@ -72,7 +72,7 @@ public class LiveCenter {
             String typingUser = object.getString(SocketIoClient.PROPERTY_FROM);
             boolean isTyping = object.optBoolean(SocketIoClient.PROPERTY_IS_TYPING);
             synchronized (TYPING_AND_ACTIVE_USERS_LOCK) {
-                CLog.d(TAG, "typing event");
+                PLog.d(TAG, "typing event");
                 if (isTyping) {
                     typing.add(typingUser);
                 } else {
@@ -277,7 +277,7 @@ public class LiveCenter {
         ThreadUtils.ensureMain();
         synchronized (PEERS_IN_CHATROOM) {
             if (!PEERS_IN_CHATROOM.contains(userId)) {
-                CLog.i(TAG, "peer not in chat room stopping dispatch");
+                PLog.i(TAG, "peer not in chat room stopping dispatch");
                 return;
             }
         }
@@ -285,7 +285,7 @@ public class LiveCenter {
             synchronized (PEERS_IN_CHATROOM) {
                 PEERS_IN_CHATROOM.remove(userId);
             }
-            CLog.i(TAG, "peer offline, not dispatching typing event");
+            PLog.i(TAG, "peer offline, not dispatching typing event");
             return;
         }
         if (WORKER_THREAD != null && WORKER_THREAD.isAlive()) {
@@ -309,7 +309,7 @@ public class LiveCenter {
         ThreadUtils.ensureMain();
         synchronized (PEERS_IN_CHATROOM) {
             if (!PEERS_IN_CHATROOM.contains(userId)) {
-                CLog.i(TAG, "peer not in chat room stopping dispatch");
+                PLog.i(TAG, "peer not in chat room stopping dispatch");
                 return;
             }
         }
@@ -317,7 +317,7 @@ public class LiveCenter {
             synchronized (PEERS_IN_CHATROOM) {
                 PEERS_IN_CHATROOM.remove(userId);
             }
-            CLog.i(TAG, "peer offline, not dispatching typing event");
+            PLog.i(TAG, "peer offline, not dispatching typing event");
             return;
         }
 
@@ -471,7 +471,7 @@ public class LiveCenter {
 
         private void doNotifyTyping(String to, boolean isTyping) {
             if (!isOnline(to)) {
-                CLog.d(TAG, "user offline, typing event not dispatched");
+                PLog.d(TAG, "user offline, typing event not dispatched");
                 return;
             }
             try {

@@ -21,7 +21,7 @@ import com.pair.Errors.ErrorCenter;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.LiveCenter;
@@ -337,7 +337,7 @@ private String phoneInlocalFormat;
             }
             //todo probably change status too and last activity
         } catch (Exception lateUpdate) {//fragment no more in layout or maybe user left group
-            CLog.e(TAG, lateUpdate.getMessage(), lateUpdate.getCause());
+            PLog.e(TAG, lateUpdate.getMessage(), lateUpdate.getCause());
         }
     }
 

@@ -37,10 +37,10 @@ public class MediaUtils {
             context.startActivityForResult(attachIntent, requestCode);
         } catch (Exception e) {
             if (BuildConfig.DEBUG) {
-                CLog.e(TAG, e.getMessage(), e.getCause());
+                PLog.e(TAG, e.getMessage(), e.getCause());
                 throw new RuntimeException(e.getCause());
             }
-            CLog.e(TAG, e.getMessage());
+            PLog.e(TAG, e.getMessage());
         }
     }
 

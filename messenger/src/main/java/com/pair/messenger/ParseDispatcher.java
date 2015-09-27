@@ -2,7 +2,7 @@ package com.pair.messenger;
 
 import com.pair.data.Message;
 import com.pair.data.MessageJsonAdapter;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.parse.ParseException;
 import com.parse.ParseObject;
@@ -44,7 +44,7 @@ class ParseDispatcher extends AbstractMessageDispatcher {
     }
 
     private void finallyDispatch(Message message, Object target) {
-        CLog.d(TAG, "dispatching message: " + message.getMessageBody()
+        PLog.d(TAG, "dispatching message: " + message.getMessageBody()
                 + " from " + message.getFrom()
                 + " to " + message.getTo());
         finallyDispatch(message, target, false);

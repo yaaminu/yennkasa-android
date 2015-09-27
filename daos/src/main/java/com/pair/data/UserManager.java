@@ -12,7 +12,7 @@ import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.data.net.HttpResponse;
 import com.pair.data.net.UserApiV2;
 import com.pair.parse_client.ParseClient;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.ConnectionUtils;
 import com.pair.util.FileUtils;
@@ -173,7 +173,7 @@ public final class UserManager {
                     completeGroupCreation(group, membersId);
                     doNotify(callBack, null, group.getUserId());
                 } else {
-                    CLog.i(TAG, "failed to create group");
+                    PLog.i(TAG, "failed to create group");
                     doNotify(callBack, e, null);
                 }
             }
@@ -327,7 +327,7 @@ public final class UserManager {
                         }
                     });
                 } else {
-                    CLog.w(TAG, "failed to fetch group members with reason: " + e.getMessage());
+                    PLog.w(TAG, "failed to fetch group members with reason: " + e.getMessage());
                 }
             }
         });
@@ -387,7 +387,7 @@ public final class UserManager {
         realm.close();
         realm = Realm.getInstance(Config.getApplicationContext());
         User g = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
-        CLog.d(TAG, "members of " + g.getName() + " are: " + g.getMembers().size());
+        PLog.d(TAG, "members of " + g.getName() + " are: " + g.getMembers().size());
         realm.close();
         getGroupMembers(id); //async
     }
@@ -417,7 +417,7 @@ public final class UserManager {
                         realm.commitTransaction();
                         realm.close();
                     } else {
-                        CLog.w(TAG, "refreshing user failed with reason: " + e.getMessage());
+                        PLog.w(TAG, "refreshing user failed with reason: " + e.getMessage());
                     }
                 }
             });
@@ -491,7 +491,7 @@ public final class UserManager {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         final User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
         if (user == null) {
-            CLog.w(TAG, "can't change dp for user with id " + userId + " because no such user exists");
+            PLog.w(TAG, "can't change dp for user with id " + userId + " because no such user exists");
             doNotify(null, callback);
             return;
         }
@@ -518,7 +518,7 @@ public final class UserManager {
             FileUtils.copyTo(imageFile, dpFile);
         } catch (IOException e) {
             //we will not cancel the transaction
-            CLog.e(TAG, "failed to save user's profile locally: " + e.getMessage());
+            PLog.e(TAG, "failed to save user's profile locally: " + e.getMessage());
             doNotify(e, callback);
             return;
         }
@@ -556,9 +556,9 @@ public final class UserManager {
             phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userIso2LetterCode);
         } catch (NumberParseException e) {
             if (BuildConfig.DEBUG) {
-                CLog.e(TAG, e.getMessage(), e.getCause());
+                PLog.e(TAG, e.getMessage(), e.getCause());
             } else {
-                CLog.e(TAG, e.getMessage());
+                PLog.e(TAG, e.getMessage());
             }
             doNotify(new Exception("invalid phone number"), callback);
             return;
@@ -621,7 +621,7 @@ public final class UserManager {
         try {
             thePhoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, countryIso);
         } catch (NumberParseException e) {
-            CLog.e(TAG, e.getMessage());
+            PLog.e(TAG, e.getMessage());
             doNotify(e, callback);
             return;
         }
@@ -888,7 +888,7 @@ public final class UserManager {
                 public void done(Exception e, User user) {
                     try {
                         if (e != null) {
-                            CLog.e(TAG, e.getMessage(), e.getCause());
+                            PLog.e(TAG, e.getMessage(), e.getCause());
                             doNotify(e, callBack);
                             return;
                         }
@@ -907,12 +907,12 @@ public final class UserManager {
 
     @NonNull
     public String encodeDp(String dp) {
-        CLog.d(TAG, "raw dp: " + dp);
+        PLog.d(TAG, "raw dp: " + dp);
         String encoded = dp;
         if (encoded.startsWith("http")) {
             encoded = Base64.encodeToString(dp.getBytes(), Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING) + ".jpg";
         }
-        CLog.d(TAG, "encoded dp: " + encoded);
+        PLog.d(TAG, "encoded dp: " + encoded);
         return encoded;
     }
 

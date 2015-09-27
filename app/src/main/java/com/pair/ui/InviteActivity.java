@@ -23,7 +23,7 @@ import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.TypeFaceUtil;
 import com.pair.util.UiHelpers;
@@ -140,7 +140,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
     }
 
     private void proceedToAddMembers() {
-        CLog.i(TAG, "add members" + selectedUsers.toString());
+        PLog.i(TAG, "add members" + selectedUsers.toString());
         final DialogFragment progressView = UiHelpers.newProgressDialog();
         progressView.show(getSupportFragmentManager(), null);
         userManager.addMembersToGroup(groupId, selectedUsers, new UserManager.CallBack() {

@@ -34,7 +34,7 @@ import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.FileUtils;
 import com.pair.util.MediaUtils;
 import com.pair.util.UiHelpers;
@@ -389,7 +389,7 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
                 if (BuildConfig.DEBUG) {
                     throw new IllegalStateException("this view should be hidden");
                 }
-                CLog.i(TAG, "missing message body");
+                PLog.i(TAG, "missing message body");
                 break;
             case R.id.cancel_attachment:
                 isAttaching = false;

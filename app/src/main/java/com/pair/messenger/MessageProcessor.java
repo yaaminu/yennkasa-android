@@ -9,7 +9,7 @@ import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.MessageJsonAdapter;
 import com.pair.data.UserManager;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 
 import java.util.Date;
 import java.util.List;
@@ -38,7 +38,7 @@ public class MessageProcessor extends IntentService {
         String data = bundle.getString(MessageCenter.KEY_MESSAGE);
 
         assert data != null;
-        CLog.i(TAG, data);
+        PLog.i(TAG, data);
         if (data.equals(SYNC_MESSAGES)) {
             MessagesProvider provider = PairAppClient.getMessageProvider();
             List<Message> messages = provider.retrieveMessages();
@@ -94,8 +94,8 @@ public class MessageProcessor extends IntentService {
         } catch (RealmException primaryKey) {
             //lets eat up this error
             realm.cancelTransaction();
-            CLog.d(TAG, primaryKey.getMessage());
-            CLog.d(TAG, "failed to process message");
+            PLog.d(TAG, primaryKey.getMessage());
+            PLog.d(TAG, "failed to process message");
             return;
         }
         conversation.setSummary(Message.isTextMessage(message) ? message.getMessageBody() : ""); //ui elements must detect this

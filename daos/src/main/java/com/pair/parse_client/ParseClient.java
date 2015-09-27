@@ -13,7 +13,7 @@ import com.pair.data.User;
 import com.pair.data.net.FileApi;
 import com.pair.data.net.HttpResponse;
 import com.pair.data.net.UserApiV2;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.L;
 import com.pair.util.TaskManager;
@@ -86,7 +86,7 @@ public class ParseClient implements UserApiV2, FileApi {
         Parse.setLogLevel(Parse.LOG_LEVEL_VERBOSE);
         /***************************************KEYS***************************************************************************/
 
-        Parse.initialize(application, "RcCxnXwO1mpkSNrU9u4zMtxQac4uabLNIFa662ZY", "f1ad1Vfjisr7mVBDSeoFO1DobD6OaLkggHvT2Nk4");
+        Parse.initialize(application, application.getString(R.string.parse_application_id), application.getString(R.string.parse_client_key));
 
         /******************************************************************************************************************/
 
@@ -112,13 +112,13 @@ public class ParseClient implements UserApiV2, FileApi {
         num = Math.abs(num);
 
         String token = String.valueOf(num);
-        CLog.d(TAG, token); //fixme remove this
+        PLog.d(TAG, token); //fixme remove this
         return token;
     }
 
     @Override
     public void registerUser(@Body final User user, final Callback<User> callback) {
-        CLog.d(TAG, "register user: user info " + user.getName() + ":" + user.getUserId());
+        PLog.d(TAG, "register user: user info " + user.getName() + ":" + user.getUserId());
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
@@ -153,11 +153,11 @@ public class ParseClient implements UserApiV2, FileApi {
             }
         } catch (ParseException e) {
             if (e.getCode() != ParseException.OBJECT_NOT_FOUND) {
-                CLog.d(TAG, "encountered error while registering user, message: " + e.getMessage());
+                PLog.d(TAG, "encountered error while registering user, message: " + e.getMessage());
                 notifyCallback(callback, prepareErrorReport(e), null);
                 return;
             }
-            CLog.d(TAG, "no account associated with " + _id + " in proceeding to create new account");
+            PLog.d(TAG, "no account associated with " + _id + " in proceeding to create new account");
             //continue
         }
         try {
@@ -440,9 +440,9 @@ public class ParseClient implements UserApiV2, FileApi {
             notifyCallback(response, null, members);
         } catch (ParseException e) {
             if (BuildConfig.DEBUG) {
-                CLog.e(TAG, e.getMessage(), e.getCause());
+                PLog.e(TAG, e.getMessage(), e.getCause());
             } else {
-                CLog.e(TAG, e.getMessage());
+                PLog.e(TAG, e.getMessage());
             }
             notifyCallback(response, prepareErrorReport(e), null);
         }
@@ -554,7 +554,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     private void doResendToken(@Path("id") String userId, @Field("password") String password, Callback<HttpResponse> response) {
         String newToken = genVerificationToken();
-        CLog.d(TAG, newToken);
+        PLog.d(TAG, newToken);
         try {
             ParseObject object = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, userId).getFirst();
             object.put(FIELD_TOKEN, newToken);

@@ -10,9 +10,10 @@ import com.pair.data.UserManager;
 import com.pair.messenger.MessageCenter;
 import com.pair.messenger.MessageProcessor;
 import com.pair.messenger.PairAppClient;
+import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.parse_client.ParseClient;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.workers.ContactSyncService;
 
@@ -23,7 +24,7 @@ public class PairApp extends Application {
     public static final String TAG = PairApp.class.getName();
 
     private static void enableComponent(Class clazz) {
-        CLog.d(TAG, "enabling " + clazz.getSimpleName());
+        PLog.d(TAG, "enabling " + clazz.getSimpleName());
         ComponentName receiver = new ComponentName(Config.getApplication(), clazz);
 
         PackageManager pm = Config.getApplication().getPackageManager();
@@ -34,7 +35,7 @@ public class PairApp extends Application {
     }
 
     private static void disableComponent(Class clazz) {
-        CLog.d(TAG, "disabling " + clazz.getSimpleName());
+        PLog.d(TAG, "disabling " + clazz.getSimpleName());
         ComponentName receiver = new ComponentName(Config.getApplication(), clazz);
 
         PackageManager pm = Config.getApplication().getPackageManager();
@@ -77,6 +78,7 @@ public class PairApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        PLog.setLogLevel(BuildConfig.DEBUG?PLog.LEVEL_VERBOSE:PLog.LEVEL_ERROR);
         Config.init(this);
         ParseClient.init(this);
         if (UserManager.getInstance().isUserVerified()) {

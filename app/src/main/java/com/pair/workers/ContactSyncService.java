@@ -8,7 +8,7 @@ import android.content.Intent;
 
 import com.pair.data.ContactsManager;
 import com.pair.data.UserManager;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +59,7 @@ public class ContactSyncService extends IntentService {
             List<ContactsManager.Contact> numbers = ContactsManager.getInstance().findAllContactsSync(filter, null);
 
             if (numbers.isEmpty()) { //all contacts fetched.. this should rarely happen
-                CLog.i(TAG, "all contacts synced");
+                PLog.i(TAG, "all contacts synced");
                 return;
             }
 
@@ -69,7 +69,7 @@ public class ContactSyncService extends IntentService {
                 //correctly retrieve the right users.
                 onlyNumbers.add(contact.numberInIEE_Format);
             }
-            CLog.d(TAG, onlyNumbers.toString());
+            PLog.d(TAG, onlyNumbers.toString());
             doSync(manager, onlyNumbers);
         }
     }

@@ -5,7 +5,7 @@ import android.content.Context;
 
 import com.pair.Errors.PairappException;
 import com.pair.data.util.MessageUtils;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.ThreadUtils;
@@ -104,7 +104,7 @@ public class Message extends RealmObject {
             long count = realm.where(Message.class).count() + 1;
             id = count + "@" + UserManager.getInstance().getCurrentUser().getUserId() + "@" + System.nanoTime();
         }
-        CLog.i(TAG, "generated message id: " + id);
+        PLog.i(TAG, "generated message id: " + id);
         realm.close();
         return id;
     }

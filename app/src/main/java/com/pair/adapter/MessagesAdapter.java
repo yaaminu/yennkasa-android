@@ -22,7 +22,7 @@ import com.pair.Errors.PairappException;
 import com.pair.data.Message;
 import com.pair.pairapp.R;
 import com.pair.ui.PairAppBaseActivity;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.PreviewsHelper;
@@ -327,7 +327,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                             realm.commitTransaction();
                             onComplete(null);
                         } catch (IOException e) {
-                            CLog.e(TAG, e.getMessage(), e.getCause());
+                            PLog.e(TAG, e.getMessage(), e.getCause());
                             onComplete(e);
                         } finally {
                             if (realm != null) {
@@ -373,7 +373,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         if (delegate.onDateSetChanged()) {
             super.notifyDataSetChanged();
         } else {
-            CLog.d(TAG, "out of sync");
+            PLog.d(TAG, "out of sync");
         }
     }
 

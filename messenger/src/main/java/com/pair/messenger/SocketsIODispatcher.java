@@ -6,7 +6,7 @@ import com.pair.data.Message;
 import com.pair.data.MessageJsonAdapter;
 import com.pair.data.UserManager;
 import com.pair.net.sockets.SocketIoClient;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 
 import org.json.JSONException;
@@ -35,13 +35,13 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
                 int status = object.getInt(SocketIoClient.MSG_STS_STATUS);
                 String messageId = object.getString(SocketIoClient.MSG_STS_MESSAGE_ID);
                 if (status == Message.STATE_SENT) {
-                    CLog.i(TAG, "message sent");
+                    PLog.i(TAG, "message sent");
                     onSent(messageId);
                 } else if (status == Message.STATE_RECEIVED) {
-                    CLog.i(TAG, "message delivered");
+                    PLog.i(TAG, "message delivered");
                     onDelivered(messageId);
                 } else if (status == Message.STATE_SEND_FAILED) {
-                    CLog.i(TAG, "message dispatch failed");
+                    PLog.i(TAG, "message dispatch failed");
                     onFailed(messageId, ERR_USER_OFFLINE);
                 }
             } catch (JSONException e) {

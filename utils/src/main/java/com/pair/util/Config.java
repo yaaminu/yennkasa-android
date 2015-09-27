@@ -59,7 +59,7 @@ public class Config {
             getAppProfilePicsBaseDir().mkdirs();
             getTempDir().mkdirs();
         } else {
-            CLog.w(TAG, "This is strange! no sdCard available on this device");
+            PLog.w(TAG, "This is strange! no sdCard available on this device");
         }
 
     }
@@ -87,7 +87,7 @@ public class Config {
     }
 
     private static void warnAndThrow(String msg, String detailMessage) {
-        CLog.w(TAG, msg);
+        PLog.w(TAG, msg);
         throw new IllegalStateException(detailMessage);
     }
 

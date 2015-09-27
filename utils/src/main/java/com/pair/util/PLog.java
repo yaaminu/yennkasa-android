@@ -7,7 +7,7 @@ import android.util.Log;
  *
  * @author http://www.liaohuqiu.net/
  */
-public class CLog {
+public class PLog {
 
     public static final int LEVEL_VERBOSE = 0;
     public static final int LEVEL_DEBUG = 1;

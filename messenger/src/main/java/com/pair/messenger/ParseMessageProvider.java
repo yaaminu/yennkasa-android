@@ -5,7 +5,7 @@ import android.app.AlarmManager;
 import com.pair.data.Message;
 import com.pair.data.MessageJsonAdapter;
 import com.pair.data.UserManager;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.TaskManager;
 import com.parse.ParseException;
 import com.parse.ParseObject;
@@ -55,7 +55,7 @@ class ParseMessageProvider implements MessagesProvider {
             });
             return messages;
         } catch (ParseException e) {
-            CLog.e(TAG, "error retrieving messages: " + e.getMessage());
+            PLog.e(TAG, "error retrieving messages: " + e.getMessage());
         }
         return Collections.emptyList();
     }

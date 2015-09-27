@@ -19,7 +19,7 @@ import com.pair.data.Country;
 import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.FormValidator;
 import com.pair.util.PhoneNumberNormaliser;
@@ -227,13 +227,13 @@ public class LoginFragment extends Fragment {
                 }
                 realm.commitTransaction();
                 for (Country country : realm.where(Country.class).findAll()) {
-                    CLog.i(TAG, country.toString());
+                    PLog.i(TAG, country.toString());
                 }
             } catch (IOException | JSONException e) {
                 if (BuildConfig.DEBUG) {
-                    CLog.e(TAG, e.getMessage(), e.getCause());
+                    PLog.e(TAG, e.getMessage(), e.getCause());
                 } else {
-                    CLog.e(TAG, e.getMessage());
+                    PLog.e(TAG, e.getMessage());
                 }
             } finally {
                 realm.close();

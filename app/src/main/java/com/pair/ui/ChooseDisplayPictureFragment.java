@@ -17,7 +17,7 @@ import android.widget.TextView;
 
 import com.pair.Errors.ErrorCenter;
 import com.pair.pairapp.R;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.MediaUtils;
@@ -95,7 +95,7 @@ public class ChooseDisplayPictureFragment extends Fragment {
 
         @Override
         public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom loadedFrom) {
-            CLog.d(TAG, "loaded");
+            PLog.d(TAG, "loaded");
             previewLabel.setText("");
             if (bitmap.getHeight() == 0) {
                 ErrorCenter.reportError(TAG, getString(R.string.error_failed_to_open_image));
@@ -114,14 +114,14 @@ public class ChooseDisplayPictureFragment extends Fragment {
 
         @Override
         public void onBitmapFailed(Drawable drawable) {
-            CLog.d(TAG, "failed");
+            PLog.d(TAG, "failed");
             previewLabel.setText(noDpNotice);
             displayPicture.setImageDrawable(drawable);
         }
 
         @Override
         public void onPrepareLoad(Drawable drawable) {
-            CLog.d(TAG, "before load");
+            PLog.d(TAG, "before load");
             displayPicture.setImageDrawable(drawable);
             previewLabel.setText(R.string.loading);
         }

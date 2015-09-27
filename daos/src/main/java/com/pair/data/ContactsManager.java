@@ -10,7 +10,7 @@ import android.provider.ContactsContract;
 import android.text.TextUtils;
 
 import com.google.i18n.phonenumbers.NumberParseException;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.PhoneNumberNormaliser;
 
@@ -86,16 +86,16 @@ public class ContactsManager {
                 phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract
                         .CommonDataKinds.Phone.NUMBER));
                 if (TextUtils.isEmpty(phoneNumber)) {
-                    CLog.i(TAG, "strange!: no phone number for this contact, ignoring");
+                    PLog.i(TAG, "strange!: no phone number for this contact, ignoring");
                     continue;
                 }
                 try {
                     standardisedNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO());
                 } catch (IllegalArgumentException e) {
-                    CLog.e(TAG, "failed to format the number: " + standardisedNumber + "to IEE number: " + e.getMessage());
+                    PLog.e(TAG, "failed to format the number: " + standardisedNumber + "to IEE number: " + e.getMessage());
                     continue;
                 } catch (NumberParseException e) {
-                    CLog.e(TAG, "failed to format the number: " + standardisedNumber + "to IEE number: " + e.getMessage());
+                    PLog.e(TAG, "failed to format the number: " + standardisedNumber + "to IEE number: " + e.getMessage());
                     continue;
                 }
                 user = realm.where(User.class)

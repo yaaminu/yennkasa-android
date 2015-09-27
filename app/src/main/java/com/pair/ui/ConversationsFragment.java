@@ -14,7 +14,7 @@ import com.pair.adapter.ConversationAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.pairapp.R;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.UiHelpers;
 import com.pair.view.SwipeDismissListViewTouchListener;
@@ -102,7 +102,7 @@ public class ConversationsFragment extends ListFragment {
             return copy;
         } catch (Exception e) {
             realm.cancelTransaction();
-            CLog.e(TAG, e.getMessage(), e.getCause());
+            PLog.e(TAG, e.getMessage(), e.getCause());
         }
         return null;
     }

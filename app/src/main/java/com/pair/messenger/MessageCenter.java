@@ -7,7 +7,7 @@ import com.github.nkzawa.emitter.Emitter;
 import com.pair.data.Message;
 import com.pair.data.UserManager;
 import com.pair.net.sockets.SocketIoClient;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.L;
 import com.pair.util.LiveCenter;
@@ -31,13 +31,13 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
     private static final Emitter.Listener MESSAGE_STATUS_RECEIVER = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            CLog.i(TAG, "message status report: " + args[0].toString());
+            PLog.i(TAG, "message status report: " + args[0].toString());
             try {
                 JSONObject object = new JSONObject(args[0].toString());
                 int status = object.getInt(SocketIoClient.MSG_STS_STATUS);
                 String messageId = object.getString(SocketIoClient.MSG_STS_MESSAGE_ID);
                 if (status == Message.STATE_SEEN) {
-                    CLog.i(TAG, "message seen");
+                    PLog.i(TAG, "message seen");
                     Realm realm = Message.REALM(Config.getApplicationContext());
                     Message msg = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
                     if (msg != null) {
@@ -45,7 +45,7 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
                         msg.setState(Message.STATE_SEEN);
                         realm.commitTransaction();
                     } else {
-                        CLog.i(TAG, "message not available for update");
+                        PLog.i(TAG, "message not available for update");
                     }
                     realm.close();
                 }
@@ -57,7 +57,7 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
     private static final Emitter.Listener MESSAGE_RECEIVER = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            CLog.i(TAG, "socket message received: " + args[0].toString());
+            PLog.i(TAG, "socket message received: " + args[0].toString());
             //process message
             String data = args[0].toString();
             processMessage(Config.getApplicationContext(), data);

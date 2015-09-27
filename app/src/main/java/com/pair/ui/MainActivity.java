@@ -15,7 +15,7 @@ import com.pair.PairApp;
 import com.pair.data.RealmUtils;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
-import com.pair.util.CLog;
+import com.pair.util.PLog;
 import com.pair.util.UiHelpers;
 import com.parse.ParseAnalytics;
 import com.rey.material.app.ToolbarManager;
@@ -94,7 +94,7 @@ public class MainActivity extends PairAppActivity {
         try {
             ((LinearLayout) tabStrip.getChildAt(0)).setGravity(Gravity.CENTER_HORIZONTAL);
         } catch (Exception ignored) { //this could raise an exception
-            CLog.e(TAG, ignored.getMessage());
+            PLog.e(TAG, ignored.getMessage());
         }
         Toolbar toolBar = (Toolbar) findViewById(R.id.main_toolbar);
         toolBar.setTitle("");

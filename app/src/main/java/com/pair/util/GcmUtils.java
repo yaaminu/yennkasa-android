@@ -36,7 +36,7 @@ public class GcmUtils {
         // FIXME: 8/14/2015 change this
 
         int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(context);
-        CLog.i(TAG, "results code: " + resultCode);
+        PLog.i(TAG, "results code: " + resultCode);
         if (resultCode != ConnectionResult.SUCCESS && resultCode != ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED) {
             return false;
         }
@@ -58,9 +58,9 @@ public class GcmUtils {
                     return null;
                 } catch (IOException e) {
                     if (BuildConfig.DEBUG) {
-                        CLog.e(TAG, e.getMessage(), e.getCause());
+                        PLog.e(TAG, e.getMessage(), e.getCause());
                     } else {
-                        CLog.e(TAG, e.getMessage());
+                        PLog.e(TAG, e.getMessage());
                     }
                     return e;
                 }
@@ -109,7 +109,7 @@ public class GcmUtils {
                 sharedPreferences.edit().putString(GCM_REG_ID, registrationId).commit();
                 return new GcmRegResults(registrationId, null);
             } catch (IOException e) {
-                CLog.e(TAG, e.getMessage(), e.getCause());
+                PLog.e(TAG, e.getMessage(), e.getCause());
                 return new GcmRegResults(null, e);
             }
 
