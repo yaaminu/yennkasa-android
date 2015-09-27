@@ -8,6 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="8dp"
+        android:id="@+id/tv_dialog_message"
         android:text="@string/sure_you_want_to_delete_conversation"
         android:textSize="@dimen/standard_text_size"/>
 

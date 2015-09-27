@@ -10,11 +10,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.util.Pair;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import com.pair.Errors.PairappException;
 import com.pair.data.Message;
+import com.pair.data.UserManager;
 import com.pair.data.util.MessageUtils;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
@@ -29,6 +31,8 @@ import com.pair.ui.UsersActivity;
 import com.rey.material.app.Dialog;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.SimpleDialog;
+import com.rey.material.widget.CheckBox;
+import com.rey.material.widget.TextView;
 
 import java.io.File;
 import java.io.IOException;
@@ -207,6 +211,63 @@ public class UiHelpers {
         DialogFragment fragment = DialogFragment.newInstance(builder);
         fragment.setCancelable(cancelable);
         return fragment;
+    }
+
+    public static void showStopAnnoyingMeDialog(PairAppBaseActivity activity, final String key, final String message, String ok, String no, final Listener okListener, final Listener noListener) {
+        boolean stopAnnoyingMe = UserManager.getInstance().getUserPreference().getBoolean(key, false);
+        if (stopAnnoyingMe) {
+            if (okListener != null) {
+                okListener.onClick();
+            }
+            return;
+        }
+        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
+            boolean touchedCheckBox = false, checkBoxValue;
+            public CompoundButton.OnCheckedChangeListener listener = new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    touchedCheckBox = true;
+                    checkBoxValue = isChecked;
+                    UiHelpers.showToast(String.valueOf(isChecked));
+                }
+            };
+
+            @Override
+            protected void onBuildDone(Dialog dialog) {
+                dialog.layoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                CheckBox checkBox = ((CheckBox) dialog.findViewById(R.id.cb_stop_annoying_me));
+                ((TextView) dialog.findViewById(R.id.tv_dialog_message)).setText(message);
+                checkBox.setOnCheckedChangeListener(listener);
+            }
+
+            @Override
+            public void onPositiveActionClicked(DialogFragment fragment) {
+                if (okListener != null) {
+                    okListener.onClick();
+                }
+                super.onPositiveActionClicked(fragment);
+                updateStopAnnoyingMe(checkBoxValue);
+            }
+
+            @Override
+            public void onNegativeActionClicked(DialogFragment fragment) {
+                if (noListener != null) {
+                    noListener.onClick();
+                }
+                super.onNegativeActionClicked(fragment);
+            }
+
+            private void updateStopAnnoyingMe(boolean newValue) {
+                if (touchedCheckBox) {
+                    UserManager.getInstance().getUserPreference().edit().putBoolean(key, newValue).apply();
+                }
+            }
+        };
+        builder.contentView(R.layout.stop_annoying_me_dialog);
+        builder.positiveAction(ok)
+                .negativeAction(no);
+        DialogFragment fragment = DialogFragment.newInstance(builder);
+        fragment.show(activity.getSupportFragmentManager(), null);
     }
 
     private static String getString(Context context, int resId) {

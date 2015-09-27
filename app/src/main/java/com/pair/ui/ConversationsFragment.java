@@ -8,22 +8,16 @@ import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
 import android.widget.ListView;
 
 import com.pair.adapter.ConversationAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
-import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.pair.util.UiHelpers;
 import com.pair.view.SwipeDismissListViewTouchListener;
-import com.rey.material.app.Dialog;
-import com.rey.material.app.DialogFragment;
-import com.rey.material.app.SimpleDialog;
-import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.FloatingActionButton;
 
 import io.realm.Realm;
@@ -80,13 +74,7 @@ public class ConversationsFragment extends ListFragment {
         SwipeDismissListViewTouchListener swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(getListView(), new SwipeDismissListViewTouchListener.OnDismissCallback() {
             @Override
             public void onDismiss(ListView listView, final int[] reverseSortedPositions) {
-                deleted = deleteConversation(reverseSortedPositions);
-                boolean stopAnnoyingMe = UserManager.getInstance().getUserPreference().getBoolean(STOP_ANNOYING_ME, false);
-                if (stopAnnoyingMe) {
-                    cleanMessages(deleted);
-                    return;
-                }
-                showAlertDialog();
+                showAlertDialog(reverseSortedPositions);
             }
         });
         getListView().setOnTouchListener(swipeDismissListViewTouchListener);
@@ -104,10 +92,10 @@ public class ConversationsFragment extends ListFragment {
         realm.commitTransaction();
     }
 
-    private Conversation deleteConversation(int[] reverseSortedPositions) {
+    private Conversation deleteConversation(int position) {
         realm.beginTransaction();
         try {
-            Conversation conversation = conversations.get(reverseSortedPositions[0]);
+            Conversation conversation = conversations.get(position);
             Conversation copy = Conversation.copy(conversation);
             conversation.removeFromRealm();
             realm.commitTransaction();
@@ -131,52 +119,24 @@ public class ConversationsFragment extends ListFragment {
         super.onDestroy();
     }
 
-    private void showAlertDialog() {
-
-        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
-            boolean touchedCheckBox = false,checkBoxValue;
-            public CompoundButton.OnCheckedChangeListener listener = new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    touchedCheckBox = true;
-                    checkBoxValue = isChecked;
-                    UiHelpers.showToast(String.valueOf(isChecked));
-                }
-            };
-
-            @Override
-            protected void onBuildDone(Dialog dialog) {
-                dialog.layoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                CheckBox checkBox = ((CheckBox) dialog.findViewById(R.id.cb_stop_annoying_me));
-                checkBox.setOnCheckedChangeListener(listener);
-            }
-
-            @Override
-            public void onPositiveActionClicked(DialogFragment fragment) {
-                cleanMessages(deleted);
-                super.onPositiveActionClicked(fragment);
-                updateStopAnnoyingMe(checkBoxValue);
-            }
-
-            @Override
-            public void onNegativeActionClicked(DialogFragment fragment) {
-                realm.beginTransaction();
-                realm.copyToRealm(deleted);
-                realm.commitTransaction();
-                super.onNegativeActionClicked(fragment);
-            }
-
-            private void updateStopAnnoyingMe(boolean newValue) {
-                if(touchedCheckBox) {
-                    UserManager.getInstance().getUserPreference().edit().putBoolean(STOP_ANNOYING_ME, newValue).apply();
-                }
-            }
-        };
-        builder.contentView(R.layout.delete_conversation_prompt);
-        builder.positiveAction(getString(android.R.string.ok))
-                .negativeAction(getString(R.string.no));
-        DialogFragment fragment = DialogFragment.newInstance(builder);
-        fragment.show(getFragmentManager(), null);
+    private void showAlertDialog(int[] reverseSortedPositions) {
+        for (int position : reverseSortedPositions) {
+            deleted = deleteConversation(position);
+            UiHelpers.showStopAnnoyingMeDialog(((PairAppBaseActivity) getActivity()), STOP_ANNOYING_ME,
+                    getString(R.string.sure_you_want_to_delete_conversation), getString(android.R.string.ok), getString(R.string.no), new UiHelpers.Listener() {
+                        @Override
+                        public void onClick() {
+                            cleanMessages(deleted);
+                        }
+                    }, new UiHelpers.Listener() {
+                        @Override
+                        public void onClick() {
+                            realm.beginTransaction();
+                            realm.copyToRealm(deleted);
+                            realm.commitTransaction();
+                        }
+                    });
+        }
     }
 
 }
