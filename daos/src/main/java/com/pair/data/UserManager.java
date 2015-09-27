@@ -3,29 +3,26 @@ package com.pair.data;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.Log;
 import android.util.Pair;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.data.net.HttpResponse;
 import com.pair.data.net.UserApiV2;
 import com.pair.parse_client.ParseClient;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.pair.util.ConnectionUtils;
 import com.pair.util.FileUtils;
 import com.pair.util.PhoneNumberNormaliser;
+import com.pair.util.TaskManager;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import io.realm.Realm;
 import io.realm.RealmList;
@@ -45,13 +42,10 @@ public final class UserManager {
     private final Object mainUserLock = new Object();
     private final Exception NO_CONNECTION_ERROR;
     private final UserApiV2 userApi;
-    private final Handler MAIN_THREAD_HANDLER;
-    private final ExecutorService WORKER = Executors.newSingleThreadExecutor();
     private volatile User mainUser;
 
     private UserManager() {
         NO_CONNECTION_ERROR = new Exception(Config.getApplicationContext().getString(R.string.st_unable_to_connect));
-        MAIN_THREAD_HANDLER = new Handler(Looper.getMainLooper());
         userApi = ParseClient.getInstance();
     }
 
@@ -104,7 +98,7 @@ public final class UserManager {
         return user;
     }
 
-    public boolean isUserLoggedIn() {
+    public boolean isUserCLoggedIn() {
         return isEveryThingSetup();
     }
 
@@ -120,7 +114,7 @@ public final class UserManager {
     }
 
     public boolean isUserVerified() {
-        return isUserLoggedIn() && getSettings().getBoolean(KEY_USER_VERIFIED, false);
+        return isUserCLoggedIn() && getSettings().getBoolean(KEY_USER_VERIFIED, false);
     }
 
     private SharedPreferences getSettings() {
@@ -178,7 +172,7 @@ public final class UserManager {
                     completeGroupCreation(group, membersId);
                     doNotify(callBack, null, group.getUserId());
                 } else {
-                    Log.i(TAG, "failed to create group");
+                    CLog.i(TAG, "failed to create group");
                     doNotify(callBack, e, null);
                 }
             }
@@ -319,7 +313,7 @@ public final class UserManager {
             @Override
             public void done(Exception e, final List<User> freshMembers) {
                 if (e == null) {
-                    WORKER.submit(new Runnable() {
+                    TaskManager.execute(new Runnable() {
                         @Override
                         public void run() {
                             Realm realm = User.Realm(Config.getApplicationContext());
@@ -332,7 +326,7 @@ public final class UserManager {
                         }
                     });
                 } else {
-                    Log.w(TAG, "failed to fetch group members with reason: " + e.getMessage());
+                    CLog.w(TAG, "failed to fetch group members with reason: " + e.getMessage());
                 }
             }
         });
@@ -364,7 +358,7 @@ public final class UserManager {
             @Override
             public void done(Exception e, final User group) {
                 if (e == null) {
-                    WORKER.submit(new Runnable() {
+                    TaskManager.execute(new Runnable() {
                         @Override
                         public void run() {
                             completeGetGroupInfo(group, id);
@@ -392,7 +386,7 @@ public final class UserManager {
         realm.close();
         realm = Realm.getInstance(Config.getApplicationContext());
         User g = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
-        Log.d(TAG, "members of " + g.getName() + " are: " + g.getMembers().size());
+        CLog.d(TAG, "members of " + g.getName() + " are: " + g.getMembers().size());
         realm.close();
         getGroupMembers(id); //async
     }
@@ -422,7 +416,7 @@ public final class UserManager {
                         realm.commitTransaction();
                         realm.close();
                     } else {
-                        Log.w(TAG, "refreshing user failed with reason: " + e.getMessage());
+                        CLog.w(TAG, "refreshing user failed with reason: " + e.getMessage());
                     }
                 }
             });
@@ -496,7 +490,7 @@ public final class UserManager {
         Realm realm = Realm.getInstance(Config.getApplicationContext());
         final User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
         if (user == null) {
-            Log.w(TAG, "can't change dp for user with id " + userId + " because no such user exists");
+            CLog.w(TAG, "can't change dp for user with id " + userId + " because no such user exists");
             doNotify(null, callback);
             return;
         }
@@ -523,7 +517,7 @@ public final class UserManager {
             FileUtils.copyTo(imageFile, dpFile);
         } catch (IOException e) {
             //we will not cancel the transaction
-            Log.e(TAG, "failed to save user's profile locally: " + e.getMessage());
+            CLog.e(TAG, "failed to save user's profile locally: " + e.getMessage());
             doNotify(e, callback);
             return;
         }
@@ -543,10 +537,10 @@ public final class UserManager {
             doNotify(NO_CONNECTION_ERROR, callback);
             return;
         }
-        completeLogin(phoneNumber, userIso2LetterCode, callback);
+        completeCLogin(phoneNumber, userIso2LetterCode, callback);
     }
 
-    private void completeLogin(String phoneNumber, String userIso2LetterCode, CallBack callback) {
+    private void completeCLogin(String phoneNumber, String userIso2LetterCode, CallBack callback) {
         if (TextUtils.isEmpty(phoneNumber)) {
             doNotify(new Exception("invalid phone number"), callback);
             return;
@@ -561,9 +555,9 @@ public final class UserManager {
             phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userIso2LetterCode);
         } catch (NumberParseException e) {
             if (BuildConfig.DEBUG) {
-                Log.e(TAG, e.getMessage(), e.getCause());
+                CLog.e(TAG, e.getMessage(), e.getCause());
             } else {
-                Log.e(TAG, e.getMessage());
+                CLog.e(TAG, e.getMessage());
             }
             doNotify(new Exception("invalid phone number"), callback);
             return;
@@ -572,11 +566,11 @@ public final class UserManager {
         user.setCountry(userIso2LetterCode);
         String password = Base64.encodeToString(phoneNumber.getBytes(), Base64.DEFAULT);
         user.setPassword(password);
-        doLogIn(user, callback);
+        doCLogIn(user, callback);
     }
 
     //this method must be called on the main thread
-    private void doLogIn(final User user, final CallBack callback) {
+    private void doCLogIn(final User user, final CallBack callback) {
         userApi.logIn(user, new UserApiV2.Callback<User>() {
             @Override
             public void done(Exception e, User backendUser) {
@@ -626,7 +620,7 @@ public final class UserManager {
         try {
             thePhoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, countryIso);
         } catch (NumberParseException e) {
-            Log.e(TAG, e.getMessage());
+            CLog.e(TAG, e.getMessage());
             doNotify(e, callback);
             return;
         }
@@ -664,7 +658,7 @@ public final class UserManager {
             doNotify(new Exception("invalid token"), callBack);
             return;
         }
-        if (!isUserLoggedIn()) {
+        if (!isUserCLoggedIn()) {
             throw new IllegalStateException("no user logged for verification");
         }
         userApi.verifyUser(getCurrentUser().getUserId(), token, new UserApiV2.Callback<HttpResponse>() {
@@ -681,7 +675,7 @@ public final class UserManager {
     }
 
     public void resendToken(final CallBack callBack) {
-        if (!isUserLoggedIn()) {
+        if (!isUserCLoggedIn()) {
             throw new IllegalArgumentException(new Exception("no user logged for verification"));
         }
         if (isUserVerified()) {
@@ -700,7 +694,7 @@ public final class UserManager {
         });
     }
 
-    public void LogOut(Context context, final CallBack logOutCallback) {
+    public void CLogOut(Context context, final CallBack logOutCallback) {
         //TODO logout user from backend
         String userId = getSettings().getString(KEY_SESSION_ID, null);
         if ((userId == null)) {
@@ -792,14 +786,14 @@ public final class UserManager {
     }
 
     public String getUserCountryISO() {
-        if (!isUserLoggedIn()) {
+        if (!isUserCLoggedIn()) {
             throw new IllegalStateException("no user logged in");
         }
         return getCurrentUser().getCountry();
     }
 
     public void reset(final CallBack callBack) {
-        WORKER.submit(new Runnable() {
+        TaskManager.execute(new Runnable() {
             @Override
             public void run() {
                 if (isUserVerified()) {
@@ -824,7 +818,7 @@ public final class UserManager {
     }
 
     private void doNotify(final Exception e, final CallBack callBack) {
-        MAIN_THREAD_HANDLER.post(new Runnable() {
+        TaskManager.executeOnMainThread(new Runnable() {
             @Override
             public void run() {
                 callBack.done(e);
@@ -833,7 +827,7 @@ public final class UserManager {
     }
 
     private void doNotify(final CreateGroupCallBack callBack, final Exception e, final String id) {
-        MAIN_THREAD_HANDLER.post(new Runnable() {
+        TaskManager.executeOnMainThread(new Runnable() {
             @Override
             public void run() {
                 callBack.done(e, id);
@@ -854,7 +848,7 @@ public final class UserManager {
             doNotify(NO_CONNECTION_ERROR, callBack);
             return;
         }
-        WORKER.submit(new Runnable() {
+        TaskManager.execute(new Runnable() {
             @Override
             public void run() {
                 Realm realm = User.Realm(Config.getApplicationContext());
@@ -893,7 +887,7 @@ public final class UserManager {
                 public void done(Exception e, User user) {
                     try {
                         if (e != null) {
-                            Log.e(TAG, e.getMessage(), e.getCause());
+                            CLog.e(TAG, e.getMessage(), e.getCause());
                             doNotify(e, callBack);
                             return;
                         }
@@ -912,12 +906,12 @@ public final class UserManager {
 
     @NonNull
     public String encodeDp(String dp) {
-        Log.d(TAG, "raw dp: " + dp);
+        CLog.d(TAG, "raw dp: " + dp);
         String encoded = dp;
         if (encoded.startsWith("http")) {
             encoded = Base64.encodeToString(dp.getBytes(), Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING) + ".jpg";
         }
-        Log.d(TAG, "encoded dp: " + encoded);
+        CLog.d(TAG, "encoded dp: " + encoded);
         return encoded;
     }
 

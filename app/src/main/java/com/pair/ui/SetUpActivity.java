@@ -80,7 +80,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     private void next() {
         Fragment fragment;// = getSupportFragmentManager().findFragmentById(R.id.container);
         if (stage == UNKNOWN) {
-            if (isUserLoggedIn()) {
+            if (isUserCLoggedIn()) {
                 if (isUserVerified()) {
                     stage = DP_STAGE;
                 } else {
@@ -120,7 +120,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
         getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, OUR_TAG + stage).commit();
     }
 
-    private void doGoBackToLogin() {
+    private void doGoBackToCLogin() {
         progressDialog.show(getSupportFragmentManager(), null);
         UserManager.getInstance().reset(new UserManager.CallBack() {
             @Override
@@ -143,8 +143,8 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     }
 
     @Override
-    public void onBackToLogIn() {
-        doGoBackToLogin();
+    public void onBackToCLogIn() {
+        doGoBackToCLogin();
     }
 
     private void completeSetUp() {
@@ -216,11 +216,11 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
 
     @Override
     public String defaultDp() {
-        return isUserLoggedIn() ? getCurrentUser().getDP() : null;
+        return isUserCLoggedIn() ? getCurrentUser().getDP() : null;
     }
 
     @Override
-    public void onLogin(String phoneNumber, String userIsoCountry) {
+    public void onCLogin(String phoneNumber, String userIsoCountry) {
         progressDialog.show(getSupportFragmentManager(), "");
         userManager.logIn(phoneNumber, userIsoCountry, loginOrSignUpCallback);
     }

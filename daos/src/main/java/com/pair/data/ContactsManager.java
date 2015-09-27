@@ -8,9 +8,9 @@ import android.os.Looper;
 import android.os.Process;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.google.i18n.phonenumbers.NumberParseException;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.pair.util.PhoneNumberNormaliser;
 
@@ -29,6 +29,8 @@ import io.realm.Realm;
 public class ContactsManager {
     private static final ContactsManager INSTANCE = new ContactsManager();
     private static final String TAG = ContactsManager.class.getSimpleName();
+    private static final String[] PROJECT_NAME_PHONE = new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME};
 
     private ContactsManager() {
 
@@ -37,7 +39,6 @@ public class ContactsManager {
     public static ContactsManager getInstance() {
         return INSTANCE;
     }
-
 
     public Cursor findAllContactsCursor(Context context) {
         return getCursor(context);
@@ -66,9 +67,6 @@ public class ContactsManager {
         }).start();
     }
 
-    private static final String[] PROJECT_NAME_PHONE = new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
-            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME};
-
     private Cursor getCursor(Context context) {
         ContentResolver cr = context.getContentResolver();
         return cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, PROJECT_NAME_PHONE,
@@ -88,16 +86,16 @@ public class ContactsManager {
                 phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract
                         .CommonDataKinds.Phone.NUMBER));
                 if (TextUtils.isEmpty(phoneNumber)) {
-                    Log.i(TAG, "strange!: no phone number for this contact, ignoring");
+                    CLog.i(TAG, "strange!: no phone number for this contact, ignoring");
                     continue;
                 }
                 try {
                     standardisedNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO());
                 } catch (IllegalArgumentException e) {
-                    Log.e(TAG, "failed to format the number: " + standardisedNumber + "to IEE number: " + e.getMessage());
+                    CLog.e(TAG, "failed to format the number: " + standardisedNumber + "to IEE number: " + e.getMessage());
                     continue;
                 } catch (NumberParseException e) {
-                    Log.e(TAG, "failed to format the number: " + standardisedNumber + "to IEE number: " + e.getMessage());
+                    CLog.e(TAG, "failed to format the number: " + standardisedNumber + "to IEE number: " + e.getMessage());
                     continue;
                 }
                 user = realm.where(User.class)
@@ -134,6 +132,10 @@ public class ContactsManager {
 
     public interface FindCallback<T> {
         void done(T t);
+    }
+
+    public interface Filter<T> {
+        boolean accept(T t);
     }
 
     public static final class Contact {
@@ -178,9 +180,5 @@ public class ContactsManager {
         public String toString() {
             return this.phoneNumber;
         }
-    }
-
-    public interface Filter<T> {
-        boolean accept(T t);
     }
 }

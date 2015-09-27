@@ -1,7 +1,6 @@
 package com.pair.adapter;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +14,7 @@ import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.ui.DPLoader;
+import com.pair.util.CLog;
 import com.pair.util.UiHelpers;
 
 import java.util.Date;
@@ -53,7 +53,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         }
         final Conversation conversation = getItem(position);
         holder.chatSummary.setText(conversation.getSummary());
-        Log.d(TAG, conversation.toString());
+        CLog.d(TAG, conversation.toString());
         User peer = UserManager.getInstance().fetchUserIfNeeded(conversation.getPeerId());
         String peerName = peer.getName();
         holder.peerName.setText(peerName);

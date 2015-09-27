@@ -23,7 +23,7 @@ import android.widget.Toast;
 
 public class MentionSpanRenderer implements AwesomeTextHandler.ViewSpanRenderer, AwesomeTextHandler.ViewSpanClickListener {
 
-    private final static int textSizeInDips = 18;
+    //    private final static int textSizeInDips = 18;
     private final static int backgroundResource = R.drawable.common_mentions_background;
     private final static int textColorResource = android.R.color.black;
 
@@ -31,7 +31,13 @@ public class MentionSpanRenderer implements AwesomeTextHandler.ViewSpanRenderer,
     public View getView(String text, Context context) {
         TextView view = new TextView(context);
         view.setText(text.substring(1));
-        view.setTextSize(ScreenUtils.dipsToPixels(context, textSizeInDips));
+        int size;
+        if (context.getResources().getBoolean(R.bool.is_big_screen)) {
+            size = 18;
+        } else {
+            size = 12;
+        }
+        view.setTextSize(ScreenUtils.dipsToPixels(context, size));
         view.setBackgroundResource(backgroundResource);
         int textColor = context.getResources().getColor(textColorResource);
         view.setTextColor(textColor);

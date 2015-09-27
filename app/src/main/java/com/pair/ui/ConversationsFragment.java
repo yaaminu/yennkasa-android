@@ -5,19 +5,24 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.ListView;
 
 import com.pair.adapter.ConversationAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.pairapp.R;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.pair.util.UiHelpers;
 import com.pair.view.SwipeDismissListViewTouchListener;
+import com.rey.material.app.Dialog;
+import com.rey.material.app.DialogFragment;
+import com.rey.material.app.SimpleDialog;
+import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.FloatingActionButton;
 
 import io.realm.Realm;
@@ -32,6 +37,7 @@ public class ConversationsFragment extends ListFragment {
     private Realm realm;
     private RealmResults<Conversation> conversations;
     private ConversationAdapter adapter;
+    private Conversation deleted;
 
     public ConversationsFragment() {
     } //required no-arg constructor
@@ -72,20 +78,8 @@ public class ConversationsFragment extends ListFragment {
         SwipeDismissListViewTouchListener swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(getListView(), new SwipeDismissListViewTouchListener.OnDismissCallback() {
             @Override
             public void onDismiss(ListView listView, final int[] reverseSortedPositions) {
-                final Conversation deleted = deleteConversation(reverseSortedPositions);
-                UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), R.string.sure_you_want_to_delete_conversation, R.string.yes, R.string.no, new UiHelpers.Listener() {
-                    @Override
-                    public void onClick() {
-                        cleanMessages(deleted);
-                    }
-                }, new UiHelpers.Listener() {
-                    @Override
-                    public void onClick() {
-                        realm.beginTransaction();
-                        realm.copyToRealm(deleted);
-                        realm.commitTransaction();
-                    }
-                });
+                deleted = deleteConversation(reverseSortedPositions);
+                showAlertDialog();
             }
         });
         getListView().setOnTouchListener(swipeDismissListViewTouchListener);
@@ -113,7 +107,7 @@ public class ConversationsFragment extends ListFragment {
             return copy;
         } catch (Exception e) {
             realm.cancelTransaction();
-            Log.e(TAG, e.getMessage(), e.getCause());
+            CLog.e(TAG, e.getMessage(), e.getCause());
         }
         return null;
     }
@@ -128,6 +122,45 @@ public class ConversationsFragment extends ListFragment {
     public void onDestroy() {
         realm.close();
         super.onDestroy();
+    }
+
+    private void showAlertDialog() {
+
+        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
+            public CompoundButton.OnCheckedChangeListener listener = new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    UiHelpers.showToast(String.valueOf(isChecked));
+                }
+            };
+
+            @Override
+            protected void onBuildDone(Dialog dialog) {
+                dialog.layoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                CheckBox checkBox = ((CheckBox) dialog.findViewById(R.id.cb_stop_annoying_me));
+                checkBox.setOnCheckedChangeListener(listener);
+            }
+
+            @Override
+            public void onPositiveActionClicked(DialogFragment fragment) {
+                cleanMessages(deleted);
+                super.onPositiveActionClicked(fragment);
+            }
+
+            @Override
+            public void onNegativeActionClicked(DialogFragment fragment) {
+                realm.beginTransaction();
+                realm.copyToRealm(deleted);
+                realm.commitTransaction();
+                super.onNegativeActionClicked(fragment);
+            }
+        };
+        builder.contentView(R.layout.delete_conversation_prompt);
+        builder.positiveAction(getString(android.R.string.ok))
+                .negativeAction(getString(R.string.no));
+        DialogFragment fragment = DialogFragment.newInstance(builder);
+        fragment.show(getFragmentManager(), null);
+
     }
 
 }

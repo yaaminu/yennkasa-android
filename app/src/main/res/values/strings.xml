@@ -12,7 +12,7 @@
     <string name="action_settings">Settings</string>
     <string name="verify">Verify</string>
     <string name="content_desc_user_avatar">user DP thumbnail</string>
-    <string name="st_empty_contacts">It\'s Lonely Here :-) No Contact To Display</string>
+    <string name="st_empty_contacts">It\'s Lonely Here, No contact</string>
     <string name="action_call_sender">Call sender</string>
     <string name="action_delete_conversation">Delete</string>
     <string name="title_pick_recipient">Pick recipient</string>
@@ -123,9 +123,9 @@
     <string name="group">group</string>
     <string name="forward_to">Forward to…</string>
     <string name="enter_a_number">Enter a valid phone number</string>
-    <string name="picture">Picture</string>
-    <string name="video">Video</string>
-    <string name="file">File</string>
+    <!--<string name="picture">Picture</string>-->
+    <!--<string name="video">Video</string>-->
+    <!--<string name="file">File</string>-->
     <string name="dissolve_group">Dissolve</string>
     <string name="phone">Phone</string>
     <string name="groups_you_share_in_common">Groups you share in common</string>
@@ -197,7 +197,7 @@
     <string name="dp_prompt">Are you sure you want to use this picture as the DP?</string>
     <string name="get_started_noitce"><![CDATA[<p>Hi there! thanks for installing PairApp.<br/>Please take a few seconds to set things up.</p>]]></string>
     <string name="complete"><![CDATA[<p>Please take time to complete the set up process.</p>]]></string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="picture">Picture</string>
+    <string name="video">Video</string>
+    <string name="file">File</string>
 </resources>

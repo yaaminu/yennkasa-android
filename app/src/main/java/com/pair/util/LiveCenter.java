@@ -2,9 +2,7 @@ package com.pair.util;
 
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 
 import com.github.nkzawa.emitter.Emitter;
 import com.pair.data.UserManager;
@@ -26,37 +24,10 @@ import java.util.Set;
 public class LiveCenter {
 
     private static final String TAG = "livecenter";
-
-
-    private static final Set<String> activeUsers = new HashSet<>(),
-            typing = new HashSet<>(),
-            PEERS_IN_CHATROOM = new HashSet<>();
-
-    private static WorkerThread WORKER_THREAD;
-    private static SocketIoClient liveClient;
-
-    private static final Object TYPING_AND_ACTIVE_USERS_LOCK = new Object();
-
-    private static WeakReference<TypingListener> typingListener;
-
-    /**
-     * an interface one must implement if one wants to be notified of typing events
-     * you may not implement this interface using an anonymous inner class as the listner
-     * is referenced internally as a weakReference. at any point in time, there may be at
-     * most one listener.
-     */
-    public interface TypingListener {
-        void onTyping(String userId);
-
-        void onStopTyping(String userId);
-
-        void onUserStatusChanged(String userId, boolean isOnline);
-    }
-
     public static final Emitter.Listener CHAT_ROOM_RECEIVER = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            Log.i(TAG, "chatroom event: " + args[0]);
+            CLog.i(TAG, "chatroom event: " + args[0]);
             try {
                 JSONObject object = new JSONObject(args[0].toString());
                 String userId = object.getString(SocketIoClient.PROPERTY_FROM);
@@ -73,17 +44,23 @@ public class LiveCenter {
             }
         }
     };
-
+    private static final Set<String> activeUsers = new HashSet<>(),
+            typing = new HashSet<>(),
+            PEERS_IN_CHATROOM = new HashSet<>();
+    private static final Object TYPING_AND_ACTIVE_USERS_LOCK = new Object();
+    private static WorkerThread WORKER_THREAD;
+    private static SocketIoClient liveClient;
+    private static WeakReference<TypingListener> typingListener;
     private static final Emitter.Listener ONLINE_RECEIVER = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            Log.d(TAG, "online reciever: " + args[0].toString());
+            CLog.d(TAG, "online reciever: " + args[0].toString());
             updateUserStatus(args[0]);
         }
     }, TYPING_RECEIVER = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            Log.d(TAG, "typing reciever: " + args[0].toString());
+            CLog.d(TAG, "typing reciever: " + args[0].toString());
             //mark user as typing
             updateTyping(args[0]);
         }
@@ -95,7 +72,7 @@ public class LiveCenter {
             String typingUser = object.getString(SocketIoClient.PROPERTY_FROM);
             boolean isTyping = object.optBoolean(SocketIoClient.PROPERTY_IS_TYPING);
             synchronized (TYPING_AND_ACTIVE_USERS_LOCK) {
-                Log.d(TAG, "typing event");
+                CLog.d(TAG, "typing event");
                 if (isTyping) {
                     typing.add(typingUser);
                 } else {
@@ -108,12 +85,10 @@ public class LiveCenter {
         }
     }
 
-    private static Handler mainThreadHandler = new Handler(Looper.getMainLooper());
-
     private static void notifyListener(final String userId, final boolean isTyping) {
         if (typingListener != null && typingListener.get() != null) {
             final TypingListener typingListener = LiveCenter.typingListener.get();
-            mainThreadHandler.post(new Runnable() {
+            TaskManager.executeOnMainThread(new Runnable() {
                 public void run() {
                     if (isTyping) {
                         typingListener.onTyping(userId);
@@ -138,7 +113,7 @@ public class LiveCenter {
                     //if user is not online then he can't be online too
                     typing.remove(userId);
                 }
-                mainThreadHandler.post(new Runnable() {
+                TaskManager.executeOnMainThread(new Runnable() {
                     @Override
                     public void run() {
                         if (typingListener != null) {
@@ -161,7 +136,6 @@ public class LiveCenter {
             throw new RuntimeException(e.getCause());
         }
     }
-
 
     /**
      * starts the {@link LiveCenter} class. until this method is called
@@ -273,7 +247,6 @@ public class LiveCenter {
         }
     }
 
-
     /**
      * send a message across to the other user on the other end that
      * this user is no more in the chat room.
@@ -304,7 +277,7 @@ public class LiveCenter {
         ThreadUtils.ensureMain();
         synchronized (PEERS_IN_CHATROOM) {
             if (!PEERS_IN_CHATROOM.contains(userId)) {
-                Log.i(TAG, "peer not in chat room stopping dispatch");
+                CLog.i(TAG, "peer not in chat room stopping dispatch");
                 return;
             }
         }
@@ -312,7 +285,7 @@ public class LiveCenter {
             synchronized (PEERS_IN_CHATROOM) {
                 PEERS_IN_CHATROOM.remove(userId);
             }
-            Log.i(TAG, "peer offline, not dispatching typing event");
+            CLog.i(TAG, "peer offline, not dispatching typing event");
             return;
         }
         if (WORKER_THREAD != null && WORKER_THREAD.isAlive()) {
@@ -336,7 +309,7 @@ public class LiveCenter {
         ThreadUtils.ensureMain();
         synchronized (PEERS_IN_CHATROOM) {
             if (!PEERS_IN_CHATROOM.contains(userId)) {
-                Log.i(TAG, "peer not in chat room stopping dispatch");
+                CLog.i(TAG, "peer not in chat room stopping dispatch");
                 return;
             }
         }
@@ -344,7 +317,7 @@ public class LiveCenter {
             synchronized (PEERS_IN_CHATROOM) {
                 PEERS_IN_CHATROOM.remove(userId);
             }
-            Log.i(TAG, "peer offline, not dispatching typing event");
+            CLog.i(TAG, "peer offline, not dispatching typing event");
             return;
         }
 
@@ -416,6 +389,20 @@ public class LiveCenter {
         }
     }
 
+    /**
+     * an interface one must implement if one wants to be notified of typing events
+     * you may not implement this interface using an anonymous inner class as the listner
+     * is referenced internally as a weakReference. at any point in time, there may be at
+     * most one listener.
+     */
+    public interface TypingListener {
+        void onTyping(String userId);
+
+        void onStopTyping(String userId);
+
+        void onUserStatusChanged(String userId, boolean isOnline);
+    }
+
     private static final class WorkerThread extends HandlerThread implements Handler.Callback {
 
         private static final int
@@ -429,6 +416,10 @@ public class LiveCenter {
                 LEFT_CHAT_ROOM = 0x8;
 
         private Handler handler;
+
+        public WorkerThread() {
+            super(TAG, WorkerThread.NORM_PRIORITY);
+        }
 
         @Override
         public boolean handleMessage(Message msg) {
@@ -463,10 +454,6 @@ public class LiveCenter {
             return true;
         }
 
-        public WorkerThread() {
-            super(TAG, WorkerThread.NORM_PRIORITY);
-        }
-
         private void doNotifyLeftOrJoinChatRoom(String userId, boolean inChatRoom) {
             if (!isOnline(userId)) {
                 return;
@@ -484,7 +471,7 @@ public class LiveCenter {
 
         private void doNotifyTyping(String to, boolean isTyping) {
             if (!isOnline(to)) {
-                Log.d(TAG, "user offline, typing event not dispatched");
+                CLog.d(TAG, "user offline, typing event not dispatched");
                 return;
             }
             try {

@@ -6,34 +6,41 @@
 
     <com.handmark.pulltorefresh.library.PullToRefreshListView
         android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:descendantFocusability="afterDescendants"
         android:divider="@null"
         android:dividerHeight="0dp"
-        android:layout_width="match_parent"
         android:fadingEdge="none"
-        android:descendantFocusability="afterDescendants"
-        android:transcriptMode="normal"
-        android:layout_height="match_parent"/>
+        android:transcriptMode="normal"/>
 
-    <TextView
-        android:id="@android:id/empty"
+    <LinearLayout
+        android:id="@+id/empty_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:gravity="center"
-        android:text="@string/st_empty_contacts"
-        android:textSize="24sp"
-        android:textStyle="italic" />
+        android:orientation="vertical">
 
-    <com.rey.material.widget.Button
-        android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="@color/white"
-        style="@style/TabPageIndicator"
-        android:background="@color/preferred_primary_color"
-        android:textSize="@dimen/standard_text_size"
-        android:id="@+id/refresh_button"
-        android:layout_below="@android:id/empty"
-        android:visibility="gone"
-        android:text="@string/refresh_contacts"/>
+        <TextView
+            android:id="@+id/tv_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/st_empty_contacts"
+            android:textSize="24sp"
+            android:textStyle="italic"/>
+
+        <com.rey.material.widget.Button
+            android:id="@+id/refresh_button"
+            style="@style/TabRippleStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
+            android:background="@color/preferred_primary_color"
+            android:minHeight="@dimen/big_button_height"
+            android:text="@string/refresh_contacts"
+            android:textColor="@color/white"
+            android:textSize="@dimen/standard_text_size"
+            android:visibility="visible"/>
+    </LinearLayout>
 </com.pair.view.RelativeLayout>

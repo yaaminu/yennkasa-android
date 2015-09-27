@@ -14,8 +14,8 @@ import com.pair.util.UiHelpers;
  * @author by Null-Pointer on 9/6/2015.
  */
 public abstract class PairAppBaseActivity extends ActionBarActivity implements ErrorCenter.ErrorShower {
-    private boolean isUserVerified = false;
     protected final UserManager userManager = UserManager.getInstance();
+    private boolean isUserVerified = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,8 +69,8 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
         return userManager.getCurrentUser();
     }
 
-    protected final boolean isUserLoggedIn() {
-        return userManager.isUserLoggedIn();
+    protected final boolean isUserCLoggedIn() {
+        return userManager.isUserCLoggedIn();
     }
 
     protected final boolean isUserVerified() {

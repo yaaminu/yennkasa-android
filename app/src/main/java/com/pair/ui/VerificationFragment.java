@@ -32,7 +32,7 @@ public class VerificationFragment extends Fragment {
             } else if (v.getId() == R.id.bt_resend_token) {
                 resendToken();
             } else if (v.getId() == R.id.tv_back_to_login) {
-                callback.onBackToLogIn();
+                callback.onBackToCLogIn();
             }
         }
     };
@@ -102,6 +102,6 @@ public class VerificationFragment extends Fragment {
     public interface Callbacks {
         void onVerified();
 
-        void onBackToLogIn();
+        void onBackToCLogIn();
     }
 }

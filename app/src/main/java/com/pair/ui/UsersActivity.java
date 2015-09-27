@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,6 +25,7 @@ import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
+import com.pair.util.CLog;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
@@ -218,7 +218,7 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
                 realm.commitTransaction();
                 return to;
             } catch (PairappException e) {
-                Log.e(TAG, "error while creating message", e.getCause());
+                CLog.e(TAG, "error while creating message", e.getCause());
                 realm.cancelTransaction();
             } finally {
                 realm.close();

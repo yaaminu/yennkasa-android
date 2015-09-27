@@ -1,7 +1,5 @@
 package com.pair.util;
 
-import android.util.Log;
-
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
@@ -90,7 +88,7 @@ public class PhoneNumberNormaliser {
         try {
             return util.formatOutOfCountryCallingNumber((util.parse("+" + phoneNumber, null)), userCountry);
         } catch (NumberParseException e) {
-            Log.e(TAG, e.getMessage(), e.getCause());
+            CLog.e(TAG, e.getMessage(), e.getCause());
             if (BuildConfig.DEBUG) {
                 throw new RuntimeException("invalid user id");
             }

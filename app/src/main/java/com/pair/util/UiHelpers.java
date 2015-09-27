@@ -8,10 +8,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.v4.util.Pair;
-import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -45,6 +42,42 @@ import static android.widget.Toast.LENGTH_SHORT;
 public class UiHelpers {
 
     private static final String TAG = UiHelpers.class.getSimpleName();
+    private static final int TAKE_PHOTO_REQUEST = 0x0,
+            TAKE_VIDEO_REQUEST = 0x1,
+            PICK_PHOTO_REQUEST = 0x2,
+            PICK_VIDEO_REQUEST = 0x3,
+            PICK_FILE_REQUEST = 0x4;
+    private static Uri mMediaUri; //this is safe as at any point in time one activity may be doing this
+    private static DialogInterface.OnClickListener dialogListener = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            switch (which) {
+                case TAKE_PHOTO_REQUEST:
+                    takePhoto();
+                    break;
+                case TAKE_VIDEO_REQUEST:
+                    recordVideo();
+                    break;
+                case PICK_PHOTO_REQUEST:
+                    choosePicture();
+                    break;
+                case PICK_VIDEO_REQUEST:
+                    chooseVideo();
+                    break;
+                case PICK_FILE_REQUEST:
+                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                    intent.setType("*/*");
+                    try {
+                        NavigationManager.getCurrentActivity().startActivityForResult(intent, PICK_FILE_REQUEST);
+                    } catch (NavigationManager.NoActiveActivityException e) {
+                        crashAndBurn(e);
+                    }
+                    break; //safety!
+                default:
+                    break;
+            }
+        }
+    };
 
     public static String getFieldContent(EditText field) {
         String content = field.getText().toString();
@@ -106,7 +139,7 @@ public class UiHelpers {
             try {
                 showPlainOlDialog(context, message);
             } catch (Exception ignored) { //still bad tokens ets.
-                Log.w(TAG, "failed to show message: " + message);
+                CLog.w(TAG, "failed to show message: " + message);
             }
         }
     }
@@ -156,7 +189,6 @@ public class UiHelpers {
         showErrorDialog(context, messageText, okTxt, noTxt, ok, no);
     }
 
-
     public static DialogFragment newProgressDialog() {
         return newProgressDialog(false);
     }
@@ -181,7 +213,6 @@ public class UiHelpers {
         return context.getString(resId).toUpperCase();
     }
 
-
     public static void promptAndExit(final PairAppBaseActivity toFinish) {
         final UiHelpers.Listener cancelProgress = new UiHelpers.Listener() {
             @Override
@@ -195,7 +226,6 @@ public class UiHelpers {
     public static void showToast(String message) {
         showToast(message, Toast.LENGTH_SHORT);
     }
-
 
     @SuppressWarnings("ConstantConditions")
     public static void showToast(String message, int duration) {
@@ -288,48 +318,6 @@ public class UiHelpers {
         context.finish();
     }
 
-    public interface Listener {
-        void onClick();
-    }
-
-    private static final int TAKE_PHOTO_REQUEST = 0x0,
-            TAKE_VIDEO_REQUEST = 0x1,
-            PICK_PHOTO_REQUEST = 0x2,
-            PICK_VIDEO_REQUEST = 0x3,
-            PICK_FILE_REQUEST = 0x4;
-
-    private static DialogInterface.OnClickListener dialogListener = new DialogInterface.OnClickListener() {
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-            switch (which) {
-                case TAKE_PHOTO_REQUEST:
-                    takePhoto();
-                    break;
-                case TAKE_VIDEO_REQUEST:
-                    recordVideo();
-                    break;
-                case PICK_PHOTO_REQUEST:
-                    choosePicture();
-                    break;
-                case PICK_VIDEO_REQUEST:
-                    chooseVideo();
-                    break;
-                case PICK_FILE_REQUEST:
-                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                    intent.setType("*/*");
-                    try {
-                        NavigationManager.getCurrentActivity().startActivityForResult(intent, PICK_FILE_REQUEST);
-                    } catch (NavigationManager.NoActiveActivityException e) {
-                        crashAndBurn(e);
-                    }
-                    break; //safety!
-                default:
-                    break;
-            }
-        }
-    };
-
-
     private static void chooseVideo() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("video/*");
@@ -355,8 +343,6 @@ public class UiHelpers {
         throw new RuntimeException(e.getCause());
     }
 
-    private static Uri mMediaUri; //this is safe as at any point in time one activity may be doing this
-
     private static void recordVideo() {
         try {
             if (mMediaUri != null) {
@@ -381,7 +367,6 @@ public class UiHelpers {
             crashAndBurn(e);
         }
     }
-
 
     private static String getActualPath(Intent data) {
         String actualPath;
@@ -425,10 +410,9 @@ public class UiHelpers {
         return new Pair<>(actualPath, type);
     }
 
-
     public static void dismissProgressDialog(final DialogFragment dialogFragment) {
         if (dialogFragment != null) {
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
+            TaskManager.executeOnMainThread(new Runnable() {
                 @Override
                 public void run() {
                     //noinspection EmptyCatchBlock
@@ -439,5 +423,10 @@ public class UiHelpers {
                 }
             });
         }
+    }
+
+
+    public interface Listener {
+        void onClick();
     }
 }

@@ -62,7 +62,7 @@ public class UserManagerTest {
     }
 
     @Test
-    public void testLogIn() throws Exception {
+    public void testCLogIn() throws Exception {
 
     }
 
@@ -72,7 +72,7 @@ public class UserManagerTest {
     }
 
     @Test
-    public void testLogOut() throws Exception {
+    public void testCLogOut() throws Exception {
 
     }
 

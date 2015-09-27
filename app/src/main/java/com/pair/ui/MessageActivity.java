@@ -5,7 +5,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.Log;
 
 import com.pair.Errors.ErrorCenter;
 import com.pair.Errors.PairappException;
@@ -14,6 +13,7 @@ import com.pair.data.Message;
 import com.pair.data.util.MessageUtils;
 import com.pair.messenger.PairAppClient;
 import com.pair.pairapp.BuildConfig;
+import com.pair.util.CLog;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -26,8 +26,8 @@ import io.realm.Realm;
  */
 public abstract class MessageActivity extends PairAppActivity {
 
-    private static final String TAG = MessageActivity.class.getSimpleName();
     public static final String CONVERSATION_ACTIVE = "active";
+    private static final String TAG = MessageActivity.class.getSimpleName();
     private Worker worker;
 
     //public for MessagesAdapter to access
@@ -94,11 +94,12 @@ public abstract class MessageActivity extends PairAppActivity {
     }
 
     private final class Worker extends HandlerThread implements Handler.Callback, Thread.UncaughtExceptionHandler {
+        public static final String TAG = "dispatchThread";
         @SuppressWarnings("unused")
         final static int START = 0x1,
                 STOP = 0x2, SEND_MESSAGE = 0x3, SEND_MESSAGE_TO_MANY = 0x4, RESEND_MESSAGE = 0x5, MARK_AS_SEEN = 0x6;
-        public static final String TAG = "dispatchThread";
         private final Context context;
+        private final Set<android.os.Message> waitingMessages = new HashSet<>();
         private Handler handler;
         private Realm realm;
 
@@ -138,10 +139,10 @@ public abstract class MessageActivity extends PairAppActivity {
                         if (BuildConfig.DEBUG) {
                             throw new IllegalArgumentException("attempted to resend a non-failed message");
                         }
-                        Log.w(MessageActivity.TAG, "message cannot be resent because its dispatch has not failed");
+                        CLog.w(MessageActivity.TAG, "message cannot be resent because its dispatch has not failed");
                         break;
                     }
-                    Log.w(MessageActivity.TAG, "failed to resend message, reason: message deleted");
+                    CLog.w(MessageActivity.TAG, "failed to resend message, reason: message deleted");
                     break;
                 case MARK_AS_SEEN:
                     String id = ((String) msg.obj);
@@ -159,8 +160,6 @@ public abstract class MessageActivity extends PairAppActivity {
             }
             return true;
         }
-
-        private final Set<android.os.Message> waitingMessages = new HashSet<>();
 
         void sendMessage(android.os.Message message) {
             if (handler == null) {
@@ -243,7 +242,7 @@ public abstract class MessageActivity extends PairAppActivity {
 
         @Override
         public void uncaughtException(Thread thread, Throwable ex) {
-            Log.w(TAG, " uncaught exception : " + ex);
+            CLog.w(TAG, " uncaught exception : " + ex);
             throw new RuntimeException(ex);
 //            if(ex instanceof RuntimeException){
 //                throw new RuntimeException(ex);

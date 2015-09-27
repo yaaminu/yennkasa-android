@@ -1,12 +1,12 @@
 package com.pair.messenger;
 
-import android.util.Log;
 
 import com.github.nkzawa.emitter.Emitter;
 import com.pair.data.Message;
 import com.pair.data.MessageJsonAdapter;
 import com.pair.data.UserManager;
 import com.pair.net.sockets.SocketIoClient;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 
 import org.json.JSONException;
@@ -35,13 +35,13 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
                 int status = object.getInt(SocketIoClient.MSG_STS_STATUS);
                 String messageId = object.getString(SocketIoClient.MSG_STS_MESSAGE_ID);
                 if (status == Message.STATE_SENT) {
-                    Log.i(TAG, "message sent");
+                    CLog.i(TAG, "message sent");
                     onSent(messageId);
                 } else if (status == Message.STATE_RECEIVED) {
-                    Log.i(TAG, "message delivered");
+                    CLog.i(TAG, "message delivered");
                     onDelivered(messageId);
                 } else if (status == Message.STATE_SEND_FAILED) {
-                    Log.i(TAG, "message dispatch failed");
+                    CLog.i(TAG, "message dispatch failed");
                     onFailed(messageId, ERR_USER_OFFLINE);
                 }
             } catch (JSONException e) {
@@ -50,6 +50,11 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
         }
     };
     private final SocketIoClient socketIoClient;
+
+    private SocketsIODispatcher() {
+        socketIoClient = SocketIoClient.getInstance(Config.PAIRAPP_ENDPOINT + "/message", UserManager.getMainUserId());
+        socketIoClient.registerForEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
+    }
 
     /**
      * create a new an instance of {@link SocketsIODispatcher}.
@@ -60,11 +65,6 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
      */
     static Dispatcher<Message> newInstance() {
         return new SocketsIODispatcher();
-    }
-
-    private SocketsIODispatcher() {
-        socketIoClient = SocketIoClient.getInstance(Config.PAIRAPP_ENDPOINT + "/message", UserManager.getMainUserId());
-        socketIoClient.registerForEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
     }
 
     @Override

@@ -4,10 +4,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.provider.MediaStore;
-import android.util.Log;
+import android.support.v4.BuildConfig;
 
 import java.util.ArrayList;
 import java.util.List;
+
 
 
 /**
@@ -15,6 +16,19 @@ import java.util.List;
  */
 public class MediaUtils {
     public static final String TAG = MediaUtils.class.getSimpleName();
+    private static final List<String> pictures = new ArrayList<>(5), videos = new ArrayList<>(5);
+
+    static {
+        pictures.add("png");
+        pictures.add("jpg");
+        pictures.add("jpeg");
+        pictures.add("gif");
+        videos.add("mp4");
+        videos.add("avi");
+        videos.add("flv");
+        videos.add("3gp");
+        videos.add("3gpp");
+    }
 
     public static void takePhoto(Activity context, Uri outPutUri, int requestCode) {
         try {
@@ -23,10 +37,10 @@ public class MediaUtils {
             context.startActivityForResult(attachIntent, requestCode);
         } catch (Exception e) {
             if (BuildConfig.DEBUG) {
-                Log.e(TAG, e.getMessage(), e.getCause());
+                CLog.e(TAG, e.getMessage(), e.getCause());
                 throw new RuntimeException(e.getCause());
             }
-            Log.e(TAG, e.getMessage());
+            CLog.e(TAG, e.getMessage());
         }
     }
 
@@ -50,20 +64,6 @@ public class MediaUtils {
         attachIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
         attachIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 60 * 10);
         fragment.startActivityForResult(attachIntent, requestCode);
-    }
-
-    private static final List<String> pictures = new ArrayList<>(5), videos = new ArrayList<>(5);
-
-    static {
-        pictures.add("png");
-        pictures.add("jpg");
-        pictures.add("jpeg");
-        pictures.add("gif");
-        videos.add("mp4");
-        videos.add("avi");
-        videos.add("flv");
-        videos.add("3gp");
-        videos.add("3gpp");
     }
 
     public static boolean isImage(String actualPath) {

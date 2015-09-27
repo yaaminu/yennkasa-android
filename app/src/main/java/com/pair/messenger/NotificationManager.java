@@ -4,34 +4,60 @@ import android.content.Context;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Looper;
-import android.util.Log;
 
 import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.R;
+import com.pair.util.CLog;
 import com.pair.util.Config;
+import com.pair.util.TaskManager;
 import com.pair.util.ThreadUtils;
 
 import java.lang.ref.WeakReference;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import io.realm.Realm;
+
 
 /**
  * @author Null-Pointer on 6/14/2015.
  */
 final class NotificationManager {
-    private static final String TAG = NotificationManager.class.getSimpleName();
-
     static final NotificationManager INSTANCE = new NotificationManager();
-    private volatile WeakReference<Notifier> UI_NOTIFIER;
+    private static final String TAG = NotificationManager.class.getSimpleName();
     private final Notifier BACKGROUND_NOTIFIER = new StatusBarNotifier();
+    private volatile WeakReference<Notifier> UI_NOTIFIER;
+
+    static CharSequence messageTypeToString(int type) {
+        switch (type) {
+            case Message.TYPE_PICTURE_MESSAGE:
+                return Config.getApplicationContext().getString(R.string.picture);
+            case Message.TYPE_VIDEO_MESSAGE:
+                return Config.getApplicationContext().getString(R.string.video);
+            case Message.TYPE_BIN_MESSAGE:
+                return Config.getApplicationContext().getString(R.string.file);
+            default:
+                if (com.pair.pairapp.BuildConfig.DEBUG) {
+                    throw new AssertionError("Unknown message type");
+                }
+                return "";
+        }
+    }
+
+    static void playTone(Context context) {
+        // TODO: 6/14/2015 fetch correct tone from preferences
+        Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        Ringtone ringtone = RingtoneManager.getRingtone(context, uri);
+        if (ringtone != null) {
+            ringtone.play();
+        } else {
+            CLog.d(TAG, "unable to play ringtone");
+            // TODO: 6/15/2015 fallback to default tone for app if available
+        }
+    }
 
     void onNewMessage(final Context context, final Message message) {
         if (ThreadUtils.isMainThread()) {
-            executorService.submit(new Runnable() {
+            TaskManager.execute(new Runnable() {
                 @Override
                 public void run() {
                     notifyUser(context, message, retrieveSendersName(message));
@@ -42,14 +68,11 @@ final class NotificationManager {
         }
     }
 
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
-
     private void notifyUser(final Context context, final Message message, final String sendersName) {
         if (Config.isAppOpen()) {
             //Toast.makeText(Config.getApplicationContext(), message.getFrom() + " : " + message.getMessageBody(), Toast.LENGTH_LONG).show();
             if (UI_NOTIFIER != null) {
-                android.os.Handler handler = new android.os.Handler(Looper.getMainLooper());
-                handler.post(new Runnable() {
+                TaskManager.executeOnMainThread(new Runnable() {
                     @Override
                     public void run() {
                         if (UI_NOTIFIER != null) {
@@ -108,34 +131,6 @@ final class NotificationManager {
         if (UI_NOTIFIER != null && UI_NOTIFIER.get() == notifier) {
             UI_NOTIFIER.clear();
             UI_NOTIFIER = null;
-        }
-    }
-
-    static CharSequence messageTypeToString(int type) {
-        switch (type) {
-            case Message.TYPE_PICTURE_MESSAGE:
-                return Config.getApplicationContext().getString(R.string.picture);
-            case Message.TYPE_VIDEO_MESSAGE:
-                return Config.getApplicationContext().getString(R.string.video);
-            case Message.TYPE_BIN_MESSAGE:
-                return Config.getApplicationContext().getString(R.string.file);
-            default:
-                if (com.pair.pairapp.BuildConfig.DEBUG) {
-                    throw new AssertionError("Unknown message type");
-                }
-                return "";
-        }
-    }
-
-    static void playTone(Context context) {
-        // TODO: 6/14/2015 fetch correct tone from preferences
-        Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        Ringtone ringtone = RingtoneManager.getRingtone(context, uri);
-        if (ringtone != null) {
-            ringtone.play();
-        } else {
-            Log.d(TAG, "unable to play ringtone");
-            // TODO: 6/15/2015 fallback to default tone for app if available
         }
     }
 

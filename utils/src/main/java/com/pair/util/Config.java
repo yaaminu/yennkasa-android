@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Environment;
-import android.util.Log;
 
 import java.io.File;
 import java.util.Locale;
@@ -17,8 +16,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class Config {
 
-    private static final String TAG = Config.class.getSimpleName();
     public static final String APP_PREFS = "prefs";
+    public static final String APP_USER_AGENT = "pairapp-android-development-version";
+    private static final String TAG = Config.class.getSimpleName();
     private static final String HOST_REAL_SERVER = "http://192.168.43.42:3000";
     private static final String LOCAL_HOST_GENYMOTION = "http://10.0.3.2:3000";
     private static final String DP_API_GENYMOTION = "http://10.0.3.2:5000/fileApi/dp";
@@ -31,18 +31,15 @@ public class Config {
     public static final String PAIRAPP_ENDPOINT = getEndPoint();
     private static final String logMessage = "calling getApplication when init has not be called";
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
-    public static final String APP_USER_AGENT = "pairapp-android-development-version";
     private static float SCREEN_DENSITY;
     private static String APP_NAME = "PairApp";
-
+    private static Application application;
+    private static AtomicBoolean isChatRoomOpen = new AtomicBoolean(false);
 
     private static boolean isExternalStorageAvailable() {
         String state = Environment.getExternalStorageState();
         return state.equals(Environment.MEDIA_MOUNTED);
     }
-
-    private static Application application;
-    private static AtomicBoolean isChatRoomOpen = new AtomicBoolean(false);
 
     public static void init(Application pairApp) {
         Config.application = pairApp;
@@ -62,7 +59,7 @@ public class Config {
             getAppProfilePicsBaseDir().mkdirs();
             getTempDir().mkdirs();
         } else {
-            Log.w(TAG, "This is strange! no sdCard available on this device");
+            CLog.w(TAG, "This is strange! no sdCard available on this device");
         }
 
     }
@@ -90,7 +87,7 @@ public class Config {
     }
 
     private static void warnAndThrow(String msg, String detailMessage) {
-        Log.w(TAG, msg);
+        CLog.w(TAG, msg);
         throw new IllegalStateException(detailMessage);
     }
 

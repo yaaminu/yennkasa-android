@@ -28,6 +28,7 @@ import java.util.Locale;
 
 import static com.pair.data.ContactsManager.Contact;
 
+
 /**
  * @author Null-Pointer on 6/12/2015.
  */

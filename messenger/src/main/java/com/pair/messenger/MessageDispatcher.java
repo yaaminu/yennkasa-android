@@ -12,6 +12,7 @@ import com.pair.data.User;
 import com.pair.data.net.FileApi;
 import com.pair.data.net.HttpResponse;
 import com.pair.net.MessageApi;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.pair.util.ConnectionUtils;
 
@@ -37,7 +38,13 @@ import retrofit.mime.TypedFile;
 @Deprecated
 class MessageDispatcher implements Dispatcher<Message> {
     private static final String TAG = MessageDispatcher.class.getSimpleName();
-    private volatile int NUM_OF_TASKS = 0;
+    private static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
+        @Override
+        public void intercept(RequestFacade requestFacade) {
+            requestFacade.addHeader("Authorization", "kiiboda+=s3cr3te");
+            requestFacade.addHeader("User-Agent", Config.APP_USER_AGENT);
+        }
+    };
     private static MessageDispatcher INSTANCE;
     private final int MAX_RETRY_TIMES;
     private final MessageApi MESSAGE_API;
@@ -46,14 +53,7 @@ class MessageDispatcher implements Dispatcher<Message> {
     private final Sender sender;
     private final Set<DispatcherMonitor> monitors;
     private final Handler RETRY_HANDLER;
-
-    private static final RequestInterceptor INTERCEPTOR = new RequestInterceptor() {
-        @Override
-        public void intercept(RequestFacade requestFacade) {
-            requestFacade.addHeader("Authorization", "kiiboda+=s3cr3te");
-            requestFacade.addHeader("User-Agent", Config.APP_USER_AGENT);
-        }
-    };
+    private volatile int NUM_OF_TASKS = 0;
 
     private MessageDispatcher(BaseJsonAdapter<Message> jsonAdapter, DispatcherMonitor errorHandler, int retryTimes) {
         RestAdapter adapter = new RestAdapter.Builder()
@@ -87,29 +87,29 @@ class MessageDispatcher implements Dispatcher<Message> {
 
     private boolean failedScreening(Message message) {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
-            Log.w(TAG, "no internet connection, message will not be sent");
+            CLog.w(TAG, "no internet connection, message will not be sent");
             reportError(message.getId(), "no internet connection");
             return true;
         }
         if (message.getType() == Message.TYPE_DATE_MESSAGE) {
-            Log.w(TAG, "attempted to send a date message,but will not be sent");
+            CLog.w(TAG, "attempted to send a date message,but will not be sent");
             reportError(message.getId(), "date messages cannot be sent");
             return true;
         }
         if (message.getType() == Message.TYPE_TYPING_MESSAGE) {
-            Log.w(TAG, "attempted to send a typing message,but will not be sent");
+            CLog.w(TAG, "attempted to send a typing message,but will not be sent");
             reportError(message.getId(), "\'typing\' messages cannot be sent");
             return true;
         }
         if (message.getType() != Message.TYPE_TEXT_MESSAGE) { //is it a binary message?
             if (!new File(message.getMessageBody()).exists()) {
-                Log.w(TAG, "error: " + message.getMessageBody() + " is not a valid file path");
+                CLog.w(TAG, "error: " + message.getMessageBody() + " is not a valid file path");
                 reportError(message.getId(), "file does not exist");
                 return true;
             }
         }
         if ((message.getState() != Message.STATE_PENDING) && (message.getState() != Message.STATE_SEND_FAILED)) {
-            Log.w(TAG, "attempted to send a sent message, but will not be sent");
+            CLog.w(TAG, "attempted to send a sent message, but will not be sent");
             reportError(message.getId(), "message already sent");
             return true;
         }
@@ -182,17 +182,77 @@ class MessageDispatcher implements Dispatcher<Message> {
         //do nothing
     }
 
+    private void reportSuccess(SenderJob job) {
+        decrementNumOfTasks();
+        synchronized (dispatcherMonitorLock) {
+            for (DispatcherMonitor dispatcherMonitor : monitors) {
+                if (dispatcherMonitor != null) {
+                    dispatcherMonitor.onDispatchSucceed(job.id);
+                } else {
+                    warnAndThrowIfInDevelopment();
+                }
+            }
+        }
+    }
+
+    private void reportError(String jobId, String reason) {
+        decrementNumOfTasks();
+        synchronized (dispatcherMonitorLock) {
+            for (DispatcherMonitor monitor : monitors) {
+                if (monitor != null) {
+                    monitor.onDispatchFailed(reason, jobId);
+                } else {
+                    warnAndThrowIfInDevelopment();
+                }
+            }
+        }
+    }
+
+    private void warnAndThrowIfInDevelopment() {
+        CLog.w(TAG, "null reference added as monitors");
+        if (BuildConfig.DEBUG) {
+            throw new IllegalArgumentException("cannot passe a null reference as a monitor");
+        }
+    }
+
+    private void decrementNumOfTasks() {
+        synchronized (this) {
+            NUM_OF_TASKS--;
+        }
+        if (NUM_OF_TASKS == 0) {
+            allTaskComplete();
+        }
+    }
+
+    private void incrementNumOfTasks() {
+        synchronized (this) {
+            NUM_OF_TASKS++;
+        }
+    }
+
+    private void allTaskComplete() {
+        synchronized (dispatcherMonitorLock) {
+            for (DispatcherMonitor monitor : monitors) {
+                if (monitor != null) {
+                    monitor.onAllDispatched();
+                } else {
+                    warnAndThrowIfInDevelopment();
+                }
+            }
+        }
+    }
+
     private static class SenderJob {
+        public static final long MAX_DELAY = AlarmManager.INTERVAL_HOUR;
         // TODO: 6/15/2015 sender job is to hardcoded, got to do something
         final static long MIN_DELAY = 5000; // 5 seconds
-        public static final long MAX_DELAY = AlarmManager.INTERVAL_HOUR;
-        int retries;
         final JsonObject data;
         final String id;
-        long backOff;
         final int jobType;
         final String binPath;
         final int toGroup;
+        int retries;
+        long backOff;
 
         SenderJob(String id, JsonObject data, int jobType, String binPath, int toGroup) {
             this.retries = 0;
@@ -214,7 +274,7 @@ class MessageDispatcher implements Dispatcher<Message> {
         }
 
         void doSend(final SenderJob job) {
-            Log.i(TAG, "about to send message: " + job.data.toString());
+            CLog.i(TAG, "about to send message: " + job.data.toString());
             if (job.jobType == Message.TYPE_TEXT_MESSAGE) {
                 sendTextMessage(job);
             } else if (job.jobType == Message.TYPE_DATE_MESSAGE) { // FIXME: 6/25/2015 take this off in production
@@ -259,12 +319,12 @@ class MessageDispatcher implements Dispatcher<Message> {
 
         private void handleError(RetrofitError retrofitError, SenderJob job) {
             if (retrofitError.getKind().equals(RetrofitError.Kind.UNEXPECTED)) {
-                Log.w(TAG, "unexpected error, trying to send message again");
+                CLog.w(TAG, "unexpected error, trying to send message again");
                 tryAgain(job);
             } else if (retrofitError.getKind().equals(RetrofitError.Kind.HTTP)) {
                 int statusCode = retrofitError.getResponse().getStatus();
                 if (statusCode == HttpStatus.SC_INTERNAL_SERVER_ERROR) {
-                    Log.w(TAG, "internal server error, trying to send again");
+                    CLog.w(TAG, "internal server error, trying to send again");
                     tryAgain(job);
                 } else {//crash early
                     // as far as we know, our backend will only return other status code if its is our fault and that normally should not happen
@@ -279,7 +339,7 @@ class MessageDispatcher implements Dispatcher<Message> {
                     tryAgain(job);
                 } else {
                     //bubble up error and empty send queue let callers re-dispatch messages again;
-                    Log.w(TAG, "no network connection, message will not be sent");
+                    CLog.w(TAG, "no network connection, message will not be sent");
                     reportError(job.id, "Error in network connection");
                 }
             }
@@ -288,7 +348,7 @@ class MessageDispatcher implements Dispatcher<Message> {
         private void tryAgain(final SenderJob job) {
             // TODO: 6/15/2015 if there is no network we wont try again but will rather wait till we get connected
             if (!ConnectionUtils.isConnectedOrConnecting()) {
-                Log.w(TAG, "no network connection, message will not be sent");
+                CLog.w(TAG, "no network connection, message will not be sent");
                 reportError(job.id, "no internet connection");
             } else if (job.retries < MAX_RETRY_TIMES) {
                 job.retries++;
@@ -296,7 +356,7 @@ class MessageDispatcher implements Dispatcher<Message> {
                 if (job.backOff > SenderJob.MAX_DELAY) {
                     job.backOff = SenderJob.MAX_DELAY;
                 }
-                Log.i(TAG, "retrying in: " + job.backOff + " milliseconds");
+                CLog.i(TAG, "retrying in: " + job.backOff + " milliseconds");
                 RETRY_HANDLER.postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -304,72 +364,12 @@ class MessageDispatcher implements Dispatcher<Message> {
                     }
                 }, job.backOff);
             } else {
-                Log.w(TAG, "unable to send message after: " + job.backOff + "seconds");
+                CLog.w(TAG, "unable to send message after: " + job.backOff + "seconds");
                 reportError("an unknown error occurred made " + job.retries + " attempts made", job.id);
             }
 
         }
 
-    }
-
-    private void reportSuccess(SenderJob job) {
-        decrementNumOfTasks();
-        synchronized (dispatcherMonitorLock) {
-            for (DispatcherMonitor dispatcherMonitor : monitors) {
-                if (dispatcherMonitor != null) {
-                    dispatcherMonitor.onDispatchSucceed(job.id);
-                } else {
-                    warnAndThrowIfInDevelopment();
-                }
-            }
-        }
-    }
-
-    private void reportError(String jobId, String reason) {
-        decrementNumOfTasks();
-        synchronized (dispatcherMonitorLock) {
-            for (DispatcherMonitor monitor : monitors) {
-                if (monitor != null) {
-                    monitor.onDispatchFailed(reason, jobId);
-                } else {
-                    warnAndThrowIfInDevelopment();
-                }
-            }
-        }
-    }
-
-    private void warnAndThrowIfInDevelopment() {
-        Log.w(TAG, "null reference added as monitors");
-        if (BuildConfig.DEBUG) {
-            throw new IllegalArgumentException("cannot passe a null reference as a monitor");
-        }
-    }
-
-    private void decrementNumOfTasks() {
-        synchronized (this) {
-            NUM_OF_TASKS--;
-        }
-        if (NUM_OF_TASKS == 0) {
-            allTaskComplete();
-        }
-    }
-
-    private void incrementNumOfTasks() {
-        synchronized (this) {
-            NUM_OF_TASKS++;
-        }
-    }
-
-    private void allTaskComplete() {
-        synchronized (dispatcherMonitorLock) {
-            for (DispatcherMonitor monitor : monitors) {
-                if (monitor != null) {
-                    monitor.onAllDispatched();
-                } else {
-                    warnAndThrowIfInDevelopment();
-                }
-            }
-        }
     }
 
 }

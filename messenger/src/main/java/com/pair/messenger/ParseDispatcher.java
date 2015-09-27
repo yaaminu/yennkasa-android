@@ -1,9 +1,8 @@
 package com.pair.messenger;
 
-import android.util.Log;
-
 import com.pair.data.Message;
 import com.pair.data.MessageJsonAdapter;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.parse.ParseException;
 import com.parse.ParseObject;
@@ -27,11 +26,11 @@ class ParseDispatcher extends AbstractMessageDispatcher {
     private static final String TAG = ParseDispatcher.class.getSimpleName();
     private static final Dispatcher<Message> INSTANCE = new ParseDispatcher();
 
-    static synchronized Dispatcher<Message> getInstance() {
-        return INSTANCE;
+    private ParseDispatcher() {
     }
 
-    private ParseDispatcher() {
+    static synchronized Dispatcher<Message> getInstance() {
+        return INSTANCE;
     }
 
     @Override
@@ -45,7 +44,7 @@ class ParseDispatcher extends AbstractMessageDispatcher {
     }
 
     private void finallyDispatch(Message message, Object target) {
-        Log.d(TAG, "dispatching message: " + message.getMessageBody()
+        CLog.d(TAG, "dispatching message: " + message.getMessageBody()
                 + " from " + message.getFrom()
                 + " to " + message.getTo());
         finallyDispatch(message, target, false);
@@ -69,8 +68,8 @@ class ParseDispatcher extends AbstractMessageDispatcher {
 
     private String prepareReport(ParseException e) {
         if (e.getCode() == ParseException.CONNECTION_FAILED) {
-            return Config.getApplicationContext().getString(R.string.st_unable_to_connect);
+            return Config.getApplicationContext().getString(R.string.unable_to_connect);
         }
-        return Config.getApplicationContext().getString(R.string.an_error_occurred);
+        return "Sorry an unknown error occurred";
     }
 }

@@ -1,16 +1,15 @@
 package com.pair.messenger;
 
-
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.util.Log;
 
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.MessageJsonAdapter;
 import com.pair.data.UserManager;
+import com.pair.util.CLog;
 
 import java.util.Date;
 import java.util.List;
@@ -39,7 +38,7 @@ public class MessageProcessor extends IntentService {
         String data = bundle.getString(MessageCenter.KEY_MESSAGE);
 
         assert data != null;
-        Log.i(TAG, data);
+        CLog.i(TAG, data);
         if (data.equals(SYNC_MESSAGES)) {
             MessagesProvider provider = PairAppClient.getMessageProvider();
             List<Message> messages = provider.retrieveMessages();
@@ -95,8 +94,8 @@ public class MessageProcessor extends IntentService {
         } catch (RealmException primaryKey) {
             //lets eat up this error
             realm.cancelTransaction();
-            Log.d(TAG, primaryKey.getMessage());
-            Log.d(TAG, "failed to process message");
+            CLog.d(TAG, primaryKey.getMessage());
+            CLog.d(TAG, "failed to process message");
             return;
         }
         conversation.setSummary(Message.isTextMessage(message) ? message.getMessageBody() : ""); //ui elements must detect this

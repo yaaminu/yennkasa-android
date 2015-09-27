@@ -1,11 +1,12 @@
 package com.pair.messenger;
 
 import android.app.AlarmManager;
-import android.util.Log;
 
 import com.pair.data.Message;
 import com.pair.data.MessageJsonAdapter;
 import com.pair.data.UserManager;
+import com.pair.util.CLog;
+import com.pair.util.TaskManager;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
@@ -13,8 +14,6 @@ import com.parse.ParseQuery;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 /**
  * @author _2am on 9/8/2015.
@@ -48,7 +47,7 @@ class ParseMessageProvider implements MessagesProvider {
                 Message message = MessageJsonAdapter.INSTANCE.fromJson(object.getString(MESSAGE));
                 messages.add(message);
             }
-            worker.execute(new Runnable() {
+            TaskManager.execute(new Runnable() {
                 @Override
                 public void run() {
                     runUpdates(toBeDeleted, toBeUpdated);
@@ -56,7 +55,7 @@ class ParseMessageProvider implements MessagesProvider {
             });
             return messages;
         } catch (ParseException e) {
-            Log.e(TAG, "error retrieving messages: " + e.getMessage());
+            CLog.e(TAG, "error retrieving messages: " + e.getMessage());
         }
         return Collections.emptyList();
     }
@@ -72,6 +71,4 @@ class ParseMessageProvider implements MessagesProvider {
             object.saveEventually();
         }
     }
-
-    private final Executor worker = Executors.newSingleThreadExecutor();
 }

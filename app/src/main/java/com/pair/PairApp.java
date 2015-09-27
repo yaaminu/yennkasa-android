@@ -4,7 +4,6 @@ import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.util.Log;
 
 import com.pair.data.Message;
 import com.pair.data.UserManager;
@@ -13,6 +12,7 @@ import com.pair.messenger.MessageProcessor;
 import com.pair.messenger.PairAppClient;
 import com.pair.pairapp.R;
 import com.pair.parse_client.ParseClient;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.pair.workers.ContactSyncService;
 
@@ -23,7 +23,7 @@ public class PairApp extends Application {
     public static final String TAG = PairApp.class.getName();
 
     private static void enableComponent(Class clazz) {
-        Log.d(TAG, "enabling " + clazz.getSimpleName());
+        CLog.d(TAG, "enabling " + clazz.getSimpleName());
         ComponentName receiver = new ComponentName(Config.getApplication(), clazz);
 
         PackageManager pm = Config.getApplication().getPackageManager();
@@ -34,7 +34,7 @@ public class PairApp extends Application {
     }
 
     private static void disableComponent(Class clazz) {
-        Log.d(TAG, "disabling " + clazz.getSimpleName());
+        CLog.d(TAG, "disabling " + clazz.getSimpleName());
         ComponentName receiver = new ComponentName(Config.getApplication(), clazz);
 
         PackageManager pm = Config.getApplication().getPackageManager();

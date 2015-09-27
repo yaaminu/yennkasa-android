@@ -2,8 +2,6 @@ package com.pair.adapter;
 
 import android.graphics.Bitmap;
 import android.media.ThumbnailUtils;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.Process;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -11,7 +9,6 @@ import android.support.v4.util.LruCache;
 import android.text.Html;
 import android.text.format.DateUtils;
 import android.util.Base64;
-import android.util.Log;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -25,10 +22,12 @@ import com.pair.Errors.PairappException;
 import com.pair.data.Message;
 import com.pair.pairapp.R;
 import com.pair.ui.PairAppBaseActivity;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.PreviewsHelper;
 import com.pair.util.SimpleDateUtil;
+import com.pair.util.TaskManager;
 import com.pair.util.UiHelpers;
 import com.squareup.picasso.Picasso;
 
@@ -37,8 +36,6 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
@@ -50,10 +47,15 @@ import io.realm.RealmResults;
 @SuppressWarnings("ConstantConditions")
 public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.OnLongClickListener {
     private static final String TAG = MessagesAdapter.class.getSimpleName();
-    private static final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
     private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2, DATE_MESSAGE = 0x0, TYPING_MESSAGE = 0x3;
-    private final SparseIntArray messageStates;
     private static final Map<String, Integer> downloadingRows = new Hashtable<>();
+    private static final int[] messagesLayout = {
+            R.layout.message_item_session_date,
+            R.layout.list_item_message_outgoing,
+            R.layout.list_item_message_incoming,
+            R.layout.typing_dots
+    };
+    private final SparseIntArray messageStates;
     private final Picasso PICASSO;
     private final LruCache<String, Bitmap> thumbnailCache;
     private final int height;
@@ -238,7 +240,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     }
 
     private void makeThumbnail(final String uri) {
-        WORKER.execute(new Runnable() {
+        TaskManager.execute(new Runnable() {
             @Override
             public void run() {
                 Bitmap bitmap = ThumbnailUtils.createVideoThumbnail(uri, MediaStore.Images.Thumbnails.MINI_KIND);
@@ -246,7 +248,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                     synchronized (thumbnailCache) {
                         thumbnailCache.put(uri, bitmap);
                     }
-                    mainThreadHandler.post(new Runnable() {
+                    TaskManager.executeOnMainThread(new Runnable() {
                         @Override
                         public void run() {
                             notifyDataSetChanged();
@@ -292,7 +294,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                 messageBody = message.getMessageBody();
         downloadingRows.put(message.getId(), 0);
         notifyDataSetChanged(); //this will show the progress indicator and hide the download button
-        WORKER.execute(
+        TaskManager.execute(
                 new Runnable() {
                     @Override
                     public void run() {
@@ -325,7 +327,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                             realm.commitTransaction();
                             onComplete(null);
                         } catch (IOException e) {
-                            Log.e(TAG, e.getMessage(), e.getCause());
+                            CLog.e(TAG, e.getMessage(), e.getCause());
                             onComplete(e);
                         } finally {
                             if (realm != null) {
@@ -335,7 +337,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                     }
 
                     private void onComplete(final Exception error) {
-                        mainThreadHandler.post(
+                        TaskManager.executeOnMainThread(
                                 new Runnable() {
                                     @Override
                                     public void run() {
@@ -371,7 +373,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         if (delegate.onDateSetChanged()) {
             super.notifyDataSetChanged();
         } else {
-            Log.d(TAG, "out of sync");
+            CLog.d(TAG, "out of sync");
         }
     }
 
@@ -386,23 +388,6 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         return false;
     }
 
-    private class ViewHolder {
-        private TextView textMessage, dateComposed;
-        private ImageView preview, playOrDownload;
-        private View progress;
-        private View retry;
-        //TODO add more fields as we support different media/file types
-    }
-
-    private static final int[] messagesLayout = {
-            R.layout.message_item_session_date,
-            R.layout.list_item_message_outgoing,
-            R.layout.list_item_message_incoming,
-            R.layout.typing_dots
-    };
-
-    private final Executor WORKER = Executors.newCachedThreadPool();
-
     public interface Delegate {
         boolean onDateSetChanged();
 
@@ -411,5 +396,13 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         void onSendMessage(Message message);
 
         PairAppBaseActivity getContext();
+    }
+
+    private class ViewHolder {
+        private TextView textMessage, dateComposed;
+        private ImageView preview, playOrDownload;
+        private View progress;
+        private View retry;
+        //TODO add more fields as we support different media/file types
     }
 }

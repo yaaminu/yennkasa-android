@@ -9,26 +9,24 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
-import android.util.Log;
 
 import com.pair.data.Message;
 import com.pair.data.UserManager;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.pair.util.L;
 import com.pair.util.LiveCenter;
+import com.pair.util.TaskManager;
 import com.pair.util.ThreadUtils;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
+
 
 
 public class PairAppClient extends Service {
@@ -36,15 +34,13 @@ public class PairAppClient extends Service {
     public static final String TAG = PairAppClient.class.getSimpleName();
     public static final String ACTION_SEND_ALL_UNSENT = "send unsent messages";
     public static final String ACTION = "action";
-
-    private final PairAppClientInterface INTERFACE = new PairAppClientInterface();
-    private Dispatcher<Message> PARSE_MESSAGE_DISPATCHER;
     private static Dispatcher<Message> SOCKETSIO_DISPATCHER;
-    private WorkerThread WORKER_THREAD;
-    private ExecutorService WORKER;
-
     private static AtomicBoolean isClientStarted = new AtomicBoolean(false);
     private static MessagesProvider messageProvider = new ParseMessageProvider();
+    private static Stack<Activity> backStack = new Stack<>();
+    private final PairAppClientInterface INTERFACE = new PairAppClientInterface();
+    private Dispatcher<Message> PARSE_MESSAGE_DISPATCHER;
+    private WorkerThread WORKER_THREAD;
 
     public static void startIfRequired(Context context) {
         if (!UserManager.getInstance().isUserVerified()) {
@@ -56,7 +52,7 @@ public class PairAppClient extends Service {
             pairAppClient.putExtra(PairAppClient.ACTION, PairAppClient.ACTION_SEND_ALL_UNSENT);
             context.startService(pairAppClient);
         } else {
-            Log.d(TAG, "already running");
+            CLog.d(TAG, "already running");
         }
 
     }
@@ -65,6 +61,49 @@ public class PairAppClient extends Service {
         return messageProvider;
     }
 
+    public static void markUserAsOffline(Activity activity) {
+        ThreadUtils.ensureMain();
+        ensureUserCLoggedIn();
+        if (activity == null) {
+            throw new IllegalArgumentException();
+        }
+        if (backStack.size() > 0) { //avoid empty stack exceptions
+            backStack.pop();
+        }
+
+        if (backStack.isEmpty()) {
+            LiveCenter.stop();
+            MessageCenter.stopListeningForSocketMessages();
+            if (SOCKETSIO_DISPATCHER != null) {
+                SOCKETSIO_DISPATCHER.close();
+                SOCKETSIO_DISPATCHER = null;
+            }
+        }
+    }
+
+    public static void markUserAsOnline(Activity activity) {
+        ThreadUtils.ensureMain();
+        ensureUserCLoggedIn();
+        if (activity == null) {
+            throw new IllegalArgumentException();
+        }
+        if (backStack.isEmpty()) {
+            LiveCenter.start();
+            MessageCenter.startListeningForSocketMessages();
+        }
+        backStack.add(activity);
+    }
+
+    public static void notifyMessageSeen(Message message) {
+        ensureUserCLoggedIn();
+        MessageCenter.notifyMessageSeen(message);
+    }
+
+    private static void ensureUserCLoggedIn() {
+        if (!UserManager.getInstance().isUserVerified()) {
+            throw new IllegalStateException("no user logged in");
+        }
+    }
 
     @Override
     public void onCreate() {
@@ -73,15 +112,9 @@ public class PairAppClient extends Service {
             WORKER_THREAD = new WorkerThread();
             WORKER_THREAD.start();
         }
-        if (WORKER == null || WORKER.isShutdown()) {
-            //stolen from the android.os.AsyncTask class
-            final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
-            WORKER = new ThreadPoolExecutor(CPU_COUNT + 1, CPU_COUNT * 2 + 1, 1000L,
-                    TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(128));
 
-        }
         if (!isClientStarted.get()) {
-            WORKER.execute(new Runnable() {
+            TaskManager.execute(new Runnable() {
                 @Override
                 public void run() {
                     if (!isClientStarted.get())
@@ -100,7 +133,7 @@ public class PairAppClient extends Service {
             return START_NOT_STICKY;
         }
 
-        Log.i(TAG, "starting pairapp client");
+        CLog.i(TAG, "starting pairapp client");
         if (intent != null && isClientStarted.get()) {
             if (intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
                 attemptToSendAllUnsentMessages();
@@ -128,13 +161,11 @@ public class PairAppClient extends Service {
         return true; //support re-binding default implementation returns false
     }
 
-
     @Override
     public void onDestroy() {
         shutDown();
         //order is important
         WORKER_THREAD.shutDown();
-        WORKER.shutdownNow();
         super.onDestroy();
     }
 
@@ -144,7 +175,6 @@ public class PairAppClient extends Service {
             isClientStarted.set(true);
         }
     }
-
 
     private synchronized void shutDown() {
         if (isClientStarted.get()) {
@@ -157,12 +187,11 @@ public class PairAppClient extends Service {
             }
             MessageCenter.stopListeningForSocketMessages();
             isClientStarted.set(false);
-            Log.i(TAG, TAG + ": bye");
+            CLog.i(TAG, TAG + ": bye");
             return;
         }
         L.w(TAG, "shutting down pairapp client when it is already shut down");
     }
-
 
     private void attemptToSendAllUnsentMessages() {
         if (!isClientStarted.get()) {
@@ -178,7 +207,7 @@ public class PairAppClient extends Service {
                     realm.close();
 
                     if (copy.isEmpty()) {
-                        Log.d(TAG, "all messages sent");
+                        CLog.d(TAG, "all messages sent");
                     } else {
                         for (Message message : copy) {
                             sendMessageInternal(message);
@@ -187,53 +216,17 @@ public class PairAppClient extends Service {
                 }
             }
         };
-        WORKER.submit(task);
+        TaskManager.execute(task);
     }
 
-
-    private static Stack<Activity> backStack = new Stack<>();
-
-    public static void markUserAsOffline(Activity activity) {
-        ThreadUtils.ensureMain();
-        ensureUserLoggedIn();
-        if (activity == null) {
-            throw new IllegalArgumentException();
-        }
-        if (backStack.size() > 0) { //avoid empty stack exceptions
-            backStack.pop();
-        }
-
-        if (backStack.isEmpty()) {
-            LiveCenter.stop();
-            MessageCenter.stopListeningForSocketMessages();
-            if (SOCKETSIO_DISPATCHER != null) {
-                SOCKETSIO_DISPATCHER.close();
-                SOCKETSIO_DISPATCHER = null;
+    private void sendMessageInternal(Message message) {
+        if (LiveCenter.isOnline(message.getTo()) && !UserManager.getInstance().isGroup(message.getTo())) {
+            if (SOCKETSIO_DISPATCHER == null) {
+                SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance();
             }
-        }
-    }
-
-    public static void markUserAsOnline(Activity activity) {
-        ThreadUtils.ensureMain();
-        ensureUserLoggedIn();
-        if (activity == null) {
-            throw new IllegalArgumentException();
-        }
-        if (backStack.isEmpty()) {
-            LiveCenter.start();
-            MessageCenter.startListeningForSocketMessages();
-        }
-        backStack.add(activity);
-    }
-
-    public static void notifyMessageSeen(Message message) {
-        ensureUserLoggedIn();
-        MessageCenter.notifyMessageSeen(message);
-    }
-
-    private static void ensureUserLoggedIn() {
-        if (!UserManager.getInstance().isUserVerified()) {
-            throw new IllegalStateException("no user logged in");
+            SOCKETSIO_DISPATCHER.dispatch(message);
+        } else {
+            PARSE_MESSAGE_DISPATCHER.dispatch(message);
         }
     }
 
@@ -272,7 +265,7 @@ public class PairAppClient extends Service {
 
         public void registerUINotifier(final Notifier notifier) {
             if (!isClientStarted.get()) {
-                WORKER.execute(new Runnable() {
+                TaskManager.execute(new Runnable() {
                     @Override
                     public void run() {
                         bootClient();
@@ -292,7 +285,6 @@ public class PairAppClient extends Service {
             throw new UnsupportedOperationException("not yet implemented");
         }
     }
-
 
     private final class WorkerThread extends HandlerThread {
         Handler handler;
@@ -336,7 +328,7 @@ public class PairAppClient extends Service {
                 if (BuildConfig.DEBUG) {
                     throw new IllegalStateException("thread yet to run");
                 }
-                Log.w(TAG, "sending message when worker is yet to start");
+                CLog.w(TAG, "sending message when worker is yet to start");
                 return false;
             }
             return true;
@@ -370,7 +362,7 @@ public class PairAppClient extends Service {
         }
 
         private void doSendMessage(final Message message) {
-            WORKER.execute(new Runnable() {
+            TaskManager.execute(new Runnable() {
                 @Override
                 public void run() {
                     sendMessageInternal(message);
@@ -382,17 +374,6 @@ public class PairAppClient extends Service {
             for (Message message : messages) {
                 doSendMessage(message);
             }
-        }
-    }
-
-    private void sendMessageInternal(Message message) {
-        if (LiveCenter.isOnline(message.getTo()) && !UserManager.getInstance().isGroup(message.getTo())) {
-            if (SOCKETSIO_DISPATCHER == null) {
-                SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance();
-            }
-            SOCKETSIO_DISPATCHER.dispatch(message);
-        } else {
-            PARSE_MESSAGE_DISPATCHER.dispatch(message);
         }
     }
 

@@ -8,7 +8,6 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Gravity;
 import android.widget.LinearLayout;
 
@@ -16,6 +15,7 @@ import com.pair.PairApp;
 import com.pair.data.RealmUtils;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
+import com.pair.util.CLog;
 import com.pair.util.UiHelpers;
 import com.parse.ParseAnalytics;
 import com.rey.material.app.ToolbarManager;
@@ -94,7 +94,7 @@ public class MainActivity extends PairAppActivity {
         try {
             ((LinearLayout) tabStrip.getChildAt(0)).setGravity(Gravity.CENTER_HORIZONTAL);
         } catch (Exception ignored) { //this could raise an exception
-            Log.e(TAG, ignored.getMessage());
+            CLog.e(TAG, ignored.getMessage());
         }
         Toolbar toolBar = (Toolbar) findViewById(R.id.main_toolbar);
         toolBar.setTitle("");

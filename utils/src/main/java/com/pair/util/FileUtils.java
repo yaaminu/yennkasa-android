@@ -4,7 +4,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.TextUtils;
-import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import org.apache.commons.io.FilenameUtils;
@@ -94,7 +93,7 @@ public class FileUtils {
         cursor.moveToFirst();
         String path = cursor.getString(cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA));
         // STOPSHIP: 9/24/2015 fix this problem that arises on android 5 and up
-        Log.i(TAG, path);
+        CLog.i(TAG, path);
         cursor.close();
         return path;
     }
@@ -104,7 +103,7 @@ public class FileUtils {
         if ("".equals(extension)) return extension;
         //re use extension.
         extension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-        Log.i(TAG, "mime type of " + path + " is: " + extension);
+        CLog.i(TAG, "mime type of " + path + " is: " + extension);
         return extension;
     }
 

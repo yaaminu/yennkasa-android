@@ -4,7 +4,6 @@ import android.app.Application;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.telephony.SmsManager;
-import android.util.Log;
 
 import com.google.gson.JsonObject;
 import com.pair.data.BuildConfig;
@@ -14,8 +13,10 @@ import com.pair.data.User;
 import com.pair.data.net.FileApi;
 import com.pair.data.net.HttpResponse;
 import com.pair.data.net.UserApiV2;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.pair.util.L;
+import com.pair.util.TaskManager;
 import com.parse.Parse;
 import com.parse.ParseACL;
 import com.parse.ParseException;
@@ -38,8 +39,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import retrofit.http.Body;
 import retrofit.http.Field;
@@ -71,7 +70,6 @@ public class ParseClient implements UserApiV2, FileApi {
     private static final String TAG = ParseClient.class.getSimpleName();
     private static boolean initialised = false;
     private static ParseClient INSTANCE = new ParseClient();
-    private final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
 
     private ParseClient() {
 
@@ -114,14 +112,14 @@ public class ParseClient implements UserApiV2, FileApi {
         num = Math.abs(num);
 
         String token = String.valueOf(num);
-        Log.d(TAG, token); //fixme remove this
+        CLog.d(TAG, token); //fixme remove this
         return token;
     }
 
     @Override
     public void registerUser(@Body final User user, final Callback<User> callback) {
-        Log.d(TAG, "register user: user info " + user.getName() + ":" + user.getUserId());
-        EXECUTOR.submit(new Runnable() {
+        CLog.d(TAG, "register user: user info " + user.getName() + ":" + user.getUserId());
+        TaskManager.execute(new Runnable() {
             @Override
             public void run() {
                 doRegisterUser(user, callback);
@@ -155,11 +153,11 @@ public class ParseClient implements UserApiV2, FileApi {
             }
         } catch (ParseException e) {
             if (e.getCode() != ParseException.OBJECT_NOT_FOUND) {
-                Log.d(TAG, "encountered error while registering user, message: " + e.getMessage());
+                CLog.d(TAG, "encountered error while registering user, message: " + e.getMessage());
                 notifyCallback(callback, prepareErrorReport(e), null);
                 return;
             }
-            Log.d(TAG, "no account associated with " + _id + " in proceeding to create new account");
+            CLog.d(TAG, "no account associated with " + _id + " in proceeding to create new account");
             //continue
         }
         try {
@@ -227,15 +225,15 @@ public class ParseClient implements UserApiV2, FileApi {
             notifyCallback(callback, null, copy);
             return;
         }
-        EXECUTOR.submit(new Runnable() {
+        TaskManager.execute(new Runnable() {
             @Override
             public void run() {
-                doLogIn(user, callback);
+                doCLogIn(user, callback);
             }
         });
     }
 
-    private void doLogIn(User user, Callback<User> callback) {
+    private void doCLogIn(User user, Callback<User> callback) {
         ParseQuery<ParseObject> query = makeParseQuery();
         try {
             ParseObject object = query.whereEqualTo(FIELD_ID, user.getUserId()).getFirst();
@@ -263,7 +261,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     @Override
     public void syncContacts(@Body final List<String> userIds, final Callback<List<User>> callback) {
-        EXECUTOR.submit(new Runnable() {
+        TaskManager.execute(new Runnable() {
             @Override
             public void run() {
                 doSyncContacts(userIds, callback);
@@ -287,7 +285,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     @Override
     public void getUser(@Path(Message.FIELD_ID) final String id, final Callback<User> response) {
-        EXECUTOR.submit(new Runnable() {
+        TaskManager.execute(new Runnable() {
             public void run() {
                 doGetUser(id, response);
             }
@@ -305,7 +303,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     @Override
     public void getGroups(@Path(Message.FIELD_ID) final String id, final Callback<List<User>> response) {
-        EXECUTOR.submit(new Runnable() {
+        TaskManager.execute(new Runnable() {
             public void run() {
                 doGetGroups(id, response);
             }
@@ -327,7 +325,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     @Override
     public void changeDp(@Path("placeHolder") final String userOrGroup, @Path(Message.FIELD_ID) final String id, @Body final TypedFile file, final Callback<HttpResponse> response) {
-        EXECUTOR.submit(new Runnable() {
+        TaskManager.execute(new Runnable() {
             public void run() {
                 doChangeDp(userOrGroup, id, file, response);
             }
@@ -364,7 +362,7 @@ public class ParseClient implements UserApiV2, FileApi {
     @Override
     public void createGroup(@Field("createdBy") final String by, @Field("name") final String name, @Field("starters") final Collection<String> members, final Callback<User> response) {
 
-        EXECUTOR.submit(new Runnable() {
+        TaskManager.execute(new Runnable() {
             public void run() {
                 doCreateGroup(by, name, members, response);
             }
@@ -403,7 +401,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     @Override
     public void getGroup(@Path(Message.FIELD_ID) final String id, final Callback<User> callback) {
-        EXECUTOR.submit(new Runnable() {
+        TaskManager.execute(new Runnable() {
             public void run() {
                 doGetGroup(id, callback);
             }
@@ -423,7 +421,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     @Override
     public void getGroupMembers(@Path(Message.FIELD_ID) final String id, final Callback<List<User>> response) {
-        EXECUTOR.submit(new Runnable() {
+        TaskManager.execute(new Runnable() {
             public void run() {
                 doGetGroupMembers(id, response);
             }
@@ -442,9 +440,9 @@ public class ParseClient implements UserApiV2, FileApi {
             notifyCallback(response, null, members);
         } catch (ParseException e) {
             if (BuildConfig.DEBUG) {
-                Log.e(TAG, e.getMessage(), e.getCause());
+                CLog.e(TAG, e.getMessage(), e.getCause());
             } else {
-                Log.e(TAG, e.getMessage());
+                CLog.e(TAG, e.getMessage());
             }
             notifyCallback(response, prepareErrorReport(e), null);
         }
@@ -452,7 +450,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     @Override
     public void addMembersToGroup(@Path(Message.FIELD_ID) final String id, @Field("by") final String by, @Field(User.FIELD_MEMBERS) final Collection<String> members, final Callback<HttpResponse> response) {
-        EXECUTOR.submit(new Runnable() {
+        TaskManager.execute(new Runnable() {
             public void run() {
                 doAddMembersToGroup(id, members, response);
             }
@@ -476,7 +474,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     @Override
     public void removeMembersFromGroup(@Path(Message.FIELD_ID) final String id, @Field("by") final String by, @Field(User.FIELD_MEMBERS) final List<String> members, final Callback<HttpResponse> response) {
-        EXECUTOR.submit(new Runnable() {
+        TaskManager.execute(new Runnable() {
             public void run() {
                 doRemoveMembersFromGroup(id, members, response);
             }
@@ -500,7 +498,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     @Override
     public void leaveGroup(@Path("id") final String id, @Field("leaver") final String userId, @Field("password") final String password, final Callback<HttpResponse> response) {
-        EXECUTOR.submit(new Runnable() {
+        TaskManager.execute(new Runnable() {
             public void run() {
                 doLeaveGroup(id, userId, response);
             }
@@ -527,7 +525,7 @@ public class ParseClient implements UserApiV2, FileApi {
             notifyCallback(callback, null, new HttpResponse(200, "user verified successfully"));
             return;
         }
-        EXECUTOR.submit(new Runnable() {
+        TaskManager.execute(new Runnable() {
             public void run() {
                 doVerifyUser(userId, token, callback);
             }
@@ -547,7 +545,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     @Override
     public void resendToken(@Path("id") final String userId, @Field("password") final String password, final Callback<HttpResponse> response) {
-        EXECUTOR.submit(new Runnable() {
+        TaskManager.execute(new Runnable() {
             public void run() {
                 doResendToken(userId, password, response);
             }
@@ -556,7 +554,7 @@ public class ParseClient implements UserApiV2, FileApi {
 
     private void doResendToken(@Path("id") String userId, @Field("password") String password, Callback<HttpResponse> response) {
         String newToken = genVerificationToken();
-        Log.d(TAG, newToken);
+        CLog.d(TAG, newToken);
         try {
             ParseObject object = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, userId).getFirst();
             object.put(FIELD_TOKEN, newToken);

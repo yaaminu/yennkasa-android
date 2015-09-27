@@ -1,11 +1,10 @@
 package com.pair.Errors;
 
 import android.app.Activity;
-import android.os.Handler;
-import android.os.Looper;
 import android.util.Log;
 
 import com.pair.util.NavigationManager;
+import com.pair.util.TaskManager;
 import com.pair.util.ThreadUtils;
 
 import java.lang.ref.WeakReference;
@@ -25,7 +24,6 @@ public class ErrorCenter {
     public static final int INDEFINITE = -1;
     private static final String TAG = ErrorCenter.class.getSimpleName();
     private static final long DEFAULT_TIMEOUT = 1000L;
-    private static final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
     private static Error waitingError;
     private static WeakReference<ErrorShower> errorShower = new WeakReference<>(null);//to free us from null-checks
 
@@ -59,7 +57,7 @@ public class ErrorCenter {
             if (!currentActivityState.equals(NavigationManager.States.DESTROYED) || !currentActivityState.equals(NavigationManager.States.STOPPED)) {
                 final ErrorShower errorShower = ErrorCenter.errorShower.get();
                 if (errorShower != null) {
-                    mainThreadHandler.post(new Runnable() {
+                    TaskManager.execute(new Runnable() {
                         @Override
                         public void run() {
                             errorShower.showError(errorMessage);

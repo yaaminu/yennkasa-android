@@ -16,7 +16,6 @@ import android.text.Editable;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,6 +34,7 @@ import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
+import com.pair.util.CLog;
 import com.pair.util.FileUtils;
 import com.pair.util.MediaUtils;
 import com.pair.util.UiHelpers;
@@ -389,7 +389,7 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
                 if (BuildConfig.DEBUG) {
                     throw new IllegalStateException("this view should be hidden");
                 }
-                Log.i(TAG, "missing message body");
+                CLog.i(TAG, "missing message body");
                 break;
             case R.id.cancel_attachment:
                 isAttaching = false;

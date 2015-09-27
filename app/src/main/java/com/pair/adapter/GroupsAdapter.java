@@ -1,7 +1,6 @@
 package com.pair.adapter;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +11,7 @@ import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.ui.DPLoader;
+import com.pair.util.CLog;
 import com.pair.util.UiHelpers;
 
 import java.util.List;
@@ -26,6 +26,21 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
     private static final String TAG = GroupsAdapter.class.getSimpleName();
     public GroupsAdapter(Context context, RealmResults<User> realmResults) {
         super(context, realmResults, true);
+    }
+
+    public static String join(Context context, CharSequence delimiter, List<User> users) {
+        StringBuilder sb = new StringBuilder(users.size() * 10);
+        String mainUserId = UserManager.getMainUserId();
+
+        sb.append(context.getString(R.string.you));
+        for (User user : users) {
+            if (mainUserId.equals(user.getUserId())) {
+                continue;
+            }
+            sb.append(delimiter);
+            sb.append(user.getName());
+        }
+        return sb.toString();
     }
 
     @Override
@@ -60,23 +75,8 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
         };
         holder.groupIcon.setOnClickListener(listener);
         holder.groupName.setOnClickListener(listener);
-        Log.i(TAG, "Display Picture: " + group.getDP());
+        CLog.i(TAG, "Display Picture: " + group.getDP());
         return convertView;
-    }
-
-    public static String join(Context context, CharSequence delimiter, List<User> users) {
-        StringBuilder sb = new StringBuilder(users.size() * 10);
-        String mainUserId = UserManager.getMainUserId();
-
-        sb.append(context.getString(R.string.you));
-        for (User user : users) {
-            if (mainUserId.equals(user.getUserId())) {
-                continue;
-            }
-            sb.append(delimiter);
-            sb.append(user.getName());
-        }
-        return sb.toString();
     }
 
     public class ViewHolder {

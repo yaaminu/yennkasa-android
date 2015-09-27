@@ -1,11 +1,11 @@
 package com.pair.net.sockets;
 
-import android.util.Log;
 import android.util.Pair;
 
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
+import com.pair.util.CLog;
 
 import java.io.Closeable;
 import java.net.MalformedURLException;
@@ -53,28 +53,18 @@ public class SocketIoClient implements Closeable {
             EVENT_MSG_STATUS = "msgStatus",
             MSG_STS_STATUS = "status",
             MSG_STS_MESSAGE_ID = "messageId";
-
+    private static final WeakHashMap<String, SocketIoClient> instances = new WeakHashMap<>();
     private final AtomicBoolean initialised = new AtomicBoolean(false),
             ready = new AtomicBoolean(false),
             pongedBack = new AtomicBoolean(false);
     private final AtomicInteger referenceCount = new AtomicInteger(0), retryAttempts = new AtomicInteger(0);
-
-
     private final List<Pair<String, Object>> waitingBroadcasts = new ArrayList<>();
-
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private final String userId;
-
-    private Socket CLIENT;
-    private static final WeakHashMap<String, SocketIoClient> instances = new WeakHashMap<>();
-    private Timer reconnect_OR_PingTimer;
-    private String endPoint;
-
-
     private final Listener ON_PONG = new Listener() {
         @Override
         public void call(Object... args) {
-            Log.i(TAG, "pong");
+            CLog.i(TAG, "pong");
             ready.set(true);
             pongedBack.set(true);
             retryAttempts.set(0);
@@ -86,37 +76,88 @@ public class SocketIoClient implements Closeable {
             ready.set(false);
         }
     };
-
     private final Listener ON_ERROR = new Listener() {
         @Override
         public void call(Object... args) {
             ready.set(false);
-            Log.e(TAG, "client error!: ");
+            CLog.e(TAG, "client error!: ");
             if (args.length > 0) {
-                Log.e(TAG, "message: " + args[0]);
+                CLog.e(TAG, "message: " + args[0]);
             }
         }
     };
-    private final Listener ON_RECONNECT = new Listener() {
+    private final Emitter.Listener ON_CONNECT_TIMEOUT = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
             ready.set(false);
-            Log.i(TAG, "preparing to reconnect...");
-            attemptReconnect();
+            CLog.i(TAG, "connection timed out");
         }
     };
-
-
+    private final Emitter.Listener ON_CONNECT_ERROR = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            ready.set(false);
+            CLog.i(TAG, "connection error");
+        }
+    };
+    private Socket CLIENT;
     private final Emitter.Listener ON_CONNECTED = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            Log.i(TAG, "connected");
+            CLog.i(TAG, "connected");
             ready.set(true);
             pongedBack.set(true);
             retryAttempts.set(0);
             sendQueuedMessages();
         }
     };
+    private Timer reconnect_OR_PingTimer;
+    private String endPoint;
+    private AtomicLong reconnectionDelay = new AtomicLong(30 * 1000); //30 seconds
+    private AtomicBoolean reconnecting = new AtomicBoolean(false);
+    private final Listener ON_RECONNECT = new Listener() {
+        @Override
+        public void call(Object... args) {
+            ready.set(false);
+            CLog.i(TAG, "preparing to reconnect...");
+            attemptReconnect();
+        }
+    };
+    private final Emitter.Listener ON_DISCONNECTED = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            ready.set(false);
+            if (initialised.get() && referenceCount.get() > 0) {
+                CLog.i(TAG, "socket disconnected unexpectedly, retrying");
+                CLog.i(TAG, args[0] + "");
+                attemptReconnect();
+            } else {
+                CLog.i(TAG, "disconnected");
+            }
+        }
+    };
+
+    private SocketIoClient(String endPoint, String userId) {
+        //if we are in a testing environment we cannot use handlers
+        //more so if we are initialised from a thread with no looper
+        initialise(endPoint, userId);
+        this.endPoint = endPoint;
+        this.userId = userId;
+    }
+
+    public static SocketIoClient getInstance(String endPoint, String userId) {
+        synchronized (instances) {
+            SocketIoClient client = instances.get(endPoint);
+            if (client == null) {
+                client = new SocketIoClient(endPoint, userId);
+                instances.put(endPoint, client);
+                client.referenceCount.set(1);
+            } else {
+                client.referenceCount.incrementAndGet();
+            }
+            return client;
+        }
+    }
 
     private void sendQueuedMessages() {
         if (CLIENT.connected()) {
@@ -127,44 +168,6 @@ public class SocketIoClient implements Closeable {
                 waitingBroadcasts.clear();
             }
         }
-    }
-
-    private final Emitter.Listener ON_DISCONNECTED = new Emitter.Listener() {
-        @Override
-        public void call(Object... args) {
-            ready.set(false);
-            if (initialised.get() && referenceCount.get() > 0) {
-                Log.i(TAG, "socket disconnected unexpectedly, retrying");
-                Log.i(TAG, args[0] + "");
-                attemptReconnect();
-            } else {
-                Log.i(TAG, "disconnected");
-            }
-        }
-    };
-
-    private final Emitter.Listener ON_CONNECT_TIMEOUT = new Emitter.Listener() {
-        @Override
-        public void call(Object... args) {
-            ready.set(false);
-            Log.i(TAG, "connection timed out");
-        }
-    };
-
-    private final Emitter.Listener ON_CONNECT_ERROR = new Emitter.Listener() {
-        @Override
-        public void call(Object... args) {
-            ready.set(false);
-            Log.i(TAG, "connection error");
-        }
-    };
-
-    private SocketIoClient(String endPoint, String userId) {
-        //if we are in a testing environment we cannot use handlers
-        //more so if we are initialised from a thread with no looper
-        initialise(endPoint, userId);
-        this.endPoint = endPoint;
-        this.userId = userId;
     }
 
     private void ping() {
@@ -230,23 +233,9 @@ public class SocketIoClient implements Closeable {
         return currentDelay * 2 + deviation;
     }
 
-    public static SocketIoClient getInstance(String endPoint, String userId) {
-        synchronized (instances) {
-            SocketIoClient client = instances.get(endPoint);
-            if (client == null) {
-                client = new SocketIoClient(endPoint, userId);
-                instances.put(endPoint, client);
-                client.referenceCount.set(1);
-            } else {
-                client.referenceCount.incrementAndGet();
-            }
-            return client;
-        }
-    }
-
     public boolean registerForEvent(String eventName, Listener eventReceiver) {
         if (!initialised.get()) {
-            Log.w(TAG, "can't register for an event. client yet to start");
+            CLog.w(TAG, "can't register for an event. client yet to start");
             return false;
         }
         CLIENT.on(eventName, eventReceiver);
@@ -255,7 +244,7 @@ public class SocketIoClient implements Closeable {
 
     public boolean unRegisterEvent(String eventName, Listener eventReceiver) {
         if (!initialised.get()) {
-            Log.w(TAG, "can't unregister  an event. client yet to start");
+            CLog.w(TAG, "can't unregister  an event. client yet to start");
             return false;
         }
         CLIENT.off(eventName, eventReceiver);
@@ -272,7 +261,7 @@ public class SocketIoClient implements Closeable {
     }
 
     public void send(String eventName, Object jsonData) {
-        Log.d(TAG, "emitting: " + eventName + " with data" + jsonData);
+        CLog.d(TAG, "emitting: " + eventName + " with data" + jsonData);
         if (ready.get() && CLIENT.connected()) {
             CLIENT.emit(eventName, jsonData);
         } else {
@@ -280,7 +269,7 @@ public class SocketIoClient implements Closeable {
             synchronized (waitingBroadcasts) {
                 //queue the message.
                 waitingBroadcasts.add(new Pair<>(eventName, jsonData));
-                Log.i(TAG, "message queued for sending later client yet to start");
+                CLog.i(TAG, "message queued for sending later client yet to start");
             }
             attemptReconnect();
         }
@@ -320,7 +309,7 @@ public class SocketIoClient implements Closeable {
                 reconnect_OR_PingTimer.cancel();
                 reconnect_OR_PingTimer = null;
             }
-            Log.d(TAG, "failed to establish connection after " + retryAttempts.get() + " attempts giving up");
+            CLog.d(TAG, "failed to establish connection after " + retryAttempts.get() + " attempts giving up");
             return;
         }
         if (reconnect_OR_PingTimer == null) {
@@ -336,12 +325,9 @@ public class SocketIoClient implements Closeable {
             }
         };
         long delay = reconnectionDelay.addAndGet(getNextDelay(reconnectionDelay.get()));
-        Log.d(TAG, retryAttempts.get() + " attempt(s). retrying after " + delay + "ms");
+        CLog.d(TAG, retryAttempts.get() + " attempt(s). retrying after " + delay + "ms");
         reconnect_OR_PingTimer.schedule(task, delay);
     }
-
-    private AtomicLong reconnectionDelay = new AtomicLong(30 * 1000); //30 seconds
-    private AtomicBoolean reconnecting = new AtomicBoolean(false);
 
     public String getEndPoint() {
         return endPoint;

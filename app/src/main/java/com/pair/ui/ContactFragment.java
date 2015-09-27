@@ -2,7 +2,6 @@ package com.pair.ui;
 
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
@@ -40,10 +39,7 @@ import io.realm.RealmChangeListener;
 public class ContactFragment extends Fragment implements RealmChangeListener, AdapterView.OnItemClickListener, PullToRefreshBase.OnRefreshListener {
 
     private static final String TAG = ContactFragment.class.getSimpleName();
-    private ContactsAdapter adapter;
-    private Realm realm;
     private static List<Contact> contacts = new ArrayList<>();
-
     private final ContactsManager.Filter<Contact> filter = new ContactsManager.Filter<Contact>() {
         @Override
         public boolean accept(Contact contact) {
@@ -71,14 +67,23 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Ad
             return (!lhs.isRegisteredUser && !rhs.isRegisteredUser);
         }
     };
-
+    private ContactsAdapter adapter;
+    private Realm realm;
+    private TextView emptyTextView;
+    private PullToRefreshListView listView;
+    private View refreshButton;
+    private final View.OnClickListener listener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            refresh();
+            UiHelpers.showToast(getString(R.string.refreshing), Toast.LENGTH_LONG);
+        }
+    };
     private final ContactsManager.FindCallback<List<Contact>> contactsFindCallback = new ContactsManager.FindCallback<List<Contact>>() {
         @Override
         public void done(List<Contact> freshContacts) {
-            synchronized (this) {
-                safeToStopPullRefreshAnimation = true;
-            }
-            emptyView.setText(R.string.st_empty_contacts);
+            emptyTextView.setText(R.string.st_empty_contacts);
+            ViewUtils.showViews(refreshButton);
             if (freshContacts.size() < 1) {
                 ViewUtils.showViews(refreshButton);
                 refreshButton.setOnClickListener(listener);
@@ -88,17 +93,12 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Ad
             }
             contacts = freshContacts;
             adapter.refill(contacts);
-        }
-    };
-    private TextView emptyView;
-    private PullToRefreshListView listView;
-    private View refreshButton;
-
-    private final View.OnClickListener listener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            refresh();
-            UiHelpers.showToast(getString(R.string.refreshing), Toast.LENGTH_LONG);
+            listView.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    listView.onRefreshComplete();
+                }
+            }, 10000);
         }
     };
 
@@ -130,9 +130,9 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Ad
         ViewUtils.hideViews(refreshButton);
         listView.setScrollEmptyView(false);
         listView.setOnRefreshListener(this);
-        emptyView = ((TextView) view.findViewById(android.R.id.empty));
-        emptyView.setText(R.string.loading);
-        listView.setEmptyView(emptyView);
+        emptyTextView = ((TextView) view.findViewById(R.id.tv_empty));
+        emptyTextView.setText(R.string.loading);
+        listView.setEmptyView(view.findViewById(R.id.empty_view));
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(this);
         return view;
@@ -160,7 +160,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Ad
     @Override
     public void onResume() {
         super.onResume();
-        refreshLocalContacts();
+        //refreshLocalContacts();
     }
 
     @Override
@@ -184,40 +184,23 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Ad
         ContactsManager.getInstance().findAllContacts(filter, comparator, contactsFindCallback);
     }
 
-    boolean safeToStopPullRefreshAnimation = false;
 
     @Override
     public void onRefresh(PullToRefreshBase refreshView) {
-        synchronized (this) {
-            safeToStopPullRefreshAnimation = false;
-        }
         refresh();
-        new StopPullRefreshTask().execute();
     }
 
     private void refresh() {
-        ContactSyncService.syncIfRequired(getActivity());
-        refreshLocalContacts();
-    }
-
-    private class StopPullRefreshTask extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected Void doInBackground(Void... params) {
-            long endMillis = System.currentTimeMillis() + 10 * 1000;
-            while (true) {
-                synchronized (ContactFragment.this) {
-                    if (safeToStopPullRefreshAnimation && System.currentTimeMillis() >= endMillis) {
-                        break;
-                    }
-                }
+        ViewUtils.hideViews(refreshButton);
+        emptyTextView.setText(R.string.loading);
+        listView.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                ContactSyncService.syncIfRequired(getActivity());
+                refreshLocalContacts();
             }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            listView.onRefreshComplete();
-        }
+        }, 10000);
     }
+
 }
 

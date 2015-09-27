@@ -5,10 +5,10 @@ import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import com.pair.data.ContactsManager;
 import com.pair.data.UserManager;
+import com.pair.util.CLog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +29,22 @@ public class ContactSyncService extends IntentService {
         super(TAG);
     }
 
+    public static void syncIfRequired(Context context) {
+        if (!UserManager.getInstance().isUserVerified()) {
+            return;
+        }
+        Intent intent = new Intent(context, ContactSyncService.class);
+        intent.putExtra(ContactSyncService.ACTION, ContactSyncService.SYNC_CONTACTS);
+        PendingIntent operation = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager manager = ((AlarmManager) context.getSystemService(Context.ALARM_SERVICE));
+        //noinspection ConstantConditions
+        manager.setRepeating(AlarmManager.ELAPSED_REALTIME, 5000, AlarmManager.INTERVAL_HOUR, operation); //start now
+    }
+
+    public static void syncNow(Context context) {
+
+    }
+
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent.getStringExtra(ACTION).equals(SYNC_CONTACTS)) {
@@ -43,7 +59,7 @@ public class ContactSyncService extends IntentService {
             List<ContactsManager.Contact> numbers = ContactsManager.getInstance().findAllContactsSync(filter, null);
 
             if (numbers.isEmpty()) { //all contacts fetched.. this should rarely happen
-                Log.i(TAG, "all contacts synced");
+                CLog.i(TAG, "all contacts synced");
                 return;
             }
 
@@ -53,28 +69,12 @@ public class ContactSyncService extends IntentService {
                 //correctly retrieve the right users.
                 onlyNumbers.add(contact.numberInIEE_Format);
             }
-            Log.d(TAG, onlyNumbers.toString());
+            CLog.d(TAG, onlyNumbers.toString());
             doSync(manager, onlyNumbers);
         }
     }
 
     private void doSync(UserManager manager, List<String> onlyNumbers) {
         manager.syncContacts(onlyNumbers);
-    }
-
-    public static void syncIfRequired(Context context) {
-        if(!UserManager.getInstance().isUserVerified()){
-            return;
-        }
-        Intent intent = new Intent(context, ContactSyncService.class);
-        intent.putExtra(ContactSyncService.ACTION, ContactSyncService.SYNC_CONTACTS);
-        PendingIntent operation = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        AlarmManager manager = ((AlarmManager) context.getSystemService(Context.ALARM_SERVICE));
-        //noinspection ConstantConditions
-        manager.setRepeating(AlarmManager.ELAPSED_REALTIME, 5000, AlarmManager.INTERVAL_HOUR, operation); //start now
-    }
-
-    public static void syncNow(Context context){
-
     }
 }

@@ -2,12 +2,12 @@ package com.pair.messenger;
 
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import com.github.nkzawa.emitter.Emitter;
 import com.pair.data.Message;
 import com.pair.data.UserManager;
 import com.pair.net.sockets.SocketIoClient;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.pair.util.L;
 import com.pair.util.LiveCenter;
@@ -18,37 +18,26 @@ import org.json.JSONObject;
 
 import io.realm.Realm;
 
+
 /**
  * @author by Null-Pointer on 5/28/2015.
  */
 public class MessageCenter extends ParsePushBroadcastReceiver {
+    static final String KEY_MESSAGE = "message";
     private static final String TAG = MessageCenter.class.getSimpleName();
     private static final String EXTRA_MESSAGE = "message";
     private static final String EXTRA_NEW_USER = "user";
     private static final String EXTRA_TYPE = Message.FIELD_TYPE;
-    static final String KEY_MESSAGE = "message";
-
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        L.d(TAG, "push recieved");
-        final String data = intent.getStringExtra(ParsePushBroadcastReceiver.KEY_PUSH_DATA);
-        L.d(TAG, data);
-
-        // TODO: 9/3/2015 check the purpose of the push
-        processMessage(context, data);
-    }
-
-
     private static final Emitter.Listener MESSAGE_STATUS_RECEIVER = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            Log.i(TAG, "message status report: " + args[0].toString());
+            CLog.i(TAG, "message status report: " + args[0].toString());
             try {
                 JSONObject object = new JSONObject(args[0].toString());
                 int status = object.getInt(SocketIoClient.MSG_STS_STATUS);
                 String messageId = object.getString(SocketIoClient.MSG_STS_MESSAGE_ID);
                 if (status == Message.STATE_SEEN) {
-                    Log.i(TAG, "message seen");
+                    CLog.i(TAG, "message seen");
                     Realm realm = Message.REALM(Config.getApplicationContext());
                     Message msg = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
                     if (msg != null) {
@@ -56,7 +45,7 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
                         msg.setState(Message.STATE_SEEN);
                         realm.commitTransaction();
                     } else {
-                        Log.i(TAG, "message not available for update");
+                        CLog.i(TAG, "message not available for update");
                     }
                     realm.close();
                 }
@@ -65,17 +54,15 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             }
         }
     };
-
     private static final Emitter.Listener MESSAGE_RECEIVER = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            Log.i(TAG, "socket message received: " + args[0].toString());
+            CLog.i(TAG, "socket message received: " + args[0].toString());
             //process message
             String data = args[0].toString();
             processMessage(Config.getApplicationContext(), data);
         }
     };
-
     static SocketIoClient messagingClient;
 
     static void startListeningForSocketMessages() {
@@ -152,5 +139,15 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             // TODO: 9/18/2015 use push
         }
 
+    }
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        L.d(TAG, "push recieved");
+        final String data = intent.getStringExtra(ParsePushBroadcastReceiver.KEY_PUSH_DATA);
+        L.d(TAG, data);
+
+        // TODO: 9/3/2015 check the purpose of the push
+        processMessage(context, data);
     }
 }

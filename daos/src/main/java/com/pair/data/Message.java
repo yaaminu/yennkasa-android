@@ -2,10 +2,10 @@ package com.pair.data;
 
 import android.app.Application;
 import android.content.Context;
-import android.util.Log;
 
 import com.pair.Errors.PairappException;
 import com.pair.data.util.MessageUtils;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.ThreadUtils;
@@ -52,8 +52,6 @@ public class Message extends RealmObject {
             TYPE_VIDEO_MESSAGE = 0x3f1, //don't touch me!
             TYPE_DATE_MESSAGE = 0x3f2, //don't touch me!
             TYPE_TYPING_MESSAGE = 0x3f3; //don't touch me!
-    private static final String TAG = Message.class.getSimpleName();
-
     public static final String FIELD_ID = "id",
             FIELD_FROM = "from",
             FIELD_TO = "to",
@@ -61,22 +59,16 @@ public class Message extends RealmObject {
             FIELD_STATE = "state",
             FIELD_DATE_COMPOSED = "dateComposed",
             FIELD_MESSAGE_BODY = "messageBody";
+    private static final String TAG = Message.class.getSimpleName();
+    private final static Object idLock = new Object();
     @PrimaryKey
     private String id;
-
     private String from; //sender's id
     private String to; //recipient's id
     private String messageBody;
     private Date dateComposed;
     private int state;
     private int type;
-
-    /**
-     * you are strongly advised to use the factory {@link Message#makeNew}
-     * and its siblings instead
-     */
-    public Message() {
-    } //required no-arg c'tor;
 
 //    /**
 //     * @param mesdsage the message to be used as the basis of the new clone
@@ -94,63 +86,12 @@ public class Message extends RealmObject {
 //        this.state = message.getState();
 //    }
 
-    public void setType(int type) {
-        this.type = type;
-    }
-
-    public int getType() {
-        return type;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getFrom() {
-        return from;
-    }
-
-    public void setFrom(String from) {
-        this.from = from;
-    }
-
-    public String getTo() {
-        return to;
-    }
-
-    public void setTo(String to) {
-        this.to = to;
-    }
-
-    public String getMessageBody() {
-        return messageBody;
-    }
-
-    public void setMessageBody(String messageBody) {
-        this.messageBody = messageBody;
-    }
-
-    public Date getDateComposed() {
-        return dateComposed;
-    }
-
-    public void setDateComposed(Date dateComposed) {
-        this.dateComposed = dateComposed;
-    }
-
-    public int getState() {
-        return state;
-    }
-
-    public void setState(int state) {
-        this.state = state;
-    }
-
-    private final static Object idLock = new Object();
+    /**
+     * you are strongly advised to use the factory {@link Message#makeNew}
+     * and its siblings instead
+     */
+    public Message() {
+    } //required no-arg c'tor;
 
     /**
      * @return a new id that is likely unique.there is no guarantee that this will be unique
@@ -163,7 +104,7 @@ public class Message extends RealmObject {
             long count = realm.where(Message.class).count() + 1;
             id = count + "@" + UserManager.getInstance().getCurrentUser().getUserId() + "@" + System.nanoTime();
         }
-        Log.i(TAG, "generated message id: " + id);
+        CLog.i(TAG, "generated message id: " + id);
         realm.close();
         return id;
     }
@@ -342,7 +283,6 @@ public class Message extends RealmObject {
         return clone;
     }
 
-
     /**
      * copies the message. This effectively detaches the message from {@link Realm} so
      * that you can pass it around even between threads with no problem
@@ -379,5 +319,61 @@ public class Message extends RealmObject {
         typingMessage.setTo(peerId);
         typingMessage.setId(peerId + "typing");
         return typingMessage;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getFrom() {
+        return from;
+    }
+
+    public void setFrom(String from) {
+        this.from = from;
+    }
+
+    public String getTo() {
+        return to;
+    }
+
+    public void setTo(String to) {
+        this.to = to;
+    }
+
+    public String getMessageBody() {
+        return messageBody;
+    }
+
+    public void setMessageBody(String messageBody) {
+        this.messageBody = messageBody;
+    }
+
+    public Date getDateComposed() {
+        return dateComposed;
+    }
+
+    public void setDateComposed(Date dateComposed) {
+        this.dateComposed = dateComposed;
+    }
+
+    public int getState() {
+        return state;
+    }
+
+    public void setState(int state) {
+        this.state = state;
     }
 }

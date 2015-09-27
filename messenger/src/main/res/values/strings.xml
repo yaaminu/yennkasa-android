@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Messenger</string>
+    <string name="unable_to_connect">we were unable to connect to the internet,check your internet settings and try again</string>
 </resources>

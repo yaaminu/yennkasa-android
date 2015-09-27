@@ -2,9 +2,9 @@ package com.pair.ui;
 
 import android.content.Context;
 import android.os.AsyncTask;
-import android.util.Log;
 
 import com.pair.data.UserManager;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.pair.util.L;
 import com.squareup.picasso.Picasso;
@@ -64,7 +64,7 @@ public class DPLoader {
             if (e == null) {
                 L.d(TAG, "successfully changed/refreshed dp of user with id: "+ userId);
             } else {
-                Log.e(TAG, "dp change unsuccessful with reason: " + e.getMessage());
+                CLog.e(TAG, "dp change unsuccessful with reason: " + e.getMessage());
             }
         }
     }

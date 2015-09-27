@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
-import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +19,7 @@ import com.pair.data.Country;
 import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.pair.util.FormValidator;
 import com.pair.util.PhoneNumberNormaliser;
@@ -50,7 +50,7 @@ public class LoginFragment extends Fragment {
     private Button loginButton;
     private EditText usernameEt, phoneNumberEt;
     private Realm realm;
-    private boolean isLoggingIn = true;
+    private boolean isCLoggingIn = true;
     private Spinner spinner;
     private String userName, phoneNumber, userCountry;
     private FormValidator validator;
@@ -89,7 +89,7 @@ public class LoginFragment extends Fragment {
     }, usernameStrategy = new FormValidator.ValidationStrategy() {
         @Override
         public boolean validate() {
-            if (isLoggingIn) return true;
+            if (isCLoggingIn) return true;
             if (TextUtils.isEmpty(userName)) {
                 showRequiredFieldDialog(getString(R.string.username_hint));
                 usernameEt.requestFocus();
@@ -118,7 +118,7 @@ public class LoginFragment extends Fragment {
                 final UiHelpers.Listener okListener = new UiHelpers.Listener() {
                     @Override
                     public void onClick() {
-                        doAttemptLogin();
+                        doAttemptCLogin();
                     }
                 };
                 UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(),
@@ -184,7 +184,7 @@ public class LoginFragment extends Fragment {
             if (v.getId() == R.id.bt_loginButton) {
                 validateAndContinue();
             } else if (v.getId() == R.id.tv_signup) {
-                toggleSignUpLogin(((TextView) v));
+                toggleSignUpCLogin(((TextView) v));
             } else {
                 throw new AssertionError();
             }
@@ -227,13 +227,13 @@ public class LoginFragment extends Fragment {
                 }
                 realm.commitTransaction();
                 for (Country country : realm.where(Country.class).findAll()) {
-                    Log.i(TAG, country.toString());
+                    CLog.i(TAG, country.toString());
                 }
             } catch (IOException | JSONException e) {
                 if (BuildConfig.DEBUG) {
-                    Log.e(TAG, e.getMessage(), e.getCause());
+                    CLog.e(TAG, e.getMessage(), e.getCause());
                 } else {
-                    Log.e(TAG, e.getMessage());
+                    CLog.e(TAG, e.getMessage());
                 }
             } finally {
                 realm.close();
@@ -321,19 +321,19 @@ public class LoginFragment extends Fragment {
         userName = usernameEt.getText().toString().trim();
 
         if (userCountryStrategy.validate() && usernameStrategy.validate() && phoneNumberStrategy.validate()) {
-            attemptLoginOrSignUp();
+            attemptCLoginOrSignUp();
         }
     }
 
-    private void toggleSignUpLogin(TextView v) {
-        if (isLoggingIn) {
-            isLoggingIn = false;
+    private void toggleSignUpCLogin(TextView v) {
+        if (isCLoggingIn) {
+            isCLoggingIn = false;
             v.setText(R.string.st_already_have_an_account);
             usernameEt.setVisibility(View.VISIBLE);
             usernameEt.requestFocus();
             loginButton.setText(R.string.sign_up_button_label);
         } else {
-            isLoggingIn = true;
+            isCLoggingIn = true;
             v.setText(R.string.dont_have_an_account_sign_up);
             usernameEt.setVisibility(View.GONE);
             phoneNumberEt.requestFocus();
@@ -341,13 +341,13 @@ public class LoginFragment extends Fragment {
         }
     }
 
-    private void attemptLoginOrSignUp() {
-        doAttemptLogin();
+    private void attemptCLoginOrSignUp() {
+        doAttemptCLogin();
     }
 
-    private void doAttemptLogin() {
-        if (isLoggingIn) {
-            callback.onLogin(phoneNumber, userCountry);
+    private void doAttemptCLogin() {
+        if (isCLoggingIn) {
+            callback.onCLogin(phoneNumber, userCountry);
         } else {
             callback.onSignUp(userName, phoneNumber, userCountry);
         }
@@ -366,7 +366,7 @@ public class LoginFragment extends Fragment {
     }
 
     interface Callbacks {
-        void onLogin(String phoneNumber, String userIsoCountry);
+        void onCLogin(String phoneNumber, String userIsoCountry);
 
         void onSignUp(String userName, String phoneNumber, String userIsoCountry);
 

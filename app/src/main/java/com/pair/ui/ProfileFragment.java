@@ -11,7 +11,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +21,7 @@ import com.pair.Errors.ErrorCenter;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.LiveCenter;
@@ -337,7 +337,7 @@ private String phoneInlocalFormat;
             }
             //todo probably change status too and last activity
         } catch (Exception lateUpdate) {//fragment no more in layout or maybe user left group
-            Log.e(TAG, lateUpdate.getMessage(), lateUpdate.getCause());
+            CLog.e(TAG, lateUpdate.getMessage(), lateUpdate.getCause());
         }
     }
 

@@ -9,7 +9,6 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +17,7 @@ import android.widget.TextView;
 
 import com.pair.Errors.ErrorCenter;
 import com.pair.pairapp.R;
+import com.pair.util.CLog;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.MediaUtils;
@@ -95,7 +95,7 @@ public class ChooseDisplayPictureFragment extends Fragment {
 
         @Override
         public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom loadedFrom) {
-            Log.d(TAG, "loaded");
+            CLog.d(TAG, "loaded");
             previewLabel.setText("");
             if (bitmap.getHeight() == 0) {
                 ErrorCenter.reportError(TAG, getString(R.string.error_failed_to_open_image));
@@ -114,14 +114,14 @@ public class ChooseDisplayPictureFragment extends Fragment {
 
         @Override
         public void onBitmapFailed(Drawable drawable) {
-            Log.d(TAG, "failed");
+            CLog.d(TAG, "failed");
             previewLabel.setText(noDpNotice);
             displayPicture.setImageDrawable(drawable);
         }
 
         @Override
         public void onPrepareLoad(Drawable drawable) {
-            Log.d(TAG, "before load");
+            CLog.d(TAG, "before load");
             displayPicture.setImageDrawable(drawable);
             previewLabel.setText(R.string.loading);
         }
