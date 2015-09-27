@@ -3,9 +3,7 @@ package com.pair.ui;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -49,17 +47,6 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         ChooseDisplayPictureFragment.Callbacks {
 
     public static final String TAG = CreateGroupActivity.class.getSimpleName();
-    private final UiHelpers.Listener cancelProgress = new UiHelpers.Listener() {
-        @Override
-        public void onClick() {
-            new Handler(getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    NavUtils.navigateUpFromSameTask(CreateGroupActivity.this);
-                }
-            });
-        }
-    };
     private Set<String> selectedUsersNames = new TreeSet<>();
     private Set<String> selectedUsers = new HashSet<>();
     private String groupName;
@@ -191,7 +178,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     }
 
     private void promptAndExit() {
-        UiHelpers.showErrorDialog(this, R.string.st_sure_to_exit, R.string.i_know, android.R.string.no, cancelProgress, null);
+        UiHelpers.promptAndExit(this);
     }
 
     @Override

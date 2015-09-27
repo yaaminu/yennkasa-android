@@ -13,7 +13,6 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Filterable;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.i18n.phonenumbers.NumberParseException;
@@ -26,11 +25,13 @@ import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.CLog;
 import com.pair.util.PhoneNumberNormaliser;
+import com.pair.util.TypeFaceUtil;
 import com.pair.util.UiHelpers;
 import com.pair.view.CheckBox;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
+import com.rey.material.widget.TextView;
 
 import java.util.HashSet;
 import java.util.List;
@@ -145,11 +146,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
         userManager.addMembersToGroup(groupId, selectedUsers, new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
-                try {
-                    progressView.dismiss();
-                } catch (Exception ignored) {
-
-                }
+                UiHelpers.dismissProgressDialog(progressView);
                 if (e != null) {
                     ErrorCenter.reportError(TAG, e.getMessage());
                 }
@@ -183,9 +180,10 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
     @Override
     public View emptyView() {
         TextView emptyView = new TextView(this);
+        emptyView.setTypeface(TypeFaceUtil.loadFromAssets("Roboto"));
         emptyView.setText(getString(R.string.add_custom_number));
         emptyView.setTextSize(R.dimen.standard_text_size);
-        emptyView.setBackgroundColor(getResources().getColor(R.color.black));
+        emptyView.setTextColor(getResources().getColor(R.color.black));
         return emptyView;
     }
 

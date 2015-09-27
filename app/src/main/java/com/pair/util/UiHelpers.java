@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.support.v4.util.Pair;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
@@ -213,6 +214,10 @@ public class UiHelpers {
         return fragment;
     }
 
+    public static void showStopAnnoyingMeDialog(PairAppBaseActivity activity, final String key, int message, int ok, int no, Listener okListener, Listener noListener) {
+        showStopAnnoyingMeDialog(activity, key, getString(activity, message), getString(activity, ok), getString(activity, no), okListener, noListener);
+    }
+
     public static void showStopAnnoyingMeDialog(PairAppBaseActivity activity, final String key, final String message, String ok, String no, final Listener okListener, final Listener noListener) {
         boolean stopAnnoyingMe = UserManager.getInstance().getUserPreference().getBoolean(key, false);
         if (stopAnnoyingMe) {
@@ -278,10 +283,15 @@ public class UiHelpers {
         final UiHelpers.Listener cancelProgress = new UiHelpers.Listener() {
             @Override
             public void onClick() {
-                toFinish.finish();
+                TaskManager.executeOnMainThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        NavUtils.navigateUpFromSameTask(toFinish);
+                    }
+                });
             }
         };
-        UiHelpers.showErrorDialog(toFinish, R.string.st_sure_to_exit, R.string.i_know, android.R.string.no, cancelProgress, null);
+        UiHelpers.showStopAnnoyingMeDialog(toFinish, toFinish.getClass().getName() + "sureToExit", R.string.st_sure_to_exit, R.string.i_know, android.R.string.no, cancelProgress, null);
     }
 
     public static void showToast(String message) {
