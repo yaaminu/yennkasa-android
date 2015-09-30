@@ -21,13 +21,15 @@ import com.pair.Errors.ErrorCenter;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
-import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.LiveCenter;
 import com.pair.util.MediaUtils;
+import com.pair.util.PLog;
 import com.pair.util.PhoneNumberNormaliser;
+import com.pair.util.ScreenUtility;
 import com.pair.util.UiHelpers;
+import com.pair.view.FrameLayout;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.widget.FloatingActionButton;
 import com.squareup.picasso.Callback;
@@ -54,7 +56,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private TextView userName, userPhoneOrAdminName, mutualGroupsOrMembersTv;
     private User user;
     private Realm realm;
-    private View exitGroupButton, callButton, progressView, editName, changeDpButton, changeDpButton2, deleteGroup;
+    private View exitGroupButton, callButton, progressView, changeDpButton, changeDpButton2, deleteGroup;
     private DialogFragment progressDialog;
     private Uri image_capture_out_put_uri;
     private boolean changingDp = false;
@@ -92,9 +94,6 @@ private String phoneInlocalFormat;
                             leaveGroup();
                         }
                     }, null);
-                    break;
-                case R.id.ib_change_name:
-                    UiHelpers.showToast("not implemented");
                     break;
                 case R.id.bt_call:
                     Intent intent = new Intent(Intent.ACTION_DIAL);
@@ -171,7 +170,6 @@ private String phoneInlocalFormat;
         changeDpButton = view.findViewById(R.id.bt_pick_photo_change_dp);
         changeDpButton2 = view.findViewById(R.id.bt_take_photo_change_dp);
         progressView = view.findViewById(R.id.pb_progress);
-        editName = view.findViewById(R.id.ib_change_name);
         deleteGroup = view.findViewById(R.id.bt_dissolve_group);
         sendMessageButton = view.findViewById(R.id.bt_message);
         sendMessageButton.setOnClickListener(clickListener);
@@ -182,6 +180,9 @@ private String phoneInlocalFormat;
         ((FloatingActionButton) changeDpButton2).setIcon(getResources().getDrawable(R.drawable.ic_action_camera), true);
         ((FloatingActionButton) changeDpButton).setIcon(getResources().getDrawable(R.drawable.ic_action_picture), true);
 
+        int screenHeight = (int) new ScreenUtility(getActivity()).getPixelsHeight();
+
+        displayPicture.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,screenHeight/2));
         View parent = view.findViewById(R.id.tv_user_phone_group_admin);
         phoneOrAdminTitle = ((TextView) parent.findViewById(R.id.tv_title));
         userPhoneOrAdminName = ((TextView) parent.findViewById(R.id.tv_subtitle));
@@ -248,11 +249,9 @@ private String phoneInlocalFormat;
             callButton.setVisibility(View.GONE);
             sendMessageButton.setVisibility(View.GONE);
             ((View) mutualGroupsOrMembersTvTitle.getParent()).setVisibility(View.GONE);
-            editName.setOnClickListener(clickListener);
             changeDpButton.setOnClickListener(clickListener);
             changeDpButton2.setOnClickListener(clickListener);
         } else {
-            editName.setVisibility(View.GONE);
             changeDpButton.setVisibility(View.GONE);
             changeDpButton2.setVisibility(View.GONE);
             mutualGroupsOrMembersTvTitle.setText(R.string.shared_groups);
@@ -273,11 +272,9 @@ private String phoneInlocalFormat;
         if (userManager.isAdmin(user.getUserId())) {
             deleteGroup.setVisibility(View.VISIBLE);
             exitGroupButton.setVisibility(View.GONE);
-            editName.setOnClickListener(clickListener);
         } else {
             exitGroupButton.setOnClickListener(clickListener);
             deleteGroup.setVisibility(View.GONE);
-            editName.setVisibility(View.GONE);
         }
         //any member can change dp of a group
         changeDpButton2.setOnClickListener(clickListener);

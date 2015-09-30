@@ -1,9 +1,11 @@
-<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                              xmlns:app="http://schemas.android.com/apk/res-auto"
-                              xmlns:tools="http://schemas.android.com/tools"
-                              android:layout_width="match_parent"
-                              android:layout_height="match_parent"
-                              tools:context="com.pair.ui.ProfileFragment">
+<com.pair.view.LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.pair.ui.ProfileFragment">
 
     <com.pair.view.FrameLayout
         android:id="@+id/fl_dp_panel"
@@ -45,130 +47,125 @@
         </com.pair.view.LinearLayout>
     </com.pair.view.FrameLayout>
 
-    <com.pair.view.LinearLayout
-        android:id="@+id/rl_main_button_panel"
+    <LinearLayout
+        android:id="@+id/user_action_panel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/fl_dp_panel"
         android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
         android:layout_marginEnd="@dimen/padding_ll_login_fragment_right"
         android:layout_marginLeft="@dimen/padding_ll_login_fragment_left"
         android:layout_marginRight="@dimen/padding_ll_login_fragment_right"
         android:layout_marginStart="@dimen/padding_ll_login_fragment_left"
-        android:gravity="center_horizontal"
-        android:orientation="vertical">
+        android:layout_marginTop="@dimen/profile_list_item_padding_top"
+        android:gravity="center_vertical"
+        android:minHeight="?android:attr/listPreferredItemHeight">
 
-        <LinearLayout
-            android:id="@+id/user_action_panel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
-            android:layout_marginTop="@dimen/profile_list_item_padding_top"
-            android:gravity="center_vertical"
-            android:minHeight="?android:attr/listPreferredItemHeight">
+        <com.rey.material.widget.Button
+            android:id="@+id/bt_message"
+            style="@style/profile_fragment_round_button_style"
+            android:contentDescription="@string/message"
+            android:drawableEnd="@drawable/ic_action_chat_white"
+            android:drawableRight="@drawable/ic_action_chat_white"
+            android:padding="@dimen/padding_button"
+            android:text="@string/message"
+            android:textColor="@color/white"
+            android:textSize="@dimen/standard_text_size"/>
 
-            <com.rey.material.widget.Button
-                android:id="@+id/bt_message"
-                style="@style/profile_fragment_round_button_style"
-                android:contentDescription="@string/message"
-                android:drawableEnd="@drawable/ic_action_chat_white"
-                android:drawableRight="@drawable/ic_action_chat_white"
-                android:padding="@dimen/padding_button"
-                android:text="@string/message"
-                android:textColor="@color/white"
-                android:textSize="@dimen/standard_text_size"/>
+        <com.rey.material.widget.Button
+            android:id="@+id/bt_call"
+            style="@style/profile_fragment_round_button_style"
+            android:drawableEnd="@drawable/ic_action_call_white"
+            android:drawableRight="@drawable/ic_action_call_white"
+            android:padding="@dimen/padding_button"
+            android:text="@string/call"
+            android:textColor="@color/white"
+            android:textSize="@dimen/standard_text_size"
+            android:visibility="visible"/>
 
-            <com.rey.material.widget.Button
-                android:id="@+id/bt_call"
-                style="@style/profile_fragment_round_button_style"
-                android:drawableEnd="@drawable/ic_action_call_white"
-                android:drawableRight="@drawable/ic_action_call_white"
-                android:padding="@dimen/padding_button"
-                android:text="@string/call"
-                android:textColor="@color/white"
-                android:textSize="@dimen/standard_text_size"
-                android:visibility="visible"/>
+        <com.rey.material.widget.Button
+            android:id="@+id/bt_dissolve_group"
+            style="@style/profile_fragment_round_button_style"
+            android:drawableEnd="@drawable/ic_action_discard_white"
+            android:drawableRight="@drawable/ic_action_discard_white"
+            android:padding="@dimen/padding_button"
+            android:text="@string/dissolve_group"
+            android:textColor="@color/white"
+            android:textSize="@dimen/standard_text_size"
+            android:visibility="visible"/>
 
-            <com.rey.material.widget.Button
-                android:id="@+id/bt_dissolve_group"
-                style="@style/profile_fragment_round_button_style"
-                android:drawableEnd="@drawable/ic_action_discard_white"
-                android:drawableRight="@drawable/ic_action_discard_white"
-                android:padding="@dimen/padding_button"
-                android:text="@string/dissolve_group"
-                android:textColor="@color/white"
-                android:textSize="@dimen/standard_text_size"
-                android:visibility="visible"/>
+        <com.rey.material.widget.Button
+            android:id="@+id/bt_exit_group"
+            style="@style/profile_fragment_round_button_style"
+            android:drawableEnd="@drawable/ic_action_discard_white"
+            android:drawableRight="@drawable/ic_action_discard_white"
+            android:padding="@dimen/padding_button"
+            android:text="@string/leave"
+            android:textColor="@color/white"
+            android:textSize="@dimen/standard_text_size"
+            android:visibility="visible"/>
+    </LinearLayout>
 
-            <com.rey.material.widget.Button
-                android:id="@+id/bt_exit_group"
-                style="@style/profile_fragment_round_button_style"
-                android:drawableEnd="@drawable/ic_action_discard_white"
-                android:drawableRight="@drawable/ic_action_discard_white"
-                android:padding="@dimen/padding_button"
-                android:text="@string/leave"
-                android:textColor="@color/white"
-                android:textSize="@dimen/standard_text_size"
-                android:visibility="visible"/>
-        </LinearLayout>
+    <include layout="@layout/divider_span_full"/>
 
-
-        <include layout="@layout/divider_span_full"/>
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
         <com.pair.view.LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
+            android:layout_marginEnd="@dimen/padding_ll_login_fragment_right"
+            android:layout_marginLeft="@dimen/padding_ll_login_fragment_left"
+            android:layout_marginRight="@dimen/padding_ll_login_fragment_right"
+            android:layout_marginStart="@dimen/padding_ll_login_fragment_left"
             android:layout_marginTop="@dimen/profile_list_item_padding_top"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:minHeight="?android:attr/listPreferredItemHeight"
-            android:paddingBottom="@dimen/padding_ll_login_fragment_bottom">
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/tv_user_name"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+            <com.pair.view.LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="@dimen/profile_list_item_padding_top"
                 android:layout_weight="1"
-                android:clickable="true"
-                android:ellipsize="end"
-                android:singleLine="true"
-                android:text="@string/username_placeholder"
-                android:textColor="#000"
-                android:textSize="@dimen/edit_text_size"/>
+                android:gravity="center_vertical"
+                android:minHeight="?android:attr/listPreferredItemHeight"
+                android:paddingBottom="@dimen/padding_ll_login_fragment_bottom">
 
+                <TextView
+                    android:id="@+id/tv_user_name"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:clickable="true"
+                    android:ellipsize="end"
+                    android:singleLine="true"
+                    android:text="@string/username_placeholder"
+                    android:textColor="#000"
+                    android:textSize="@dimen/edit_text_size"/>
+            </com.pair.view.LinearLayout>
 
-            <ImageView
-                android:id="@+id/ib_change_name"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentRight="true"
-                android:layout_alignTop="@+id/tv_user_name"
-                android:background="@color/transparent"
-                android:contentDescription="@string/edit_username"
-                android:src="@drawable/ic_action_edit"/>
+            <include layout="@layout/divider_span_full"/>
+
+            <include
+                android:id="@+id/tv_user_phone_group_admin"
+                layout="@layout/title_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="@dimen/profile_list_item_padding_top"
+                android:layout_weight="1"
+                android:minHeight="?android:attr/listPreferredItemHeight"
+                />
+
+            <include layout="@layout/divider_span_full"/>
+
+            <include
+                android:id="@+id/tv_shared_groups_or_group_members"
+                layout="@layout/title_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="@dimen/profile_list_item_padding_top"
+                android:layout_weight="1"
+                android:minHeight="?android:attr/listPreferredItemHeight"/>
         </com.pair.view.LinearLayout>
-
-        <include layout="@layout/divider_span_full"/>
-
-        <include
-            android:id="@+id/tv_user_phone_group_admin"
-            layout="@layout/title_subtitle"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="@dimen/profile_list_item_padding_top"
-            android:layout_weight="1"
-            android:minHeight="?android:attr/listPreferredItemHeight"
-            />
-
-        <include layout="@layout/divider_span_full"/>
-
-        <include
-            android:id="@+id/tv_shared_groups_or_group_members"
-            layout="@layout/title_subtitle"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="@dimen/profile_list_item_padding_top"
-            android:layout_weight="1"
-            android:minHeight="?android:attr/listPreferredItemHeight"/>
-    </com.pair.view.LinearLayout>
-</com.pair.view.RelativeLayout>
+    </ScrollView>
+</com.pair.view.LinearLayout>

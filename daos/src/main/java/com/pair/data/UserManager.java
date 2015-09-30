@@ -1,7 +1,6 @@
 package com.pair.data;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
@@ -30,6 +29,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -44,13 +44,18 @@ import retrofit.mime.TypedFile;
  */
 public final class UserManager {
 
+    private static final String TAG = UserManager.class.getSimpleName(),
+            KEY_SESSION_ID = "lfl/-90-09=klvj8ejf", //don't give a clue what this is for security reasons
+            KEY_USER_PASSWORD = "klfiildelklaklier",//and this one too
+            KEY_USER_VERIFIED = "vvlaikkljhf", // and this
+            DEFAULT_VALUE = "defaultValue",
+            sessionPrefFileName = "slfdafks",
+            USER_PREFS_FILE_NAME = "userPrefs";
+
     public static final String DEFAULT = "default";
-    private static final String TAG = UserManager.class.getSimpleName();
-    private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is for security reasons
-    private static final String KEY_USER_PASSWORD = "klfiildelklaklier"; //and this one too
-    private static final String KEY_USER_VERIFIED = "vvlaikkljhf"; // and this
     private static final UserManager INSTANCE = new UserManager();
-    public static final String DEFAULT_VALUE = "defaultValue";
+    private static final String CLEANED_UP = "cleanedUp";
+    private final File sessionFile;
     private final Object mainUserLock = new Object();
     private final Exception NO_CONNECTION_ERROR;
     private final UserApiV2 userApi;
@@ -66,22 +71,20 @@ public final class UserManager {
     private static final Set<String> protectedKeys = new HashSet<>();
 
     static {
-        protectedKeys.add(IN_APP_NOTIFICATIONS);
-        protectedKeys.add(NEW_MESSAGE_TONE);
-        protectedKeys.add(VIBRATE);
-        protectedKeys.add(LIGHTS);
-        protectedKeys.add(DELETE_ATTACHMENT_ON_DELETE);
-        protectedKeys.add(DELETE_OLDER_MESSAGE);
-        protectedKeys.add(AUTO_DOWNLOAD_MESSAGE);
-        protectedKeys.add(NOTIFICATION);
-        protectedKeys.add(STORAGE);
-        protectedKeys.add(NETWORK);
+        Collections.addAll(protectedKeys, IN_APP_NOTIFICATIONS,
+                NEW_MESSAGE_TONE, VIBRATE, LIGHTS, DELETE_ATTACHMENT_ON_DELETE, DELETE_OLDER_MESSAGE,
+                AUTO_DOWNLOAD_MESSAGE, NOTIFICATION, STORAGE, NETWORK);
+
+        if (BuildConfig.DEBUG && protectedKeys.size() != 10) {
+            throw new AssertionError();
+        }
     }
 
     private UserManager() {
         NO_CONNECTION_ERROR = new Exception(Config.getApplicationContext().getString(R.string.st_unable_to_connect));
         userApi = ParseClient.getInstance();
-        userPrefsLocation = Config.getApplicationContext().getDir("userPrefs", Context.MODE_PRIVATE);
+        userPrefsLocation = Config.getApplicationContext().getDir(USER_PREFS_FILE_NAME, Context.MODE_PRIVATE);
+        sessionFile = Config.getApplicationContext().getDir(sessionPrefFileName, Context.MODE_PRIVATE);
     }
 
     @Deprecated
@@ -97,19 +100,17 @@ public final class UserManager {
         return getInstance().getCurrentUser().getUserId();
     }
 
-    private void saveMainUser(User user) {
+    private synchronized void saveMainUser(User user) {
         final Context context = Config.getApplicationContext();
         Realm realm = Realm.getInstance(context);
         realm.beginTransaction();
         realm.copyToRealmOrUpdate(user);
         realm.commitTransaction();
         // TODO: 6/25/2015 encrypt the id and password before storing it
-        getSettings()
-                .edit()
-                .putString(KEY_SESSION_ID, user.getUserId())
-                .putString(KEY_USER_PASSWORD, user.getPassword())
-                .commit();
+        putSessionPref(KEY_SESSION_ID, user.getUserId());
+        putSessionPref(KEY_USER_PASSWORD, user.getPassword());
     }
+
 
     public User getCurrentUser() {
         synchronized (mainUserLock) {
@@ -127,6 +128,8 @@ public final class UserManager {
                 mainUser = User.copy(user);
             }
             return mainUser;
+        }else{
+            cleanUp();
         }
         realm.close();
         //noinspection ConstantConditions
@@ -142,32 +145,83 @@ public final class UserManager {
         if (mainUser == null || mainUser.getUserId().isEmpty() || mainUser.getName().isEmpty() || mainUser.getCountry().isEmpty()) {
             return false;
         } else //noinspection ConstantConditions
-            if (getSettings().getString(KEY_SESSION_ID, "").isEmpty()) {
+            if (getSessionStringPref(KEY_SESSION_ID, "").isEmpty()) {
                 return false;
             }
         return true;
     }
 
-    public boolean isUserVerified() {
-        return isUserLoggedIn() && getSettings().getBoolean(KEY_USER_VERIFIED, false);
+
+    private void putSessionPref(String key, Object value) {
+        Realm realm = PersistedSetting.REALM(sessionFile);
+        realm.beginTransaction();
+        PersistedSetting setting = new PersistedSetting();
+        setting.setKey(key);
+        setting.setStandAlone(true);
+        if (!PersistedSetting.put(setting, value))
+            throw new RuntimeException();
+        realm.copyToRealmOrUpdate(setting);
+        realm.commitTransaction();
+        realm.close();
     }
 
-    private SharedPreferences getSettings() {
-        return Config.getApplicationWidePrefs();
+    private String getSessionStringPref(String key, String defaultValue) {
+
+        Realm realm = PersistedSetting.REALM(sessionFile);
+        try {
+            PersistedSetting setting = realm.where(PersistedSetting.class).equalTo(PersistedSetting.FIELD_KEY, key).findFirst();
+            if (setting != null) {
+                return setting.getStringValue();
+            }
+            return defaultValue;
+        } finally {
+            realm.close();
+        }
+    }
+
+    private boolean getSessionBoolPref(String key, boolean defaultValue) {
+
+        Realm realm = PersistedSetting.REALM(sessionFile);
+        try {
+            PersistedSetting setting = realm.where(PersistedSetting.class).equalTo(PersistedSetting.FIELD_KEY, key).findFirst();
+            if (setting != null) {
+                return setting.getBoolValue();
+            }
+            return defaultValue;
+        } finally {
+            realm.close();
+        }
+    }
+
+    private int getSessionIntPref(String key, int defaultValue) {
+
+        Realm realm = PersistedSetting.REALM(sessionFile);
+        try {
+            PersistedSetting setting = realm.where(PersistedSetting.class).equalTo(PersistedSetting.FIELD_KEY, key).findFirst();
+            if (setting != null) {
+                return setting.getIntValue();
+            }
+            return defaultValue;
+        } finally {
+            realm.close();
+        }
+    }
+
+    public boolean isUserVerified() {
+        return isUserLoggedIn() && getSessionBoolPref(KEY_USER_VERIFIED, false);
     }
 
 
     private User getCurrentUser(Realm realm) {
-        String currUserId = getSettings().getString(KEY_SESSION_ID, null);
+        String currUserId = getSessionStringPref(KEY_SESSION_ID, null);
         if (currUserId == null) {
             return null;
         }
-
         return realm.where(User.class).equalTo(User.FIELD_ID, currUserId).findFirst();
     }
 
     private String getUserPassword() {
-        String password = getSettings().getString(KEY_USER_PASSWORD, null);
+        String password = getSessionStringPref(KEY_USER_PASSWORD, null);
         if (password == null) {
             // TODO: 7/19/2015 logout user and clean up realm as we suspect intruders
             throw new IllegalStateException("session data tampered with");
@@ -702,7 +756,7 @@ public final class UserManager {
             public void done(Exception e, HttpResponse s) {
                 if (e == null) {
                     initialiseSettings();
-                    getSettings().edit().putBoolean(KEY_USER_VERIFIED, true).commit();
+                    putSessionPref(KEY_USER_VERIFIED, true);
                     doNotify(null, callBack);
                 } else {
                     doNotify(e, callBack);
@@ -741,22 +795,24 @@ public final class UserManager {
     }
 
     public void logOut(Context context, final CallBack logOutCallback) {
+        if (true) {
+            throw new UnsupportedOperationException();
+        }
         //TODO logout user from backend
-        String userId = getSettings().getString(KEY_SESSION_ID, null);
+        String userId = getSessionStringPref(KEY_SESSION_ID, null);
         if ((userId == null)) {
             throw new AssertionError("calling logout when no user is logged in"); //security hole!
         }
 
-        getSettings()
-                .edit()
-                .remove(KEY_SESSION_ID)
-                .apply();
         Realm realm = Realm.getInstance(context);
         // TODO: 6/14/2015 remove this in production code.
         User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
         if (user == null) {
             throw new IllegalStateException("existing session id with no corresponding User in the database");
         }
+        realm.clear(User.class);
+        realm.clear(Message.class);
+        realm.clear(Conversation.class);
         realm.close();
     }
 
@@ -849,16 +905,8 @@ public final class UserManager {
                     doNotify(NO_CONNECTION_ERROR, callBack);
                     return;
                 }
-                Realm realm = Realm.getInstance(Config.getApplicationContext());
-                try {
-                    realm.beginTransaction();
-                    realm.clear(User.class);
-                    realm.commitTransaction();
-                    cleanUp();
-                    doNotify(null, callBack);
-                } finally {
-                    realm.close();
-                }
+                cleanUp();
+                doNotify(null, callBack);
             }
         });
     }
@@ -882,11 +930,28 @@ public final class UserManager {
     }
 
     private void cleanUp() {
-        getSettings().edit()
-                .remove(KEY_SESSION_ID)
-                .remove(KEY_USER_VERIFIED)
-                .remove(KEY_USER_PASSWORD)
-                .commit();
+        if(Config.getApplicationWidePrefs().getBoolean(CLEANED_UP,false)) {
+            Realm realm = PersistedSetting.REALM(userPrefsLocation);
+            clearClass(realm, PersistedSetting.class);
+            realm = PersistedSetting.REALM(sessionFile);
+            clearClass(realm, PersistedSetting.class);
+            realm = Message.REALM(Config.getApplicationContext());
+            clearClass(realm, Message.class);
+            realm = Conversation.Realm(Config.getApplicationContext());
+            clearClass(realm, Conversation.class);
+            realm = User.Realm(Config.getApplicationContext());
+            clearClass(realm, User.class);
+            realm = Country.REALM(Config.getApplicationContext());
+            clearClass(realm, Country.class);
+            Config.getApplicationWidePrefs().edit().remove(CLEANED_UP).apply();
+        }
+    }
+
+    private void clearClass(Realm realm, Class clazz) {
+        realm.beginTransaction();
+        realm.clear(clazz);
+        realm.commitTransaction();
+        realm.close();
     }
 
     public void refreshDp(final String id, final CallBack callBack) {
@@ -1076,13 +1141,6 @@ public final class UserManager {
         } finally {
             realm.close();
         }
-    }
-
-    public SharedPreferences getUserPreference() {
-        if (!isUserVerified()) {
-            throw new IllegalStateException("no user logged in");
-        }
-        return Config.getApplicationContext().getSharedPreferences("Userpreference", Context.MODE_PRIVATE);
     }
 
     public Object putStandAlonePref(String key, Object value) {
