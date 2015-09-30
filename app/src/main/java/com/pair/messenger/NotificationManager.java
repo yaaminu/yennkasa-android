@@ -1,14 +1,11 @@
 package com.pair.messenger;
 
 import android.content.Context;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
 
 import com.pair.data.Message;
 import com.pair.data.User;
+import com.pair.data.UserManager;
 import com.pair.pairapp.R;
-import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.TaskManager;
 import com.pair.util.ThreadUtils;
@@ -43,18 +40,6 @@ final class NotificationManager {
         }
     }
 
-    static void playTone(Context context) {
-        // TODO: 6/14/2015 fetch correct tone from preferences
-        Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        Ringtone ringtone = RingtoneManager.getRingtone(context, uri);
-        if (ringtone != null) {
-            ringtone.play();
-        } else {
-            PLog.d(TAG, "unable to play ringtone");
-            // TODO: 6/15/2015 fallback to default tone for app if available
-        }
-    }
-
     void onNewMessage(final Context context, final Message message) {
         if (ThreadUtils.isMainThread()) {
             TaskManager.execute(new Runnable() {
@@ -69,7 +54,7 @@ final class NotificationManager {
     }
 
     private void notifyUser(final Context context, final Message message, final String sendersName) {
-        if (Config.isAppOpen()) {
+        if (Config.isAppOpen() && UserManager.getInstance().getBoolPref(UserManager.IN_APP_NOTIFICATIONS,false)) {
             //Toast.makeText(Config.getApplicationContext(), message.getFrom() + " : " + message.getMessageBody(), Toast.LENGTH_LONG).show();
             if (UI_NOTIFIER != null) {
                 TaskManager.executeOnMainThread(new Runnable() {

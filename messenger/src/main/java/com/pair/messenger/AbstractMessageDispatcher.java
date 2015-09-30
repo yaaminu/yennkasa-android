@@ -30,7 +30,8 @@ import io.realm.Realm;
  */
 abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     public static final String TAG = AbstractMessageDispatcher.class.getSimpleName();
-    public static final ContactsManager.Filter<User> USER_FILTER = new ContactsManager.Filter<User>() {
+
+    private static final ContactsManager.Filter<User> USER_FILTER = new ContactsManager.Filter<User>() {
         @Override
         public boolean accept(User user) {
             return !UserManager.getInstance().isCurrentUser(user.getUserId());

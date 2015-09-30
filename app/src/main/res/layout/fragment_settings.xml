@@ -4,10 +4,16 @@
              android:layout_height="match_parent"
              tools:context="com.pair.ui.SettingsFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <ListView
+        android:id="@android:id/list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="Settings fragment"/>
-
+        android:dividerHeight="0dp"
+        android:paddingTop="@dimen/padding_ll_login_fragment_top"
+        android:paddingBottom="@dimen/padding_ll_login_fragment_bottom"
+        android:paddingRight="@dimen/padding_ll_login_fragment_right"
+        android:paddingEnd="@dimen/padding_ll_login_fragment_right"
+        android:paddingLeft="@dimen/padding_ll_login_fragment_left"
+        android:paddingStart="@dimen/padding_ll_login_fragment_left"
+        android:divider="@null"
+        android:layout_height="match_parent"/>
 </FrameLayout>

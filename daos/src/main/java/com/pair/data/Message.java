@@ -2,6 +2,7 @@ package com.pair.data;
 
 import android.app.Application;
 import android.content.Context;
+import android.support.annotation.NonNull;
 
 import com.pair.Errors.PairappException;
 import com.pair.data.util.MessageUtils;
@@ -26,7 +27,7 @@ import io.realm.annotations.RealmClass;
  * this class represents a particular message sent by a given {@link User}.
  * it is normally used in conjunction with {@link Conversation}
  * the message may be attached to {@link Realm} or not.
- * <p>
+ * <p/>
  * one can detach the message from realm by using its {@link #copy} method
  * and using the returned message.
  *
@@ -35,6 +36,8 @@ import io.realm.annotations.RealmClass;
 @SuppressWarnings("unused")
 @RealmClass
 public class Message extends RealmObject {
+
+    public static final int NEVER_DELETE = 0, AFTER_FIVE_DAYS = 1, AFTER_TEN_DAYS = 2, AFTER_30_DAYS = 3;
 
     public static final int STATE_PENDING = 0x3e9,
             STATE_SENT = 0x3ea,
@@ -259,7 +262,10 @@ public class Message extends RealmObject {
 
     /**
      * copies the message. This effectively detaches the message from {@link Realm} so
-     * that you can pass it around even between threads with no problem
+     * that you can pass it around even between threads with no problem.
+     * this method will only copy object that are attached to realm if you want to copy
+     * the message irrespective of whether it's attached to realm or not, use the
+     * other overload {@link Message#copy(Message, boolean)}
      *
      * @param message the message to be copied
      * @return a clone of the message passed
@@ -270,7 +276,11 @@ public class Message extends RealmObject {
         if (message == null) {
             throw new IllegalArgumentException("message is null");
         }
+        return copy(message,false);
+    }
 
+    @NonNull
+    private static Message internalCopy(Message message) {
         Message clone = new Message();
 
         clone.setId(message.getId());
@@ -284,6 +294,21 @@ public class Message extends RealmObject {
     }
 
     /**
+     * copies a message irrespective of whether it's attached to realm or not
+     *
+     * @param message   the message to be copied, may not be null
+     * @param forceCopy indicate whether to copy the message irrespective of whether its attached to realm or not
+     * @return the copied message
+     * @see {@link #copy(Message)}
+     */
+    public static Message copy(Message message, boolean forceCopy) {
+        if (!message.isValid() && !forceCopy) {
+            return message;
+        }
+        return internalCopy(message);
+    }
+
+    /**
      * copies the message. This effectively detaches the message from {@link Realm} so
      * that you can pass it around even between threads with no problem
      *
@@ -293,12 +318,16 @@ public class Message extends RealmObject {
      * @see {@link #copy}
      */
     public static List<Message> copy(Collection<Message> messages) {
+       return copy(messages,false);
+    }
+
+    public static List<Message> copy(Collection<Message> messages,boolean forceCopy){
         if (messages == null || messages.isEmpty()) {
             return Collections.emptyList();
         }
         List<Message> copy = new ArrayList<>(messages.size());
         for (Message message : messages) {
-            copy.add(copy(message));
+            copy.add(copy(message,forceCopy));
         }
         return copy;
     }

@@ -11,17 +11,24 @@ public class ConnectionUtils {
 
     @SuppressWarnings("unused")
     public static boolean isConnected() {
-        Context context = Config.getApplicationContext();
-        ConnectivityManager manager = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE));
-        NetworkInfo networkInfo = manager.getActiveNetworkInfo();
+        NetworkInfo networkInfo = getNetworkInfo();
         return ((networkInfo != null) && networkInfo.isConnected());
     }
 
     public static boolean isConnectedOrConnecting() {
-        Context context = Config.getApplicationContext();
-        ConnectivityManager manager = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE));
-        NetworkInfo networkInfo = manager.getActiveNetworkInfo();
+        NetworkInfo networkInfo = getNetworkInfo();
         return ((networkInfo != null) && networkInfo.isConnectedOrConnecting());
     }
 
+    private static NetworkInfo getNetworkInfo() {
+        Context context = Config.getApplicationContext();
+        ConnectivityManager manager = ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE));
+        return manager.getActiveNetworkInfo();
+    }
+
+    public static boolean isWifiConnected() {
+        NetworkInfo info = getNetworkInfo();
+        int type = info.getType();
+        return type == ConnectivityManager.TYPE_WIFI;
+    }
 }

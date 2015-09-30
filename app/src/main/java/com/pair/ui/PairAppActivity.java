@@ -14,6 +14,7 @@ import android.view.View;
 
 import com.pair.PairApp;
 import com.pair.data.Message;
+import com.pair.data.UserManager;
 import com.pair.messenger.Notifier;
 import com.pair.messenger.PairAppClient;
 import com.pair.pairapp.R;
@@ -32,6 +33,7 @@ import io.realm.RealmChangeListener;
  * @author Null-Pointer on 8/12/2015.
  */
 public abstract class PairAppActivity extends PairAppBaseActivity implements Notifier, RealmChangeListener, NoticeFragment.NoticeFragmentCallback {
+    public static final int DELAY_MILLIS = 2000;
     static private volatile List<Pair<String, String>> recentChatList = new ArrayList<>();
     private static volatile long unReadMessages = 0;
     static private volatile Message latestMessage;
@@ -178,22 +180,24 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
     @Override
     public void notifyUser(Context context, final Message message, final String sender) {
-        latestMessage = message;
-        final Pair<String, String> tuple = new Pair<>(message.getFrom(), sender);
-        if (recentChatList.contains(tuple)) {
-            recentChatList.remove(tuple);
-        }
+        if(userManager.getBoolPref(UserManager.IN_APP_NOTIFICATIONS,true)) {
+            latestMessage = message;
+            final Pair<String, String> tuple = new Pair<>(message.getFrom(), sender);
+            if (recentChatList.contains(tuple)) {
+                recentChatList.remove(tuple);
+            }
 
-        recentChatList.add(tuple);
-        // TODO: 8/17/2015 vibrate or play short tone
-        if (snackBar.getState() != SnackBar.STATE_SHOWN) { //we only notify when there is no ongoing notification
-            snackBar.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    doNotifyUser(message, sender);
+            recentChatList.add(tuple);
+            // TODO: 8/17/2015 vibrate or play short tone
+            if (snackBar.getState() != SnackBar.STATE_SHOWN) { //we only notify when there is no ongoing notification
+                snackBar.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        doNotifyUser(message, sender);
 
-                }
-            }, 4000);
+                    }
+                }, DELAY_MILLIS);
+            }
         }
     }
 

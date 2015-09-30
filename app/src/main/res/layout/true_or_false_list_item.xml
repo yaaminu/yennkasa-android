@@ -5,27 +5,26 @@
     android:layout_height="wrap_content"
     android:descendantFocusability="beforeDescendants"
     android:minHeight="?android:attr/listPreferredItemHeight"
+    android:orientation="vertical"
     android:padding="@dimen/list_item_padding"
     tools:ignore="RtlHardcoded">
 
     <com.pair.view.LinearLayout
-        android:id="@+id/ll_tv_cb"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
         android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/tv_user_name"
+        <com.rey.material.widget.TextView
+            android:id="@+id/tv_title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:singleLine="true"
             android:text="@string/username_hint"
             android:textSize="@dimen/standard_text_size"
-            android:textStyle="bold"
             tools:ignore="RtlHardcoded"/>
 
-        <com.pair.view.CheckBox
+        <com.rey.material.widget.CheckBox
             android:id="@+id/cb_checked"
             style="@style/CheckBoxDrawable"
             android:layout_width="wrap_content"
@@ -33,25 +32,14 @@
             android:checked="false"/>
     </com.pair.view.LinearLayout>
 
-    <TextView
-        android:id="@+id/tv_user_phone_group_admin"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:ellipsize="end"
-        android:singleLine="true"
-        android:text="@string/phone"
-        android:layout_below="@+id/ll_tv_cb"
-        android:textSize="@dimen/standard_text_size"
-        android:textStyle="italic"/>
-
     <include
+        android:id="@+id/divider"
         layout="@layout/divider"
         android:layout_width="match_parent"
         android:layout_height="@dimen/inbox_preferred_list_item_divider_height"
-        android:layout_alignLeft="@+id/tv_user_phone_group_admin"
-        android:layout_alignStart="@+id/tv_user_phone_group_admin"
-        android:layout_marginEnd="@dimen/divider_right_offset"
+        android:layout_marginLeft="@dimen/divider_right_offset"
         android:layout_marginRight="@dimen/divider_right_offset"
+        android:gravity="bottom"
         android:layout_alignParentBottom="true"
         />
 </com.pair.view.RelativeLayout>

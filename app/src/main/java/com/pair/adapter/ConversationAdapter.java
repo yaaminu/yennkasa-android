@@ -54,7 +54,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         final Conversation conversation = getItem(position);
         holder.chatSummary.setText(conversation.getSummary());
         PLog.d(TAG, conversation.toString());
-        User peer = UserManager.getInstance().fetchUserIfNeeded(conversation.getPeerId());
+        User peer = UserManager.getInstance().fetchUserIfRequired(conversation.getPeerId());
         String peerName = peer.getName();
         holder.peerName.setText(peerName);
         DPLoader.load(context, peer.getUserId(), peer.getDP())
@@ -80,7 +80,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
                 if (Message.isOutGoing(message)) {
                     summary.append(context.getString(R.string.you)).append(":  ");
                 } else {
-                    User user = UserManager.getInstance().fetchUserIfNeeded(message.getFrom());
+                    User user = UserManager.getInstance().fetchUserIfRequired(message.getFrom());
                     summary.append(user.getName()).append(":  ");
                 }
             }

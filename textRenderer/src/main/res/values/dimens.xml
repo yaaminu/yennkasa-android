@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="selected_item_size">12dp</dimen>
+    <integer name="selected_item_size">12</integer>
 </resources>

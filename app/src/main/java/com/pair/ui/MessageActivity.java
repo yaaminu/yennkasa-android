@@ -1,6 +1,7 @@
 package com.pair.ui;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -62,9 +63,26 @@ public abstract class MessageActivity extends PairAppActivity {
         super.onDestroy();
     }
 
-    protected final void sendMessage(String messageBody, Set<String> recipientIds, int type) {
-        for (String recipientId : recipientIds) {
-            sendMessage(messageBody, recipientId, type);
+    protected final void sendMessage(final String messageBody, final Set<String> recipientIds, final int type, final MessageActivity.SendCallback callback) {
+       AsyncTask<Void,Void,Void> sendMessageTask =  new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+                for (String recipientId : recipientIds) {
+                    sendMessage(messageBody, recipientId, type);
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                callback.onSendComplete(null);
+            }
+        };
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
+            sendMessageTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }else{
+            sendMessageTask.execute();
         }
     }
 
@@ -93,7 +111,7 @@ public abstract class MessageActivity extends PairAppActivity {
         }
     }
 
-    private final class Worker extends HandlerThread implements Handler.Callback, Thread.UncaughtExceptionHandler {
+    private final class Worker extends HandlerThread implements Handler.Callback {
         public static final String TAG = "dispatchThread";
         @SuppressWarnings("unused")
         final static int START = 0x1,
@@ -175,7 +193,6 @@ public abstract class MessageActivity extends PairAppActivity {
         @Override
         protected void onLooperPrepared() {
             handler = new Handler(getLooper(), this);
-            this.setUncaughtExceptionHandler(this);
             realm = Message.REALM(context);
             synchronized (waitingMessages) {
                 for (android.os.Message waitingMessage : waitingMessages) {
@@ -240,20 +257,24 @@ public abstract class MessageActivity extends PairAppActivity {
             return Conversation.newSession(realm, conversation);
         }
 
-        @Override
-        public void uncaughtException(Thread thread, Throwable ex) {
-            PLog.w(TAG, " uncaught exception : " + ex);
-            throw new RuntimeException(ex);
-//            if(ex instanceof RuntimeException){
-//                throw new RuntimeException(ex);
-//            }else{
-//                if(BuildConfig.DEBUG){
-//                    throw new RuntimeException(ex.getCause());
-//                }
-//                Log.d(TAG,"caught a checked exception " + ex);
-//            }
-        }
+//        @Override
+//        public void uncaughtException(Thread thread, Throwable ex) {
+//            PLog.w(TAG, " uncaught exception : " + ex);
+//            throw new RuntimeException(ex);
+////            if(ex instanceof RuntimeException){
+////                throw new RuntimeException(ex);
+////            }else{
+////                if(BuildConfig.DEBUG){
+////                    throw new RuntimeException(ex.getCause());
+////                }
+////                Log.d(TAG,"caught a checked exception " + ex);
+////            }
+//        }
     }
 
+
+    protected interface SendCallback {
+        void onSendComplete(Exception e);
+    }
 
 }

@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v4.util.Pair;
+import android.text.TextUtils;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -28,6 +29,7 @@ import com.pair.ui.MainActivity;
 import com.pair.ui.PairAppBaseActivity;
 import com.pair.ui.ProfileActivity;
 import com.pair.ui.SetUpActivity;
+import com.pair.ui.SettingsActivity;
 import com.pair.ui.UsersActivity;
 import com.rey.material.app.Dialog;
 import com.rey.material.app.DialogFragment;
@@ -219,7 +221,7 @@ public class UiHelpers {
     }
 
     public static void showStopAnnoyingMeDialog(PairAppBaseActivity activity, final String key, final String message, String ok, String no, final Listener okListener, final Listener noListener) {
-        boolean stopAnnoyingMe = UserManager.getInstance().getUserPreference().getBoolean(key, false);
+        boolean stopAnnoyingMe = UserManager.getInstance().getBoolPref(key, false);
         if (stopAnnoyingMe) {
             if (okListener != null) {
                 okListener.onClick();
@@ -233,7 +235,6 @@ public class UiHelpers {
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     touchedCheckBox = true;
                     checkBoxValue = isChecked;
-                    UiHelpers.showToast(String.valueOf(isChecked));
                 }
             };
 
@@ -264,7 +265,7 @@ public class UiHelpers {
 
             private void updateStopAnnoyingMe(boolean newValue) {
                 if (touchedCheckBox) {
-                    UserManager.getInstance().getUserPreference().edit().putBoolean(key, newValue).apply();
+                    UserManager.getInstance().putPref(key, newValue);
                 }
             }
         };
@@ -291,7 +292,8 @@ public class UiHelpers {
                 });
             }
         };
-        UiHelpers.showStopAnnoyingMeDialog(toFinish, toFinish.getClass().getName() + "sureToExit", R.string.st_sure_to_exit, R.string.i_know, android.R.string.no, cancelProgress, null);
+        UiHelpers.showStopAnnoyingMeDialog(toFinish,
+                toFinish.getClass().getName() + "sureToExit", R.string.st_sure_to_exit, R.string.i_know, android.R.string.no, cancelProgress, null);
     }
 
     public static void showToast(String message) {
@@ -314,6 +316,10 @@ public class UiHelpers {
         Intent intent = new Intent(context, ChatActivity.class);
         intent.putExtra(ChatActivity.EXTRA_PEER_ID, peerId);
         context.startActivity(intent);
+    }
+
+    public static void gotoProfileActivity(Context context) {
+        gotoProfileActivity(context, UserManager.getMainUserId());
     }
 
     public static void gotoProfileActivity(Context context, String id) {
@@ -471,6 +477,9 @@ public class UiHelpers {
             default:
                 throw new AssertionError("impossible");
         }
+        if(TextUtils.isEmpty(actualPath)){
+            throw new PairappException(getString(Config.getApplicationContext(),R.string.error_use_file_manager),MessageUtils.ERROR_FILE_DOES_NOT_EXIST);
+        }
         int type = Message.TYPE_BIN_MESSAGE;
         if (MediaUtils.isImage(actualPath)) {
             type = Message.TYPE_PICTURE_MESSAGE;
@@ -494,6 +503,12 @@ public class UiHelpers {
                 }
             });
         }
+    }
+
+    public static void gotoSettingsActivity(Context context, int item) {
+        Intent intent = new Intent(context, SettingsActivity.class);
+        intent.putExtra(SettingsActivity.EXTRA_ITEM, item);
+        context.startActivity(intent);
     }
 
 

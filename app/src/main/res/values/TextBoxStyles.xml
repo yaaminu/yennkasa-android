@@ -26,4 +26,17 @@
         <item name="android:hint">@string/phone_hint</item>
         <item name="android:inputType">phone</item>
     </style>
+
+    <style name="message_edittext_style">
+        <item name="android:background">@drawable/messge_edit_text_background</item>
+        <item name="android:padding">@dimen/message_padding</item>
+        <item name="android:inputType">text|textMultiLine|textLongMessage</item>
+        <item name="android:maxHeight">@dimen/multiline_text_box_max_height</item>
+        <item name="android:ems">10</item>
+        <item name="android:hint">@string/message_box_hint</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:gravity">bottom</item>
+    </style>
 </resources>

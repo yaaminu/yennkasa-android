@@ -125,7 +125,7 @@ private String phoneInlocalFormat;
                         UiHelpers.showToast(getString(R.string.busy));
                         return;
                     }
-                    File file = new File(Config.getTempDir(), user.getUserId() + ".jpg.tmp");
+                    File file = new File(Config.getTempDir(), user.getUserId() + ".jpg");
                     image_capture_out_put_uri = Uri.fromFile(file);
                     MediaUtils.takePhoto(ProfileFragment.this, image_capture_out_put_uri, TAKE_PHOTO_REQUEST);
                     break;
@@ -196,8 +196,7 @@ private String phoneInlocalFormat;
         userManager = UserManager.getInstance();
 
         String id = getArguments().getString(ARG_USER_ID);
-        user = UserManager.getInstance().fetchUserIfNeeded(realm, id);
-
+        user = UserManager.getInstance().fetchUserIfRequired(realm, id,true);
         //common to all
         userName.setText(user.getName());
         displayPicture.setOnClickListener(clickListener);
@@ -206,7 +205,6 @@ private String phoneInlocalFormat;
         } else {
             setUpViewSingleUserWay();
         }
-        userManager.refreshUserDetails(user.getUserId()); //async
         final ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
         //noinspection ConstantConditions
         if (userManager.isCurrentUser(user.getUserId())) {
@@ -273,7 +271,7 @@ private String phoneInlocalFormat;
         //noinspection ConstantConditions
         callButton.setVisibility(View.GONE);
         if (userManager.isAdmin(user.getUserId())) {
-            deleteGroup.setVisibility(View.GONE);
+            deleteGroup.setVisibility(View.VISIBLE);
             exitGroupButton.setVisibility(View.GONE);
             editName.setOnClickListener(clickListener);
         } else {

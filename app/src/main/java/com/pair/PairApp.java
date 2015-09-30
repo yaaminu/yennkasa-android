@@ -13,8 +13,9 @@ import com.pair.messenger.PairAppClient;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.parse_client.ParseClient;
-import com.pair.util.PLog;
 import com.pair.util.Config;
+import com.pair.util.PLog;
+import com.pair.util.TaskManager;
 import com.pair.workers.ContactSyncService;
 
 /**
@@ -78,7 +79,8 @@ public class PairApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        PLog.setLogLevel(BuildConfig.DEBUG?PLog.LEVEL_VERBOSE:PLog.LEVEL_ERROR);
+        PLog.setLogLevel(BuildConfig.DEBUG ? PLog.LEVEL_VERBOSE : PLog.LEVEL_ERROR);
+        TaskManager.init(this);
         Config.init(this);
         ParseClient.init(this);
         if (UserManager.getInstance().isUserVerified()) {

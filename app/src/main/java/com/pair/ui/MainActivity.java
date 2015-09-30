@@ -13,7 +13,6 @@ import android.widget.LinearLayout;
 
 import com.pair.PairApp;
 import com.pair.data.RealmUtils;
-import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.PLog;
 import com.pair.util.UiHelpers;
@@ -38,6 +37,7 @@ public class MainActivity extends PairAppActivity {
         super.onCreate(savedInstanceState);
         final Intent intent = getIntent();
         handleIntent(intent);
+        // STOPSHIP: 9/27/2015 remove this
         if (!cleanedMessages) {
             cleanedMessages = true;
             RealmUtils.runRealmOperation(this);
@@ -52,6 +52,7 @@ public class MainActivity extends PairAppActivity {
     }
 
     private void handleIntent(Intent intent) {
+//        Realm realm2 = Realm.getInstance(this);
         ParseAnalytics.trackAppOpenedInBackground(intent);
         if (notIsMainIntent(intent)) {
             if (isUserVerified() && SetUpActivity.isEveryThingOk()) {
@@ -61,12 +62,6 @@ public class MainActivity extends PairAppActivity {
                 intent.setComponent(new ComponentName(this, CreateMessageActivity.class));
                 startActivity(intent);
             } else {
-//                UiHelpers.showPlainOlDialog(this, getString(R.string.login_signup_notice), new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        UiHelpers.gotoSetUpActivity(MainActivity.this);
-//                    }
-//                }, false);
                 intent = new Intent(this, LoginSignupPrompt.class);
                 startActivity(intent);
                 finish();
@@ -166,10 +161,8 @@ public class MainActivity extends PairAppActivity {
                     fragment = new GroupsFragment();
                     break;
                 case POSITION_SETTINGS_FRAGMENT:
-                    fragment = new SettingsFragment();
+                    fragment = new SettingsFragment2();
                     Bundle bundle = new Bundle(1);
-                    bundle.putString(ProfileFragment.ARG_USER_ID, UserManager.getMainUserId());
-                    fragment.setArguments(bundle);
                     break;
                 default:
                     throw new AssertionError("impossible");

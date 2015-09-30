@@ -11,7 +11,9 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#0000"
-        android:orientation="vertical">
+        android:animateLayoutChanges="true"
+        android:orientation="vertical"
+        tools:ignore="UnusedAttribute">
 
         <include
             layout="@layout/toolbar"/>
@@ -23,45 +25,45 @@
             android:layout_weight="1"/>
 
         <android.support.v7.widget.CardView
-            android:id="@+id/cv_input_message_card_view"
+            android:id="@+id/attachment_preview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
             android:animateLayoutChanges="true"
+            android:visibility="visible"
             app:cardCornerRadius="2dp"
             app:cardElevation="8dp"
             tools:ignore="UnusedAttribute">
 
             <LinearLayout
-                android:id="@+id/attachment_preview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="@dimen/padding_ll_login_fragment_right"
-                android:layout_marginRight="@dimen/padding_ll_login_fragment_right"
                 android:layout_marginLeft="@dimen/padding_ll_login_fragment_left"
+                android:layout_marginRight="@dimen/padding_ll_login_fragment_right"
                 android:layout_marginStart="@dimen/padding_ll_login_fragment_left"
-                android:descendantFocusability="afterDescendants"
                 android:background="@color/transparent"
-                android:padding="@dimen/message_input_padding"
-                android:gravity="center_vertical">
+                android:descendantFocusability="afterDescendants"
+                android:gravity="center_vertical"
+                android:padding="@dimen/message_input_padding">
 
                 <TextView
                     android:id="@+id/attachment_description"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:maxLines="3"
+                    android:clickable="false"
                     android:ellipsize="start"
+                    android:maxLines="3"
                     android:text="binary message"
                     android:textColor="@color/preferred_primary_color"
                     android:textSize="@dimen/standard_text_size"
-                    android:clickable="false"
                     tools:ignore="HardcodedText"/>
 
                 <com.pair.view.FrameLayout
+                    style="@style/FlatWaveButtonRippleStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    style="@style/FlatWaveButtonRippleStyle"
                     android:background="@drawable/green_round_back_ground">
 
                     <ImageButton
@@ -73,22 +75,19 @@
                         android:src="@drawable/ic_action_cancel"/>
                 </com.pair.view.FrameLayout>
             </LinearLayout>
-
-            <EditText
-                android:id="@+id/et_message"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:ems="10"
-                android:hint="@string/message_box_hint"
-                android:inputType="text|textLongMessage|textMultiLine"
-                android:maxHeight="@dimen/multiline_text_box_max_height"
-                android:textSize="@dimen/edit_text_size"
-                android:visibility="gone"
-                tools:ignore="HardcodedText"/>
         </android.support.v7.widget.CardView>
+        <EditText
+            android:id="@+id/et_message"
+            style="@style/message_edittext_style"
+            android:layout_width="match_parent"
+            android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
+            android:layout_marginEnd="@dimen/padding_ll_login_fragment_right"
+            android:layout_marginLeft="@dimen/padding_ll_login_fragment_left"
+            android:layout_marginRight="@dimen/padding_ll_login_fragment_right"
+            android:layout_marginStart="@dimen/padding_ll_login_fragment_left"
+            android:layout_alignParentBottom="true"
+            />
     </com.pair.view.LinearLayout>
-
     <include
         layout="@layout/snack_bar"/>
 </com.pair.view.RelativeLayout>

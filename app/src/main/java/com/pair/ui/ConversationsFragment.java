@@ -13,12 +13,16 @@ import android.widget.ListView;
 import com.pair.adapter.ConversationAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
+import com.pair.data.UserManager;
 import com.pair.pairapp.R;
-import com.pair.util.PLog;
 import com.pair.util.Config;
+import com.pair.util.PLog;
+import com.pair.util.TaskManager;
 import com.pair.util.UiHelpers;
 import com.pair.view.SwipeDismissListViewTouchListener;
 import com.rey.material.widget.FloatingActionButton;
+
+import java.io.File;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -83,13 +87,34 @@ public class ConversationsFragment extends ListFragment {
 
 
     private void cleanMessages(Conversation conversation) {
-        realm.beginTransaction();
         final String peerId = conversation.getPeerId();
-        realm.where(Message.class).equalTo(Message.FIELD_FROM, peerId)
-                .or()
-                .equalTo(Message.FIELD_TO, peerId)
-                .findAll().clear();
-        realm.commitTransaction();
+        TaskManager.execute(new Runnable() {
+            @Override
+            public void run() {
+                PLog.d(TAG, "deleting messages for conversion between user and %s", peerId);
+                Realm realm = Conversation.Realm(getActivity());
+                realm.beginTransaction();
+                RealmResults<Message> messages = realm.where(Message.class).equalTo(Message.FIELD_FROM, peerId)
+                        .or()
+                        .equalTo(Message.FIELD_TO, peerId)
+                        .findAll();
+                if (UserManager.getInstance().getBoolPref(UserManager.DELETE_ATTACHMENT_ON_DELETE, false)) {
+                    for (Message message : messages) {
+                        if (Message.isVideoMessage(message) || Message.isPictureMessage(message) || Message.isBinMessage(message)) {
+                            File file = new File(message.getMessageBody());
+                            if (file.delete()) {
+                                PLog.d(TAG, "deleted file %s", file.getAbsolutePath());
+                            } else {
+                                PLog.d(TAG, "failed to delete file: %s", file.getAbsolutePath());
+                            }
+                        }
+                    }
+                }
+                messages.clear();
+                realm.commitTransaction();
+                realm.close();
+            }
+        });
     }
 
     private Conversation deleteConversation(int position) {

@@ -83,4 +83,7 @@
     <dimen name="big_button_height">48dp</dimen>
     <dimen name="selected_item_text_size">18dp</dimen>
     <dimen name="selected_items_view">100dp</dimen>
+    <dimen name="setting_item_category">18sp</dimen>
+    <dimen name="setting_category_divider_height">1dp</dimen>
+    <dimen name="stroke_width">2dp</dimen>
 </resources>

@@ -1,31 +1,33 @@
-<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                              xmlns:tools="http://schemas.android.com/tools"
-                              android:layout_width="match_parent"
-                              android:layout_height="@dimen/list_item_height"
-                              android:minHeight="?android:attr/listPreferredItemHeight"
-                              android:descendantFocusability="afterDescendants"
-                              android:padding="@dimen/list_item_padding"
-                              android:layout_marginBottom="@dimen/list_item_margin_bottom"
-                              tools:ignore="RtlHardcoded,HardcodedText"
-                              android:gravity="center_vertical">
+<com.pair.view.RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/list_item_height"
+    android:layout_marginBottom="@dimen/list_item_margin_bottom"
+    android:descendantFocusability="afterDescendants"
+    android:minHeight="?android:attr/listPreferredItemHeight"
+    android:padding="@dimen/list_item_padding"
+    tools:ignore="RtlHardcoded,HardcodedText"
+    >
 
     <com.pair.view.RoundedImageView
         android:id="@+id/iv_display_picture"
         android:layout_width="@dimen/thumbnail_width"
         android:layout_height="@dimen/thumbnail_height"
-        android:layout_margin="@dimen/thumbnail_margin"
         android:layout_alignParentLeft="true"
         android:layout_centerVertical="true"
+        android:layout_margin="@dimen/thumbnail_margin"
         android:contentDescription="@string/content_desc_user_avatar"
+        android:gravity="center_vertical"
         android:scaleType="centerCrop"
-        android:src="@drawable/user_avartar" />
+        android:src="@drawable/user_avartar"/>
 
     <TextView
         android:id="@+id/tv_user_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toRightOf="@+id/iv_display_picture"
         android:layout_alignTop="@id/iv_display_picture"
+        android:layout_toRightOf="@+id/iv_display_picture"
         android:singleLine="true"
         android:text="name"
         android:textSize="@dimen/standard_text_size"
@@ -37,12 +39,12 @@
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/iv_display_picture"
         android:layout_alignLeft="@+id/tv_user_name"
+        android:gravity="top"
+        android:scrollHorizontally="true"
         android:singleLine="true"
         android:text="0204441069"
-        android:gravity="top"
         android:textSize="@dimen/standard_text_size"
-        android:scrollHorizontally="true"
-        android:textStyle="italic" />
+        android:textStyle="italic"/>
 
     <include
         layout="@layout/divider"
@@ -53,16 +55,17 @@
         android:layout_alignStart="@+id/ll_conversation_desc"
         android:layout_marginEnd="@dimen/divider_right_offset"
         android:layout_marginRight="@dimen/divider_right_offset"
-        android:layout_marginTop="4dp"/>
+        android:layout_marginTop="4dp"
+        android:gravity="bottom"/>
 
     <com.pair.view.CheckBox
-        android:layout_width="wrap_content"
         android:id="@+id/cb_checked"
-        android:layout_height="wrap_content"
-        android:checked="false"
-        android:layout_alignParentRight="true"
         style="@style/CheckBoxDrawable"
-        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:checked="false"
         android:clickable="false"
-        android:layout_alignBottom="@+id/tv_user_phone_group_admin" />
+        android:visibility="gone"/>
 </com.pair.view.RelativeLayout>

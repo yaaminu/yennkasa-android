@@ -6,21 +6,32 @@ import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Log;
 import android.util.Pair;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.pair.data.net.HttpResponse;
 import com.pair.data.net.UserApiV2;
+import com.pair.data.settings.PersistedSetting;
 import com.pair.parse_client.ParseClient;
-import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.ConnectionUtils;
 import com.pair.util.FileUtils;
+import com.pair.util.PLog;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.TaskManager;
 
+import org.apache.commons.io.Charsets;
+import org.apache.commons.io.IOUtils;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -34,19 +45,44 @@ import retrofit.mime.TypedFile;
  */
 public final class UserManager {
 
+    public static final String DEFAULT = "default";
     private static final String TAG = UserManager.class.getSimpleName();
     private static final String KEY_SESSION_ID = "lfl/-90-09=klvj8ejf"; //don't give a clue what this is for security reasons
-    private static final String KEY_USER_PASSWORD = "klfiielklaklier"; //and this one too
+    private static final String KEY_USER_PASSWORD = "klfiildelklaklier"; //and this one too
     private static final String KEY_USER_VERIFIED = "vvlaikkljhf"; // and this
     private static final UserManager INSTANCE = new UserManager();
+    public static final String DEFAULT_VALUE = "defaultValue";
     private final Object mainUserLock = new Object();
     private final Exception NO_CONNECTION_ERROR;
     private final UserApiV2 userApi;
     private volatile User mainUser;
+    private final File userPrefsLocation;
+
+    public static final String IN_APP_NOTIFICATIONS = "inAppNotifications",
+            NEW_MESSAGE_TONE = "newMessageTone", VIBRATE = "vibrateOnNewMessage",
+            LIGHTS = "litLightOnNewMessage", DELETE_ATTACHMENT_ON_DELETE = "deleteAttachmentsOnMessageDelete",
+            DELETE_OLDER_MESSAGE = "deleteOldMessages", AUTO_DOWNLOAD_MESSAGE = "autoDownloadMessage",
+            NOTIFICATION = "Notification", STORAGE = "Storage", NETWORK = "Network";
+
+    private static final Set<String> protectedKeys = new HashSet<>();
+
+    static {
+        protectedKeys.add(IN_APP_NOTIFICATIONS);
+        protectedKeys.add(NEW_MESSAGE_TONE);
+        protectedKeys.add(VIBRATE);
+        protectedKeys.add(LIGHTS);
+        protectedKeys.add(DELETE_ATTACHMENT_ON_DELETE);
+        protectedKeys.add(DELETE_OLDER_MESSAGE);
+        protectedKeys.add(AUTO_DOWNLOAD_MESSAGE);
+        protectedKeys.add(NOTIFICATION);
+        protectedKeys.add(STORAGE);
+        protectedKeys.add(NETWORK);
+    }
 
     private UserManager() {
         NO_CONNECTION_ERROR = new Exception(Config.getApplicationContext().getString(R.string.st_unable_to_connect));
         userApi = ParseClient.getInstance();
+        userPrefsLocation = Config.getApplicationContext().getDir("userPrefs", Context.MODE_PRIVATE);
     }
 
     @Deprecated
@@ -666,6 +702,7 @@ public final class UserManager {
             @Override
             public void done(Exception e, HttpResponse s) {
                 if (e == null) {
+                    initialiseSettings();
                     getSettings().edit().putBoolean(KEY_USER_VERIFIED, true).commit();
                     doNotify(null, callBack);
                 } else {
@@ -673,6 +710,15 @@ public final class UserManager {
                 }
             }
         });
+    }
+
+    private void initialiseSettings() {
+        try {
+            String json = IOUtils.toString(Config.getApplicationContext().getAssets().open("settings.json"), Charsets.UTF_8);
+            createPrefs(new JSONArray(json));
+        } catch (IOException | JSONException e) {
+            throw new RuntimeException(e.getCause());
+        }
     }
 
     public void resendToken(final CallBack callBack) {
@@ -984,14 +1030,19 @@ public final class UserManager {
         return new Pair<>(proposedName, errorMessage);
     }
 
-    public User fetchUserIfNeeded(String userId) {
+    public User fetchUserIfRequired(String userId) {
         Realm realm = User.Realm(Config.getApplicationContext());
-        User user = fetchUserIfNeeded(realm, userId);
+        User user = fetchUserIfRequired(realm, userId);
+        user =  User.copy(user);
         realm.close();
-        return User.copy(user);
+        return user;
     }
 
-    public User fetchUserIfNeeded(Realm realm, String userId) {
+    public User fetchUserIfRequired(Realm realm, String userId) {
+        return fetchUserIfRequired(realm, userId, false);
+    }
+
+    public User fetchUserIfRequired(Realm realm,String userId,boolean refresh){
         User peer = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
         if (peer == null) {
             realm.beginTransaction();
@@ -1008,10 +1059,13 @@ public final class UserManager {
             }
             realm.commitTransaction();
             refreshUserDetails(userId);
+        }else {
+            if (refresh) {
+                refreshUserDetails(userId);
+            }
         }
         return peer;
     }
-
     public List<String> allUserIds() {
         Realm realm = User.Realm(Config.getApplicationContext());
         try {
@@ -1028,7 +1082,235 @@ public final class UserManager {
         if (!isUserVerified()) {
             throw new IllegalStateException("no user logged in");
         }
-        return Config.getApplicationContext().getSharedPreferences("Userpreference",Context.MODE_PRIVATE);
+        return Config.getApplicationContext().getSharedPreferences("Userpreference", Context.MODE_PRIVATE);
+    }
+
+    public Object putStandAlonePref(String key, Object value) {
+        ensureNotProtectedKey(key);
+        if (value == null || key == null) {
+            throw new IllegalArgumentException("null!");
+        }
+        Realm realm = PersistedSetting.REALM(userPrefsLocation);
+
+        PersistedSetting persistedSetting = realm.where(PersistedSetting.class).equalTo(PersistedSetting.FIELD_KEY, key).findFirst();
+        if (persistedSetting == null) {
+            persistedSetting = new PersistedSetting();
+            persistedSetting.setStandAlone(true);
+            persistedSetting.setKey(key);
+        } else if (!persistedSetting.isStandAlone()) {
+            throw new IllegalArgumentException("pref already exist and is not standalone");
+        }
+        if (!PersistedSetting.put(persistedSetting, value)) {
+            throw new IllegalArgumentException("unknown data type");
+        }
+        realm.beginTransaction();
+        realm.copyToRealmOrUpdate(persistedSetting);
+        realm.commitTransaction();
+        return value;
+    }
+
+    public Object putPref(String key, Object value) {
+        Realm realm = PersistedSetting.REALM(userPrefsLocation);
+
+        try {
+            PersistedSetting setting = realm.where(PersistedSetting.class).equalTo(PersistedSetting.FIELD_KEY, key).findFirst();
+            if (setting == null) {
+                return putStandAlonePref(key, value);
+            }
+            realm.beginTransaction();
+            PersistedSetting.put(setting, value);
+            if (setting.getType() == PersistedSetting.TYPE_INTEGER) {
+                setting.setSummary(retrieveIntPrefSummary(key, ((Integer) value)));
+            }
+            realm.commitTransaction();
+        } finally {
+            realm.close();
+        }
+        return value;
+    }
+
+    public Object putPrefUpdateSummary(String key, Object value, String withSummary) {
+        Realm realm = PersistedSetting.REALM(userPrefsLocation);
+
+        try {
+            PersistedSetting setting = realm.where(PersistedSetting.class).equalTo(PersistedSetting.FIELD_KEY, key).findFirst();
+            if (setting == null) {
+                return null;
+            }
+            realm.beginTransaction();
+            if (!PersistedSetting.put(setting, value)) {
+                realm.cancelTransaction();
+                return null;
+            }
+            setting.setSummary(withSummary);
+            realm.commitTransaction();
+        } finally {
+            realm.close();
+        }
+        return value;
+    }
+
+    private void ensureNotProtectedKey(String key) {
+        if (protectedKeys.contains(key)) {
+            throw new IllegalArgumentException("this key is protected");
+        }
+    }
+
+    public int getIntPref(String key, int defaultValue) {
+        Realm realm = PersistedSetting.REALM(userPrefsLocation);
+        try {
+            PersistedSetting setting = realm.where(PersistedSetting.class)
+                    .equalTo(PersistedSetting.FIELD_KEY, key).findFirst();
+            if (setting == null) {
+                return (int) putStandAlonePref(key, defaultValue);
+            }
+            return setting.getIntValue();
+        } finally {
+            realm.close();
+        }
+    }
+
+    public boolean getBoolPref(String key, boolean defaultValue) {
+        Realm realm = PersistedSetting.REALM(userPrefsLocation);
+        try {
+            PersistedSetting setting = realm.where(PersistedSetting.class)
+                    .equalTo(PersistedSetting.FIELD_KEY, key).findFirst();
+            if (setting == null) {
+                return (boolean) putStandAlonePref(key, defaultValue);
+            }
+            return setting.getBoolValue();
+        } finally {
+            realm.close();
+        }
+    }
+
+    public String getStringPref(String key, String defaultValue) {
+        Realm realm = PersistedSetting.REALM(userPrefsLocation);
+        try {
+            PersistedSetting setting = realm.where(PersistedSetting.class)
+                    .equalTo(PersistedSetting.FIELD_KEY, key).findFirst();
+            if (setting == null) {
+                return (String) putStandAlonePref(key, defaultValue);
+            }
+            return setting.getStringValue();
+        } finally {
+            realm.close();
+        }
+    }
+
+
+    private void createPrefs(JSONArray array) throws JSONException {
+
+        Realm realm = PersistedSetting.REALM(userPrefsLocation);
+        JSONObject cursor;
+        List<PersistedSetting> settings = new ArrayList<>(array.length());
+        for (int i = 0; i < array.length(); i++) {
+            cursor = array.getJSONObject(i);
+            String key = cursor.getString(PersistedSetting.FIELD_KEY);
+            int order = cursor.getInt(PersistedSetting.FIELD_ORDER);
+            int type = cursor.getInt(PersistedSetting.FIELD_TYPE);
+            if (type == 0) {
+                break;
+            }
+            Object defaultValue = cursor.opt(DEFAULT_VALUE);
+
+            settings.add(createPref(key, type, defaultValue, order));
+        }
+        realm.beginTransaction();
+        realm.copyToRealmOrUpdate(settings);
+        realm.commitTransaction();
+        realm.close();
+    }
+
+    private PersistedSetting createPref(String key, int type, Object value, int order) {
+        Context con = Config.getApplicationContext();
+        PersistedSetting.Builder builder = new PersistedSetting.Builder(key);
+
+        if (type == PersistedSetting.TYPE_INTEGER) {
+            String itemSummary = retrieveIntPrefSummary(key, (Integer) value);
+            PLog.d(TAG, "summary for: %s : %s", key, itemSummary);
+            builder.summary(itemSummary);
+        } else if (type == PersistedSetting.TYPE_LIST_STRING) {
+            String itemSummary = getStringPrefSummary(key);
+            PLog.d(TAG, "summary for: %s : %s", key, itemSummary);
+            builder.summary(itemSummary);
+        }
+
+        int titleRes = con.getResources()
+                .getIdentifier("string/" + key + "_title", null, con.getPackageName());
+
+        if (titleRes == 0) {
+            PLog.f(TAG, "failed to load resource for : %s", key);
+            throw new RuntimeException("failed to load resource for " + key);
+        }
+        String title = con.getString(titleRes);
+        builder.title(title)
+                .type(type)
+                .value(value)
+                .order(order);
+
+        return builder.build();
+    }
+
+    @NonNull
+    private String getStringPrefSummary(String key) {
+        Context con = Config.getApplicationContext();
+        int summary;
+        summary = con.getResources()
+                .getIdentifier("string/" + key + "_summary", null, con.getPackageName());
+        if (summary == 0) {
+            PLog.f(TAG, "could not retrieve summary for: %s", key);
+            throw new RuntimeException("failed to retrieve summary");
+        }
+        return con.getString(summary);
+    }
+
+    private String retrieveIntPrefSummary(String key, Integer value) {
+        Context con = Config.getApplicationContext();
+        int summary;
+        summary = con.getResources().getIdentifier("array/" + key + "_options", null, con.getPackageName());
+        if (summary == 0) {
+            PLog.f(TAG, "could not retrieve summary for: %s", key);
+            throw new RuntimeException("summary is required for integer prefs");
+        }
+        return con.getResources().getStringArray(summary)[value];
+    }
+
+    public List<PersistedSetting> userSettings() {
+        Realm realm = PersistedSetting.REALM(userPrefsLocation);
+        try {
+            List<PersistedSetting> setting = PersistedSetting.copy(realm.where(PersistedSetting.class)
+                    .equalTo(PersistedSetting.FIELD_STANDALONE, false).findAllSorted(PersistedSetting.FIELD_ORDER));
+            for (PersistedSetting persistedSetting : setting) {
+                Log.i(TAG, persistedSetting.getKey());
+            }
+            return setting;
+        } finally {
+            realm.close();
+        }
+    }
+
+    public void restoreUserDefaultSettings(CallBack callback) {
+        reInitialiseSettings(callback);
+    }
+
+    private void reInitialiseSettings(UserManager.CallBack callback) {
+
+        final WeakReference<CallBack> callBackWeakReference = new WeakReference<>(callback);
+        TaskManager.execute(new Runnable() {
+            @Override
+            public void run() {
+                Realm realm = PersistedSetting.REALM(userPrefsLocation);
+                realm.beginTransaction();
+                realm.clear(PersistedSetting.class);
+                realm.commitTransaction();
+                initialiseSettings();
+                CallBack callBack = callBackWeakReference.get();
+                if (callBack != null) {
+                    doNotify(null, callBack);
+                }
+            }
+        });
     }
 
     public interface CallBack {

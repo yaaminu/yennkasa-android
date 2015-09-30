@@ -9,6 +9,8 @@ import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.MessageJsonAdapter;
 import com.pair.data.UserManager;
+import com.pair.data.util.MessageUtils;
+import com.pair.util.ConnectionUtils;
 import com.pair.util.PLog;
 
 import java.util.Date;
@@ -67,7 +69,7 @@ public class MessageProcessor extends IntentService {
         } else {
             peerId = message.getFrom();
         }
-        UserManager.getInstance().fetchUserIfNeeded(peerId);
+        UserManager.getInstance().fetchUserIfRequired(peerId);
         //all other operations are deferred till we set up the conversation
         Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
 
@@ -105,6 +107,11 @@ public class MessageProcessor extends IntentService {
         realm.close();
         NotificationManager.INSTANCE.onNewMessage(this, message);
         MessageCenter.notifyReceived(message);
+        if(!Message.isTextMessage(message)){
+            if(ConnectionUtils.isWifiConnected() || UserManager.getInstance().getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE,false)){
+                MessageUtils.download(message,null);
+            }
+        }
     }
 
     // TODO: 9/3/2015 this is not safe!

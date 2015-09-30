@@ -23,6 +23,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.jmpergar.awesometext.AwesomeTextHandler;
+import com.jmpergar.awesometext.HashtagsSpanRenderer;
 import com.pair.Errors.ErrorCenter;
 import com.pair.Errors.PairappException;
 import com.pair.adapter.GroupsAdapter;
@@ -30,14 +32,16 @@ import com.pair.adapter.MessagesAdapter;
 import com.pair.data.Conversation;
 import com.pair.data.Message;
 import com.pair.data.User;
+import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.FileUtils;
 import com.pair.util.LiveCenter;
+import com.pair.util.PLog;
 import com.pair.util.SimpleDateUtil;
+import com.pair.util.TaskManager;
 import com.pair.util.UiHelpers;
 import com.pair.util.ViewUtils;
 import com.rey.material.app.ToolbarManager;
-import com.rey.material.widget.FloatingActionButton;
 import com.rey.material.widget.SnackBar;
 
 import java.io.File;
@@ -96,10 +100,11 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private ListView messagesListView;
     private EditText messageEt;
     private View sendButton, dateHeaderViewParent;
-    private TextView dateHeader;
     private MessagesAdapter adapter;
     private Toolbar toolBar;
     private ToolbarManager toolbarManager;
+    private AwesomeTextHandler awesomeTextViewHandler;
+    private static final String MENTION_PATTERN = "(@[\\p{L}0-9-_ ]+)";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,15 +115,18 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         messageEt = ((EditText) findViewById(R.id.et_message));
         sendButton = findViewById(R.id.iv_send);
-        ((FloatingActionButton) sendButton).setIcon(getResources().getDrawable(R.drawable.ic_action_send_now), false);
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
-        dateHeader = ((TextView) findViewById(R.id.tv_header_date));
-        dateHeaderViewParent = findViewById(R.id.cv_date_header_parent);
+        dateHeaderViewParent = findViewById(R.id.date_header_parent);
+
+        awesomeTextViewHandler = new AwesomeTextHandler();
+        awesomeTextViewHandler
+                .addViewSpanRenderer(MENTION_PATTERN, new HashtagsSpanRenderer())
+                .setView((TextView) findViewById(R.id.tv_log_message));
 
         realm = Realm.getInstance(this);
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
-        peer = userManager.fetchUserIfNeeded(realm, peerId);
+        peer = userManager.fetchUserIfRequired(realm, peerId);
         String peerName = peer.getName();
         //noinspection ConstantConditions
         final ActionBar actionBar = getSupportActionBar();
@@ -299,7 +307,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             for (int i = firstVisibleItem + visibleItemCount - 1; i >= 0; i--) { //loop backwards
                 final Message message = messages.get(i);
                 if (Message.isDateMessage(message)) {
-                    dateHeader.setText(SimpleDateUtil.formatDateRage(this, message.getDateComposed()));
+                    awesomeTextViewHandler.setText("@"+SimpleDateUtil.formatDateRage(this, message.getDateComposed()));
                     return;
                 }
             }
@@ -373,11 +381,12 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         //if it is the only message for the day remove the date message
         //if it is the last message
         //if there are other messages set the newest to the just removed message as the last message of the conversation
-        Message currMessage = messages.get(position),
+        final Message currMessage = messages.get(position),
                 previousToCurrMessage = messages.get(position - 1), //at least there will be a date message
                 nextToCurrMessage = (messages.size() - 1 > position ? messages.get(position + 1) : null);
 
         final boolean wasLastForTheDay = nextToCurrMessage == null || Message.isDateMessage(nextToCurrMessage);
+        final String messageBody = currMessage.getMessageBody();
         currMessage.removeFromRealm();
         if (Message.isDateMessage(previousToCurrMessage) &&
                 wasLastForTheDay) {
@@ -396,7 +405,19 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         realm.commitTransaction();
         outOfSync = false;
         adapter.notifyDataSetChanged();
-
+        TaskManager.execute(new Runnable() {
+            @Override
+            public void run() {
+                if (UserManager.getInstance().getBoolPref(UserManager.DELETE_ATTACHMENT_ON_DELETE, false)) {
+                    File file = new File(messageBody);
+                    if (file.exists()) {
+                        if (file.delete()) {
+                            PLog.d(TAG, "deleted file successfully");
+                        }
+                    }
+                }
+            }
+        });
     }
 
     @Override

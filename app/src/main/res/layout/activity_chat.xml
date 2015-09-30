@@ -64,40 +64,28 @@
                 android:gravity="center"
                 tools:ignore="UnusedAttribute">
 
-                <android.support.v7.widget.CardView
-                    android:id="@+id/cv_input_message_card_view"
+                <EditText
+                    android:id="@+id/et_message"
+                    style="@style/message_edittext_style"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    app:cardCornerRadius="2dp"
-                    app:cardElevation="8dp">
+                    android:layout_weight="1"/>
 
-                    <EditText
-                        android:id="@+id/et_message"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="bottom"
-                        android:ems="10"
-                        android:hint="@string/message_box_hint"
-                        android:inputType="text|textLongMessage|textMultiLine"
-                        android:maxHeight="@dimen/multiline_text_box_max_height"
-                        android:textColor="@color/black"
-                        android:textSize="@dimen/edit_text_size"
-                        tools:ignore="HardcodedText"/>
-                </android.support.v7.widget.CardView>
-
-                <com.rey.material.widget.FloatingActionButton
+                <com.pair.view.FrameLayout
                     android:id="@+id/iv_send"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginLeft="0dp"
                     android:layout_marginStart="0dp"
-                    android:visibility="gone"
-                    app:fab_backgroundColor="@color/white"
-                    app:fab_elevation="8dp"
-                    app:fab_iconSize="@dimen/fab_icon_size_small"
-                    app:fab_radius="@dimen/fab_icon_radius_small"/>
+                    android:padding="@dimen/padding_ll_login_fragment_bottom"
+                    android:background="@drawable/green_round_back_ground"
+                    android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/ic_action_send_now_white"/>
+                </com.pair.view.FrameLayout>
             </LinearLayout>
         </com.pair.view.LinearLayout>
 
@@ -112,28 +100,9 @@
         <!--android:textSize="@dimen/log_message_text_size"-->
         <!--android:visibility="gone"/>-->
 
-        <android.support.v7.widget.CardView
-            android:id="@+id/cv_date_header_parent"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="@dimen/header_date_message_margin_top"
-            android:visibility="visible"
-            app:cardCornerRadius="4dp"
-            app:cardElevation="4dp">
-
-            <TextView
-                android:id="@+id/tv_header_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:gravity="center"
-                android:padding="@dimen/date_message_paddingTop"
-                android:text="2/2/2015"
-                android:textColor="@color/title_gray"
-                android:textSize="@dimen/log_message_text_size"
-                tools:ignore="HardcodedText"/>
-        </android.support.v7.widget.CardView>
+        <include
+            layout="@layout/message_item_session_date">
+        </include>
     </com.pair.view.RelativeLayout>
 
     <include

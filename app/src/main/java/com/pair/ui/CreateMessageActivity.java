@@ -34,12 +34,13 @@ import com.pair.data.Message;
 import com.pair.data.User;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
-import com.pair.util.PLog;
 import com.pair.util.FileUtils;
 import com.pair.util.MediaUtils;
+import com.pair.util.PLog;
 import com.pair.util.UiHelpers;
 import com.pair.util.ViewUtils;
 import com.pair.view.CheckBox;
+import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
 
@@ -52,7 +53,8 @@ import java.util.TreeSet;
 import io.realm.Realm;
 import io.realm.RealmQuery;
 
-public class CreateMessageActivity extends MessageActivity implements ItemsSelector.OnFragmentInteractionListener, TextWatcher, View.OnClickListener {
+public class CreateMessageActivity extends MessageActivity
+        implements ItemsSelector.OnFragmentInteractionListener, TextWatcher, View.OnClickListener {
 
     static final String EXTRA_FORWARDED_FROM = "fLKDFAJKAom"; //reduce the likeliness of conflict
     private static final String TAG = CreateMessageActivity.class.getSimpleName();
@@ -140,7 +142,8 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
         if (adapter.getCount() >= 1) {
             fragment = new ItemsSelector();
         } else {
-            ViewUtils.hideViews(findViewById(R.id.cv_input_message_card_view));
+            ViewUtils.hideViews(attachmentPreview);
+            ViewUtils.hideViews(messageEt);
             fragment = new NoticeFragment();
         }
         getSupportFragmentManager().beginTransaction()
@@ -174,6 +177,9 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
                 ViewUtils.hideViews(attachmentPreview);
                 setActionBArTitle(null);
             }
+        }else{
+            PLog.f(TAG, "error while attaching. uri returned is null or the file it points to does not exist");
+            ErrorCenter.reportError(TAG+"attaching",getString(R.string.error_use_file_manager));
         }
     }
 
@@ -256,9 +262,16 @@ public class CreateMessageActivity extends MessageActivity implements ItemsSelec
                 }
                 type = Message.TYPE_TEXT_MESSAGE;
             }
-            sendMessage(messageBody, selectedItems, type);
-            Intent intent = new Intent(this, MainActivity.class);
-            NavUtils.navigateUpTo(this, intent);
+            final DialogFragment progressDialog = UiHelpers.newProgressDialog();
+            progressDialog.show(getSupportFragmentManager(),null);
+            sendMessage(messageBody, selectedItems, type, new SendCallback() {
+                @Override
+                public void onSendComplete(Exception e) {
+                    UiHelpers.dismissProgressDialog(progressDialog);
+                    Intent intent = new Intent(CreateMessageActivity.this, MainActivity.class);
+                    NavUtils.navigateUpTo(CreateMessageActivity.this, intent);
+                }
+            });
         }
         return super.onOptionsItemSelected(item);
     }

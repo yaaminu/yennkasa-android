@@ -31,13 +31,7 @@ public class MentionSpanRenderer implements AwesomeTextHandler.ViewSpanRenderer,
     public View getView(String text, Context context) {
         TextView view = new TextView(context);
         view.setText(text.substring(1));
-        int size;
-        if (context.getResources().getBoolean(R.bool.is_big_screen)) {
-            size = 18;
-        } else {
-            size = 12;
-        }
-        view.setTextSize(ScreenUtils.dipsToPixels(context, size));
+        view.setTextSize(ScreenUtils.dipsToPixels(context, context.getResources().getInteger(R.integer.selected_item_size)));
         view.setBackgroundResource(backgroundResource);
         int textColor = context.getResources().getColor(textColorResource);
         view.setTextColor(textColor);

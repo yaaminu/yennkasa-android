@@ -83,6 +83,8 @@ public class FileUtils {
             }
             return null;
         }
+
+        // TODO: 9/28/2015 detect from which contact provider to look up
         String[] projections = {
                 MediaStore.Files.FileColumns.DATA
         };
@@ -114,9 +116,8 @@ public class FileUtils {
     }
 
     public static void save(File file, String url) throws IOException {
-        if (ThreadUtils.isMainThread()) {
-            throw new IllegalStateException("main thread!");
-        }
+        ThreadUtils.ensureNotMain();
+
         URL location = new URL(url);
         save(file, location.openStream()); //the stream will be closed in the other overload
     }
@@ -143,17 +144,12 @@ public class FileUtils {
     }
 
     public static void copyTo(String oldPath, String newPath) throws IOException {
-        if (ThreadUtils.isMainThread()) {
-            throw new IllegalStateException("main thread!");
-        }
+        ThreadUtils.ensureNotMain();
         copyTo(new File(oldPath), new File(newPath));
     }
 
     public static void copyTo(File source, File destination) throws IOException {
-        if (ThreadUtils.isMainThread()) {
-            throw new IllegalStateException("main thread");
-        }
-
+        ThreadUtils.ensureNotMain();
         if (source == null || destination == null) {
             throw new NullPointerException("null!");
         }

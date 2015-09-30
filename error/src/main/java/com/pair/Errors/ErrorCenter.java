@@ -57,7 +57,7 @@ public class ErrorCenter {
             if (!currentActivityState.equals(NavigationManager.States.DESTROYED) || !currentActivityState.equals(NavigationManager.States.STOPPED)) {
                 final ErrorShower errorShower = ErrorCenter.errorShower.get();
                 if (errorShower != null) {
-                    TaskManager.execute(new Runnable() {
+                    TaskManager.executeOnMainThread(new Runnable() {
                         @Override
                         public void run() {
                             errorShower.showError(errorMessage);
@@ -108,7 +108,6 @@ public class ErrorCenter {
             ErrorShower ourErrorShower = ErrorCenter.errorShower.get();
             if (ourErrorShower != null && ourErrorShower == errorShower) {
                 ErrorCenter.errorShower.clear();
-                ErrorCenter.errorShower = null;
             }
         }
     }

@@ -2,13 +2,11 @@ package com.pair.adapter;
 
 import android.graphics.Bitmap;
 import android.media.ThumbnailUtils;
-import android.os.Process;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.util.LruCache;
 import android.text.Html;
 import android.text.format.DateUtils;
-import android.util.Base64;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -17,14 +15,15 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.jmpergar.awesometext.AwesomeTextHandler;
+import com.jmpergar.awesometext.MentionSpanRenderer;
 import com.pair.Errors.ErrorCenter;
 import com.pair.Errors.PairappException;
 import com.pair.data.Message;
+import com.pair.data.util.MessageUtils;
 import com.pair.pairapp.R;
 import com.pair.ui.PairAppBaseActivity;
 import com.pair.util.PLog;
-import com.pair.util.Config;
-import com.pair.util.FileUtils;
 import com.pair.util.PreviewsHelper;
 import com.pair.util.SimpleDateUtil;
 import com.pair.util.TaskManager;
@@ -32,12 +31,10 @@ import com.pair.util.UiHelpers;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Map;
 
-import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
 
@@ -60,6 +57,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     private final LruCache<String, Bitmap> thumbnailCache;
     private final int height;
     private final Delegate delegate;
+    private static final String MENTION_PATTERN = "(@[\\p{L}0-9-_ ]+)";
 
     public MessagesAdapter(Delegate delegate, RealmResults<Message> realmResults, boolean automaticUpdate) {
         super(delegate.getContext(), realmResults, automaticUpdate);
@@ -73,6 +71,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         height = context.getResources().getDrawable(R.drawable.ic_action_error).getIntrinsicHeight();
         thumbnailCache = new LruCache<>(3);
         PICASSO = Picasso.with(context);
+
     }
 
     @Override
@@ -116,7 +115,11 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         if (Message.isDateMessage(message)) {
             // TODO: 9/18/2015 improve this
             String formattedDate = SimpleDateUtil.formatDateRage(context, messageDateComposed);
-            holder.textMessage.setText(formattedDate);
+            AwesomeTextHandler awesomeTextViewHandler = new AwesomeTextHandler();
+            awesomeTextViewHandler
+                    .addViewSpanRenderer(MENTION_PATTERN, new MentionSpanRenderer())
+                    .setView(holder.textMessage);
+            awesomeTextViewHandler.setText("@"+formattedDate);
             convertView.setOnTouchListener(touchListener);
             return convertView;
         } else if (Message.isTypingMessage(message)) {
@@ -181,6 +184,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                         if (messageFile.exists()) {
                             UiHelpers.attemptToViewFile((PairAppBaseActivity) context, messageFile);
                         } else {
+                            downloadingRows.put(message.getId(), 0);
+                            notifyDataSetChanged();
                             download(message);
                         }
                     } else if (v.getId() == R.id.iv_message_preview) {
@@ -287,69 +292,19 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         }
     }
 
-    private void download(final Message realmMessage) {
-
-        final Message message = Message.copy(realmMessage); //detach from realm
-        final String messageId = message.getId(),
-                messageBody = message.getMessageBody();
-        downloadingRows.put(message.getId(), 0);
-        notifyDataSetChanged(); //this will show the progress indicator and hide the download button
-        TaskManager.execute(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-                        Realm realm = null;
-                        final File finalFile;
-                        String destination = Base64.encodeToString(messageBody.getBytes(), Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP);
-                        // FIXME: 9/3/2015  find a better way of handling file extensions rather than use sniffing methods
-                        //may be MimeTypeMap#guessFileExtensionFromStream() will do.
-
-                        switch (message.getType()) {
-                            case Message.TYPE_VIDEO_MESSAGE:
-                                finalFile = new File(Config.getAppVidMediaBaseDir(), destination + ".mp4");
-                                break;
-                            case Message.TYPE_PICTURE_MESSAGE:
-                                finalFile = new File(Config.getAppImgMediaBaseDir(), destination + ".jpeg");
-                                break;
-                            case Message.TYPE_BIN_MESSAGE:
-                                finalFile = new File(Config.getAppBinFilesBaseDir(), destination);
-                                break;
-                            default:
-                                throw new AssertionError("should never happen");
-                        }
-                        try {
-                            FileUtils.save(finalFile, messageBody);
-                            realm = Realm.getInstance(Config.getApplicationContext());
-                            realm.beginTransaction();
-                            Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
-                            toBeUpdated.setMessageBody(finalFile.getAbsolutePath());
-                            realm.commitTransaction();
-                            onComplete(null);
-                        } catch (IOException e) {
-                            PLog.e(TAG, e.getMessage(), e.getCause());
-                            onComplete(e);
-                        } finally {
-                            if (realm != null) {
-                                realm.close();
-                            }
-                        }
-                    }
-
-                    private void onComplete(final Exception error) {
-                        TaskManager.executeOnMainThread(
-                                new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        downloadingRows.remove(message.getId());
-                                        notifyDataSetChanged();
-                                        if (error != null) { //user might have left
-                                            ErrorCenter.reportError(TAG, error.getMessage());
-                                        }
-                                    }
-                                });
-                    }
-                });
+    MessageUtils.Callback callback = new MessageUtils.Callback() {
+        @Override
+        public void onDownloaded(Exception e, String messageId) {
+            downloadingRows.remove(messageId);
+            notifyDataSetChanged();
+            if (e != null) {
+                //user might have left
+                ErrorCenter.reportError(TAG, e.getMessage());
+            }
+        }
+    };
+    private void download(Message message) {
+        MessageUtils.download(message, callback);
     }
 
     @NonNull

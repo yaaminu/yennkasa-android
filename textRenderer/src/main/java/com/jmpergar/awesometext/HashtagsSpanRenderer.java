@@ -22,7 +22,6 @@ import android.widget.TextView;
 
 public class HashtagsSpanRenderer implements AwesomeTextHandler.ViewSpanRenderer {
 
-    private final static int textSizeInDips = 18;
     private final static int backgroundResource = R.drawable.common_hashtags_background;
     private final static int textColorResource = android.R.color.white;
 
@@ -30,7 +29,7 @@ public class HashtagsSpanRenderer implements AwesomeTextHandler.ViewSpanRenderer
     public View getView(String text, Context context) {
         TextView view = new TextView(context);
         view.setText(text.substring(1));
-        view.setTextSize(ScreenUtils.dipsToPixels(context, textSizeInDips));
+        view.setTextSize(ScreenUtils.dipsToPixels(context, context.getResources().getInteger(R.integer.selected_item_size)));
         view.setBackgroundResource(backgroundResource);
         int textColor = context.getResources().getColor(textColorResource);
         view.setTextColor(textColor);

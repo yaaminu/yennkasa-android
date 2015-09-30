@@ -1,33 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<com.pair.view.RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
+    android:id="@+id/date_header_parent"
     android:layout_height="wrap_content"
+    android:background="@color/transparent"
     android:gravity="center">
 
-    <android.support.v7.widget.CardView
+    <TextView
+        android:id="@+id/tv_log_message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        app:cardCornerRadius="4dp"
-        app:cardElevation="4dp">
-
-        <TextView
-            android:id="@+id/tv_log_message"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:paddingTop="@dimen/date_message_paddingTop"
-            android:paddingLeft="@dimen/date_message_paddingSides"
-            android:paddingRight="@dimen/date_message_paddingSides"
-            android:paddingBottom="@dimen/date_message_paddingTop"
-            android:text="2/2/2015"
-            android:background="#0000"
-            android:textColor="@color/title_gray"
-            android:textSize="@dimen/log_message_text_size"
-            />
-    </android.support.v7.widget.CardView>
-
+        android:layout_gravity="center"
+        android:background="#0000"
+        android:gravity="center"
+        android:paddingBottom="@dimen/date_message_paddingTop"
+        android:paddingLeft="@dimen/date_message_paddingSides"
+        android:paddingRight="@dimen/date_message_paddingSides"
+        android:paddingTop="@dimen/date_message_paddingTop"
+        android:text="2/2/2015"
+        android:textColor="@color/title_gray"
+        android:textSize="@dimen/log_message_text_size"
+        />
 </com.pair.view.RelativeLayout>
 

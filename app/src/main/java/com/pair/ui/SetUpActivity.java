@@ -120,7 +120,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
         getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, OUR_TAG + stage).commit();
     }
 
-    private void doGoBackToCLogin() {
+    private void doGoBackToLogin() {
         progressDialog.show(getSupportFragmentManager(), null);
         UserManager.getInstance().reset(new UserManager.CallBack() {
             @Override
@@ -144,7 +144,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
 
     @Override
     public void onBackToCLogIn() {
-        doGoBackToCLogin();
+        doGoBackToLogin();
     }
 
     private void completeSetUp() {
