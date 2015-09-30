@@ -63,7 +63,7 @@ public class PairAppClient extends Service {
 
     public static void markUserAsOffline(Activity activity) {
         ThreadUtils.ensureMain();
-        ensureUserCLoggedIn();
+        ensureUserLoggedIn();
         if (activity == null) {
             throw new IllegalArgumentException();
         }
@@ -83,7 +83,7 @@ public class PairAppClient extends Service {
 
     public static void markUserAsOnline(Activity activity) {
         ThreadUtils.ensureMain();
-        ensureUserCLoggedIn();
+        ensureUserLoggedIn();
         if (activity == null) {
             throw new IllegalArgumentException();
         }
@@ -95,11 +95,11 @@ public class PairAppClient extends Service {
     }
 
     public static void notifyMessageSeen(Message message) {
-        ensureUserCLoggedIn();
+        ensureUserLoggedIn();
         MessageCenter.notifyMessageSeen(message);
     }
 
-    private static void ensureUserCLoggedIn() {
+    private static void ensureUserLoggedIn() {
         if (!UserManager.getInstance().isUserVerified()) {
             throw new IllegalStateException("no user logged in");
         }
@@ -128,7 +128,7 @@ public class PairAppClient extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
         if (!UserManager.getInstance().isUserVerified()) {
-            L.w(TAG, " pariapp client wont start when a user is not logged in");
+            PLog.f(TAG, " pariapp client wont start when a user is not logged in");
             stopSelf();
             return START_NOT_STICKY;
         }

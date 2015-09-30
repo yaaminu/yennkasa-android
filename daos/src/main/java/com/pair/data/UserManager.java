@@ -29,7 +29,6 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -1033,7 +1032,7 @@ public final class UserManager {
     public User fetchUserIfRequired(String userId) {
         Realm realm = User.Realm(Config.getApplicationContext());
         User user = fetchUserIfRequired(realm, userId);
-        user =  User.copy(user);
+        user = User.copy(user);
         realm.close();
         return user;
     }
@@ -1042,7 +1041,7 @@ public final class UserManager {
         return fetchUserIfRequired(realm, userId, false);
     }
 
-    public User fetchUserIfRequired(Realm realm,String userId,boolean refresh){
+    public User fetchUserIfRequired(Realm realm, String userId, boolean refresh) {
         User peer = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
         if (peer == null) {
             realm.beginTransaction();
@@ -1059,13 +1058,14 @@ public final class UserManager {
             }
             realm.commitTransaction();
             refreshUserDetails(userId);
-        }else {
+        } else {
             if (refresh) {
                 refreshUserDetails(userId);
             }
         }
         return peer;
     }
+
     public List<String> allUserIds() {
         Realm realm = User.Realm(Config.getApplicationContext());
         try {
@@ -1294,10 +1294,8 @@ public final class UserManager {
         reInitialiseSettings(callback);
     }
 
-    private void reInitialiseSettings(UserManager.CallBack callback) {
-
-        final WeakReference<CallBack> callBackWeakReference = new WeakReference<>(callback);
-        TaskManager.execute(new Runnable() {
+    private void reInitialiseSettings(final UserManager.CallBack callback) {
+        Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 Realm realm = PersistedSetting.REALM(userPrefsLocation);
@@ -1305,12 +1303,14 @@ public final class UserManager {
                 realm.clear(PersistedSetting.class);
                 realm.commitTransaction();
                 initialiseSettings();
-                CallBack callBack = callBackWeakReference.get();
-                if (callBack != null) {
-                    doNotify(null, callBack);
+                if (callback != null) {
+                    doNotify(null, callback);
                 }
             }
-        });
+        };
+        if (!TaskManager.executeNow(runnable)) { //express task already full
+            TaskManager.execute(runnable);
+        }
     }
 
     public interface CallBack {

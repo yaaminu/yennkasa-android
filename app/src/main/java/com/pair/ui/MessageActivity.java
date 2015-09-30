@@ -51,20 +51,27 @@ public abstract class MessageActivity extends PairAppActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        sendStopSignal();
         worker = new Worker(this);
         worker.start();
     }
 
     @Override
     protected void onDestroy() {
-        android.os.Message message = android.os.Message.obtain();
-        message.what = Worker.STOP;
-        worker.sendMessage(message);
+        sendStopSignal();
         super.onDestroy();
     }
 
+    private void sendStopSignal() {
+        if (worker != null && worker.isAlive()) {
+            android.os.Message message = android.os.Message.obtain();
+            message.what = Worker.STOP;
+            worker.sendMessage(message);
+        }
+    }
+
     protected final void sendMessage(final String messageBody, final Set<String> recipientIds, final int type, final MessageActivity.SendCallback callback) {
-       AsyncTask<Void,Void,Void> sendMessageTask =  new AsyncTask<Void, Void, Void>() {
+        AsyncTask<Void, Void, Void> sendMessageTask = new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
                 for (String recipientId : recipientIds) {
@@ -79,9 +86,9 @@ public abstract class MessageActivity extends PairAppActivity {
             }
         };
 
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             sendMessageTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        }else{
+        } else {
             sendMessageTask.execute();
         }
     }

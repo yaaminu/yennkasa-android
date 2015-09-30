@@ -13,7 +13,6 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 
 import io.realm.Realm;
 
@@ -81,7 +80,6 @@ public class MessageUtils {
     }
 
     public static void download(final Message realmMessage, final Callback callback) {
-        final WeakReference<Callback> callbackWeakReference = new WeakReference<>(callback);
 
         final Message message = Message.copy(realmMessage); //detach from realm
         final String messageId = message.getId(),
@@ -127,14 +125,15 @@ public class MessageUtils {
                     }
 
                     private void onComplete(final Exception error) {
-                        if (callbackWeakReference.get() != null) {
-                            TaskManager.executeOnMainThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    callbackWeakReference.get().onDownloaded(error,message.getId());
-                                }
-                            });
+                        if (callback == null) {
+                            return;
                         }
+                        TaskManager.executeOnMainThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                callback.onDownloaded(error, message.getId());
+                            }
+                        });
                     }
                 });
     }
@@ -154,6 +153,6 @@ public class MessageUtils {
     }
 
     public interface Callback {
-        void onDownloaded(Exception e,String messageId);
+        void onDownloaded(Exception e, String messageId);
     }
 }
