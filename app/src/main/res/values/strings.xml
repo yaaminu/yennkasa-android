@@ -202,14 +202,25 @@
     <string name="file">File</string>
     <string name="Silent">Silent</string>
 
-<!-- TODO: Remove or change this placeholder text -->
+    <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="title_activity_settings">SettingsActivity</string>
 
     <string name="hello_world">Hello world!</string>
-    <string name="Feedbacks">Feedback</string>
+    <string name="Feedback">Feedback &amp; suggestions</string>
     <string name="about_app">About PairApp</string>
     <string name="preferences">Preferences</string>
     <string name="error_use_file_manager">An error occurred processing the attachment. Try using a file manager to pick the file if the problem persists</string>
     <string name="restore_defaults">Restore defaults</string>
+    <string name="feedback_subject">Optional subject</string>
+    <string name="helper_feedback_subject">at most 40 letters</string>
+    <string name="feedback_here">Feedback Here</string>
+    <string name="add_device_info">Add device info</string>
+    <string name="submit">Submit</string>
+    <string name="error_feedback_body_empty">Feedback body cannot be empty</string>
+    <string name="feedback_sent_successfully">Feedback sent successfully. Thanks for your support and co-operation</string>
+    <string name="app_name_cap">PAIRAPP</string>
+    <string name="idea_inc">IDEA Inc.</string>
+    <string name="app_version">V 0.0.1 beta</string>
+    <string name="legal_notice">LEGAL NOTICE</string>
 </resources>

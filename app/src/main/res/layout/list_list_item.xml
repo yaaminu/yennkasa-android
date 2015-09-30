@@ -26,7 +26,7 @@
         android:ellipsize="end"
         android:singleLine="true"
         android:text="@string/phone"
-        android:textSize="@dimen/standard_text_size"
+        android:textSize="@dimen/standard_text_size_small"
         android:gravity="bottom"
         android:layout_below="@+id/tv_title"/>
 

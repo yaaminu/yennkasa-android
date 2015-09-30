@@ -58,9 +58,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public static final String EXTRA_PEER_ID = "peer id";
     private static final String TAG = ChatActivity.class.getSimpleName();
     private static final int ADD_USERS_REQUEST = 0x5;
+    private static final String MENTION_PATTERN = "(@[\\p{L}0-9-_ ]+)";
     private static Message selectedMessage;
     private static int cursor = -1; //static so that it can resist activity restarts.
-    Handler handler = new Handler();
     boolean wasTyping = false;
     boolean outOfSync = false;
     private final MessagesAdapter.Delegate delegate = new MessagesAdapter.Delegate() {
@@ -84,10 +84,11 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             return ChatActivity.this;
         }
     };
-    boolean inContextualMode;
+    //    boolean inContextualMode;
+    private Handler handler;
     private RealmResults<Message> messages;
     private User peer;
-    Runnable runnable = new Runnable() {
+    private final Runnable runnable = new Runnable() {
         @Override
         public void run() {
             wasTyping = false;
@@ -104,12 +105,12 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private Toolbar toolBar;
     private ToolbarManager toolbarManager;
     private AwesomeTextHandler awesomeTextViewHandler;
-    private static final String MENTION_PATTERN = "(@[\\p{L}0-9-_ ]+)";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        handler = new Handler();
         toolBar = (Toolbar) findViewById(R.id.main_toolbar);
         toolBar.setOnClickListener(this);
         toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
@@ -145,6 +146,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 //                .placeholder(userManager.isGroup(peer.getUserId()) ? R.drawable.group_avatar : R.drawable.user_avartar)
 //                .into(imageView);
         // TODO: 8/22/2015 in future we will move to the last  un seen message if any
+//        inContextualMode = false;
     }
 
     private void setUpListView() {
@@ -176,6 +178,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         toolbarManager.onPrepareMenu();
+//        if(inContextualMode){
+//
+//        }else {
         menu = toolBar.getMenu();
         if (menu != null && menu.size() > 0) { //required for toolbar to behave on older platforms <=10
             User mainUser = getCurrentUser();
@@ -183,6 +188,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                     .setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().getUserId().equals(mainUser.getUserId()));
             menu.findItem(R.id.action_view_profile).setTitle((peer.getType() == User.TYPE_GROUP) ? R.string.st_group_info : R.string.st_view_profile);
         }
+//        }
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -307,7 +313,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             for (int i = firstVisibleItem + visibleItemCount - 1; i >= 0; i--) { //loop backwards
                 final Message message = messages.get(i);
                 if (Message.isDateMessage(message)) {
-                    awesomeTextViewHandler.setText("@"+SimpleDateUtil.formatDateRage(this, message.getDateComposed()));
+                    awesomeTextViewHandler.setText("@" + SimpleDateUtil.formatDateRage(this, message.getDateComposed()));
                     return;
                 }
             }
@@ -320,6 +326,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         if (outOfSync) return;
+
         User user = realm.where(User.class).beginGroup().notEqualTo(User.FIELD_ID, getMainUserId()).notEqualTo(User.FIELD_ID, peer.getUserId()).endGroup().findFirst();
         boolean can4ward = user != null; //no other user apart from peer. cannot forward so lets hide it
 
@@ -328,7 +335,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         selectedMessage = messages.get(info.position);
         cursor = info.position;
         if (cursor <= 0)
-            return; //thanks to realm long is not precise if a message managed to be first before any date lets return
+            return; //if a message managed to be first before any date lets return
         if (selectedMessage.getType() != Message.TYPE_DATE_MESSAGE && selectedMessage.getType() != Message.TYPE_TYPING_MESSAGE) {
             getMenuInflater().inflate(R.menu.message_context_menu, menu);
             menu.findItem(R.id.action_copy).setVisible(selectedMessage.getType() == TYPE_TEXT_MESSAGE);
@@ -482,4 +489,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private void updateUserStatus(boolean isOnline) {
         getSupportActionBar().setSubtitle(isOnline ? R.string.st_online : R.string.st_offline);
     }
+
+
 }

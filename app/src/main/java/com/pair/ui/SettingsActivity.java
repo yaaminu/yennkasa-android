@@ -37,9 +37,10 @@ public class SettingsActivity extends PairAppActivity {
                 break;
             case 2:
                 fragment = new FeedBackFragment();
-                supportActionBar.setTitle(R.string.Feedbacks);
+                supportActionBar.setTitle(R.string.Feedback);
                 break;
             case 3:
+                supportActionBar.hide();
                 fragment = new AboutFragment();
                 supportActionBar.setTitle(R.string.about_app);
                 break;

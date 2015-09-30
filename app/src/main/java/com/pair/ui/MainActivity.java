@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
 
 import com.pair.PairApp;
 import com.pair.data.RealmUtils;
+import com.pair.data.User;
 import com.pair.pairapp.R;
 import com.pair.util.PLog;
 import com.pair.util.UiHelpers;
@@ -21,10 +22,13 @@ import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
 import com.rey.material.widget.TabPageIndicator;
 
+import io.realm.Realm;
+import io.realm.RealmChangeListener;
+
 /**
  * @author Null-Pointer on 6/6/2015.
  */
-public class MainActivity extends PairAppActivity {
+public class MainActivity extends PairAppActivity implements NoticeFragment.NoticeFragmentCallback {
     public static final String DEFAULT_FRAGMENT = "default_fragment";
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final String ARG_TITLE = "title";
@@ -70,6 +74,7 @@ public class MainActivity extends PairAppActivity {
             //noinspection ConstantConditions
             if (SetUpActivity.isEveryThingOk()) {
                 setupViews();
+                checkIfUserAvailable();
                 final int default_fragment = intent.getIntExtra(DEFAULT_FRAGMENT, savedPosition);
                 savedPosition = Math.min(default_fragment, MyFragmentStatePagerAdapter.POSITION_SETTINGS_FRAGMENT);
                 savedPosition = Math.max(MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT, default_fragment);
@@ -152,7 +157,10 @@ public class MainActivity extends PairAppActivity {
             Fragment fragment;
             switch (position) {
                 case POSITION_CONVERSATION_FRAGMENT:
-                    fragment = new ConversationsFragment();
+                    if (noUserAvailable) {
+                        fragment = new NoticeFragment();
+                    } else
+                        fragment = new ConversationsFragment();
                     break;
                 case POSITION_CONTACTS_FRAGMENT:
                     fragment = new ContactFragment();
@@ -162,7 +170,6 @@ public class MainActivity extends PairAppActivity {
                     break;
                 case POSITION_SETTINGS_FRAGMENT:
                     fragment = new SettingsFragment2();
-                    Bundle bundle = new Bundle(1);
                     break;
                 default:
                     throw new AssertionError("impossible");
@@ -179,6 +186,41 @@ public class MainActivity extends PairAppActivity {
         public CharSequence getPageTitle(int position) {
             return pageTitles[position];
         }
+    }
 
+    @Override
+    public void onAction() {
+        pager.setCurrentItem(MyFragmentStatePagerAdapter.POSITION_CONTACTS_FRAGMENT, true);
+    }
+
+    private boolean noUserAvailable = false;
+
+    private final RealmChangeListener changeListener = new RealmChangeListener() {
+        @Override
+        public void onChange() {
+            checkIfUserAvailable();
+            if(!noUserAvailable){
+                pager.getAdapter().notifyDataSetChanged();
+            }
+        }
+    };
+    private Realm realm;
+
+    private void checkIfUserAvailable() {
+        if (realm == null) {
+            realm = User.Realm(MainActivity.this);
+            realm.addChangeListener(changeListener);
+        }
+        noUserAvailable = realm.where(User.class).notEqualTo(User.FIELD_ID, getMainUserId()).findFirst() == null;
+        realm.close();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (realm != null) {
+            realm.removeChangeListener(changeListener);
+            realm.close();
+        }
+        super.onDestroy();
     }
 }

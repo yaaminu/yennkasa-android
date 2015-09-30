@@ -19,6 +19,7 @@ import com.handmark.pulltorefresh.library.PullToRefreshListView;
 import com.pair.adapter.ContactsAdapter;
 import com.pair.data.ContactsManager;
 import com.pair.data.ContactsManager.Contact;
+import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.UiHelpers;
@@ -113,6 +114,12 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Ad
     }
 
     @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        realm = User.Realm(getActivity());
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
@@ -140,10 +147,6 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Ad
 
     @Override
     public void onStart() {
-        if (realm == null) {
-            realm = Realm.getInstance(getActivity());
-        }
-        realm.addChangeListener(this);
         super.onStart();
     }
 
@@ -160,6 +163,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Ad
     @Override
     public void onResume() {
         super.onResume();
+        realm.addChangeListener(this);
         refreshLocalContacts();
     }
 

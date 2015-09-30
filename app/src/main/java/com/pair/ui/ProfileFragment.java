@@ -29,6 +29,7 @@ import com.pair.util.PLog;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.ScreenUtility;
 import com.pair.util.UiHelpers;
+import com.pair.util.ViewUtils;
 import com.pair.view.FrameLayout;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.widget.FloatingActionButton;
@@ -65,6 +66,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         public void done(Exception e) {
             changingDp = false;
             hideProgressView();
+            ViewUtils.showViews(changeDpButton, changeDpButton2);
             if (e == null) {
                 showDp();
             } else {
@@ -75,9 +77,9 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private TextView phoneOrAdminTitle, mutualGroupsOrMembersTvTitle;
     private View sendMessageButton;
     private UserManager userManager;
-//    private int DP_HEIGHT;
+    //    private int DP_HEIGHT;
 //    private int DP_WIDTH;
-private String phoneInlocalFormat;
+    private String phoneInlocalFormat;
     private final View.OnClickListener clickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -124,6 +126,7 @@ private String phoneInlocalFormat;
                         UiHelpers.showToast(getString(R.string.busy));
                         return;
                     }
+                    ViewUtils.hideViews(changeDpButton, changeDpButton2);
                     File file = new File(Config.getTempDir(), user.getUserId() + ".jpg");
                     image_capture_out_put_uri = Uri.fromFile(file);
                     MediaUtils.takePhoto(ProfileFragment.this, image_capture_out_put_uri, TAKE_PHOTO_REQUEST);
@@ -133,6 +136,7 @@ private String phoneInlocalFormat;
                         UiHelpers.showToast(getString(R.string.busy));
                         return;
                     }
+                    ViewUtils.hideViews(changeDpButton, changeDpButton2);
                     choosePicture();
                     break;
                 default:
@@ -182,7 +186,7 @@ private String phoneInlocalFormat;
 
         int screenHeight = (int) new ScreenUtility(getActivity()).getPixelsHeight();
 
-        displayPicture.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,screenHeight/2));
+        displayPicture.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, screenHeight / 2));
         View parent = view.findViewById(R.id.tv_user_phone_group_admin);
         phoneOrAdminTitle = ((TextView) parent.findViewById(R.id.tv_title));
         userPhoneOrAdminName = ((TextView) parent.findViewById(R.id.tv_subtitle));
@@ -197,7 +201,7 @@ private String phoneInlocalFormat;
         userManager = UserManager.getInstance();
 
         String id = getArguments().getString(ARG_USER_ID);
-        user = UserManager.getInstance().fetchUserIfRequired(realm, id,true);
+        user = UserManager.getInstance().fetchUserIfRequired(realm, id, true);
         //common to all
         userName.setText(user.getName());
         displayPicture.setOnClickListener(clickListener);
@@ -349,30 +353,38 @@ private String phoneInlocalFormat;
                 doChangeDp(uri);
             } else if (requestCode == TAKE_PHOTO_REQUEST) {
                 doChangeDp(image_capture_out_put_uri);
+            } else {
+                ViewUtils.showViews(changeDpButton, changeDpButton2);
             }
+        } else {
+            ViewUtils.showViews(changeDpButton, changeDpButton2);
         }
+
     }
 
     private void doChangeDp(Uri uri) {
         if (changingDp) {
             return;
         }
-        String filePath;
-        if (uri.getScheme().equals("content")) {
-            filePath = FileUtils.resolveContentUriToFilePath(uri);
-        } else {
-            filePath = uri.getPath();
+        ViewUtils.hideViews(changeDpButton, changeDpButton2);
+        String filePath = FileUtils.resolveContentUriToFilePath(uri);
+        if (filePath == null) {
+            ErrorCenter.reportError(TAG, getString(R.string.error_use_file_manager));
+            return;
         }
-
         File file = new File(filePath);
 
         if (!file.exists()) {
             UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.invalid_image));
+            ViewUtils.showViews(changeDpButton, changeDpButton2);
         } else if (!MediaUtils.isImage(filePath)) {
             UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.not_a_bitmap));
+            ViewUtils.showViews(changeDpButton, changeDpButton2);
         } else if (file.length() > FileUtils.ONE_MB * 8) {
             UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.image_size_too_large));
+            ViewUtils.showViews(changeDpButton, changeDpButton2);
         } else {
+            ViewUtils.hideViews(changeDpButton, changeDpButton2);
             Picasso.with(getActivity()).load(file)
                     .placeholder(UserManager.getInstance().isGroup(user.getUserId()) ? R.drawable.group_avatar : R.drawable.user_avartar)
                     .into(displayPicture);

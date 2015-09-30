@@ -73,6 +73,7 @@ public class FileUtils {
         }
         return resolveContentUriToFilePath(Uri.parse(uri));
     }
+
     public static String resolveContentUriToFilePath(Uri uri) {
         if (uri.getScheme() == null) {
             return null;
@@ -88,16 +89,26 @@ public class FileUtils {
         String[] projections = {
                 MediaStore.Files.FileColumns.DATA
         };
-        Cursor cursor = Config.getApplication().getContentResolver().query(uri, projections, null, null, null);
-        if (cursor == null || cursor.getCount() < 1) {
+        // STOPSHIP: 9/24/2015 fix this problem that arises on android 5 and up when we are retrieving the url
+        Cursor cursor = null;
+        try {
+            cursor = Config.getApplication().getContentResolver().query(uri, projections, null, null, null);
+            if (cursor == null || cursor.getCount() < 1) {
+                return null;
+            }
+            cursor.moveToFirst();
+            String path = cursor.getString(cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA));
+            PLog.i(TAG, path);
+            return path;
+        } catch (Exception e) {
+            PLog.i(TAG, "error while retrieving file from content provider");
+            PLog.e(TAG,e.getMessage(),e.getCause());
             return null;
+        } finally {
+            if (cursor != null)
+                cursor.close();
         }
-        cursor.moveToFirst();
-        String path = cursor.getString(cursor.getColumnIndex(MediaStore.Files.FileColumns.DATA));
-        // STOPSHIP: 9/24/2015 fix this problem that arises on android 5 and up
-        PLog.i(TAG, path);
-        cursor.close();
-        return path;
+
     }
 
     public static String getMimeType(String path) {

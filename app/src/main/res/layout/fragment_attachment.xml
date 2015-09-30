@@ -1,0 +1,16 @@
+<android.support.v7.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.pair.ui.AttachmentFragment">
+
+    <GridView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/transparent"
+        android:numColumns="@integer/grid_column_count"
+        android:stretchMode="columnWidth"
+        android:id="@+id/gv_attach_options"
+        />
+</android.support.v7.widget.CardView>

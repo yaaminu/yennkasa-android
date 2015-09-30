@@ -12,12 +12,15 @@ import android.os.Looper;
 
 import com.pair.data.Message;
 import com.pair.data.UserManager;
-import com.pair.util.PLog;
+import com.pair.parse_client.ParseClient;
 import com.pair.util.Config;
 import com.pair.util.L;
 import com.pair.util.LiveCenter;
+import com.pair.util.PLog;
 import com.pair.util.TaskManager;
 import com.pair.util.ThreadUtils;
+
+import org.json.JSONObject;
 
 import java.util.Collection;
 import java.util.List;
@@ -26,7 +29,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
-
 
 
 public class PairAppClient extends Service {
@@ -230,6 +232,18 @@ public class PairAppClient extends Service {
         }
     }
 
+    public static void sendFeedBack(final JSONObject report) {
+        if(report == null || !report.keys().hasNext()){
+            throw new IllegalArgumentException("empty report");
+        }
+
+        TaskManager.execute(new Runnable() {
+            @Override
+            public void run() {
+                ParseClient.getInstance().sendFeedBack(report);
+            }
+        });
+    }
     public class PairAppClientInterface extends Binder {
         public void sendMessage(Message message) {
             if (!isClientStarted.get()) {

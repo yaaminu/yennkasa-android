@@ -207,7 +207,16 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
         if (filter != null) {
             filter.filter(s);
         }
-        onSetupFilterEditText();
+//        onSetupFilterEditText();
+        if(interactionListener.supportAddCustom()) {
+            if (interactionListener.getAdapter().getCount() > 0) {
+                filterEditText.setHint(R.string.search_or_add_custom);
+                filterEditText.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_action_search, 0, 0, 0);
+            } else {
+                filterEditText.setHint(R.string.add_custom);
+                filterEditText.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+            }
+        }
         addView.setEnabled(s.length() > 5 && TextUtils.isDigitsOnly(s));
     }
 

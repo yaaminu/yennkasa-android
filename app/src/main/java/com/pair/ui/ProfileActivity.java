@@ -4,9 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.MenuItem;
 
 import com.pair.pairapp.R;
@@ -56,24 +54,6 @@ public class ProfileActivity extends PairAppActivity {
     @Override
     protected SnackBar getSnackBar() {
         return ((SnackBar) findViewById(R.id.notification_bar));
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        manager.createMenu(R.menu.menu_profile);
-        return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        manager.onPrepareMenu();
-        menu = toolBar.getMenu();
-        MenuItem item = menu.add(1, 1, 1, R.string.edit_username);
-        item.setIcon(R.drawable.ic_action_edit_white);
-        MenuItemCompat.setShowAsAction(item, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
-        item.setVisible(true);
-        super.onPrepareOptionsMenu(menu);
-        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override

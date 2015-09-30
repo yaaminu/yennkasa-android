@@ -61,11 +61,11 @@ public class EditText extends FrameLayout {
     private int mAutoCompleteMode;
 
     /**
-     * Indicate this EditText should not show a support text.  
+     * Indicate this EditText should not show a support text.
      */
 	public static final int SUPPORT_MODE_NONE 					= 0;
     /**
-     * Indicate this EditText should show a helper text, or error text if it's set. 
+     * Indicate this EditText should show a helper text, or error text if it's set.
      */
 	public static final int SUPPORT_MODE_HELPER 				= 1;
     /**
@@ -80,20 +80,20 @@ public class EditText extends FrameLayout {
     public static final int AUTOCOMPLETE_MODE_NONE 				= 0;
     public static final int AUTOCOMPLETE_MODE_SINGLE 			= 1;
     public static final int AUTOCOMPLETE_MODE_MULTI      		= 2;
-	
+
 	private ColorStateList mDividerColors;
 	private ColorStateList mDividerErrorColors;
     private boolean mDividerCompoundPadding;
-	
+
 	private ColorStateList mSupportColors;
 	private ColorStateList mSupportErrorColors;
 	private int mSupportMaxChars;
 	private CharSequence mSupportHelper;
 	private CharSequence mSupportError;
-	
+
 	private int mLabelInAnimId;
 	private int mLabelOutAnimId;
-	
+
 	protected LabelView mLabelView;
     protected android.widget.EditText mInputView;
     protected LabelView mSupportView;
@@ -117,7 +117,7 @@ public class EditText extends FrameLayout {
 
 	public EditText(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
-		
+
 		init(context, attrs, defStyleAttr, 0);
 	}
 
@@ -126,7 +126,7 @@ public class EditText extends FrameLayout {
 
         init(context, attrs, defStyleAttr, defStyleRes);
     }
-	
+
 	@SuppressWarnings("deprecation")
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 	private void init(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes){
@@ -333,36 +333,36 @@ public class EditText extends FrameLayout {
 		int widthSize = MeasureSpec.getSize(widthMeasureSpec);
 		int heightMode = MeasureSpec.getMode(heightMeasureSpec);
 		int heightSize = MeasureSpec.getSize(heightMeasureSpec);
-				
-		int tempWidthSpec = widthMode == MeasureSpec.UNSPECIFIED ? widthMeasureSpec : MeasureSpec.makeMeasureSpec(widthSize - getPaddingLeft() - getPaddingRight(), widthMode);		
+
+		int tempWidthSpec = widthMode == MeasureSpec.UNSPECIFIED ? widthMeasureSpec : MeasureSpec.makeMeasureSpec(widthSize - getPaddingLeft() - getPaddingRight(), widthMode);
 		int tempHeightSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
-						
+
 		int labelWidth = 0;
 		int labelHeight = 0;
 		int inputWidth = 0;
 		int inputHeight = 0;
 		int supportWidth = 0;
 		int supportHeight = 0;
-		
+
 		if(mLabelView != null){
 			mLabelView.measure(tempWidthSpec, tempHeightSpec);
 			labelWidth = mLabelView.getMeasuredWidth();
 			labelHeight = mLabelView.getMeasuredHeight();
 		}
-		
+
 		mInputView.measure(tempWidthSpec, tempHeightSpec);
 		inputWidth = mInputView.getMeasuredWidth();
 		inputHeight = mInputView.getMeasuredHeight();
-		
+
 		if(mSupportView != null){
 			mSupportView.measure(tempWidthSpec, tempHeightSpec);
 			supportWidth = mSupportView.getMeasuredWidth();
 			supportHeight = mSupportView.getMeasuredHeight();
 		}
-		
+
 		int width = 0;
 		int height = 0;
-		
+
 		switch (widthMode) {
 			case MeasureSpec.UNSPECIFIED:
 				width = Math.max(labelWidth, Math.max(inputWidth, supportWidth)) + getPaddingLeft() + getPaddingRight();
@@ -374,7 +374,7 @@ public class EditText extends FrameLayout {
 				width = widthSize;
 				break;
 		}
-		
+
 		switch (heightMode) {
 			case MeasureSpec.UNSPECIFIED:
 				height = labelHeight + inputHeight + supportHeight + getPaddingTop() + getPaddingBottom();
@@ -386,18 +386,18 @@ public class EditText extends FrameLayout {
 				height = heightSize;
 				break;
 		}
-		
-		setMeasuredDimension(width, height);		
-		
+
+		setMeasuredDimension(width, height);
+
 		tempWidthSpec = MeasureSpec.makeMeasureSpec(width - getPaddingLeft() - getPaddingRight(),  MeasureSpec.EXACTLY);
 		if(mLabelView != null)
 			mLabelView.measure(tempWidthSpec, tempHeightSpec);
-		
+
 		mInputView.measure(tempWidthSpec, tempHeightSpec);
-		
+
 		if(mSupportView != null)
-			mSupportView.measure(tempWidthSpec, tempHeightSpec);				
-	}	
+			mSupportView.measure(tempWidthSpec, tempHeightSpec);
+	}
 
 	@Override
 	protected void onLayout(boolean changed, int l, int t, int r, int b) {
@@ -405,17 +405,17 @@ public class EditText extends FrameLayout {
 		int childRight = r - l - getPaddingRight();
 		int childTop = getPaddingTop();
 		int childBottom = b - t - getPaddingBottom();
-		
+
 		if(mLabelView != null){
 			mLabelView.layout(childLeft, childTop, childRight, childTop + mLabelView.getMeasuredHeight());
 			childTop += mLabelView.getMeasuredHeight();
 		}
-		
+
 		if(mSupportView != null){
 			mSupportView.layout(childLeft, childBottom - mSupportView.getMeasuredHeight(), childRight, childBottom);
 			childBottom -= mSupportView.getMeasuredHeight();
 		}
-		
+
 		mInputView.layout(childLeft, childTop, childRight, childBottom);
 	}
 
@@ -441,18 +441,18 @@ public class EditText extends FrameLayout {
      */
 	public void setError(CharSequence error){
 		mSupportError = error;
-		
+
 		if(mSupportMode != SUPPORT_MODE_HELPER && mSupportMode != SUPPORT_MODE_HELPER_WITH_ERROR)
-			return;		
-		
+			return;
+
 		if(mSupportError != null){
 			mSupportView.setTextColor(mSupportErrorColors);
-			mDivider.setColor(mDividerErrorColors);			
-			mSupportView.setText(mSupportMode == SUPPORT_MODE_HELPER ? mSupportError : TextUtils.concat(mSupportHelper, ", ", mSupportError));						
+			mDivider.setColor(mDividerErrorColors);
+			mSupportView.setText(mSupportMode == SUPPORT_MODE_HELPER ? mSupportError : TextUtils.concat(mSupportHelper, ", ", mSupportError));
 		}
 		else{
 			mSupportView.setTextColor(mSupportColors);
-			mDivider.setColor(mDividerColors);			
+			mDivider.setColor(mDividerColors);
 			mSupportView.setText(mSupportHelper);
 		}
 	}
@@ -470,12 +470,12 @@ public class EditText extends FrameLayout {
 	public void clearError(){
 		setError(null);
 	}
-	
+
 	private void updateCharCounter(int count){
 		if(count == 0){
 			mSupportView.setTextColor(mSupportColors);
 			mDivider.setColor(mDividerColors);
-			mSupportView.setText(null);   			
+			mSupportView.setText(null);
 		}
 		else{
 			if(mSupportMaxChars > 0){
@@ -1170,14 +1170,14 @@ public class EditText extends FrameLayout {
     public void setEnabled(boolean enabled){
         mInputView.setEnabled(enabled);
     }
-	
+
 	/**
      * Convenience for {@link android.text.Selection#extendSelection}.
      */
 	public void extendSelection (int index){
 		mInputView.extendSelection(index);
 	}
-	
+
 	public Editable getText (){
 		return mInputView.getText();
 	}
@@ -1206,25 +1206,25 @@ public class EditText extends FrameLayout {
 	public void setEllipsize (TruncateAt ellipsis){
 		mInputView.setEllipsize(ellipsis);
 	}
-	
+
 	/**
      * Convenience for {@link android.text.Selection#setSelection(android.text.Spannable, int)}.
      */
 	public void setSelection (int index){
 		mInputView.setSelection(index);
 	}
-	
+
 	/**
      * Convenience for {@link android.text.Selection#setSelection(android.text.Spannable, int, int)}.
      */
 	public void setSelection (int start, int stop){
 		mInputView.setSelection(start, stop);
 	}
-	
+
 	public void setText (CharSequence text, android.widget.TextView.BufferType type){
 		mInputView.setText(text, type);
 	}
-	
+
 	/**
      * Adds a TextWatcher to the list of those whose methods are called
      * whenever this TextView's text changes.
@@ -1237,7 +1237,7 @@ public class EditText extends FrameLayout {
 	public void addTextChangedListener(TextWatcher textWatcher){
 		mInputView.addTextChangedListener(textWatcher);
 	}
-	
+
 	/**
      * Convenience method: Append the specified text to the TextView's
      * display buffer, upgrading it to BufferType.EDITABLE if it was
@@ -1246,7 +1246,7 @@ public class EditText extends FrameLayout {
 	public final void append (CharSequence text){
 		mInputView.append(text);
 	}
-	
+
 	/**
      * Convenience method: Append the specified text slice to the TextView's
      * display buffer, upgrading it to BufferType.EDITABLE if it was
@@ -1255,23 +1255,23 @@ public class EditText extends FrameLayout {
 	public void append (CharSequence text, int start, int end){
 		mInputView.append(text, start, end);
 	}
-	
+
 	public void beginBatchEdit (){
 		mInputView.beginBatchEdit();
 	}
-	
+
 	/**
      * Move the point, specified by the offset, into the view if it is needed.
      * This has to be called after layout. Returns true if anything changed.
      */
 	public boolean bringPointIntoView (int offset){
 		return mInputView.bringPointIntoView(offset);
-	}	
-	
+	}
+
 	public void cancelLongPress (){
 		mInputView.cancelLongPress();
 	}
-	
+
 	/**
      * Use {@link android.view.inputmethod.BaseInputConnection#removeComposingSpans
      * BaseInputConnection.removeComposingSpans()} to remove any IME composing
@@ -1280,17 +1280,17 @@ public class EditText extends FrameLayout {
 	public void clearComposingText (){
 		mInputView.clearComposingText();
 	}
-	
+
 	@Override
 	public void computeScroll (){
 		mInputView.computeScroll();
 	}
-	
+
 	@Override
 	public void debug (int depth){
 		mInputView.debug(depth);
 	}
-	
+
 	 /**
      * Returns true, only while processing a touch gesture, if the initial
      * touch down event caused focus to move to the text view and as a result
@@ -1300,11 +1300,11 @@ public class EditText extends FrameLayout {
 	public boolean didTouchFocusSelect (){
 		return mInputView.didTouchFocusSelect();
 	}
-	
+
 	public void endBatchEdit (){
 		mInputView.endBatchEdit();
 	}
-	
+
 	/**
      * If this TextView contains editable content, extract a portion of it
      * based on the information in <var>request</var> in to <var>outText</var>.
@@ -1313,14 +1313,14 @@ public class EditText extends FrameLayout {
 	public boolean extractText (ExtractedTextRequest request, ExtractedText outText){
 		return mInputView.extractText(request, outText);
 	}
-	
+
 	@Override
 	@TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 	public void findViewsWithText (ArrayList<View> outViews, CharSequence searched, int flags){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 			mInputView.findViewsWithText(outViews, searched, flags);
 	}
-	
+
 	/**
      * Gets the autolink mask of the text.  See {@link
      * android.text.util.Linkify#ALL Linkify.ALL} and peers for
@@ -1331,12 +1331,12 @@ public class EditText extends FrameLayout {
 	public final int getAutoLinkMask (){
 		return mInputView.getAutoLinkMask();
 	}
-	
+
 	@Override
 	public int getBaseline (){
 		return mInputView.getBaseline();
 	}
-	
+
 	/**
      * Returns the padding between the compound drawables and the text.
      *
@@ -1345,7 +1345,7 @@ public class EditText extends FrameLayout {
 	public int getCompoundDrawablePadding (){
 		return mInputView.getCompoundDrawablePadding();
 	}
-	
+
 	/**
      * Returns drawables for the left, top, right, and bottom borders.
      *
@@ -1357,15 +1357,15 @@ public class EditText extends FrameLayout {
 	public Drawable[] getCompoundDrawables (){
 		return mInputView.getCompoundDrawables();
 	}
-	
+
 	@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
 	public Drawable[] getCompoundDrawablesRelative (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
 			return mInputView.getCompoundDrawablesRelative();
-		
+
 		return mInputView.getCompoundDrawables();
 	}
-	
+
 	/**
      * Returns the bottom padding of the view, plus space for the bottom
      * Drawable if any.
@@ -1373,7 +1373,7 @@ public class EditText extends FrameLayout {
 	public int getCompoundPaddingBottom (){
 		return mInputView.getCompoundPaddingBottom();
 	}
-	
+
 	/**
      * Returns the end padding of the view, plus space for the end
      * Drawable if any.
@@ -1382,10 +1382,10 @@ public class EditText extends FrameLayout {
 	public int getCompoundPaddingEnd (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
 			return mInputView.getCompoundPaddingEnd();
-		
+
 		return mInputView.getCompoundPaddingRight();
 	}
-	
+
 	/**
      * Returns the left padding of the view, plus space for the left
      * Drawable if any.
@@ -1393,7 +1393,7 @@ public class EditText extends FrameLayout {
 	public int getCompoundPaddingLeft (){
 		return mInputView.getCompoundPaddingLeft();
 	}
-	
+
 	/**
      * Returns the right padding of the view, plus space for the right
      * Drawable if any.
@@ -1401,7 +1401,7 @@ public class EditText extends FrameLayout {
 	public int getCompoundPaddingRight (){
 		return mInputView.getCompoundPaddingRight();
 	}
-	
+
 	/**
      * Returns the start padding of the view, plus space for the start
      * Drawable if any.
@@ -1410,10 +1410,10 @@ public class EditText extends FrameLayout {
 	public int getCompoundPaddingStart (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
 			return mInputView.getCompoundPaddingStart();
-		
+
 		return mInputView.getCompoundPaddingLeft();
 	}
-	
+
 	/**
      * Returns the top padding of the view, plus space for the top
      * Drawable if any.
@@ -1421,7 +1421,7 @@ public class EditText extends FrameLayout {
 	public int getCompoundPaddingTop (){
 		return mInputView.getCompoundPaddingTop();
 	}
-	
+
 	/**
      * <p>Return the current color selected to paint the hint text.</p>
      *
@@ -1430,7 +1430,7 @@ public class EditText extends FrameLayout {
 	public final int getCurrentHintTextColor (){
 		return mInputView.getCurrentHintTextColor();
 	}
-	
+
 	/**
      * <p>Return the current color selected for normal text.</p>
      *
@@ -1439,7 +1439,7 @@ public class EditText extends FrameLayout {
 	public final int getCurrentTextColor (){
 		return mInputView.getCurrentTextColor();
 	}
-	
+
 	/**
      * Retrieves the value set in {@link #setCustomSelectionActionModeCallback}. Default is null.
      *
@@ -1449,10 +1449,10 @@ public class EditText extends FrameLayout {
 	public ActionMode.Callback getCustomSelectionActionModeCallback (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
 			return mInputView.getCustomSelectionActionModeCallback();
-		
+
 		return null;
 	}
-	
+
 	/**
      * Return the text the TextView is displaying as an Editable object.  If
      * the text is not editable, null is returned.
@@ -1462,7 +1462,7 @@ public class EditText extends FrameLayout {
 	public Editable getEditableText (){
 		return mInputView.getEditableText();
 	}
-	
+
 	/**
      * Returns where, if anywhere, words that are longer than the view
      * is wide should be ellipsized.
@@ -1470,7 +1470,7 @@ public class EditText extends FrameLayout {
 	public TruncateAt getEllipsize (){
 		return mInputView.getEllipsize();
 	}
-	
+
 	/**
      * Returns the extended bottom padding of the view, including both the
      * bottom Drawable if any and any extra space to keep more than maxLines
@@ -1479,7 +1479,7 @@ public class EditText extends FrameLayout {
 	public int getExtendedPaddingBottom (){
 		return mInputView.getExtendedPaddingBottom();
 	}
-	
+
 	/**
      * Returns the extended top padding of the view, including both the
      * top Drawable if any and any extra space to keep more than maxLines
@@ -1488,7 +1488,7 @@ public class EditText extends FrameLayout {
 	public int getExtendedPaddingTop (){
 		return mInputView.getExtendedPaddingTop();
 	}
-	
+
 	/**
      * Returns the current list of input filters.
      *
@@ -1497,12 +1497,12 @@ public class EditText extends FrameLayout {
 	public InputFilter[] getFilters (){
 		return mInputView.getFilters();
 	}
-	
+
 	@Override
 	public void getFocusedRect (@NonNull Rect r){
 		mInputView.getFocusedRect(r);
 	}
-	
+
 	/**
      * @return the currently set font feature settings.  Default is null.
      *
@@ -1515,7 +1515,7 @@ public class EditText extends FrameLayout {
 			return mInputView.getFontFeatureSettings();
 		return null;
 	}
-	
+
 	/**
      * Return whether this text view is including its entire text contents
      * in frozen icicles.
@@ -1527,7 +1527,7 @@ public class EditText extends FrameLayout {
 	public boolean getFreezesText (){
 		return mInputView.getFreezesText();
 	}
-	
+
 	/**
      * Returns the horizontal and vertical alignment of this TextView.
      *
@@ -1537,7 +1537,7 @@ public class EditText extends FrameLayout {
 	public int getGravity (){
 		return mInputView.getGravity();
 	}
-	
+
 	/**
      * @return the color used to display the selection highlight
      *
@@ -1549,10 +1549,10 @@ public class EditText extends FrameLayout {
 	public int getHighlightColor (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
 			return mInputView.getHighlightColor();
-		
+
 		return 0;
 	}
-	
+
 	/**
      * Returns the hint that is displayed when the text of the TextView
      * is empty.
@@ -1562,7 +1562,7 @@ public class EditText extends FrameLayout {
 	public CharSequence getHint (){
 		return mInputView.getHint();
 	}
-	
+
 	/**
      * @return the color of the hint text, for the different states of this TextView.
      *
@@ -1576,7 +1576,7 @@ public class EditText extends FrameLayout {
 	public final ColorStateList getHintTextColors (){
 		return mInputView.getHintTextColors();
 	}
-	
+
 	/**
      * Get the IME action ID previous set with {@link #setImeActionLabel}.
      *
@@ -1586,7 +1586,7 @@ public class EditText extends FrameLayout {
 	public int getImeActionId (){
 		return mInputView.getImeActionId();
 	}
-	
+
 	/**
      * Get the IME action label previous set with {@link #setImeActionLabel}.
      *
@@ -1596,7 +1596,7 @@ public class EditText extends FrameLayout {
 	public CharSequence getImeActionLabel (){
 		return mInputView.getImeActionLabel();
 	}
-	
+
 	/**
      * Get the type of the IME editor.
      *
@@ -1606,7 +1606,7 @@ public class EditText extends FrameLayout {
 	public int getImeOptions (){
 		return mInputView.getImeOptions();
 	}
-	
+
 	/**
      * Gets whether the TextView includes extra top and bottom padding to make
      * room for accents that go above the normal ascent and descent.
@@ -1619,7 +1619,7 @@ public class EditText extends FrameLayout {
 	public boolean getIncludeFontPadding (){
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN && mInputView.getIncludeFontPadding();
     }
-	
+
 	/**
      * Retrieve the input extras currently associated with the text view, which
      * can be viewed as well as modified.
@@ -1633,7 +1633,7 @@ public class EditText extends FrameLayout {
 	public Bundle getInputExtras (boolean create){
 		return mInputView.getInputExtras(create);
 	}
-	
+
 	/**
      * Get the type of the editable content.
      *
@@ -1643,7 +1643,7 @@ public class EditText extends FrameLayout {
 	public int getInputType (){
 		return mInputView.getInputType();
 	}
-	
+
 	/**
      * @return the current key listener for this TextView.
      * This will frequently be null for non-EditText TextViews.
@@ -1658,7 +1658,7 @@ public class EditText extends FrameLayout {
 	public final KeyListener getKeyListener (){
 		return mInputView.getKeyListener();
 	}
-	
+
 	/**
      * @return the Layout that is currently being used to display the text.
      * This can be null if the text or width has recently changes.
@@ -1666,7 +1666,7 @@ public class EditText extends FrameLayout {
 	public final Layout getLayout (){
 		return mInputView.getLayout();
 	}
-	
+
 	/**
      * @return the extent by which text is currently being letter-spaced.
      * This will normally be 0.
@@ -1678,7 +1678,7 @@ public class EditText extends FrameLayout {
     public float getLetterSpacing (){
 		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? mInputView.getLetterSpacing() : 0;
 	}
-	
+
 	/**
      * Return the baseline for the specified line (0...getLineCount() - 1)
      * If bounds is not null, return the top, left, right, bottom extents
@@ -1691,7 +1691,7 @@ public class EditText extends FrameLayout {
 	public int getLineBounds (int line, Rect bounds){
 		return mInputView.getLineBounds(line, bounds);
 	}
-	
+
 	/**
      * Return the number of lines of text, or 0 if the internal Layout has not
      * been built.
@@ -1699,7 +1699,7 @@ public class EditText extends FrameLayout {
 	public int getLineCount (){
 		return mInputView.getLineCount();
 	}
-	
+
 	/**
      * @return the height of one standard line in pixels.  Note that markup
      * within the text can cause individual lines to be taller or shorter
@@ -1709,7 +1709,7 @@ public class EditText extends FrameLayout {
 	public int getLineHeight (){
 		return mInputView.getLineHeight();
 	}
-	
+
 	/**
      * Gets the line spacing extra space
      *
@@ -1726,7 +1726,7 @@ public class EditText extends FrameLayout {
 			return mInputView.getLineSpacingExtra();
 		return 0f;
 	}
-	
+
 	/**
      * Gets the line spacing multiplier
      *
@@ -1743,7 +1743,7 @@ public class EditText extends FrameLayout {
 			return mInputView.getLineSpacingMultiplier();
 		return 0f;
 	}
-	
+
 	/**
      * @return the list of colors used to paint the links in the text, for the different states of
      * this TextView
@@ -1756,7 +1756,7 @@ public class EditText extends FrameLayout {
 	public final ColorStateList getLinkTextColors (){
 		return mInputView.getLinkTextColors();
 	}
-	
+
 	/**
      * Returns whether the movement method will automatically be set to
      * {@link android.text.method.LinkMovementMethod} if {@link #setAutoLinkMask} has been
@@ -1768,7 +1768,7 @@ public class EditText extends FrameLayout {
 	public final boolean getLinksClickable (){
 		return mInputView.getLinksClickable();
 	}
-	
+
 	/**
      * Gets the number of times the marquee animation is repeated. Only meaningful if the
      * TextView has marquee enabled.
@@ -1784,10 +1784,10 @@ public class EditText extends FrameLayout {
 	public int getMarqueeRepeatLimit (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
 			return mInputView.getMarqueeRepeatLimit();
-		
+
 		return -1;
 	}
-	
+
 	/**
      * @return the maximum width of the TextView, expressed in ems or -1 if the maximum width
      * was set in pixels instead (using {@link #setMaxWidth(int)} or {@link #setWidth(int)}).
@@ -1801,10 +1801,10 @@ public class EditText extends FrameLayout {
 	public int getMaxEms (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
 			return mInputView.getMaxEms();
-		
+
 		return -1;
 	}
-	
+
 	/**
      * @return the maximum height of this TextView expressed in pixels, or -1 if the maximum
      * height was set in number of lines instead using {@link #setMaxLines(int) or #setLines(int)}.
@@ -1817,10 +1817,10 @@ public class EditText extends FrameLayout {
 	public int getMaxHeight (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
 			return mInputView.getMaxHeight();
-		
+
 		return -1;
 	}
-	
+
 	/**
      * @return the maximum number of lines displayed in this TextView, or -1 if the maximum
      * height was set in pixels instead using {@link #setMaxHeight(int) or #setHeight(int)}.
@@ -1833,10 +1833,10 @@ public class EditText extends FrameLayout {
 	public int getMaxLines (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
 			return mInputView.getMaxLines();
-		
+
 		return -1;
 	}
-	
+
 	/**
      * @return the maximum width of the TextView, in pixels or -1 if the maximum width
      * was set in ems instead (using {@link #setMaxEms(int)} or {@link #setEms(int)}).
@@ -1850,10 +1850,10 @@ public class EditText extends FrameLayout {
 	public int getMaxWidth (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
 			return mInputView.getMaxWidth();
-		
+
 		return -1;
 	}
-	
+
 	/**
      * @return the minimum width of the TextView, expressed in ems or -1 if the minimum width
      * was set in pixels instead (using {@link #setMinWidth(int)} or {@link #setWidth(int)}).
@@ -1867,10 +1867,10 @@ public class EditText extends FrameLayout {
 	public int getMinEms (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
 			return mInputView.getMinEms();
-		
+
 		return -1;
 	}
-	
+
 	/**
      * @return the minimum height of this TextView expressed in pixels, or -1 if the minimum
      * height was set in number of lines instead using {@link #setMinLines(int) or #setLines(int)}.
@@ -1883,10 +1883,10 @@ public class EditText extends FrameLayout {
 	public int getMinHeight (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
 			return mInputView.getMinHeight();
-		
+
 		return -1;
 	}
-	
+
 	/**
      * @return the minimum number of lines displayed in this TextView, or -1 if the minimum
      * height was set in pixels instead using {@link #setMinHeight(int) or #setHeight(int)}.
@@ -1899,10 +1899,10 @@ public class EditText extends FrameLayout {
 	public int getMinLines (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
 			return mInputView.getMinLines();
-		
+
 		return -1;
 	}
-	
+
 	/**
      * @return the minimum width of the TextView, in pixels or -1 if the minimum width
      * was set in ems instead (using {@link #setMinEms(int)} or {@link #setEms(int)}).
@@ -1916,10 +1916,10 @@ public class EditText extends FrameLayout {
 	public int getMinWidth (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
 			return mInputView.getMinWidth();
-		
+
 		return -1;
 	}
-	
+
 	/**
      * @return the movement method being used for this TextView.
      * This will frequently be null for non-EditText TextViews.
@@ -1927,7 +1927,7 @@ public class EditText extends FrameLayout {
 	public final MovementMethod getMovementMethod (){
 		return mInputView.getMovementMethod();
 	}
-	
+
 	/**
      * Get the character offset closest to the specified absolute position. A typical use case is to
      * pass the result of {@link android.view.MotionEvent#getX()} and {@link android.view.MotionEvent#getY()} to this method.
@@ -1967,7 +1967,7 @@ public class EditText extends FrameLayout {
         x = convertToLocalHorizontalCoordinate(x);
         return getLayout().getOffsetForHorizontal(line, x);
     }
-	
+
 	/**
      * @return the base paint used for the text.  Please use this only to
      * consult the Paint's properties and not to change them.
@@ -1975,7 +1975,7 @@ public class EditText extends FrameLayout {
 	public TextPaint getPaint (){
 		return mInputView.getPaint();
 	}
-	
+
 	/**
      * @return the flags on the Paint being used to display the text.
      * @see android.graphics.Paint#getFlags
@@ -1983,7 +1983,7 @@ public class EditText extends FrameLayout {
 	public int getPaintFlags (){
 		return mInputView.getPaintFlags();
 	}
-	
+
 	/**
      * Get the private type of the content.
      *
@@ -1993,21 +1993,21 @@ public class EditText extends FrameLayout {
 	public String getPrivateImeOptions (){
 		return mInputView.getPrivateImeOptions();
 	}
-	
+
 	/**
      * Convenience for {@link android.text.Selection#getSelectionEnd}.
      */
 	public int getSelectionEnd (){
 		return mInputView.getSelectionEnd();
 	}
-	
+
 	/**
      * Convenience for {@link android.text.Selection#getSelectionStart}.
      */
 	public int getSelectionStart (){
 		return mInputView.getSelectionStart();
 	}
-	
+
 	/**
      * @return the color of the shadow layer
      *
@@ -2019,10 +2019,10 @@ public class EditText extends FrameLayout {
 	public int getShadowColor (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
 			return mInputView.getShadowColor();
-		
+
 		return 0;
 	}
-	
+
 	/**
      * @return the horizontal offset of the shadow layer
      *
@@ -2034,10 +2034,10 @@ public class EditText extends FrameLayout {
 	public float getShadowDx (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
 			return mInputView.getShadowDx();
-		
+
 		return 0;
 	}
-	
+
 	/**
      * @return the vertical offset of the shadow layer
      *
@@ -2049,10 +2049,10 @@ public class EditText extends FrameLayout {
 	public float getShadowDy (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
 			return mInputView.getShadowDy();
-		
+
 		return 0;
 	}
-	
+
 	/**
      * Gets the radius of the shadow layer.
      *
@@ -2066,10 +2066,10 @@ public class EditText extends FrameLayout {
 	public float getShadowRadius (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
 			return mInputView.getShadowRadius();
-		
+
 		return 0;
 	}
-	
+
 	 /**
      * Returns whether the soft input method will be made visible when this
      * TextView gets focused. The default is true.
@@ -2080,7 +2080,7 @@ public class EditText extends FrameLayout {
 			return mInputView.getShowSoftInputOnFocus();
 		return true;
 	}
-	
+
 	/**
      * Gets the text colors for the different states (normal, selected, focused) of the TextView.
      *
@@ -2092,7 +2092,7 @@ public class EditText extends FrameLayout {
 	public final ColorStateList getTextColors (){
 		return mInputView.getTextColors();
 	}
-	
+
 	/**
      * Get the default {@link java.util.Locale} of the text in this TextView.
      * @return the default {@link java.util.Locale} of the text in this TextView.
@@ -2101,10 +2101,10 @@ public class EditText extends FrameLayout {
 	public Locale getTextLocale (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
 			return mInputView.getTextLocale();
-		
+
 		return Locale.getDefault();
 	}
-	
+
 	/**
      * @return the extent by which text is currently being stretched
      * horizontally.  This will usually be 1.
@@ -2112,14 +2112,14 @@ public class EditText extends FrameLayout {
 	public float getTextScaleX (){
 		return mInputView.getTextScaleX();
 	}
-	
+
 	/**
      * @return the size (in pixels) of the default text size in this TextView.
      */
 	public float getTextSize (){
 		return mInputView.getTextSize();
 	}
-	
+
 	/**
      * Returns the total bottom padding of the view, including the bottom
      * Drawable if any, the extra space to keep more than maxLines
@@ -2128,7 +2128,7 @@ public class EditText extends FrameLayout {
 	public int getTotalPaddingBottom (){
 		return getPaddingBottom() + mInputView.getTotalPaddingBottom() + (mSupportMode != SUPPORT_MODE_NONE ? mSupportView.getHeight() : 0);
 	}
-	
+
 	/**
      * Returns the total end padding of the view, including the end
      * Drawable if any.
@@ -2137,10 +2137,10 @@ public class EditText extends FrameLayout {
 	public int getTotalPaddingEnd (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
 			return getPaddingEnd() + mInputView.getTotalPaddingEnd();
-		
+
 		return getTotalPaddingRight();
 	}
-	
+
 	/**
      * Returns the total left padding of the view, including the left
      * Drawable if any.
@@ -2148,7 +2148,7 @@ public class EditText extends FrameLayout {
 	public int getTotalPaddingLeft (){
 		return getPaddingLeft() + mInputView.getTotalPaddingLeft();
 	}
-	
+
 	/**
      * Returns the total right padding of the view, including the right
      * Drawable if any.
@@ -2156,7 +2156,7 @@ public class EditText extends FrameLayout {
 	public int getTotalPaddingRight (){
 		return getPaddingRight() + mInputView.getTotalPaddingRight();
 	}
-	
+
 	/**
      * Returns the total start padding of the view, including the start
      * Drawable if any.
@@ -2165,10 +2165,10 @@ public class EditText extends FrameLayout {
 	public int getTotalPaddingStart (){
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
 			return getPaddingStart() + mInputView.getTotalPaddingStart();
-		
+
 		return getTotalPaddingLeft();
 	}
-	
+
 	 /**
      * Returns the total top padding of the view, including the top
      * Drawable if any, the extra space to keep more than maxLines
@@ -2177,7 +2177,7 @@ public class EditText extends FrameLayout {
 	public int getTotalPaddingTop (){
 		return getPaddingTop() + mInputView.getTotalPaddingTop() + (mLabelEnable ? mLabelView.getHeight() : 0);
 	}
-	
+
 	/**
      * @return the current transformation method for this TextView.
      * This will frequently be null except for single-line and password
@@ -2189,7 +2189,7 @@ public class EditText extends FrameLayout {
 	public final TransformationMethod getTransformationMethod (){
 		return mInputView.getTransformationMethod();
 	}
-	
+
 	/**
      * @return the current typeface and style in which the text is being
      * displayed.
@@ -2203,7 +2203,7 @@ public class EditText extends FrameLayout {
 	public Typeface getTypeface (){
 		return mInputView.getTypeface();
 	}
-	
+
 	/**
      * Returns the list of URLSpans attached to the text
      * (by {@link android.text.util.Linkify} or otherwise) if any.  You can call
@@ -2214,20 +2214,20 @@ public class EditText extends FrameLayout {
 	public URLSpan[] getUrls (){
 		return mInputView.getUrls();
 	}
-	
+
 	@Override
 	@TargetApi(Build.VERSION_CODES.JELLY_BEAN)
 	public boolean hasOverlappingRendering (){
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN && mInputView.hasOverlappingRendering();
     }
-	
+
 	/**
      * Return true iff there is a selection inside this text view.
      */
 	public boolean hasSelection (){
 		return mInputView.hasSelection();
 	}
-	
+
 	/**
      * @return whether or not the cursor is visible (assuming this TextView is editable)
      *
@@ -2239,15 +2239,15 @@ public class EditText extends FrameLayout {
 	public boolean isCursorVisible (){
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN || mInputView.isCursorVisible();
     }
-	
+
 	/**
      * Returns whether this text view is a current input method target.  The
      * default implementation just checks with {@link android.view.inputmethod.InputMethodManager}.
      */
 	public boolean isInputMethodTarget (){
-		return mInputView.isInputMethodTarget();		
+		return mInputView.isInputMethodTarget();
 	}
-	
+
 	/**
      * Return whether or not suggestions are enabled on this TextView. The suggestions are generated
      * by the IME or by the spell checker as the user types. This is done by adding
@@ -2274,7 +2274,7 @@ public class EditText extends FrameLayout {
 	public boolean isSuggestionsEnabled (){
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH && mInputView.isSuggestionsEnabled();
     }
-	
+
 	/**
     *
     * Returns the state of the {@code textIsSelectable} flag (See
@@ -2291,14 +2291,14 @@ public class EditText extends FrameLayout {
 	public boolean isTextSelectable (){
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB || mInputView.isTextSelectable();
     }
-	
+
 	/**
      * Returns the length, in characters, of the text managed by this TextView
      */
 	public int length (){
 		return mInputView.length();
 	}
-	
+
 	/**
      * Move the cursor, if needed, so that it is at an offset that is visible
      * to the user.  This will not move the cursor if it represents more than
@@ -2329,7 +2329,7 @@ public class EditText extends FrameLayout {
         else
             ((InternalMultiAutoCompleteTextView)mInputView).superOnCommitCompletion(text);
 	}
-	
+
 	/**
      * Called by the framework in response to a text auto-correction (such as fixing a typo using a
      * a dictionnary) from the current input method, provided by it calling
@@ -2346,7 +2346,7 @@ public class EditText extends FrameLayout {
         else
             ((InternalMultiAutoCompleteTextView)mInputView).superOnCommitCorrection(info);
 	}
-	
+
 	@Override
 	public InputConnection onCreateInputConnection (EditorInfo outAttrs){
         if(mAutoCompleteMode == AUTOCOMPLETE_MODE_NONE)
@@ -2356,7 +2356,7 @@ public class EditText extends FrameLayout {
         else
             return ((InternalMultiAutoCompleteTextView)mInputView).superOnCreateInputConnection(outAttrs);
 	}
-	
+
 	/**
      * Called when an attached input method calls
      * {@link android.view.inputmethod.InputConnection#performEditorAction(int)
@@ -2385,7 +2385,7 @@ public class EditText extends FrameLayout {
         else
             ((InternalMultiAutoCompleteTextView)mInputView).superOnEditorAction(actionCode);
 	}
-	
+
 	@Override
 	public boolean onKeyDown (int keyCode, KeyEvent event){
         if(mAutoCompleteMode == AUTOCOMPLETE_MODE_NONE)
@@ -2395,7 +2395,7 @@ public class EditText extends FrameLayout {
         else
             return ((InternalMultiAutoCompleteTextView)mInputView).superOnKeyDown(keyCode, event);
 	}
-	
+
 	@Override
 	public boolean onKeyMultiple (int keyCode, int repeatCount, KeyEvent event){
         if(mAutoCompleteMode == AUTOCOMPLETE_MODE_NONE)
@@ -2405,7 +2405,7 @@ public class EditText extends FrameLayout {
         else
             return ((InternalMultiAutoCompleteTextView)mInputView).superOnKeyMultiple(keyCode, repeatCount, event);
 	}
-	
+
 	@Override
 	public boolean onKeyPreIme (int keyCode, KeyEvent event){
         if(mAutoCompleteMode == AUTOCOMPLETE_MODE_NONE)
@@ -2415,7 +2415,7 @@ public class EditText extends FrameLayout {
         else
             return ((InternalMultiAutoCompleteTextView)mInputView).superOnKeyPreIme(keyCode, event);
 	}
-	
+
 	@Override
 	public boolean onKeyShortcut (int keyCode, KeyEvent event){
         if(mAutoCompleteMode == AUTOCOMPLETE_MODE_NONE)
@@ -2425,7 +2425,7 @@ public class EditText extends FrameLayout {
         else
             return ((InternalMultiAutoCompleteTextView)mInputView).superOnKeyShortcut(keyCode, event);
 	}
-	
+
 	@Override
 	public boolean onKeyUp (int keyCode, KeyEvent event){
         if(mAutoCompleteMode == AUTOCOMPLETE_MODE_NONE)
@@ -2461,7 +2461,7 @@ public class EditText extends FrameLayout {
         if(mOnSelectionChangedListener != null)
             mOnSelectionChangedListener.onSelectionChanged(this, selStart, selEnd);
     }
-	
+
 	/**
      * Removes the specified TextWatcher from the list of those whose
      * methods are called
@@ -2470,7 +2470,7 @@ public class EditText extends FrameLayout {
 	public void removeTextChangedListener (TextWatcher watcher){
 		mInputView.removeTextChangedListener(watcher);
 	}
-	
+
 	/**
      * Sets the properties of this field to transform input to ALL CAPS
      * display. This may use a "small caps" formatting if available.
@@ -2488,7 +2488,7 @@ public class EditText extends FrameLayout {
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH)
 			mInputView.setAllCaps(allCaps);
 	}
-	
+
 	/**
      * Sets the autolink mask of the text.  See {@link
      * android.text.util.Linkify#ALL Linkify.ALL} and peers for
@@ -2499,7 +2499,7 @@ public class EditText extends FrameLayout {
 	public final void setAutoLinkMask (int mask){
 		mInputView.setAutoLinkMask(mask);
 	}
-	
+
 	/**
      * Sets the size of the padding between the compound drawables and
      * the text.
@@ -2516,7 +2516,7 @@ public class EditText extends FrameLayout {
                 mSupportView.setPadding(mDivider.getPaddingLeft(), mSupportView.getPaddingTop(), mDivider.getPaddingRight(), mSupportView.getPaddingBottom());
         }
 	}
-	
+
 	/**
      * Sets the Drawables (if any) to appear to the left of, above, to the
      * right of, and below the text. Use {@code null} if you do not want a
@@ -2541,7 +2541,7 @@ public class EditText extends FrameLayout {
                 mSupportView.setPadding(mDivider.getPaddingLeft(), mSupportView.getPaddingTop(), mDivider.getPaddingRight(), mSupportView.getPaddingBottom());
         }
 	}
-	
+
 	/**
      * Sets the Drawables (if any) to appear to the start of, above, to the end
      * of, and below the text. Use {@code null} if you do not want a Drawable
@@ -2563,7 +2563,7 @@ public class EditText extends FrameLayout {
 		else
 			mInputView.setCompoundDrawables(start, top, end, bottom);
 	}
-	
+
 	/**
      * Sets the Drawables (if any) to appear to the start of, above, to the end
      * of, and below the text. Use {@code null} if you do not want a Drawable
@@ -2584,7 +2584,7 @@ public class EditText extends FrameLayout {
 		else
 			mInputView.setCompoundDrawablesWithIntrinsicBounds(start, top, end, bottom);
 	}
-	
+
 	/**
      * Sets the Drawables (if any) to appear to the start of, above, to the end
      * of, and below the text. Use 0 if you do not want a Drawable there. The
@@ -2610,7 +2610,7 @@ public class EditText extends FrameLayout {
 		else
 			mInputView.setCompoundDrawablesWithIntrinsicBounds(start, top, end, bottom);
 	}
-	
+
 	/**
      * Sets the Drawables (if any) to appear to the left of, above, to the
      * right of, and below the text. Use {@code null} if you do not want a
@@ -2628,7 +2628,7 @@ public class EditText extends FrameLayout {
 	public void setCompoundDrawablesWithIntrinsicBounds (Drawable left, Drawable top, Drawable right, Drawable bottom){
 		mInputView.setCompoundDrawablesWithIntrinsicBounds(left, top, right, bottom);
 	}
-	
+
 	/**
      * Sets the Drawables (if any) to appear to the left of, above, to the
      * right of, and below the text. Use 0 if you do not want a Drawable there.
@@ -2650,7 +2650,7 @@ public class EditText extends FrameLayout {
 	public void setCompoundDrawablesWithIntrinsicBounds (int left, int top, int right, int bottom){
 		mInputView.setCompoundDrawablesWithIntrinsicBounds(left, top, right, bottom);
 	}
-	
+
 	/**
      * Set whether the cursor is visible. The default is true. Note that this property only
      * makes sense for editable TextView.
@@ -2662,7 +2662,7 @@ public class EditText extends FrameLayout {
 	public void setCursorVisible (boolean visible){
 		mInputView.setCursorVisible(visible);
 	}
-	
+
 	/**
      * If provided, this ActionMode.Callback will be used to create the ActionMode when text
      * selection is initiated in this View.
@@ -2692,14 +2692,14 @@ public class EditText extends FrameLayout {
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
 			mInputView.setCustomSelectionActionModeCallback(actionModeCallback);
 	}
-	
+
 	/**
      * Sets the Factory used to create new Editables.
      */
 	public final void setEditableFactory (Editable.Factory factory){
 		mInputView.setEditableFactory(factory);
 	}
-	
+
 	/**
      * Set the TextView's elegant height metrics flag. This setting selects font
      * variants that have not been compacted to fit Latin-based vertical
@@ -2714,7 +2714,7 @@ public class EditText extends FrameLayout {
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
 			mInputView.setElegantTextHeight(elegant);
 	}
-	
+
 	/**
      * Makes the TextView exactly this many ems wide
      *
@@ -2728,7 +2728,7 @@ public class EditText extends FrameLayout {
 	public void setEms (int ems){
 		mInputView.setEms(ems);
 	}
-	
+
 	/**
      * Apply to this text view the given extracted text, as previously
      * returned by {@link #extractText(android.view.inputmethod.ExtractedTextRequest, android.view.inputmethod.ExtractedText)}.
@@ -2736,7 +2736,7 @@ public class EditText extends FrameLayout {
 	public void setExtractedText (ExtractedText text){
 		mInputView.setExtractedText(text);
 	}
-	
+
 	/**
      * Sets the list of input filters that will be used if the buffer is
      * Editable. Has no effect otherwise.
@@ -2746,7 +2746,7 @@ public class EditText extends FrameLayout {
 	public void setFilters (InputFilter[] filters){
 		mInputView.setFilters(filters);
 	}
-	
+
 	/**
      * Sets font feature settings.  The format is the same as the CSS
      * font-feature-settings attribute:
@@ -2763,7 +2763,7 @@ public class EditText extends FrameLayout {
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
 			mInputView.setFontFeatureSettings(fontFeatureSettings);
 	}
-	
+
 	/**
      * Control whether this text view saves its entire text contents when
      * freezing to an icicle, in addition to dynamic state such as cursor
@@ -2780,7 +2780,7 @@ public class EditText extends FrameLayout {
 	public void setFreezesText (boolean freezesText){
 		mInputView.setFreezesText(freezesText);
 	}
-	
+
 	/**
      * Sets the horizontal alignment of the text and the
      * vertical gravity that will be used when there is extra space
@@ -2792,7 +2792,7 @@ public class EditText extends FrameLayout {
 	public void setGravity (int gravity){
 		mInputView.setGravity(gravity);
 	}
-	
+
 	/**
      * Sets the color used to display the selection highlight.
      *
@@ -2801,7 +2801,7 @@ public class EditText extends FrameLayout {
 	public void setHighlightColor (int color){
 		mInputView.setHighlightColor(color);
 	}
-	
+
 	/**
      * Sets the text to be displayed when the text of the TextView is empty.
      * Null means to use the normal empty text. The hint does not currently
@@ -2814,7 +2814,7 @@ public class EditText extends FrameLayout {
 		if(mLabelView != null)
 			mLabelView.setText(hint);
 	}
-	
+
 	/**
      * Sets the text to be displayed when the text of the TextView is empty,
      * from a resource.
@@ -2826,7 +2826,7 @@ public class EditText extends FrameLayout {
 		if(mLabelView != null)
 			mLabelView.setText(resid);
 	}
-	
+
 	/**
      * Sets the color of the hint text.
      *
@@ -2840,7 +2840,7 @@ public class EditText extends FrameLayout {
 	public final void setHintTextColor (ColorStateList colors){
 		mInputView.setHintTextColor(colors);
 	}
-	
+
 	/**
      * Sets the color of the hint text for all the states (disabled, focussed, selected...) of this
      * TextView.
@@ -2854,7 +2854,7 @@ public class EditText extends FrameLayout {
 	public final void setHintTextColor (int color){
 		mInputView.setHintTextColor(color);
 	}
-	
+
 	/**
      * Sets whether the text should be allowed to be wider than the
      * View is.  If false, it will be wrapped to the width of the View.
@@ -2864,7 +2864,7 @@ public class EditText extends FrameLayout {
 	public void setHorizontallyScrolling (boolean whether){
 		mInputView.setHorizontallyScrolling(whether);
 	}
-	
+
 	/**
      * Change the custom IME action associated with the text view, which
      * will be reported to an IME with {@link android.view.inputmethod.EditorInfo#actionLabel}
@@ -2878,7 +2878,7 @@ public class EditText extends FrameLayout {
 	public void setImeActionLabel (CharSequence label, int actionId){
 		mInputView.setImeActionLabel(label, actionId);
 	}
-	
+
 	/**
      * Change the editor type integer associated with the text view, which
      * will be reported to an IME with {@link android.view.inputmethod.EditorInfo#imeOptions} when it
@@ -2890,7 +2890,7 @@ public class EditText extends FrameLayout {
 	public void setImeOptions (int imeOptions){
 		mInputView.setImeOptions(imeOptions);
 	}
-	
+
 	/**
      * Set whether the TextView includes extra top and bottom padding to make
      * room for accents that go above the normal ascent and descent.
@@ -2903,7 +2903,7 @@ public class EditText extends FrameLayout {
 	public void setIncludeFontPadding (boolean includepad){
 		mInputView.setIncludeFontPadding(includepad);
 	}
-	
+
 	/**
      * Set the extra input data of the text, which is the
      * {@link android.view.inputmethod.EditorInfo#extras TextBoxAttribute.extras}
@@ -2918,7 +2918,7 @@ public class EditText extends FrameLayout {
 	public void setInputExtras (int xmlResId) throws XmlPullParserException, IOException{
 		mInputView.setInputExtras(xmlResId);
 	}
-	
+
 	/**
      * Set the type of the content with a constant as defined for {@link android.view.inputmethod.EditorInfo#inputType}. This
      * will take care of changing the key listener, by calling {@link #setKeyListener(android.text.method.KeyListener)},
@@ -2937,7 +2937,7 @@ public class EditText extends FrameLayout {
 	public void setInputType (int type){
 		mInputView.setInputType(type);
 	}
-	
+
 	/**
      * Sets the key listener to be used with this TextView.  This can be null
      * to disallow user input.  Note that this method has significant and
@@ -2963,7 +2963,7 @@ public class EditText extends FrameLayout {
 	public void setKeyListener (KeyListener input){
 		mInputView.setKeyListener(input);
 	}
-	
+
 	/**
      * Sets text letter-spacing.  The value is in 'EM' units.  Typical values
      * for slight expansion will be around 0.05.  Negative values tighten text.
@@ -2977,7 +2977,7 @@ public class EditText extends FrameLayout {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
 		    mInputView.setLetterSpacing(letterSpacing);
 	}
-	
+
 	/**
      * Sets line spacing for this TextView.  Each line will have its height
      * multiplied by <code>mult</code> and have <code>add</code> added to it.
@@ -2988,7 +2988,7 @@ public class EditText extends FrameLayout {
 	public void setLineSpacing (float add, float mult){
 		mInputView.setLineSpacing(add, mult);
 	}
-	
+
 	/**
      * Makes the TextView exactly this many lines tall.
      *
@@ -3000,7 +3000,7 @@ public class EditText extends FrameLayout {
 	public void setLines (int lines){
 		mInputView.setLines(lines);
 	}
-	
+
 	/**
      * Sets the color of links in the text.
      *
@@ -3014,7 +3014,7 @@ public class EditText extends FrameLayout {
 	public final void setLinkTextColor (ColorStateList colors){
 		mInputView.setLinkTextColor(colors);
 	}
-	
+
 	 /**
      * Sets the color of links in the text.
      *
@@ -3028,7 +3028,7 @@ public class EditText extends FrameLayout {
 	public final void setLinkTextColor (int color){
 		mInputView.setLinkTextColor(color);
 	}
-	
+
 	/**
      * Sets whether the movement method will automatically be set to
      * {@link android.text.method.LinkMovementMethod} if {@link #setAutoLinkMask} has been
@@ -3040,7 +3040,7 @@ public class EditText extends FrameLayout {
 	public final void setLinksClickable (boolean whether){
 		mInputView.setLinksClickable(whether);
 	}
-	
+
 	/**
      * Sets how many times to repeat the marquee animation. Only applied if the
      * TextView has marquee enabled. Set to -1 to repeat indefinitely.
@@ -3052,7 +3052,7 @@ public class EditText extends FrameLayout {
 	public void setMarqueeRepeatLimit (int marqueeLimit){
 		mInputView.setMarqueeRepeatLimit(marqueeLimit);
 	}
-	
+
 	/**
      * Makes the TextView at most this many ems wide
      *
@@ -3061,7 +3061,7 @@ public class EditText extends FrameLayout {
 	public void setMaxEms (int maxems){
 		mInputView.setMaxEms(maxems);
 	}
-	
+
 	/**
      * Makes the TextView at most this many pixels tall.  This option is mutually exclusive with the
      * {@link #setMaxLines(int)} method.
@@ -3073,7 +3073,7 @@ public class EditText extends FrameLayout {
 	public void setMaxHeight (int maxHeight){
 		mInputView.setMaxHeight(maxHeight);
 	}
-	
+
 	/**
      * Makes the TextView at most this many lines tall.
      *
@@ -3084,7 +3084,7 @@ public class EditText extends FrameLayout {
 	public void setMaxLines (int maxlines){
 		mInputView.setMaxLines(maxlines);
 	}
-	
+
 	/**
      * Makes the TextView at most this many pixels wide
      *
@@ -3093,7 +3093,7 @@ public class EditText extends FrameLayout {
 	public void setMaxWidth (int maxpixels){
 		mInputView.setMaxWidth(maxpixels);
 	}
-	
+
 	/**
      * Makes the TextView at least this many ems wide
      *
@@ -3102,7 +3102,7 @@ public class EditText extends FrameLayout {
 	public void setMinEms (int minems){
 		mInputView.setMinEms(minems);
 	}
-	
+
 	/**
      * Makes the TextView at least this many pixels tall.
      *
@@ -3113,7 +3113,7 @@ public class EditText extends FrameLayout {
 	public void setMinHeight (int minHeight){
 		mInputView.setMinHeight(minHeight);
 	}
-	
+
 	/**
      * Makes the TextView at least this many lines tall.
      *
@@ -3127,7 +3127,7 @@ public class EditText extends FrameLayout {
 	public void setMinLines (int minlines){
 		mInputView.setMinLines(minlines);
 	}
-	
+
 	/**
      * Makes the TextView at least this many pixels wide
      *
@@ -3136,7 +3136,7 @@ public class EditText extends FrameLayout {
 	public void setMinWidth (int minpixels){
 		mInputView.setMinWidth(minpixels);
 	}
-	
+
 	/**
      * Sets the movement method (arrow key handler) to be used for
      * this TextView.  This can be null to disallow using the arrow keys
@@ -3151,7 +3151,7 @@ public class EditText extends FrameLayout {
 	public final void setMovementMethod (MovementMethod movement){
 		mInputView.setMovementMethod(movement);
 	}
-	
+
 	/**
      * Set a special listener to be called when an action is performed
      * on the text view.  This will be called when the enter key is pressed,
@@ -3163,7 +3163,7 @@ public class EditText extends FrameLayout {
 	public void setOnEditorActionListener (android.widget.TextView.OnEditorActionListener l){
 		mInputView.setOnEditorActionListener(l);
 	}
-	
+
 	/**
      * Register a callback to be invoked when a hardware key is pressed in this view.
      * Key presses in software input methods will generally not trigger the methods of
@@ -3174,7 +3174,7 @@ public class EditText extends FrameLayout {
     public void setOnKeyListener(OnKeyListener l) {
     	mInputView.setOnKeyListener(l);
     }
-	
+
 	/**
      * Register a callback to be invoked when focus of this view changed.
      *
@@ -3183,8 +3183,8 @@ public class EditText extends FrameLayout {
 	@Override
     public void setOnFocusChangeListener(OnFocusChangeListener l) {
     	mInputView.setOnFocusChangeListener(l);
-    }	
-	
+    }
+
 	/**
      * Directly change the content type integer of the text view, without
      * modifying any other state.
@@ -3195,11 +3195,11 @@ public class EditText extends FrameLayout {
 	public void setRawInputType (int type){
 		mInputView.setRawInputType(type);
 	}
-	
+
 	public void setScroller (Scroller s){
 		mInputView.setScroller(s);
 	}
-	
+
 	/**
      * Set the TextView so that when it takes focus, all the text is
      * selected.
@@ -3209,12 +3209,12 @@ public class EditText extends FrameLayout {
 	public void setSelectAllOnFocus (boolean selectAllOnFocus){
 		mInputView.setSelectAllOnFocus(selectAllOnFocus);
 	}
-	
+
 	@Override
 	public void setSelected (boolean selected){
 		mInputView.setSelected(selected);
 	}
-	
+
 	 /**
      * Gives the text a shadow of the specified blur radius and color, the specified
      * distance from its drawn position.
@@ -3234,7 +3234,7 @@ public class EditText extends FrameLayout {
 	public void setShadowLayer (float radius, float dx, float dy, int color){
 		mInputView.setShadowLayer(radius, dx, dy, color);
 	}
-	
+
 	/**
      * Sets whether the soft input method will be made visible when this
      * TextView gets focused. The default is true.
@@ -3242,7 +3242,7 @@ public class EditText extends FrameLayout {
 	public final void setShowSoftInputOnFocus (boolean show){
 		mInputView.setShowSoftInputOnFocus(show);
 	}
-	
+
 	/**
      * Sets the properties of this field (lines, horizontally scrolling,
      * transformation method) to be for a single-line input.
@@ -3252,30 +3252,30 @@ public class EditText extends FrameLayout {
 	public void setSingleLine (){
 		mInputView.setSingleLine();
 	}
-	
+
 	/**
      * Sets the Factory used to create new Spannables.
      */
 	public final void setSpannableFactory (Spannable.Factory factory){
 		mInputView.setSpannableFactory(factory);
 	}
-	
+
 	public final void setText (int resid){
 		mInputView.setText(resid);
 	}
-	
+
 	public final void setText (char[] text, int start, int len){
 		mInputView.setText(text, start, len);
 	}
-	
+
 	public final void setText (int resid, android.widget.TextView.BufferType type){
 		mInputView.setText(resid, type);
 	}
-	
+
 	public final void setText (CharSequence text){
 		mInputView.setText(text);
 	}
-	
+
 	 /**
      * Sets the text color, size, style, hint color, and highlight color
      * from the specified TextAppearance resource.
@@ -3283,7 +3283,7 @@ public class EditText extends FrameLayout {
 	public void setTextAppearance (Context context, int resid){
 		mInputView.setTextAppearance(context, resid);
 	}
-	
+
 	/**
      * Sets the text color.
      *
@@ -3297,7 +3297,7 @@ public class EditText extends FrameLayout {
 	public void setTextColor (ColorStateList colors){
 		mInputView.setTextColor(colors);
 	}
-	
+
 	/**
      * Sets the text color for all the states (normal, selected,
      * focused) to be this color.
@@ -3310,7 +3310,7 @@ public class EditText extends FrameLayout {
 	public void setTextColor (int color){
 		mInputView.setTextColor(color);
 	}
-	
+
 	/**
      * Sets whether the content of this view is selectable by the user. The default is
      * {@code false}, meaning that the content is not selectable.
@@ -3340,7 +3340,7 @@ public class EditText extends FrameLayout {
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
 			mInputView.setTextIsSelectable(selectable);
 	}
-	
+
 	/**
      * Like {@link #setText(CharSequence)},
      * except that the cursor position (if any) is retained in the new text.
@@ -3362,7 +3362,7 @@ public class EditText extends FrameLayout {
 	public final void setTextKeepState (CharSequence text, android.widget.TextView.BufferType type){
 		mInputView.setTextKeepState(text, type);
 	}
-	
+
 	/**
      * Set the default {@link java.util.Locale} of the text in this TextView to the given value. This value
      * is used to choose appropriate typefaces for ambiguous characters. Typically used for CJK
@@ -3377,7 +3377,7 @@ public class EditText extends FrameLayout {
 		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1)
 			mInputView.setTextLocale(locale);
 	}
-	
+
 	/**
      * Sets the extent by which text should be stretched horizontally.
      *
@@ -3386,7 +3386,7 @@ public class EditText extends FrameLayout {
 	public void setTextScaleX (float size){
 		mInputView.setTextScaleX(size);
 	}
-	
+
 	/**
      * Set the default text size to the given value, interpreted as "scaled
      * pixel" units.  This size is adjusted based on the current density and
@@ -3399,7 +3399,7 @@ public class EditText extends FrameLayout {
 	public void setTextSize (float size){
 		mInputView.setTextSize(size);
 	}
-	
+
 	/**
      * Set the default text size to a given unit and value.  See {@link
      * android.util.TypedValue} for the possible dimension units.
@@ -3412,7 +3412,7 @@ public class EditText extends FrameLayout {
 	public void setTextSize (int unit, float size){
 		mInputView.setTextSize(unit, size);
 	}
-	
+
 	/**
      * Sets the transformation that is applied to the text that this
      * TextView is displaying.
@@ -3423,7 +3423,7 @@ public class EditText extends FrameLayout {
 	public final void setTransformationMethod (TransformationMethod method){
 		mInputView.setTransformationMethod(method);
 	}
-	
+
 	/**
      * Sets the typeface and style in which the text should be displayed,
      * and turns on the fake bold and italic bits in the Paint if the
@@ -3436,7 +3436,7 @@ public class EditText extends FrameLayout {
 	public void setTypeface (Typeface tf, int style){
 		mInputView.setTypeface(tf, style);
 	}
-	
+
 	/**
      * Sets the typeface and style in which the text should be displayed.
      * Note that not all Typeface families actually have bold and italic
@@ -3489,7 +3489,7 @@ public class EditText extends FrameLayout {
     }
 
 	/* Inner class */
-	
+
 	private class InputTextWatcher implements TextWatcher {
         @Override
         public void afterTextChanged(Editable s) {
@@ -3505,26 +3505,26 @@ public class EditText extends FrameLayout {
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count) {}
     }
-	
+
 	private class LabelView extends android.widget.TextView{
 
 		public LabelView(Context context) {
 			super(context);
 		}
-		
+
 		@Override
 		protected int[] onCreateDrawableState(int extraSpace) {
 			return mInputView.getDrawableState();
-		}	
-		
+		}
+
 	}
-	
+
 	private class InternalEditText extends android.widget.EditText{
 
 		public InternalEditText(Context context) {
 			super(context);
 		}
-		
+
 		public InternalEditText(Context context, AttributeSet attrs) {
 			super(context, attrs);
 		}
@@ -3536,10 +3536,10 @@ public class EditText extends FrameLayout {
 		@Override
 		public void refreshDrawableState() {
 			super.refreshDrawableState();
-			
+
 			if(mLabelView != null)
 				mLabelView.refreshDrawableState();
-			
+
 			if(mSupportView != null)
 				mSupportView.refreshDrawableState();
 		}

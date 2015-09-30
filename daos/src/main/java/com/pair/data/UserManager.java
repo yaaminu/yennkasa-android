@@ -52,9 +52,8 @@ public final class UserManager {
             sessionPrefFileName = "slfdafks",
             USER_PREFS_FILE_NAME = "userPrefs";
 
-    public static final String DEFAULT = "default";
     private static final UserManager INSTANCE = new UserManager();
-    private static final String CLEANED_UP = "cleanedUp";
+    private static final String CLEANED_UP = "lkfakfalkfclkieifklaklf";
     private final File sessionFile;
     private final Object mainUserLock = new Object();
     private final Exception NO_CONNECTION_ERROR;
@@ -62,12 +61,16 @@ public final class UserManager {
     private volatile User mainUser;
     private final File userPrefsLocation;
 
+    /**************************
+     * important constants
+     *****************************************/
     public static final String IN_APP_NOTIFICATIONS = "inAppNotifications",
             NEW_MESSAGE_TONE = "newMessageTone", VIBRATE = "vibrateOnNewMessage",
             LIGHTS = "litLightOnNewMessage", DELETE_ATTACHMENT_ON_DELETE = "deleteAttachmentsOnMessageDelete",
             DELETE_OLDER_MESSAGE = "deleteOldMessages", AUTO_DOWNLOAD_MESSAGE = "autoDownloadMessage",
             NOTIFICATION = "Notification", STORAGE = "Storage", NETWORK = "Network";
-
+    public static final String DEFAULT = "default";
+    /***********************************************************************/
     private static final Set<String> protectedKeys = new HashSet<>();
 
     static {
@@ -128,7 +131,7 @@ public final class UserManager {
                 mainUser = User.copy(user);
             }
             return mainUser;
-        }else{
+        } else {
             cleanUp();
         }
         realm.close();
@@ -930,7 +933,7 @@ public final class UserManager {
     }
 
     private void cleanUp() {
-        if(Config.getApplicationWidePrefs().getBoolean(CLEANED_UP,false)) {
+        if (Config.getApplicationWidePrefs().getBoolean(CLEANED_UP, false)) {
             Realm realm = PersistedSetting.REALM(userPrefsLocation);
             clearClass(realm, PersistedSetting.class);
             realm = PersistedSetting.REALM(sessionFile);

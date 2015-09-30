@@ -11,7 +11,9 @@ import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v4.util.Pair;
 import android.text.TextUtils;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -58,33 +60,37 @@ public class UiHelpers {
     private static DialogInterface.OnClickListener dialogListener = new DialogInterface.OnClickListener() {
         @Override
         public void onClick(DialogInterface dialog, int which) {
-            switch (which) {
-                case TAKE_PHOTO_REQUEST:
-                    takePhoto();
-                    break;
-                case TAKE_VIDEO_REQUEST:
-                    recordVideo();
-                    break;
-                case PICK_PHOTO_REQUEST:
-                    choosePicture();
-                    break;
-                case PICK_VIDEO_REQUEST:
-                    chooseVideo();
-                    break;
-                case PICK_FILE_REQUEST:
-                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                    intent.setType("*/*");
-                    try {
-                        NavigationManager.getCurrentActivity().startActivityForResult(intent, PICK_FILE_REQUEST);
-                    } catch (NavigationManager.NoActiveActivityException e) {
-                        crashAndBurn(e);
-                    }
-                    break; //safety!
-                default:
-                    break;
-            }
+            handleAction(which);
         }
     };
+
+    private static void handleAction(int which) {
+        switch (which) {
+            case TAKE_PHOTO_REQUEST:
+                takePhoto();
+                break;
+            case TAKE_VIDEO_REQUEST:
+                recordVideo();
+                break;
+            case PICK_PHOTO_REQUEST:
+                choosePicture();
+                break;
+            case PICK_VIDEO_REQUEST:
+                chooseVideo();
+                break;
+            case PICK_FILE_REQUEST:
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("*/*");
+                try {
+                    NavigationManager.getCurrentActivity().startActivityForResult(intent, PICK_FILE_REQUEST);
+                } catch (NavigationManager.NoActiveActivityException e) {
+                    crashAndBurn(e);
+                }
+                break; //safety!
+            default:
+                break;
+        }
+    }
 
     public static String getFieldContent(EditText field) {
         String content = field.getText().toString();
@@ -477,8 +483,8 @@ public class UiHelpers {
             default:
                 throw new AssertionError("impossible");
         }
-        if(TextUtils.isEmpty(actualPath)){
-            throw new PairappException(getString(Config.getApplicationContext(),R.string.error_use_file_manager),MessageUtils.ERROR_FILE_DOES_NOT_EXIST);
+        if (TextUtils.isEmpty(actualPath)) {
+            throw new PairappException(getString(Config.getApplicationContext(), R.string.error_use_file_manager), MessageUtils.ERROR_FILE_DOES_NOT_EXIST);
         }
         int type = Message.TYPE_BIN_MESSAGE;
         if (MediaUtils.isImage(actualPath)) {
@@ -511,8 +517,36 @@ public class UiHelpers {
         context.startActivity(intent);
     }
 
+    private static AdapterView.OnItemClickListener makeAttachListenr() {
+        return attachListClickListener;
+    }
+
+    private static final AdapterView.OnItemClickListener attachListClickListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            handleAction(position);
+        }
+    };
 
     public interface Listener {
         void onClick();
+    }
+
+    private static DialogFragment makeAttachDialog(final Context context) {
+        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
+            @Override
+            protected void onBuildDone(Dialog dialog) {
+
+            }
+
+            @Override
+            public void onPositiveActionClicked(DialogFragment fragment) {
+                handleAction(getSelectedIndex());
+                super.onPositiveActionClicked(fragment);
+            }
+        };
+        builder.items(context.getResources().getStringArray(R.array.attach_options), 0)
+                .positiveAction(getString(context, android.R.string.ok));
+        return DialogFragment.newInstance(builder);
     }
 }

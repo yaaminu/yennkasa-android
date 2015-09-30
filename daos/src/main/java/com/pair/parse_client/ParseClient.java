@@ -13,9 +13,9 @@ import com.pair.data.User;
 import com.pair.data.net.FileApi;
 import com.pair.data.net.HttpResponse;
 import com.pair.data.net.UserApiV2;
-import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.L;
+import com.pair.util.PLog;
 import com.pair.util.TaskManager;
 import com.parse.Parse;
 import com.parse.ParseACL;
@@ -29,6 +29,8 @@ import com.parse.SaveCallback;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,6 +40,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import retrofit.http.Body;
@@ -68,6 +71,7 @@ import static com.pair.parse_client.PARSE_CONSTANTS.USER_CLASS_NAME;
 public class ParseClient implements UserApiV2, FileApi {
 
     private static final String TAG = ParseClient.class.getSimpleName();
+    public static final String FEEDBACK_CLASS_NAME = "feedback";
     private static boolean initialised = false;
     private static ParseClient INSTANCE = new ParseClient();
 
@@ -693,6 +697,20 @@ public class ParseClient implements UserApiV2, FileApi {
         } catch (Exception e) {
             throw new RuntimeException(); //we cannot handle this
         }
+    }
+
+    public void sendFeedBack(JSONObject report) {
+        ParseObject object = new ParseObject(FEEDBACK_CLASS_NAME);
+        try {
+            Iterator keys = report.keys();
+            while (keys.hasNext()) {
+                String key = (String) keys.next();
+                object.put(key, report.get(key));
+            }
+        } catch (JSONException|ClassCastException e) {
+            throw new RuntimeException(e.getCause());
+        }
+        object.saveEventually();
     }
 
     private class RequiredFieldsError extends Exception {

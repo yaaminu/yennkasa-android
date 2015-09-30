@@ -8,11 +8,13 @@
     <ImageView
         android:id="@+id/imageView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
         android:adjustViewBounds="true"
+        android:contentDescription="@string/image"
         android:src="@drawable/group_avatar"
+        android:layout_centerVertical="true"
         android:scaleType="fitCenter" />
 
     <com.rey.material.widget.ProgressView
@@ -31,9 +33,9 @@
         android:layout_height="@dimen/action_bar_height"
         android:minHeight="?attr/actionBarSize"
         app:sb_actionText="@string/close"
-        android:visibility="gone"
+        android:visibility="visible"
         app:sb_text="You have a new message"
-        app:sb_textColor="@color/preferred_primary_color"
-        app:sb_backgroundColor="@color/white"
-        app:sb_actionTextColor="#9f00"/>
+        app:sb_textColor="@color/white"
+        app:sb_backgroundColor="@color/black"
+        app:sb_actionTextColor="#f00"/>
 </com.pair.view.RelativeLayout>

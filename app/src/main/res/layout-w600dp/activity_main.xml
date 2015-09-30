@@ -22,7 +22,6 @@
                 <com.rey.material.widget.TabPageIndicator
                     android:id="@+id/pts_title_strip"
                     style="@style/TabPageIndicator"
-                    android:layout_marginBottom="8dp"
                     android:background="?attr/colorPrimary"
                     android:clipToPadding="false"
                     android:foregroundGravity="center_vertical"

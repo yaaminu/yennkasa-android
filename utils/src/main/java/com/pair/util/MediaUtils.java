@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class MediaUtils {
     public static final String TAG = MediaUtils.class.getSimpleName();
-    private static final List<String> pictures = new ArrayList<>(5), videos = new ArrayList<>(5);
+    private static final List<String> pictures = new ArrayList<>(5), videos = new ArrayList<>(7);
 
     static {
         pictures.add("png");
@@ -28,6 +28,8 @@ public class MediaUtils {
         videos.add("flv");
         videos.add("3gp");
         videos.add("3gpp");
+        videos.add("mkv");
+        videos.add("mpeg");
     }
 
     public static void takePhoto(Activity context, Uri outPutUri, int requestCode) {
@@ -54,7 +56,7 @@ public class MediaUtils {
         Intent attachIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
         attachIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputUri);
         attachIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
-        attachIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 60 * 10);
+        attachIntent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 7.5*FileUtils.ONE_MB);
         activity.startActivityForResult(attachIntent, requestCode);
     }
 
@@ -62,7 +64,7 @@ public class MediaUtils {
         Intent attachIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
         attachIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputUri);
         attachIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
-        attachIntent.putExtra(MediaStore.EXTRA_DURATION_LIMIT, 60 * 10);
+        attachIntent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 7.5*FileUtils.ONE_MB);
         fragment.startActivityForResult(attachIntent, requestCode);
     }
 

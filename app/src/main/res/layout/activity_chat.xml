@@ -29,8 +29,16 @@
         android:layout_marginRight="@dimen/chat_activity_side_margin"
         android:layout_marginTop="2dp"
         android:background="#0000"
+        android:animateLayoutChanges="true"
         tools:ignore="UnusedAttribute">
 
+        <com.pair.view.RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/attachment_picker_container"
+            >
+
+        </com.pair.view.RelativeLayout>
         <com.pair.view.LinearLayout
             android:id="@+id/ll_list_view_container"
             android:layout_width="match_parent"
@@ -75,10 +83,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginStart="0dp"
-                    android:padding="@dimen/padding_ll_login_fragment_bottom"
-                    android:background="@drawable/green_round_back_ground"
                     android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
+                    android:layout_marginStart="0dp"
+                    android:background="@drawable/green_round_back_ground"
+                    android:padding="@dimen/padding_ll_login_fragment_bottom"
                     android:visibility="gone">
 
                     <ImageView
