@@ -197,7 +197,9 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
         int screenHeight = (int) new ScreenUtility(getActivity()).getPixelsHeight();
 
-        displayPicture.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, screenHeight / 2));
+        if (!getResources().getBoolean(R.bool.isLandscape)) {
+            displayPicture.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, screenHeight / 2));
+        }
         View parent = view.findViewById(R.id.tv_user_phone_group_admin);
         phoneOrAdminTitle = ((TextView) parent.findViewById(R.id.tv_title));
         userPhoneOrAdminName = ((TextView) parent.findViewById(R.id.tv_subtitle));

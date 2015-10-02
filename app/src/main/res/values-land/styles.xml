@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+        <style name="profile_fragment_round_button_style" parent="FlatWaveColorButtonRippleStyle">
+                <item name="android:layout_width">match_parent</item>
+                <item name="android:layout_height">@dimen/big_button_height</item>
+                <item name="android:layout_marginBottom">5dp</item>
+                <item name="android:background">@drawable/button_background</item>
+                <item name="android:layout_weight">1</item>
+        </style>
+    <bool name="isLandscape">true</bool>
+</resources>
