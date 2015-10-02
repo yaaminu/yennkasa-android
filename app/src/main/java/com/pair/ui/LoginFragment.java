@@ -19,7 +19,6 @@ import com.pair.data.Country;
 import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
-import com.pair.util.Config;
 import com.pair.util.FormValidator;
 import com.pair.util.PLog;
 import com.pair.util.PhoneNumberNormaliser;
@@ -248,7 +247,6 @@ public class LoginFragment extends Fragment {
         protected void onPostExecute(Void aVoid) {
             progressDialog.dismiss();
             setUpSpinner();
-            UiHelpers.showToast(Config.deviceArc() + "  " + Config.supportsCalling());
         }
 
     };

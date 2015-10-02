@@ -64,9 +64,10 @@
             style="@style/message_outgoing_date"
             android:layout_alignLeft="@+id/fl_message_body_view"
             android:layout_alignStart="@+id/fl_message_body_view"
-            android:gravity="center_vertical"
+            android:gravity="center_vertical|right"
             android:singleLine="true"
-            android:text="@string/sampleDate"/>
+            android:drawableLeft="@drawable/ic_visibility_white_18dp"
+            android:text="  12-12-12"/>
     </com.pair.view.RelativeLayout>
 
     <com.pair.view.RoundedImageView

@@ -51,7 +51,7 @@
 
             <com.rey.material.widget.Button
                 android:id="@+id/bt_verify"
-                style="@style/FlatWaveButtonRippleStyle"
+                style="@style/FlatButtonRippleStyle"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/big_button_height"
                 android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
@@ -62,7 +62,7 @@
 
             <com.rey.material.widget.Button
                 android:id="@+id/bt_resend_token"
-                style="@style/FlatWaveButtonRippleStyle"
+                style="@style/FlatButtonRippleStyle"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/big_button_height"
                 android:layout_marginTop="10dp"
@@ -75,7 +75,7 @@
 
     <com.rey.material.widget.TextView
         android:id="@+id/tv_back_to_login"
-        style="@style/FlatWaveButtonRippleStyle"
+        style="@style/TabRippleStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/ll_edittext_pane"

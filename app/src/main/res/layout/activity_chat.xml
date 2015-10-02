@@ -99,7 +99,7 @@
         </com.pair.view.LinearLayout>
 
         <!--<include-->
-        <!--layout="@layout/message_item_session_date"-->
+        <!--layout="@layout/message_item_log"-->
         <!--android:layout_width="wrap_content"-->
         <!--android:layout_height="wrap_content"-->
         <!--android:layout_alignParentTop="true"-->
@@ -110,7 +110,7 @@
         <!--android:visibility="gone"/>-->
 
         <include
-            layout="@layout/message_item_session_date">
+            layout="@layout/message_item_log">
         </include>
     </com.pair.view.RelativeLayout>
 

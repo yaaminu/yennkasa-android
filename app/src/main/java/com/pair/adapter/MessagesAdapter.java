@@ -48,7 +48,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2, DATE_MESSAGE = 0x0, TYPING_MESSAGE = 0x3;
     private static final Map<String, Integer> downloadingRows = new Hashtable<>();
     private static final int[] messagesLayout = {
-            R.layout.message_item_session_date,
+            R.layout.message_item_log,
             R.layout.list_item_message_outgoing,
             R.layout.list_item_message_incoming,
             R.layout.typing_dots
@@ -146,7 +146,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
 //                holder.dateComposed.setMinHeight(height);
 //                holder.dateComposed.setText(Html.fromHtml("<h1><b>...</b></h1>") + dateComposed, TextView.BufferType.SPANNABLE);
 //            } else {
-            holder.dateComposed.setText(dateComposed);
+            holder.dateComposed.setText("  "+dateComposed);
             holder.dateComposed.setCompoundDrawablesWithIntrinsicBounds(messageStates.get(message.getState()), 0, 0, 0);
 //            }
 

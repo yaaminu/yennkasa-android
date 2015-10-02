@@ -79,11 +79,11 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                 savedPosition = Math.min(default_fragment, MyFragmentStatePagerAdapter.POSITION_SETTINGS_FRAGMENT);
                 savedPosition = Math.max(MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT, default_fragment);
             } else {
-                UiHelpers.gotoSetUpActivity(MainActivity.this);
+                UiHelpers.gotoSetUpActivity(this);
             }
         } else {
             PairApp.disableComponents();
-            UiHelpers.gotoSetUpActivity(MainActivity.this);
+            UiHelpers.gotoSetUpActivity(this);
         }
     }
 

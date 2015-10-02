@@ -144,7 +144,7 @@
     <string name="sample_date">2/23/12</string>
     <string name="typing_message">typingMessage</string>
     <string name="ellipsis">…</string>
-    <string name="sampleDate">12–12–12</string>
+    <string name="sampleDate">  12–12–12</string>
     <string name="play_download_content_description">play_or_download</string>
     <string name="not_group">Sorry not yet a member of any group</string>
     <string name="invalid_verification_token">Invalid verification token</string>
