@@ -108,7 +108,7 @@ public class ParseClient implements UserApiV2, FileApi {
         return INSTANCE;
     }
 
-    public static String genVerificationToken() {
+    private static String genVerificationToken() {
         SecureRandom random = new SecureRandom();
         //maximum of 10000 and minimum of 99999
         int num = (int) Math.abs(random.nextDouble() * (99999 - 10000) + 10000);
@@ -138,6 +138,7 @@ public class ParseClient implements UserApiV2, FileApi {
                 country = user.getCountry();
 
         if (true) {
+            user.setDP("avartarempty");
             notifyCallback(callback, null, user);
             return;
         }

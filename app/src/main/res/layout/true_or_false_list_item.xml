@@ -2,6 +2,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    style="@style/FlatButtonRippleStyle"
     android:layout_height="wrap_content"
     android:descendantFocusability="beforeDescendants"
     android:minHeight="?android:attr/listPreferredItemHeight"
@@ -22,6 +23,7 @@
             android:layout_weight="1"
             android:text="@string/username_hint"
             android:textSize="@dimen/standard_text_size"
+            android:textColor="@color/abc_primary_text_material_light"
             tools:ignore="RtlHardcoded"/>
 
         <com.rey.material.widget.CheckBox

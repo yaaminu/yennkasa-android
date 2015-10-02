@@ -16,7 +16,7 @@
         app:pv_progressMode="indeterminate"
         app:pv_progressStyle="@style/InOutCircularProgressDrawableStyle" />
 
-    <TextView
+    <com.rey.material.widget.TextView
         android:id="@+id/textView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

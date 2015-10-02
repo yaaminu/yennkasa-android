@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.DrawableRes;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,12 +18,16 @@ import android.widget.TextView;
 
 import com.pair.Errors.ErrorCenter;
 import com.pair.pairapp.R;
-import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
 import com.pair.util.MediaUtils;
+import com.pair.util.PLog;
 import com.pair.util.SimpleDateUtil;
+import com.pair.util.TypeFaceUtil;
 import com.pair.util.UiHelpers;
+import com.pair.util.ViewUtils;
+import com.rey.material.util.TypefaceUtil;
+import com.rey.material.util.ViewUtil;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
 
@@ -96,19 +101,25 @@ public class ChooseDisplayPictureFragment extends Fragment {
         @Override
         public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom loadedFrom) {
             PLog.d(TAG, "loaded");
-            previewLabel.setText("");
             if (bitmap.getHeight() == 0) {
                 ErrorCenter.reportError(TAG, getString(R.string.error_failed_to_open_image));
-                displayPicture.setImageResource(R.drawable.group_avatar);
+                displayPicture.setImageResource(placeHolderDp);
             } else {
                 displayPicture.setImageBitmap(bitmap);
                 UiHelpers.showErrorDialog(((PairAppBaseActivity) getActivity()), getString(R.string.dp_prompt),
                         getString(R.string.yes), getString(R.string.no), new UiHelpers.Listener() {
                             @Override
                             public void onClick() {
+                                previewLabel.setText("");
                                 callback.onDp(dp);
                             }
-                        }, null);
+                        }, new UiHelpers.Listener() {
+                            @Override
+                            public void onClick() {
+                                previewLabel.setText(noDpNotice);
+                                displayPicture.setImageResource(placeHolderDp);
+                            }
+                        });
             }
         }
 
@@ -127,6 +138,7 @@ public class ChooseDisplayPictureFragment extends Fragment {
         }
     };
     private boolean dpShown = false;
+    private int placeHolderDp;
 
 
     public ChooseDisplayPictureFragment() {
@@ -150,17 +162,32 @@ public class ChooseDisplayPictureFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_choose_display_picture, container, false);
         previewLabel = ((TextView) view.findViewById(R.id.tv_dp_preview_label));
-        view.findViewById(R.id.bt_take_photo_change_dp).setOnClickListener(listener);
-        view.findViewById(R.id.bt_pick_photo_change_dp).setOnClickListener(listener);
+        ViewUtils.setTypeface(previewLabel, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
+        TextView takePhotoButton =(TextView) view.findViewById(R.id.bt_take_photo_change_dp);
+        takePhotoButton.setOnClickListener(listener);
+        ViewUtils.setTypeface(takePhotoButton, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
+        TextView pickPhotobutton = (TextView) view.findViewById(R.id.bt_pick_photo_change_dp);
+        pickPhotobutton.setOnClickListener(listener);
+        ViewUtils.setTypeface(pickPhotobutton, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
+
         displayPicture = ((ImageView) view.findViewById(R.id.riv_group_avatar_preview));
         final View cancelButton = view.findViewById(R.id.choose_dp_later);
+        ViewUtils.setTypeface((TextView) cancelButton,TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
         if (!callback.allowCancelling()) {
             cancelButton.setVisibility(View.GONE);
         } else {
             cancelButton.setVisibility(View.VISIBLE);
             cancelButton.setOnClickListener(listener);
         }
+
         dp = callback.defaultDp();
+        placeHolderDp = callback.placeHolderDp();
+        if (placeHolderDp == 0) {
+            throw new IllegalArgumentException("invalid drawable resource");
+        }
         noDpNotice = callback.noDpNotice() != null ? callback.noDpNotice() : getString(R.string.pick_an_optional_dp);
         previewLabel.setText(noDpNotice);
         displayPicture.setOnClickListener(listener);
@@ -225,16 +252,16 @@ public class ChooseDisplayPictureFragment extends Fragment {
             if (dp.startsWith("http")) {
                 dpShown = true;
                 picasso.load(dp)
-                        .placeholder(R.drawable.user_avartar)
-                        .error(R.drawable.user_avartar)
+                        .placeholder(placeHolderDp)
+                        .error(placeHolderDp)
                         .into(target);
             } else {
                 File dpFile = new File(dp);
                 if (dpFile.exists()) {
                     dpShown = true;
                     picasso.load(dpFile)
-                            .placeholder(R.drawable.user_avartar)
-                            .error(R.drawable.user_avartar)
+                            .placeholder(placeHolderDp)
+                            .error(placeHolderDp)
                             .into(target);
                 }
             }
@@ -255,6 +282,9 @@ public class ChooseDisplayPictureFragment extends Fragment {
         CharSequence noDpNotice();
 
         String defaultDp();
+
+        @DrawableRes
+        int placeHolderDp();
     }
 
 }

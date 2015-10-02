@@ -15,7 +15,9 @@ import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.ui.DPLoader;
 import com.pair.util.PLog;
+import com.pair.util.TypeFaceUtil;
 import com.pair.util.UiHelpers;
+import com.pair.util.ViewUtils;
 
 import java.util.Date;
 
@@ -47,6 +49,9 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
             holder.dateLastActive = (TextView) convertView.findViewById(R.id.tv_date_last_active);
             holder.peerName = (TextView) convertView.findViewById(R.id.tv_sender);
             holder.senderAvatar = (ImageView) convertView.findViewById(R.id.iv_user_avatar);
+            ViewUtils.setTypeface(holder.chatSummary, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
+            ViewUtils.setTypeface(holder.peerName, TypeFaceUtil.DROID_SERIF_BOLD_TTF);
+            ViewUtils.setTypeface(holder.dateLastActive, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
@@ -57,7 +62,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         User peer = UserManager.getInstance().fetchUserIfRequired(conversation.getPeerId());
         String peerName = peer.getName();
         holder.peerName.setText(peerName);
-        DPLoader.load(context, peer.getUserId(), peer.getDP())
+        DPLoader.load(context, peer.getDP())
                 .error(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .placeholder(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .resize(150, 150)

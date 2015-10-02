@@ -4,12 +4,15 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.CompoundButton;
 
 import com.pair.data.UserManager;
 import com.pair.data.settings.PersistedSetting;
 import com.pair.pairapp.R;
+import com.pair.util.TypeFaceUtil;
+import com.pair.util.ViewUtils;
 import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.TextView;
 
@@ -21,6 +24,7 @@ import java.util.List;
 public class SettingsAdapter extends BaseAdapter {
 
     private final List<PersistedSetting> results;
+    private final Delegate delegate;
     private View.OnTouchListener touchListener = new View.OnTouchListener() {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -28,9 +32,9 @@ public class SettingsAdapter extends BaseAdapter {
         }
     };
 
-    public SettingsAdapter(List<PersistedSetting> results) {
+    public SettingsAdapter(List<PersistedSetting> results, Delegate delegate) {
         this.results = results;
-
+        this.delegate = delegate;
     }
 
     @Override
@@ -71,19 +75,24 @@ public class SettingsAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, final ViewGroup parent) {
         ViewHolder holder;
+        final PersistedSetting setting = getItem(position);
         if (convertView == null) {
             convertView = LayoutInflater.from(parent.getContext()).inflate(layoutResources[getItemViewType(position)], parent, false);
             holder = new ViewHolder();
             holder.checkBox = ((CheckBox) convertView.findViewById(R.id.cb_checked));
             holder.summary = ((TextView) convertView.findViewById(R.id.tv_summary));
             holder.title = (TextView) convertView.findViewById(R.id.tv_title);
+            ViewUtils.setTypeface(holder.summary, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
+            if (setting.getType() == PersistedSetting.TYPE_CATEGORY) {
+                ViewUtils.setTypeface(holder.title, TypeFaceUtil.DROID_SERIF_BOLD_TTF);
+            } else {
+                ViewUtils.setTypeface(holder.title, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
+            }
             convertView.setTag(holder);
         }
         holder = (ViewHolder) convertView.getTag();
-
-        final PersistedSetting setting = getItem(position);
 
         holder.title.setText(setting.getTitle());
         if (setting.getType() != PersistedSetting.TYPE_CATEGORY) {
@@ -100,6 +109,12 @@ public class SettingsAdapter extends BaseAdapter {
             } else {
                 holder.summary.setText(setting.getSummary());
             }
+            convertView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                 delegate.onItemClick(((AdapterView) parent),v,position,-1);
+                }
+            });
         } else {
             convertView.setOnTouchListener(touchListener);
         }
@@ -124,4 +139,8 @@ public class SettingsAdapter extends BaseAdapter {
             R.layout.true_or_false_list_item,
             R.layout.list_list_item
     };
+
+    public interface Delegate {
+        void onItemClick(AdapterView parent, View view, int position, long itemId);
+    }
 }

@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/preferred_primary_color"
+    android:background="@drawable/login_fragment_back_ground"
     android:gravity="center_horizontal|top"
     android:paddingTop="@dimen/login_in_fragment_margin_top">
 
@@ -20,37 +20,35 @@
         android:textSize="@dimen/title_text_size"
         android:textStyle="bold"/>
 
-    <TextView
-        android:id="@+id/tv_sub_title"
-        android:layout_width="wrap_content"
+    <!--<TextView-->
+        <!--android:id="@+id/tv_sub_title"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_below="@+id/tv_app_name"-->
+        <!--android:layout_centerHorizontal="true"-->
+        <!--android:text="@string/subtitle"-->
+        <!--android:textColor="@android:color/white"-->
+        <!--android:textSize="@dimen/sub_title_text_size"-->
+        <!--android:textStyle="bold|italic"/>-->
+
+    <com.pair.view.RelativeLayout
+        android:id="@+id/login_sign_up_pane"
+        android:layout_width="@dimen/login_signup_verificaton_panel_width"
         android:layout_height="wrap_content"
         android:layout_below="@+id/tv_app_name"
-        android:layout_centerHorizontal="true"
-        android:text="@string/subtitle"
-        android:textColor="@android:color/white"
-        android:textSize="@dimen/sub_title_text_size"
-        android:textStyle="bold|italic"/>
-
-    <android.support.v7.widget.CardView
-        android:id="@+id/login_sign_up_pane"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/tv_sub_title"
         android:layout_centerHorizontal="true"
         android:layout_marginEnd="@dimen/login_fragment_cardview_margin_right"
         android:layout_marginLeft="@dimen/login_fragment_cardview_margin_left"
         android:layout_marginRight="@dimen/login_fragment_cardview_margin_right"
         android:layout_marginStart="@dimen/login_fragment_cardview_margin_left"
         android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
-        android:background="@android:color/white"
-        app:cardCornerRadius="0dp"
-        app:cardElevation="0dp">
+        android:background="#dfff">
 
         <com.pair.view.LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:animateLayoutChanges="true"
-            android:background="@color/white"
+            android:background="@color/transparent"
             android:orientation="vertical"
             android:paddingBottom="@dimen/padding_ll_login_fragment_bottom"
             android:paddingLeft="@dimen/padding_ll_login_fragment_left"
@@ -63,10 +61,9 @@
                 style="@style/Material.Widget.Spinner.Light"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/spinner_height"
-                android:gravity="center"
                 app:rd_delayClick="afterRelease"
                 app:rd_enable="true"
-                app:rd_style="@style/selectedListItemStyle"
+                app:rd_style="@style/FlatButtonRippleStyle"
                 app:spn_arrowAnimDuration="@android:integer/config_shortAnimTime"
                 app:spn_arrowInterpolator="@android:anim/decelerate_interpolator"
                 app:spn_arrowSwitchMode="true"
@@ -89,11 +86,10 @@
 
             <com.rey.material.widget.Button
                 android:id="@+id/bt_loginButton"
-                style="@style/RaiseWaveColorButtonRippleStyle"
+                style="@style/RaiseButtonRippleStyle"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/big_button_height"
                 android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
-                android:background="#225eb964"
                 android:gravity="center"
                 android:text="@string/log_in_button_label"
                 android:textColor="#000"
@@ -101,11 +97,11 @@
 
         </com.pair.view.LinearLayout>
 
-    </android.support.v7.widget.CardView>
+    </com.pair.view.RelativeLayout>
 
     <com.rey.material.widget.TextView
         android:id="@+id/tv_signup"
-        style="@style/FlatWaveColorButtonRippleStyle"
+        style="@style/FlatButtonRippleStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/login_sign_up_pane"
@@ -116,4 +112,6 @@
         android:text="@string/dont_have_an_account_sign_up"
         android:textColor="@android:color/white"
         android:textSize="@dimen/signup_have_an_account_size"/>
+
+    <include layout="@layout/copyright_text_view"/>
 </com.pair.view.RelativeLayout>

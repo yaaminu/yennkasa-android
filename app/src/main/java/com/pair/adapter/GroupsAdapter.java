@@ -12,7 +12,9 @@ import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.ui.DPLoader;
 import com.pair.util.PLog;
+import com.pair.util.TypeFaceUtil;
 import com.pair.util.UiHelpers;
+import com.pair.util.ViewUtils;
 
 import java.util.List;
 
@@ -54,12 +56,14 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
             holder.groupName = ((TextView) convertView.findViewById(R.id.tv_user_name));
             holder.groupMembers = ((TextView) convertView.findViewById(R.id.tv_group_members));
             holder.groupIcon = (ImageView) convertView.findViewById(R.id.iv_group_dp);
+            ViewUtils.setTypeface(holder.groupName, TypeFaceUtil.DROID_SERIF_BOLD_TTF);
+            ViewUtils.setTypeface(holder.groupMembers, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
             convertView.setTag(holder);
         } else {
             holder = ((ViewHolder) convertView.getTag());
         }
         holder.groupName.setText(group.getName());
-        DPLoader.load(context,group.getUserId(), group.getDP())
+        DPLoader.load(context, group.getDP())
                 .placeholder(R.drawable.group_avatar)
                 .error(R.drawable.group_avatar)
                 .resize(150, 150)

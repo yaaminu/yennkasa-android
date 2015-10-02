@@ -212,7 +212,6 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
             realm.addChangeListener(changeListener);
         }
         noUserAvailable = realm.where(User.class).notEqualTo(User.FIELD_ID, getMainUserId()).findFirst() == null;
-        realm.close();
     }
 
     @Override

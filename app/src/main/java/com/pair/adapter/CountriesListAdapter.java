@@ -8,6 +8,8 @@ import android.widget.ArrayAdapter;
 
 import com.pair.data.Country;
 import com.pair.pairapp.R;
+import com.pair.util.TypeFaceUtil;
+import com.pair.util.ViewUtils;
 import com.rey.material.widget.TextView;
 
 import java.util.Locale;
@@ -53,11 +55,14 @@ public class CountriesListAdapter extends ArrayAdapter<Country> {
         // FIXME: 8/14/2015 ensure we use the view holder pattern;
         if (convertView == null) {
             convertView = inflater.inflate(R.layout.country_spinner_item, parent, false);
+            holder = new ViewHolder();
+            holder.name = ((TextView) convertView.findViewById(R.id.tv_country_name));
+            holder.CCC = (TextView) convertView.findViewById(R.id.tv_country_ccc);
+            ViewUtils.setTypeface(holder.name, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
+            ViewUtils.setTypeface(holder.CCC, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
+            convertView.setTag(R.id.tag,holder);
         }
-        holder = new ViewHolder();
-        holder.name = ((TextView) convertView.findViewById(R.id.tv_country_name));
-        holder.CCC = (TextView) convertView.findViewById(R.id.tv_country_ccc);
-        convertView.setTag(holder);
+        holder = ((ViewHolder) convertView.getTag(R.id.tag));
 
         Country country = getItem(position);
         holder.name.setText(country.getName());

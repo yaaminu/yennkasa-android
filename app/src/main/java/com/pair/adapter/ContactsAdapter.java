@@ -20,7 +20,9 @@ import com.pair.pairapp.R;
 import com.pair.ui.DPLoader;
 import com.pair.ui.PairAppBaseActivity;
 import com.pair.util.PhoneNumberNormaliser;
+import com.pair.util.TypeFaceUtil;
 import com.pair.util.UiHelpers;
+import com.pair.util.ViewUtils;
 import com.rey.material.widget.Button;
 
 import java.util.List;
@@ -99,6 +101,11 @@ public class ContactsAdapter extends BaseAdapter {
             holder.userDp = ((ImageView) convertView.findViewById(R.id.iv_display_picture));
             holder.userPhone = (TextView) convertView.findViewById(R.id.tv_user_phone_group_admin);
             holder.initials = (TextView) convertView.findViewById(R.id.tv_initials);
+
+            ViewUtils.setTypeface(holder.inviteButton, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+            ViewUtils.setTypeface(holder.userPhone, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
+            ViewUtils.setTypeface(holder.initials, TypeFaceUtil.ROBOTO_LIGHT_TTF);
+            ViewUtils.setTypeface(holder.userName, TypeFaceUtil.DROID_SERIF_BOLD_TTF);
             convertView.setTag(holder);
         } else {
             holder = ((ViewHolder) convertView.getTag());
@@ -115,7 +122,7 @@ public class ContactsAdapter extends BaseAdapter {
             return convertView;
         }
         if (contact.isRegisteredUser) {
-            DPLoader.load(context, contact.numberInIEE_Format, contact.DP)
+            DPLoader.load(context, contact.DP)
                     .error(R.drawable.user_avartar)
                     .placeholder(R.drawable.user_avartar)
                     .resize(150, 150)

@@ -4,13 +4,11 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import com.pair.data.UserManager;
-import com.pair.util.PLog;
-import com.pair.util.Config;
 import com.pair.util.L;
+import com.pair.util.PLog;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.RequestCreator;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,14 +21,15 @@ public class DPLoader {
 
     private static final Map<String, String> refreshing = new HashMap<>();
 
-    public static RequestCreator load(Context context,String userId, String userDp) {
-        File dpFile = new File(Config.getAppProfilePicsBaseDir(), userDp);
-        if (dpFile.exists()) {
-            return Picasso.with(context).load(dpFile);
-        } else {
-            attemptToRecoverDp(userId, userDp); //async
-            return Picasso.with(context).load(DUMMY_URL);
-        }
+    public static RequestCreator load(Context context, String userDp) {
+//        File dpFile = new File(Config.getAppProfilePicsBaseDir(), userDp);
+//        if (dpFile.exists()) {
+//            return Picasso.with(context).load(dpFile);
+//        } else {
+//            attemptToRecoverDp(userId, userDp); //async
+//            return Picasso.with(context).load(DUMMY_URL);
+//        }
+        return Picasso.with(context).load(userDp);
     }
 
     private static void attemptToRecoverDp(final String userId, final String userDp) {

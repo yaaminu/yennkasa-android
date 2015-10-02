@@ -1,6 +1,7 @@
 package com.pair.util;
 
 import android.view.View;
+import android.widget.TextView;
 
 /**
  * @author Null-Pointer on 9/20/2015.
@@ -32,6 +33,17 @@ public class ViewUtils {
     public static void showViews(View... views) {
         for (View view : views) {
             showViewInternal(view);
+        }
+    }
+
+    public static void setTypeface(TextView textView, String fontName) {
+        if(textView != null){
+            textView.setTypeface(TypeFaceUtil.loadFromAssets(fontName));
+        }
+    }
+    public static void setTypeface(com.rey.material.widget.EditText editText, String fontName) {
+        if(editText != null){
+            editText.setTypeface(TypeFaceUtil.loadFromAssets(fontName));
         }
     }
 }

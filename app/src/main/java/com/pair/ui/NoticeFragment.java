@@ -12,6 +12,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.pair.pairapp.R;
+import com.pair.util.TypeFaceUtil;
+import com.pair.util.ViewUtils;
 import com.rey.material.widget.Button;
 
 /**
@@ -42,11 +44,14 @@ public class NoticeFragment extends Fragment implements View.OnClickListener {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_notice, container, false);
         TextView textView = ((TextView) view.findViewById(R.id.tv_notice));
+        ViewUtils.setTypeface(textView, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
         CharSequence noticeText = callback.getNoticeText();
         if (!TextUtils.isEmpty(noticeText)) {
             textView.setText(noticeText, TextView.BufferType.SPANNABLE);
         }
         final Button actionButton = ((Button) view.findViewById(R.id.action));
+        ViewUtils.setTypeface(textView, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
         noticeText = callback.getActionText();
         if (!TextUtils.isEmpty(noticeText)) {
             actionButton.setText(noticeText);

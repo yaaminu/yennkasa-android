@@ -1,10 +1,11 @@
-<com.pair.view.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                            xmlns:app="http://schemas.android.com/apk/res-auto"
-                            xmlns:tools="http://schemas.android.com/tools"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:orientation="vertical"
-                            tools:context="com.pair.ui.InviteActivity">
+<com.pair.view.LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.pair.ui.InviteActivity">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -26,8 +27,8 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="right"
                 android:clickable="true"
-                android:drawableLeft="@drawable/ic_action_accept"
-                android:drawableStart="@drawable/ic_action_accept"
+                android:drawableLeft="@drawable/ic_done_white_24dp"
+                android:drawableStart="@drawable/ic_done_white_24dp"
                 android:gravity="center_vertical"
                 android:text="@string/st_done"
                 android:textAppearance="@style/TabTextAppearance"

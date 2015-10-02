@@ -10,28 +10,6 @@
     tools:context="com.pair.ui.VerificationFragment">
 
     <TextView
-        android:id="@+id/tv_app_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:paddingTop="@dimen/tv_app_name_title_padding_top"
-        android:text="@string/app_name"
-        android:textColor="@android:color/white"
-        android:textSize="@dimen/title_text_size"
-        android:textStyle="bold"/>
-
-    <TextView
-        android:id="@+id/tv_sub_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/tv_app_name"
-        android:layout_centerHorizontal="true"
-        android:text="@string/subtitle"
-        android:textColor="@android:color/white"
-        android:textSize="@dimen/sub_title_text_size"
-        android:textStyle="bold|italic"/>
-
-    <TextView
         android:id="@+id/tv_verification_notice"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -44,21 +22,22 @@
         android:textSize="@dimen/sub_title_text_size"
         />
 
-    <android.support.v7.widget.CardView
+    <com.pair.view.RelativeLayout
         android:id="@+id/ll_edittext_pane"
-        android:layout_width="match_parent"
+        android:layout_width="@dimen/login_signup_verificaton_panel_width"
         android:layout_height="wrap_content"
         android:layout_below="@+id/tv_verification_notice"
+        android:layout_centerHorizontal="true"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
-        android:background="@color/white"
+        android:background="#dfff"
         app:cardCornerRadius="0dp"
         app:cardElevation="0dp">
 
         <com.pair.view.LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/white"
+            android:background="@color/transparent"
             android:orientation="vertical"
             android:padding="@dimen/padding_ll_login_fragment_bottom">
 
@@ -72,7 +51,7 @@
 
             <com.rey.material.widget.Button
                 android:id="@+id/bt_verify"
-                style="@style/RaiseWaveColorButtonRippleStyle"
+                style="@style/FlatWaveButtonRippleStyle"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/big_button_height"
                 android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
@@ -83,7 +62,7 @@
 
             <com.rey.material.widget.Button
                 android:id="@+id/bt_resend_token"
-                style="@style/RaiseWaveColorButtonRippleStyle"
+                style="@style/FlatWaveButtonRippleStyle"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/big_button_height"
                 android:layout_marginTop="10dp"
@@ -92,11 +71,11 @@
                 android:text="@string/st_send_again"
                 android:textSize="@dimen/standard_text_size"/>
         </com.pair.view.LinearLayout>
-    </android.support.v7.widget.CardView>
+    </com.pair.view.RelativeLayout>
 
     <com.rey.material.widget.TextView
         android:id="@+id/tv_back_to_login"
-        style="@style/FlatWaveColorButtonRippleStyle"
+        style="@style/FlatWaveButtonRippleStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/ll_edittext_pane"
@@ -107,4 +86,17 @@
         android:text="@string/st_back_login"
         android:textColor="@android:color/white"
         android:textSize="@dimen/standard_text_size"/>
+
+    <com.rey.material.widget.TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/copy_right"
+        android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
+        android:text="@string/idea_inc"
+        android:textColor="@color/white"
+        android:textSize="@dimen/standard_text_size"
+        android:textStyle="bold"
+        />
 </com.pair.view.RelativeLayout>

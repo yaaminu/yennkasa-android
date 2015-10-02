@@ -23,4 +23,5 @@ repositories {
 }
 
 dependencies {
+    compile project(':utils')
 }

@@ -37,6 +37,7 @@ import com.pair.pairapp.R;
 import com.pair.util.FileUtils;
 import com.pair.util.MediaUtils;
 import com.pair.util.PLog;
+import com.pair.util.TypeFaceUtil;
 import com.pair.util.UiHelpers;
 import com.pair.util.ViewUtils;
 import com.pair.view.CheckBox;
@@ -85,6 +86,10 @@ public class CreateMessageActivity extends MessageActivity
         attachmentPreview = findViewById(R.id.attachment_preview);
         View cancelAttachment = findViewById(R.id.cancel_attachment);
         tvAttachmentDescription = (TextView) findViewById(R.id.attachment_description);
+
+        ViewUtils.setTypeface(tvAttachmentDescription, TypeFaceUtil.DROID_SERIF_BOLD_TTF);
+        ViewUtils.setTypeface(messageEt,TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
         attachmentPreview.setOnClickListener(this);
         cancelAttachment.setOnClickListener(this);
         toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
@@ -216,7 +221,7 @@ public class CreateMessageActivity extends MessageActivity
             MenuItem sendMessageMenuItem = menu.findItem(R.id.action_send_message);
             if (sendMessageMenuItem == null) {
                 sendMessageMenuItem = menu.add(0, R.id.action_send_message, 100, R.string.send);
-                sendMessageMenuItem.setIcon(R.drawable.ic_action_send_now_white);
+                sendMessageMenuItem.setIcon(R.drawable.ic_send_white_24dp);
                 MenuItemCompat.setShowAsAction(sendMessageMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
             }
             sendMessageMenuItem.setVisible((!messageEt.getText().toString().isEmpty() || isAttaching)

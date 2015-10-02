@@ -5,7 +5,6 @@ import android.media.ThumbnailUtils;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.util.LruCache;
-import android.text.Html;
 import android.text.format.DateUtils;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
@@ -27,7 +26,9 @@ import com.pair.util.PLog;
 import com.pair.util.PreviewsHelper;
 import com.pair.util.SimpleDateUtil;
 import com.pair.util.TaskManager;
+import com.pair.util.TypeFaceUtil;
 import com.pair.util.UiHelpers;
+import com.pair.util.ViewUtils;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -63,12 +64,12 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         super(delegate.getContext(), realmResults, automaticUpdate);
         this.delegate = delegate;
         messageStates = new SparseIntArray(4);
-        messageStates.put(Message.STATE_PENDING, R.drawable.ic_action_upload);
-        messageStates.put(Message.STATE_SENT, R.drawable.ic_action_sent);
-        messageStates.put(Message.STATE_SEND_FAILED, R.drawable.ic_action_error);
-        messageStates.put(Message.STATE_SEEN, R.drawable.ic_visibility_white_24dp);
-        messageStates.put(Message.STATE_RECEIVED, R.drawable.ic_done_all_white_24dp);
-        height = context.getResources().getDrawable(R.drawable.ic_action_error).getIntrinsicHeight();
+        messageStates.put(Message.STATE_PENDING, R.drawable.ic_vertical_align_top_white_18dp);
+        messageStates.put(Message.STATE_SENT, R.drawable.ic_done_white_18dp);
+        messageStates.put(Message.STATE_SEND_FAILED, R.drawable.ic_error_white_18dp);
+        messageStates.put(Message.STATE_SEEN, R.drawable.ic_visibility_white_18dp);
+        messageStates.put(Message.STATE_RECEIVED, R.drawable.ic_done_all_white_18dp);
+        height = context.getResources().getDrawable(R.drawable.ic_error_white_18dp).getIntrinsicHeight();
         thumbnailCache = new LruCache<>(3);
         PICASSO = Picasso.with(context);
 
@@ -119,7 +120,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             awesomeTextViewHandler
                     .addViewSpanRenderer(MENTION_PATTERN, new MentionSpanRenderer())
                     .setView(holder.textMessage);
-            awesomeTextViewHandler.setText("@"+formattedDate);
+            awesomeTextViewHandler.setText("@" + formattedDate);
             convertView.setOnTouchListener(touchListener);
             return convertView;
         } else if (Message.isTypingMessage(message)) {
@@ -140,14 +141,14 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
 
         String dateComposed = DateUtils.formatDateTime(context, messageDateComposed.getTime(), DateUtils.FORMAT_SHOW_TIME);
         if (isOutgoingMessage(message)) {
-            if (message.getState() == Message.STATE_PENDING) {
-                holder.dateComposed.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0); //reset every thing
-                holder.dateComposed.setMinHeight(height);
-                holder.dateComposed.setText(Html.fromHtml("<h1><b>...</b></h1>") + dateComposed, TextView.BufferType.SPANNABLE);
-            } else {
-                holder.dateComposed.setText(dateComposed);
-                holder.dateComposed.setCompoundDrawablesWithIntrinsicBounds(messageStates.get(message.getState()), 0, 0, 0);
-            }
+//            if (message.getState() == Message.STATE_PENDING) {
+//                holder.dateComposed.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0); //reset every thing
+//                holder.dateComposed.setMinHeight(height);
+//                holder.dateComposed.setText(Html.fromHtml("<h1><b>...</b></h1>") + dateComposed, TextView.BufferType.SPANNABLE);
+//            } else {
+            holder.dateComposed.setText(dateComposed);
+            holder.dateComposed.setCompoundDrawablesWithIntrinsicBounds(messageStates.get(message.getState()), 0, 0, 0);
+//            }
 
             if (message.getState() == Message.STATE_SEND_FAILED) {
                 holder.retry.setVisibility(View.VISIBLE);
@@ -245,7 +246,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     }
 
     private void makeThumbnail(final String uri) {
-        TaskManager.execute(new Runnable() {
+        Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 Bitmap bitmap = ThumbnailUtils.createVideoThumbnail(uri, MediaStore.Images.Thumbnails.MINI_KIND);
@@ -256,32 +257,20 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                     TaskManager.executeOnMainThread(new Runnable() {
                         @Override
                         public void run() {
-                            notifyDataSetChanged();
+                            try {
+                                notifyDataSetChanged();
+                            } catch (Exception ignored) {
+                            }
                         }
                     });
                 }
             }
-        });
+        };
+        if (!TaskManager.executeNow(runnable)) {
+            TaskManager.execute(runnable);
+        }
     }
 
-    @SuppressWarnings("unused")
-    private String getStringRepresentation(int status) {
-//        switch (status) {
-//            case Message.STATE_PENDING:
-//                return context.getString(R.string.st_message_state_pending);
-//            case Message.STATE_SEND_FAILED:
-//                return context.getString(R.string.st_message_state_failed);
-//            case Message.STATE_RECEIVED:
-//                return context.getString(R.string.st_message_state_delivered);
-//            case Message.STATE_SEEN:
-//                return context.getString(R.string.st_message_state_seen);
-//            case Message.STATE_SENT:
-//                return context.getString(R.string.st_message_state_sent);
-//            default:
-//                throw new AssertionError("new on unknown message status");
-//        }
-        return Message.state(context, status);
-    }
 
     private void attemptToMarkAsSeen(Message message) {
         if (message.getState() != Message.STATE_SEEN &&
@@ -295,14 +284,18 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     MessageUtils.Callback callback = new MessageUtils.Callback() {
         @Override
         public void onDownloaded(Exception e, String messageId) {
-            downloadingRows.remove(messageId);
-            notifyDataSetChanged();
-            if (e != null) {
-                //user might have left
-                ErrorCenter.reportError(TAG, e.getMessage());
+            try {
+                downloadingRows.remove(messageId);
+                notifyDataSetChanged();
+                if (e != null) {
+                    //user might have left
+                    ErrorCenter.reportError(TAG, e.getMessage());
+                }
+            } catch (Exception ignored) {
             }
         }
     };
+
     private void download(Message message) {
         MessageUtils.download(message, callback);
     }
@@ -319,6 +312,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         holder.playOrDownload = ((ImageView) convertView.findViewById(R.id.v_download_play));
         holder.progress = convertView.findViewById(R.id.pb_download_progress);
         holder.retry = convertView.findViewById(R.id.iv_retry);
+        ViewUtils.setTypeface(holder.dateComposed, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+        ViewUtils.setTypeface(holder.textMessage, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
         convertView.setTag(holder);
         return convertView;
     }

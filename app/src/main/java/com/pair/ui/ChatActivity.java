@@ -39,6 +39,7 @@ import com.pair.util.LiveCenter;
 import com.pair.util.PLog;
 import com.pair.util.SimpleDateUtil;
 import com.pair.util.TaskManager;
+import com.pair.util.TypeFaceUtil;
 import com.pair.util.UiHelpers;
 import com.pair.util.ViewUtils;
 import com.rey.material.app.ToolbarManager;
@@ -96,7 +97,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         }
     };
     private Conversation currConversation;
-    private Realm realm;
+    private Realm messageConversationRealm,usersRealm;
     //    private SwipeDismissListViewTouchListener swipeDismissListViewTouchListener;
     private ListView messagesListView;
     private EditText messageEt;
@@ -115,6 +116,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         toolBar.setOnClickListener(this);
         toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         messageEt = ((EditText) findViewById(R.id.et_message));
+        ViewUtils.setTypeface(messageEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         sendButton = findViewById(R.id.iv_send);
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
         dateHeaderViewParent = findViewById(R.id.date_header_parent);
@@ -124,16 +126,18 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                 .addViewSpanRenderer(MENTION_PATTERN, new HashtagsSpanRenderer())
                 .setView((TextView) findViewById(R.id.tv_log_message));
 
-        realm = Realm.getInstance(this);
+        messageConversationRealm = Message.REALM(this);
+        usersRealm = User.Realm(this);
+
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
-        peer = userManager.fetchUserIfRequired(realm, peerId);
+        peer = userManager.fetchUserIfRequired(usersRealm, peerId);
         String peerName = peer.getName();
         //noinspection ConstantConditions
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setTitle(peerName);
         actionBar.setDisplayHomeAsUpEnabled(true);
-        messages = realm.where(Message.class).equalTo(Message.FIELD_FROM, peer.getUserId())
+        messages = messageConversationRealm.where(Message.class).equalTo(Message.FIELD_FROM, peer.getUserId())
                 .or()
                 .equalTo(Message.FIELD_TO, peer.getUserId())
                 .findAllSorted(Message.FIELD_DATE_COMPOSED, true, Message.FIELD_TYPE, false);
@@ -169,9 +173,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     private void setUpCurrentConversation() {
         String peerId = peer.getUserId();
-        currConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
+        currConversation = messageConversationRealm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
         if (currConversation == null) { //first time
-            currConversation = Conversation.newConversationWithoutSession(realm, peerId, true);
+            currConversation = Conversation.newConversationWithoutSession(messageConversationRealm, peerId, true);
         }
     }
 
@@ -186,7 +190,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             User mainUser = getCurrentUser();
             menu.findItem(R.id.action_invite_friends)
                     .setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().getUserId().equals(mainUser.getUserId()));
-            menu.findItem(R.id.action_view_profile).setTitle((peer.getType() == User.TYPE_GROUP) ? R.string.st_group_info : R.string.st_view_profile);
         }
 //        }
         return super.onPrepareOptionsMenu(menu);
@@ -206,9 +209,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             Intent intent = new Intent(this, InviteActivity.class);
             intent.putExtra(InviteActivity.EXTRA_GROUP_ID, peer.getUserId());
             startActivityForResult(intent, ADD_USERS_REQUEST);
-            return true;
-        } else if (id == R.id.action_view_profile) {
-            UiHelpers.gotoProfileActivity(this, peer.getUserId());
             return true;
         } else if (id == R.id.action_attach) {
             UiHelpers.attach(this);
@@ -234,9 +234,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     protected void onPause() {
         if (currConversation != null) {
-            realm.beginTransaction();
+            messageConversationRealm.beginTransaction();
             currConversation.setActive(false);
-            realm.commitTransaction();
+            messageConversationRealm.commitTransaction();
         }
         if (!userManager.isGroup(peer.getUserId())) {
             LiveCenter.notifyNotTyping(peer.getUserId());
@@ -254,7 +254,8 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     @Override
     protected void onDestroy() {
-        realm.close();
+        messageConversationRealm.close();
+        usersRealm.close();
         super.onDestroy();
     }
 
@@ -327,7 +328,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         if (outOfSync) return;
 
-        User user = realm.where(User.class).beginGroup().notEqualTo(User.FIELD_ID, getMainUserId()).notEqualTo(User.FIELD_ID, peer.getUserId()).endGroup().findFirst();
+        User user = usersRealm.where(User.class).beginGroup().notEqualTo(User.FIELD_ID, getMainUserId()).notEqualTo(User.FIELD_ID, peer.getUserId()).endGroup().findFirst();
         boolean can4ward = user != null; //no other user apart from peer. cannot forward so lets hide it
 
 
@@ -383,7 +384,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     private void deleteMessage(int position) {
         outOfSync = true;
-        realm.beginTransaction(); //beginning transaction earlier to force realm to prevent other realms from changing the data set
+        messageConversationRealm.beginTransaction(); //beginning transaction earlier to force realm to prevent other realms from changing the data set
         //hook up message to remove.
         //if it is the only message for the day remove the date message
         //if it is the last message
@@ -409,7 +410,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                 }
             }
         }
-        realm.commitTransaction();
+        messageConversationRealm.commitTransaction();
         outOfSync = false;
         adapter.notifyDataSetChanged();
         TaskManager.execute(new Runnable() {

@@ -5,4 +5,5 @@
     <item name="action_done" type="id" />
     <item name="latest_message" type="id" />
     <item name="bt_add" type="id" />
+    <item name="tag" type="id"/>
 </resources>

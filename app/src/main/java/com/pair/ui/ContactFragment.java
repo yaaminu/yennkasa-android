@@ -22,6 +22,7 @@ import com.pair.data.ContactsManager.Contact;
 import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
+import com.pair.util.TypeFaceUtil;
 import com.pair.util.UiHelpers;
 import com.pair.util.ViewUtils;
 import com.pair.workers.ContactSyncService;
@@ -134,11 +135,14 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Ad
         proxy.setReleaseLabel(getString(R.string.release_to_refresh));
         proxy.setPullLabel(getString(R.string.pull_to_refresh));
         refreshButton = view.findViewById(R.id.refresh_button);
+        ViewUtils.setTypeface(((TextView) refreshButton), TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
         ViewUtils.hideViews(refreshButton);
         listView.setScrollEmptyView(false);
         listView.setOnRefreshListener(this);
         emptyTextView = ((TextView) view.findViewById(R.id.tv_empty));
         emptyTextView.setText(R.string.loading);
+        ViewUtils.setTypeface(emptyTextView, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
         listView.setEmptyView(view.findViewById(R.id.empty_view));
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(this);

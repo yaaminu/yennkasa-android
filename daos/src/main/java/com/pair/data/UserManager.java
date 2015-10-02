@@ -45,9 +45,9 @@ import retrofit.mime.TypedFile;
 public final class UserManager {
 
     private static final String TAG = UserManager.class.getSimpleName(),
-            KEY_SESSION_ID = "lfl/-90-09=klvj8ejf", //don't give a clue what this is for security reasons
-            KEY_USER_PASSWORD = "klfiildelklaklier",//and this one too
-            KEY_USER_VERIFIED = "vvlaikkljhf", // and this
+            KEY_USER_PASSWORD = "klfiildelklaklier",
+            KEY_SESSION_ID = "lfl/-90-09=klvj8ejf",
+            KEY_USER_VERIFIED = "vvlaikkljhf",
             DEFAULT_VALUE = "defaultValue",
             sessionPrefFileName = "slfdafks",
             USER_PREFS_FILE_NAME = "userPrefs";
@@ -105,7 +105,7 @@ public final class UserManager {
 
     private synchronized void saveMainUser(User user) {
         final Context context = Config.getApplicationContext();
-        Realm realm = Realm.getInstance(context);
+        Realm realm = User.Realm(context);
         realm.beginTransaction();
         realm.copyToRealmOrUpdate(user);
         realm.commitTransaction();
@@ -121,7 +121,7 @@ public final class UserManager {
                 return mainUser;
             }
         }
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        Realm realm = User.Realm(Config.getApplicationContext());
         User user = getCurrentUser(realm);
         if (user != null) {
             //returning {@link RealmObject} from methods will leak resources since
@@ -196,6 +196,7 @@ public final class UserManager {
         }
     }
 
+    @SuppressWarnings("unused")
     private int getSessionIntPref(String key, int defaultValue) {
 
         Realm realm = PersistedSetting.REALM(sessionFile);
@@ -273,7 +274,7 @@ public final class UserManager {
     }
 
     private void completeGroupCreation(User group, Set<String> membersId) {
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        Realm realm = User.Realm(Config.getApplicationContext());
         realm.beginTransaction();
         group.setMembers(new RealmList<User>());//required for realm to behave
         User mainUser = getCurrentUser(realm);
@@ -286,6 +287,7 @@ public final class UserManager {
                 return user != null && !isGroup(user.getUserId());
             }
         });
+        //noinspection ConstantConditions
         group.getMembers().addAll(members);
         group.setAdmin(mainUser);
         group.setType(User.TYPE_GROUP);
@@ -312,7 +314,7 @@ public final class UserManager {
             @Override
             public void done(Exception e, HttpResponse response) {
                 if (e == null) {
-                    Realm realm = Realm.getInstance(Config.getApplicationContext());
+                    Realm realm = User.Realm(Config.getApplicationContext());
                     realm.beginTransaction();
                     final User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
                     final ContactsManager.Filter<User> filter = new ContactsManager.Filter<User>() {
@@ -322,6 +324,7 @@ public final class UserManager {
                         }
                     };
                     RealmList<User> membersToDelete = User.aggregateUsers(realm, members, filter);
+                    //noinspection ConstantConditions
                     group.getMembers().removeAll(membersToDelete);
                     realm.commitTransaction();
                     realm.close();
@@ -335,14 +338,14 @@ public final class UserManager {
     }
 
     private boolean isUser(String id) {
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        Realm realm = User.Realm(Config.getApplicationContext());
         boolean isUser = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst() != null;
         realm.close();
         return isUser;
     }
 
     public boolean isAdmin(String groupId, String userId) {
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        Realm realm = User.Realm(Config.getApplicationContext());
         User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
         if (group == null) {
             realm.close();
@@ -380,7 +383,7 @@ public final class UserManager {
             @Override
             public void done(Exception e, HttpResponse httpResponse) {
                 if (e == null) {
-                    Realm realm = Realm.getInstance(Config.getApplicationContext());
+                    Realm realm = User.Realm(Config.getApplicationContext());
                     realm.beginTransaction();
                     final User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
                     final ContactsManager.Filter<User> filter = new ContactsManager.Filter<User>() {
@@ -390,6 +393,7 @@ public final class UserManager {
                         }
                     };
                     RealmList<User> newMembers = User.aggregateUsers(realm, membersId, filter);
+                    //noinspection ConstantConditions
                     group.getMembers().addAll(newMembers);
                     realm.commitTransaction();
                     realm.close();
@@ -426,7 +430,7 @@ public final class UserManager {
     }
 
     private void saveFreshUsers(List<User> freshMembers) {
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        Realm realm = User.Realm(Config.getApplicationContext());
         saveFreshUsers(freshMembers, realm);
         realm.close();
     }
@@ -463,7 +467,7 @@ public final class UserManager {
     }
 
     private void completeGetGroupInfo(User group, String id) {
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        Realm realm = User.Realm(Config.getApplicationContext());
         User staleGroup = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
         realm.beginTransaction();
         if (staleGroup != null) {
@@ -477,7 +481,7 @@ public final class UserManager {
         }
         realm.commitTransaction();
         realm.close();
-        realm = Realm.getInstance(Config.getApplicationContext());
+        realm = User.Realm(Config.getApplicationContext());
         User g = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
         PLog.d(TAG, "members of " + g.getName() + " are: " + g.getMembers().size());
         realm.close();
@@ -536,7 +540,7 @@ public final class UserManager {
     }
 
     private void completeGetGroups(List<User> groups) {
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        Realm realm = User.Realm(Config.getApplicationContext());
         realm.beginTransaction();
         User mainUser = getCurrentUser(realm);
         for (User group : groups) {
@@ -580,7 +584,7 @@ public final class UserManager {
             doNotify(NO_CONNECTION_ERROR, callback);
             return;
         }
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        Realm realm = User.Realm(Config.getApplicationContext());
         final User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
         if (user == null) {
             PLog.w(TAG, "can't change dp for user with id " + userId + " because no such user exists");
@@ -615,7 +619,7 @@ public final class UserManager {
             return;
         }
 
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        Realm realm = User.Realm(Config.getApplicationContext());
         User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
         if (user != null) {
             realm.beginTransaction();
@@ -627,7 +631,7 @@ public final class UserManager {
 
     public void logIn(final String phoneNumber, final String userIso2LetterCode, final CallBack callback) {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
-            doNotify(NO_CONNECTION_ERROR, callback);
+            callback.done(NO_CONNECTION_ERROR);
             return;
         }
         completeLogin(phoneNumber, userIso2LetterCode, callback);
@@ -797,17 +801,17 @@ public final class UserManager {
         });
     }
 
+    @SuppressWarnings("unused")
     public void logOut(Context context, final CallBack logOutCallback) {
-        if (true) {
-            throw new UnsupportedOperationException();
-        }
+
+        oops();
         //TODO logout user from backend
         String userId = getSessionStringPref(KEY_SESSION_ID, null);
         if ((userId == null)) {
             throw new AssertionError("calling logout when no user is logged in"); //security hole!
         }
 
-        Realm realm = Realm.getInstance(context);
+        Realm realm = User.Realm(context);
         // TODO: 6/14/2015 remove this in production code.
         User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
         if (user == null) {
@@ -818,7 +822,9 @@ public final class UserManager {
         realm.clear(Conversation.class);
         realm.close();
     }
-
+    private void oops(){
+        throw new UnsupportedOperationException();
+    }
     public void syncContacts(final List<String> array) {
         if (!ConnectionUtils.isConnected()) {
             return;
@@ -845,7 +851,7 @@ public final class UserManager {
             @Override
             public void done(Exception e, HttpResponse response) {
                 if (e == null) {
-                    Realm realm = Realm.getInstance(Config.getApplicationContext());
+                    Realm realm = User.Realm(Config.getApplicationContext());
                     try {
                         User group = realm.where(User.class).equalTo("_id", id).findFirst();
                         if (group != null) {
@@ -952,6 +958,7 @@ public final class UserManager {
 
     private void clearClass(Realm realm, Class clazz) {
         realm.beginTransaction();
+        //noinspection unchecked
         realm.clear(clazz);
         realm.commitTransaction();
         realm.close();
@@ -1043,20 +1050,6 @@ public final class UserManager {
         realm.close();
     }
 
-    public boolean supportsCalling(String userId) {
-        if (isGroup(userId)) {
-            return false;
-        }
-
-        Realm realm = User.Realm(Config.getApplicationContext());
-        try {
-            User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
-            return user != null && user.getHasCall();
-        } finally {
-            realm.close();
-        }
-    }
-
     public Pair<String, String> isValidGroupName(String proposedName) {
         Context applicationContext = Config.getApplicationContext();
         String errorMessage = null;
@@ -1134,6 +1127,7 @@ public final class UserManager {
         return peer;
     }
 
+    @SuppressWarnings("unused")
     public List<String> allUserIds() {
         Realm realm = User.Realm(Config.getApplicationContext());
         try {
@@ -1217,6 +1211,7 @@ public final class UserManager {
         }
     }
 
+    @SuppressWarnings("unused")
     public int getIntPref(String key, int defaultValue) {
         Realm realm = PersistedSetting.REALM(userPrefsLocation);
         try {

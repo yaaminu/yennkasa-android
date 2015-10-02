@@ -24,6 +24,8 @@ import com.jmpergar.awesometext.AwesomeTextHandler;
 import com.jmpergar.awesometext.MentionSpanRenderer;
 import com.pair.pairapp.R;
 import com.pair.util.ScreenUtility;
+import com.pair.util.TypeFaceUtil;
+import com.pair.util.ViewUtils;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -83,12 +85,17 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
         listContainer = (ListView) view.findViewById(R.id.lv_container);
         selectedItems.clear();
         awesomeTextViewHandler = new AwesomeTextHandler();
+        TextView selectedUsers = (TextView) view.findViewById(R.id.tv_selected_tems);
         awesomeTextViewHandler
                 .addViewSpanRenderer(MENTION_PATTERN, new MentionSpanRenderer())
-                .setView(((TextView) view.findViewById(R.id.tv_selected_tems)));
+                .setView(selectedUsers);
         awesomeTextViewHandler.hide();
+
+        ViewUtils.setTypeface(selectedUsers, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+        ViewUtils.setTypeface(filterEditText, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+        ViewUtils.setTypeface((TextView) addView,TypeFaceUtil.ROBOTO_REGULAR_TTF);
         View emptyView = interactionListener.emptyView();
-        final View defaultEmptyView = view.findViewById(R.id.tv_empty);
+        final TextView defaultEmptyView = ((TextView) view.findViewById(R.id.tv_empty));
         //noinspection StatementWithEmptyBody
         if (emptyView == null) {
             emptyView = defaultEmptyView;
@@ -100,7 +107,9 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
 //            parent.addView(emptyView, 0, defaultEmptyView.getLayoutParams());
 //            parent.removeView(defaultEmptyView);
         }
-        ((TextView) defaultEmptyView).setText(((TextView) emptyView).getText());
+        defaultEmptyView.setText(((TextView) emptyView).getText());
+        ViewUtils.setTypeface(defaultEmptyView, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
+
         emptyView = defaultEmptyView;
         if (interactionListener.preferredContainer() == ContainerType.LIST) {
             listContainer.setEmptyView(emptyView);

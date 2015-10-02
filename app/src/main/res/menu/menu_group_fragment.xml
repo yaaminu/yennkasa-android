@@ -4,6 +4,6 @@
     <item
         android:id="@+id/action_create_group"
         android:title="@string/action_create_group"
-        android:icon="@drawable/ic_action_add_group_white"
+        android:icon="@drawable/ic_group_add_white_24dp"
         pairapp:showAsAction="always|withText" />
 </menu>

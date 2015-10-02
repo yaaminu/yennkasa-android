@@ -42,6 +42,7 @@ public class RealmUtils {
                 user.setUserId(23326656422L + "" + i);
                 user.setName("@username " + i);
                 user.setType(User.TYPE_NORMAL_USER);
+                user.setDP("avatar_empty");
                 realm.copyToRealm(user);
             }
         } catch (Exception e) {

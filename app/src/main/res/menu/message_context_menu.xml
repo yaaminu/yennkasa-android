@@ -15,7 +15,7 @@
         pairapp:showAsAction="always"/>
     <item
         android:id="@+id/action_delete"
-        android:icon="@drawable/ic_action_discard_white"
+        android:icon="@drawable/ic_delete_white_24dp"
         android:title="@string/action_delete_conversation"
         pairapp:showAsAction="always"/>
 </menu>

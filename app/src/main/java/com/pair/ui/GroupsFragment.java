@@ -46,7 +46,7 @@ public class GroupsFragment extends ListFragment {
         setHasOptionsMenu(true);
         View view = inflater.inflate(R.layout.fragment_groups, container, false);
         FloatingActionButton actionButton = ((FloatingActionButton) view.findViewById(R.id.fab_new_group));
-        actionButton.setIcon(getResources().getDrawable(R.drawable.ic_action_add_group_white), false);
+        actionButton.setIcon(getResources().getDrawable(R.drawable.ic_group_add_white_24dp), false);
         actionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

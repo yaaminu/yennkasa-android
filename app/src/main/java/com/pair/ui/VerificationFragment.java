@@ -9,11 +9,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.pair.Errors.ErrorCenter;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
+import com.pair.util.TypeFaceUtil;
 import com.pair.util.UiHelpers;
+import com.pair.util.ViewUtils;
 import com.rey.material.app.DialogFragment;
 
 /**
@@ -56,10 +59,24 @@ public class VerificationFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_verification, container, false);
-        view.findViewById(R.id.bt_verify).setOnClickListener(listener);
-        view.findViewById(R.id.bt_resend_token).setOnClickListener(listener);
-        view.findViewById(R.id.tv_back_to_login).setOnClickListener(listener);
+        android.widget.TextView buttonVerify = (android.widget.TextView) view.findViewById(R.id.bt_verify);
+        buttonVerify.setOnClickListener(listener);
+        ViewUtils.setTypeface(buttonVerify, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
+        android.widget.TextView resendToken = (android.widget.TextView) view.findViewById(R.id.bt_resend_token);
+        resendToken.setOnClickListener(listener);
+        ViewUtils.setTypeface(resendToken, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
+        android.widget.TextView backToLogin = (android.widget.TextView) view.findViewById(R.id.tv_back_to_login);
+        backToLogin.setOnClickListener(listener);
+        ViewUtils.setTypeface(backToLogin, TypeFaceUtil.DROID_SERIF_BOLD_TTF);
+
         etVerification = ((EditText) view.findViewById(R.id.et_verification));
+        ViewUtils.setTypeface(etVerification, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
+        ViewUtils.setTypeface((TextView) view.findViewById(R.id.tv_verification_notice), TypeFaceUtil.ROBOTO_REGULAR_TTF);
+        ViewUtils.setTypeface((TextView) view.findViewById(R.id.copy_right), TypeFaceUtil.two_d_font);
+
         progressDialog = UiHelpers.newProgressDialog();
         return view;
     }

@@ -36,8 +36,7 @@ public class AttachmentFragment extends Fragment {
     private class AttachOptionsAdapter extends BaseAdapter {
       private final int [] icons = {
         R.drawable.ic_action_picture,
-              R.drawable.ic_action_video,
-              R.drawable.ic_action_call,
+              R.drawable.ic_action_video
       };
         @Override
         public int getCount() {

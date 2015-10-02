@@ -63,4 +63,5 @@
     <dimen name="setting_item_category">36sp</dimen>
     <dimen name="stroke_width">4dp</dimen>
     <dimen name="title_text_size_large">70sp</dimen>
+    <dimen name="login_signup_verificaton_panel_width">500dp</dimen>
 </resources>

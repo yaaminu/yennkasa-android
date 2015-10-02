@@ -223,4 +223,6 @@
     <string name="idea_inc">IDEA Inc.</string>
     <string name="app_version">V 0.0.1 beta</string>
     <string name="legal_notice">LEGAL NOTICE</string>
+    <string name="error_feedback_subject_too_lonng">Subject may not  exceed 40 chars</string>
+    <string name="silent">Silent</string>
 </resources>

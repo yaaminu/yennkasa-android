@@ -16,6 +16,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 
@@ -23,6 +24,7 @@ import com.pair.adapter.SettingsAdapter;
 import com.pair.data.UserManager;
 import com.pair.data.settings.PersistedSetting;
 import com.pair.pairapp.R;
+import com.pair.util.PLog;
 import com.pair.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.SimpleDialog;
@@ -34,7 +36,7 @@ public class SettingsFragment extends ListFragment {
 
 
     public static final int PICK_RINGTONE_REQUEST_CODE = 1001;
-    private BaseAdapter adapter;
+    public static final String TAG = SettingsFragment.class.getSimpleName();
     private UserManager.CallBack callback = new UserManager.CallBack() {
         @Override
         public void done(Exception e) {
@@ -43,6 +45,41 @@ public class SettingsFragment extends ListFragment {
         }
     };
     private DialogFragment dialogFragment;
+    private SettingsAdapter.Delegate delegate = new SettingsAdapter.Delegate() {
+        @Override
+        public void onItemClick(AdapterView parent, View view, int position, long itemId) {
+            final PersistedSetting item = (PersistedSetting) parent.getAdapter().getItem(position);
+            key = item.getKey();
+            if (key.equals(UserManager.NEW_MESSAGE_TONE)) {
+                Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, true);
+                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
+                if (!item.getStringValue().equals(UserManager.DEFAULT)) {
+                    intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, Uri.parse(item.getStringValue()));
+                }
+                startActivityForResult(intent, PICK_RINGTONE_REQUEST_CODE);
+            } else if (key.equals(UserManager.DELETE_OLDER_MESSAGE)) {
+                final String[] options = getResources().getStringArray(R.array.deleteOldMessages_options);
+                SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
+                    @Override
+                    public void onPositiveActionClicked(DialogFragment fragment) {
+                        super.onPositiveActionClicked(fragment);
+                        int selected = getSelectedIndex();
+                        item.setIntValue(selected);
+                        item.setSummary(options[selected]);
+                        UserManager.getInstance().putPref(key, selected);
+                        refreshDisplay();
+                    }
+                };
+                builder.title(getString(R.string.deleteOldMessages_title) + " ?");
+                builder.positiveAction(getString(android.R.string.ok));
+                builder.negativeAction(getString(android.R.string.no));
+                builder.items(options, item.getIntValue());
+                DialogFragment.newInstance(builder).show(getFragmentManager(), null);
+            }
+        }
+    };
 
     public SettingsFragment() {
         // Required empty public constructor
@@ -85,7 +122,7 @@ public class SettingsFragment extends ListFragment {
     }
 
     private void refreshDisplay() {
-        adapter = new SettingsAdapter(UserManager.getInstance().userSettings());
+        BaseAdapter adapter = new SettingsAdapter(UserManager.getInstance().userSettings(), delegate);
         setListAdapter(adapter);
     }
 
@@ -93,36 +130,7 @@ public class SettingsFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView l, View v, int position, final long id) {
-        final PersistedSetting item = (PersistedSetting) l.getAdapter().getItem(position);
-        key = item.getKey();
-        if (key.equals(UserManager.NEW_MESSAGE_TONE)) {
-            Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
-            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
-            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, true);
-            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
-            if (!item.getStringValue().equals(UserManager.DEFAULT)) {
-                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, Uri.parse(item.getStringValue()));
-            }
-            startActivityForResult(intent, PICK_RINGTONE_REQUEST_CODE);
-        } else if (key.equals(UserManager.DELETE_OLDER_MESSAGE)) {
-            final String[] options = getResources().getStringArray(R.array.deleteOldMessages_options);
-            SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
-                @Override
-                public void onPositiveActionClicked(DialogFragment fragment) {
-                    super.onPositiveActionClicked(fragment);
-                    int selected = getSelectedIndex();
-                    item.setIntValue(selected);
-                    item.setSummary(options[selected]);
-                    UserManager.getInstance().putPref(key, selected);
-                    refreshDisplay();
-                }
-            };
-            builder.title(getString(R.string.deleteOldMessages_title) + " ?");
-            builder.positiveAction(getString(android.R.string.ok));
-            builder.negativeAction(getString(android.R.string.no));
-            builder.items(options, item.getIntValue());
-            DialogFragment.newInstance(builder).show(getFragmentManager(), null);
-        }
+
     }
 
 
@@ -131,16 +139,27 @@ public class SettingsFragment extends ListFragment {
         if (resultCode == Activity.RESULT_OK && requestCode == PICK_RINGTONE_REQUEST_CODE) {
             String ringToneUri = PersistedSetting.SILENT;
             Uri uri = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
-            String title = getString(R.string.no_name);
+            String title = getString(R.string.silent);
             if (uri != null) {
                 ringToneUri = uri.toString();
-                String[] projection = {MediaStore.MediaColumns.TITLE};
-                Cursor cursor = getContext().getContentResolver().query(uri, projection, null, null, null);
-                if (cursor.getCount() > 0) {
-                    cursor.moveToFirst();
-                    title = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.TITLE));
+                Cursor cursor = null;
+                try {
+                    String[] projection = {MediaStore.MediaColumns.TITLE};
+                    cursor = getContext().getContentResolver().query(uri, projection, null, null, null);
+                    if (cursor.getCount() > 0) {
+                        cursor.moveToFirst();
+                        int columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.TITLE);
+                        title = columnIndex == -1 ? getString(R.string.no_name) : cursor.getString(columnIndex);
+                    } else {
+                        title = getString(R.string.no_name);
+                    }
+                }catch (IllegalArgumentException e){
+                    PLog.e(TAG,"error while retrieving ringtone from media store");
+                }finally{
+                    if (cursor != null) {
+                        cursor.close();
+                    }
                 }
-                cursor.close();
             }
             UserManager.getInstance().putPrefUpdateSummary(key, ringToneUri, title);
             refreshDisplay();

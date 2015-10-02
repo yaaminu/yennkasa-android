@@ -3,9 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:descendantFocusability="beforeDescendants"
+    android:descendantFocusability="afterDescendants"
     android:minHeight="?android:attr/listPreferredItemHeight"
     android:orientation="vertical"
+    style="@style/FlatButtonRippleStyle"
     android:padding="@dimen/list_item_padding"
     tools:ignore="RtlHardcoded">
 
@@ -17,6 +18,7 @@
         android:singleLine="true"
         android:text="@string/username_hint"
         android:textSize="@dimen/standard_text_size"
+        android:textColor="@color/abc_primary_text_material_light"
         tools:ignore="RtlHardcoded"/>
 
     <com.rey.material.widget.TextView

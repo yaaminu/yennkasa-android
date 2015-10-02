@@ -30,13 +30,13 @@
         app:et_supportSingleLine="true"
         app:et_supportTextErrorColor="#FFFF0000"/>
 
-    <com.rey.material.widget.EditText
+    <EditText
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:id="@+id/et_feedback_body"
         android:layout_weight="0.5"
         style="@style/message_edittext_style"
-        app:et_supportMode="none"
+        android:gravity="top"
         android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
         />
 
@@ -57,6 +57,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/add_device_info"
+            android:id="@+id/tv_add_device_info"
             android:textColor="@color/black"
             android:textSize="@dimen/standard_text_size"/>
 

@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.util.Pair;
 import android.text.TextUtils;
@@ -212,6 +213,7 @@ public class UiHelpers {
             @Override
             protected void onBuildDone(Dialog dialog) {
                 dialog.layoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+                ViewUtils.setTypeface((TextView) dialog.findViewById(R.id.textView), TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
                 dialog.setCancelable(cancelable);
                 dialog.setCanceledOnTouchOutside(cancelable);
             }
@@ -248,7 +250,9 @@ public class UiHelpers {
             protected void onBuildDone(Dialog dialog) {
                 dialog.layoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 CheckBox checkBox = ((CheckBox) dialog.findViewById(R.id.cb_stop_annoying_me));
-                ((TextView) dialog.findViewById(R.id.tv_dialog_message)).setText(message);
+                TextView textView = (TextView) dialog.findViewById(R.id.tv_dialog_message);
+                textView.setText(message);
+                ViewUtils.setTypeface(textView, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
                 checkBox.setOnCheckedChangeListener(listener);
             }
 
@@ -283,7 +287,7 @@ public class UiHelpers {
     }
 
     private static String getString(Context context, int resId) {
-        return context.getString(resId).toUpperCase();
+        return context.getString(resId);
     }
 
     public static void promptAndExit(final PairAppBaseActivity toFinish) {
@@ -498,16 +502,25 @@ public class UiHelpers {
 
     public static void dismissProgressDialog(final DialogFragment dialogFragment) {
         if (dialogFragment != null) {
-            TaskManager.executeOnMainThread(new Runnable() {
-                @Override
-                public void run() {
-                    //noinspection EmptyCatchBlock
-                    try {
-                        dialogFragment.dismiss();
-                    } catch (Exception e) {
-                    }
-                }
-            });
+            try {
+                FragmentManager supportFragmentManager = dialogFragment.getActivity().getSupportFragmentManager();
+                supportFragmentManager.beginTransaction()
+                        .remove(dialogFragment)
+                        .commitAllowingStateLoss();
+                //noinspection ConstantConditions
+                    TaskManager.executeOnMainThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            //noinspection EmptyCatchBlock
+                            try {
+                                dialogFragment.dismiss();
+                            } catch (Exception e) {
+                            }
+                        }
+                    });
+            } catch (Exception ignored) {
+                PLog.e(TAG,ignored.getMessage());
+            }
         }
     }
 
@@ -530,6 +543,7 @@ public class UiHelpers {
 
     public interface Listener {
         void onClick();
+
     }
 
     private static DialogFragment makeAttachDialog(final Context context) {

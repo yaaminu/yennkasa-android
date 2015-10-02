@@ -58,7 +58,7 @@ public class ConversationsFragment extends ListFragment {
         conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
         adapter = new ConversationAdapter(getActivity(), conversations, true);
         FloatingActionButton actionButton = ((FloatingActionButton) view.findViewById(R.id.fab_new_message));
-        actionButton.setIcon(getResources().getDrawable(R.drawable.ic_action_edit_white), false);
+        actionButton.setIcon(getResources().getDrawable(R.drawable.ic_mode_edit_white_24dp), false);
         actionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -19,11 +19,13 @@ import com.pair.data.Country;
 import com.pair.data.UserManager;
 import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
-import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.FormValidator;
+import com.pair.util.PLog;
 import com.pair.util.PhoneNumberNormaliser;
+import com.pair.util.TypeFaceUtil;
 import com.pair.util.UiHelpers;
+import com.pair.util.ViewUtils;
 import com.pair.view.MyTextWatcher;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.widget.Spinner;
@@ -184,7 +186,7 @@ public class LoginFragment extends Fragment {
             if (v.getId() == R.id.bt_loginButton) {
                 validateAndContinue();
             } else if (v.getId() == R.id.tv_signup) {
-                toggleSignUpCLogin(((TextView) v));
+                toggleSignUpLogin(((TextView) v));
             } else {
                 throw new AssertionError();
             }
@@ -272,18 +274,41 @@ public class LoginFragment extends Fragment {
         super.onCreateView(inflater, container, savedInstanceState);
         realm = Country.REALM(getActivity());
         View view = inflater.inflate(R.layout.login_fragment, container, false);
+
         phoneNumberEt = (EditText) view.findViewById(R.id.et_phone_number_field);
+        ViewUtils.setTypeface(phoneNumberEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
         loginButton = (Button) view.findViewById(R.id.bt_loginButton);
+        ViewUtils.setTypeface(loginButton, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
         usernameEt = (EditText) view.findViewById(R.id.et_username);
+        ViewUtils.setTypeface(usernameEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
         spinner = ((Spinner) view.findViewById(R.id.sp_ccc));
         progressDialog = UiHelpers.newProgressDialog();
         validator = new FormValidator();
         validator.addStrategy(phoneNumberStrategy)
                 .addStrategy(usernameStrategy);
         setUpSpinner();
+
         TextView tv = (TextView) view.findViewById(R.id.tv_signup);
+        ViewUtils.setTypeface(tv, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         tv.setOnClickListener(listener);
+
         loginButton.setOnClickListener(listener);
+
+        android.widget.TextView appName = ((android.widget.TextView) view.findViewById(R.id.tv_app_name));
+        ViewUtils.setTypeface(appName, TypeFaceUtil.two_d_font);
+
+
+
+        android.widget.TextView copyRight = ((android.widget.TextView) view.findViewById(R.id.copy_right));
+        ViewUtils.setTypeface(copyRight, TypeFaceUtil.two_d_font);
+
+//        //re-use appName
+//        appName = ((android.widget.TextView) view.findViewById(R.id.tv_app_name));
+//        ViewUtils.setTypeface(appName, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
+
         return view;
     }
 
@@ -325,7 +350,7 @@ public class LoginFragment extends Fragment {
         }
     }
 
-    private void toggleSignUpCLogin(TextView v) {
+    private void toggleSignUpLogin(TextView v) {
         if (isCLoggingIn) {
             isCLoggingIn = false;
             v.setText(R.string.st_already_have_an_account);
@@ -347,7 +372,7 @@ public class LoginFragment extends Fragment {
 
     private void doAttemptCLogin() {
         if (isCLoggingIn) {
-            callback.onCLogin(phoneNumber, userCountry);
+            callback.onLogin(phoneNumber, userCountry);
         } else {
             callback.onSignUp(userName, phoneNumber, userCountry);
         }
@@ -366,7 +391,7 @@ public class LoginFragment extends Fragment {
     }
 
     interface Callbacks {
-        void onCLogin(String phoneNumber, String userIsoCountry);
+        void onLogin(String phoneNumber, String userIsoCountry);
 
         void onSignUp(String userName, String phoneNumber, String userIsoCountry);
 

@@ -15,6 +15,8 @@ import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.ui.DPLoader;
 import com.pair.util.PhoneNumberNormaliser;
+import com.pair.util.TypeFaceUtil;
+import com.pair.util.ViewUtils;
 import com.pair.view.CheckBox;
 
 import java.util.regex.Pattern;
@@ -69,14 +71,16 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
             convertView = LayoutInflater.from(context).inflate(layoutResource, parent, false);
             ViewHolder holder = new ViewHolder();
             holder.iv = ((ImageView) convertView.findViewById(R.id.iv_display_picture));
-            holder.tv = ((TextView) convertView.findViewById(R.id.tv_user_name));
+            holder.userName = ((TextView) convertView.findViewById(R.id.tv_user_name));
             holder.userPhone = (TextView) convertView.findViewById(R.id.tv_user_phone_group_admin);
             holder.checkBox = (CheckBox) convertView.findViewById(R.id.cb_checked);
+            ViewUtils.setTypeface(holder.userName, TypeFaceUtil.DROID_SERIF_BOLD_TTF);
+            ViewUtils.setTypeface(holder.userPhone, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
             convertView.setTag(holder);
         }
         User user = getItem(position);
         ViewHolder holder = (ViewHolder) convertView.getTag();
-        holder.tv.setText(user.getName());
+        holder.userName.setText(user.getName());
 
         if (UserManager.getInstance().isGroup(user.getUserId())) {
             holder.userPhone.setText(R.string.group);
@@ -84,7 +88,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
             holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId(), UserManager.getInstance().getUserCountryISO()));
         }
         if (!multiSelect) {
-            DPLoader.load(context, user.getUserId(), user.getDP())
+            DPLoader.load(context, user.getDP())
                     .error(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                     .placeholder(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                     .resize(150, 150)
@@ -182,7 +186,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
 
     private static class ViewHolder {
         private ImageView iv;
-        private TextView tv, userPhone;
+        private TextView userName, userPhone;
         private CheckBox checkBox;
     }
 

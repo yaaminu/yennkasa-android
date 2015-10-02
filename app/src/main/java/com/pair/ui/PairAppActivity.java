@@ -4,6 +4,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
@@ -39,7 +41,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     static private volatile Message latestMessage;
     protected PairAppClient.PairAppClientInterface pairAppClientInterface;
     protected boolean bound = false;
-    private float dpWidth, dpHeight, pixelsHeight, pixelsWidth;
 
 
     private ServiceConnection connection = new ServiceConnection() {
@@ -59,7 +60,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
             onUnbind();
         }
     };
-    private Realm realm;
+    private Realm messageRealm;
     private View.OnClickListener listener = new View.OnClickListener() {
 
         @Override
@@ -82,13 +83,16 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         }
     };
     private SnackBar snackBar;
+    private SoundPool pool;
+    private int streamId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setUpScreenDimensions();
         if (isUserVerified()) {
-            realm = Message.REALM(this);
+            messageRealm = Message.REALM(this);
+            pool = new SoundPool(1, AudioManager.STREAM_NOTIFICATION, 0);
         }
     }
 
@@ -105,7 +109,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         super.onResume();
         if (isUserVerified()) {
             Config.appOpen(true);
-            realm.addChangeListener(this);
+            messageRealm.addChangeListener(this);
             snackBar = getSnackBar();
             if (snackBar == null) {
                 throw new IllegalStateException("snack bar cannot be null");
@@ -121,7 +125,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         super.onPause();
         if (isUserVerified()) {
             Config.appOpen(false);
-            realm.removeChangeListener(this);
+            messageRealm.removeChangeListener(this);
             if (bound) {
                 pairAppClientInterface.unRegisterUINotifier(this);
             }
@@ -142,7 +146,10 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     @Override
     protected void onDestroy() {
         if (isUserVerified()) {
-            realm.close();
+            if (streamId != 0) {
+                pool.pause(streamId);
+            }
+            messageRealm.close();
         }
         super.onDestroy();
     }
@@ -180,7 +187,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
     @Override
     public void notifyUser(Context context, final Message message, final String sender) {
-        if(userManager.getBoolPref(UserManager.IN_APP_NOTIFICATIONS,true)) {
+        if (userManager.getBoolPref(UserManager.IN_APP_NOTIFICATIONS, true)) {
             latestMessage = message;
             final Pair<String, String> tuple = new Pair<>(message.getFrom(), sender);
             if (recentChatList.contains(tuple)) {
@@ -222,32 +229,14 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 })
                 .duration(6000) //6 secs
                 .setOnClickListener(listener);
+        int id = pool.load(this, R.raw.sound_a, 1);
+
+        streamId = pool.play(id, 1, 1, 0, 1, 1);
         snackBar.removeOnDismiss(true).show(this);
     }
 
     protected void setUpScreenDimensions() {
         ScreenUtility utility = new ScreenUtility(this);
-        this.dpHeight = utility.getDpHeight();
-        this.dpWidth = utility.getDpWidth();
-        this.pixelsHeight = utility.getPixelsHeight();
-        this.pixelsWidth = utility.getPixelsWidth();
-    }
-
-    protected float SCREEN_WIDTH_PIXELS() {
-        return pixelsWidth;
-    }
-
-    protected float SCREEN_WIDTH_DP() {
-        return dpWidth;
-    }
-
-    protected float SCREEN_HEIGHT_PIXELS() {
-
-        return pixelsHeight;
-    }
-
-    protected float SCREEN_HEIGHT_DP() {
-        return dpHeight;
     }
 
     @Override
@@ -257,7 +246,9 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
     @Override
     public final void onChange() {
-        long newMessageCount = realm.where(Message.class).equalTo(Message.FIELD_STATE, Message.STATE_RECEIVED).count();
+        long newMessageCount = messageRealm.where(Message.class)
+                .equalTo(Message.FIELD_STATE, Message.STATE_RECEIVED)
+                .notEqualTo(Message.FIELD_FROM, getCurrentUser().getUserId()).count();
         if (newMessageCount > 0 && newMessageCount >= unReadMessages) {
             unReadMessages = newMessageCount;
         } else {

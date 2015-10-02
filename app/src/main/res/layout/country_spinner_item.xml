@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.pair.view.LinearLayout
-    style="@style/selectedListItemStyle"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/FlatButtonRippleStyle"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="48dp"
     android:gravity="center_vertical"
     android:orientation="horizontal"
+    tools:ignore="RtlHardcoded"
     app:rd_delayClick="afterRelease">
 
     <com.rey.material.widget.TextView
@@ -16,8 +18,8 @@
         android:layout_weight="1"
         android:ellipsize="end"
         android:maxLines="2"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
+        android:paddingLeft="@dimen/padding_ll_login_fragment_left"
+        android:paddingRight="@dimen/padding_ll_login_fragment_right"
         android:textColor="#FF000000"
         android:textSize="@dimen/spinner_item_text_size"/>
 
@@ -25,8 +27,8 @@
         android:id="@+id/tv_country_ccc"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
+        android:paddingLeft="@dimen/padding_ll_login_fragment_left"
+        android:paddingRight="@dimen/padding_ll_login_fragment_right"
         android:singleLine="true"
         android:textColor="#FF000000"
         android:textSize="@dimen/spinner_item_text_size"/>

@@ -28,6 +28,7 @@ import com.pair.util.MediaUtils;
 import com.pair.util.PLog;
 import com.pair.util.PhoneNumberNormaliser;
 import com.pair.util.ScreenUtility;
+import com.pair.util.TypeFaceUtil;
 import com.pair.util.UiHelpers;
 import com.pair.util.ViewUtils;
 import com.pair.view.FrameLayout;
@@ -57,7 +58,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private TextView userName, userPhoneOrAdminName, mutualGroupsOrMembersTv;
     private User user;
     private Realm realm;
-    private View exitGroupButton, callButton, progressView, changeDpButton, changeDpButton2, deleteGroup;
+    private View progressView, changeDpButton, changeDpButton2;
+    private android.widget.Button exitGroupButton, callButton, deleteGroup, sendMessageButton;
     private DialogFragment progressDialog;
     private Uri image_capture_out_put_uri;
     private boolean changingDp = false;
@@ -75,7 +77,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         }
     };
     private TextView phoneOrAdminTitle, mutualGroupsOrMembersTvTitle;
-    private View sendMessageButton;
     private UserManager userManager;
     //    private int DP_HEIGHT;
 //    private int DP_WIDTH;
@@ -171,14 +172,24 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
         displayPicture = ((android.widget.ImageView) view.findViewById(R.id.iv_display_picture));
         userName = ((TextView) view.findViewById(R.id.tv_user_name));
+        ViewUtils.setTypeface(userName, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
+
         changeDpButton = view.findViewById(R.id.bt_pick_photo_change_dp);
         changeDpButton2 = view.findViewById(R.id.bt_take_photo_change_dp);
         progressView = view.findViewById(R.id.pb_progress);
-        deleteGroup = view.findViewById(R.id.bt_dissolve_group);
-        sendMessageButton = view.findViewById(R.id.bt_message);
+        deleteGroup = (android.widget.Button) view.findViewById(R.id.bt_dissolve_group);
+        ViewUtils.setTypeface(deleteGroup, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
+        sendMessageButton = (android.widget.Button) view.findViewById(R.id.bt_message);
         sendMessageButton.setOnClickListener(clickListener);
-        callButton = view.findViewById(R.id.bt_call);
-        exitGroupButton = view.findViewById(R.id.bt_exit_group);
+        ViewUtils.setTypeface(sendMessageButton, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
+        callButton = (android.widget.Button) view.findViewById(R.id.bt_call);
+        ViewUtils.setTypeface(callButton, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
+        exitGroupButton = (android.widget.Button) view.findViewById(R.id.bt_exit_group);
+        ViewUtils.setTypeface(exitGroupButton, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
         progressDialog = UiHelpers.newProgressDialog();
 
         ((FloatingActionButton) changeDpButton2).setIcon(getResources().getDrawable(R.drawable.ic_action_camera), true);
@@ -190,11 +201,16 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         View parent = view.findViewById(R.id.tv_user_phone_group_admin);
         phoneOrAdminTitle = ((TextView) parent.findViewById(R.id.tv_title));
         userPhoneOrAdminName = ((TextView) parent.findViewById(R.id.tv_subtitle));
-
+        ViewUtils.setTypeface(phoneOrAdminTitle, TypeFaceUtil.DROID_SERIF_BOLD_TTF);
+        ViewUtils.setTypeface(userPhoneOrAdminName, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
         //re-use parent
         parent = view.findViewById(R.id.tv_shared_groups_or_group_members);
         mutualGroupsOrMembersTv = ((TextView) parent.findViewById(R.id.tv_subtitle));
         mutualGroupsOrMembersTvTitle = (TextView) parent.findViewById(R.id.tv_title);
+
+        ViewUtils.setTypeface(mutualGroupsOrMembersTv, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
+        ViewUtils.setTypeface(mutualGroupsOrMembersTvTitle, TypeFaceUtil.DROID_SERIF_BOLD_TTF);
+
 
         //end view hookup
         realm = Realm.getInstance(getActivity());
@@ -399,7 +415,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             return;
         }
         showProgressView();
-        DPLoader.load(getActivity(), user.getUserId(), user.getDP())
+        DPLoader.load(getActivity(), user.getDP())
                 .placeholder(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .error(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .into(displayPicture, new Callback() {

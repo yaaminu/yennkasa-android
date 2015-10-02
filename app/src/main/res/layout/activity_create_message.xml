@@ -72,7 +72,7 @@
                         android:layout_height="wrap_content"
                         android:background="@color/transparent"
                         android:contentDescription="@string/content_description_remove_attachment"
-                        android:src="@drawable/ic_action_cancel"/>
+                        android:src="@drawable/ic_cancel_white_24dp"/>
                 </com.pair.view.FrameLayout>
             </LinearLayout>
         </android.support.v7.widget.CardView>

@@ -80,7 +80,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     private void next() {
         Fragment fragment;// = getSupportFragmentManager().findFragmentById(R.id.container);
         if (stage == UNKNOWN) {
-            if (isUserCLoggedIn()) {
+            if (isUserLoggedIn()) {
                 if (isUserVerified()) {
                     stage = DP_STAGE;
                 } else {
@@ -216,11 +216,16 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
 
     @Override
     public String defaultDp() {
-        return isUserCLoggedIn() ? getCurrentUser().getDP() : null;
+        return isUserLoggedIn() ? getCurrentUser().getDP() : null;
     }
 
     @Override
-    public void onCLogin(String phoneNumber, String userIsoCountry) {
+    public int placeHolderDp() {
+        return R.drawable.user_avartar;
+    }
+
+    @Override
+    public void onLogin(String phoneNumber, String userIsoCountry) {
         progressDialog.show(getSupportFragmentManager(), "");
         userManager.logIn(phoneNumber, userIsoCountry, loginOrSignUpCallback);
     }

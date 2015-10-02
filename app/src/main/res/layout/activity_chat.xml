@@ -3,7 +3,7 @@
                               xmlns:tools="http://schemas.android.com/tools"
                               android:layout_width="match_parent"
                               android:layout_height="match_parent"
-                              android:background="@drawable/bg_messages">
+                              android:background="@drawable/tile_bg">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/main_toolbar"
@@ -45,7 +45,7 @@
             android:layout_height="match_parent"
             android:layout_alignParentTop="true"
             android:layout_marginBottom="16dp"
-            android:background="#0000"
+            android:background="@color/transparent"
             android:gravity="top"
             android:orientation="vertical">
 
@@ -54,7 +54,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:background="#0000"
+                android:background="@color/transparent"
                 android:divider="@null"
                 android:dividerHeight="16dp"
                 android:fadingEdge="none"
@@ -87,12 +87,13 @@
                     android:layout_marginStart="0dp"
                     android:background="@drawable/green_round_back_ground"
                     android:padding="@dimen/padding_ll_login_fragment_bottom"
+                    android:foregroundGravity="center"
                     android:visibility="gone">
 
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:src="@drawable/ic_action_send_now_white"/>
+                        android:src="@drawable/ic_send_white_24dp"/>
                 </com.pair.view.FrameLayout>
             </LinearLayout>
         </com.pair.view.LinearLayout>

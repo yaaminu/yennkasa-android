@@ -27,10 +27,13 @@ import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.PhoneNumberNormaliser;
+import com.pair.util.TypeFaceUtil;
 import com.pair.util.UiHelpers;
+import com.pair.util.ViewUtils;
 import com.pair.view.CheckBox;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
+import com.rey.material.util.ViewUtil;
 import com.rey.material.widget.SnackBar;
 
 import java.io.File;
@@ -89,6 +92,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         groupNameEt = ((EditText) findViewById(R.id.et_group_name));
+        ViewUtils.setTypeface(groupNameEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         dpPreview = findViewById(R.id.rl_group_dp_preview);
         groupNameEt.addTextChangedListener(this);
         realm = Realm.getInstance(this);
@@ -256,6 +260,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
 
     private void onGroupCreated(Exception e, final String groupId) {
         if (e != null) {
+
             UiHelpers.dismissProgressDialog(progressDialog);
             ErrorCenter.reportError(TAG, e.getMessage());
         } else {
@@ -428,6 +433,11 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     @Override
     public String defaultDp() {
         return null;
+    }
+
+    @Override
+    public int placeHolderDp() {
+        return R.drawable.group_avatar;
     }
 
     private class CustomUsersAdapter extends MultiChoiceUsersAdapter {
