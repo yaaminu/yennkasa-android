@@ -26,7 +26,6 @@ public class TaskManager {
     public static void init(Application application) {
         if (!initialised.getAndSet(true)) {
             PLog.w(TAG, "initialising %s", TAG);
-
             // TODO: 9/28/2015 look up for all pending tasks like dp change
         }
     }
@@ -59,7 +58,7 @@ public class TaskManager {
 
 
     private static boolean expressExecutionQueueNotTooLong() {
-        return expressQueueLength > maxLength;
+        return expressQueueLength >= maxLength;
     }
 
     private static void ensureInitialised() {

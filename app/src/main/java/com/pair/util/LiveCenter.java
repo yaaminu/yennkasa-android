@@ -1,8 +1,11 @@
 package com.pair.util;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.text.TextUtils;
 
 import com.github.nkzawa.emitter.Emitter;
 import com.pair.data.UserManager;
@@ -12,7 +15,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -44,6 +49,56 @@ public class LiveCenter {
             }
         }
     };
+
+    private static int totalUnreadMessages = 0;
+
+
+    public synchronized static void incrementUnreadMessageForPeer(String peerId, int messageCount) {
+        if (TextUtils.isEmpty(peerId)) {
+            throw new IllegalArgumentException("null peer id");
+        }
+        if (messageCount < 1) {
+            throw new IllegalArgumentException("invalid message count");
+        }
+
+        SharedPreferences preferences = getPreferences();
+        int existing = preferences.getInt(peerId, 0) + messageCount;
+        preferences.edit().putInt(peerId, existing).apply();
+        totalUnreadMessages += messageCount;
+    }
+
+    private static SharedPreferences getPreferences() {
+        return Config.getApplication().getSharedPreferences("unreadMessages", Context.MODE_PRIVATE);
+    }
+
+    public synchronized static void incrementUnreadMessageForPeer(String peerId) {
+        incrementUnreadMessageForPeer(peerId, 1);
+    }
+
+    public synchronized static int getUnreadMessageFor(String peerId) {
+        if (TextUtils.isEmpty(peerId)) {
+            throw new IllegalArgumentException("null peerId");
+        }
+        return getPreferences().getInt(peerId, 0);
+    }
+
+    public synchronized static int getTotalUnreadMessages() {
+        return totalUnreadMessages;
+    }
+
+    public synchronized static void invalidateNewMessageCount(String peerId) {
+        if (TextUtils.isEmpty(peerId)) {
+            throw new IllegalArgumentException("null peerId");
+        }
+        final SharedPreferences preferences = getPreferences();
+        int newMessagesToPeerId = preferences.getInt(peerId, 0);
+        totalUnreadMessages -= newMessagesToPeerId;
+        if (totalUnreadMessages < 0) {
+            totalUnreadMessages = 0;
+        }
+        preferences.edit().remove(peerId).apply();
+    }
+
     private static final Set<String> activeUsers = new HashSet<>(),
             typing = new HashSet<>(),
             PEERS_IN_CHATROOM = new HashSet<>();
@@ -271,7 +326,7 @@ public class LiveCenter {
      * this particular user is typing
      *
      * @param userId the id of the recipient of the message
-     * @throws IllegalStateException    if the call is not made on the main thread
+     * @throws IllegalStateException if the call is not made on the main thread
      */
     public static void notifyTyping(String userId) {
         ThreadUtils.ensureMain();
@@ -303,7 +358,7 @@ public class LiveCenter {
      * this particular user is no more typing
      *
      * @param userId the ID of the recipient of the message
-     * @throws IllegalStateException    if the call is not made on the main thread
+     * @throws IllegalStateException if the call is not made on the main thread
      */
     public static void notifyNotTyping(String userId) {
         ThreadUtils.ensureMain();
@@ -387,6 +442,15 @@ public class LiveCenter {
         synchronized (TYPING_AND_ACTIVE_USERS_LOCK) {
             return typing.contains(userId);
         }
+    }
+
+    public synchronized static Set<String> getAllPeersWithUnreadMessages() {
+        SharedPreferences data = getPreferences();
+        Map<String, ?> all = data.getAll();
+        if (all != null) {
+            return Collections.unmodifiableSet(all.keySet());
+        }
+        return Collections.emptySet();
     }
 
     /**

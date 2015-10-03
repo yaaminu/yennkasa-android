@@ -7,10 +7,12 @@ import com.github.nkzawa.emitter.Emitter;
 import com.pair.data.Message;
 import com.pair.data.UserManager;
 import com.pair.net.sockets.SocketIoClient;
-import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.L;
 import com.pair.util.LiveCenter;
+import com.pair.util.PLog;
+import com.pair.util.TaskManager;
+import com.pair.util.ThreadUtils;
 import com.parse.ParsePushBroadcastReceiver;
 
 import org.json.JSONException;
@@ -90,8 +92,20 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
         }
     }
 
-    static void notifyReceived(Message message) {
+    static void notifyReceived(final Message message) {
         //noinspection StatementWithEmptyBody
+        if (ThreadUtils.isMainThread()) {
+            TaskManager.execute(new Runnable() {
+                @Override
+                public void run() {
+                    doNotifyReceived(message);
+                }
+            });
+            return;
+        }
+        doNotifyReceived(message);    }
+
+    private static void doNotifyReceived(Message message) {
         if (LiveCenter.isOnline(message.getFrom())) {
             if (messagingClient == null) {
                 initClient();
@@ -120,6 +134,26 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
 
     static void notifyMessageSeen(final Message message) {
         //noinspection StatementWithEmptyBody
+        if (ThreadUtils.isMainThread()) {
+            TaskManager.execute(new Runnable() {
+                @Override
+                public void run() {
+                    doNotifySeen(message);
+                }
+            });
+            return;
+        }
+        doNotifySeen(message);
+
+    }
+
+    private static void doNotifySeen(Message message) {
+        String sender = message.getFrom();
+        if (UserManager.getInstance().isGroup(message.getTo())) {
+            sender = message.getTo();
+        }
+        LiveCenter.invalidateNewMessageCount(sender);
+
         if (LiveCenter.isOnline(message.getFrom())) {
             //use socketsIO
             if (messagingClient == null) {
@@ -138,7 +172,6 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             //maybe push
             // TODO: 9/18/2015 use push
         }
-
     }
 
     @Override

@@ -6,10 +6,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
-import android.support.v4.util.Pair;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.View;
@@ -19,9 +19,11 @@ import com.pair.data.Message;
 import com.pair.data.UserManager;
 import com.pair.messenger.Notifier;
 import com.pair.messenger.PairAppClient;
+import com.pair.pairapp.BuildConfig;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
-import com.pair.util.ScreenUtility;
+import com.pair.util.LiveCenter;
+import com.pair.util.PLog;
 import com.pair.util.UiHelpers;
 import com.rey.material.widget.SnackBar;
 
@@ -29,15 +31,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.realm.Realm;
-import io.realm.RealmChangeListener;
 
 /**
  * @author Null-Pointer on 8/12/2015.
  */
-public abstract class PairAppActivity extends PairAppBaseActivity implements Notifier, RealmChangeListener, NoticeFragment.NoticeFragmentCallback {
+public abstract class PairAppActivity extends PairAppBaseActivity implements Notifier, NoticeFragment.NoticeFragmentCallback {
     public static final int DELAY_MILLIS = 2000;
-    static private volatile List<Pair<String, String>> recentChatList = new ArrayList<>();
-    private static volatile long unReadMessages = 0;
+    public static final String TAG = PairAppActivity.class.getSimpleName();
     static private volatile Message latestMessage;
     protected PairAppClient.PairAppClientInterface pairAppClientInterface;
     protected boolean bound = false;
@@ -66,10 +66,14 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         @Override
         public void onClick(View v) {
             PairAppActivity self = PairAppActivity.this;
-            if (recentChatList.size() == 1) {
-                recentChatList.clear();
-                unReadMessages = 0;
-                UiHelpers.enterChatRoom(self, v.getTag(R.id.latest_message).toString());
+
+            final int totalUnreadMessages = LiveCenter.getTotalUnreadMessages();
+            if (totalUnreadMessages < 1) {
+                PLog.w(TAG, "snackbar visible yet no unread message");
+                return;
+            }
+            if (totalUnreadMessages == 1) {
+                UiHelpers.enterChatRoom(self, Message.isGroupMessage(latestMessage) ? latestMessage.getTo() : latestMessage.getFrom());
             } else {
                 if (getClass().equals(MainActivity.class)) {
                     ((MainActivity) self).setPagePosition(MainActivity.MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT);
@@ -85,13 +89,14 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     private SnackBar snackBar;
     private SoundPool pool;
     private int streamId;
+//    private String latestActivePeer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setUpScreenDimensions();
         if (isUserVerified()) {
             messageRealm = Message.REALM(this);
+            //noinspection deprecation
             pool = new SoundPool(1, AudioManager.STREAM_NOTIFICATION, 0);
         }
     }
@@ -109,13 +114,15 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         super.onResume();
         if (isUserVerified()) {
             Config.appOpen(true);
-            messageRealm.addChangeListener(this);
-            snackBar = getSnackBar();
-            if (snackBar == null) {
-                throw new IllegalStateException("snack bar cannot be null");
-            }
             if (bound) {
                 pairAppClientInterface.registerUINotifier(this);
+            }
+            if(snackBar == null) {
+                snackBar = getSnackBar();
+                if (snackBar == null) {
+                    throw new IllegalStateException("snack bar cannot be null");
+                }
+                snackBar.applyStyle(R.style.Material_Widget_SnackBar_Mobile_MultiLine);
             }
         }
     }
@@ -125,7 +132,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         super.onPause();
         if (isUserVerified()) {
             Config.appOpen(false);
-            messageRealm.removeChangeListener(this);
             if (bound) {
                 pairAppClientInterface.unRegisterUINotifier(this);
             }
@@ -149,12 +155,13 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
             if (streamId != 0) {
                 pool.pause(streamId);
             }
+            pool.release();
             messageRealm.close();
         }
         super.onDestroy();
     }
 
-    protected void bind() {
+    protected final void bind() {
         Intent intent = new Intent(this, PairAppClient.class);
         intent.putExtra(PairAppClient.ACTION, PairAppClient.ACTION_SEND_ALL_UNSENT);
         bindService(intent, connection, BIND_AUTO_CREATE);
@@ -162,26 +169,32 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
     @NonNull
     private String formatNotificationMessage(Message message, String sender) {
-        unReadMessages++;
         String text;
-        final int recentCount = recentChatList.size();
+        List<String> recentChatList = new ArrayList<>(LiveCenter.getAllPeersWithUnreadMessages());
+        final int recentCount = recentChatList.size(), unReadMessages = LiveCenter.getTotalUnreadMessages();
         switch (recentCount) {
             case 0:
+                if(BuildConfig.DEBUG) throw new AssertionError();
                 return getString(R.string.new_message);
             case 1:
-                String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(this, message.getType());
-                text = sender + ":\n" + messageBody;
+                if(unReadMessages == 1) {
+                    String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(this, message.getType());
+                    text = sender + ":  " + messageBody;
+                }else {
+                    text = unReadMessages + " " + getString(R.string.new_message_from) + " " + sender;
+                }
                 break;
             case 2:
-                text = unReadMessages + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0).second + getString(R.string.and) + recentChatList.get(1).second;
+                text = unReadMessages + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + recentChatList.get(1);
                 break;
             case 3:
-                text = unReadMessages + "  " + getString(R.string.new_message_from) + " " + recentChatList.get(0).second + ", " + recentChatList.get(1).second + getString(R.string.and) + recentChatList.get(2).second;
+                text = unReadMessages + "  " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + ", " + recentChatList.get(1) + getString(R.string.and) + recentChatList.get(2);
                 break;
             default:
-                text = "" + recentCount + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0).second + getString(R.string.and) + (recentCount - 1) + getString(R.string.others);
-                break; //redundant
+                text = "" + recentCount + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + (recentCount - 1) + getString(R.string.others);
+                break; //redundant but safe
         }
+
         return text;
     }
 
@@ -189,12 +202,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     public void notifyUser(Context context, final Message message, final String sender) {
         if (userManager.getBoolPref(UserManager.IN_APP_NOTIFICATIONS, true)) {
             latestMessage = message;
-            final Pair<String, String> tuple = new Pair<>(message.getFrom(), sender);
-            if (recentChatList.contains(tuple)) {
-                recentChatList.remove(tuple);
-            }
-
-            recentChatList.add(tuple);
             // TODO: 8/17/2015 vibrate or play short tone
             if (snackBar.getState() != SnackBar.STATE_SHOWN) { //we only notify when there is no ongoing notification
                 snackBar.postDelayed(new Runnable() {
@@ -210,11 +217,10 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
     private void doNotifyUser(Message message, String sender) {
         snackBar.setTag(R.id.latest_message, message.getFrom());
-        snackBar.applyStyle(R.style.Material_Widget_SnackBar_Mobile_MultiLine);
-        final String text;// = String.format(getString(R.string.message_from_v2), sender) + message.getMessageBody();
+        new notifyTask().execute(message, sender);
+    }
 
-        text = formatNotificationMessage(message, sender);
-
+    private void doNotify(String text) {
         snackBar.text(text)
                 .ellipsize(TextUtils.TruncateAt.END)
                 .maxLines(2)
@@ -230,30 +236,13 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 .duration(6000) //6 secs
                 .setOnClickListener(listener);
         int id = pool.load(this, R.raw.sound_a, 1);
-
         streamId = pool.play(id, 1, 1, 0, 1, 1);
         snackBar.removeOnDismiss(true).show(this);
     }
 
-    protected void setUpScreenDimensions() {
-        ScreenUtility utility = new ScreenUtility(this);
-    }
-
     @Override
-    public location where() {
+    public final location where() {
         return location.FORE_GROUND;
-    }
-
-    @Override
-    public final void onChange() {
-        long newMessageCount = messageRealm.where(Message.class)
-                .equalTo(Message.FIELD_STATE, Message.STATE_RECEIVED)
-                .notEqualTo(Message.FIELD_FROM, getCurrentUser().getUserId()).count();
-        if (newMessageCount > 0 && newMessageCount >= unReadMessages) {
-            unReadMessages = newMessageCount;
-        } else {
-            clearRecentChat();
-        }
     }
 
     @Override
@@ -277,10 +266,27 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     protected void onUnbind() {
     }
 
-    public void clearRecentChat() {
-        recentChatList.clear();
-        unReadMessages = 0;
+    protected final void clearRecentChat(String peerId) {
+        if (peerId == null) {
+            throw new IllegalArgumentException("peer id is null!");
+        }
+        LiveCenter.invalidateNewMessageCount(peerId);
     }
 
     protected abstract SnackBar getSnackBar();
+
+
+    private class notifyTask extends AsyncTask<Object, Void, String> {
+        @Override
+        protected String doInBackground(Object... params) {
+            return formatNotificationMessage((Message) params[0], (String) params[1]);
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            if (s != null) {
+                doNotify(s);
+            }
+        }
+    }
 }

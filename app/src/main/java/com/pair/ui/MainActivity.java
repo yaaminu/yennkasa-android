@@ -12,10 +12,13 @@ import android.view.Gravity;
 import android.widget.LinearLayout;
 
 import com.pair.PairApp;
+import com.pair.data.Conversation;
 import com.pair.data.RealmUtils;
 import com.pair.data.User;
 import com.pair.pairapp.R;
+import com.pair.util.LiveCenter;
 import com.pair.util.PLog;
+import com.pair.util.TaskManager;
 import com.pair.util.UiHelpers;
 import com.parse.ParseAnalytics;
 import com.rey.material.app.ToolbarManager;
@@ -28,7 +31,7 @@ import io.realm.RealmChangeListener;
 /**
  * @author Null-Pointer on 6/6/2015.
  */
-public class MainActivity extends PairAppActivity implements NoticeFragment.NoticeFragmentCallback {
+public class MainActivity extends PairAppActivity implements NoticeFragment.NoticeFragmentCallback, ConversationsFragment.Callbacks {
     public static final String DEFAULT_FRAGMENT = "default_fragment";
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final String ARG_TITLE = "title";
@@ -199,7 +202,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         @Override
         public void onChange() {
             checkIfUserAvailable();
-            if(!noUserAvailable){
+            if (!noUserAvailable) {
                 pager.getAdapter().notifyDataSetChanged();
             }
         }
@@ -221,5 +224,25 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
             realm.close();
         }
         super.onDestroy();
+    }
+
+    @Override
+    public void onConversionClicked(Conversation conversation) {
+        final String peerId = conversation.getPeerId();
+        final Runnable invalidateTask = new Runnable() {
+            @Override
+            public void run() {
+                LiveCenter.invalidateNewMessageCount(peerId); //FIXME this might block for long enough
+            }
+        };
+        if (!TaskManager.executeNow(invalidateTask)) {
+            TaskManager.execute(invalidateTask);
+        }
+        UiHelpers.enterChatRoom(this, peerId);
+    }
+
+    @Override
+    public int unSeenMessagesCount(Conversation conversation) {
+        return LiveCenter.getUnreadMessageFor(conversation.getPeerId());
     }
 }

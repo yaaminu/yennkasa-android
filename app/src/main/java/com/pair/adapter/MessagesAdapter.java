@@ -129,13 +129,14 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         }
 
         //hide all views and show only if it's required. life will be easier this way
-        holder.preview.setVisibility(View.GONE);
-        holder.progress.setVisibility(View.GONE);
-        holder.playOrDownload.setVisibility(View.GONE);
+        ViewUtils.hideViews(holder.preview,
+                holder.progress,
+                holder.playOrDownload,
+                holder.textMessage,
+                holder.retry);
+
         holder.preview.setOnClickListener(null);
         holder.playOrDownload.setOnClickListener(null);
-        holder.textMessage.setVisibility(View.GONE);
-        holder.retry.setVisibility(View.GONE);
         //common to all
         holder.dateComposed.setVisibility(View.VISIBLE);
 
@@ -146,7 +147,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
 //                holder.dateComposed.setMinHeight(height);
 //                holder.dateComposed.setText(Html.fromHtml("<h1><b>...</b></h1>") + dateComposed, TextView.BufferType.SPANNABLE);
 //            } else {
-            holder.dateComposed.setText("  "+dateComposed);
+            holder.dateComposed.setText("  " + dateComposed);
             holder.dateComposed.setCompoundDrawablesWithIntrinsicBounds(messageStates.get(message.getState()), 0, 0, 0);
 //            }
 

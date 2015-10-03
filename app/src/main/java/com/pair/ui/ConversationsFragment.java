@@ -16,6 +16,7 @@ import com.pair.data.Message;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.util.Config;
+import com.pair.util.LiveCenter;
 import com.pair.util.PLog;
 import com.pair.util.TaskManager;
 import com.pair.util.UiHelpers;
@@ -23,6 +24,7 @@ import com.pair.view.SwipeDismissListViewTouchListener;
 import com.rey.material.widget.FloatingActionButton;
 
 import java.io.File;
+import java.util.Date;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -38,12 +40,46 @@ public class ConversationsFragment extends ListFragment {
     private RealmResults<Conversation> conversations;
     private ConversationAdapter adapter;
     private Conversation deleted;
+    private ConversationAdapter.Delegate delegate = new ConversationAdapter.Delegate() {
+        @Override
+        public int unSeenMessagesCount(Conversation conversation) {
+            return LiveCenter.getUnreadMessageFor(conversation.getPeerId());
+        }
+
+        @Override
+        public RealmResults<Conversation> dataSet() {
+            return conversations;
+        }
+
+        @Override
+        public PairAppBaseActivity context() {
+            return ((PairAppBaseActivity) getActivity());
+        }
+
+        @Override
+        public boolean autoUpdate() {
+            return true;
+        }
+    };
+    private Callbacks interactionListener;
+
+    interface Callbacks {
+        void onConversionClicked(Conversation conversation);
+
+        int unSeenMessagesCount(Conversation conversation);
+    }
 
     public ConversationsFragment() {
     } //required no-arg constructor
 
     @Override
     public void onAttach(Context activity) {
+        try {
+            interactionListener = (Callbacks) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString()
+                    + " must implement " + Callbacks.class.getName());
+        }
         super.onAttach(activity);
         setHasOptionsMenu(true);
         setRetainInstance(true);
@@ -51,12 +87,12 @@ public class ConversationsFragment extends ListFragment {
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, final ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_inbox, container, false);
         realm = Realm.getInstance(Config.getApplicationContext());
         conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
-        adapter = new ConversationAdapter(getActivity(), conversations, true);
+        adapter = new ConversationAdapter(delegate);
         FloatingActionButton actionButton = ((FloatingActionButton) view.findViewById(R.id.fab_new_message));
         actionButton.setIcon(getResources().getDrawable(R.drawable.ic_mode_edit_white_24dp), false);
         actionButton.setOnClickListener(new View.OnClickListener() {
@@ -88,15 +124,18 @@ public class ConversationsFragment extends ListFragment {
 
     private void cleanMessages(Conversation conversation) {
         final String peerId = conversation.getPeerId();
+        final Date date = new Date();
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
+                LiveCenter.invalidateNewMessageCount(peerId);
                 PLog.d(TAG, "deleting messages for conversion between user and %s", peerId);
                 Realm realm = Conversation.Realm(getActivity());
                 realm.beginTransaction();
                 RealmResults<Message> messages = realm.where(Message.class).equalTo(Message.FIELD_FROM, peerId)
                         .or()
                         .equalTo(Message.FIELD_TO, peerId)
+                        .lessThan(Message.FIELD_DATE_COMPOSED, date)
                         .findAll();
                 if (UserManager.getInstance().getBoolPref(UserManager.DELETE_ATTACHMENT_ON_DELETE, false)) {
                     for (Message message : messages) {
@@ -134,8 +173,7 @@ public class ConversationsFragment extends ListFragment {
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        String peerId = ((Conversation) l.getAdapter().getItem(position)).getPeerId();
-        UiHelpers.enterChatRoom(getActivity(), peerId);
+        interactionListener.onConversionClicked(((Conversation) l.getAdapter().getItem(position)));
     }
 
     @Override

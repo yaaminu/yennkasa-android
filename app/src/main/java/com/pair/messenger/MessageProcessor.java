@@ -11,6 +11,7 @@ import com.pair.data.MessageJsonAdapter;
 import com.pair.data.UserManager;
 import com.pair.data.util.MessageUtils;
 import com.pair.util.ConnectionUtils;
+import com.pair.util.LiveCenter;
 import com.pair.util.PLog;
 
 import java.util.Date;
@@ -64,7 +65,7 @@ public class MessageProcessor extends IntentService {
         String peerId;
         //for messages sent to groups, the group is always the recipient
         //and the members the senders
-        if (isGroupMessage(message)) {
+        if (Message.isGroupMessage(message)) {
             peerId = message.getTo();
         } else {
             peerId = message.getFrom();
@@ -73,7 +74,7 @@ public class MessageProcessor extends IntentService {
         //all other operations are deferred till we set up the conversation
         Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
 
-        //WATCH OUT! don't touch this block except you are careful!
+        //WATCH OUT! don't touch this block!
         //////////////////////////////////////////////////////////////////////////////////////////
         //ensure the conversation and session is set up
         // before persisting the message
@@ -104,19 +105,17 @@ public class MessageProcessor extends IntentService {
         realm.commitTransaction();
 
         message = Message.copy(message);
+        if (!conversation.isActive()) { //hopefully we might be able to void race conditions
+            LiveCenter.incrementUnreadMessageForPeer(conversation.getPeerId());
+        }
         realm.close();
         NotificationManager.INSTANCE.onNewMessage(this, message);
         MessageCenter.notifyReceived(message);
-        if(!Message.isTextMessage(message)){
-            if(ConnectionUtils.isWifiConnected() || UserManager.getInstance().getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE,false)){
-                MessageUtils.download(message,null);
+        if (!Message.isTextMessage(message)) {
+            if (ConnectionUtils.isWifiConnected() || UserManager.getInstance().getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE, false)) {
+                MessageUtils.download(message, null);
             }
         }
     }
 
-    // TODO: 9/3/2015 this is not safe!
-    //we want to avoid round a trip to the database
-    private boolean isGroupMessage(Message message) {
-        return message.getTo().contains("@");
-    }
 }

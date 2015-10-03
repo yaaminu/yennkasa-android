@@ -11,16 +11,22 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Vibrator;
+import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 
+import com.pair.PairApp;
 import com.pair.data.Message;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.ui.ChatActivity;
 import com.pair.util.Config;
+import com.pair.util.LiveCenter;
 import com.pair.util.PLog;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,13 +53,9 @@ public class StatusBarNotifier implements Notifier {
                 PendingIntent.FLAG_CANCEL_CURRENT);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(Config.getApplication());
         builder.setTicker(context.getString(R.string.new_message))
-                .setContentTitle(String.format(context.getString(R.string.message_from), sender));
+                .setContentTitle(context.getString(R.string.new_message));
 
-        if (Message.isTextMessage(message)) {
-            builder.setContentText(message.getMessageBody());
-        } else {
-            builder.setContentText(NotificationManager.messageTypeToString(message.getType()));
-        }
+        builder.setContentText(formatNotificationMessage(message,sender));
 
         builder.setSmallIcon(android.R.drawable.stat_notify_chat)
                 .setContentIntent(pendingIntent);
@@ -93,7 +95,7 @@ public class StatusBarNotifier implements Notifier {
         if (TextUtils.isEmpty(uriString) || uriString.equals(UserManager.DEFAULT)) {
             uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             if (uri == null) {
-                PLog.d(TAG, " unable to play notification tone");
+                PLog.e(TAG, " unable to play default notification tone");
             }
         } else {
             uri = Uri.parse(uriString);
@@ -108,8 +110,8 @@ public class StatusBarNotifier implements Notifier {
     }
 
     private static void vibrateIfAllowed(Context context) {
-        if(UserManager.getInstance().getBoolPref(UserManager.VIBRATE,false)) {
-            PLog.v(TAG,"vibrating....");
+        if (UserManager.getInstance().getBoolPref(UserManager.VIBRATE, false)) {
+            PLog.v(TAG, "vibrating....");
             Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
                 if (vibrator.hasVibrator()) {
@@ -129,5 +131,35 @@ public class StatusBarNotifier implements Notifier {
     @Override
     public location where() {
         return location.BACKGROUND;
+    }
+
+    @NonNull
+    private String formatNotificationMessage(Message message, String sender) {
+        String text;
+        List<String> recentChatList = new ArrayList<>(LiveCenter.getAllPeersWithUnreadMessages());
+        final int recentCount = recentChatList.size(), unReadMessages = LiveCenter.getTotalUnreadMessages();
+        switch (recentCount) {
+            case 0:
+                return getString(R.string.new_message);
+            case 1:
+                String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(Config.getApplicationContext(), message.getType());
+                text = sender + ":  " + messageBody;
+                break;
+            case 2:
+                text = unReadMessages + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + recentChatList.get(1);
+                break;
+            case 3:
+                text = unReadMessages + "  " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + ", " + recentChatList.get(1) + getString(R.string.and) + recentChatList.get(2);
+                break;
+            default:
+                text = "" + recentCount + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + (recentCount - 1) + getString(R.string.others);
+                break; //redundant but safe
+        }
+        return text;
+    }
+
+    private String getString(@StringRes int resId) {
+        if (resId == 0) throw new IllegalArgumentException("invalid resource id");
+        return Config.getApplicationContext().getString(resId);
     }
 }

@@ -54,24 +54,20 @@ final class NotificationManager {
     }
 
     private void notifyUser(final Context context, final Message message, final String sendersName) {
-        if (Config.isAppOpen() && UserManager.getInstance().getBoolPref(UserManager.IN_APP_NOTIFICATIONS,false)) {
+        if (Config.isAppOpen() && UserManager.getInstance().getBoolPref(UserManager.IN_APP_NOTIFICATIONS, false)) {
             //Toast.makeText(Config.getApplicationContext(), message.getFrom() + " : " + message.getMessageBody(), Toast.LENGTH_LONG).show();
             if (UI_NOTIFIER != null) {
-                TaskManager.executeOnMainThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (UI_NOTIFIER != null) {
-                            Notifier notifier = UI_NOTIFIER.get();
-                            if (notifier != null) {
-                                notifier.notifyUser(context, message, sendersName);
-                            }
+                final Notifier notifier = UI_NOTIFIER.get();
+                if (notifier != null) {
+                    TaskManager.executeOnMainThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            notifier.notifyUser(context, message, sendersName);
                         }
-                    }
-                });
-            } else {
-                BACKGROUND_NOTIFIER.notifyUser(context, message, sendersName);
+                    });
+                    return;
+                }
             }
-        } else {
             BACKGROUND_NOTIFIER.notifyUser(context, message, sendersName);
         }
     }
@@ -84,17 +80,13 @@ final class NotificationManager {
             User user = realm.
                     where(User.class).equalTo(User.FIELD_ID, message.getFrom())
                     .findFirst();
+
             if (user == null) {
-                //if user is null then retrieve users name from the senders id.
-                //we are splitting if the message is from a group the senders id will
-                //be in the format: "groupName@adminUserId".
-
-                //if the sender is a normal user then the phoneNumber will be used as a temporary
-                // name. the user manager will detect these situations and automatically attempt to
-                // retrieve the users name from the peoples contact if its available otherwise this id(which is same as phoneNumber
-                // will be used
-
-                sendersName = message.getFrom().split("@")[0];
+                user = UserManager.getInstance().fetchUserIfRequired(
+                        Message.isGroupMessage(message)
+                                ? message.getTo()
+                                : message.getFrom());
+                sendersName = user.getName();
             } else {
                 sendersName = user.getName();
             }

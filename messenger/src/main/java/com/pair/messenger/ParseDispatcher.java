@@ -2,13 +2,16 @@ package com.pair.messenger;
 
 import com.pair.data.Message;
 import com.pair.data.MessageJsonAdapter;
-import com.pair.util.PLog;
 import com.pair.util.Config;
+import com.pair.util.PLog;
+import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseObject;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.pair.messenger.ParseMessageProvider.EXPIRES;
 import static com.pair.messenger.ParseMessageProvider.IS_GROUP_MESSAGE;
@@ -60,7 +63,10 @@ class ParseDispatcher extends AbstractMessageDispatcher {
         try {
             parseMessage.save();
             onSent(message.getId());
-            // STOPSHIP: 9/24/2015 call a cloud function to send push to all recipients.
+            Map<String, String> params = new HashMap<>(3);
+            params.put(ParseMessageProvider.TO,message.getTo());
+            params.put(ParseMessageProvider.IS_GROUP_MESSAGE,Boolean.toString(isGroupMessage));
+            ParseCloud.callFunctionInBackground("pushToSyncMessage", params);
         } catch (ParseException e) {
             onFailed(message.getId(), prepareReport(e));
         }

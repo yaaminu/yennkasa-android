@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                              xmlns:tools="http://schemas.android.com/tools"
                               android:layout_width="match_parent"
                               android:layout_height="@dimen/list_item_height"
                               android:layout_marginBottom="@dimen/list_item_margin_bottom"
@@ -77,4 +78,18 @@
         android:layout_marginRight="@dimen/divider_right_offset"
         android:layout_alignParentBottom="true"
         />
+    <TextView
+        android:id="@+id/tv_new_messages_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="12"
+        android:textSize="@dimen/standard_text_size_small"
+        android:textColor="@color/white"
+        android:padding="@dimen/padding_ll_login_fragment_left"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="@dimen/padding_ll_login_fragment_left"
+        android:background="@drawable/green_round_back_ground"
+        tools:ignore="HardcodedText"/>
 </com.pair.view.RelativeLayout>

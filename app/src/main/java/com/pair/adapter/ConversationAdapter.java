@@ -14,6 +14,7 @@ import com.pair.data.User;
 import com.pair.data.UserManager;
 import com.pair.pairapp.R;
 import com.pair.ui.DPLoader;
+import com.pair.ui.PairAppBaseActivity;
 import com.pair.util.PLog;
 import com.pair.util.TypeFaceUtil;
 import com.pair.util.UiHelpers;
@@ -32,10 +33,12 @@ import static android.text.format.DateUtils.getRelativeTimeSpanString;
  */
 public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
     private static final String TAG = ConversationAdapter.class.getSimpleName();
+    private Delegate delegate;
 
 
-    public ConversationAdapter(Context context, RealmResults<Conversation> realmResults, boolean automaticUpdate) {
-        super(context, realmResults, automaticUpdate);
+    public ConversationAdapter(Delegate delegate) {
+        super(delegate.context(), delegate.dataSet(), delegate.autoUpdate());
+        this.delegate = delegate;
     }
 
     @Override
@@ -49,6 +52,8 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
             holder.dateLastActive = (TextView) convertView.findViewById(R.id.tv_date_last_active);
             holder.peerName = (TextView) convertView.findViewById(R.id.tv_sender);
             holder.senderAvatar = (ImageView) convertView.findViewById(R.id.iv_user_avatar);
+            holder.newMessagesCount = (TextView) convertView.findViewById(R.id.tv_new_messages_count);
+            ViewUtils.setTypeface(holder.newMessagesCount, TypeFaceUtil.two_d_font);
             ViewUtils.setTypeface(holder.chatSummary, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
             ViewUtils.setTypeface(holder.peerName, TypeFaceUtil.DROID_SERIF_BOLD_TTF);
             ViewUtils.setTypeface(holder.dateLastActive, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
@@ -57,6 +62,15 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
             holder = (ViewHolder) convertView.getTag();
         }
         final Conversation conversation = getItem(position);
+        final int unseenMessages = delegate.unSeenMessagesCount(conversation);
+
+        if (unseenMessages > 0) {
+            ViewUtils.showViews(holder.newMessagesCount);
+            holder.newMessagesCount.setText(String.valueOf(unseenMessages));
+        } else {
+            ViewUtils.hideViews(holder.newMessagesCount);
+        }
+
         holder.chatSummary.setText(conversation.getSummary());
         PLog.d(TAG, conversation.toString());
         User peer = UserManager.getInstance().fetchUserIfRequired(conversation.getPeerId());
@@ -117,8 +131,17 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
 
     public class ViewHolder {
         public String peerId; //holds current item to be used by callers outside this adapter.
-        TextView chatSummary, dateLastActive, peerName;
+        TextView chatSummary, dateLastActive, peerName, newMessagesCount;
         ImageView senderAvatar;
     }
 
+    public interface Delegate {
+        int unSeenMessagesCount(Conversation conversation);
+
+        RealmResults<Conversation> dataSet();
+
+        PairAppBaseActivity context();
+
+        boolean autoUpdate();
+    }
 }

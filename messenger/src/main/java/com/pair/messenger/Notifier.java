@@ -16,4 +16,5 @@ public interface Notifier {
     void notifyUser(Context context, Message message, String sender);
 
     location where();
+
 }

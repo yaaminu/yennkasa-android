@@ -220,7 +220,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     protected void onResume() {
         super.onResume();
-        clearRecentChat();
+        clearRecentChat(peer.getUserId());
         if (!User.isGroup(peer)) {
             updateUserStatus(LiveCenter.isOnline(peer.getUserId()));
             LiveCenter.trackUser(peer.getUserId());

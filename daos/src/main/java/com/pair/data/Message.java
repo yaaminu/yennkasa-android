@@ -6,9 +6,9 @@ import android.support.annotation.NonNull;
 
 import com.pair.Errors.PairappException;
 import com.pair.data.util.MessageUtils;
-import com.pair.util.PLog;
 import com.pair.util.Config;
 import com.pair.util.FileUtils;
+import com.pair.util.PLog;
 import com.pair.util.ThreadUtils;
 
 import java.io.File;
@@ -276,7 +276,7 @@ public class Message extends RealmObject {
         if (message == null) {
             throw new IllegalArgumentException("message is null");
         }
-        return copy(message,false);
+        return copy(message, false);
     }
 
     @NonNull
@@ -318,16 +318,16 @@ public class Message extends RealmObject {
      * @see {@link #copy}
      */
     public static List<Message> copy(Collection<Message> messages) {
-       return copy(messages,false);
+        return copy(messages, false);
     }
 
-    public static List<Message> copy(Collection<Message> messages,boolean forceCopy){
+    public static List<Message> copy(Collection<Message> messages, boolean forceCopy) {
         if (messages == null || messages.isEmpty()) {
             return Collections.emptyList();
         }
         List<Message> copy = new ArrayList<>(messages.size());
         for (Message message : messages) {
-            copy.add(copy(message,forceCopy));
+            copy.add(copy(message, forceCopy));
         }
         return copy;
     }
@@ -348,6 +348,12 @@ public class Message extends RealmObject {
         typingMessage.setTo(peerId);
         typingMessage.setId(peerId + "typing");
         return typingMessage;
+    }
+
+    // TODO: 9/3/2015 this is not safe!
+    //we want to avoid round a trip to the database
+    public static boolean isGroupMessage(Message message) {
+        return !message.getTo().equals(UserManager.getMainUserId());
     }
 
     public int getType() {

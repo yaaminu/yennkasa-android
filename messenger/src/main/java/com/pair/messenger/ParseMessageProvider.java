@@ -20,6 +20,7 @@ import java.util.List;
  */
 class ParseMessageProvider implements MessagesProvider {
 
+    public static final String TO = "to";
     static final String RETRIEVED = "retrieved";
     static final String MESSAGE = "message";
     static final String EXPIRES = "expires";
