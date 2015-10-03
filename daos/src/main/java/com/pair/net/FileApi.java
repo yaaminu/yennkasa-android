@@ -1,4 +1,4 @@
-package com.pair.data.net;
+package com.pair.net;
 
 import java.io.File;
 

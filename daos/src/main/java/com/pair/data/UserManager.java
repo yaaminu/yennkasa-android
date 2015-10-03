@@ -9,10 +9,10 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.google.i18n.phonenumbers.NumberParseException;
-import com.pair.data.net.HttpResponse;
-import com.pair.data.net.UserApiV2;
+import com.pair.net.HttpResponse;
+import com.pair.net.UserApiV2;
 import com.pair.data.settings.PersistedSetting;
-import com.pair.parse_client.ParseClient;
+import com.pair.net.ParseClient;
 import com.pair.util.Config;
 import com.pair.util.ConnectionUtils;
 import com.pair.util.FileUtils;

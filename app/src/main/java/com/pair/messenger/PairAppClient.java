@@ -12,7 +12,7 @@ import android.os.Looper;
 
 import com.pair.data.Message;
 import com.pair.data.UserManager;
-import com.pair.parse_client.ParseClient;
+import com.pair.net.ParseClient;
 import com.pair.util.Config;
 import com.pair.util.L;
 import com.pair.util.LiveCenter;

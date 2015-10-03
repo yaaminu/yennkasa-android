@@ -1,6 +1,6 @@
 package com.pair.messenger;
 
-import com.pair.data.net.FileApi;
+import com.pair.net.FileApi;
 
 import java.io.Closeable;
 import java.util.Collection;

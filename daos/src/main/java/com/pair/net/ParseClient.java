@@ -1,4 +1,4 @@
-package com.pair.parse_client;
+package com.pair.net;
 
 import android.app.Application;
 import android.net.Uri;
@@ -10,9 +10,6 @@ import com.pair.data.BuildConfig;
 import com.pair.data.Message;
 import com.pair.data.R;
 import com.pair.data.User;
-import com.pair.data.net.FileApi;
-import com.pair.data.net.HttpResponse;
-import com.pair.data.net.UserApiV2;
 import com.pair.util.Config;
 import com.pair.util.L;
 import com.pair.util.PLog;
@@ -48,21 +45,21 @@ import retrofit.http.Field;
 import retrofit.http.Path;
 import retrofit.mime.TypedFile;
 
-import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_ACCOUNT_CREATED;
-import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_ADMIN;
-import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_COUNTRY;
-import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_DP;
-import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_DP_FILE;
-import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_HAS_CALL;
-import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_ID;
-import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_LAST_ACTIVITY;
-import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_MEMBERS;
-import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_NAME;
-import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_STATUS;
-import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_TOKEN;
-import static com.pair.parse_client.PARSE_CONSTANTS.FIELD_VERIFIED;
-import static com.pair.parse_client.PARSE_CONSTANTS.GROUP_CLASS_NAME;
-import static com.pair.parse_client.PARSE_CONSTANTS.USER_CLASS_NAME;
+import static com.pair.net.PARSE_CONSTANTS.FIELD_ACCOUNT_CREATED;
+import static com.pair.net.PARSE_CONSTANTS.FIELD_ADMIN;
+import static com.pair.net.PARSE_CONSTANTS.FIELD_COUNTRY;
+import static com.pair.net.PARSE_CONSTANTS.FIELD_DP;
+import static com.pair.net.PARSE_CONSTANTS.FIELD_DP_FILE;
+import static com.pair.net.PARSE_CONSTANTS.FIELD_HAS_CALL;
+import static com.pair.net.PARSE_CONSTANTS.FIELD_ID;
+import static com.pair.net.PARSE_CONSTANTS.FIELD_LAST_ACTIVITY;
+import static com.pair.net.PARSE_CONSTANTS.FIELD_MEMBERS;
+import static com.pair.net.PARSE_CONSTANTS.FIELD_NAME;
+import static com.pair.net.PARSE_CONSTANTS.FIELD_STATUS;
+import static com.pair.net.PARSE_CONSTANTS.FIELD_TOKEN;
+import static com.pair.net.PARSE_CONSTANTS.FIELD_VERIFIED;
+import static com.pair.net.PARSE_CONSTANTS.GROUP_CLASS_NAME;
+import static com.pair.net.PARSE_CONSTANTS.USER_CLASS_NAME;
 
 
 /**

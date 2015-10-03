@@ -11,8 +11,10 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/calligraphy-2.1.0" />
             <option value="$PROJECT_DIR$/daos" />
             <option value="$PROJECT_DIR$/error" />
+            <option value="$PROJECT_DIR$/fileclient" />
             <option value="$PROJECT_DIR$/lib" />
             <option value="$PROJECT_DIR$/messenger" />
             <option value="$PROJECT_DIR$/pullToRefresh" />

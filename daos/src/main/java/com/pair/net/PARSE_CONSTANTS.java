@@ -1,4 +1,4 @@
-package com.pair.parse_client;
+package com.pair.net;
 
 /**
  * @author Null-Pointer on 8/27/2015.

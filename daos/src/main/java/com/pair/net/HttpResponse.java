@@ -1,4 +1,4 @@
-package com.pair.data.net;
+package com.pair.net;
 
 /**
  * @author by Null-Pointer on 5/26/2015.
