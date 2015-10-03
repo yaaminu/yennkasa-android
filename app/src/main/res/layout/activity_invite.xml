@@ -1,11 +1,11 @@
-<com.pair.view.LinearLayout
+<com.idea.view.LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.pair.ui.InviteActivity">
+    tools:context="com.idea.ui.InviteActivity">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -41,10 +41,10 @@
             layout="@layout/snack_bar"/>
     </RelativeLayout>
 
-    <com.pair.view.FrameLayout
+    <com.idea.view.FrameLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
-    </com.pair.view.FrameLayout>
-</com.pair.view.LinearLayout>
+    </com.idea.view.FrameLayout>
+</com.idea.view.LinearLayout>

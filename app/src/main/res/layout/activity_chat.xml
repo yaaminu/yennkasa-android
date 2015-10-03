@@ -1,4 +1,4 @@
-<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                               xmlns:app="http://schemas.android.com/apk/res-auto"
                               xmlns:tools="http://schemas.android.com/tools"
                               android:layout_width="match_parent"
@@ -20,7 +20,7 @@
         tools:ignore="UnusedAttribute">
     </android.support.v7.widget.Toolbar>
 
-    <com.pair.view.RelativeLayout
+    <com.idea.view.RelativeLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -32,14 +32,14 @@
         android:animateLayoutChanges="true"
         tools:ignore="UnusedAttribute">
 
-        <com.pair.view.RelativeLayout
+        <com.idea.view.RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/attachment_picker_container"
             >
 
-        </com.pair.view.RelativeLayout>
-        <com.pair.view.LinearLayout
+        </com.idea.view.RelativeLayout>
+        <com.idea.view.LinearLayout
             android:id="@+id/ll_list_view_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -78,7 +78,7 @@
                     android:layout_width="0dp"
                     android:layout_weight="1"/>
 
-                <com.pair.view.FrameLayout
+                <com.idea.view.FrameLayout
                     android:id="@+id/iv_send"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -94,9 +94,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:src="@drawable/ic_send_white_24dp"/>
-                </com.pair.view.FrameLayout>
+                </com.idea.view.FrameLayout>
             </LinearLayout>
-        </com.pair.view.LinearLayout>
+        </com.idea.view.LinearLayout>
 
         <!--<include-->
         <!--layout="@layout/message_item_log"-->
@@ -112,9 +112,9 @@
         <include
             layout="@layout/message_item_log">
         </include>
-    </com.pair.view.RelativeLayout>
+    </com.idea.view.RelativeLayout>
 
     <include
         layout="@layout/snack_bar"
         />
-</com.pair.view.RelativeLayout>
+</com.idea.view.RelativeLayout>

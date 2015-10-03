@@ -2,12 +2,12 @@
                 xmlns:tools="http://schemas.android.com/tools"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                tools:context="com.pair.ui.LoginSignupPrompt">
+                tools:context="com.idea.ui.LoginSignupPrompt">
 
     <fragment
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:name="com.pair.ui.NoticeFragment"
+        android:name="com.idea.ui.NoticeFragment"
         tools:layout="@layout/fragment_notice"/>
 
 </RelativeLayout>

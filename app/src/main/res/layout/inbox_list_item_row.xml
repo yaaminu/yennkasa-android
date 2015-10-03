@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                               xmlns:tools="http://schemas.android.com/tools"
                               android:layout_width="match_parent"
                               android:layout_height="@dimen/list_item_height"
@@ -10,7 +10,7 @@
                               android:paddingRight="@dimen/list_item_padding"
                               android:paddingTop="@dimen/list_item_padding">
 
-    <com.pair.view.RoundedImageView
+    <com.idea.view.RoundedImageView
         android:id="@+id/iv_user_avatar"
         android:layout_width="@dimen/thumbnail_width"
         android:layout_height="@dimen/thumbnail_height"
@@ -36,7 +36,7 @@
         android:textSize="@dimen/standard_text_size"/>
 
 
-    <com.pair.view.LinearLayout
+    <com.idea.view.LinearLayout
         android:id="@+id/ll_conversation_desc"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -66,7 +66,7 @@
             android:singleLine="true"
             android:textColor="@color/light_gray"
             android:textSize="@dimen/standard_text_size_small"/>
-    </com.pair.view.LinearLayout>
+    </com.idea.view.LinearLayout>
 
     <include
         layout="@layout/divider"
@@ -92,4 +92,4 @@
         android:layout_margin="@dimen/padding_ll_login_fragment_left"
         android:background="@drawable/green_round_back_ground"
         tools:ignore="HardcodedText"/>
-</com.pair.view.RelativeLayout>
+</com.idea.view.RelativeLayout>

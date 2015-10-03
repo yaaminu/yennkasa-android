@@ -1,8 +1,8 @@
-<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                               xmlns:tools="http://schemas.android.com/tools"
                               android:layout_width="match_parent"
                               android:layout_height="match_parent"
-                              tools:context="com.pair.ui.ContactFragment">
+                              tools:context="com.idea.ui.ContactFragment">
 
     <com.handmark.pulltorefresh.library.PullToRefreshListView
         android:id="@+id/list"
@@ -43,4 +43,4 @@
             android:textSize="@dimen/standard_text_size"
             android:visibility="visible"/>
     </LinearLayout>
-</com.pair.view.RelativeLayout>
+</com.idea.view.RelativeLayout>

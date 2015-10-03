@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
-    package="com.pair.pairapp"
+    package="com.idea.pairapp"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
@@ -15,7 +15,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
-    <uses-permission android:name="com.pair.pairapp.permission.C2D_MESSAGE"/>
+    <uses-permission android:name="com.idea.pairapp.permission.C2D_MESSAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
@@ -23,13 +23,13 @@
     <uses-permission android:name="android.permission.VIBRATE"/>
 
     <permission
-        android:name="com.pair.pairapp.permission.C2D_MESSAGE"
+        android:name="com.idea.pairapp.permission.C2D_MESSAGE"
         android:protectionLevel="signature"/>
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
-        android:name="com.pair.PairApp"
+        android:name="com.idea.PairApp"
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
@@ -38,7 +38,7 @@
         android:theme="@style/Theme.AppTheme"
         tools:ignore="UnusedAttribute">
         <activity
-            android:name="com.pair.ui.MainActivity"
+            android:name="com.idea.ui.MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleTask">
             <intent-filter>
@@ -76,82 +76,82 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.pair.ui.SetUpActivity"
+            android:name="com.idea.ui.SetUpActivity"
             android:configChanges="orientation|keyboardHidden"
             android:excludeFromRecents="true"
             android:label="@string/title_activity_set_up"
             />
         <activity
-            android:name="com.pair.ui.ChatActivity"
+            android:name="com.idea.ui.ChatActivity"
             android:label="@string/title_activity_chat"
-            android:parentActivityName="com.pair.ui.MainActivity"
+            android:parentActivityName="com.idea.ui.MainActivity"
             android:windowSoftInputMode="stateHidden|adjustResize"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pair.ui.MainActivity"/>
+                android:value="com.idea.ui.MainActivity"/>
         </activity>
         <activity
-            android:name="com.pair.ui.ProfileActivity"
+            android:name="com.idea.ui.ProfileActivity"
             android:label="@string/title_activity_profile"
             android:launchMode="singleTop"
-            android:parentActivityName="com.pair.ui.MainActivity"
+            android:parentActivityName="com.idea.ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pair.ui.MainActivity"/>
+                android:value="com.idea.ui.MainActivity"/>
         </activity>
         <activity
-            android:name="com.pair.ui.InviteActivity"
+            android:name="com.idea.ui.InviteActivity"
             android:label="@string/title_invite_friends"
-            android:parentActivityName="com.pair.ui.MainActivity"
+            android:parentActivityName="com.idea.ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pair.ui.MainActivity"/>
+                android:value="com.idea.ui.MainActivity"/>
         </activity>
         <activity
-            android:name="com.pair.ui.UsersActivity"
+            android:name="com.idea.ui.UsersActivity"
             android:label="@string/title_activity_users"
-            android:parentActivityName="com.pair.ui.MainActivity"
+            android:parentActivityName="com.idea.ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pair.ui.MainActivity"/>
+                android:value="com.idea.ui.MainActivity"/>
         </activity>
         <activity
-            android:name="com.pair.ui.ImageViewer"
+            android:name="com.idea.ui.ImageViewer"
             android:theme="@style/Theme.AppCompat.NoActionBar"/>
         <activity
-            android:name="com.pair.ui.CreateGroupActivity"
+            android:name="com.idea.ui.CreateGroupActivity"
             android:label="@string/title_activity_create_group"
-            android:parentActivityName="com.pair.ui.MainActivity"
+            android:parentActivityName="com.idea.ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pair.ui.MainActivity"/>
+                android:value="com.idea.ui.MainActivity"/>
         </activity>
         <activity
-            android:name="com.pair.ui.CreateMessageActivity"
+            android:name="com.idea.ui.CreateMessageActivity"
             android:label="@string/title_activity_create_message"
-            android:parentActivityName="com.pair.ui.MainActivity"
+            android:parentActivityName="com.idea.ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pair.ui.MainActivity"/>
+                android:value="com.idea.ui.MainActivity"/>
         </activity>
 
         <service android:name="com.parse.PushService"/>
         <service
-            android:name="com.pair.workers.ContactSyncService"
+            android:name="com.idea.workers.ContactSyncService"
             android:enabled="false"
             android:exported="false"/>
         <service
-            android:name="com.pair.messenger.MessageProcessor"
+            android:name="com.idea.messenger.MessageProcessor"
             android:enabled="false"
             android:exported="false"/>
         <service
-            android:name="com.pair.messenger.PairAppClient"
+            android:name="com.idea.messenger.PairAppClient"
             android:enabled="false"
             android:exported="false"/>
 
@@ -164,7 +164,7 @@
             </intent-filter>
         </receiver>
         <receiver
-            android:name="com.pair.messenger.MessageCenter"
+            android:name="com.idea.messenger.MessageCenter"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.parse.push.intent.RECEIVE"/>
@@ -179,25 +179,25 @@
                 <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
                 <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
 
-                <category android:name="com.pair.pairapp"/>
+                <category android:name="com.idea.pairapp"/>
             </intent-filter>
         </receiver>
 
         <activity
-            android:name="com.pair.ui.LoginSignupPrompt"
+            android:name="com.idea.ui.LoginSignupPrompt"
             android:excludeFromRecents="true"
             android:label="@string/title_activity_login_signup_prompt"
             android:launchMode="singleTask">
         </activity>
         <activity
-            android:name="com.pair.ui.SettingsActivity"
+            android:name="com.idea.ui.SettingsActivity"
             android:exported="false"
             android:label="@string/action_settings"
-            android:parentActivityName="com.pair.ui.MainActivity"
+            android:parentActivityName="com.idea.ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pair.ui.MainActivity"/>
+                android:value="com.idea.ui.MainActivity"/>
         </activity>
     </application>
 

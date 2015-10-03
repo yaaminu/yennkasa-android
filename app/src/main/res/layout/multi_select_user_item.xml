@@ -1,4 +1,4 @@
-<com.pair.view.RelativeLayout
+<com.idea.view.RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,7 +8,7 @@
     android:padding="@dimen/list_item_padding"
     tools:ignore="RtlHardcoded">
 
-    <com.pair.view.LinearLayout
+    <com.idea.view.LinearLayout
         android:id="@+id/ll_tv_cb"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -25,13 +25,13 @@
             android:textStyle="bold"
             tools:ignore="RtlHardcoded"/>
 
-        <com.pair.view.CheckBox
+        <com.idea.view.CheckBox
             android:id="@+id/cb_checked"
             style="@style/CheckBoxDrawable"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="false"/>
-    </com.pair.view.LinearLayout>
+    </com.idea.view.LinearLayout>
 
     <TextView
         android:id="@+id/tv_user_phone_group_admin"
@@ -54,4 +54,4 @@
         android:layout_marginRight="@dimen/divider_right_offset"
         android:layout_alignParentBottom="true"
         />
-</com.pair.view.RelativeLayout>
+</com.idea.view.RelativeLayout>

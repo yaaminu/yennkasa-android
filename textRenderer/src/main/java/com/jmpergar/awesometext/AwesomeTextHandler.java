@@ -25,7 +25,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.pair.util.TypeFaceUtil;
+import com.idea.util.TypeFaceUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -66,7 +66,7 @@ public class AwesomeTextHandler {
 
     public void setView(TextView view) {
         this.view = view;
-        com.pair.util.ViewUtils.setTypeface(view, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+        com.idea.util.ViewUtils.setTypeface(view, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         this.context = view.getContext();
         view.setOnLongClickListener(longClickListener);
         applyRenderers();

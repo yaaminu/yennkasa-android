@@ -1,4 +1,4 @@
-<com.pair.view.RelativeLayout
+<com.idea.view.RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -10,7 +10,7 @@
     tools:ignore="RtlHardcoded,HardcodedText"
     >
 
-    <com.pair.view.RoundedImageView
+    <com.idea.view.RoundedImageView
         android:id="@+id/iv_display_picture"
         android:layout_width="@dimen/thumbnail_width"
         android:layout_height="@dimen/thumbnail_height"
@@ -58,7 +58,7 @@
         android:layout_marginTop="4dp"
         android:gravity="bottom"/>
 
-    <com.pair.view.CheckBox
+    <com.idea.view.CheckBox
         android:id="@+id/cb_checked"
         style="@style/CheckBoxDrawable"
         android:layout_width="wrap_content"
@@ -68,4 +68,4 @@
         android:checked="false"
         android:clickable="false"
         android:visibility="gone"/>
-</com.pair.view.RelativeLayout>
+</com.idea.view.RelativeLayout>

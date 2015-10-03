@@ -4,9 +4,9 @@
               android:layout_height="wrap_content"
               android:gravity="center_horizontal"
               android:orientation="vertical"
-              tools:context="com.pair.ui.ChooseDisplayPictureFragment">
+              tools:context="com.idea.ui.ChooseDisplayPictureFragment">
 
-    <com.pair.view.RoundedImageView
+    <com.idea.view.RoundedImageView
         android:id="@+id/riv_group_avatar_preview"
         android:layout_width="@dimen/dp_thumbnail_width_large"
         android:layout_height="@dimen/dp_thumbnail_height_large"

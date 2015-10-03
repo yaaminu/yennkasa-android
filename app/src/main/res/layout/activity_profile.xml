@@ -1,16 +1,16 @@
-<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.pair.ui.ProfileActivity">
+    tools:context="com.idea.ui.ProfileActivity">
 
-    <com.pair.view.FrameLayout
+    <com.idea.view.FrameLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-    </com.pair.view.FrameLayout>
+    </com.idea.view.FrameLayout>
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/main_toolbar"
@@ -21,4 +21,4 @@
         android:layout_alignParentTop="true"
         app:theme="@style/AppBar" />
     <include layout="@layout/snack_bar"/>
-</com.pair.view.RelativeLayout>
+</com.idea.view.RelativeLayout>

@@ -1,5 +1,5 @@
 <menu
       xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.pair.ui.InviteActivity">
+    tools:context="com.idea.ui.InviteActivity">
 
 </menu>

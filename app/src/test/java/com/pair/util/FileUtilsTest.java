@@ -1,8 +1,8 @@
-package com.pair.util;
+package com.idea.util;
 
 import android.net.Uri;
 
-import com.pair.pairapp.BuildConfig;
+import com.idea.pairapp.BuildConfig;
 
 import junit.framework.TestCase;
 

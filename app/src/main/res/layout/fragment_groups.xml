@@ -1,8 +1,8 @@
-<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                               xmlns:tools="http://schemas.android.com/tools"
                               android:layout_width="match_parent"
                               android:layout_height="match_parent"
-                              tools:context="com.pair.ui.GroupsFragment">
+                              tools:context="com.idea.ui.GroupsFragment">
 
     <TextView
         android:id="@android:id/empty"
@@ -26,4 +26,4 @@
     <include
         android:id="@+id/fab_new_group"
         layout="@layout/fab_generic"/>
-</com.pair.view.RelativeLayout>
+</com.idea.view.RelativeLayout>

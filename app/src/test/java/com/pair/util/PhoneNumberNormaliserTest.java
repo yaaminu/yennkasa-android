@@ -1,4 +1,4 @@
-package com.pair.util;
+package com.idea.util;
 
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 

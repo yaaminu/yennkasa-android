@@ -1,6 +1,6 @@
 <menu
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.pair.ui.CreateMessageActivity"
+    tools:context="com.idea.ui.CreateMessageActivity"
     tools:ignore="AlwaysShowAction">
     <!--<item-->
     <!--android:id="@+id/action_send_message"-->

@@ -1,9 +1,9 @@
-<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                               xmlns:app="http://schemas.android.com/apk/res-auto"
                               xmlns:tools="http://schemas.android.com/tools"
                               android:layout_width="match_parent"
                               android:layout_height="match_parent"
-                              tools:context="com.pair.ui.CreateGroupActivity">
+                              tools:context="com.idea.ui.CreateGroupActivity">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/main_toolbar"
@@ -49,7 +49,7 @@
             />
     </android.support.v7.widget.Toolbar>
 
-    <com.pair.view.RelativeLayout
+    <com.idea.view.RelativeLayout
         android:id="@+id/rl_main_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -73,7 +73,7 @@
 
         <fragment
             android:id="@+id/rl_group_dp_preview"
-            android:name="com.pair.ui.ChooseDisplayPictureFragment"
+            android:name="com.idea.ui.ChooseDisplayPictureFragment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/et_group_name"
@@ -86,5 +86,5 @@
 
         <include
             layout="@layout/snack_bar"/>
-    </com.pair.view.RelativeLayout>
-</com.pair.view.RelativeLayout>
+    </com.idea.view.RelativeLayout>
+</com.idea.view.RelativeLayout>

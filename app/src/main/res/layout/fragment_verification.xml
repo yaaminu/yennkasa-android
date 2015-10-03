@@ -1,4 +1,4 @@
-<com.pair.view.RelativeLayout
+<com.idea.view.RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -7,7 +7,7 @@
     android:background="@color/preferred_primary_color"
     android:gravity="center_horizontal|top"
     android:paddingTop="@dimen/login_in_fragment_margin_top"
-    tools:context="com.pair.ui.VerificationFragment">
+    tools:context="com.idea.ui.VerificationFragment">
 
     <TextView
         android:id="@+id/tv_verification_notice"
@@ -22,7 +22,7 @@
         android:textSize="@dimen/sub_title_text_size"
         />
 
-    <com.pair.view.RelativeLayout
+    <com.idea.view.RelativeLayout
         android:id="@+id/ll_edittext_pane"
         android:layout_width="@dimen/login_signup_verificaton_panel_width"
         android:layout_height="wrap_content"
@@ -34,7 +34,7 @@
         app:cardCornerRadius="0dp"
         app:cardElevation="0dp">
 
-        <com.pair.view.LinearLayout
+        <com.idea.view.LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/transparent"
@@ -70,8 +70,8 @@
                 android:gravity="center"
                 android:text="@string/st_send_again"
                 android:textSize="@dimen/standard_text_size"/>
-        </com.pair.view.LinearLayout>
-    </com.pair.view.RelativeLayout>
+        </com.idea.view.LinearLayout>
+    </com.idea.view.RelativeLayout>
 
     <com.rey.material.widget.TextView
         android:id="@+id/tv_back_to_login"
@@ -99,4 +99,4 @@
         android:textSize="@dimen/standard_text_size"
         android:textStyle="bold"
         />
-</com.pair.view.RelativeLayout>
+</com.idea.view.RelativeLayout>

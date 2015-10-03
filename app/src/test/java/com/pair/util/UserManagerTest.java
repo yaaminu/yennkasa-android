@@ -1,9 +1,9 @@
-package com.pair.util;
+package com.idea.util;
 
 import android.content.Context;
 
-import com.pair.data.User;
-import com.pair.data.UserManager;
+import com.idea.data.User;
+import com.idea.data.UserManager;
 
 import org.junit.After;
 import org.junit.Assert;

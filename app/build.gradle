@@ -8,7 +8,7 @@ android {
         unitTests.returnDefaultValues = true
     }
     defaultConfig {
-        applicationId "com.pair.pairapp"
+        applicationId "com.idea.pairapp"
         minSdkVersion 9
         targetSdkVersion 22
         versionCode 1

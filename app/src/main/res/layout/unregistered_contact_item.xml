@@ -1,4 +1,4 @@
-<com.pair.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                               xmlns:tools="http://schemas.android.com/tools"
                               android:layout_width="match_parent"
                               android:layout_height="@dimen/list_item_height"
@@ -79,5 +79,5 @@
         android:text="@string/invite"
         android:textColor="@color/white"
         android:textSize="@dimen/standard_text_size"/>
-</com.pair.view.RelativeLayout>
+</com.idea.view.RelativeLayout>
 

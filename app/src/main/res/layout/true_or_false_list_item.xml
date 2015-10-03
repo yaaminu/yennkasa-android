@@ -1,4 +1,4 @@
-<com.pair.view.RelativeLayout
+<com.idea.view.RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -10,7 +10,7 @@
     android:padding="@dimen/list_item_padding"
     tools:ignore="RtlHardcoded">
 
-    <com.pair.view.LinearLayout
+    <com.idea.view.LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
@@ -32,7 +32,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="false"/>
-    </com.pair.view.LinearLayout>
+    </com.idea.view.LinearLayout>
 
     <include
         android:id="@+id/divider"
@@ -44,4 +44,4 @@
         android:gravity="bottom"
         android:layout_alignParentBottom="true"
         />
-</com.pair.view.RelativeLayout>
+</com.idea.view.RelativeLayout>
