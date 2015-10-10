@@ -1,5 +1,6 @@
 package com.idea.ui;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -23,14 +24,12 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.Filterable;
-import android.widget.ListView;
 import android.widget.TextView;
 
-import com.idea.adapter.UsersAdapter;
-import com.idea.view.CheckBox;
 import com.idea.Errors.ErrorCenter;
 import com.idea.Errors.PairappException;
 import com.idea.adapter.MultiChoiceUsersAdapter;
+import com.idea.adapter.UsersAdapter;
 import com.idea.data.Message;
 import com.idea.data.User;
 import com.idea.pairapp.BuildConfig;
@@ -41,6 +40,7 @@ import com.idea.util.PLog;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
+import com.idea.view.CheckBox;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
@@ -73,6 +73,7 @@ public class CreateMessageActivity extends MessageActivity
     private boolean isAttaching = false;
     private boolean isNotDefaultIntent = false;
     private Set<String> selectedUserNames = new TreeSet<>();
+    private Fragment fragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +89,7 @@ public class CreateMessageActivity extends MessageActivity
         tvAttachmentDescription = (TextView) findViewById(R.id.attachment_description);
 
         ViewUtils.setTypeface(tvAttachmentDescription, TypeFaceUtil.DROID_SERIF_BOLD_TTF);
-        ViewUtils.setTypeface(messageEt,TypeFaceUtil.ROBOTO_REGULAR_TTF);
+        ViewUtils.setTypeface(messageEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
 
         attachmentPreview.setOnClickListener(this);
         cancelAttachment.setOnClickListener(this);
@@ -143,7 +144,6 @@ public class CreateMessageActivity extends MessageActivity
             isNotDefaultIntent = false;
         }
 
-        Fragment fragment;
         if (adapter.getCount() >= 1) {
             fragment = new ItemsSelector();
         } else {
@@ -182,9 +182,9 @@ public class CreateMessageActivity extends MessageActivity
                 ViewUtils.hideViews(attachmentPreview);
                 setActionBArTitle(null);
             }
-        }else{
+        } else {
             PLog.f(TAG, "error while attaching. uri returned is null or the file it points to does not exist");
-            ErrorCenter.reportError(TAG+"attaching",getString(R.string.error_use_file_manager));
+            ErrorCenter.reportError(TAG + "attaching", getString(R.string.error_use_file_manager));
         }
     }
 
@@ -268,7 +268,7 @@ public class CreateMessageActivity extends MessageActivity
                 type = Message.TYPE_TEXT_MESSAGE;
             }
             final DialogFragment progressDialog = UiHelpers.newProgressDialog();
-            progressDialog.show(getSupportFragmentManager(),null);
+            progressDialog.show(getSupportFragmentManager(), null);
             sendMessage(messageBody, selectedItems, type, new SendCallback() {
                 @Override
                 public void onSendComplete(Exception e) {
@@ -356,25 +356,25 @@ public class CreateMessageActivity extends MessageActivity
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        User user = adapter.getItem(position);
-        if (((ListView) parent).isItemChecked(position)) {
-            selectedItems.add(user.getUserId());
-            selectedUserNames.add(user.getName());
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(true);
-            } else {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(true);
-            }
-        } else {
-            selectedItems.remove(user.getUserId());
-            selectedUserNames.remove(user.getName());
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(false);
-            } else {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(false);
-            }
-        }
-        supportInvalidateOptionsMenu();
+//        User user = adapter.getItem(position);
+//        if (((ListView) parent).isItemChecked(position)) {
+//            selectedItems.add(user.getUserId());
+//            selectedUserNames.add(user.getName());
+//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+//                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(true);
+//            } else {
+//                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(true);
+//            }
+//        } else {
+//            selectedItems.remove(user.getUserId());
+//            selectedUserNames.remove(user.getName());
+//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+//                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(false);
+//            } else {
+//                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(false);
+//            }
+//        }
+//        supportInvalidateOptionsMenu();
     }
 
     @Override
@@ -444,9 +444,54 @@ public class CreateMessageActivity extends MessageActivity
         onAction();
     }
 
+    private final MultiChoiceUsersAdapter.Delegate delegagte = new MultiChoiceUsersAdapter.Delegate() {
+
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id, boolean isSelected) {
+            User user = ((User) parent.getAdapter().getItem(position));
+            CheckBox checkBox = (CheckBox) view.findViewById(R.id.cb_checked);
+            String userName = user.getName();
+            if (!userName.startsWith("@")) {
+                userName = "@" + userName;
+            }
+            if (isSelected) {
+                selectedItems.add(user.getUserId());
+                selectedUserNames.add(userName);
+                if (!checkBox.isChecked()) {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                        checkBox.setCheckedImmediately(true);
+                    } else {
+                        checkBox.setCheckedAnimated(true);
+                    }
+                }
+            } else {
+                selectedItems.remove(user.getUserId());
+                selectedUserNames.remove(userName);
+                if (checkBox.isChecked()) {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                        checkBox.setCheckedImmediately(false);
+                    } else {
+                        checkBox.setCheckedAnimated(false);
+                    }
+                }
+            }
+            try {
+                ((ItemsSelector) fragment).onItemsChanged();
+            } catch (ClassCastException e) {
+                throw new RuntimeException(e.getCause());
+            }
+            supportInvalidateOptionsMenu();
+        }
+
+        @Override
+        public Context getContext() {
+            return CreateMessageActivity.this;
+        }
+    };
+
     private class CustomAdapter extends MultiChoiceUsersAdapter {
         private CustomAdapter() {
-            super(CreateMessageActivity.this, realm, prepareQuery().findAllSorted(User.FIELD_NAME), selectedItems, R.id.cb_checked);
+            super(delegagte, realm, prepareQuery().findAllSorted(User.FIELD_NAME), selectedItems, R.id.cb_checked);
         }
 
         @Override

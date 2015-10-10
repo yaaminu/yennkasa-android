@@ -17,28 +17,24 @@ import com.idea.util.TaskManager;
 import com.parse.Parse;
 import com.parse.ParseACL;
 import com.parse.ParseException;
-import com.parse.ParseFile;
 import com.parse.ParseInstallation;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
-import com.parse.ProgressCallback;
-import com.parse.SaveCallback;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import retrofit.http.Body;
 import retrofit.http.Field;
@@ -49,7 +45,6 @@ import static com.idea.net.PARSE_CONSTANTS.FIELD_ACCOUNT_CREATED;
 import static com.idea.net.PARSE_CONSTANTS.FIELD_ADMIN;
 import static com.idea.net.PARSE_CONSTANTS.FIELD_COUNTRY;
 import static com.idea.net.PARSE_CONSTANTS.FIELD_DP;
-import static com.idea.net.PARSE_CONSTANTS.FIELD_DP_FILE;
 import static com.idea.net.PARSE_CONSTANTS.FIELD_HAS_CALL;
 import static com.idea.net.PARSE_CONSTANTS.FIELD_ID;
 import static com.idea.net.PARSE_CONSTANTS.FIELD_LAST_ACTIVITY;
@@ -65,14 +60,21 @@ import static com.idea.net.PARSE_CONSTANTS.USER_CLASS_NAME;
 /**
  * @author Null-Pointer on 8/27/2015.
  */
-public class ParseClient implements UserApiV2, FileApi {
+public class ParseClient implements UserApiV2 {
 
     private static final String TAG = ParseClient.class.getSimpleName();
-    public static final String FEEDBACK_CLASS_NAME = "feedback";
     private static boolean initialised = false;
-    private static ParseClient INSTANCE = new ParseClient();
+    private static ParseClient INSTANCE;
+    private DisplayPictureFileClient displayPictureFileClient;
 
     private ParseClient() {
+        Map<String, String> credentials ;//= UserManager.getInstance().getUserCredentials();
+        credentials = new HashMap<>();
+         //////////////////////////////////////////////////////////////////////////////
+        credentials.put("key", "doTbKQlpZyNZohX7KPYGNQXIghATCx");
+        credentials.put("password", "Dq8FLrF7HjeiyJBFGv9acNvOLV1Jqm");
+        /////////////////////////////////////////////////////////////////////////////////////
+        displayPictureFileClient =  DisplayPictureFileClient.createInstance(credentials);
 
     }
 
@@ -100,6 +102,9 @@ public class ParseClient implements UserApiV2, FileApi {
         synchronized (ParseClient.class) {
             if (!initialised) {
                 throw new IllegalStateException("did you forget to init() the client?");
+            }
+            if(INSTANCE == null){
+                INSTANCE = new ParseClient();
             }
         }
         return INSTANCE;
@@ -134,11 +139,11 @@ public class ParseClient implements UserApiV2, FileApi {
                 password = user.getPassword(),
                 country = user.getCountry();
 
-        if (true) {
-            user.setDP("avartarempty");
-            notifyCallback(callback, null, user);
-            return;
-        }
+//         if (true) {
+//             user.setDP("avartarempty");
+//             notifyCallback(callback, null, user);
+//             return;
+//         }
         try {
             ParseObject existing = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, _id).getFirst();
             if (existing != null) {
@@ -219,23 +224,23 @@ public class ParseClient implements UserApiV2, FileApi {
     @Override
     public void logIn(final User user, final Callback<User> callback) {
         L.d(TAG, "logging in user: " + user.getUserId());
-        if (true) {
-            User copy = User.copy(user);
-            copy.setName("@unnamed");
-            copy.setType(User.TYPE_NORMAL_USER);
-            copy.setDP("avarta_empty");
-            notifyCallback(callback, null, copy);
-            return;
-        }
+//         if (true) {
+//             User copy = User.copy(user);
+//             copy.setName("@unnamed");
+//             copy.setType(User.TYPE_NORMAL_USER);
+//             copy.setDP("avarta_empty");
+//             notifyCallback(callback, null, copy);
+//             return;
+//         }
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
-                doCLogIn(user, callback);
+                doLogIn(user, callback);
             }
         });
     }
 
-    private void doCLogIn(User user, Callback<User> callback) {
+    private void doLogIn(User user, Callback<User> callback) {
         ParseQuery<ParseObject> query = makeParseQuery();
         try {
             ParseObject object = query.whereEqualTo(FIELD_ID, user.getUserId()).getFirst();
@@ -244,9 +249,9 @@ public class ParseClient implements UserApiV2, FileApi {
             object.put(PARSE_CONSTANTS.FIELD_TOKEN, token);
             object.put(PARSE_CONSTANTS.FIELD_VERIFIED, false);
             cleanExistingInstallation(user.getUserId());
-            object.save();
             //push
             registerForPushes(user.getUserId());
+            object.save();
             sendToken(user.getUserId(), token);
             user = parseObjectToUser(object);
             notifyCallback(callback, null, user);
@@ -334,31 +339,45 @@ public class ParseClient implements UserApiV2, FileApi {
         });
     }
 
-    private void doChangeDp(@Path("placeHolder") String userOrGroup, @Path(Message.FIELD_ID) String id, @Body TypedFile file, Callback<HttpResponse> response) {
-        try {
-            if (!userOrGroup.equals("users") && !userOrGroup.equals("groups")) {
-                throw new IllegalArgumentException("unknown placeholder");
-            }
-            ParseQuery<ParseObject> userOrGroupQuery = makeParseQuery(userOrGroup.equals("users") ? USER_CLASS_NAME : GROUP_CLASS_NAME);
-            ParseObject object = userOrGroupQuery.whereEqualTo(FIELD_ID, id).getFirst();
-            ParseFile parseFile = new ParseFile(file.fileName(), IOUtils.toByteArray(file.in()), file.mimeType());
-            parseFile.save();
-            object.put(FIELD_DP, parseFile.getUrl());
-            object.put(FIELD_DP_FILE, parseFile); //this is to help us track the file and delete it at a later time
-            try {
-                object.save();
-                notifyCallback(response, null, new HttpResponse(200, parseFile.getUrl()));
-            } catch (ParseException e) {
-                //uguu! we saved the file but could not update user, cant delete the parse file too... problem!
-                // TODO: 8/27/2015 find a way to either delete the parse file or schedule a task that will keep retrying till
-                //we succeeded
-                notifyCallback(response, prepareErrorReport(e), new HttpResponse(400, "error while processing file"));
-            }
-        } catch (IOException e) {
-            notifyCallback(response, new Exception("error processing picture", e.getCause()), new HttpResponse(400, "error while processing file"));
-        } catch (ParseException e) {
-            notifyCallback(response, prepareErrorReport(e), new HttpResponse(400, "error while processing file"));
+    private void doChangeDp(@Path("placeHolder") final String userOrGroup, @Path(Message.FIELD_ID) final String id, @Body TypedFile file, final Callback<HttpResponse> response) {
+        if (!userOrGroup.equals("users") && !userOrGroup.equals("groups")) {
+            throw new IllegalArgumentException("unknown placeholder");
         }
+
+        displayPictureFileClient.saveFileToBackend(new File(file.file().getAbsolutePath()), new FileApi.FileSaveCallback() {
+
+            @Override
+            public void done(FileClientException e, String url) {
+                if (e == null) {
+                    // FIXME: 10/3/2015 remove this
+                    // STOPSHIP: 10/3/2015  
+                    // if (true) {
+                    //     notifyCallback(response, null, new HttpResponse(200, url));
+                    //     return;
+                    // }
+                    try {
+                        ParseQuery<ParseObject> userOrGroupQuery = makeParseQuery(userOrGroup.equals("users") ? USER_CLASS_NAME : GROUP_CLASS_NAME);
+                        ParseObject object = userOrGroupQuery.whereEqualTo(FIELD_ID, id).getFirst();
+                        object.put(FIELD_DP, url);
+                        try {
+                            object.save();
+                            notifyCallback(response, null, new HttpResponse(200, url));
+                        } catch (ParseException e2) {
+                            notifyCallback(response, prepareErrorReport(e2), new HttpResponse(400, "error while processing file"));
+                        }
+                    } catch (ParseException e2) {
+                        notifyCallback(response, prepareErrorReport(e2), new HttpResponse(400, "error while processing file"));
+                    }
+                } else {
+                    notifyCallback(response, e, new HttpResponse(400, "error during dp change"));
+                }
+            }
+        }, new FileApi.ProgressListener() {
+            @Override
+            public void onProgress(long expected, long transferred) {
+                PLog.i(TAG, "dp change progress %s", (((double) expected) / (double) transferred) * 100);
+            }
+        });
     }
 
     @Override
@@ -388,6 +407,7 @@ public class ParseClient implements UserApiV2, FileApi {
             ParseObject object = new ParseObject(GROUP_CLASS_NAME);
             object.setACL(makeReadWriteACL());
             object.put(FIELD_ID, name + "@" + by);
+            object.put(FIELD_DP, "avartar_empty");
             object.put(FIELD_NAME, name);
             object.put(FIELD_ACCOUNT_CREATED, new Date());
             object.put(FIELD_ADMIN, admin);
@@ -414,7 +434,7 @@ public class ParseClient implements UserApiV2, FileApi {
         try {
             ParseObject object = makeParseQuery(GROUP_CLASS_NAME).whereEqualTo(FIELD_ID, id).getFirst();
             User group = parseObjectToGroup(object);
-            group.setAdmin(parseObjectToUser(object.getParseObject(FIELD_ADMIN)));
+            group.setAdmin(parseObjectToUser(object.getParseObject(FIELD_ADMIN).fetchIfNeeded()));
             notifyCallback(callback, null, group);
         } catch (ParseException e) {
             notifyCallback(callback, prepareErrorReport(e), null);
@@ -522,11 +542,11 @@ public class ParseClient implements UserApiV2, FileApi {
     }
 
     @Override
-    public void verifyUser(@Path("id") final String userId, @Field("token") final String token, final Callback<HttpResponse> callback) {
-        if (true) {
-            notifyCallback(callback, null, new HttpResponse(200, "user verified successfully"));
-            return;
-        }
+    public void verifyUser(@Path("id") final String userId, @Field("token") final String token, final Callback<SessionData> callback) {
+//         if (true) {
+//             notifyCallback(callback, null, new SessionData("accessToken", userId));
+//             return;
+//         }
         TaskManager.execute(new Runnable() {
             public void run() {
                 doVerifyUser(userId, token, callback);
@@ -534,12 +554,16 @@ public class ParseClient implements UserApiV2, FileApi {
         });
     }
 
-    private void doVerifyUser(@Path("id") String userId, @Field("token") String token, Callback<HttpResponse> callback) {
+    private void doVerifyUser(@Path("id") String userId, @Field("token") String token, Callback<SessionData> callback) {
         try {
             ParseObject object = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, userId).whereEqualTo(FIELD_TOKEN, token).getFirst();
             object.put(FIELD_VERIFIED, true);
+            final String accessToken = ParseInstallation.getCurrentInstallation().getObjectId();
+            object.put(PARSE_CONSTANTS.FIELD_ACCESS_TOKEN, accessToken);
             object.save();
-            notifyCallback(callback, null, new HttpResponse(200, "user verified successfully"));
+
+            // STOPSHIP: 10/3/2015 get the right key for device token in parse installation
+            notifyCallback(callback, null, new SessionData(accessToken,userId));
         } catch (ParseException e) {
             notifyCallback(callback, prepareErrorReport(e), null);
         }
@@ -593,27 +617,16 @@ public class ParseClient implements UserApiV2, FileApi {
         oops("use the registerUser(User,Callback) overload instead");
     }
 
-    @Override
-    public void saveFileToBackend(File file, final FileSaveCallback callback, final ProgressListener listener) {
-        final ParseFile parseFile;
-        try {
-            parseFile = new ParseFile(file.getName(), FileUtils.readFileToByteArray(file));
-        } catch (IOException e) {
-            callback.done(e, null);
-            return;
-        }
-        parseFile.saveInBackground(new SaveCallback() {
-            @Override
-            public void done(ParseException e) {
-                callback.done(e, parseFile.getUrl());
-            }
-        }, new ProgressCallback() {
-            @Override
-            public void done(Integer integer) {
-                listener.onProgress(integer);
-            }
-        });
-    }
+//    public void saveFileToBackend(File file, final FileApi.FileSaveCallback callback, final FileApi.ProgressListener listener) {
+//        final ParseFile parseFile;
+//        try {
+//            final byte[] data = FileUtils.readFileToByteArray(file);
+//            parseFile = new ParseFile(file.getName(), data);
+//        } catch (IOException e) {
+//            callback.done(e, null);
+//            return;
+//        }
+//    }
 
     private String hashPassword(String password) {
         try {
@@ -655,12 +668,14 @@ public class ParseClient implements UserApiV2, FileApi {
     }
 
     @NonNull
-    private User parseObjectToGroup(ParseObject object) {
+    private User parseObjectToGroup(ParseObject object) throws ParseException {
         User user = new User();
         user.setName(object.getString(FIELD_NAME));
         user.setUserId(object.getString(FIELD_ID));
         user.setDP(object.getString(FIELD_DP));
-        user.setAdmin(parseObjectToUser(object.getParseObject(FIELD_ADMIN)));
+        final ParseObject parseObject = object.getParseObject(FIELD_ADMIN);
+        parseObject.fetchIfNeeded();
+        user.setAdmin(parseObjectToUser(parseObject));
         return user;
     }
 
@@ -674,6 +689,10 @@ public class ParseClient implements UserApiV2, FileApi {
 
     private void notifyCallback(Callback<HttpResponse> response, Exception e, HttpResponse httpResponse) {
         response.done(e, httpResponse);
+    }
+
+    private void notifyCallback(Callback<SessionData> response, Exception e, SessionData sessionData) {
+        response.done(e, sessionData);
     }
 
     @NonNull
@@ -693,19 +712,22 @@ public class ParseClient implements UserApiV2, FileApi {
             Config.getApplicationContext().getContentResolver().delete(Uri.parse("content://sms/outbox"), "address = ? and body = ?",
                     new String[]{recipient, messageBody});
         } catch (Exception e) {
-            throw new RuntimeException(); //we cannot handle this
+            // if(BuildConfig.DEBUG){
+                
+            // }
+            // throw new RuntimeException(); //we cannot handle this
         }
     }
 
     public void sendFeedBack(JSONObject report) {
-        ParseObject object = new ParseObject(FEEDBACK_CLASS_NAME);
+        ParseObject object = new ParseObject(PARSE_CONSTANTS.FEEDBACK_CLASS_NAME);
         try {
             Iterator keys = report.keys();
             while (keys.hasNext()) {
                 String key = (String) keys.next();
                 object.put(key, report.get(key));
             }
-        } catch (JSONException|ClassCastException e) {
+        } catch (JSONException | ClassCastException e) {
             throw new RuntimeException(e.getCause());
         }
         object.saveEventually();

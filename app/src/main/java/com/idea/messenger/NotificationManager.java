@@ -68,8 +68,8 @@ final class NotificationManager {
                     return;
                 }
             }
-            BACKGROUND_NOTIFIER.notifyUser(context, message, sendersName);
         }
+        BACKGROUND_NOTIFIER.notifyUser(context, message, sendersName);
     }
 
     private String retrieveSendersName(Message message) {

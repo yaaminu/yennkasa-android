@@ -7,7 +7,9 @@ import android.os.Build;
 import android.os.Environment;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
@@ -25,6 +27,10 @@ public class Config {
     private static final String DP_API_REAL_PHONE = "http://192.168.43.42:5000/fileApi/dp";
     private static final String MESSAGE_API_GENY = "http://10.0.3.2:5000/fileApi/message";
     private static final String MESSAGE_API_REAL_PHONE = "http://192.168.43.42:5000/fileApi/message";
+    private static final String MESSAGE_SOCKET_API_REMOTE = "https://pairap-message.herokuapp.com/message";
+    private static final String MESSAGE_SOCKET_API_LOCAL = "http://10.0.3.2:3000/message";
+    private static final String LIVE_SOCKET_API_REMOTE = "https://pairapp-live.herokuapp.com/live";
+    private static final String LIVE_SOCKET_API_LOCAL = "http://10.0.3.2:4000/live";
     private static final String ENV_PROD = "prod";
     private static final String ENV_DEV = "dev";
     public static final String PAIRAPP_ENV = getEnvironment();
@@ -43,7 +49,7 @@ public class Config {
 
     public static void init(Application pairApp) {
         Config.application = pairApp;
-        SCREEN_DENSITY = pairApp.getResources().getDisplayMetrics().density;
+       // SCREEN_DENSITY = pairApp.getResources().getDisplayMetrics().density;
         setUpDirs();
     }
 
@@ -99,7 +105,7 @@ public class Config {
         }
     }
 
-    private static boolean isEmulator() {
+    public static boolean isEmulator() {
         return Build.HARDWARE.contains("goldfish")
                 || Build.PRODUCT.equals("sdk") // sdk
                 || Build.PRODUCT.endsWith("_sdk") // google_sdk
@@ -116,7 +122,7 @@ public class Config {
         }
     }
 
-    private static String getDpEndpoint() {
+    public static String getDpEndpoint() {
         if (PAIRAPP_ENV.equals(ENV_DEV)) {
             return DP_API_GENYMOTION;
         } else {
@@ -132,7 +138,7 @@ public class Config {
         return getApplication().getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
     }
 
-    private static String getMessageApiEndpoint() {
+    public static String getMessageApiEndpoint() {
         if (PAIRAPP_ENV.equals(ENV_DEV)) {
             return MESSAGE_API_GENY;
         } else {
@@ -178,4 +184,57 @@ public class Config {
     public static float getScreenDensity() {
         return SCREEN_DENSITY;
     }
+
+    public synchronized static String get(String propertyName) {
+        return internalGet(propertyName);
+    }
+
+    public synchronized static void set(String propertyName, String value) {
+        internalSet(propertyName, value);
+    }
+
+    private static void internalSet(String propertyName, String value) {
+        if (propertyName == null || value == null) {
+            throw new IllegalArgumentException("null propertyName or value");
+        }
+        ensureNotAlreadySet(propertyName);
+        properties.put(propertyName, value);
+    }
+
+    private static void ensureNotAlreadySet(String propertyName) {
+        if (properties.get(propertyName) != null) {
+            throw new IllegalArgumentException("property with name " + propertyName + " already set");
+        }
+    }
+
+    private static String internalGet(String propertyName) {
+        if (propertyName == null) {
+            throw new IllegalArgumentException("propertyName cannot be null");
+        }
+        String property = properties.get(propertyName);
+        if (property == null) {
+            throw new IllegalArgumentException("property " + propertyName + "not set");
+        }
+        return property;
+    }
+
+    public static String getLiveEndpoint() {
+        //STOPSHIP
+        if (isEmulator()&& false) {
+            return LIVE_SOCKET_API_LOCAL;
+        } else {
+            return LIVE_SOCKET_API_REMOTE;
+        }
+    }
+
+    public static String getMessageEndpoint() {
+        //STOPSHIP
+        if (isEmulator() && false) {
+            return MESSAGE_SOCKET_API_LOCAL;
+        } else {
+            return MESSAGE_SOCKET_API_REMOTE;
+        }
+    }
+
+    private static final Map<String, String> properties = new HashMap<>();
 }

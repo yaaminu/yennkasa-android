@@ -1,5 +1,6 @@
 package com.idea.ui;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,12 +17,10 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.Filterable;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.i18n.phonenumbers.NumberParseException;
-import com.idea.view.CheckBox;
 import com.idea.Errors.ErrorCenter;
 import com.idea.adapter.MultiChoiceUsersAdapter;
 import com.idea.data.User;
@@ -31,6 +30,7 @@ import com.idea.util.PhoneNumberNormaliser;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
+import com.idea.view.CheckBox;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
@@ -167,14 +167,17 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     //pattern is locale insensitive
 //    private static final Pattern groupNamePattern = Pattern.compile("^[\\p{Alpha}][A-Za-z_\\p{Space}]{3,30}[\\p{Alpha}]$");
 
+    private ItemsSelector fragment = null;
+
     private void proceedToNextStage(String name) {
+        fragment = new ItemsSelector();
         groupNameEt.setVisibility(View.GONE);
         dpPreview.setVisibility(View.GONE);
         groupName = name;
         stage = 2;
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.rl_main_container, new ItemsSelector())
+                .replace(R.id.rl_main_container, fragment)
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
                 .commit();
         supportInvalidateOptionsMenu();
@@ -292,26 +295,8 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        User user = ((User) parent.getAdapter().getItem(position));
-
-        if (((ListView) parent).isItemChecked(position)) {
-            selectedUsers.add(user.getUserId());
-            selectedUsersNames.add(user.getName());
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(true);
-            } else {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(true);
-            }
-        } else {
-            selectedUsers.remove(user.getUserId());
-            selectedUsersNames.remove(user.getName());
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(false);
-            } else {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(false);
-            }
-        }
-        supportInvalidateOptionsMenu();
+//        String userId = ((User) parent.getAdapter().getItem(position)).getUserId();
+//        delegagte.onItemSelected(parent, view, position, id, !selectedUsers.contains(userId));
     }
 
     @Override
@@ -382,8 +367,9 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
             UiHelpers.showErrorDialog(this, getString(R.string.duplicate_number_notice));
         } else {
             selectedUsers.add(phoneNumber);
-            selectedUsersNames.add(PhoneNumberNormaliser.toLocalFormat(phoneNumber, getCurrentUser().getCountry()));
+            selectedUsersNames.add("@" + PhoneNumberNormaliser.toLocalFormat(phoneNumber, getCurrentUser().getCountry()).replace("\\D",""));
             adapter.notifyDataSetChanged();
+            fragment.onItemsChanged();
             supportInvalidateOptionsMenu();
             UiHelpers.showToast(getString(R.string.added_custom_notice_toast), Toast.LENGTH_LONG);
         }
@@ -439,9 +425,50 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         return R.drawable.group_avatar;
     }
 
+    private final MultiChoiceUsersAdapter.Delegate delegagte = new MultiChoiceUsersAdapter.Delegate() {
+
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id, boolean isSelected) {
+            User user = ((User) parent.getAdapter().getItem(position));
+            CheckBox checkBox = (CheckBox) view.findViewById(R.id.cb_checked);
+            String userName = user.getName();
+            if (!userName.startsWith("@")) {
+                userName = "@" + userName;
+            }
+            if (isSelected) {
+                selectedUsers.add(user.getUserId());
+                selectedUsersNames.add(userName);
+                if (!checkBox.isChecked()) {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                        checkBox.setCheckedImmediately(true);
+                    } else {
+                        checkBox.setCheckedAnimated(true);
+                    }
+                }
+            } else {
+                selectedUsers.remove(user.getUserId());
+                selectedUsersNames.remove(userName);
+                if (checkBox.isChecked()) {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                        checkBox.setCheckedImmediately(false);
+                    } else {
+                        checkBox.setCheckedAnimated(false);
+                    }
+                }
+            }
+            fragment.onItemsChanged();
+            supportInvalidateOptionsMenu();
+        }
+
+        @Override
+        public Context getContext() {
+            return CreateGroupActivity.this;
+        }
+    };
+
     private class CustomUsersAdapter extends MultiChoiceUsersAdapter {
         public CustomUsersAdapter(Realm realm, RealmResults<User> realmResults) {
-            super(CreateGroupActivity.this, realm, realmResults, selectedUsers, R.id.cb_checked);
+            super(delegagte, realm, realmResults, selectedUsers, R.id.cb_checked);
         }
 
         @Override

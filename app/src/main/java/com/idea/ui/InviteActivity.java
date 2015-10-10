@@ -1,8 +1,8 @@
 package com.idea.ui;
 
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -12,14 +12,12 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Filterable;
-import android.widget.ListView;
 import android.widget.Toast;
 
 import com.google.i18n.phonenumbers.NumberParseException;
-import com.idea.adapter.UsersAdapter;
-import com.idea.view.CheckBox;
 import com.idea.Errors.ErrorCenter;
 import com.idea.adapter.MultiChoiceUsersAdapter;
+import com.idea.adapter.UsersAdapter;
 import com.idea.data.User;
 import com.idea.data.UserManager;
 import com.idea.pairapp.BuildConfig;
@@ -29,6 +27,7 @@ import com.idea.util.PhoneNumberNormaliser;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
+import com.idea.view.CheckBox;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
@@ -65,6 +64,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
     };
     private View menuItemDone;
     private Set<String> selectedUserNames = new TreeSet<>();
+    private ItemsSelector fragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,7 +82,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
         selectedUsers = new HashSet<>();
         realm = User.Realm(this);
         usersAdapter = new CustomUserAdapter(this, prepareQuery().findAllSorted(User.FIELD_NAME));
-        Fragment fragment = new ItemsSelector();
+        fragment = new ItemsSelector();
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.container, fragment)
@@ -233,6 +233,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
             selectedUsers.add(phoneNumber);
             selectedUserNames.add(PhoneNumberNormaliser.toLocalFormat(phoneNumber, getCurrentUser().getCountry()));
             usersAdapter.notifyDataSetChanged();
+            fragment.onItemsChanged();
             supportInvalidateOptionsMenu();
             UiHelpers.showToast(getString(R.string.added_custom_notice_toast), Toast.LENGTH_LONG);
         }
@@ -240,32 +241,71 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        User user = usersAdapter.getItem(position);
-        if (((ListView) parent).isItemChecked(position)) {
-            selectedUsers.add(user.getUserId());
-            selectedUserNames.add(user.getName());
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(true);
-            } else {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(true);
-            }
-        } else {
-            selectedUsers.remove(user.getUserId());
-            selectedUserNames.remove(user.getName());
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(false);
-            } else {
-                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(false);
-            }
-        }
-
-        supportInvalidateOptionsMenu();
+//        User user = usersAdapter.getItem(position);
+//        if (((ListView) parent).isItemChecked(position)) {
+//            selectedUsers.add(user.getUserId());
+//            selectedUserNames.add(user.getName());
+//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+//                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(true);
+//            } else {
+//                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(true);
+//            }
+//        } else {
+//            selectedUsers.remove(user.getUserId());
+//            selectedUserNames.remove(user.getName());
+//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+//                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(false);
+//            } else {
+//                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(false);
+//            }
+//        }
+//
+//        supportInvalidateOptionsMenu();
     }
 
+    private final MultiChoiceUsersAdapter.Delegate delegate = new MultiChoiceUsersAdapter.Delegate() {
+
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id, boolean isSelected) {
+            User user = ((User) parent.getAdapter().getItem(position));
+            CheckBox checkBox = (CheckBox) view.findViewById(R.id.cb_checked);
+            String userName = user.getName();
+            if (!userName.startsWith("@")) {
+                userName = "@" + userName;
+            }
+            if (isSelected) {
+                selectedUsers.add(user.getUserId());
+                selectedUserNames.add(userName);
+                if (!checkBox.isChecked()) {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                        checkBox.setCheckedImmediately(true);
+                    } else {
+                        checkBox.setCheckedAnimated(true);
+                    }
+                }
+            } else {
+                selectedUsers.remove(user.getUserId());
+                selectedUserNames.remove(userName);
+                if (checkBox.isChecked()) {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                        checkBox.setCheckedImmediately(false);
+                    } else {
+                        checkBox.setCheckedAnimated(false);
+                    }
+                }
+            }
+            fragment.onItemsChanged();
+            supportInvalidateOptionsMenu();        }
+
+        @Override
+        public Context getContext() {
+            return InviteActivity.this;
+        }
+    };
     private class CustomUserAdapter extends MultiChoiceUsersAdapter {
 
         public CustomUserAdapter(PairAppBaseActivity context, RealmResults<User> realmResults) {
-            super(context, realm, realmResults, selectedUsers, R.id.cb_checked);
+            super(delegate, realm, realmResults, selectedUsers, R.id.cb_checked);
         }
 
         @Override

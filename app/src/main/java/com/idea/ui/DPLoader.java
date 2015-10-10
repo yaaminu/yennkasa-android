@@ -2,6 +2,7 @@ package com.idea.ui;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.text.TextUtils;
 
 import com.idea.data.UserManager;
 import com.idea.util.L;
@@ -9,6 +10,7 @@ import com.idea.util.PLog;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.RequestCreator;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,6 +31,13 @@ public class DPLoader {
 //            attemptToRecoverDp(userId, userDp); //async
 //            return Picasso.with(context).load(DUMMY_URL);
 //        }
+        final File dpFile = new File(userDp);
+        if(dpFile.exists()){
+            return Picasso.with(context).load(dpFile);
+        }
+        if(TextUtils.isEmpty(userDp)){
+            userDp = "avatar_empty";
+        }
         return Picasso.with(context).load(userDp);
     }
 

@@ -8,18 +8,20 @@ import com.idea.data.ContactsManager;
 import com.idea.data.Message;
 import com.idea.data.User;
 import com.idea.data.UserManager;
-import com.idea.net.FileApi;
 import com.idea.data.util.MessageUtils;
-import com.idea.net.ParseClient;
+import com.idea.net.FileApi;
+import com.idea.net.FileClientException;
+import com.idea.net.SmartFileMessageClient;
 import com.idea.util.Config;
 import com.idea.util.ConnectionUtils;
-import com.idea.util.L;
+import com.idea.util.PLog;
 import com.idea.util.ThreadUtils;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -40,17 +42,21 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     protected static final String ERR_USER_OFFLINE = "user offline";
     protected static final FileApi.ProgressListener DUMMY_LISTENER = new FileApi.ProgressListener() {
         @Override
-        public void onProgress(int percentComplete) {
+        public void onProgress(long expected, long processed) {
             //do nothing
-            L.d(TAG, "dummy progress listener: " + percentComplete);
+            double ratio = ((double) processed) / expected;
+            PLog.d(TAG, "dummy progress listener: %s percent", 100 * ratio);
         }
     };
+    public static final String KEY = "key";
+    public static final String PASSWORD = "password";
     private final List<DispatcherMonitor> monitors = new ArrayList<>();
     private final FileApi file_service;
     private Timer timer = new Timer(TAG, false);
 
-    AbstractMessageDispatcher() {
-        this.file_service = ParseClient.getInstance();
+    AbstractMessageDispatcher(Map<String, String> credentials) {
+        this.file_service = //MessageFileClient.createInstance(Config.getMessageApiEndpoint(), credentials);//Config.getme
+                new SmartFileMessageClient(credentials.get(KEY), credentials.get(PASSWORD), UserManager.getMainUserId());
     }
 
     private void uploadFileAndProceed(final Message message, FileApi.ProgressListener listener) {
@@ -67,7 +73,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
 
             file_service.saveFileToBackend(actualFile, new FileApi.FileSaveCallback() {
                 @Override
-                public void done(Exception e, String locationUrl) {
+                public void done(FileClientException e, String locationUrl) {
                     if (e == null) {
                         message.setMessageBody(locationUrl); //do not persist this change.
                         proceedToSend(message);
@@ -121,13 +127,13 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         Realm realm = Message.REALM(Config.getApplicationContext());
         try {
             Message realmMessage = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
-            if (realmMessage != null) {
-                realm.beginTransaction();
+            realm.beginTransaction();
+            if (realmMessage != null && realmMessage.isValid()) {
                 if (realmMessage.getState() == Message.STATE_PENDING) {
-                    updateMessageStatus(realmMessage, Message.STATE_SEND_FAILED);
+                    realmMessage.setState(Message.STATE_SEND_FAILED);
                 }
-                realm.commitTransaction();
             }
+            realm.commitTransaction();
         } finally {
             realm.close();
         }
@@ -142,14 +148,14 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         Realm realm = Message.REALM(Config.getApplicationContext());
         try {
             Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
-            if (message != null) {
+            realm.beginTransaction();
+            if (message != null && message.isValid()) {
                 int state = message.getState();
-                realm.beginTransaction();
                 if (state == Message.STATE_PENDING || state == Message.STATE_SEND_FAILED) {
-                    updateMessageStatus(message, Message.STATE_SENT);
+                    message.setState(Message.STATE_SENT);
                 }
-                realm.commitTransaction();
             }
+            realm.commitTransaction();
         } finally {
             realm.close();
         }
@@ -164,23 +170,18 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         Realm realm = Message.REALM(Config.getApplicationContext());
         try {
             Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, ourMessageId).findFirst();
-            if (message != null) {
-                realm.beginTransaction();
+            realm.beginTransaction();
+            if (message != null && message.isValid()) {
                 if (message.getState() != Message.STATE_SEEN) {
-                    updateMessageStatus(message, Message.STATE_RECEIVED);
+                    message.setState(Message.STATE_RECEIVED);
                 }
-                realm.commitTransaction();
             }
+            realm.commitTransaction();
         } finally {
             realm.close();
         }
     }
 
-    private void updateMessageStatus(Message message, int state) {
-        if (message.isValid()) {
-            message.setState(state);
-        }
-    }
 
     protected final void onAllSent() {
         synchronized (monitors) {

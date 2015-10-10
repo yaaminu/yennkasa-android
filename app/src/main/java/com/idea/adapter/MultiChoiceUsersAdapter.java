@@ -1,14 +1,15 @@
 package com.idea.adapter;
 
+import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.CompoundButton;
 import android.widget.ListView;
 
-import com.idea.ui.PairAppBaseActivity;
-import com.idea.view.CheckBox;
 import com.idea.data.User;
 import com.idea.pairapp.R;
+import com.idea.view.CheckBox;
 
 import java.util.Set;
 
@@ -20,49 +21,57 @@ import io.realm.RealmResults;
  */
 public class MultiChoiceUsersAdapter extends UsersAdapter {
     private final Set<String> selectedItems;
-    private final PairAppBaseActivity baseActivity;
     private int checkBoxResId = 0;
+    private Delegate delegate;
 
 
     @SuppressWarnings("unused")
-    public MultiChoiceUsersAdapter(PairAppBaseActivity context, Realm realm, RealmResults<User> realmResults, Set<String> selectedItems) {
-        this(context, realm, realmResults, selectedItems, R.id.cb_checked);
+    public MultiChoiceUsersAdapter(Delegate delegate, Realm realm, RealmResults<User> realmResults, Set<String> selectedItems) {
+        this(delegate, realm, realmResults, selectedItems, R.id.cb_checked);
     }
 
-    public MultiChoiceUsersAdapter(PairAppBaseActivity context, Realm realm, RealmResults<User> realmResults, Set<String> selectedItems, int checkBoxResId) {
-        super(context, realm, realmResults, true);
+    public MultiChoiceUsersAdapter(Delegate delegate, Realm realm, RealmResults<User> realmResults, Set<String> selectedItems, int checkBoxResId) {
+        super(delegate.getContext(), realm, realmResults, true);
         if (selectedItems == null || !selectedItems.isEmpty()) {
             throw new IllegalArgumentException("null || non-empty container");
         }
         this.selectedItems = selectedItems;
-        this.baseActivity = context;
         this.checkBoxResId = checkBoxResId;
+        this.delegate = delegate;
     }
 
     @Override
     public View getView(final int position, final View convertView, final ViewGroup parent) {
-        View view = super.getView(position, convertView, parent);
-        final String userId = getItem(position).getUserId();
+        final View view = super.getView(position, convertView, parent);
+        final User user = getItem(position);
+        final String userId = user.getUserId();
         final CheckBox checkBox = (CheckBox) view.findViewById(checkBoxResId);
 
         //clear this so that some old converted view cannot cause a problems as we check this
         //checkbox
         checkBox.setOnCheckedChangeListener(null);
         final boolean isSelected = selectedItems.contains(userId);
-        ((ListView) parent).setItemChecked(position, isSelected);
+        final ListView listView = (ListView) parent;
+        listView.setItemChecked(position, isSelected);
         checkBox.setCheckedImmediately(isSelected);
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    selectedItems.add(userId);
-                } else {
-                    selectedItems.remove(userId);
+                if (isChecked && selectedItems.add(userId)) {
+                     listView.setItemChecked(position, true);
+                    delegate.onItemSelected(((AdapterView) parent),view,position,-1, true);
+                } else if (selectedItems.remove(userId)) {
+                    listView.setItemChecked(position, false);
+                    delegate.onItemSelected(((AdapterView) parent),view,position,-1, false);
                 }
-                ((ListView) parent).setItemChecked(position, isChecked);
-                baseActivity.supportInvalidateOptionsMenu();
             }
         });
         return view;
+    }
+
+    public interface Delegate {
+        void onItemSelected(AdapterView<?> parent, View view, int position, long id, boolean isSelected);
+
+        Context getContext();
     }
 }

@@ -20,12 +20,12 @@ import android.widget.GridView;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.jmpergar.awesometext.AwesomeTextHandler;
-import com.jmpergar.awesometext.MentionSpanRenderer;
 import com.idea.pairapp.R;
 import com.idea.util.ScreenUtility;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.ViewUtils;
+import com.jmpergar.awesometext.AwesomeTextHandler;
+import com.jmpergar.awesometext.MentionSpanRenderer;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -93,7 +93,7 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
 
         ViewUtils.setTypeface(selectedUsers, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         ViewUtils.setTypeface(filterEditText, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-        ViewUtils.setTypeface((TextView) addView,TypeFaceUtil.ROBOTO_REGULAR_TTF);
+        ViewUtils.setTypeface((TextView) addView, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         View emptyView = interactionListener.emptyView();
         final TextView defaultEmptyView = ((TextView) view.findViewById(R.id.tv_empty));
         //noinspection StatementWithEmptyBody
@@ -217,7 +217,7 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
             filter.filter(s);
         }
 //        onSetupFilterEditText();
-        if(interactionListener.supportAddCustom()) {
+        if (interactionListener.supportAddCustom()) {
             if (interactionListener.getAdapter().getCount() > 0) {
                 filterEditText.setHint(R.string.search_or_add_custom);
                 filterEditText.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_action_search, 0, 0, 0);
@@ -232,6 +232,9 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         interactionListener.onItemClick(parent, view, position, id);
+    }
+
+    void onItemsChanged() {
         if (interactionListener.multiChoice()) {
             selectedItems = interactionListener.selectedItems();
             if (selectedItems.isEmpty()) {
@@ -241,9 +244,10 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
                 CharSequence sequence = TextUtils.join("", selectedItems);
                 awesomeTextViewHandler.setText(sequence);
             }
+        } else {
+            throw new IllegalStateException("only for interactionListeners that support multiChoice ");
         }
     }
-
 
     public enum ContainerType {
         LIST, GRID

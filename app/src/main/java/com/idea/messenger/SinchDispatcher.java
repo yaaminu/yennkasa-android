@@ -1,5 +1,7 @@
 package com.idea.messenger;
 
+import java.util.Map;
+
 /**
  * @author Null-Pointer on 8/27/2015.
  */
@@ -8,6 +10,9 @@ abstract class SinchDispatcher extends AbstractMessageDispatcher {
     private static final String TAG = SinchDispatcher.class.getSimpleName();
     private static final String MESSAGE_ID_MAPPER = "sichMessageIdToOurMessageIdMapper";
 
+    public SinchDispatcher(Map<String,String> credentials){
+        super(credentials);
+    }
 //    private MessageClient messageClient;
 //    private static SinchDispatcher INSTANCE;
 //

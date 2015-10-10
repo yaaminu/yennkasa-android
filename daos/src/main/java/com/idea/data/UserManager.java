@@ -9,10 +9,10 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.google.i18n.phonenumbers.NumberParseException;
-import com.idea.net.HttpResponse;
-import com.idea.net.UserApiV2;
 import com.idea.data.settings.PersistedSetting;
+import com.idea.net.HttpResponse;
 import com.idea.net.ParseClient;
+import com.idea.net.UserApiV2;
 import com.idea.util.Config;
 import com.idea.util.ConnectionUtils;
 import com.idea.util.FileUtils;
@@ -30,8 +30,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import io.realm.Realm;
@@ -54,6 +56,7 @@ public final class UserManager {
 
     private static final UserManager INSTANCE = new UserManager();
     private static final String CLEANED_UP = "lkfakfalkfclkieifklaklf";
+    public static final String KEY_ACCESS_TOKEN = "accessToken";
     private final File sessionFile;
     private final Object mainUserLock = new Object();
     private final Exception NO_CONNECTION_ERROR;
@@ -146,9 +149,21 @@ public final class UserManager {
     private boolean isEveryThingSetup() {
         final User mainUser = getCurrentUser();
         if (mainUser == null || mainUser.getUserId().isEmpty() || mainUser.getName().isEmpty() || mainUser.getCountry().isEmpty()) {
+            TaskManager.execute(new Runnable() {
+                @Override
+                public void run() {
+                    cleanUp();
+                }
+            });
             return false;
         } else //noinspection ConstantConditions
             if (getSessionStringPref(KEY_SESSION_ID, "").isEmpty()) {
+                TaskManager.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        cleanUp();
+                    }
+                });
                 return false;
             }
         return true;
@@ -758,12 +773,13 @@ public final class UserManager {
         if (!isUserLoggedIn()) {
             throw new IllegalStateException("no user logged for verification");
         }
-        userApi.verifyUser(getCurrentUser().getUserId(), token, new UserApiV2.Callback<HttpResponse>() {
+        userApi.verifyUser(getCurrentUser().getUserId(), token, new UserApiV2.Callback<UserApiV2.SessionData>() {
             @Override
-            public void done(Exception e, HttpResponse s) {
+            public void done(Exception e, UserApiV2.SessionData data) {
                 if (e == null) {
-                    initialiseSettings();
+                    putSessionPref(KEY_ACCESS_TOKEN, data.accessToken);
                     putSessionPref(KEY_USER_VERIFIED, true);
+                    initialiseSettings();
                     doNotify(null, callBack);
                 } else {
                     doNotify(e, callBack);
@@ -822,9 +838,11 @@ public final class UserManager {
         realm.clear(Conversation.class);
         realm.close();
     }
-    private void oops(){
+
+    private void oops() {
         throw new UnsupportedOperationException();
     }
+
     public void syncContacts(final List<String> array) {
         if (!ConnectionUtils.isConnected()) {
             return;
@@ -952,7 +970,7 @@ public final class UserManager {
             clearClass(realm, User.class);
             realm = Country.REALM(Config.getApplicationContext());
             clearClass(realm, Country.class);
-            Config.getApplicationWidePrefs().edit().remove(CLEANED_UP).apply();
+            Config.getApplicationWidePrefs().edit().clear().apply();
         }
     }
 
@@ -1106,7 +1124,7 @@ public final class UserManager {
         User peer = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
         if (peer == null) {
             realm.beginTransaction();
-            peer = realm.createObject(User.class);
+            peer = new User();
             peer.setUserId(userId);
             String[] parts = userId.split("@"); //in case the peer is a group
             peer.setType(parts.length > 1 ? User.TYPE_GROUP : User.TYPE_NORMAL_USER);
@@ -1117,6 +1135,7 @@ public final class UserManager {
             } else {
                 peer.setName(PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO()));
             }
+            realm.copyToRealmOrUpdate(peer);
             realm.commitTransaction();
             refreshUserDetails(userId);
         } else {
@@ -1367,6 +1386,18 @@ public final class UserManager {
         if (!TaskManager.executeNow(runnable)) { //express task already full
             TaskManager.execute(runnable);
         }
+    }
+
+    public Map<String, String> getUserCredentials() {
+        if (!isUserVerified()) {
+            throw new IllegalStateException("no user logged in");
+        }
+        String userId = getCurrentUser().getUserId(),
+                accessToken = getSessionStringPref(KEY_ACCESS_TOKEN, "");
+        Map<String, String> credentials = new HashMap<>(3);
+        credentials.put(KEY_ACCESS_TOKEN, accessToken);
+        credentials.put("userId", userId);
+        return credentials;
     }
 
     public interface CallBack {

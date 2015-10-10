@@ -135,7 +135,7 @@ public class FileUtils {
 
     public static void save(File fileToSave, InputStream in) throws IOException {
         if (fileToSave.exists()) {
-            throw new IOException("destination file already exists to");
+            return;
         }
         byte[] buffer = new byte[1024];
         final File temp = new File(Config.getTempDir(), fileToSave.getName() + ".tmp");

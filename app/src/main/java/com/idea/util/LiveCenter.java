@@ -218,7 +218,7 @@ public class LiveCenter {
     //this method is synchronized because of the
     //activePeers,typing and peers_in_chatRoom fields.
     private synchronized static void doStart() {
-        liveClient = SocketIoClient.getInstance(Config.PAIRAPP_ENDPOINT + "/live", UserManager.getMainUserId());
+        liveClient = SocketIoClient.getInstance(Config.getLiveEndpoint(), UserManager.getMainUserId());
         liveClient.registerForEvent(SocketIoClient.TYPING, TYPING_RECEIVER);
         liveClient.registerForEvent(SocketIoClient.IS_ONLINE, ONLINE_RECEIVER);
         liveClient.registerForEvent(SocketIoClient.EVENT_CHAT_ROOM, CHAT_ROOM_RECEIVER);

@@ -10,7 +10,7 @@ import junit.framework.TestCase;
 public class SimpleDateUtilTest extends TestCase {
 
     public SimpleDateUtilTest() {
-        super("test");
+        super("");
     }
 
     @SmallTest

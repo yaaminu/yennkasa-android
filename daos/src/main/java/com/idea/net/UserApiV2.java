@@ -75,9 +75,10 @@ public interface UserApiV2 {
     @PUT("/api/v1/groups/{id}/leave")
     void leaveGroup(@Path("id") String id, @Field("leaver") String userId, @Field("password") String password, Callback<HttpResponse> response);
 
+
     @FormUrlEncoded
     @POST("/api/v1/users/{id}/verify")
-    void verifyUser(@Path("id") String userId, @Field("token") String token, Callback<HttpResponse> callback);
+    void verifyUser(@Path("id") String userId, @Field("token") String token, Callback<SessionData> callback);
 
     @FormUrlEncoded
     @POST("/api/v1/users/{id}/resendToken")
@@ -92,5 +93,14 @@ public interface UserApiV2 {
 
     interface Callback<T> {
         void done(Exception e, T t);
+    }
+
+    class SessionData {
+        public final String accessToken, userId;
+
+        public SessionData(String accessToken, String ownerId) {
+            this.accessToken = accessToken;
+            this.userId = ownerId;
+        }
     }
 }

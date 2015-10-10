@@ -15,20 +15,22 @@ import android.text.TextUtils;
 import android.view.View;
 
 import com.idea.PairApp;
-import com.idea.util.LiveCenter;
 import com.idea.data.Message;
+import com.idea.data.User;
 import com.idea.data.UserManager;
 import com.idea.messenger.Notifier;
 import com.idea.messenger.PairAppClient;
 import com.idea.pairapp.BuildConfig;
 import com.idea.pairapp.R;
 import com.idea.util.Config;
+import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
 import com.idea.util.UiHelpers;
 import com.rey.material.widget.SnackBar;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.realm.Realm;
 
@@ -39,6 +41,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     public static final int DELAY_MILLIS = 2000;
     public static final String TAG = PairAppActivity.class.getSimpleName();
     static private volatile Message latestMessage;
+    AtomicInteger unreadMessages = new AtomicInteger(0);
     protected PairAppClient.PairAppClientInterface pairAppClientInterface;
     protected boolean bound = false;
 
@@ -89,7 +92,8 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     private SnackBar snackBar;
     private SoundPool pool;
     private int streamId;
-//    private String latestActivePeer;
+    // private List<String> recentChatList;
+    //    private String latestActivePeer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,7 +121,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
             if (bound) {
                 pairAppClientInterface.registerUINotifier(this);
             }
-            if(snackBar == null) {
+            if (snackBar == null) {
                 snackBar = getSnackBar();
                 if (snackBar == null) {
                     throw new IllegalStateException("snack bar cannot be null");
@@ -171,16 +175,25 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     private String formatNotificationMessage(Message message, String sender) {
         String text;
         List<String> recentChatList = new ArrayList<>(LiveCenter.getAllPeersWithUnreadMessages());
+        Realm realm = User.Realm(this);
+        for (int i = 0; i < recentChatList.size(); i++) {
+            if(i > 3){
+                break;
+            }
+            User user = userManager.fetchUserIfRequired(realm, recentChatList.get(i));
+            recentChatList.set(i,user.getName());
+        }
+        realm.close();
         final int recentCount = recentChatList.size(), unReadMessages = LiveCenter.getTotalUnreadMessages();
         switch (recentCount) {
             case 0:
-                if(BuildConfig.DEBUG) throw new AssertionError();
+                if (BuildConfig.DEBUG) throw new AssertionError();
                 return getString(R.string.new_message);
             case 1:
-                if(unReadMessages == 1) {
+                if (unReadMessages == 1) {
                     String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(this, message.getType());
                     text = sender + ":  " + messageBody;
-                }else {
+                } else {
                     text = unReadMessages + " " + getString(R.string.new_message_from) + " " + sender;
                 }
                 break;
@@ -194,7 +207,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 text = "" + recentCount + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + (recentCount - 1) + getString(R.string.others);
                 break; //redundant but safe
         }
-
         return text;
     }
 

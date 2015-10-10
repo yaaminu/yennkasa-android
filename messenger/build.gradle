@@ -34,4 +34,6 @@ dependencies {
     compile project(':daos')
     compile project(':error')
     compile project(':sockets_io_client')
+    compile files('libs/JavaClient-1.0.jar')
+    compile project(':fileclient')
 }

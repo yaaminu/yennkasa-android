@@ -6,13 +6,14 @@ import com.idea.data.Message;
 import com.idea.data.MessageJsonAdapter;
 import com.idea.data.UserManager;
 import com.idea.net.sockets.SocketIoClient;
-import com.idea.util.PLog;
 import com.idea.util.Config;
+import com.idea.util.PLog;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * an implementation of {@link Dispatcher} that uses web sockets(socketIo) to be
@@ -51,8 +52,9 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
     };
     private final SocketIoClient socketIoClient;
 
-    private SocketsIODispatcher() {
-        socketIoClient = SocketIoClient.getInstance(Config.PAIRAPP_ENDPOINT + "/message", UserManager.getMainUserId());
+    private SocketsIODispatcher(Map<String, String> credentials) {
+        super(credentials);
+        socketIoClient = SocketIoClient.getInstance(Config.getMessageEndpoint(), UserManager.getMainUserId());
         socketIoClient.registerForEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
     }
 
@@ -63,8 +65,8 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
      *
      * @return an instance of this class.
      */
-    static Dispatcher<Message> newInstance() {
-        return new SocketsIODispatcher();
+    static Dispatcher<Message> newInstance(Map<String, String> credentials) {
+        return new SocketsIODispatcher(credentials);
     }
 
     @Override

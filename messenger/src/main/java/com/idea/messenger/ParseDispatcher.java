@@ -6,20 +6,16 @@ import com.idea.util.Config;
 import com.idea.util.PLog;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
-import com.parse.ParseObject;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.idea.messenger.ParseMessageProvider.EXPIRES;
+import static com.idea.messenger.ParseMessageProvider.FROM;
 import static com.idea.messenger.ParseMessageProvider.IS_GROUP_MESSAGE;
-import static com.idea.messenger.ParseMessageProvider.MAX_AGE;
 import static com.idea.messenger.ParseMessageProvider.MESSAGE;
-import static com.idea.messenger.ParseMessageProvider.MESSAGE_CLASS_NAME;
-import static com.idea.messenger.ParseMessageProvider.RETRIEVED;
-import static com.idea.messenger.ParseMessageProvider.TARGET;
+import static com.idea.messenger.ParseMessageProvider.TO;
 
 /**
  * @author Null-Pointer on 8/29/2015.
@@ -27,12 +23,16 @@ import static com.idea.messenger.ParseMessageProvider.TARGET;
 class ParseDispatcher extends AbstractMessageDispatcher {
 
     private static final String TAG = ParseDispatcher.class.getSimpleName();
-    private static final Dispatcher<Message> INSTANCE = new ParseDispatcher();
+    private static  Dispatcher<Message> INSTANCE;
 
-    private ParseDispatcher() {
+    private ParseDispatcher(Map<String, String> credentials) {
+        super(credentials);
     }
 
-    static synchronized Dispatcher<Message> getInstance() {
+    static synchronized Dispatcher<Message> getInstance(Map<String, String> credentials) {
+        if(INSTANCE == null){
+            INSTANCE = new ParseDispatcher(credentials);
+        }
         return INSTANCE;
     }
 
@@ -43,10 +43,12 @@ class ParseDispatcher extends AbstractMessageDispatcher {
 
     @Override
     public void dispatchToUser(final Message message) {
-        finallyDispatch(message, message.getTo());
+        List<String> target = new ArrayList<>(1);
+        target.add(message.getTo());
+        finallyDispatch(message,target);
     }
 
-    private void finallyDispatch(Message message, Object target) {
+    private void finallyDispatch(Message message, List<String> target) {
         PLog.d(TAG, "dispatching message: " + message.getMessageBody()
                 + " from " + message.getFrom()
                 + " to " + message.getTo());
@@ -54,19 +56,15 @@ class ParseDispatcher extends AbstractMessageDispatcher {
     }
 
     private void finallyDispatch(Message message, Object target, boolean isGroupMessage) {
-        ParseObject parseMessage = new ParseObject(MESSAGE_CLASS_NAME);
-        parseMessage.put(MESSAGE, MessageJsonAdapter.INSTANCE.toJson(message).toString());
-        parseMessage.put(TARGET, target);
-        parseMessage.put(RETRIEVED, Collections.emptyList());
-        parseMessage.put(EXPIRES, MAX_AGE);
-        parseMessage.put(IS_GROUP_MESSAGE, isGroupMessage);
+        String messageJson = MessageJsonAdapter.INSTANCE.toJson(message).toString();
         try {
-            parseMessage.save();
+            Map<String, Object> params = new HashMap<>(3);
+            params.put(TO, message.getTo());
+            params.put(IS_GROUP_MESSAGE, isGroupMessage);
+            params.put(FROM,message.getFrom());
+            params.put(MESSAGE,messageJson);
+            ParseCloud.callFunction("pushToSyncMessages", params);
             onSent(message.getId());
-            Map<String, String> params = new HashMap<>(3);
-            params.put(ParseMessageProvider.TO,message.getTo());
-            params.put(ParseMessageProvider.IS_GROUP_MESSAGE,Boolean.toString(isGroupMessage));
-            ParseCloud.callFunctionInBackground("pushToSyncMessage", params);
         } catch (ParseException e) {
             onFailed(message.getId(), prepareReport(e));
         }

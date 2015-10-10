@@ -4,21 +4,30 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.github.nkzawa.emitter.Emitter;
-import com.idea.util.LiveCenter;
 import com.idea.data.Message;
 import com.idea.data.UserManager;
 import com.idea.net.sockets.SocketIoClient;
 import com.idea.util.Config;
 import com.idea.util.L;
+import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
 import com.idea.util.ThreadUtils;
+import com.parse.ParseCloud;
 import com.parse.ParsePushBroadcastReceiver;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import io.realm.Realm;
+
+import static com.idea.messenger.ParseMessageProvider.FROM;
+import static com.idea.messenger.ParseMessageProvider.IS_GROUP_MESSAGE;
+import static com.idea.messenger.ParseMessageProvider.MESSAGE;
+import static com.idea.messenger.ParseMessageProvider.TO;
 
 
 /**
@@ -74,7 +83,7 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
     private static void initClient() {
         synchronized (MessageCenter.class) {
             if (messagingClient == null) {
-                messagingClient = SocketIoClient.getInstance(Config.PAIRAPP_ENDPOINT + "/message", UserManager.getMainUserId());
+                messagingClient = SocketIoClient.getInstance(Config.getMessageEndpoint(), UserManager.getMainUserId());
                 messagingClient.registerForEvent(SocketIoClient.EVENT_MESSAGE, MESSAGE_RECEIVER);
                 messagingClient.registerForEvent(SocketIoClient.EVENT_MSG_STATUS, MESSAGE_STATUS_RECEIVER);
             }
@@ -103,25 +112,34 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             });
             return;
         }
-        doNotifyReceived(message);    }
+        doNotifyReceived(message);
+    }
 
     private static void doNotifyReceived(Message message) {
+        if (Message.isGroupMessage(message))
+            return;
+
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put(SocketIoClient.PROPERTY_TO, message.getFrom());
+            obj.put(SocketIoClient.MSG_STS_MESSAGE_ID, message.getId());
+            obj.put(SocketIoClient.MSG_STS_STATUS, Message.STATE_RECEIVED);
+        } catch (JSONException e) {
+            throw new RuntimeException(e.getCause());
+        }
+
         if (LiveCenter.isOnline(message.getFrom())) {
             if (messagingClient == null) {
                 initClient();
             }
-            JSONObject obj = new JSONObject();
-            try {
-                obj.put(SocketIoClient.PROPERTY_TO, message.getFrom());
-                obj.put(SocketIoClient.MSG_STS_MESSAGE_ID, message.getId());
-                obj.put(SocketIoClient.MSG_STS_STATUS, Message.STATE_RECEIVED);
-                messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
-            } catch (JSONException e) {
-                throw new RuntimeException(e.getCause());
-            }
+            messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
         } else {
-            //maybe push.
-            // TODO: 9/18/2015 use push
+            Map<String, Object> params = new HashMap<>(3);
+            params.put(TO, message.getFrom());
+            params.put(IS_GROUP_MESSAGE, false);
+            params.put(FROM, message.getTo());
+            params.put(MESSAGE, obj);
+            ParseCloud.callFunctionInBackground("pushToSyncMessages", params);
         }
     }
 
@@ -151,36 +169,43 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
         String sender = message.getFrom();
         if (UserManager.getInstance().isGroup(message.getTo())) {
             sender = message.getTo();
+            LiveCenter.invalidateNewMessageCount(sender);
+            return;
+
         }
         LiveCenter.invalidateNewMessageCount(sender);
+
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put(SocketIoClient.PROPERTY_TO, message.getFrom());
+            obj.put(SocketIoClient.MSG_STS_MESSAGE_ID, message.getId());
+            obj.put(SocketIoClient.MSG_STS_STATUS, Message.STATE_SEEN);
+        } catch (JSONException e) {
+            throw new RuntimeException(e.getCause());
+        }
 
         if (LiveCenter.isOnline(message.getFrom())) {
             //use socketsIO
             if (messagingClient == null) {
                 initClient();
             }
-            JSONObject obj = new JSONObject();
-            try {
-                obj.put(SocketIoClient.PROPERTY_TO, message.getFrom());
-                obj.put(SocketIoClient.MSG_STS_MESSAGE_ID, message.getId());
-                obj.put(SocketIoClient.MSG_STS_STATUS, Message.STATE_SEEN);
-                messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
-            } catch (JSONException e) {
-                throw new RuntimeException(e.getCause());
-            }
+            messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
         } else {
             //maybe push
-            // TODO: 9/18/2015 use push
+            Map<String, Object> params = new HashMap<>(3);
+            params.put(TO, message.getFrom());
+            params.put(IS_GROUP_MESSAGE, false);
+            params.put(FROM, message.getTo());
+            params.put(MESSAGE, obj);
+            ParseCloud.callFunctionInBackground("pushToSyncMessages", params);
         }
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         L.d(TAG, "push recieved");
-        final String data = intent.getStringExtra(ParsePushBroadcastReceiver.KEY_PUSH_DATA);
+        String data = intent.getStringExtra(ParsePushBroadcastReceiver.KEY_PUSH_DATA);
         L.d(TAG, data);
-
-        // TODO: 9/3/2015 check the purpose of the push
         processMessage(context, data);
     }
 }

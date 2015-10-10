@@ -25,8 +25,9 @@ class ParseMessageProvider implements MessagesProvider {
     static final String MESSAGE = "message";
     static final String EXPIRES = "expires";
     static final String MESSAGE_CLASS_NAME = "message";
-    static final String TARGET = "target";
-    static final String IS_GROUP_MESSAGE = "groupMessage";
+    static final String TARGET = "targets";
+    static final String IS_GROUP_MESSAGE = "isGroupMessage";
+    static final String FROM = "from";
     static final long MAX_AGE = AlarmManager.INTERVAL_DAY * 10;
     private static final String TAG = ParseMessageProvider.class.getSimpleName();
 

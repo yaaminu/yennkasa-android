@@ -9,11 +9,9 @@ import com.idea.messenger.MessageProcessor;
 import com.idea.util.Config;
 
 import java.util.Date;
-import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmList;
-import io.realm.RealmResults;
 
 /**
  * @author Null-Pointer on 6/10/2015.
@@ -35,38 +33,38 @@ public class RealmUtils {
 //            if (TextUtils.isEmpty(user.getDP()))
 //                user.setDP("avatar_empty");
 //        }
-        try {
-            User user = User.copy(UserManager.getInstance().getCurrentUser());
-            int i = 0;
-            while (i++ < 20) {
-                user.setUserId(23326656422L + "" + i);
-                user.setName("@username " + i);
-                user.setType(User.TYPE_NORMAL_USER);
-                user.setDP("avatar_empty");
-                realm.copyToRealm(user);
-            }
-        } catch (Exception e) {
-
-        }
-        try {
-            User group = User.copy(UserManager.getInstance().getCurrentUser());
-            int i = 0;
-            while (i++ < 20) {
-                group.setUserId("groupName@" + "233204441069");
-                group.setName("group " + i);
-                group.setType(User.TYPE_GROUP);
-                group.setAdmin(realm.where(User.class).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP).findFirst());
-                group.setMembers(new RealmList<User>());
-                RealmResults<User> all = realm.where(User.class).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP).findAll();
-                List<User> users = User.copy(all);
-                for (User user : users) {
-                    group.getMembers().add(user);
-                }
-                realm.copyToRealmOrUpdate(group);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//        try {
+//            User user = User.copy(UserManager.getInstance().getCurrentUser());
+//            int i = 0;
+//            while (i++ < 20) {
+//                user.setUserId(23326656422L + "" + i);
+//                user.setName("@username " + i);
+//                user.setType(User.TYPE_NORMAL_USER);
+//                user.setDP("avatar_empty");
+//                realm.copyToRealm(user);
+//            }
+//        } catch (Exception e) {
+//
+//        }
+//        try {
+//            User group = User.copy(UserManager.getInstance().getCurrentUser());
+//            int i = 0;
+//            while (i++ < 20) {
+//                group.setUserId("groupName@" + "233204441069");
+//                group.setName("group " + i);
+//                group.setType(User.TYPE_GROUP);
+//                group.setAdmin(realm.where(User.class).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP).findFirst());
+//                group.setMembers(new RealmList<User>());
+//                RealmResults<User> all = realm.where(User.class).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP).findAll();
+//                List<User> users = User.copy(all);
+//                for (User user : users) {
+//                    group.getMembers().add(user);
+//                }
+//                realm.copyToRealmOrUpdate(group);
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
         realm.commitTransaction();
         realm.close();
     }

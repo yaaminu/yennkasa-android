@@ -1,23 +1,21 @@
 package com.idea.net;
 
+import com.google.gson.JsonObject;
+
 import retrofit.Callback;
-import retrofit.client.Response;
 import retrofit.http.Multipart;
 import retrofit.http.POST;
 import retrofit.http.Part;
+import retrofit.http.Path;
 import retrofit.mime.TypedFile;
 
-/**
- * @author Null-Pointer on 10/3/2015.
- */
 public interface Api {
 
     @Multipart
-    @POST("/fileApi/dp")
-    Response upload(@Part("bin") TypedFile file);
+    @POST("/{path}")
+    void upload(@Path(value = "path",encode = false) String path, @Part("bin") TypedFile file, Callback<JsonObject> fileSaveCallback);
 
     @Multipart
-    @POST("/fileApi/dp")
-    void upload(@Part("bin") TypedFile file, Callback<Response> responseCallback);
-
+    @POST("/{path}")
+    JsonObject upload(@Path(value = "path",encode = false) String path, @Part("bin") TypedFile file);
 }

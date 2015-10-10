@@ -4,15 +4,21 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.text.TextUtils;
 
 import com.idea.data.Conversation;
 import com.idea.data.Message;
 import com.idea.data.MessageJsonAdapter;
 import com.idea.data.UserManager;
 import com.idea.data.util.MessageUtils;
+import com.idea.net.sockets.SocketIoClient;
+import com.idea.pairapp.BuildConfig;
 import com.idea.util.ConnectionUtils;
 import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Date;
 import java.util.List;
@@ -23,6 +29,9 @@ import io.realm.exceptions.RealmException;
 public class MessageProcessor extends IntentService {
     public static final String SYNC_MESSAGES = "syncMessages";
     private static final String TAG = MessageProcessor.class.getSimpleName();
+    public static final String MESSAGE = "message";
+    public static final String UNKNOWN = "unknown";
+    public static final String MESSAGE_STATUS = "messageStatus";
 
     public MessageProcessor() {
         super(TAG);
@@ -42,18 +51,60 @@ public class MessageProcessor extends IntentService {
 
         assert data != null;
         PLog.i(TAG, data);
-        if (data.equals(SYNC_MESSAGES)) {
-            MessagesProvider provider = PairAppClient.getMessageProvider();
-            List<Message> messages = provider.retrieveMessages();
-            for (Message message : messages) {
+        try {
+            final JSONObject data1 = new JSONObject(data);
+            String type = getType(data1);
+            if (data.equals(SYNC_MESSAGES)) {
+                MessagesProvider provider = PairAppClient.getMessageProvider();
+                List<Message> messages = provider.retrieveMessages();
+                for (Message message : messages) {
+                    doProcessMessage(message);
+                }
+            } else if (type.equals(MESSAGE)) {
+                Message message = MessageJsonAdapter.INSTANCE.fromJson(data);
                 doProcessMessage(message);
+            } else if (type.equals(MESSAGE_STATUS)) {
+                Realm realm = Message.REALM(this);
+                int state = data1.getInt(SocketIoClient.MSG_STS_STATUS);
+                String messageId = data1.getString(SocketIoClient.MSG_STS_MESSAGE_ID);
+                Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
+                message = Message.copy(message);
+                realm.close();
+                if (message != null) {
+                    if (state == Message.STATE_RECEIVED) {
+                        MessageCenter.notifyReceived(message);
+                    } else if (state == Message.STATE_SEEN) {
+                        MessageCenter.notifyMessageSeen(message);
+                    } else {
+                        if (BuildConfig.DEBUG) {
+                            throw new RuntimeException("whats is wrong");
+                        }
+                    }
+                } else {
+                    PLog.d(TAG, "message not avalialble for updates");
+                }
+            } else {
+                throw new JSONException("unknown message");
             }
-        } else {
-            Message message = MessageJsonAdapter.INSTANCE.fromJson(data);
-            doProcessMessage(message);
+        } catch (JSONException e) {
+            PLog.i(TAG, "unknown message");
         }
         wakeLock.release();
 
+    }
+
+    private String getType(JSONObject data) {
+        if (data.has(SocketIoClient.MSG_STS_STATUS)) {
+            return SocketIoClient.MSG_STS_STATUS;
+        } else if (data.has(Message.FIELD_MESSAGE_BODY)) {
+            return MESSAGE;
+        }
+
+        final String message = data.optString("message");
+        if (!TextUtils.isEmpty(message) && message.equals(SYNC_MESSAGES)) {
+            return SYNC_MESSAGES;
+        }
+        return UNKNOWN;
     }
 
     private void doProcessMessage(Message message) {
@@ -102,12 +153,11 @@ public class MessageProcessor extends IntentService {
             return;
         }
         conversation.setSummary(Message.isTextMessage(message) ? message.getMessageBody() : ""); //ui elements must detect this
-        realm.commitTransaction();
-
         message = Message.copy(message);
         if (!conversation.isActive()) { //hopefully we might be able to void race conditions
             LiveCenter.incrementUnreadMessageForPeer(conversation.getPeerId());
         }
+        realm.commitTransaction();
         realm.close();
         NotificationManager.INSTANCE.onNewMessage(this, message);
         MessageCenter.notifyReceived(message);

@@ -4,6 +4,8 @@ package com.idea.net;
  * @author Null-Pointer on 8/27/2015.
  */
 public class PARSE_CONSTANTS {
+    public static final String FEEDBACK_CLASS_NAME = "feedback";
+    public static final String FIELD_ACCESS_TOKEN = "accessToken";
     static final String USER_CLASS_NAME = "user", GROUP_CLASS_NAME = "group";
         public static final String FIELD_ID = "userId",
             FIELD_NAME = "name",

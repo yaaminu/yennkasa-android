@@ -10,12 +10,12 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 
-import com.idea.util.LiveCenter;
 import com.idea.data.Message;
 import com.idea.data.UserManager;
 import com.idea.net.ParseClient;
 import com.idea.util.Config;
 import com.idea.util.L;
+import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
 import com.idea.util.ThreadUtils;
@@ -23,7 +23,9 @@ import com.idea.util.ThreadUtils;
 import org.json.JSONObject;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -43,6 +45,17 @@ public class PairAppClient extends Service {
     private final PairAppClientInterface INTERFACE = new PairAppClientInterface();
     private Dispatcher<Message> PARSE_MESSAGE_DISPATCHER;
     private WorkerThread WORKER_THREAD;
+    private static final Map<String, String> credentials;
+
+    static {
+        Map<String, String> userCredentials = UserManager.getInstance().getUserCredentials();
+        credentials = new HashMap<>(userCredentials.size() + 3);
+        credentials.putAll(userCredentials);
+        //////////////////////////////////////////////////////////////////////////////
+        credentials.put(AbstractMessageDispatcher.KEY, "doTbKQlpZyNZohX7KPYGNQXIghATCx");
+        credentials.put(AbstractMessageDispatcher.PASSWORD, "Dq8FLrF7HjeiyJBFGv9acNvOLV1Jqm");
+        /////////////////////////////////////////////////////////////////////////////////////
+    }
 
     public static void startIfRequired(Context context) {
         if (!UserManager.getInstance().isUserVerified()) {
@@ -173,7 +186,7 @@ public class PairAppClient extends Service {
 
     private synchronized void bootClient() {
         if (!isClientStarted.get()) {
-            PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance();
+            PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance(credentials);
             isClientStarted.set(true);
         }
     }
@@ -224,7 +237,7 @@ public class PairAppClient extends Service {
     private void sendMessageInternal(Message message) {
         if (LiveCenter.isOnline(message.getTo()) && !UserManager.getInstance().isGroup(message.getTo())) {
             if (SOCKETSIO_DISPATCHER == null) {
-                SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance();
+                SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance(credentials);
             }
             SOCKETSIO_DISPATCHER.dispatch(message);
         } else {
@@ -233,7 +246,7 @@ public class PairAppClient extends Service {
     }
 
     public static void sendFeedBack(final JSONObject report) {
-        if(report == null || !report.keys().hasNext()){
+        if (report == null || !report.keys().hasNext()) {
             throw new IllegalArgumentException("empty report");
         }
 
@@ -244,6 +257,7 @@ public class PairAppClient extends Service {
             }
         });
     }
+
     public class PairAppClientInterface extends Binder {
         public void sendMessage(Message message) {
             if (!isClientStarted.get()) {
@@ -376,12 +390,15 @@ public class PairAppClient extends Service {
         }
 
         private void doSendMessage(final Message message) {
-            TaskManager.execute(new Runnable() {
+            final Runnable sendTask = new Runnable() {
                 @Override
                 public void run() {
                     sendMessageInternal(message);
                 }
-            });
+            };
+            if (!TaskManager.executeNow(sendTask)) {
+                TaskManager.execute(sendTask);
+            }
         }
 
         private void doSendMessages(Collection<Message> messages) {
