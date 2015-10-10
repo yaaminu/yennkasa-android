@@ -1,6 +1,7 @@
 package com.idea.ui;
 
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -11,11 +12,17 @@ import android.support.v7.widget.Toolbar;
 import android.view.Gravity;
 import android.widget.LinearLayout;
 
+import com.google.gson.JsonObject;
 import com.idea.PairApp;
 import com.idea.data.Conversation;
+import com.idea.data.Message;
+import com.idea.data.MessageJsonAdapter;
 import com.idea.data.RealmUtils;
 import com.idea.data.User;
+import com.idea.data.UserManager;
+import com.idea.messenger.MessageProcessor;
 import com.idea.pairapp.R;
+import com.idea.util.Config;
 import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
@@ -24,6 +31,9 @@ import com.parse.ParseAnalytics;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
 import com.rey.material.widget.TabPageIndicator;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
@@ -81,6 +91,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                 final int default_fragment = intent.getIntExtra(DEFAULT_FRAGMENT, savedPosition);
                 savedPosition = Math.min(default_fragment, MyFragmentStatePagerAdapter.POSITION_SETTINGS_FRAGMENT);
                 savedPosition = Math.max(MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT, default_fragment);
+                testChatActivity();
             } else {
                 UiHelpers.gotoSetUpActivity(this);
             }
@@ -244,5 +255,34 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     @Override
     public int unSeenMessagesCount(Conversation conversation) {
         return LiveCenter.getUnreadMessageFor(conversation.getPeerId());
+    }
+
+    /**
+     * code purposely for testing we will take this off in production
+     */
+    private static void testChatActivity() {
+        final String senderId = "233541730101";
+        timer = new Timer(true);
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_LOWEST);
+                testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, UserManager.getMainUserId()));
+                testMessageProcessor(RealmUtils.seedIncomingMessages("233268866434", UserManager.getMainUserId()));
+            }
+        };
+        timer.scheduleAtFixedRate(task, 5000, 20000);
+    }
+
+    static Timer timer;
+
+    private static void testMessageProcessor(Message messages) {
+        JsonObject object = MessageJsonAdapter.INSTANCE.toJson(messages);
+        Context context = Config.getApplicationContext();
+        Bundle bundle = new Bundle();
+        bundle.putString("message", object.toString());
+        Intent intent = new Intent(context, MessageProcessor.class);
+        intent.putExtras(bundle);
+        context.startService(intent);
     }
 }
