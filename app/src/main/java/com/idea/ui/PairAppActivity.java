@@ -9,7 +9,6 @@ import android.media.SoundPool;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.support.annotation.NonNull;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.View;
@@ -30,7 +29,6 @@ import com.rey.material.widget.SnackBar;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import io.realm.Realm;
 
@@ -41,7 +39,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     public static final int DELAY_MILLIS = 2000;
     public static final String TAG = PairAppActivity.class.getSimpleName();
     static private volatile Message latestMessage;
-    AtomicInteger unreadMessages = new AtomicInteger(0);
     protected PairAppClient.PairAppClientInterface pairAppClientInterface;
     protected boolean bound = false;
 
@@ -68,6 +65,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
         @Override
         public void onClick(View v) {
+            snackBar.dismiss();
             PairAppActivity self = PairAppActivity.this;
 
             final int totalUnreadMessages = LiveCenter.getTotalUnreadMessages();
@@ -78,7 +76,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
             if (totalUnreadMessages == 1) {
                 UiHelpers.enterChatRoom(self, Message.isGroupMessage(latestMessage) ? latestMessage.getTo() : latestMessage.getFrom());
             } else {
-                if (getClass().equals(MainActivity.class)) {
+                if (self instanceof MainActivity) {
                     ((MainActivity) self).setPagePosition(MainActivity.MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT);
                 } else {
                     Intent intent = new Intent(self, MainActivity.class);
@@ -92,8 +90,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     private SnackBar snackBar;
     private SoundPool pool;
     private int streamId;
-    // private List<String> recentChatList;
-    //    private String latestActivePeer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -171,20 +167,22 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
-    @NonNull
     private String formatNotificationMessage(Message message, String sender) {
         String text;
         List<String> recentChatList = new ArrayList<>(LiveCenter.getAllPeersWithUnreadMessages());
         Realm realm = User.Realm(this);
         for (int i = 0; i < recentChatList.size(); i++) {
-            if(i > 3){
+            if (i > 3) {
                 break;
             }
             User user = userManager.fetchUserIfRequired(realm, recentChatList.get(i));
-            recentChatList.set(i,user.getName());
+            recentChatList.set(i, user.getName());
         }
         realm.close();
         final int recentCount = recentChatList.size(), unReadMessages = LiveCenter.getTotalUnreadMessages();
+        if (unReadMessages < 1) {
+            return null;
+        }
         switch (recentCount) {
             case 0:
                 if (BuildConfig.DEBUG) throw new AssertionError();

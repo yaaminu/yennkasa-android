@@ -6,7 +6,6 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.idea.pairapp.R;
-import com.idea.util.ScreenUtility;
 import com.idea.util.UiHelpers;
 import com.rey.material.widget.SnackBar;
 import com.squareup.picasso.Callback;
@@ -17,17 +16,11 @@ import java.io.File;
 public class ImageViewer extends PairAppActivity {
     private ImageView imageView;
     private Picasso picasso;
-    private int WIDTH, HEIGHT;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_view_image);
         // Show the Up button in the action bar.
-        final ScreenUtility utility = new ScreenUtility(this);
-
-        WIDTH = ((int) utility.getPixelsWidth());
-        HEIGHT = (int) utility.getPixelsHeight();
         imageView = (android.widget.ImageView) findViewById(R.id.imageView);
         picasso = Picasso.with(this);
         showImage();
@@ -40,13 +33,17 @@ public class ImageViewer extends PairAppActivity {
 
     private void showImage() {
         final Uri imageUri = getIntent().getData();
+        if (imageUri == null) {
+            throw new RuntimeException("image vier needs a uri");
+        }
+
         String path = imageUri.getPath();
         File file = new File(path);
         if (file.exists()) {
-            picasso.load(file).skipMemoryCache().resize(WIDTH, (int) (HEIGHT / 2)).into(imageView, callback);
+            picasso.load(file).skipMemoryCache().into(imageView, callback);
         } else {
             if (imageUri.getScheme().equals("http") || imageUri.getScheme().equals("https") || imageUri.getScheme().equals("ftp")) {
-                picasso.load(imageUri.toString()).resize(WIDTH, (int) (HEIGHT / 1.5)).into(imageView, callback);
+                picasso.load(imageUri.toString()).into(imageView, callback);
                 return;
             }
             UiHelpers.showErrorDialog(this, getString(R.string.error_failed_to_open_image), listener);

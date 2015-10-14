@@ -74,7 +74,7 @@ final class NotificationManager {
 
     private String retrieveSendersName(Message message) {
         ThreadUtils.ensureNotMain();
-        final Realm realm = Realm.getInstance(Config.getApplicationContext());
+        final Realm realm = User.Realm(Config.getApplicationContext());
         String sendersName;
         try {
             User user = realm.

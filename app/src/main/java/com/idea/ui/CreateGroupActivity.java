@@ -94,7 +94,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         ViewUtils.setTypeface(groupNameEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         dpPreview = findViewById(R.id.rl_group_dp_preview);
         groupNameEt.addTextChangedListener(this);
-        realm = Realm.getInstance(this);
+        realm = User.Realm(this);
         RealmResults<User> users = getQuery().findAllSorted(User.FIELD_NAME);
         adapter = new CustomUsersAdapter(realm, users);
         progressDialog = UiHelpers.newProgressDialog();

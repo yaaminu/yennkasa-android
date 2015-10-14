@@ -90,7 +90,7 @@ public class ConversationsFragment extends ListFragment {
     public View onCreateView(LayoutInflater inflater, final ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_inbox, container, false);
-        realm = Realm.getInstance(Config.getApplicationContext());
+        realm = Conversation.Realm(Config.getApplicationContext());
         conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
         adapter = new ConversationAdapter(delegate);
         FloatingActionButton actionButton = ((FloatingActionButton) view.findViewById(R.id.fab_new_message));
@@ -130,7 +130,7 @@ public class ConversationsFragment extends ListFragment {
             public void run() {
                 LiveCenter.invalidateNewMessageCount(peerId);
                 PLog.d(TAG, "deleting messages for conversion between user and %s", peerId);
-                Realm realm = Conversation.Realm(getActivity());
+                Realm realm = Message.REALM(getActivity());
                 realm.beginTransaction();
                 RealmResults<Message> messages = realm.where(Message.class).equalTo(Message.FIELD_FROM, peerId)
                         .or()

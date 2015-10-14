@@ -111,6 +111,7 @@ public class PersistedSetting extends RealmObject {
     public void setStandAlone(boolean standAlone) {
         this.standAlone = standAlone;
     }
+
     public static Realm REALM(File writableFolder) {
         if (writableFolder == null) {
             throw new IllegalArgumentException("null!");
@@ -154,8 +155,15 @@ public class PersistedSetting extends RealmObject {
     }
 
     public static PersistedSetting copy(PersistedSetting other) {
+        return copy(other, false);
+    }
+
+    public static PersistedSetting copy(PersistedSetting other, boolean forceCopy) {
         if (other == null) {
             throw new IllegalArgumentException("can't make a copy");
+        }
+        if (!other.isValid() && !forceCopy) {
+            return other;
         }
         PersistedSetting copy = new PersistedSetting();
         copy.setBoolValue(other.getBoolValue());
@@ -203,17 +211,19 @@ public class PersistedSetting extends RealmObject {
             fieldSet++;
         }
 
-        public Builder title(String title){
+        public Builder title(String title) {
             building.setTitle(title);
             return this;
         }
-        public Builder summary(String summary){
-            if(summary == null || "".equals(summary.trim())){
+
+        public Builder summary(String summary) {
+            if (summary == null || "".equals(summary.trim())) {
                 throw new IllegalArgumentException("empty or null!");
             }
             this.building.setSummary(summary);
             return this;
         }
+
         public Builder value(Object value) {
             if (!put(this.building, value)) {
                 throw new IllegalArgumentException("unknown value type");

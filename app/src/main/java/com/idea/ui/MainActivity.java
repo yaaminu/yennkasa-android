@@ -69,7 +69,6 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     }
 
     private void handleIntent(Intent intent) {
-//        Realm realm2 = Realm.getInstance(this);
         ParseAnalytics.trackAppOpenedInBackground(intent);
         if (notIsMainIntent(intent)) {
             if (isUserVerified() && SetUpActivity.isEveryThingOk()) {
@@ -91,7 +90,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                 final int default_fragment = intent.getIntExtra(DEFAULT_FRAGMENT, savedPosition);
                 savedPosition = Math.min(default_fragment, MyFragmentStatePagerAdapter.POSITION_SETTINGS_FRAGMENT);
                 savedPosition = Math.max(MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT, default_fragment);
-                testChatActivity();
+                //testChatActivity();
             } else {
                 UiHelpers.gotoSetUpActivity(this);
             }

@@ -12,11 +12,10 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 
 import com.idea.adapter.GroupsAdapter;
-import com.idea.util.UiHelpers;
-import com.idea.data.Message;
 import com.idea.data.User;
 import com.idea.data.UserManager;
 import com.idea.pairapp.R;
+import com.idea.util.UiHelpers;
 import com.rey.material.widget.FloatingActionButton;
 
 import io.realm.Realm;
@@ -53,7 +52,7 @@ public class GroupsFragment extends ListFragment {
                 gotoCreateGroupActivity();
             }
         });
-        realm = Realm.getInstance(getActivity());
+        realm = User.Realm(getActivity());
         UserManager.getInstance().refreshGroups();
         return view;
     }
@@ -61,7 +60,7 @@ public class GroupsFragment extends ListFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        final RealmResults<User> groups = realm.where(User.class).equalTo(Message.FIELD_TYPE, User.TYPE_GROUP).findAllSorted(User.FIELD_NAME);
+        final RealmResults<User> groups = realm.where(User.class).equalTo(User.FIELD_TYPE, User.TYPE_GROUP).findAllSorted(User.FIELD_NAME);
         BaseAdapter adapter = new GroupsAdapter(getActivity(), groups);
         setListAdapter(adapter);
     }

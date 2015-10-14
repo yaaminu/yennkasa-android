@@ -401,15 +401,21 @@ public final class UserManager {
                     Realm realm = User.Realm(Config.getApplicationContext());
                     realm.beginTransaction();
                     final User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
-                    final ContactsManager.Filter<User> filter = new ContactsManager.Filter<User>() {
-                        @Override
-                        public boolean accept(User user) {
-                            return (user != null && !group.getMembers().contains(user) && !isGroup(user.getUserId()));
-                        }
-                    };
-                    RealmList<User> newMembers = User.aggregateUsers(realm, membersId, filter);
+
+                    Set<String> uniqeSet = new HashSet<>(membersId);
+
+                    RealmList<User> newMembers = User.aggregateUsers(realm, uniqeSet, null);
                     //noinspection ConstantConditions
-                    group.getMembers().addAll(newMembers);
+                    newMembers.addAll(group.getMembers());
+
+                    //noinspection ConstantConditions
+                    uniqeSet.clear();
+                    group.getMembers().clear();
+                    for (User user : newMembers) {
+                        if (uniqeSet.add(user.getUserId())) {
+                            group.getMembers().add(user);
+                        }
+                    }
                     realm.commitTransaction();
                     realm.close();
                     doNotify(null, callBack);
@@ -432,7 +438,18 @@ public final class UserManager {
                             realm.beginTransaction();
                             User group = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
                             group.getMembers().clear();
-                            group.getMembers().addAll(realm.copyToRealmOrUpdate(freshMembers));
+                            List<User> collection = new ArrayList<>(freshMembers);
+                            collection = realm.copyToRealmOrUpdate(collection);
+
+                            Set<String> uniqueMembers = new HashSet<>();
+                            List<User> uniqueUsers = new ArrayList<>(uniqueMembers.size() * 2);
+                            for (User user : collection) {
+                                if (uniqueMembers.add(user.getUserId())) {
+                                    uniqueUsers.add(user);
+                                }
+                            }
+                            group.getMembers().clear();
+                            group.getMembers().addAll(uniqueUsers);
                             realm.commitTransaction();
                             realm.close();
                         }
@@ -646,7 +663,7 @@ public final class UserManager {
 
     public void logIn(final String phoneNumber, final String userIso2LetterCode, final CallBack callback) {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
-            callback.done(NO_CONNECTION_ERROR);
+            doNotify(NO_CONNECTION_ERROR, callback);
             return;
         }
         completeLogin(phoneNumber, userIso2LetterCode, callback);
@@ -1122,19 +1139,18 @@ public final class UserManager {
 
     public User fetchUserIfRequired(Realm realm, String userId, boolean refresh) {
         User peer = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
+
         if (peer == null) {
+            if (userId.contains("@")) {
+                throw new IllegalStateException("should not happen");
+            }
             realm.beginTransaction();
             peer = new User();
             peer.setUserId(userId);
-            String[] parts = userId.split("@"); //in case the peer is a group
-            peer.setType(parts.length > 1 ? User.TYPE_GROUP : User.TYPE_NORMAL_USER);
             peer.setHasCall(false); //we cannot tell for now
             peer.setDP(userId);
-            if (parts.length > 1) { //its a group
-                peer.setName(parts[0]);
-            } else {
-                peer.setName(PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO()));
-            }
+            peer.setName(PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO()));
+            peer.setType(User.TYPE_NORMAL_USER);
             realm.copyToRealmOrUpdate(peer);
             realm.commitTransaction();
             refreshUserDetails(userId);

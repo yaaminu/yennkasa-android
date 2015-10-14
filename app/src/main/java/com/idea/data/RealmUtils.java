@@ -23,7 +23,7 @@ public class RealmUtils {
 
     public static void runRealmOperation(final Context context) {
         //helper method for cleaning up realm and seeding it with data
-        Realm realm = Realm.getInstance(context);
+        Realm realm = User.Realm(context);
         realm.beginTransaction();
 //        realm.clear(Message.class);
 //        realm.clear(Conversation.class);
@@ -70,7 +70,7 @@ public class RealmUtils {
     }
 
     public static Message seedIncomingMessages() {
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        Realm realm = User.Realm(Config.getApplicationContext());
         User thisUser = UserManager.getInstance().getCurrentUser(),
                 otherUser = realm.where(User.class).notEqualTo(User.FIELD_ID, thisUser.getUserId()).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP).findFirst();
         return seedIncomingMessages(otherUser.getUserId(), thisUser.getUserId());
@@ -82,7 +82,6 @@ public class RealmUtils {
     }
 
     public static Message seedIncomingMessages(String sender, String recipient, int type, String messageBody) {
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
         Message message = new Message();
         message.setTo(recipient);
         message.setFrom(sender);
@@ -91,12 +90,11 @@ public class RealmUtils {
         message.setId(Message.generateIdPossiblyUnique());
         message.setState(Message.STATE_PENDING);
         message.setDateComposed(new Date());
-        realm.close();
         return message;
     }
 
     private static void seedOutgoingMessages() {
-        Realm realm = Realm.getInstance(Config.getApplicationContext());
+        Realm realm = Message.REALM(Config.getApplicationContext());
         realm.beginTransaction();
         User user = UserManager.getInstance(Config.getApplication()).getCurrentUser();
         RealmList<Message> messages = new RealmList<>();

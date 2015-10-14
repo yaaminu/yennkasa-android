@@ -188,8 +188,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         menu = toolBar.getMenu();
         if (menu != null && menu.size() > 0) { //required for toolbar to behave on older platforms <=10
             User mainUser = getCurrentUser();
+            final User admin = peer.getAdmin();
             menu.findItem(R.id.action_invite_friends)
-                    .setVisible(peer.getType() == User.TYPE_GROUP && peer.getAdmin().getUserId().equals(mainUser.getUserId()));
+                    .setVisible(peer.getType() == User.TYPE_GROUP && admin != null && admin.getUserId().equals(mainUser.getUserId()));
         }
 //        }
         return super.onPrepareOptionsMenu(menu);

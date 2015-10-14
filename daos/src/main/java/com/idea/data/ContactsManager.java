@@ -75,7 +75,7 @@ public class ContactsManager {
 
     private List<Contact> doFindAllContacts(Filter<Contact> filter, Comparator<Contact> comparator, Cursor cursor) {
         Context context = Config.getApplicationContext();
-        Realm realm = Realm.getInstance(context);
+        Realm realm = User.Realm(context);
         //noinspection TryFinallyCanBeTryWithResources
         try {
             Set<Contact> contacts = new HashSet<>();

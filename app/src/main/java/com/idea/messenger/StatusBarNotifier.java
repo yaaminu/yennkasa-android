@@ -11,18 +11,19 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Vibrator;
-import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 
 import com.idea.PairApp;
-import com.idea.ui.ChatActivity;
-import com.idea.util.LiveCenter;
 import com.idea.data.Message;
+import com.idea.data.User;
 import com.idea.data.UserManager;
 import com.idea.pairapp.R;
+import com.idea.ui.ChatActivity;
+import com.idea.ui.MainActivity;
 import com.idea.util.Config;
+import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
 
 import java.util.ArrayList;
@@ -31,6 +32,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.realm.Realm;
+
 /**
  * @author Null-Pointer on 8/12/2015.
  */
@@ -38,24 +41,33 @@ public class StatusBarNotifier implements Notifier {
     private final static int MESSAGE_NOTIFICATION_ID = 1001;
     private final static int MESSAGE_PENDING_INTENT_REQUEST_CODE = 1002;
     private static final String TAG = StatusBarNotifier.class.getSimpleName();
-    public static final int VIBRATION_DURATION = 2000;
+    public static final int VIBRATION_DURATION = 1000;
     private AtomicBoolean shouldPlayTone = new AtomicBoolean(true);
     Timer timer = new Timer();
 
     @Override
     public void notifyUser(Context context, Message message, String sender) {
-        Intent action = new Intent(context, ChatActivity.class);
-        action.putExtra(ChatActivity.EXTRA_PEER_ID, message.getFrom());
+        final String notificationMessage = formatNotificationMessage(message, sender);
+        if (notificationMessage == null) {
+            return;
+        }
+        Intent action;
+        if (LiveCenter.getTotalUnreadMessages() > 1) {
+            action = new Intent(context, MainActivity.class);
+        } else {
+            action = new Intent(context, ChatActivity.class);
+            action.putExtra(ChatActivity.EXTRA_PEER_ID, message.getFrom());
+        }
 
         PendingIntent pendingIntent = PendingIntent.getActivity(Config.getApplicationContext(),
                 MESSAGE_PENDING_INTENT_REQUEST_CODE,
                 action,
                 PendingIntent.FLAG_CANCEL_CURRENT);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(Config.getApplication());
-        builder.setTicker(context.getString(R.string.new_message))
+        builder.setTicker(notificationMessage)
                 .setContentTitle(context.getString(R.string.new_message));
 
-        builder.setContentText(formatNotificationMessage(message,sender));
+        builder.setContentText(notificationMessage);
 
         builder.setSmallIcon(android.R.drawable.stat_notify_chat)
                 .setContentIntent(pendingIntent);
@@ -133,17 +145,34 @@ public class StatusBarNotifier implements Notifier {
         return location.BACKGROUND;
     }
 
-    @NonNull
     private String formatNotificationMessage(Message message, String sender) {
         String text;
+        final Context applicationContext = Config.getApplicationContext();
         List<String> recentChatList = new ArrayList<>(LiveCenter.getAllPeersWithUnreadMessages());
+        Realm realm = User.Realm(applicationContext);
+        for (int i = 0; i < recentChatList.size(); i++) {
+            if (i > 3) {
+                break;
+            }
+            User user = UserManager.getInstance().fetchUserIfRequired(realm, recentChatList.get(i));
+            recentChatList.set(i, user.getName());
+        }
+        realm.close();
         final int recentCount = recentChatList.size(), unReadMessages = LiveCenter.getTotalUnreadMessages();
+        if (unReadMessages < 1) {
+            return null;
+        }
         switch (recentCount) {
             case 0:
+                if (com.idea.pairapp.BuildConfig.DEBUG) throw new AssertionError();
                 return getString(R.string.new_message);
             case 1:
-                String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(Config.getApplicationContext(), message.getType());
-                text = sender + ":  " + messageBody;
+                if (unReadMessages == 1) {
+                    String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(applicationContext, message.getType());
+                    text = sender + ":  " + messageBody;
+                } else {
+                    text = unReadMessages + " " + getString(R.string.new_message_from) + " " + sender;
+                }
                 break;
             case 2:
                 text = unReadMessages + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + recentChatList.get(1);

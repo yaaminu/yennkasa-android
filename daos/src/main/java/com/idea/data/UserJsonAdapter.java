@@ -8,6 +8,7 @@ import java.util.Collection;
 /**
  * @author Null-Pointer on 5/27/2015.
  */
+@SuppressWarnings("unused")
 public class UserJsonAdapter implements BaseJsonAdapter<User> {
     @Override
     public JsonObject toJson(User user) {

@@ -45,9 +45,16 @@ public class TaskManager {
     private static final int maxLength = 10;
 
     public static boolean executeNow(Runnable runnable) {
+        return executeNow(runnable, false);
+    }
+
+    public static boolean executeNow(Runnable runnable, boolean runOnExecutorIfFailed) {
         ensureInitialised();
         synchronized (expressQueueLock) {
-            if (expressExecutionQueueNotTooLong()) {
+            if (expressExecutionQueueTooLong()) {
+                if (runOnExecutorIfFailed) {
+                    execute(runnable);
+                }
                 return false;
             }
             expressQueueLength++;
@@ -56,8 +63,7 @@ public class TaskManager {
         return true;
     }
 
-
-    private static boolean expressExecutionQueueNotTooLong() {
+    private static boolean expressExecutionQueueTooLong() {
         return expressQueueLength >= maxLength;
     }
 
@@ -69,6 +75,7 @@ public class TaskManager {
 
     private static class SmartThread extends Thread {
         private final Runnable target;
+
         private SmartThread(Runnable r) {
             target = r;
         }

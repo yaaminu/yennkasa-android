@@ -64,7 +64,14 @@ public class LiveCenter {
         SharedPreferences preferences = getPreferences();
         int existing = preferences.getInt(peerId, 0) + messageCount;
         preferences.edit().putInt(peerId, existing).apply();
-        totalUnreadMessages += messageCount;
+        if (totalUnreadMessages <= 0) {
+            totalUnreadMessages = 0;
+            for (String s : getAllPeersWithUnreadMessages()) {
+                totalUnreadMessages += getUnreadMessageFor(s);
+            }
+        } else {
+            totalUnreadMessages += messageCount;
+        }
     }
 
     private static SharedPreferences getPreferences() {

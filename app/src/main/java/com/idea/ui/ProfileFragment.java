@@ -22,6 +22,7 @@ import com.idea.data.User;
 import com.idea.data.UserManager;
 import com.idea.pairapp.R;
 import com.idea.util.Config;
+import com.idea.util.ConnectionUtils;
 import com.idea.util.FileUtils;
 import com.idea.util.LiveCenter;
 import com.idea.util.MediaUtils;
@@ -38,6 +39,8 @@ import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
@@ -117,8 +120,17 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                         if (image_capture_out_put_uri != null) {
                             intent.setData(image_capture_out_put_uri);
                             startActivity(intent);
-                        } else {
-                            UiHelpers.showToast(R.string.sorry_no_dp);
+                            break;
+                        }
+                        if (ConnectionUtils.isConnected()) {
+                            try {
+                                URL url = new URL(user.getDP());
+                                Uri data = Uri.parse(url.toExternalForm());
+                                intent.setData(data);
+                                startActivity(intent);
+                            } catch (MalformedURLException e) {
+                                UiHelpers.showToast(R.string.sorry_no_dp);
+                            }
                         }
                     }
                     break;
@@ -215,7 +227,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
 
         //end view hookup
-        realm = Realm.getInstance(getActivity());
+        realm = User.Realm(getActivity());
         userManager = UserManager.getInstance();
 
         String id = getArguments().getString(ARG_USER_ID);

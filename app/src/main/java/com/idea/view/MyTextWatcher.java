@@ -11,7 +11,8 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import java.util.Locale;
 
 /**
- * from the android source code {@link android.telephony.PhoneNumberFormattingTextWatcher}
+ * copied from the android source code {@link android.telephony.PhoneNumberFormattingTextWatcher}
+ * this was necessary as older api have do not this api included
  * God bless open source software!
  */
 public class MyTextWatcher implements TextWatcher {

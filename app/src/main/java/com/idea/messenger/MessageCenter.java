@@ -5,6 +5,7 @@ import android.content.Intent;
 
 import com.github.nkzawa.emitter.Emitter;
 import com.idea.data.Message;
+import com.idea.data.MessageJsonAdapter;
 import com.idea.data.UserManager;
 import com.idea.net.sockets.SocketIoClient;
 import com.idea.util.Config;
@@ -72,6 +73,9 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             //process message
             String data = args[0].toString();
             processMessage(Config.getApplicationContext(), data);
+            String sender = MessageJsonAdapter.INSTANCE.fromJson(data).getFrom();
+            if (!LiveCenter.isOnline(sender))
+                LiveCenter.trackUser(sender);
         }
     };
     static SocketIoClient messagingClient;

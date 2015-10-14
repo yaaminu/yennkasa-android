@@ -32,9 +32,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import retrofit.http.Body;
 import retrofit.http.Field;
@@ -68,13 +70,13 @@ public class ParseClient implements UserApiV2 {
     private DisplayPictureFileClient displayPictureFileClient;
 
     private ParseClient() {
-        Map<String, String> credentials ;//= UserManager.getInstance().getUserCredentials();
+        Map<String, String> credentials;//= UserManager.getInstance().getUserCredentials();
         credentials = new HashMap<>();
-         //////////////////////////////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////////////////////////////
         credentials.put("key", "doTbKQlpZyNZohX7KPYGNQXIghATCx");
         credentials.put("password", "Dq8FLrF7HjeiyJBFGv9acNvOLV1Jqm");
         /////////////////////////////////////////////////////////////////////////////////////
-        displayPictureFileClient =  DisplayPictureFileClient.createInstance(credentials);
+        displayPictureFileClient = DisplayPictureFileClient.createInstance(credentials);
 
     }
 
@@ -103,7 +105,7 @@ public class ParseClient implements UserApiV2 {
             if (!initialised) {
                 throw new IllegalStateException("did you forget to init() the client?");
             }
-            if(INSTANCE == null){
+            if (INSTANCE == null) {
                 INSTANCE = new ParseClient();
             }
         }
@@ -399,7 +401,7 @@ public class ParseClient implements UserApiV2 {
             //ensure group does not exist
             ParseObject group = makeParseQuery(GROUP_CLASS_NAME).whereEqualTo(FIELD_ID, name + "@" + by).getFirst();
             if (group != null) {
-                notifyCallback(response, new Exception("Group already exists"), null);
+                notifyCallback(response, new Exception(Config.getApplicationContext().getString(R.string.group_already_exist)), null);
                 return;
             }
             final ParseObject admin = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, by).getFirst();
@@ -455,11 +457,11 @@ public class ParseClient implements UserApiV2 {
 
             List<String> membersId = makeParseQuery(GROUP_CLASS_NAME).whereEqualTo(FIELD_ID, id).getFirst().getList(FIELD_MEMBERS);
             List<ParseObject> groupMembers = makeParseQuery(USER_CLASS_NAME).whereContainedIn(FIELD_ID, membersId).find();
-            List<User> members = new ArrayList<>(groupMembers.size());
+            Set<User> members = new HashSet<>(groupMembers.size());
             for (ParseObject groupMember : groupMembers) {
                 members.add(parseObjectToUser(groupMember));
             }
-            notifyCallback(response, null, members);
+            notifyCallback(response, null,new ArrayList<User>(members));
         } catch (ParseException e) {
             if (BuildConfig.DEBUG) {
                 PLog.e(TAG, e.getMessage(), e.getCause());
@@ -563,7 +565,7 @@ public class ParseClient implements UserApiV2 {
             object.save();
 
             // STOPSHIP: 10/3/2015 get the right key for device token in parse installation
-            notifyCallback(callback, null, new SessionData(accessToken,userId));
+            notifyCallback(callback, null, new SessionData(accessToken, userId));
         } catch (ParseException e) {
             notifyCallback(callback, prepareErrorReport(e), null);
         }
@@ -664,6 +666,7 @@ public class ParseClient implements UserApiV2 {
         user.setLastActivity(object.getDate(FIELD_LAST_ACTIVITY).getTime());
         user.setCountry(object.getString(FIELD_COUNTRY));
         user.setHasCall(object.getBoolean(FIELD_HAS_CALL));
+        user.setType(User.TYPE_NORMAL_USER);
         return user;
     }
 
@@ -675,6 +678,7 @@ public class ParseClient implements UserApiV2 {
         user.setDP(object.getString(FIELD_DP));
         final ParseObject parseObject = object.getParseObject(FIELD_ADMIN);
         parseObject.fetchIfNeeded();
+        user.setType(User.TYPE_GROUP);
         user.setAdmin(parseObjectToUser(parseObject));
         return user;
     }
@@ -713,7 +717,7 @@ public class ParseClient implements UserApiV2 {
                     new String[]{recipient, messageBody});
         } catch (Exception e) {
             // if(BuildConfig.DEBUG){
-                
+
             // }
             // throw new RuntimeException(); //we cannot handle this
         }
