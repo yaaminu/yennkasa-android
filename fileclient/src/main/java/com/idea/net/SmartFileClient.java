@@ -1,5 +1,6 @@
 package com.idea.net;
 
+import android.text.TextUtils;
 import android.util.Base64;
 
 import com.google.gson.JsonObject;
@@ -38,7 +39,7 @@ abstract class SmartFileClient implements FileApi {
     private final String dir;
 
     SmartFileClient(String key, String password, String dir) {
-        if (isEmpty(key) || isEmpty(password) || isEmpty(dir)) {
+        if (TextUtils.isEmpty(key) || TextUtils.isEmpty(password) || TextUtils.isEmpty(dir)) {
             throw new IllegalArgumentException("either key or password or dir is invalid");
         }
         this.dir = dir;
@@ -67,9 +68,6 @@ abstract class SmartFileClient implements FileApi {
                 .build().create(SmartFileService.class);
     }
 
-    private static boolean isEmpty(String text) {
-        return text == null || text.trim().length() < 1;
-    }
 
     @Override
     public void saveFileToBackend(File file, FileApi.FileSaveCallback callback, FileApi.ProgressListener listener) {
@@ -86,7 +84,7 @@ abstract class SmartFileClient implements FileApi {
         }
 
         String mimeType = FileUtils.getMimeType(file.getAbsolutePath());
-        if (isEmpty(mimeType)) {
+        if (TextUtils.isEmpty(mimeType)) {
             mimeType = "application/octet-stream";
         }
         try {
@@ -95,7 +93,7 @@ abstract class SmartFileClient implements FileApi {
             // create link
             String cachedLink = getCachedLink();
             String url;
-            if (isEmpty(cachedLink)) {
+            if (TextUtils.isEmpty(cachedLink)) {
                 Calendar calendar = new GregorianCalendar();
                 calendar.set(Calendar.YEAR, 2038);
                 JsonObject object = api.getLink(true, true, calendar.getTime().getTime(), this.dir);
@@ -174,6 +172,7 @@ abstract class SmartFileClient implements FileApi {
                 MessageDigest digest = MessageDigest.getInstance("sha1");
                 byte[] hash = digest.digest(org.apache.commons.io.FileUtils.readFileToByteArray(this.file));
                 String fileNameHashed = "";
+                //noinspection ForLoopReplaceableByForEach
                 for (int i = 0; i < hash.length; i++) {
                     fileNameHashed += Integer.toString((hash[i] & 0xff) + 0x100, 16).substring(1);
                 }
