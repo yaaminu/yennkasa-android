@@ -253,10 +253,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 actionBar.setSubtitle(LiveCenter.isOnline(user.getUserId()) ? R.string.st_online : R.string.st_offline);
             }
         }
-
-//        ScreenUtility utility = new ScreenUtility(getActivity());
-////        DP_HEIGHT = getResources().getDimensionPixelSize(R.dimen.dp_height);
-////        DP_WIDTH = (int) utility.getPixelsWidth();
         return view;
     }
 

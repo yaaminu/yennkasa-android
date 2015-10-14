@@ -10,7 +10,6 @@ import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.idea.view.CheckBox;
 import com.idea.data.User;
 import com.idea.data.UserManager;
 import com.idea.pairapp.R;
@@ -18,6 +17,7 @@ import com.idea.ui.DPLoader;
 import com.idea.util.PhoneNumberNormaliser;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.ViewUtils;
+import com.rey.material.widget.CheckBox;
 
 import java.util.regex.Pattern;
 
@@ -187,7 +187,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
     private static class ViewHolder {
         private ImageView iv;
         private TextView userName, userPhone;
-        private CheckBox checkBox;
+        private com.rey.material.widget.CheckBox checkBox;
     }
 
 }

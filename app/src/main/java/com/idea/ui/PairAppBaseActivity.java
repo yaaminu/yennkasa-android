@@ -59,7 +59,7 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        NavigationManager.onStop(this);
+        NavigationManager.onDestroy(this);
         if (isUserVerified) {
             PairAppClient.markUserAsOffline(this);
         }

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                               xmlns:app="http://schemas.android.com/apk/res-auto"
+                              xmlns:tools="http://schemas.android.com/tools"
                               android:layout_width="wrap_content"
                               android:layout_height="wrap_content"
                               android:layout_margin="@dimen/message_body_margin">
@@ -22,7 +23,7 @@
             <TextView
                 android:id="@+id/tv_log_message"
                 style="@style/message_outgoing"
-                android:text="hi"/>
+                android:text="hi where have you been long messages to test some"/>
 
             <ImageView
                 android:id="@+id/iv_message_preview"
@@ -62,12 +63,14 @@
         <TextView
             android:id="@+id/tv_message_date"
             style="@style/message_outgoing_date"
-            android:layout_alignLeft="@+id/fl_message_body_view"
-            android:layout_alignStart="@+id/fl_message_body_view"
-            android:gravity="center_vertical|right"
+            android:layout_alignRight="@+id/fl_message_body_view"
+            android:layout_alignEnd="@+id/fl_message_body_view"
+            android:gravity="center_vertical|end"
             android:singleLine="true"
             android:drawableLeft="@drawable/ic_visibility_white_18dp"
-            android:text="  12-12-12"/>
+            android:drawableStart="@drawable/ic_visibility_white_18dp"
+            android:text="  12-12-12"
+            tools:ignore="HardcodedText"/>
     </com.idea.view.RelativeLayout>
 
     <com.idea.view.RoundedImageView

@@ -9,7 +9,7 @@ import android.widget.ListView;
 
 import com.idea.data.User;
 import com.idea.pairapp.R;
-import com.idea.view.CheckBox;
+import com.rey.material.widget.CheckBox;
 
 import java.util.Set;
 

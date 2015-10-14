@@ -90,4 +90,5 @@
     <dimen name="attach_icon_height">150dp</dimen>
     <dimen name="title_text_size_large">48sp</dimen>
     <dimen name="login_signup_verificaton_panel_width">300dp</dimen>
+    <dimen name="chat_activity_list_divider_hieght">16dp</dimen>
 </resources>

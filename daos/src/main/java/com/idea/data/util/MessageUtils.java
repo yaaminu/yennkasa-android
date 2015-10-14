@@ -115,8 +115,9 @@ public class MessageUtils {
                             realm.commitTransaction();
                             onComplete(null);
                         } catch (IOException e) {
-                            PLog.e(TAG, e.getMessage(), e.getCause());
-                            onComplete(e);
+                            PLog.d(TAG, e.getMessage(), e.getCause());
+                            Exception error = new Exception(Config.getApplicationContext().getString(R.string.st_unable_to_connect));
+                            onComplete(error);
                         } finally {
                             if (realm != null) {
                                 realm.close();

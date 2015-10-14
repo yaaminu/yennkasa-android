@@ -28,23 +28,24 @@
         android:layout_marginLeft="@dimen/chat_activity_side_margin"
         android:layout_marginRight="@dimen/chat_activity_side_margin"
         android:layout_marginTop="2dp"
-        android:background="#0000"
         android:animateLayoutChanges="true"
+        android:background="#0000"
         tools:ignore="UnusedAttribute">
 
         <com.idea.view.RelativeLayout
+            android:id="@+id/attachment_picker_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/attachment_picker_container"
             >
 
         </com.idea.view.RelativeLayout>
+
         <com.idea.view.LinearLayout
             android:id="@+id/ll_list_view_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignParentTop="true"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
             android:background="@color/transparent"
             android:gravity="top"
             android:orientation="vertical">
@@ -53,10 +54,11 @@
                 android:id="@+id/lv_messages"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
+                android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
                 android:layout_weight="1"
                 android:background="@color/transparent"
                 android:divider="@null"
-                android:dividerHeight="16dp"
+                android:dividerHeight="@dimen/chat_activity_list_divider_hieght"
                 android:fadingEdge="none"
                 android:scrollbars="none"
                 android:transcriptMode="normal"
@@ -86,8 +88,8 @@
                     android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
                     android:layout_marginStart="0dp"
                     android:background="@drawable/green_round_back_ground"
-                    android:padding="@dimen/padding_ll_login_fragment_bottom"
                     android:foregroundGravity="center"
+                    android:padding="@dimen/padding_ll_login_fragment_bottom"
                     android:visibility="gone">
 
                     <ImageView
@@ -97,17 +99,6 @@
                 </com.idea.view.FrameLayout>
             </LinearLayout>
         </com.idea.view.LinearLayout>
-
-        <!--<include-->
-        <!--layout="@layout/message_item_log"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_alignParentTop="true"-->
-        <!--android:layout_centerHorizontal="true"-->
-        <!--android:gravity="center"-->
-        <!--android:text="2/2/2015"-->
-        <!--android:textSize="@dimen/log_message_text_size"-->
-        <!--android:visibility="gone"/>-->
 
         <include
             layout="@layout/message_item_log">

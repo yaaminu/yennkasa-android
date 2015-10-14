@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
@@ -40,9 +39,9 @@ import com.idea.util.PLog;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
-import com.idea.view.CheckBox;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
+import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.SnackBar;
 
 import java.io.File;
@@ -458,21 +457,13 @@ public class CreateMessageActivity extends MessageActivity
                 selectedItems.add(user.getUserId());
                 selectedUserNames.add(userName);
                 if (!checkBox.isChecked()) {
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                        checkBox.setCheckedImmediately(true);
-                    } else {
-                        checkBox.setCheckedAnimated(true);
-                    }
+                    checkBox.setChecked(true);
                 }
             } else {
                 selectedItems.remove(user.getUserId());
                 selectedUserNames.remove(userName);
                 if (checkBox.isChecked()) {
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                        checkBox.setCheckedImmediately(false);
-                    } else {
-                        checkBox.setCheckedAnimated(false);
-                    }
+                    checkBox.setChecked(false);
                 }
             }
             try {

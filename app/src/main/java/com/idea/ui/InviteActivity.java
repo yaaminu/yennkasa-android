@@ -1,7 +1,6 @@
 package com.idea.ui;
 
 import android.content.Context;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
@@ -27,9 +26,9 @@ import com.idea.util.PhoneNumberNormaliser;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
-import com.idea.view.CheckBox;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
+import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.SnackBar;
 import com.rey.material.widget.TextView;
 
@@ -51,8 +50,6 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
     private Realm realm;
     private UsersAdapter usersAdapter;
     private Set<String> selectedUsers;
-    private ToolbarManager toolbarManager;
-    private Toolbar toolBar;
     private String groupId;
     private final View.OnClickListener listener = new View.OnClickListener() {
         @Override
@@ -71,17 +68,19 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_invite);
-        toolBar = (Toolbar) findViewById(R.id.main_toolbar);
+        Toolbar toolBar = (Toolbar) findViewById(R.id.main_toolbar);
         menuItemDone = toolBar.findViewById(R.id.tv_menu_item_done);
         menuItemDone.setOnClickListener(listener);
-        toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
+
+        //noinspection unused
+        ToolbarManager toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         groupId = getIntent().getStringExtra(EXTRA_GROUP_ID);
         selectedUsers = new HashSet<>();
         realm = User.Realm(this);
-        usersAdapter = new CustomUserAdapter(this, prepareQuery().findAllSorted(User.FIELD_NAME));
+        usersAdapter = new CustomUserAdapter(prepareQuery().findAllSorted(User.FIELD_NAME));
         fragment = new ItemsSelector();
         getSupportFragmentManager()
                 .beginTransaction()
@@ -277,34 +276,28 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
                 selectedUsers.add(user.getUserId());
                 selectedUserNames.add(userName);
                 if (!checkBox.isChecked()) {
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                        checkBox.setCheckedImmediately(true);
-                    } else {
-                        checkBox.setCheckedAnimated(true);
-                    }
+                    checkBox.setChecked(true);
                 }
             } else {
                 selectedUsers.remove(user.getUserId());
                 selectedUserNames.remove(userName);
                 if (checkBox.isChecked()) {
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                        checkBox.setCheckedImmediately(false);
-                    } else {
-                        checkBox.setCheckedAnimated(false);
-                    }
+                    checkBox.setChecked(false);
                 }
             }
             fragment.onItemsChanged();
-            supportInvalidateOptionsMenu();        }
+            supportInvalidateOptionsMenu();
+        }
 
         @Override
         public Context getContext() {
             return InviteActivity.this;
         }
     };
+
     private class CustomUserAdapter extends MultiChoiceUsersAdapter {
 
-        public CustomUserAdapter(PairAppBaseActivity context, RealmResults<User> realmResults) {
+        public CustomUserAdapter(RealmResults<User> realmResults) {
             super(delegate, realm, realmResults, selectedUsers, R.id.cb_checked);
         }
 

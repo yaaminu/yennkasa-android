@@ -30,9 +30,9 @@ import com.idea.util.PhoneNumberNormaliser;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
-import com.idea.view.CheckBox;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
+import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.SnackBar;
 
 import java.io.File;
@@ -367,7 +367,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
             UiHelpers.showErrorDialog(this, getString(R.string.duplicate_number_notice));
         } else {
             selectedUsers.add(phoneNumber);
-            selectedUsersNames.add("@" + PhoneNumberNormaliser.toLocalFormat(phoneNumber, getCurrentUser().getCountry()).replace("\\D",""));
+            selectedUsersNames.add("@" + PhoneNumberNormaliser.toLocalFormat(phoneNumber, getCurrentUser().getCountry()).replace("\\D", ""));
             adapter.notifyDataSetChanged();
             fragment.onItemsChanged();
             supportInvalidateOptionsMenu();
@@ -439,21 +439,13 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
                 selectedUsers.add(user.getUserId());
                 selectedUsersNames.add(userName);
                 if (!checkBox.isChecked()) {
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                        checkBox.setCheckedImmediately(true);
-                    } else {
-                        checkBox.setCheckedAnimated(true);
-                    }
+                    checkBox.setChecked(true);
                 }
             } else {
                 selectedUsers.remove(user.getUserId());
                 selectedUsersNames.remove(userName);
                 if (checkBox.isChecked()) {
-                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-                        checkBox.setCheckedImmediately(false);
-                    } else {
-                        checkBox.setCheckedAnimated(false);
-                    }
+                    checkBox.setChecked(false);
                 }
             }
             fragment.onItemsChanged();

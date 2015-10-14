@@ -14,8 +14,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.jmpergar.awesometext.AwesomeTextHandler;
-import com.jmpergar.awesometext.MentionSpanRenderer;
 import com.idea.Errors.ErrorCenter;
 import com.idea.Errors.PairappException;
 import com.idea.data.Message;
@@ -29,6 +27,8 @@ import com.idea.util.TaskManager;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
+import com.jmpergar.awesometext.AwesomeTextHandler;
+import com.jmpergar.awesometext.MentionSpanRenderer;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -45,13 +45,19 @@ import io.realm.RealmResults;
 @SuppressWarnings("ConstantConditions")
 public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.OnLongClickListener {
     private static final String TAG = MessagesAdapter.class.getSimpleName();
-    private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2, DATE_MESSAGE = 0x0, TYPING_MESSAGE = 0x3;
+    private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2,
+            DATE_MESSAGE = 0x0, TYPING_MESSAGE = 0x3,
+            INCOMING_MESSAGE_ONE_LINE = 0x4,
+            OUTGOING_MESSAGE_ONE_LINE = 0x5;
+
     private static final Map<String, Integer> downloadingRows = new Hashtable<>();
     private static final int[] messagesLayout = {
             R.layout.message_item_log,
             R.layout.list_item_message_outgoing,
             R.layout.list_item_message_incoming,
-            R.layout.typing_dots
+            R.layout.typing_dots,
+            R.layout.one_line_message_list_item_incoming,
+            R.layout.one_line_message_list_item_outgoing
     };
     private final SparseIntArray messageStates;
     private final Picasso PICASSO;
@@ -77,7 +83,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
 
     @Override
     public int getViewTypeCount() {
-        return 4;
+        return 6;
     }
 
     @Override
@@ -88,10 +94,16 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         } else if (Message.isDateMessage(message)) {
             return DATE_MESSAGE;
         } else {
+            boolean useOneLine = false;
+            if (Message.isTextMessage(message)) {
+                int length = message.getMessageBody().length();
+                int dateLength = formatDateMessage(message.getDateComposed()).length();
+                useOneLine = length < dateLength * 4;
+            }
             if (isOutgoingMessage(message)) {
-                return OUTGOING_MESSAGE;
+                return useOneLine ? OUTGOING_MESSAGE_ONE_LINE : OUTGOING_MESSAGE;
             } else {
-                return INCOMING_MESSAGE;
+                return useOneLine ? INCOMING_MESSAGE_ONE_LINE : INCOMING_MESSAGE;
             }
         }
     }
@@ -140,23 +152,15 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         //common to all
         holder.dateComposed.setVisibility(View.VISIBLE);
 
-        String dateComposed = DateUtils.formatDateTime(context, messageDateComposed.getTime(), DateUtils.FORMAT_SHOW_TIME);
+        String dateComposed = formatDateMessage(messageDateComposed);
         if (isOutgoingMessage(message)) {
-//            if (message.getState() == Message.STATE_PENDING) {
-//                holder.dateComposed.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0); //reset every thing
-//                holder.dateComposed.setMinHeight(height);
-//                holder.dateComposed.setText(Html.fromHtml("<h1><b>...</b></h1>") + dateComposed, TextView.BufferType.SPANNABLE);
-//            } else {
             holder.dateComposed.setText("  " + dateComposed);
             holder.dateComposed.setCompoundDrawablesWithIntrinsicBounds(messageStates.get(message.getState()), 0, 0, 0);
-//            }
-
             if (message.getState() == Message.STATE_SEND_FAILED) {
                 holder.retry.setVisibility(View.VISIBLE);
                 holder.retry.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        // TODO: 9/18/2015 offload this to a background thread
                         delegate.onSendMessage(message);
                     }
                 });
@@ -244,6 +248,10 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             });
         }
         return convertView;
+    }
+
+    private String formatDateMessage(Date messageDateComposed) {
+        return DateUtils.formatDateTime(context, messageDateComposed.getTime(), DateUtils.FORMAT_SHOW_TIME);
     }
 
     private void makeThumbnail(final String uri) {

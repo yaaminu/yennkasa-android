@@ -24,7 +24,7 @@ public class NavigationManager {
     /**
      * returns the current activity in this application.The returned activity may not be visible to the user or
      * there may not be an activity available at all, in that case a {@link NoActiveActivityException} is thrown.
-     * <p>
+     * <p/>
      * if one needs the returned activity(if there is any at all) to be an a given state, one must check using the
      * {@link #getCurrentActivityState()}.
      *
@@ -47,7 +47,7 @@ public class NavigationManager {
      * @see com.idea.util.NavigationManager.States
      */
     public static States getCurrentActivityState() throws NoActiveActivityException {
-        if (getCurrentActivity() == null) {
+        if (currentActivity == null) {
             return States.DESTROYED;
         }
         return state;
@@ -61,16 +61,25 @@ public class NavigationManager {
 
     public static void onStart(FragmentActivity newActivity) {
         ThreadUtils.ensureMain();
+        if (currentActivity != newActivity) {
+            currentActivity = newActivity;
+        }
         ensureSameActivityAndUpdateState(newActivity, States.STARTED);
     }
 
     public static void onResume(FragmentActivity newActivity) {
         ThreadUtils.ensureMain();
+        if (currentActivity != newActivity) {
+            currentActivity = newActivity;
+        }
         ensureSameActivityAndUpdateState(newActivity, States.RESUMED);
     }
 
     public static void onPause(FragmentActivity activity) {
         ThreadUtils.ensureMain();
+        if (currentActivity == null) {
+            currentActivity = activity;
+        }
         ensureSameActivityAndUpdateState(activity, States.PAUSED);
     }
 
@@ -82,7 +91,9 @@ public class NavigationManager {
     public static void onDestroy(FragmentActivity newActivity) {
         ThreadUtils.ensureMain();
         ensureSameActivityAndUpdateState(newActivity, States.DESTROYED);
-        currentActivity = null;
+        if (newActivity == currentActivity) {
+            currentActivity = null;
+        }
     }
 
     private static void ensureSameActivityAndUpdateState(FragmentActivity activity, States newState) {
