@@ -53,7 +53,7 @@ public class LiveCenter {
     private static int totalUnreadMessages = 0;
 
 
-    public synchronized static void incrementUnreadMessageForPeer(String peerId, int messageCount) {
+    public static void incrementUnreadMessageForPeer(String peerId, int messageCount) {
         if (TextUtils.isEmpty(peerId)) {
             throw new IllegalArgumentException("null peer id");
         }
@@ -64,13 +64,15 @@ public class LiveCenter {
         SharedPreferences preferences = getPreferences();
         int existing = preferences.getInt(peerId, 0) + messageCount;
         preferences.edit().putInt(peerId, existing).apply();
-        if (totalUnreadMessages <= 0) {
-            totalUnreadMessages = 0;
-            for (String s : getAllPeersWithUnreadMessages()) {
-                totalUnreadMessages += getUnreadMessageFor(s);
+        synchronized (unReadMessageLock) {
+            if (totalUnreadMessages <= 0) {
+                totalUnreadMessages = 0;
+                for (String s : getAllPeersWithUnreadMessages()) {
+                    totalUnreadMessages += getUnreadMessageFor(s);
+                }
+            } else {
+                totalUnreadMessages += messageCount;
             }
-        } else {
-            totalUnreadMessages += messageCount;
         }
     }
 
@@ -78,30 +80,34 @@ public class LiveCenter {
         return Config.getApplication().getSharedPreferences("unreadMessages", Context.MODE_PRIVATE);
     }
 
-    public synchronized static void incrementUnreadMessageForPeer(String peerId) {
+    public static void incrementUnreadMessageForPeer(String peerId) {
         incrementUnreadMessageForPeer(peerId, 1);
     }
 
-    public synchronized static int getUnreadMessageFor(String peerId) {
+    public static int getUnreadMessageFor(String peerId) {
         if (TextUtils.isEmpty(peerId)) {
             throw new IllegalArgumentException("null peerId");
         }
         return getPreferences().getInt(peerId, 0);
     }
 
-    public synchronized static int getTotalUnreadMessages() {
-        return totalUnreadMessages;
+    public static int getTotalUnreadMessages() {
+        synchronized (unReadMessageLock) {
+            return totalUnreadMessages;
+        }
     }
 
-    public synchronized static void invalidateNewMessageCount(String peerId) {
+    public static void invalidateNewMessageCount(String peerId) {
         if (TextUtils.isEmpty(peerId)) {
             throw new IllegalArgumentException("null peerId");
         }
         final SharedPreferences preferences = getPreferences();
         int newMessagesToPeerId = preferences.getInt(peerId, 0);
-        totalUnreadMessages -= newMessagesToPeerId;
-        if (totalUnreadMessages < 0) {
-            totalUnreadMessages = 0;
+        synchronized (unReadMessageLock) {
+            totalUnreadMessages -= newMessagesToPeerId;
+            if (totalUnreadMessages < 0) {
+                totalUnreadMessages = 0;
+            }
         }
         preferences.edit().remove(peerId).apply();
     }
@@ -112,7 +118,7 @@ public class LiveCenter {
     private static final Object TYPING_AND_ACTIVE_USERS_LOCK = new Object();
     private static WorkerThread WORKER_THREAD;
     private static SocketIoClient liveClient;
-    private static WeakReference<TypingListener> typingListener;
+    private static WeakReference<LiveCenterListener> typingListener;
     private static final Emitter.Listener ONLINE_RECEIVER = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
@@ -149,13 +155,13 @@ public class LiveCenter {
 
     private static void notifyListener(final String userId, final boolean isTyping) {
         if (typingListener != null && typingListener.get() != null) {
-            final TypingListener typingListener = LiveCenter.typingListener.get();
+            final LiveCenterListener liveCenterListener = LiveCenter.typingListener.get();
             TaskManager.executeOnMainThread(new Runnable() {
                 public void run() {
                     if (isTyping) {
-                        typingListener.onTyping(userId);
+                        liveCenterListener.onTyping(userId);
                     } else {
-                        typingListener.onStopTyping(userId);
+                        liveCenterListener.onStopTyping(userId);
                     }
                 }
             });
@@ -172,14 +178,14 @@ public class LiveCenter {
                     activeUsers.add(userId);
                 } else {
                     activeUsers.remove(userId);
-                    //if user is not online then he can't be online too
+                    //if user is not online then he can't be typing too
                     typing.remove(userId);
                 }
                 TaskManager.executeOnMainThread(new Runnable() {
                     @Override
                     public void run() {
                         if (typingListener != null) {
-                            TypingListener listener = typingListener.get();
+                            LiveCenterListener listener = typingListener.get();
                             if (listener != null) {
                                 listener.onUserStatusChanged(userId, isOnline);
                             }
@@ -211,7 +217,7 @@ public class LiveCenter {
     }
 
     /**
-     * stops the {@link LiveCenter} class. after a call this method,
+     * stops the {@link LiveCenter} class. after a call to this method,
      * this class will no more be usable until one calls {@link #start()}
      */
     public synchronized static void stop() {
@@ -222,9 +228,7 @@ public class LiveCenter {
         }
     }
 
-    //this method is synchronized because of the
-    //activePeers,typing and peers_in_chatRoom fields.
-    private synchronized static void doStart() {
+    private  static void doStart() {
         liveClient = SocketIoClient.getInstance(Config.getLiveEndpoint(), UserManager.getMainUserId());
         liveClient.registerForEvent(SocketIoClient.TYPING, TYPING_RECEIVER);
         liveClient.registerForEvent(SocketIoClient.IS_ONLINE, ONLINE_RECEIVER);
@@ -236,9 +240,13 @@ public class LiveCenter {
         } catch (JSONException e) {
             throw new RuntimeException(e.getCause());
         }
-        activeUsers.clear();
-        typing.clear();
-        PEERS_IN_CHATROOM.clear();
+        synchronized (TYPING_AND_ACTIVE_USERS_LOCK) {
+            activeUsers.clear();
+            typing.clear();
+        }
+        synchronized (PEERS_IN_CHATROOM) {
+            PEERS_IN_CHATROOM.clear();
+        }
     }
 
     private static void doStop() {
@@ -252,7 +260,7 @@ public class LiveCenter {
      * gives the {@link LiveCenter} a hint that this user is now active to the user
      * at our end here and that {@link LiveCenter} should monitor this user for typing events, etc.This is
      * different from the user been online this may be called after a call to {@link #start()}
-     * and never before also on may not call this method after call to {@link #stop()}.
+     * and never before also one may not call this method after call to {@link #stop()}.
      * in all such situations,this method will fail silently
      *
      * @param userId the userId of the user to track
@@ -393,13 +401,13 @@ public class LiveCenter {
 
     /**
      * registers a typing listener. listeners are stored internally as weakReferences so
-     * you may not pass anonymous classes.
+     * you may not pass anonymous instances.
      *
      * @param listener the listener to be registered, may not be {@code null}
      * @throws IllegalStateException    if the call is not made on the UI thread
      * @throws IllegalArgumentException if the listener to be registered is null
      */
-    public static void registerTypingListener(TypingListener listener) {
+    public static void registerTypingListener(LiveCenterListener listener) {
         ThreadUtils.ensureMain();
         if (listener == null) {
             throw new IllegalArgumentException("listener cannot be null");
@@ -414,7 +422,7 @@ public class LiveCenter {
      * @throws IllegalStateException    if the call is not made on the UI thread
      * @throws IllegalArgumentException if the listener to be unregistered is null
      */
-    public static void unRegisterTypingListener(TypingListener listener) {
+    public static void unRegisterTypingListener(LiveCenterListener listener) {
         ThreadUtils.ensureMain();
         if (listener == null) {
             throw new IllegalArgumentException("listener cannot be null");
@@ -451,7 +459,7 @@ public class LiveCenter {
         }
     }
 
-    public synchronized static Set<String> getAllPeersWithUnreadMessages() {
+    public static Set<String> getAllPeersWithUnreadMessages() {
         SharedPreferences data = getPreferences();
         Map<String, ?> all = data.getAll();
         if (all != null) {
@@ -460,13 +468,16 @@ public class LiveCenter {
         return Collections.emptySet();
     }
 
+    private static final Object unReadMessageLock = new Object();
+    private static final Object progresLock = new Object();
+
     /**
      * an interface one must implement if one wants to be notified of typing events
-     * you may not implement this interface using an anonymous inner class as the listner
-     * is referenced internally as a weakReference. at any point in time, there may be at
+     * you may not implement this interface using an anonymous inner class as the listener
+     * is referenced internally as a weakReference. at any point in time, there must be at
      * most one listener.
      */
-    public interface TypingListener {
+    public interface LiveCenterListener {
         void onTyping(String userId);
 
         void onStopTyping(String userId);

@@ -55,7 +55,7 @@ import static com.idea.data.Message.TYPE_TEXT_MESSAGE;
 
 @SuppressWarnings({"ConstantConditions"})
 public class ChatActivity extends MessageActivity implements View.OnClickListener,
-        AbsListView.OnScrollListener, TextWatcher, LiveCenter.TypingListener {
+        AbsListView.OnScrollListener, TextWatcher, LiveCenter.LiveCenterListener {
     public static final String EXTRA_PEER_ID = "peer id";
     private static final String TAG = ChatActivity.class.getSimpleName();
     private static final int ADD_USERS_REQUEST = 0x5;
