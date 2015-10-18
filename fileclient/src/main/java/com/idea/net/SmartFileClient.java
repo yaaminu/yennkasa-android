@@ -34,7 +34,8 @@ abstract class SmartFileClient implements FileApi {
     private static final Executor WORKER = Executors.newCachedThreadPool();
     public static final String CACHED_LINKS = "cachedLinks";
     private final String authorization;
-    private static final String ENDPOINT = "https://app.smartfile.com/api/2";
+    private static final String ENDPOINT =// Config.getMessageApiEndpoint()
+            "https://app.smartfile.com/api/2";
     private final SmartFileService api;
     private final String dir;
 
@@ -89,7 +90,7 @@ abstract class SmartFileClient implements FileApi {
         }
         try {
             final TypedFile countingTypedFile = new CountingTypedFile(mimeType, file, listener);
-            api.saveFile(dir, countingTypedFile);
+            api.saveFile(this.dir, countingTypedFile);
             // create link
             String cachedLink = getCachedLink();
             String url;
@@ -127,7 +128,7 @@ abstract class SmartFileClient implements FileApi {
     }
 
     private String getCachedLink() {
-        return Config.getApplicationWidePrefs().getString(SmartFileClient.class.getName()+this.dir, "");
+        return Config.getApplicationWidePrefs().getString(SmartFileClient.class.getName() + this.dir, "");
     }
 
     @Override
@@ -148,7 +149,8 @@ abstract class SmartFileClient implements FileApi {
 
         @Override
         public void writeTo(OutputStream out) throws IOException {
-            byte[] buffer = new byte[4096];
+            int bufferSize = this.file.length() > FileUtils.ONE_MB ? 4096 : 512;
+            byte[] buffer = new byte[bufferSize];
             FileInputStream in = new FileInputStream(this.file);
 
             int read;
@@ -159,6 +161,8 @@ abstract class SmartFileClient implements FileApi {
                     if (listener != null) {
                         processed += read;
                         listener.onProgress(expected, processed);
+                         //quick fix to force progress to be noticeable
+                        try{Thread.sleep(50);}catch(InterruptedException ignored){}
                     }
                 }
             } finally {

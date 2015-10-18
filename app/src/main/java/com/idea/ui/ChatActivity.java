@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v4.util.Pair;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.text.ClipboardManager;
@@ -23,25 +22,25 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.idea.Errors.ErrorCenter;
 import com.idea.adapter.GroupsAdapter;
 import com.idea.adapter.MessagesAdapter;
-import com.idea.util.LiveCenter;
-import com.idea.util.UiHelpers;
-import com.jmpergar.awesometext.AwesomeTextHandler;
-import com.jmpergar.awesometext.HashtagsSpanRenderer;
-import com.idea.Errors.ErrorCenter;
-import com.idea.Errors.PairappException;
 import com.idea.data.Conversation;
 import com.idea.data.Message;
 import com.idea.data.User;
 import com.idea.data.UserManager;
+import com.idea.messenger.PairAppClient;
 import com.idea.pairapp.R;
 import com.idea.util.FileUtils;
+import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
 import com.idea.util.SimpleDateUtil;
 import com.idea.util.TaskManager;
 import com.idea.util.TypeFaceUtil;
+import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
+import com.jmpergar.awesometext.AwesomeTextHandler;
+import com.jmpergar.awesometext.HashtagsSpanRenderer;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
 
@@ -59,15 +58,16 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public static final String EXTRA_PEER_ID = "peer id";
     private static final String TAG = ChatActivity.class.getSimpleName();
     private static final int ADD_USERS_REQUEST = 0x5;
-    private static final String MENTION_PATTERN = "(@[\\p{L}0-9-_ ]+)";
+    private static final String MENTION_PATTERN = "@.*";
     private static Message selectedMessage;
     private static int cursor = -1; //static so that it can resist activity restarts.
     boolean wasTyping = false;
     boolean outOfSync = false;
+
     private final MessagesAdapter.Delegate delegate = new MessagesAdapter.Delegate() {
         @Override
         public boolean onDateSetChanged() {
-            return !outOfSync;
+            return true;
         }
 
         @Override
@@ -76,8 +76,18 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         }
 
         @Override
-        public void onSendMessage(Message message) {
+        public void onReSendMessage(Message message) {
             resendMessage(message.getId());
+        }
+
+        @Override
+        public int getProgress(Message message) {
+            return getMessageProgress(message);
+        }
+
+        @Override
+        public void download(Message message) {
+            PairAppClient.download(message);
         }
 
         @Override
@@ -97,7 +107,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         }
     };
     private Conversation currConversation;
-    private Realm messageConversationRealm,usersRealm;
+    private Realm messageConversationRealm, usersRealm;
     //    private SwipeDismissListViewTouchListener swipeDismissListViewTouchListener;
     private ListView messagesListView;
     private EditText messageEt;
@@ -230,6 +240,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         } else {
             getSupportActionBar().setSubtitle(GroupsAdapter.join(this, ",", peer.getMembers()));
         }
+        adapter.notifyDataSetChanged();
     }
 
     @Override
@@ -287,17 +298,17 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         if (resultCode != RESULT_OK) {
             return;
         }
-        try {
-            Pair<String, Integer> pathAndType = UiHelpers.completeAttachIntent(requestCode, data);
-            sendMessage(pathAndType.first, peer.getUserId(), pathAndType.second);
-            messagesListView.setSelection(messages.size());
-        } catch (PairappException e) {
-            ErrorCenter.reportError(TAG, e.getMessage());
-        }
+        sendMessage(requestCode, data, peer.getUserId());
+    }
+
+    @Override
+    protected void onMessageQueued(@SuppressWarnings("UnusedParameters") String messageId) {
+        PLog.d(TAG, "message with id: %s queued", messageId);
+        messagesListView.setSelection(messages.size());
     }
 
     @Override
@@ -492,5 +503,13 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         getSupportActionBar().setSubtitle(isOnline ? R.string.st_online : R.string.st_offline);
     }
 
+    @Override
+    protected void reportProgress(String messageId, int progress) {
+        adapter.notifyDataSetChanged();
+    }
 
+    @Override
+    protected void onCancelledOrDone(String messageid) {
+        adapter.notifyDataSetChanged();
+    }
 }

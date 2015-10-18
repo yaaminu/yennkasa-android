@@ -19,12 +19,6 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.idea.ui.CreateMessageActivity;
-import com.idea.ui.ImageViewer;
-import com.idea.ui.MainActivity;
-import com.idea.ui.PairAppBaseActivity;
-import com.idea.ui.ProfileActivity;
-import com.idea.ui.UsersActivity;
 import com.idea.Errors.PairappException;
 import com.idea.data.Message;
 import com.idea.data.UserManager;
@@ -32,8 +26,14 @@ import com.idea.data.util.MessageUtils;
 import com.idea.pairapp.BuildConfig;
 import com.idea.pairapp.R;
 import com.idea.ui.ChatActivity;
+import com.idea.ui.CreateMessageActivity;
+import com.idea.ui.ImageViewer;
+import com.idea.ui.MainActivity;
+import com.idea.ui.PairAppBaseActivity;
+import com.idea.ui.ProfileActivity;
 import com.idea.ui.SetUpActivity;
 import com.idea.ui.SettingsActivity;
+import com.idea.ui.UsersActivity;
 import com.rey.material.app.Dialog;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.SimpleDialog;
@@ -82,6 +82,8 @@ public class UiHelpers {
             case PICK_FILE_REQUEST:
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.setType("*/*");
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.addCategory(Intent.CATEGORY_DEFAULT);
                 try {
                     NavigationManager.getCurrentActivity().startActivityForResult(intent, PICK_FILE_REQUEST);
                 } catch (NavigationManager.NoActiveActivityException e) {
@@ -419,6 +421,7 @@ public class UiHelpers {
         Intent attachIntent;
         attachIntent = new Intent(Intent.ACTION_GET_CONTENT);
         attachIntent.setType("image/*");
+        attachIntent.addCategory(Intent.CATEGORY_DEFAULT);
         try {
             NavigationManager.getCurrentActivity().startActivityForResult(attachIntent, PICK_PHOTO_REQUEST);
         } catch (NavigationManager.NoActiveActivityException e) {
@@ -459,7 +462,7 @@ public class UiHelpers {
         String actualPath;
         Uri uri = data.getData();
         if (uri.getScheme().equals("content")) {
-            actualPath = FileUtils.resolveContentUriToFilePath(uri);
+            actualPath = FileUtils.resolveContentUriToFilePath(uri, true);
         } else {
             actualPath = uri.getPath();
         }
@@ -508,18 +511,18 @@ public class UiHelpers {
                         .remove(dialogFragment)
                         .commitAllowingStateLoss();
                 //noinspection ConstantConditions
-                    TaskManager.executeOnMainThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            //noinspection EmptyCatchBlock
-                            try {
-                                dialogFragment.dismiss();
-                            } catch (Exception e) {
-                            }
+                TaskManager.executeOnMainThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //noinspection EmptyCatchBlock
+                        try {
+                            dialogFragment.dismiss();
+                        } catch (Exception e) {
                         }
-                    });
+                    }
+                });
             } catch (Exception ignored) {
-                PLog.e(TAG,ignored.getMessage());
+                PLog.e(TAG, ignored.getMessage());
             }
         }
     }

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
@@ -281,18 +283,40 @@ public class CreateMessageActivity extends MessageActivity
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         if (resultCode == RESULT_OK) {
-            try {
-                Pair<String, Integer> pathAndType = UiHelpers.completeAttachIntent(requestCode, data);
-                doAttach(pathAndType);
-                supportInvalidateOptionsMenu();
-            } catch (PairappException e) {
-                isAttaching = false;
-                ErrorCenter.reportError("attachError", e.getMessage());
-            } catch (IOException e) {
-                isAttaching = false;
-                ErrorCenter.reportError("attachError", getString(R.string.an_error_occurred));
+            AsyncTask<Void, Void, Object> task = new AsyncTask<Void, Void, Object>() {
+                @Override
+                protected Pair<String, Integer> doInBackground(Void... params) {
+                    try {
+                        return UiHelpers.completeAttachIntent(requestCode, data);
+                    } catch (PairappException e) {
+
+                        return null;
+                    }
+                }
+
+                @Override
+                protected void onPostExecute(Object pathAndType) {
+                    if (pathAndType instanceof Exception) { //error
+                        isAttaching = false;
+                        ErrorCenter.reportError("attachError", ((Exception) pathAndType).getMessage());
+                        return;
+                    }
+                    try {
+                        //noinspection unchecked
+                        doAttach((Pair<String, Integer>) pathAndType);
+                        supportInvalidateOptionsMenu();
+                    } catch (IOException e) {
+                        isAttaching = false;
+                        ErrorCenter.reportError("attachError", getString(R.string.an_error_occurred));
+                    }
+                }
+            };
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
+                task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            } else {
+                task.execute();
             }
         }
     }

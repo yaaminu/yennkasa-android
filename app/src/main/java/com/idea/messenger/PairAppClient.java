@@ -10,6 +10,7 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 
+import com.idea.Errors.PairappException;
 import com.idea.data.Message;
 import com.idea.data.UserManager;
 import com.idea.net.ParseClient;
@@ -187,6 +188,7 @@ public class PairAppClient extends Service {
     private synchronized void bootClient() {
         if (!isClientStarted.get()) {
             PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance(credentials);
+            monitorDispatcher(PARSE_MESSAGE_DISPATCHER);
             isClientStarted.set(true);
         }
     }
@@ -234,15 +236,51 @@ public class PairAppClient extends Service {
         TaskManager.execute(task);
     }
 
+    private final Dispatcher.DispatcherMonitor monitor = new Dispatcher.DispatcherMonitor() {
+        @Override
+        public void onDispatchFailed(String reason, String objectIdentifier) {
+            PLog.d(TAG, "message with id : %s dispatch failed with reason: " + reason, objectIdentifier);
+            LiveCenter.releaseProgressTag(objectIdentifier);
+        }
+
+        @Override
+        public void onDispatchSucceed(String objectIdentifier) {
+            PLog.d(TAG, "message with id : %s dispatched successfully", objectIdentifier);
+            LiveCenter.releaseProgressTag(objectIdentifier);
+        }
+
+        @Override
+        public void onProgress(String id, int progress, int max) {
+            LiveCenter.updateProgress(id, progress);
+        }
+
+        @Override
+        public void onAllDispatched() {
+
+        }
+    };
+
     private void sendMessageInternal(Message message) {
+        if (!Message.isTextMessage(message)) {
+            try {
+                LiveCenter.acquireProgressTag(message.getId());
+            } catch (PairappException e) {
+                throw new RuntimeException(e.getCause());
+            }
+        }
         if (LiveCenter.isOnline(message.getTo()) && !UserManager.getInstance().isGroup(message.getTo())) {
             if (SOCKETSIO_DISPATCHER == null) {
                 SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance(credentials);
+                monitorDispatcher(SOCKETSIO_DISPATCHER);
             }
             SOCKETSIO_DISPATCHER.dispatch(message);
         } else {
             PARSE_MESSAGE_DISPATCHER.dispatch(message);
         }
+    }
+
+    private void monitorDispatcher(Dispatcher dispatcher) {
+        dispatcher.addMonitor(monitor);
     }
 
     public static void sendFeedBack(final JSONObject report) {
@@ -256,6 +294,10 @@ public class PairAppClient extends Service {
                 ParseClient.getInstance().sendFeedBack(report);
             }
         });
+    }
+
+    public static void download(Message message) {
+        MessageProcessor.download(message);
     }
 
     public class PairAppClientInterface extends Binder {

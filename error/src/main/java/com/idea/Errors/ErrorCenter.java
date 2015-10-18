@@ -57,12 +57,16 @@ public class ErrorCenter {
             if (!currentActivityState.equals(NavigationManager.States.DESTROYED) || !currentActivityState.equals(NavigationManager.States.STOPPED)) {
                 final ErrorShower errorShower = ErrorCenter.errorShower.get();
                 if (errorShower != null) {
-                    TaskManager.executeOnMainThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            errorShower.showError(errorMessage);
-                        }
-                    });
+                    if (ThreadUtils.isMainThread()) {
+                        errorShower.showError(errorMessage);
+                    } else {
+                        TaskManager.executeOnMainThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                errorShower.showError(errorMessage);
+                            }
+                        });
+                    }
                     return;
                 }
             }
@@ -126,8 +130,8 @@ public class ErrorCenter {
         if (waitingError != null) {
             if (waitingError.timeout == INDEFINITE || waitingError.timeout <= System.currentTimeMillis()) {
                 reportError(waitingError.id, waitingError.message, waitingError.timeout);
-                return;
             }
+            waitingError = null;
         }
         Log.d(TAG, "no error to show either they have time out or there is none at all");
     }

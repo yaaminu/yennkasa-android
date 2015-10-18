@@ -1,7 +1,5 @@
 package com.idea.messenger;
 
-import com.idea.net.FileApi;
-
 import java.io.Closeable;
 import java.util.Collection;
 
@@ -21,17 +19,13 @@ interface Dispatcher<T> extends Closeable {
 
     void dispatch(Collection<T> t);
 
-    void dispatch(T t, FileApi.ProgressListener listener);
-
-    void dispatch(Collection<T> t, FileApi.ProgressListener listener);
-
     boolean cancelDispatchMayPossiblyFail(T t);
 
     void addMonitor(DispatcherMonitor monitor);
 
     void removeMonitor(DispatcherMonitor monitor);
 
-    void close();
+    void close(); //overriden to undo the throws IOException signature
 
     /**
      * an interface to be implemented if one wants to monitor
@@ -43,9 +37,11 @@ interface Dispatcher<T> extends Closeable {
      * @author Null-Pointer on 5/26/2015.
      */
     interface DispatcherMonitor {
-        void onDispatchFailed(String reason, String objectIdentifier);
+        void onDispatchFailed(String id, String reason);
 
-        void onDispatchSucceed(String objectIdentifier);
+        void onDispatchSucceed(String id);
+
+        void onProgress(String id, int progress,int max);
 
         void onAllDispatched();
     }

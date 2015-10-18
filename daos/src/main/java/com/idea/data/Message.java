@@ -39,11 +39,11 @@ public class Message extends RealmObject {
 
     public static final int NEVER_DELETE = 0, AFTER_FIVE_DAYS = 1, AFTER_TEN_DAYS = 2, AFTER_30_DAYS = 3;
 
-    public static final int STATE_PENDING = 0x3e9,
-            STATE_SENT = 0x3ea,
-            STATE_RECEIVED = 0x3eb,
-            STATE_SEEN = 0x3ec,
-            STATE_SEND_FAILED = 0x3ed;
+    public static final int STATE_PENDING = 1001,
+            STATE_SENT = 1002,
+            STATE_RECEIVED = 1003,
+            STATE_SEEN = 1004,
+            STATE_SEND_FAILED = 1005;
 
     /***********************************
      * the order of these fields i.e. TYPE_* is relevant to some components for sorting purposes

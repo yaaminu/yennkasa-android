@@ -1,11 +1,14 @@
 package com.idea.ui;
 
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.support.v4.util.Pair;
 
 import com.idea.Errors.ErrorCenter;
 import com.idea.Errors.PairappException;
@@ -14,10 +17,17 @@ import com.idea.data.Message;
 import com.idea.data.util.MessageUtils;
 import com.idea.messenger.PairAppClient;
 import com.idea.pairapp.BuildConfig;
+import com.idea.pairapp.R;
+import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
+import com.idea.util.TaskManager;
+import com.idea.util.ThreadUtils;
+import com.idea.util.UiHelpers;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import io.realm.Realm;
@@ -25,7 +35,7 @@ import io.realm.Realm;
 /**
  * @author by Null-Pointer on 9/19/2015.
  */
-public abstract class MessageActivity extends PairAppActivity {
+public abstract class MessageActivity extends PairAppActivity implements LiveCenter.ProgressListener {
 
     public static final String CONVERSATION_ACTIVE = "active";
     private static final String TAG = MessageActivity.class.getSimpleName();
@@ -40,13 +50,49 @@ public abstract class MessageActivity extends PairAppActivity {
     }
 
 
-    private void doSendMessage(Message message) {
+    @Override
+    protected void onResume() {
+        super.onResume();
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                LiveCenter.listenForAllProgress(MessageActivity.this);
+            }
+        }, true);
+    }
+
+    @Override
+    protected void onPause() {
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                LiveCenter.stopListeningForAllProgress(MessageActivity.this);
+            }
+        }, true);
+        super.onPause();
+    }
+
+    private void doSendMessage(final Message message) {
         if (bound) {
             pairAppClientInterface.sendMessage(message);
         } else {
-            bind(); //after binding dispatcher will smartly dispatch all unsent waitingMessages
+            bind(); //after binding all waiting messages will be  smartly sent.
+        }
+        final String messageId = message.getId();
+        if (ThreadUtils.isMainThread()) {
+            progresses.put(messageId, 0);
+            onMessageQueued(messageId);
+        } else {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    progresses.put(messageId, 0);
+                    onMessageQueued(messageId);
+                }
+            });
         }
     }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,6 +141,41 @@ public abstract class MessageActivity extends PairAppActivity {
 
     protected final void sendMessage(String messageBody, String recipient, int type) {
         sendMessage(messageBody, recipient, type, false);
+    }
+
+    protected final void sendMessage(final int requestCode, final Intent data, final String recipient) {
+
+        final ProgressDialog dialog = new ProgressDialog(this);
+        dialog.setCancelable(false);
+        dialog.setMessage(getString(R.string.st_please_wait));
+        dialog.show();
+        final Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Pair<String, Integer> pathAndType = UiHelpers.completeAttachIntent(requestCode, data);
+                    sendMessage(pathAndType.first, recipient, pathAndType.second);
+                } catch (final PairappException e) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            dialog.dismiss();
+                            UiHelpers.showErrorDialog(MessageActivity.this, e.getMessage());
+                        }
+                    });
+                    return;
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        dialog.dismiss();
+                    }
+                });
+            }
+        };
+        if (!TaskManager.executeNow(runnable)) {
+            new Thread(runnable).start();
+        }
     }
 
     protected final void sendMessage(String messageBody, String recipient, int type, boolean active) {
@@ -279,9 +360,62 @@ public abstract class MessageActivity extends PairAppActivity {
 //        }
     }
 
+    protected void reportProgress(String messageId, int progress) {
+    }
+
+    protected void onCancelledOrDone(String messageId) {
+    }
+
+    protected void onMessageQueued(@SuppressWarnings("UnusedParameters") String messageId /* for sub classes*/) {
+
+    }
+
+    private static final Map<Object, Integer> progresses = new HashMap<>();
+
+    @Override
+    public final void onProgress(final Object tag, final int progress) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Integer stored = progresses.get(tag);
+                    if (stored == null) {
+                        stored = progress-1;
+                    }
+                    if (stored >= progress) {
+                        PLog.d(TAG, "late progress report");
+                        return;
+                    }
+                    PLog.d(TAG, stored + "");
+                    progresses.put(tag, progress);
+                    reportProgress((String) tag, progress);
+                } catch (ClassCastException e) {
+                    throw new RuntimeException(e.getCause());
+                }
+            }
+        });
+    }
+
+    protected final int getMessageProgress(Message message) {
+        return LiveCenter.getProgress(message.getId());
+    }
+
+    @Override
+    public final void doneOrCancelled(final Object tag) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    progresses.remove(tag);
+                    onCancelledOrDone(((String) tag));
+                } catch (ClassCastException e) {
+                    throw new RuntimeException(e.getCause());
+                }
+            }
+        });
+    }
 
     protected interface SendCallback {
         void onSendComplete(Exception e);
     }
-
 }

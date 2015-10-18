@@ -11,16 +11,17 @@ import android.view.ViewGroup;
 import android.widget.ListView;
 
 import com.idea.adapter.ConversationAdapter;
-import com.idea.util.LiveCenter;
-import com.idea.util.UiHelpers;
-import com.idea.view.SwipeDismissListViewTouchListener;
 import com.idea.data.Conversation;
 import com.idea.data.Message;
 import com.idea.data.UserManager;
 import com.idea.pairapp.R;
 import com.idea.util.Config;
+import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
+import com.idea.util.UiHelpers;
+import com.idea.view.SwipeDismissListViewTouchListener;
+import com.rey.material.app.DialogFragment;
 import com.rey.material.widget.FloatingActionButton;
 
 import java.io.File;
@@ -125,6 +126,8 @@ public class ConversationsFragment extends ListFragment {
     private void cleanMessages(Conversation conversation) {
         final String peerId = conversation.getPeerId();
         final Date date = new Date();
+        final DialogFragment fragment = UiHelpers.newProgressDialog();
+        fragment.show(getFragmentManager(),null);
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
@@ -152,6 +155,12 @@ public class ConversationsFragment extends ListFragment {
                 messages.clear();
                 realm.commitTransaction();
                 realm.close();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                     UiHelpers.dismissProgressDialog(fragment);
+                    }
+                });
             }
         });
     }

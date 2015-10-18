@@ -21,7 +21,7 @@
             android:gravity="center_vertical|end"
             android:padding="@dimen/padding_ll_login_fragment_left"
             android:singleLine="true"
-            android:text="  12-12-12"
+            android:text="12-12-12"
             tools:ignore="HardcodedText"/>
 
         <View
@@ -82,7 +82,7 @@
         android:visibility="gone"/>
 
     <com.rey.material.widget.ProgressView
-        android:id="@+id/pb_download_progress"
+        android:id="@+id/pb_download_progress_indeterminate"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_gravity="center"

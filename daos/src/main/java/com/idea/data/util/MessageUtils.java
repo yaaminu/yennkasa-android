@@ -7,14 +7,10 @@ import com.idea.data.Message;
 import com.idea.data.R;
 import com.idea.util.Config;
 import com.idea.util.PLog;
-import com.idea.util.TaskManager;
 
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.io.IOException;
-
-import io.realm.Realm;
 
 /**
  * @author Null-Pointer on 8/27/2015.
@@ -77,66 +73,6 @@ public class MessageUtils {
             throw new PairappException(msg, ERROR_MESSAGE_ALREADY_SENT);
         }
         return true;
-    }
-
-    public static void download(final Message realmMessage, final Callback callback) {
-
-        final Message message = Message.copy(realmMessage); //detach from realm
-        final String messageId = message.getId(),
-                messageBody = message.getMessageBody();
-        TaskManager.execute(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-                        Realm realm = null;
-                        final File finalFile;
-                        String destination = messageBody.substring(messageBody.lastIndexOf('/'));
-
-                        switch (message.getType()) {
-                            case Message.TYPE_VIDEO_MESSAGE:
-                                finalFile = new File(Config.getAppVidMediaBaseDir(), destination);
-                                break;
-                            case Message.TYPE_PICTURE_MESSAGE:
-                                finalFile = new File(Config.getAppImgMediaBaseDir(), destination);
-                                break;
-                            case Message.TYPE_BIN_MESSAGE:
-                                finalFile = new File(Config.getAppBinFilesBaseDir(), destination);
-                                break;
-                            default:
-                                throw new AssertionError("should never happen");
-                        }
-                        try {
-                            com.idea.util.FileUtils.save(finalFile, messageBody);
-                            realm = Message.REALM(Config.getApplicationContext());
-                            realm.beginTransaction();
-                            Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
-                            toBeUpdated.setMessageBody(finalFile.getAbsolutePath());
-                            realm.commitTransaction();
-                            onComplete(null);
-                        } catch (IOException e) {
-                            PLog.d(TAG, e.getMessage(), e.getCause());
-                            Exception error = new Exception(Config.getApplicationContext().getString(R.string.st_unable_to_connect));
-                            onComplete(error);
-                        } finally {
-                            if (realm != null) {
-                                realm.close();
-                            }
-                        }
-                    }
-
-                    private void onComplete(final Exception error) {
-                        if (callback == null) {
-                            return;
-                        }
-                        TaskManager.executeOnMainThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                callback.onDownloaded(error, message.getId());
-                            }
-                        });
-                    }
-                });
     }
 
     public static String getDescription(int type) {

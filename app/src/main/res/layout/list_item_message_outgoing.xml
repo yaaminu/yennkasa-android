@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                              xmlns:app="http://schemas.android.com/apk/res-auto"
                               xmlns:tools="http://schemas.android.com/tools"
                               android:layout_width="wrap_content"
                               android:layout_height="wrap_content"
@@ -23,7 +22,8 @@
             <TextView
                 android:id="@+id/tv_log_message"
                 style="@style/message_outgoing"
-                android:text="hi where have you been long messages to test some"/>
+                android:text="hi where have you been long messages to test some"
+                tools:ignore="HardcodedText"/>
 
             <ImageView
                 android:id="@+id/iv_message_preview"
@@ -42,33 +42,48 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:background="#0000"
+                android:contentDescription="@string/play_download_content_description"
                 android:minHeight="@dimen/thumbnail_height"
                 android:minWidth="@dimen/thumbnail_width"
-                android:contentDescription="@string/play_download_content_description"
                 android:src="@drawable/playvideo"
                 android:visibility="gone"/>
 
-            <com.rey.material.widget.ProgressView
-                android:id="@+id/pb_download_progress"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+            <include
+                android:id="@+id/pb_download_progress_indeterminate"
+                layout="@layout/progress_message_list_item"
+                android:visibility="gone"/>
+
+            <FrameLayout
+                android:id="@+id/fl_progress_root_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:visibility="gone"
-                app:pv_autostart="true"
-                app:pv_circular="true"
-                app:pv_progressMode="indeterminate"
-                app:pv_progressStyle="@style/base_indeterminate_progress_style"/>
+                android:visibility="visible">
+
+                <ProgressBar
+                    android:id="@+id/pb_download_progress_determinate"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/progress_bar_shape"
+                    android:indeterminate="false"
+                    android:max="100"
+                    android:padding="2dp"
+                    android:progress="0"
+                    android:progressDrawable="@drawable/progress_bar_drawable"
+                    />
+            </FrameLayout>
+
         </com.idea.view.FrameLayout>
 
         <TextView
             android:id="@+id/tv_message_date"
             style="@style/message_outgoing_date"
-            android:layout_alignRight="@+id/fl_message_body_view"
             android:layout_alignEnd="@+id/fl_message_body_view"
+            android:layout_alignRight="@+id/fl_message_body_view"
             android:gravity="center_vertical|end"
             android:singleLine="true"
-            android:drawableLeft="@drawable/ic_visibility_white_18dp"
-            android:drawableStart="@drawable/ic_visibility_white_18dp"
             android:text="  12-12-12"
             tools:ignore="HardcodedText"/>
     </com.idea.view.RelativeLayout>
@@ -77,8 +92,8 @@
         android:id="@+id/iv_retry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
         android:layout_toLeftOf="@+id/ll_message_body_view"
         android:layout_toStartOf="@+id/ll_message_body_view"
-        android:layout_centerVertical="true"
         android:src="@drawable/ic_action_replay"/>
 </com.idea.view.RelativeLayout>

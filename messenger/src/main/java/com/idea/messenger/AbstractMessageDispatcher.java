@@ -40,14 +40,30 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         }
     };
     protected static final String ERR_USER_OFFLINE = "user offline";
-    protected static final FileApi.ProgressListener DUMMY_LISTENER = new FileApi.ProgressListener() {
+    public static final int MAX = 100;
+
+    private class ProgressListenerImpl implements FileApi.ProgressListener {
+
+        private final Message message;
+
+        ProgressListenerImpl(Message message) {
+            this.message = message;
+        }
+
         @Override
         public void onProgress(long expected, long processed) {
             //do nothing
             double ratio = ((double) processed) / expected;
-            PLog.d(TAG, "dummy progress listener: %s percent", 100 * ratio);
+            final int progress = (int) (MAX * ratio);
+            PLog.d(TAG, "progress : %s", progress + "%");
+            synchronized (monitors) {
+                for (DispatcherMonitor monitor : monitors) {
+                    monitor.onProgress(this.message.getId(), progress, MAX);
+                }
+            }
         }
-    };
+    }
+
     public static final String KEY = "key";
     public static final String PASSWORD = "password";
     private final List<DispatcherMonitor> monitors = new ArrayList<>();
@@ -59,7 +75,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                 new SmartFileMessageClient(credentials.get(KEY), credentials.get(PASSWORD), UserManager.getMainUserId());
     }
 
-    private void uploadFileAndProceed(final Message message, FileApi.ProgressListener listener) {
+    private void uploadFileAndProceed(final Message message) {
         String messageBody = message.getMessageBody();
 
         if (messageBody.startsWith("http") || messageBody.startsWith("ftp")) { //we assume the file is uploaded
@@ -71,6 +87,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                 return;
             }
 
+            final ProgressListenerImpl listener = new ProgressListenerImpl(message);
             file_service.saveFileToBackend(actualFile, new FileApi.FileSaveCallback() {
                 @Override
                 public void done(FileClientException e, String locationUrl) {
@@ -166,7 +183,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         }
     }
 
-    protected void onDelivered(String ourMessageId) {
+    protected final void onDelivered(String ourMessageId) {
         Realm realm = Message.REALM(Config.getApplicationContext());
         try {
             Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, ourMessageId).findFirst();
@@ -191,49 +208,34 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         }
     }
 
-    @Override
-    public final void dispatch(Message message) {
-        ThreadUtils.ensureNotMain();
-        dispatch(message, DUMMY_LISTENER);
-    }
 
     @Override
     public final void dispatch(Collection<Message> messages) {
         ThreadUtils.ensureNotMain();
-        dispatch(messages, DUMMY_LISTENER);
+        for (Message message : messages) {
+            dispatch(message);
+        }
     }
 
     @Override
-    public final void dispatch(Message message, FileApi.ProgressListener listener) {
+    public final void dispatch(Message message) {
         ThreadUtils.ensureNotMain();
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             Log.w(TAG, "no internet connection, message can not be sent now");
             onFailed(message.getId(), MessageUtils.ERROR_NOT_CONNECTED);
             return;
         }
-        //this pattern is not strict it only checks if it starts with http or ftp
-        //even fttp will pass this test but am making a stupid assumption that we
-        // will not receive such an input.
-//        Pattern httpOrFtpPattern = Pattern.compile("^([hf]t{1,2}p)");
         try {
             MessageUtils.validate(message); //might throw
             //is the message a binary message?
             if (!Message.isTextMessage(message)) {
                 //upload the file first before continuing
-                uploadFileAndProceed(message, listener);
+                uploadFileAndProceed(message);
             } else {
                 proceedToSend(message);
             }
         } catch (PairappException e) {
             onFailed(message.getId(), e.getMessage());
-        }
-    }
-
-    @Override
-    public final void dispatch(Collection<Message> messages, FileApi.ProgressListener listener) {
-        ThreadUtils.ensureNotMain();
-        for (Message message : messages) {
-            dispatch(message, listener);
         }
     }
 
@@ -270,6 +272,9 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     @Override
     public void close() {
         //subclasses should override this if the need to free any resource
+        synchronized (monitors) {
+            monitors.clear();
+        }
     }
 
     protected abstract void dispatchToGroup(Message message, List<String> members);

@@ -8,6 +8,7 @@ import android.os.Message;
 import android.text.TextUtils;
 
 import com.github.nkzawa.emitter.Emitter;
+import com.idea.Errors.PairappException;
 import com.idea.data.UserManager;
 import com.idea.net.sockets.SocketIoClient;
 
@@ -15,8 +16,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -53,6 +58,13 @@ public class LiveCenter {
     private static int totalUnreadMessages = 0;
 
 
+    /**
+     * increment the number of unread messages for user with id {@code peerId} by {@code messageCount}
+     *
+     * @param peerId       the id of the peer in subject, may not be null or empty
+     * @param messageCount the number of unread messages to be added. may not be {@code < 1}
+     * @see #incrementUnreadMessageForPeer(String)
+     */
     public static void incrementUnreadMessageForPeer(String peerId, int messageCount) {
         if (TextUtils.isEmpty(peerId)) {
             throw new IllegalArgumentException("null peer id");
@@ -80,10 +92,19 @@ public class LiveCenter {
         return Config.getApplication().getSharedPreferences("unreadMessages", Context.MODE_PRIVATE);
     }
 
+    /**
+     * @see #incrementUnreadMessageForPeer(String, int)
+     */
     public static void incrementUnreadMessageForPeer(String peerId) {
         incrementUnreadMessageForPeer(peerId, 1);
     }
 
+    /**
+     * gets number of unread messages from user with id {@code peerId}
+     *
+     * @param peerId the id of the peer in subject, may not be null or empty
+     * @return the number of unread messages
+     */
     public static int getUnreadMessageFor(String peerId) {
         if (TextUtils.isEmpty(peerId)) {
             throw new IllegalArgumentException("null peerId");
@@ -91,12 +112,22 @@ public class LiveCenter {
         return getPreferences().getInt(peerId, 0);
     }
 
+    /**
+     * return  the number of all unread messages
+     *
+     * @return number of all unread messages
+     */
     public static int getTotalUnreadMessages() {
         synchronized (unReadMessageLock) {
             return totalUnreadMessages;
         }
     }
 
+    /**
+     * invalidate unread messages count for user with id {@code peerId}
+     *
+     * @param peerId the id of the  user in subject may not be null or empty
+     */
     public static void invalidateNewMessageCount(String peerId) {
         if (TextUtils.isEmpty(peerId)) {
             throw new IllegalArgumentException("null peerId");
@@ -228,7 +259,7 @@ public class LiveCenter {
         }
     }
 
-    private  static void doStart() {
+    private static void doStart() {
         liveClient = SocketIoClient.getInstance(Config.getLiveEndpoint(), UserManager.getMainUserId());
         liveClient.registerForEvent(SocketIoClient.TYPING, TYPING_RECEIVER);
         liveClient.registerForEvent(SocketIoClient.IS_ONLINE, ONLINE_RECEIVER);
@@ -459,6 +490,10 @@ public class LiveCenter {
         }
     }
 
+    /**
+     * @return set of all users with unread messages. if there is no user with unread messages an empty set is
+     * returned
+     */
     public static Set<String> getAllPeersWithUnreadMessages() {
         SharedPreferences data = getPreferences();
         Map<String, ?> all = data.getAll();
@@ -469,7 +504,291 @@ public class LiveCenter {
     }
 
     private static final Object unReadMessageLock = new Object();
-    private static final Object progresLock = new Object();
+    private static final Object progressLock = new Object();
+    private static final Map<Object, Integer> tagProgressMap = new HashMap<>();
+
+
+    /**
+     * acquires a tag for publishing progress updates.
+     * one must {code release} this tag when done with it.
+     *
+     * @param tag the tag to identify this task. may not be null
+     * @throws PairappException if the tag is already in use
+     * @see #releaseProgressTag(Object)
+     */
+    public static void acquireProgressTag(Object tag) throws PairappException {
+        if (tag == null) {
+            throw new IllegalArgumentException("tag == null");
+        }
+        synchronized (progressLock) {
+            if (tagProgressMap.containsKey(tag)) {
+                throw new PairappException("tag in use");
+            }
+            tagProgressMap.put(tag, 0);
+        }
+    }
+
+    /**
+     * tells whether this tag is acquired or not. this method is not necessarally consistent with
+     * {@link #acquireProgressTag(Object)} i.e the fact this returns true does not guarantee that
+     * the tag will be available for acquisition since there could be concurrent contention for that same tag.
+     *
+     * @param tag the tag to check on
+     * @return false if {@code tag == null} or the tag is not acquired other wise true
+     * @see #acquireProgressTag(Object)
+     */
+    public static boolean isAcquired(Object tag) {
+        synchronized (progressLock) {
+            return tag != null && tagProgressMap.containsKey(tag);
+        }
+    }
+
+    /**
+     * release a tag acquired by{@link #acquireProgressTag(Object)}
+     * it's safe to call this even if the tag is not acquired.
+     *
+     * @param tag the tag to be released. may not be null
+     */
+    public static void releaseProgressTag(Object tag) {
+        if (tag == null) {
+            throw new IllegalArgumentException("tag == null");
+        }
+        synchronized (progressLock) {
+            if (tagProgressMap.remove(tag) != null) {
+                List<WeakReference<ProgressListener>> listeners = progressListeners.get(tag);
+                if (listeners != null) {
+                    for (WeakReference<ProgressListener> weakReferenceListener : listeners) {
+                        ProgressListener listener = weakReferenceListener.get();
+                        if (listener != null) {
+                            listener.doneOrCancelled(tag);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    /**
+     * updates the progress for the task identified by {@code tag}
+     * on must ensure this method is always called on  a single thread in a life-time of a task.
+     * this is to ensure that progress updates are received in the order they were published.
+     * if the progress is less than the existing progress which may be normally caused by unordered publishing of progress
+     * updates an exception is thrown. also the progress must not be less than 0.
+     * <p/>
+     * clients must ensure they have acquired this tag before they update its progress
+     *
+     * @param tag      the tag that identifies this task may not be null
+     * @param progress the new progress. this may not be less than the existing progress or 0
+     */
+    public static void updateProgress(Object tag, int progress) {
+        if (progress < 0) {
+            throw new IllegalArgumentException("progress is negative");
+        }
+        if (tag == null) {
+            throw new IllegalArgumentException("tag is null");
+        }
+        synchronized (progressLock) {
+            if (tagProgressMap.containsKey(tag)) {
+
+                int previous = tagProgressMap.get(tag);
+                if (previous > 0 && previous > progress) {
+                    throw new IllegalStateException("progress can only be incremented");
+                }
+                tagProgressMap.put(tag, progress);
+                List<WeakReference<ProgressListener>> listeners = progressListeners.get(tag);
+                if (listeners != null) {
+                    notifyListeners(listeners, tag, progress);
+                }
+                notifyListeners(allProgressListeners, tag, progress);
+            } else {
+                throw new IllegalArgumentException("tag unknown");
+            }
+        }
+    }
+
+
+    private static void notifyListeners(Collection<WeakReference<ProgressListener>> listeners, Object tag, int progress) {
+        for (WeakReference<ProgressListener> weakReferenceListener : listeners) {
+            ProgressListener listener = weakReferenceListener.get();
+            if (listener != null) {
+                listener.onProgress(tag, progress);
+            }
+        }
+    }
+
+    /**
+     * gets the progress for task identified by task
+     *
+     * @param tag the tag that identifies this task
+     * @return the progress for this task or -1 if there is no task identified by this tag
+     */
+    public static int getProgress(Object tag) {
+        if (tag == null) {
+            throw new IllegalArgumentException("tag == null");
+        }
+        Integer progress;
+        synchronized (progressLock) {
+            progress = tagProgressMap.get(tag);
+        }
+        if (progress == null) {
+            return -1;
+        }
+        return progress;
+    }
+
+    private static final Map<Object, List<WeakReference<ProgressListener>>> progressListeners = new HashMap<>();
+
+    /**
+     * registers a listener for the task identified by this tag. there need not be a task  identified by
+     * this tag before one call this method.
+     * <em>note that all listeners are kept internally as weak references so you may not pass anonymous instances</em>
+     * <em>also listeners are not necessary called on the android main thread but rather on the thread  on which the progress was reported</em>
+     *
+     * @param tag      the tag to watch for, may not be null.
+     * @param listener the listener may not be null
+     */
+    public static void listenForProgress(Object tag, ProgressListener listener) {
+        if (tag == null || listener == null) {
+            throw new IllegalArgumentException("null!");
+        }
+
+        synchronized (progressLock) {
+            boolean alreadyRegistered = false;
+            List<WeakReference<ProgressListener>> listeners = progressListeners.get(tag);
+            if (listeners == null) {
+                listeners = new ArrayList<>();
+                progressListeners.put(tag, listeners);
+            } else {
+                for (WeakReference<ProgressListener> weakReference : listeners) {
+                    final ProgressListener listener1 = weakReference.get();
+                    if (listener1 == listener) {
+                        alreadyRegistered = true;
+                        break;
+                    }
+                }
+            }
+            if (!alreadyRegistered) {
+                listeners.add(new WeakReference<>(listener));
+            } else {
+                PLog.w(TAG, "listener already registered");
+            }
+            notifyListener(tag, listener);
+        }
+    }
+
+    private static void notifyListener(Object tag, ProgressListener listener) {
+        Integer progress = tagProgressMap.get(tag);
+        if (progress != null) {
+            listener.onProgress(tag, progress);
+        }
+    }
+
+    private static Set<WeakReference<ProgressListener>> allProgressListeners = new HashSet<>();
+
+    /**
+     * registers a listener for all events(progress) one must {@link #stopListeningForAllProgress(ProgressListener)}
+     * when they no more need to listen to events.
+     * <p/>
+     * note that listeners are kept internally as weak references so you may not pass anonymous instances
+     *
+     * @param listener the listener to be registered may not be null
+     * @see {@link #listenForProgress(Object, ProgressListener)}
+     */
+    public static void listenForAllProgress(ProgressListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("listener == null!");
+        }
+        synchronized (progressLock) {
+            boolean alreadyRegistered = false;
+            for (WeakReference<ProgressListener> weakReference : allProgressListeners) {
+                final ProgressListener listener1 = weakReference.get();
+                if (listener1 == listener) {
+                    alreadyRegistered = true;
+                    break;
+                }
+            }
+            if (!alreadyRegistered) {
+                allProgressListeners.add(new WeakReference<>(listener));
+            }
+            for (Object o : tagProgressMap.keySet()) {
+                Integer progress = tagProgressMap.get(o);
+                if (progress != null) {
+                    listener.onProgress(o, progress);
+                }
+            }
+        }
+    }
+
+    /**
+     * @see {@link #stopListeningForProgress(Object, ProgressListener)}
+     */
+    public static void stopListeningForAllProgress(ProgressListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("listener == null");
+        }
+        synchronized (progressLock) {
+            for (WeakReference<ProgressListener> allProgressListener : allProgressListeners) {
+                ProgressListener listener1 = allProgressListener.get();
+                if (listener1 == listener) {
+                    allProgressListeners.remove(allProgressListener);
+                    return;
+                }
+            }
+        }
+
+        PLog.w(TAG, "listener unknown");
+    }
+
+    /**
+     * stops listening for progress on tag.
+     *
+     * @param tag      the task identifier for the task to stop listening for progress.may not be null
+     * @param listener listener to unregister may not be null
+     */
+    public static void stopListeningForProgress(Object tag, ProgressListener listener) {
+        if (tag == null || listener == null) {
+            throw new IllegalArgumentException("null!");
+        }
+        synchronized (progressLock) {
+            List<WeakReference<ProgressListener>> listeners = progressListeners.get(tag);
+            for (WeakReference<ProgressListener> progressListenerWeakReference : listeners) {
+                ProgressListener pListener = progressListenerWeakReference.get();
+                if (pListener != null) {
+                    if (pListener == listener) {
+                        listeners.remove(progressListenerWeakReference);
+                        return;
+                    }
+                }
+            }
+            PLog.d(TAG, "listener unknown");
+        }
+    }
+
+    /**
+     * listener for progress changes for a given task
+     */
+    public interface ProgressListener {
+        /**
+         * called whenever a progress is published from a task that has the identifier, tag.
+         * <em>note that this method is not necessary called on the main thread so if you need to touch ui elements you must
+         * check the thread to ensure you are on the main thread
+         * </em>
+         *
+         * @param tag      the tag identifier for the task reporting th progress
+         * @param progress the progress been reported
+         */
+        void onProgress(Object tag, int progress);
+
+        /**
+         * notifies listeners that the task identified by this tag is complete or cancelled.
+         * it's up to listeners to check whether the task was really complete or cancelled.
+         *
+         * @param tag tag that identifies the task in question
+         */
+        void doneOrCancelled(Object tag);
+    }
+
 
     /**
      * an interface one must implement if one wants to be notified of typing events
