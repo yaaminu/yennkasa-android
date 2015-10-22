@@ -4,4 +4,8 @@
     <string name="Byte"> bytes</string>
     <string name="kilobytes"> KB</string>
     <string name="megabytes"> MB</string>
+    <string name="file_too_large">"File exceeds max allowed size(8MB) "</string>
+    <string name="file_not_found">File does not exist</string>
+    <string name="file_size_invalid">Could not determine file size</string>
+    <string name="error_saving">Error saving file</string>
 </resources>

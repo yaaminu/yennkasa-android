@@ -22,11 +22,15 @@ import retrofit.mime.TypedFile;
  */
 public interface UserApiV2 {
 
+    @SuppressWarnings("unused")
     @POST("/api/v1/users/register")
     void registerUser(@Body JsonObject user, Callback<User> callback);
 
+    @SuppressWarnings("unused")
     @POST("/api/v1/users/login")
     void logIn(@Body JsonObject object, Callback<User> callback);
+
+    void sendVerificationToken(String userId, Callback<HttpResponse> callback);
 
     @POST("/api/v1/users/register")
     void registerUser(@Body User user, Callback<User> callback);

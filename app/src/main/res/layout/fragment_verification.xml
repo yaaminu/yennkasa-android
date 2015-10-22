@@ -13,7 +13,6 @@
         android:id="@+id/tv_verification_notice"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/tv_sub_title"
         android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
         android:gravity="center"
         android:padding="@dimen/padding_ll_login_fragment_bottom"

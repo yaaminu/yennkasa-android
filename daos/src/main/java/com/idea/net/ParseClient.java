@@ -5,8 +5,10 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.telephony.SmsManager;
 
+import android.text.TextUtils;
 import com.google.gson.JsonObject;
 import com.idea.data.BuildConfig;
+import com.idea.data.ContactsManager;
 import com.idea.data.Message;
 import com.idea.data.R;
 import com.idea.data.User;
@@ -140,7 +142,9 @@ public class ParseClient implements UserApiV2 {
                 name = user.getName(),
                 password = user.getPassword(),
                 country = user.getCountry();
-
+        synchronized (token) {
+            token = genVerificationToken();
+        }
 //         if (true) {
 //             user.setDP("avartarempty");
 //             notifyCallback(callback, null, user);
@@ -148,18 +152,15 @@ public class ParseClient implements UserApiV2 {
 //         }
         try {
             ParseObject existing = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, _id).getFirst();
-            if (existing != null) {
-                existing.put(FIELD_HAS_CALL, Config.supportsCalling());
-                cleanExistingInstallation(_id);
-                final String token = genVerificationToken();
-                existing.put(FIELD_TOKEN, token);
-                existing.save();
-                user = parseObjectToUser(existing);
-                registerForPushes(_id);
-                sendToken(_id, token);
-                notifyCallback(callback, null, user);
-                return; //important
-            }
+            existing.put(FIELD_HAS_CALL, Config.supportsCalling());
+            cleanExistingInstallation(_id);
+
+            existing.put(FIELD_TOKEN, token);
+            existing.save();
+            user = parseObjectToUser(existing);
+            registerForPushes(_id);
+            notifyCallback(callback, null, user);
+            return; //important
         } catch (ParseException e) {
             if (e.getCode() != ParseException.OBJECT_NOT_FOUND) {
                 PLog.d(TAG, "encountered error while registering user, message: " + e.getMessage());
@@ -173,7 +174,6 @@ public class ParseClient implements UserApiV2 {
             ensureFieldsFilled(_id, name, password, country);
 
             //should we hash passwords?
-            String verificationToken = genVerificationToken();
             final ParseObject object = ParseObject.create(USER_CLASS_NAME);
             ParseACL acl = makeReadWriteACL();
             object.setACL(acl);
@@ -182,8 +182,8 @@ public class ParseClient implements UserApiV2 {
             object.put(FIELD_COUNTRY, country);
             object.put(FIELD_ACCOUNT_CREATED, new Date());
             object.put(FIELD_STATUS, "offline");
-            object.put(FIELD_TOKEN, verificationToken);
             object.put(FIELD_LAST_ACTIVITY, new Date());
+            object.put(FIELD_TOKEN, token);
             object.put(FIELD_VERIFIED, false);
             object.put(FIELD_DP, "avatar_empty");
             object.put(PARSE_CONSTANTS.FIELD_HAS_CALL, Config.supportsCalling());
@@ -191,8 +191,6 @@ public class ParseClient implements UserApiV2 {
             //register user for pushes
             registerForPushes(user.getUserId());
             user = parseObjectToUser(object);
-            sendToken(user.getUserId(), verificationToken);
-
             notifyCallback(callback, null, user);
         } catch (RequiredFieldsError error) {
             notifyCallback(callback, error, null);
@@ -211,6 +209,7 @@ public class ParseClient implements UserApiV2 {
     }
 
     private void cleanExistingInstallation(String _id) throws ParseException {
+        //call a cloud code or something of that sort
 //        ParseInstallation installation = ParseInstallation.getQuery().whereEqualTo(FIELD_ID, _id).getFirst();
 //        installation.delete();
     }
@@ -244,21 +243,31 @@ public class ParseClient implements UserApiV2 {
 
     private void doLogIn(User user, Callback<User> callback) {
         ParseQuery<ParseObject> query = makeParseQuery();
+        synchronized (token) {
+            token = genVerificationToken();
+        }
         try {
             ParseObject object = query.whereEqualTo(FIELD_ID, user.getUserId()).getFirst();
             object.put(PARSE_CONSTANTS.FIELD_HAS_CALL, Config.supportsCalling());
-            String token = genVerificationToken();
-            object.put(PARSE_CONSTANTS.FIELD_TOKEN, token);
-            object.put(PARSE_CONSTANTS.FIELD_VERIFIED, false);
+            object.put(FIELD_TOKEN, token);
+            object.put(FIELD_VERIFIED, false);
             cleanExistingInstallation(user.getUserId());
             //push
             registerForPushes(user.getUserId());
             object.save();
-            sendToken(user.getUserId(), token);
             user = parseObjectToUser(object);
             notifyCallback(callback, null, user);
         } catch (ParseException e) {
-            notifyCallback(callback, prepareErrorReport(e), null);
+            String message;
+            if (e.getCode() == ParseException.OBJECT_NOT_FOUND) {
+                //noinspection ThrowableInstanceNeverThrown
+                message = Config.getApplicationContext().getString(R.string.login_error_message);
+            } else if (e.getCode() == ParseException.CONNECTION_FAILED) {
+                message = Config.getApplicationContext().getString(R.string.st_unable_to_connect);
+            } else {
+                message = Config.getApplicationContext().getString(R.string.an_error_occurred);
+            }
+            notifyCallback(callback, new Exception(message), null);
         }
     }
 
@@ -284,6 +293,7 @@ public class ParseClient implements UserApiV2 {
             List<ParseObject> objects = query.whereContainedIn(FIELD_ID, userIds).find();
             List<User> users = new ArrayList<>(objects.size());
             for (ParseObject object : objects) {
+                processParseObject(object);
                 users.add(parseObjectToUser(object));
             }
             notifyCallback(callback, null, users);
@@ -304,6 +314,7 @@ public class ParseClient implements UserApiV2 {
     public void doGetUser(@Path(Message.FIELD_ID) String id, Callback<User> response) {
         try {
             ParseObject object = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, id).getFirst();
+            processParseObject(object);
             notifyCallback(response, null, parseObjectToUser(object));
         } catch (ParseException e) {
             notifyCallback(response, prepareErrorReport(e), null);
@@ -377,7 +388,7 @@ public class ParseClient implements UserApiV2 {
         }, new FileApi.ProgressListener() {
             @Override
             public void onProgress(long expected, long transferred) {
-                PLog.i(TAG, "dp change progress %s", (((double) expected) / (double) transferred) * 100);
+                PLog.i(TAG, "dp change progress %s", ((expected *100) / transferred));
             }
         });
     }
@@ -399,10 +410,14 @@ public class ParseClient implements UserApiV2 {
                 return;
             }
             //ensure group does not exist
-            ParseObject group = makeParseQuery(GROUP_CLASS_NAME).whereEqualTo(FIELD_ID, name + "@" + by).getFirst();
-            if (group != null) {
-                notifyCallback(response, new Exception(Config.getApplicationContext().getString(R.string.group_already_exist)), null);
-                return;
+            try {
+                ParseObject group = makeParseQuery(GROUP_CLASS_NAME).whereEqualTo(FIELD_ID, name + "@" + by).getFirst();
+                if (group != null) {
+                    notifyCallback(response, new Exception(Config.getApplicationContext().getString(R.string.group_already_exist)), null);
+                    return;
+                }
+            } catch (ParseException e) {
+                PLog.d(TAG, "group does not exist lets continue");
             }
             final ParseObject admin = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, by).getFirst();
             admin.fetchIfNeeded();
@@ -416,7 +431,6 @@ public class ParseClient implements UserApiV2 {
             object.addAllUnique(FIELD_MEMBERS, members);
             object.save();
             User freshGroup = parseObjectToGroup(object);
-            freshGroup.setAdmin(parseObjectToUser(admin));
             notifyCallback(response, null, freshGroup);
         } catch (ParseException e) {
             notifyCallback(response, prepareErrorReport(e), null);
@@ -436,7 +450,9 @@ public class ParseClient implements UserApiV2 {
         try {
             ParseObject object = makeParseQuery(GROUP_CLASS_NAME).whereEqualTo(FIELD_ID, id).getFirst();
             User group = parseObjectToGroup(object);
-            group.setAdmin(parseObjectToUser(object.getParseObject(FIELD_ADMIN).fetchIfNeeded()));
+            final ParseObject adminObj = object.getParseObject(FIELD_ADMIN).fetchIfNeeded();
+            processParseObject(adminObj);
+            group.setAdmin(parseObjectToUser(adminObj));
             notifyCallback(callback, null, group);
         } catch (ParseException e) {
             notifyCallback(callback, prepareErrorReport(e), null);
@@ -456,12 +472,13 @@ public class ParseClient implements UserApiV2 {
         try {
 
             List<String> membersId = makeParseQuery(GROUP_CLASS_NAME).whereEqualTo(FIELD_ID, id).getFirst().getList(FIELD_MEMBERS);
-            List<ParseObject> groupMembers = makeParseQuery(USER_CLASS_NAME).whereContainedIn(FIELD_ID, membersId).find();
+            final List<ParseObject> groupMembers = makeParseQuery(USER_CLASS_NAME).whereContainedIn(FIELD_ID, membersId).find();
+            processParseObjects(groupMembers);
             Set<User> members = new HashSet<>(groupMembers.size());
             for (ParseObject groupMember : groupMembers) {
                 members.add(parseObjectToUser(groupMember));
             }
-            notifyCallback(response, null,new ArrayList<User>(members));
+            notifyCallback(response, null, new ArrayList<>(members));
         } catch (ParseException e) {
             if (BuildConfig.DEBUG) {
                 PLog.e(TAG, e.getMessage(), e.getCause());
@@ -470,6 +487,51 @@ public class ParseClient implements UserApiV2 {
             }
             notifyCallback(response, prepareErrorReport(e), null);
         }
+    }
+
+    //good solution will be to query for specific numbers but that is not possible
+    //as we don't know how the user has stored the numbers in the people(contact) app
+    //for eg +233 20 444 1069 could be stored in multiple unpredictable ways.
+    //the contact manager can retrieve all the contacts standardised them to how
+    //we store user ids and return them so that we do a quick hit test to map
+    // the names to our parse objects(we will not persist those names)
+    private void processParseObject(final ParseObject object) {
+        ContactsManager.getInstance().findAllContactsSync(new ContactsManager.Filter<ContactsManager.Contact>() {
+            @Override
+            public boolean accept(ContactsManager.Contact contact) throws AbortOperation {
+                final String userId = object.getString(PARSE_CONSTANTS.FIELD_ID);
+                if (contact.numberInIEE_Format.equals(userId)) {
+                    object.put(PARSE_CONSTANTS.FIELD_NAME, contact.name);//we will not save this change
+                    throw new AbortOperation("done"); //contact manager will stop processing contacts
+                }
+                return false; //we don't care about return values
+            }
+        }, null);
+    }
+
+    private void processParseObjects(final List<ParseObject> objects) {
+        ContactsManager.getInstance().findAllContactsSync(new ContactsManager.Filter<ContactsManager.Contact>() {
+            Set<String> processed = new HashSet<>(objects.size());
+
+            @Override
+            public boolean accept(ContactsManager.Contact contact) throws AbortOperation {
+                if (processed.size() == objects.size()) {
+                    throw new AbortOperation("done");
+                }
+                if (processed.contains(contact.numberInIEE_Format)) {
+                    return false; //we don't care about return values
+                }
+                for (ParseObject groupMember : objects) {
+                    final String userId = groupMember.getString(PARSE_CONSTANTS.FIELD_ID);
+                    if (contact.numberInIEE_Format.equals(userId)) {
+                        groupMember.put(PARSE_CONSTANTS.FIELD_NAME, contact.name);//we will not save this change
+                        processed.add(userId);
+                        break;
+                    }
+                }
+                return false; //we don't care about return values
+            }
+        }, null);
     }
 
     @Override
@@ -581,11 +643,12 @@ public class ParseClient implements UserApiV2 {
     }
 
     private void doResendToken(@Path("id") String userId, @Field("password") String password, Callback<HttpResponse> response) {
-        String newToken = genVerificationToken();
-        PLog.d(TAG, newToken);
+        synchronized (token) {
+            token = genVerificationToken();
+        }
         try {
             ParseObject object = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, userId).getFirst();
-            object.put(FIELD_TOKEN, newToken);
+            object.put(FIELD_TOKEN, token);
             object.save();
             notifyCallback(response, null, new HttpResponse(200, "successfully reset token"));
         } catch (ParseException e) {
@@ -662,7 +725,7 @@ public class ParseClient implements UserApiV2 {
         User user = new User();
         user.setName(object.getString(FIELD_NAME));
         user.setUserId(object.getString(FIELD_ID));
-        user.setDP(object.getString(FIELD_DP));
+        user.setDP(resolveDp(object.getString(FIELD_DP)));
         user.setLastActivity(object.getDate(FIELD_LAST_ACTIVITY).getTime());
         user.setCountry(object.getString(FIELD_COUNTRY));
         user.setHasCall(object.getBoolean(FIELD_HAS_CALL));
@@ -670,12 +733,26 @@ public class ParseClient implements UserApiV2 {
         return user;
     }
 
+    private String resolveDp(String userDp) {
+        // STOPSHIP
+        if(TextUtils.isEmpty(userDp)){
+            throw new RuntimeException("user dp cannot be empty");
+        }
+        if (userDp.lastIndexOf('/') != -1) {
+            File file = new File(Config.getAppProfilePicsBaseDir(), userDp.substring(userDp.lastIndexOf('/')));
+            if (file.exists()) {
+                userDp = file.getAbsolutePath();
+            }
+        }
+        return userDp;
+    }
+
     @NonNull
     private User parseObjectToGroup(ParseObject object) throws ParseException {
         User user = new User();
         user.setName(object.getString(FIELD_NAME));
         user.setUserId(object.getString(FIELD_ID));
-        user.setDP(object.getString(FIELD_DP));
+        user.setDP(resolveDp(object.getString(FIELD_DP)));
         final ParseObject parseObject = object.getParseObject(FIELD_ADMIN);
         parseObject.fetchIfNeeded();
         user.setType(User.TYPE_GROUP);
@@ -723,6 +800,7 @@ public class ParseClient implements UserApiV2 {
         }
     }
 
+    //todo send as a mail
     public void sendFeedBack(JSONObject report) {
         ParseObject object = new ParseObject(PARSE_CONSTANTS.FEEDBACK_CLASS_NAME);
         try {
@@ -737,9 +815,31 @@ public class ParseClient implements UserApiV2 {
         object.saveEventually();
     }
 
+    private String token = "";
+
+    @Override
+    public synchronized void sendVerificationToken(String userId, Callback<HttpResponse> callback) {
+        if (token == null || token.trim().length() == 0) {
+            ParseQuery<ParseObject> query = makeParseQuery();
+            query.whereEqualTo(PARSE_CONSTANTS.FIELD_ID, userId);
+            try {
+                ParseObject object = query.getFirst();
+                token = object.getString(PARSE_CONSTANTS.FIELD_TOKEN);
+                if (token == null || token.length() < 5) {
+                    throw new IllegalStateException();
+                }
+            } catch (ParseException e) {
+                notifyCallback(callback, e, new HttpResponse(400, "failed"));
+            }
+        }
+        sendToken(userId, token);
+        notifyCallback(callback, null, new HttpResponse(200, "sent token"));
+    }
+
     private class RequiredFieldsError extends Exception {
         public RequiredFieldsError(String message) {
             super(message);
         }
     }
+
 }

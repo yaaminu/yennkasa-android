@@ -9,7 +9,6 @@ import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.util.Pair;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -150,7 +149,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
 
             @Override
             protected Boolean doInBackground(Void... params) {
-                Pair<String, String> errorNamePair = userManager.isValidGroupName(finalName);
+                android.support.v4.util.Pair<String, String> errorNamePair = userManager.isValidGroupName(finalName);
                 finalName = errorNamePair.first;
                 errorMessage = errorNamePair.second;
                 return errorMessage == null;
@@ -274,6 +273,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
                         if (e == null) {
                             //hurray we changed dp successfully
                             UiHelpers.enterChatRoom(CreateGroupActivity.this, groupId);
+                            finish();
                         } else {
                             ErrorCenter.reportError(TAG, e.getMessage());
                         }
@@ -282,6 +282,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
             } else {
                 UiHelpers.dismissProgressDialog(progressDialog);
                 UiHelpers.enterChatRoom(CreateGroupActivity.this, groupId);
+                finish();
             }
         }
     }

@@ -128,23 +128,25 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             obj.put(SocketIoClient.PROPERTY_TO, message.getFrom());
             obj.put(SocketIoClient.MSG_STS_MESSAGE_ID, message.getId());
             obj.put(SocketIoClient.MSG_STS_STATUS, Message.STATE_RECEIVED);
+            obj.put(MessageProcessor.MESSAGE_STATUS, "messageStatus");
         } catch (JSONException e) {
             throw new RuntimeException(e.getCause());
         }
+        processMessage(Config.getApplicationContext(), obj.toString());
 
-        if (LiveCenter.isOnline(message.getFrom())) {
-            if (messagingClient == null) {
-                initClient();
-            }
-            messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
-        } else {
-            Map<String, Object> params = new HashMap<>(3);
-            params.put(TO, message.getFrom());
-            params.put(IS_GROUP_MESSAGE, false);
-            params.put(FROM, message.getTo());
-            params.put(MESSAGE, obj);
-            ParseCloud.callFunctionInBackground("pushToSyncMessages", params);
-        }
+//        if (LiveCenter.isOnline(message.getFrom())) {
+//            if (messagingClient == null) {
+//                initClient();
+//            }
+//            messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
+//        } else {
+//            Map<String, Object> params = new HashMap<>(3);
+//            params.put(TO, message.getFrom());
+//            params.put(IS_GROUP_MESSAGE, false);
+//            params.put(FROM, message.getTo());
+//            params.put(MESSAGE, obj);
+//            ParseCloud.callFunctionInBackground("pushToSyncMessages", params);
+//        }
     }
 
     private static void processMessage(Context context, String data) {
@@ -170,6 +172,8 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
     }
 
     private static void doNotifySeen(Message message) {
+        if (Message.isGroupMessage(message))
+            return;
         String sender = message.getFrom();
         if (UserManager.getInstance().isGroup(message.getTo())) {
             sender = message.getTo();
@@ -184,25 +188,27 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             obj.put(SocketIoClient.PROPERTY_TO, message.getFrom());
             obj.put(SocketIoClient.MSG_STS_MESSAGE_ID, message.getId());
             obj.put(SocketIoClient.MSG_STS_STATUS, Message.STATE_SEEN);
+            obj.put(MessageProcessor.MESSAGE_STATUS, "messageStatus");
         } catch (JSONException e) {
             throw new RuntimeException(e.getCause());
         }
 
-        if (LiveCenter.isOnline(message.getFrom())) {
-            //use socketsIO
-            if (messagingClient == null) {
-                initClient();
-            }
-            messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
-        } else {
-            //maybe push
-            Map<String, Object> params = new HashMap<>(3);
-            params.put(TO, message.getFrom());
-            params.put(IS_GROUP_MESSAGE, false);
-            params.put(FROM, message.getTo());
-            params.put(MESSAGE, obj);
-            ParseCloud.callFunctionInBackground("pushToSyncMessages", params);
-        }
+        processMessage(Config.getApplicationContext(), obj.toString());
+//        if (LiveCenter.isOnline(message.getFrom())) {
+//            //use socketsIO
+//            if (messagingClient == null) {
+//                initClient();
+//            }
+//            messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
+//        } else {
+//            //maybe push
+//            Map<String, Object> params = new HashMap<>(3);
+//            params.put(TO, message.getFrom());
+//            params.put(IS_GROUP_MESSAGE, false);
+//            params.put(FROM, message.getTo());
+//            params.put(MESSAGE, obj);
+//            ParseCloud.callFunctionInBackground("pushToSyncMessages", params);
+//        }
     }
 
     @Override
@@ -210,6 +216,18 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
         L.d(TAG, "push recieved");
         String data = intent.getStringExtra(ParsePushBroadcastReceiver.KEY_PUSH_DATA);
         L.d(TAG, data);
+        try {
+            JSONObject pushMessage = new JSONObject(data);
+
+            String tmp = pushMessage.optString("message", data);
+            if (!tmp.equals(MessageProcessor.SYNC_MESSAGES)) {
+                data = tmp;
+            }
+            PLog.d(TAG, "mainPushMessage: %s", data);
+        } catch (JSONException e) {
+            throw new RuntimeException(e.getCause());
+        }
         processMessage(context, data);
     }
+
 }

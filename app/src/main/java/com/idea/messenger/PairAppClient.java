@@ -39,6 +39,7 @@ public class PairAppClient extends Service {
     public static final String TAG = PairAppClient.class.getSimpleName();
     public static final String ACTION_SEND_ALL_UNSENT = "send unsent messages";
     public static final String ACTION = "action";
+    static final String VERSION = "version";
     private static Dispatcher<Message> SOCKETSIO_DISPATCHER;
     private static AtomicBoolean isClientStarted = new AtomicBoolean(false);
     private static MessagesProvider messageProvider = new ParseMessageProvider();
@@ -449,6 +450,5 @@ public class PairAppClient extends Service {
             }
         }
     }
-
 
 }

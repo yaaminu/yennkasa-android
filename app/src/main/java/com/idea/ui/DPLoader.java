@@ -31,11 +31,13 @@ public class DPLoader {
 //            attemptToRecoverDp(userId, userDp); //async
 //            return Picasso.with(context).load(DUMMY_URL);
 //        }
-        final File dpFile = new File(userDp);
-        if(dpFile.exists()){
+
+        final File  dpFile = new File(userDp);
+        if (dpFile.exists()) {
             return Picasso.with(context).load(dpFile);
         }
-        if(TextUtils.isEmpty(userDp)){
+
+        if (TextUtils.isEmpty(userDp)) {
             userDp = "avatar_empty";
         }
         return Picasso.with(context).load(userDp);
@@ -46,7 +48,7 @@ public class DPLoader {
             if (refreshing.containsKey(userId)) {
                 return;
             }
-            refreshing.put(userId,userDp);
+            refreshing.put(userId, userDp);
         }
         new AsyncTask<Void, Void, Void>() {
             @Override
@@ -70,7 +72,7 @@ public class DPLoader {
                 refreshing.remove(userId);
             }
             if (e == null) {
-                L.d(TAG, "successfully changed/refreshed dp of user with id: "+ userId);
+                L.d(TAG, "successfully changed/refreshed dp of user with id: " + userId);
             } else {
                 PLog.e(TAG, "dp change unsuccessful with reason: " + e.getMessage());
             }

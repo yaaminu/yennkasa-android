@@ -10,8 +10,8 @@ import android.provider.ContactsContract;
 import android.text.TextUtils;
 
 import com.google.i18n.phonenumbers.NumberParseException;
-import com.idea.util.PLog;
 import com.idea.util.Config;
+import com.idea.util.PLog;
 import com.idea.util.PhoneNumberNormaliser;
 
 import java.util.ArrayList;
@@ -48,6 +48,7 @@ public class ContactsManager {
         return doFindAllContacts(filter, comparator, getCursor(Config.getApplicationContext()));
     }
 
+
     public void findAllContacts(final Filter<Contact> filter, final Comparator<Contact> comparator, final FindCallback<List<Contact>> callback) {
         //noinspection ConstantConditions
         final Handler handler = new Handler(Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper());
@@ -74,6 +75,9 @@ public class ContactsManager {
     }
 
     private List<Contact> doFindAllContacts(Filter<Contact> filter, Comparator<Contact> comparator, Cursor cursor) {
+        if (cursor == null || cursor.getCount() == 0) {
+            return Collections.emptyList();
+        }
         Context context = Config.getApplicationContext();
         Realm realm = User.Realm(context);
         //noinspection TryFinallyCanBeTryWithResources
@@ -113,8 +117,12 @@ public class ContactsManager {
                     name = phoneNumber.substring(0, 4);
                 }
                 ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, isRegistered, DP, standardisedNumber);
-                if ((filter != null) && !filter.accept(contact)) {
-                    continue;
+                try {
+                    if ((filter != null) && !filter.accept(contact)) {
+                        continue;
+                    }
+                } catch (Exception e) {
+                    break;
                 }
                 contacts.add(contact);
             }
@@ -135,7 +143,13 @@ public class ContactsManager {
     }
 
     public interface Filter<T> {
-        boolean accept(T t);
+        boolean accept(T t) throws AbortOperation;
+
+        class AbortOperation extends Exception {
+            public AbortOperation(String message) {
+                super(message);
+            }
+        }
     }
 
     public static final class Contact {

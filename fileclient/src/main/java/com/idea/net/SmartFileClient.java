@@ -34,8 +34,8 @@ abstract class SmartFileClient implements FileApi {
     private static final Executor WORKER = Executors.newCachedThreadPool();
     public static final String CACHED_LINKS = "cachedLinks";
     private final String authorization;
-    private static final String ENDPOINT =// Config.getMessageApiEndpoint()
-            "https://app.smartfile.com/api/2";
+    private static final String ENDPOINT = Config.getMessageApiEndpoint();
+    // "https://app.smartfile.com/api/2";
     private final SmartFileService api;
     private final String dir;
 
@@ -43,6 +43,7 @@ abstract class SmartFileClient implements FileApi {
         if (TextUtils.isEmpty(key) || TextUtils.isEmpty(password) || TextUtils.isEmpty(dir)) {
             throw new IllegalArgumentException("either key or password or dir is invalid");
         }
+        dir = "dummy"; //STOPSHIP
         this.dir = dir;
         authorization = "Basic " + Base64.encodeToString((key + ":" + password).getBytes(), Base64.NO_WRAP);
         RequestInterceptor reqInterceptor = new RequestInterceptor() {
@@ -90,7 +91,7 @@ abstract class SmartFileClient implements FileApi {
         }
         try {
             final TypedFile countingTypedFile = new CountingTypedFile(mimeType, file, listener);
-            api.saveFile(this.dir, countingTypedFile);
+            api.saveFile(countingTypedFile);
             // create link
             String cachedLink = getCachedLink();
             String url;
@@ -161,28 +162,15 @@ abstract class SmartFileClient implements FileApi {
                     if (listener != null) {
                         processed += read;
                         listener.onProgress(expected, processed);
-                         //quick fix to force progress to be noticeable
-                        try{Thread.sleep(50);}catch(InterruptedException ignored){}
+                        //quick fix to force progress to be noticeable
+                        try {
+                            Thread.sleep(50);
+                        } catch (InterruptedException ignored) {
+                        }
                     }
                 }
             } finally {
                 in.close();
-            }
-        }
-
-        @Override
-        public String fileName() {
-            try {
-                MessageDigest digest = MessageDigest.getInstance("sha1");
-                byte[] hash = digest.digest(org.apache.commons.io.FileUtils.readFileToByteArray(this.file));
-                String fileNameHashed = "";
-                //noinspection ForLoopReplaceableByForEach
-                for (int i = 0; i < hash.length; i++) {
-                    fileNameHashed += Integer.toString((hash[i] & 0xff) + 0x100, 16).substring(1);
-                }
-                return fileNameHashed + (this.file.getName().replace("\\s+", "_"));
-            } catch (NoSuchAlgorithmException | IOException e) {
-                throw new RuntimeException(e.getCause());
             }
         }
     }

@@ -36,9 +36,10 @@ import io.realm.exceptions.RealmException;
 public class MessageProcessor extends IntentService {
     public static final String SYNC_MESSAGES = "syncMessages";
     private static final String TAG = MessageProcessor.class.getSimpleName();
-    public static final String MESSAGE = "message";
-    public static final String UNKNOWN = "unknown";
-    public static final String MESSAGE_STATUS = "messageStatus";
+    static final String MESSAGE = "message";
+    private static final String UNKNOWN = "unknown";
+    static final String MESSAGE_STATUS = "messageStatus";
+    static final String UPDATE = "update";
 
     public MessageProcessor() {
         super(TAG);
@@ -115,7 +116,7 @@ public class MessageProcessor extends IntentService {
                     private void onComplete(final Exception error) {
                         LiveCenter.releaseProgressTag(messageId);
                         synchronized (downloading) {
-                            downloading.remove(message.getId());
+                            downloading.remove(messageId);
                         }
                         if (error != null) {
                             ErrorCenter.reportError(messageId + TAG + "download", error.getMessage());
@@ -153,7 +154,7 @@ public class MessageProcessor extends IntentService {
         try {
             final JSONObject data1 = new JSONObject(data);
             String type = getType(data1);
-            if (data.equals(SYNC_MESSAGES)) {
+            if (type.equals(SYNC_MESSAGES)) {
                 MessagesProvider provider = PairAppClient.getMessageProvider();
                 List<Message> messages = provider.retrieveMessages();
                 for (Message message : messages) {
@@ -179,6 +180,8 @@ public class MessageProcessor extends IntentService {
                     PLog.d(TAG, "message not available for update");
                 }
                 realm.close();
+            } else if (type.equals(UPDATE)) {
+                PLog.i(TAG, "update available, latest version: %s",data1.getString(PairAppClient.VERSION));
             } else {
                 throw new JSONException("unknown message");
             }
@@ -188,15 +191,19 @@ public class MessageProcessor extends IntentService {
     }
 
     private String getType(JSONObject data) {
-        if (data.has(SocketIoClient.MSG_STS_STATUS)) {
-            return SocketIoClient.MSG_STS_STATUS;
-        } else if (data.has(Message.FIELD_MESSAGE_BODY)) {
+        if (data.has(Message.FIELD_MESSAGE_BODY)) {
             return MESSAGE;
         }
-
         final String message = data.optString("message");
         if (!TextUtils.isEmpty(message) && message.equals(SYNC_MESSAGES)) {
             return SYNC_MESSAGES;
+        }
+
+        if (data.has(MESSAGE_STATUS)) {
+            return MESSAGE_STATUS;
+        }
+        if (data.has(UPDATE)) {
+            return UPDATE;
         }
         return UNKNOWN;
     }

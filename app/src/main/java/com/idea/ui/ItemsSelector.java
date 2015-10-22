@@ -42,7 +42,9 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
 
 
     //    private static final String HASHTAG_PATTERN = "(#[\\p{L}0-9-_]+)";
-    private static final String MENTION_PATTERN = "(@[\\p{L}0-9-_ ]+)";
+    // private static final String MENTION_PATTERN = "@_#_@_#[.[^_#_@_#]]+)";
+   private static final String MENTION_PATTERN = "(@[\\p{L}0-9-_ [^@]]+)";
+
     private OnFragmentInteractionListener interactionListener;
     private Filter filter;
     private GridView gridContainer;

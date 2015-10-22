@@ -522,7 +522,6 @@ public class UiHelpers {
                     }
                 });
             } catch (Exception ignored) {
-                PLog.e(TAG, ignored.getMessage());
             }
         }
     }

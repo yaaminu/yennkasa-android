@@ -7,14 +7,12 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
-import com.idea.util.UiHelpers;
 import com.idea.adapter.CountriesListAdapter;
 import com.idea.data.Country;
 import com.idea.data.UserManager;
@@ -24,6 +22,7 @@ import com.idea.util.FormValidator;
 import com.idea.util.PLog;
 import com.idea.util.PhoneNumberNormaliser;
 import com.idea.util.TypeFaceUtil;
+import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
 import com.idea.view.MyTextWatcher;
 import com.rey.material.app.DialogFragment;
@@ -96,7 +95,7 @@ public class LoginFragment extends Fragment {
                 usernameEt.requestFocus();
                 return false;
             } else {
-                Pair<String, String> errorNamePair = UserManager.getInstance().isValidUserName(userName);
+                android.support.v4.util.Pair<String, String> errorNamePair = UserManager.getInstance().isValidUserName(userName);
                 if (errorNamePair.second != null) {
                     UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), errorNamePair.second);
                     usernameEt.requestFocus();

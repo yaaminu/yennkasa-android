@@ -1,9 +1,17 @@
 package com.idea.net;
 
+import com.squareup.okhttp.Headers;
+import com.squareup.okhttp.OkHttpClient;
+import retrofit.client.OkClient;
+import retrofit.client.Request;
+import retrofit.client.Response;
+import retrofit.mime.TypedOutput;
+
+import java.io.IOException;
 import java.util.Map;
 
 /**
- * Created by Null-Pointer on 10/3/2015.
+ * @author Null-Pointer on 10/3/2015.
  */
 public class DisplayPictureFileClient extends SmartFileClient {
     private DisplayPictureFileClient(String key, String password) {
@@ -23,6 +31,5 @@ public class DisplayPictureFileClient extends SmartFileClient {
 
         return new DisplayPictureFileClient(key, password);
     }
-
 
 }

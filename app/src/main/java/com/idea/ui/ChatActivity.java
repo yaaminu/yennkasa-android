@@ -82,7 +82,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
         @Override
         public int getProgress(Message message) {
-            return getMessageProgress(message);
+            if(message.getState() == Message.STATE_PENDING) {
+                return getMessageProgress(message);
+            }
+            return  -1;
         }
 
         @Override

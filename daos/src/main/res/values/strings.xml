@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">DAOs</string>
-    <string name="st_unable_to_connect">We\'re having trouble connecting to the internet. Please check your internet settings and try again</string>
-    <string name="an_error_occurred">sorry an error occurred</string>
+    <string name="st_unable_to_connect">We were unable to  trouble connect to the internet. Please check your internet settings and try again</string>
+    <string name="an_error_occurred">sorry an unknown error occurred</string>
     <string name="no_message">no messages</string>
     <string name="File">File</string>
     <string name="Image">Image</string>
@@ -34,4 +34,6 @@
     <string name="parse_application_id">RcCxnXwO1mpkSNrU9u4zMtxQac4uabLNIFa662ZY</string>
     <string name="parse_client_key">f1ad1Vfjisr7mVBDSeoFO1DobD6OaLkggHvT2Nk4</string>
     <string name="group_already_exist">Group already exists</string>
+    <string name="login_error_message">No account is associated with your phone number, You might want to register/sign up instead.</string>
+    <string name="dp_change_in_progress">A dp change is in progress</string>
 </resources>

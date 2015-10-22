@@ -27,6 +27,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -118,13 +120,13 @@ public class FileUtils {
 
 
     public static void save(File fileToSave, InputStream in) throws IOException {
-        if (fileToSave.exists()) {
-            return;
+        if (fileToSave.exists() && !fileToSave.delete()) {
+            throw new IOException(Config.getApplicationContext().getString(R.string.error_saving));
         }
-        byte[] buffer = new byte[4096];
+        final byte[] buffer = new byte[4096];
         final File temp = new File(Config.getTempDir(), fileToSave.getName() + ".tmp");
-        BufferedOutputStream bOut = new BufferedOutputStream(new FileOutputStream(temp));
-        BufferedInputStream bIn = new BufferedInputStream(in);
+        final BufferedOutputStream bOut = new BufferedOutputStream(new FileOutputStream(temp));
+        final BufferedInputStream bIn = new BufferedInputStream(in);
         int read;
         try {
             while ((read = bIn.read(buffer, 0, 4096)) != -1) {
@@ -135,6 +137,34 @@ public class FileUtils {
         } finally {
             closeQuietly(bOut);
             closeQuietly(bIn);
+        }
+    }
+
+    public static String hashFile(File source){
+        try {
+            MessageDigest digest = MessageDigest.getInstance("sha1");
+            digest.reset();
+            byte[] hash;// digest.digest(org.apache.commons.io.FileUtils.readFileToByteArray(source));
+            final byte[] buffer = new byte[4096];
+            final BufferedInputStream bIn = new BufferedInputStream(new FileInputStream(source));
+            int read;
+            try {
+                while ((read = bIn.read(buffer, 0, 4096)) != -1) {
+                    digest.update(buffer, 0, read);
+                }
+            } finally {
+                closeQuietly(bIn);
+            }
+            hash = digest.digest();
+            String hashString = "";
+            //noinspection ForLoopReplaceableByForEach
+            for (int i = 0; i < hash.length; i++) {
+                hashString += Integer.toString((hash[i] & 0xff) + 0x100, 16).substring(1);
+            }
+            PLog.d(TAG, "hash: " + hashString);
+            return hashString;
+        } catch (NoSuchAlgorithmException | IOException e) {
+            throw new RuntimeException(e.getCause());
         }
     }
 
@@ -152,8 +182,8 @@ public class FileUtils {
 
         byte[] buffer = new byte[1024];
         final File temp = new File(Config.getTempDir(), fileToSave.getName() + ".tmp");
-        BufferedOutputStream bOut = new BufferedOutputStream(new FileOutputStream(temp));
-        BufferedInputStream bIn = new BufferedInputStream(in);
+        final BufferedOutputStream bOut = new BufferedOutputStream(new FileOutputStream(temp));
+        final BufferedInputStream bIn = new BufferedInputStream(in);
         int read;
         long processed = 0;
         try {
@@ -200,10 +230,9 @@ public class FileUtils {
         if (destination.exists() && destination.isDirectory()) {
             throw new IllegalArgumentException("destination file is a directory");
         }
-        if (destination.exists() && !destination.delete()) {
-            throw new IOException("destination file exist and could not be deleted");
+        if (destination.getCanonicalPath().equals(source.getCanonicalPath())) { //same file?
+            return;
         }
-//        org.apache.commons.io.FileUtils.copyFile(source, destination);
         save(destination, new FileInputStream(source));
     }
 
@@ -230,23 +259,24 @@ public class FileUtils {
 
     public static String sizeInLowestPrecision(String filePath) throws IOException {
         File file = new File(filePath);
+        final Context applicationContext = Config.getApplicationContext();
         if (!file.exists()) {
-            throw new FileNotFoundException("file does not exist");
+            throw new FileNotFoundException(applicationContext.getString(R.string.file_not_found));
         }
         final long fileSizeBytes = file.length();
         if (fileSizeBytes == 0) {
-            throw new IOException("Could not determine file size");
+            throw new IOException(applicationContext.getString(R.string.file_size_invalid));
         }
         if (fileSizeBytes < ONE_KB) {
-            return (int) fileSizeBytes + " " + Config.getApplicationContext().getString(R.string.Byte);
+            return (int) fileSizeBytes + " " + applicationContext.getString(R.string.Byte);
         }
         if (fileSizeBytes < ONE_MB) {
-            return ((int) (fileSizeBytes / ONE_KB)) + Config.getApplicationContext().getString(R.string.kilobytes);
+            return ((int) (fileSizeBytes / ONE_KB)) + applicationContext.getString(R.string.kilobytes);
         }
         if (fileSizeBytes <= 8 * ONE_MB) {
-            return ((int) (fileSizeBytes / ONE_MB)) + Config.getApplicationContext().getString(R.string.megabytes);
+            return ((int) (fileSizeBytes / ONE_MB)) + applicationContext.getString(R.string.megabytes);
         }
-        throw new IOException("file too large");
+        throw new IOException(applicationContext.getString(R.string.file_too_large));
     }
 
     public interface ProgressListener {
@@ -254,7 +284,10 @@ public class FileUtils {
     }
 
 
-    //copied from paulBurke: https://github.com/ipaulPro/aFileChooser
+    /**
+     * the below code was copied from shamelessly copied from paulBurke: https://github.com/ipaulPro/aFileChooser
+     * licensed under the apache licence
+     */
 
     /**
      * Get a file path from a Uri. This will get the the path for Storage Access

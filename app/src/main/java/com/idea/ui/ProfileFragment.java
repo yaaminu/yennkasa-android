@@ -3,6 +3,7 @@ package com.idea.ui;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -36,7 +37,6 @@ import com.idea.view.FrameLayout;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.widget.FloatingActionButton;
 import com.squareup.picasso.Callback;
-import com.squareup.picasso.Picasso;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -57,6 +57,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private static final int PICK_PHOTO_REQUEST = 0x3e9,
             TAKE_PHOTO_REQUEST = 0X3ea;
 
+    private boolean dpLoaded = false;
     private ImageView displayPicture;
     private TextView userName, userPhoneOrAdminName, mutualGroupsOrMembersTv;
     private User user;
@@ -69,8 +70,13 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private final UserManager.CallBack DP_CALLBACK = new UserManager.CallBack() {
         @Override
         public void done(Exception e) {
-            changingDp = false;
+            if (image_capture_out_put_uri != null) {
+                File file = new File(image_capture_out_put_uri.getPath());
+                //noinspection ResultOfMethodCallIgnored
+                file.delete();
+            }
             hideProgressView();
+            changingDp = false;
             ViewUtils.showViews(changeDpButton, changeDpButton2);
             if (e == null) {
                 showDp();
@@ -107,32 +113,29 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     startActivity(intent);
                     break;
                 case R.id.iv_display_picture:
-                    File dpFile = new File(Config.getAppProfilePicsBaseDir(), user.getDP());
-                    intent = new Intent(getActivity(), ImageViewer.class);
-                    Uri uri;
-                    if (dpFile.exists()) {
-                        hideProgressView();
-                        uri = Uri.fromFile(dpFile);
-                        //noinspection ConstantConditions
-                        intent.setData(uri);
-                        startActivity(intent);
-                    } else {//dp not downloaded
-                        if (image_capture_out_put_uri != null) {
-                            intent.setData(image_capture_out_put_uri);
+                    if (dpLoaded) {
+                        File dpFile = new File(user.getDP());
+                        intent = new Intent(getActivity(), ImageViewer.class);
+                        Uri uri;
+                        if (dpFile.exists()) {
+                            hideProgressView();
+                            uri = Uri.fromFile(dpFile);
+                            //noinspection ConstantConditions
+                            intent.setData(uri);
                             startActivity(intent);
                             break;
-                        }
-                        if (ConnectionUtils.isConnected()) {
+                        } else {//dp not downloaded
                             try {
                                 URL url = new URL(user.getDP());
                                 Uri data = Uri.parse(url.toExternalForm());
                                 intent.setData(data);
                                 startActivity(intent);
-                            } catch (MalformedURLException e) {
-                                UiHelpers.showToast(R.string.sorry_no_dp);
+                                break;
+                            } catch (MalformedURLException ignored) {
                             }
                         }
                     }
+                    UiHelpers.showToast(R.string.sorry_no_dp);
                     break;
                 case R.id.bt_take_photo_change_dp:
                     if (changingDp) {
@@ -253,6 +256,9 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 actionBar.setSubtitle(LiveCenter.isOnline(user.getUserId()) ? R.string.st_online : R.string.st_offline);
             }
         }
+        pDialog = new ProgressDialog(getActivity());
+        pDialog.setCancelable(false);
+        pDialog.setMessage(getString(R.string.st_please_wait));
         return view;
     }
 
@@ -357,7 +363,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 setUpMutualMembers();
             }
             if (changingDp) {
-                changingDp = false;
                 showDp();
             }
             //todo probably change status too and last activity
@@ -379,13 +384,12 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 doChangeDp(uri);
             } else if (requestCode == TAKE_PHOTO_REQUEST) {
                 doChangeDp(image_capture_out_put_uri);
-            } else {
-                ViewUtils.showViews(changeDpButton, changeDpButton2);
             }
         } else {
-            ViewUtils.showViews(changeDpButton, changeDpButton2);
+            final UserManager instance = UserManager.getInstance();
+            if (instance.isGroup(user.getUserId()) || instance.isCurrentUser(user.getUserId()))
+                ViewUtils.showViews(changeDpButton, changeDpButton2);
         }
-
     }
 
     private void doChangeDp(Uri uri) {
@@ -411,11 +415,8 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             ViewUtils.showViews(changeDpButton, changeDpButton2);
         } else {
             ViewUtils.hideViews(changeDpButton, changeDpButton2);
-            Picasso.with(getActivity()).load(file)
-                    .placeholder(UserManager.getInstance().isGroup(user.getUserId()) ? R.drawable.group_avatar : R.drawable.user_avartar)
-                    .into(displayPicture);
-            showProgressView();
             changingDp = true;
+            showProgressView();
             userManager.changeDp(user.getUserId(), filePath, DP_CALLBACK);
         }
     }
@@ -428,18 +429,22 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         DPLoader.load(getActivity(), user.getDP())
                 .placeholder(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .error(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
-                .into(displayPicture, new Callback() {
-                    @Override
-                    public void onSuccess() {
-                        hideProgressView();
-                    }
-
-                    @Override
-                    public void onError() {
-                        ProfileFragment.this.hideProgressView();
-                    }
-                });
+                .into(displayPicture, dpLoadedCallback);
     }
+
+    private final Callback dpLoadedCallback = new Callback() {
+        @Override
+        public void onSuccess() {
+            dpLoaded = true;
+            hideProgressView();
+        }
+
+        @Override
+        public void onError() {
+            dpLoaded = false;
+            ProfileFragment.this.hideProgressView();
+        }
+    };
 
     @Override
     public void onDestroy() {
@@ -448,11 +453,21 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     }
 
     private void showProgressView() {
-        progressView.setVisibility(View.VISIBLE);
+        if (changingDp) {
+            pDialog.show();
+        } else {
+            progressView.setVisibility(View.VISIBLE);
+        }
     }
 
     private void hideProgressView() {
-        progressView.setVisibility(View.GONE);
+        try {
+            if (changingDp)
+                pDialog.dismiss();
+            else
+                progressView.setVisibility(View.GONE);
+        } catch (Exception ignored) {
+        }
     }
 
     private void leaveGroup() {
@@ -460,10 +475,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         userManager.leaveGroup(user.getUserId(), new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
-                try {
-                    progressDialog.dismiss();
-                } catch (Exception ignored) {
-                }
+                UiHelpers.dismissProgressDialog(progressDialog);
                 if (e != null) {
                     ErrorCenter.reportError(TAG, e.getMessage());
                 } else {
@@ -473,4 +485,5 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         });
     }
 
+    ProgressDialog pDialog;
 }

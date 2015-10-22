@@ -3,6 +3,8 @@ package com.idea.data;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
+import com.idea.util.PLog;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -30,6 +32,7 @@ public class User extends RealmObject {
             FIELD_PASSWORD = "password",
             FIELD_COUNTRY = "country",
             FIELD_HAS_CALL = "hasCall";
+    private static final String TAG = User.class.getSimpleName();
     @PrimaryKey
     private String userId;
 
@@ -189,10 +192,15 @@ public class User extends RealmObject {
 
     public static List<User> copy(Iterable<User> users, ContactsManager.Filter<User> filter) {
         if (users == null) throw new IllegalArgumentException("users may not be null!");
-        List<User> copied = new ArrayList<>(5);
+        List<User> copied = new ArrayList<>();
         for (User user : users) {
-            if (filter != null && !filter.accept(user)) {
-                continue;
+            try {
+                if (filter != null && !filter.accept(user)) {
+                    continue;
+                }
+            } catch (ContactsManager.Filter.AbortOperation e) {
+                PLog.d(TAG, "copy operation aborted");
+                break;
             }
             copied.add(User.copy(user));
         }
@@ -208,8 +216,13 @@ public class User extends RealmObject {
         RealmList<User> members = new RealmList<>();
         for (String id : membersId) {
             User user = realm.where(User.class).equalTo(FIELD_ID, id).findFirst();
-            if (filter == null || filter.accept(user)) {
-                members.add(user);
+            try {
+                if (filter == null || filter.accept(user)) {
+                    members.add(user);
+                }
+            } catch (ContactsManager.Filter.AbortOperation e) {
+                PLog.d(TAG, "aggregate user operation aborted");
+                break;
             }
         }
         return members;
@@ -220,8 +233,12 @@ public class User extends RealmObject {
         List<String> members = new ArrayList<>();
         for (User user : users) {
             String userId = user.getUserId();
-            if (filter == null || filter.accept(user)) {
-                members.add(userId);
+            try {
+                if (filter == null || filter.accept(user)) {
+                    members.add(userId);
+                }
+            } catch (ContactsManager.Filter.AbortOperation e) {
+                PLog.d(TAG, "aggregate user operation aborted");
             }
         }
         return members;

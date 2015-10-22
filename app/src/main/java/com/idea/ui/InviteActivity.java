@@ -149,6 +149,8 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
                 UiHelpers.dismissProgressDialog(progressView);
                 if (e != null) {
                     ErrorCenter.reportError(TAG, e.getMessage());
+                } else {
+                    NavUtils.navigateUpFromSameTask(InviteActivity.this);
                 }
             }
         });

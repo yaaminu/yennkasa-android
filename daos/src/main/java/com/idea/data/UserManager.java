@@ -3,10 +3,10 @@ package com.idea.data;
 import android.content.Context;
 import android.os.Environment;
 import android.support.annotation.NonNull;
+import android.support.v4.util.Pair;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
-import android.util.Pair;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.idea.data.settings.PersistedSetting;
@@ -28,6 +28,8 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,6 +40,7 @@ import java.util.Set;
 
 import io.realm.Realm;
 import io.realm.RealmList;
+import io.realm.RealmObject;
 import io.realm.RealmResults;
 import retrofit.mime.TypedFile;
 
@@ -57,6 +60,9 @@ public final class UserManager {
     private static final UserManager INSTANCE = new UserManager();
     private static final String CLEANED_UP = "lkfakfalkfclkieifklaklf";
     public static final String KEY_ACCESS_TOKEN = "accessToken";
+    public static final String CHANGE_DP_KEY = "changeDp";
+    public static final String NO_DP_CHANGE = "noDpChange";
+    public static final String IN_PROGRESS = "inProgress";
     private final File sessionFile;
     private final Object mainUserLock = new Object();
     private final Exception NO_CONNECTION_ERROR;
@@ -75,6 +81,7 @@ public final class UserManager {
     public static final String DEFAULT = "default";
     /***********************************************************************/
     private static final Set<String> protectedKeys = new HashSet<>();
+    private final Map<String, Pair<String, Boolean>> dpChangeInProgress = new HashMap<>();
 
     static {
         Collections.addAll(protectedKeys, IN_APP_NOTIFICATIONS,
@@ -550,6 +557,22 @@ public final class UserManager {
                 }
             });
         }
+
+        TaskManager.execute(new Runnable() {
+            public void run() {
+                String wasChangingDp = getStringPref(userId + CHANGE_DP_KEY, NO_DP_CHANGE);
+                if (!wasChangingDp.equals(NO_DP_CHANGE)) {
+                    if (new File(wasChangingDp).exists()) {
+                        changeDp(userId, wasChangingDp, new CallBack() {
+                            @Override
+                            public void done(Exception e) {
+                                PLog.d(TAG, "change dp %s", e == null ? "success" : "failed");
+                            }
+                        });
+                    }
+                }
+            }
+        });
     }
 
     public boolean isGroup(String userId) {
@@ -606,49 +629,83 @@ public final class UserManager {
         this.changeDp(getCurrentUser().getUserId(), imagePath, callBack);
     }
 
+
     public void changeDp(final String userId, final String imagePath, final CallBack callback) {
         final File imageFile = new File(imagePath);
         if (!imageFile.exists()) {
             doNotify(new Exception("file " + imagePath + " does not exist"), callback);
             return;
         }
-        if (!ConnectionUtils.isConnectedOrConnecting()) {
-            doNotify(NO_CONNECTION_ERROR, callback);
-            return;
-        }
-        Realm realm = User.Realm(Config.getApplicationContext());
-        final User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
-        if (user == null) {
-            PLog.w(TAG, "can't change dp for user with id " + userId + " because no such user exists");
-            doNotify(null, callback);
-            return;
-        }
 
-        String placeHolder = User.isGroup(user) ? "groups" : "users";
-
-        realm.close();
-        userApi.changeDp(placeHolder, userId, new TypedFile("image/*", imageFile), new UserApiV2.Callback<HttpResponse>() {
+        synchronized (dpChangeInProgress) {
+            Pair<String, Boolean> inProgress = dpChangeInProgress.get(userId);
+            if (inProgress != null && inProgress.second && imagePath.equals(inProgress.first)) {
+                PLog.d(TAG, "already changing dp");
+                return;
+            }
+            dpChangeInProgress.put(userId, new Pair<>(imagePath, true));
+        }
+        TaskManager.execute(new Runnable() {
             @Override
-            public void done(Exception e, final HttpResponse response) {
-                if (e == null) {
-                    completeDpChangeRequest(userId, imageFile, callback);
+            public void run() {
+                final Exception errorOccurred = saveDpLocally(userId, imageFile);
+                putStandAlonePref(userId + CHANGE_DP_KEY, imageFile.getAbsolutePath());
+                if (errorOccurred == null) {
+                    doNotify(null, callback);
+                    if (!ConnectionUtils.isConnectedOrConnecting()) {
+                        synchronized (dpChangeInProgress) {
+                            dpChangeInProgress.put(userId, new Pair<>(imagePath, false));
+                        }
+                        return;
+                    }
+                    String placeHolder = isGroup(userId) ? "groups" : "users";
+                    userApi.changeDp(placeHolder, userId, new TypedFile("image/*", imageFile), new UserApiV2.Callback<HttpResponse>() {
+                        @Override
+                        public void done(Exception e, final HttpResponse response) {
+                            synchronized (dpChangeInProgress) {
+                                dpChangeInProgress.put(userId, new Pair<>(imagePath, false));
+                            }
+                            if (e == null) {
+                                putStandAlonePref(userId + CHANGE_DP_KEY, NO_DP_CHANGE);
+                            }
+                        }
+                    });
                 } else {
-                    doNotify(e, callback); //may be our fault but we have reach maximum retries
+                    doNotify(errorOccurred, callback);
+                    synchronized (dpChangeInProgress) {
+                        dpChangeInProgress.put(userId, new Pair<>(imagePath, false));
+                    }
                 }
             }
         });
     }
 
-    private void completeDpChangeRequest(String userId, File imageFile, CallBack callback) {
-        final File dpFile = new File(Config.getAppProfilePicsBaseDir(), imageFile.getName());
+    private Exception saveDpLocally(String userId, File imageFile) {
+        boolean copied = false;
+        StringBuilder name = new StringBuilder(FileUtils.hashFile(imageFile));
+        if (TextUtils.isEmpty(name)) {
+            return new Exception(Config.getApplicationContext().getString(R.string.error_saving));
+        }
+
+        name.append("_").append(getMainUserId());
+        String extension = FileUtils.getExtension(imageFile.getAbsolutePath());
+        if (!TextUtils.isEmpty(extension)) {
+            name.append(".").append(extension);
+        }
+        PLog.d(TAG, "standardised fileName: %s", name.toString());
+        final File dpFile = new File(Config.getAppProfilePicsBaseDir(), name.toString());
         try {
-            //noinspection ConstantConditions
-            FileUtils.copyTo(imageFile, dpFile);
+            if (dpFile.getCanonicalPath().equals(imageFile.getCanonicalPath())) {
+                PLog.d(TAG, "not copying dp over, file already exist");
+            } else {
+                //noinspection ConstantConditions
+                FileUtils.copyTo(imageFile, dpFile);
+                copied = true;
+            }
         } catch (IOException e) {
             //we will not cancel the transaction
             PLog.e(TAG, "failed to save user's profile locally: " + e.getMessage());
-            doNotify(e, callback);
-            return;
+            return e;
         }
 
         Realm realm = User.Realm(Config.getApplicationContext());
@@ -657,8 +714,13 @@ public final class UserManager {
             realm.beginTransaction();
             user.setDP(dpFile.getAbsolutePath());
             realm.commitTransaction();
+            return null;
         }
-        doNotify(null, callback);
+        if (copied) { //delete duplicate
+            //noinspection ResultOfMethodCallIgnored
+            dpFile.delete();
+        }
+        return new Exception(Config.getApplicationContext().getString(R.string.an_error_occurred));
     }
 
     public void logIn(final String phoneNumber, final String userIso2LetterCode, final CallBack callback) {
@@ -812,6 +874,27 @@ public final class UserManager {
         } catch (IOException | JSONException e) {
             throw new RuntimeException(e.getCause());
         }
+    }
+
+    public void sendVerificationToken(final CallBack callback) {
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                if (isUserLoggedIn()) {
+                    if (isUserVerified()) {
+                        throw new IllegalStateException();
+                    }
+                    userApi.sendVerificationToken(getMainUserId(), new UserApiV2.Callback<HttpResponse>() {
+                        @Override
+                        public void done(Exception e, HttpResponse aBoolean) {
+                            doNotify(e, callback);
+                        }
+                    });
+                    return;
+                }
+                throw new IllegalStateException();
+            }
+        }, true);
     }
 
     public void resendToken(final CallBack callBack) {
@@ -991,9 +1074,8 @@ public final class UserManager {
         }
     }
 
-    private void clearClass(Realm realm, Class clazz) {
+    private void clearClass(Realm realm, Class<? extends RealmObject> clazz) {
         realm.beginTransaction();
-        //noinspection unchecked
         realm.clear(clazz);
         realm.commitTransaction();
         realm.close();
@@ -1190,10 +1272,10 @@ public final class UserManager {
         } else if (!persistedSetting.isStandAlone()) {
             throw new IllegalArgumentException("pref already exist and is not standalone");
         }
+        realm.beginTransaction();
         if (!PersistedSetting.put(persistedSetting, value)) {
             throw new IllegalArgumentException("unknown data type");
         }
-        realm.beginTransaction();
         realm.copyToRealmOrUpdate(persistedSetting);
         realm.commitTransaction();
         return value;

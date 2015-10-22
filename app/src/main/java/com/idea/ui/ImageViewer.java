@@ -16,6 +16,7 @@ import java.io.File;
 public class ImageViewer extends PairAppActivity {
     private ImageView imageView;
     private Picasso picasso;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,13 +35,14 @@ public class ImageViewer extends PairAppActivity {
     private void showImage() {
         final Uri imageUri = getIntent().getData();
         if (imageUri == null) {
-            throw new RuntimeException("image vier needs a uri");
+            throw new RuntimeException("image viewer needs a uri");
         }
 
         String path = imageUri.getPath();
         File file = new File(path);
         if (file.exists()) {
-            picasso.load(file).skipMemoryCache().into(imageView, callback);
+            picasso.invalidate(file);
+            picasso.load(file).into(imageView, callback);
         } else {
             if (imageUri.getScheme().equals("http") || imageUri.getScheme().equals("https") || imageUri.getScheme().equals("ftp")) {
                 picasso.load(imageUri.toString()).into(imageView, callback);

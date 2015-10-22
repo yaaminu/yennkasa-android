@@ -350,10 +350,8 @@ public class Message extends RealmObject {
         return typingMessage;
     }
 
-    // TODO: 9/3/2015 this is not safe!
-    //we want to avoid round a trip to the database
     public static boolean isGroupMessage(Message message) {
-        return !message.getTo().equals(UserManager.getMainUserId());
+        return UserManager.getInstance().isGroup(message.getTo());
     }
 
     public int getType() {

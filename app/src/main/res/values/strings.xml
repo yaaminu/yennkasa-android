@@ -225,4 +225,6 @@
     <string name="legal_notice">LEGAL NOTICE</string>
     <string name="error_feedback_subject_too_lonng">Subject may not  exceed 40 chars</string>
     <string name="silent">Silent</string>
+    <string name="send_token_notice">Your phone number needs to be verified. Ensure you have a working SMS plan. Click send token when you are ready</string>
+    <string name="send_token">Send token</string>
 </resources>
