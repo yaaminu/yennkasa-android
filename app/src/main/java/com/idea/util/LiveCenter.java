@@ -525,11 +525,16 @@ public class LiveCenter {
                 throw new PairappException("tag in use");
             }
             tagProgressMap.put(tag, 0);
+            List<WeakReference<ProgressListener>> listeners = progressListeners.get(tag);
+            if (listeners != null) {
+                notifyListeners(listeners, tag, 0);
+            }
+            notifyListeners(allProgressListeners, tag, 0);
         }
     }
 
     /**
-     * tells whether this tag is acquired or not. this method is not necessarally consistent with
+     * tells whether this tag is acquired or not. this method is not necessarily consistent with
      * {@link #acquireProgressTag(Object)} i.e the fact this returns true does not guarantee that
      * the tag will be available for acquisition since there could be concurrent contention for that same tag.
      *
@@ -564,6 +569,7 @@ public class LiveCenter {
                         }
                     }
                 }
+                notifyListenersDoneOrCancelled(tag);
             }
         }
     }
@@ -617,6 +623,15 @@ public class LiveCenter {
         }
     }
 
+    private static void notifyListenersDoneOrCancelled(Object tag) {
+        for (WeakReference<ProgressListener> weakReferenceListener : allProgressListeners) {
+            ProgressListener listener = weakReferenceListener.get();
+            if (listener != null) {
+                listener.doneOrCancelled(tag);
+            }
+        }
+    }
+
     /**
      * gets the progress for task identified by task
      *
@@ -641,7 +656,7 @@ public class LiveCenter {
 
     /**
      * registers a listener for the task identified by this tag. there need not be a task  identified by
-     * this tag before one call this method.
+     * this tag before one listen
      * <em>note that all listeners are kept internally as weak references so you may not pass anonymous instances</em>
      * <em>also listeners are not necessary called on the android main thread but rather on the thread  on which the progress was reported</em>
      *

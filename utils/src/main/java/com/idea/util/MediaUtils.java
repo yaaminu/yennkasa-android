@@ -1,7 +1,10 @@
 package com.idea.util;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.v4.BuildConfig;
@@ -76,5 +79,14 @@ public class MediaUtils {
     public static boolean isVideo(String actualPath) {
         String extension = FileUtils.getExtension(actualPath);
         return videos.contains(extension);
+    }
+
+    public static void playTone(Context context, Uri uri) {
+        Ringtone ringtone = RingtoneManager.getRingtone(context, uri);
+        if (ringtone != null) {
+            ringtone.play();
+        } else {
+            PLog.d(TAG, "unable to play ringtone");
+        }
     }
 }

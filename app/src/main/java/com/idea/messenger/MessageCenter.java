@@ -4,10 +4,12 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.github.nkzawa.emitter.Emitter;
+import com.google.gson.JsonArray;
 import com.idea.data.Message;
 import com.idea.data.MessageJsonAdapter;
 import com.idea.data.UserManager;
 import com.idea.net.sockets.SocketIoClient;
+import com.idea.pairapp.BuildConfig;
 import com.idea.util.Config;
 import com.idea.util.L;
 import com.idea.util.LiveCenter;
@@ -17,6 +19,7 @@ import com.idea.util.ThreadUtils;
 import com.parse.ParseCloud;
 import com.parse.ParsePushBroadcastReceiver;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -48,24 +51,35 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
                 JSONObject object = new JSONObject(args[0].toString());
                 int status = object.getInt(SocketIoClient.MSG_STS_STATUS);
                 String messageId = object.getString(SocketIoClient.MSG_STS_MESSAGE_ID);
-                if (status == Message.STATE_SEEN) {
-                    PLog.i(TAG, "message seen");
-                    Realm realm = Message.REALM(Config.getApplicationContext());
-                    Message msg = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
-                    if (msg != null) {
-                        realm.beginTransaction();
-                        msg.setState(Message.STATE_SEEN);
-                        realm.commitTransaction();
-                    } else {
-                        PLog.i(TAG, "message not available for update");
-                    }
-                    realm.close();
-                }
+                updateMessageStatus(messageId, status);
             } catch (JSONException e) {
                 throw new RuntimeException(e.getCause());
             }
         }
     };
+
+    private static void updateMessageStatus(String messageId, int status) throws JSONException {
+        Realm realm = Message.REALM(Config.getApplicationContext());
+        Message msg = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
+        if (msg != null) {
+            realm.beginTransaction();
+            if (status == Message.STATE_SEEN) {
+                PLog.i(TAG, "message seen");
+                msg.setState(Message.STATE_SEEN);
+            } else if (status == Message.STATE_RECEIVED && msg.getState() != Message.STATE_SEEN) {
+
+            } else {
+                if (BuildConfig.DEBUG) {
+                    throw new AssertionError("uknonwn message status");
+                }
+            }
+            realm.commitTransaction();
+            realm.close();
+        } else {
+            PLog.i(TAG, "message not available for update");
+        }
+    }
+
     private static final Emitter.Listener MESSAGE_RECEIVER = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
@@ -132,21 +146,20 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
         } catch (JSONException e) {
             throw new RuntimeException(e.getCause());
         }
-        processMessage(Config.getApplicationContext(), obj.toString());
 
-//        if (LiveCenter.isOnline(message.getFrom())) {
-//            if (messagingClient == null) {
-//                initClient();
-//            }
-//            messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
-//        } else {
-//            Map<String, Object> params = new HashMap<>(3);
-//            params.put(TO, message.getFrom());
-//            params.put(IS_GROUP_MESSAGE, false);
-//            params.put(FROM, message.getTo());
-//            params.put(MESSAGE, obj);
-//            ParseCloud.callFunctionInBackground("pushToSyncMessages", params);
-//        }
+        if (LiveCenter.isOnline(message.getFrom())) {
+            if (messagingClient == null) {
+                initClient();
+            }
+            messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
+        } else {
+            Map<String, Object> params = new HashMap<>(3);
+            params.put(TO, message.getFrom());
+            params.put(IS_GROUP_MESSAGE, false);
+            params.put(FROM, message.getTo());
+            params.put(MESSAGE, obj);
+            ParseCloud.callFunctionInBackground("pushToSyncMessages", params);
+        }
     }
 
     private static void processMessage(Context context, String data) {
@@ -193,22 +206,21 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             throw new RuntimeException(e.getCause());
         }
 
-        processMessage(Config.getApplicationContext(), obj.toString());
-//        if (LiveCenter.isOnline(message.getFrom())) {
-//            //use socketsIO
-//            if (messagingClient == null) {
-//                initClient();
-//            }
-//            messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
-//        } else {
-//            //maybe push
-//            Map<String, Object> params = new HashMap<>(3);
-//            params.put(TO, message.getFrom());
-//            params.put(IS_GROUP_MESSAGE, false);
-//            params.put(FROM, message.getTo());
-//            params.put(MESSAGE, obj);
-//            ParseCloud.callFunctionInBackground("pushToSyncMessages", params);
-//        }
+        if (LiveCenter.isOnline(message.getFrom())) {
+            //use socketsIO
+            if (messagingClient == null) {
+                initClient();
+            }
+            messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
+        } else {
+            //maybe push
+            Map<String, Object> params = new HashMap<>(3);
+            params.put(TO, message.getFrom());
+            params.put(IS_GROUP_MESSAGE, false);
+            params.put(FROM, message.getTo());
+            params.put(MESSAGE, obj);
+            ParseCloud.callFunctionInBackground("pushToSyncMessages", params);
+        }
     }
 
     @Override

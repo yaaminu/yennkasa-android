@@ -25,7 +25,7 @@ import com.idea.pairapp.R;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
-import com.idea.workers.ContactSyncService;
+import com.idea.data.ContactSyncService;
 
 import java.util.ArrayList;
 import java.util.Comparator;

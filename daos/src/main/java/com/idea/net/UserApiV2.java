@@ -6,6 +6,7 @@ import com.idea.data.User;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import retrofit.http.Body;
 import retrofit.http.DELETE;
@@ -94,9 +95,17 @@ public interface UserApiV2 {
     @POST("/api/v1/users/{id}/resetPassword")
     HttpResponse requestPasswordReset(String number);
 
+    void removeGroup(String adminId, String groupId, Callback<HttpResponse> callback);
+
 
     interface Callback<T> {
         void done(Exception e, T t);
+    }
+
+    interface Preprocessor {
+       void process(User user);
+
+        void process(Collection<User> users);
     }
 
     class SessionData {

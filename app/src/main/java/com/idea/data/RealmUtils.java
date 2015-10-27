@@ -78,7 +78,7 @@ public class RealmUtils {
 
     public static Message seedIncomingMessages(String sender, String recipient) {
         return seedIncomingMessages(sender, recipient, Message.TYPE_PICTURE_MESSAGE,
-                "http://files.parsetfss.com/5b50e395-c58d-4d8e-829a-8d98173a63cd/tfss-ab1fcf5e-6b77-4f1a-a6b2-837cfdc331dc-IMG_20150802_162640.jpeg");
+                "http://10.0.3.2:5000/fileApi/4ad3ea45e9908775c731a2b060af1267ac251f684ad3ea45e9908775c731a2b060af1267ac251f68_233204441069.jpg");
     }
 
     public static Message seedIncomingMessages(String sender, String recipient, int type, String messageBody) {

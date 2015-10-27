@@ -34,7 +34,6 @@ final class AndroidExecutors {
 
     private AndroidExecutors() {
         uiThread = new UIThreadExecutor();
-        final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
         WORKER = new ThreadPoolExecutor(CPU_COUNT + 1, CPU_COUNT * 2 + 1, 1000L,
                 TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(128));
     }

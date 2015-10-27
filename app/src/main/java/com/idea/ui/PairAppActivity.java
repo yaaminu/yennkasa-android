@@ -171,6 +171,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         String text;
         List<String> recentChatList = new ArrayList<>(LiveCenter.getAllPeersWithUnreadMessages());
         Realm realm = User.Realm(this);
+
         for (int i = 0; i < recentChatList.size(); i++) {
             if (i > 3) {
                 break;
@@ -190,9 +191,9 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
             case 1:
                 if (unReadMessages == 1) {
                     String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(this, message.getType());
-                    text = sender + ":  " + messageBody;
+                    text = (Message.isGroupMessage(message) ? sender + "@" + recentChatList.get(0) : sender) + ":  " + messageBody;
                 } else {
-                    text = unReadMessages + " " + getString(R.string.new_message_from) + " " + sender;
+                    text = unReadMessages + " " + getString(R.string.new_message_from) + " " + (Message.isGroupMessage(message) ? sender + "@" + recentChatList.get(0) : sender);
                 }
                 break;
             case 2:

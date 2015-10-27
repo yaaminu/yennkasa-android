@@ -1,12 +1,16 @@
 package com.idea.net;
 
 import android.app.Application;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.telephony.SmsManager;
 
 import android.text.TextUtils;
+
 import com.google.gson.JsonObject;
+import com.idea.Errors.PairappException;
 import com.idea.data.BuildConfig;
 import com.idea.data.ContactsManager;
 import com.idea.data.Message;
@@ -21,6 +25,7 @@ import com.parse.ParseACL;
 import com.parse.ParseException;
 import com.parse.ParseInstallation;
 import com.parse.ParseObject;
+import com.parse.ParsePush;
 import com.parse.ParseQuery;
 
 import org.json.JSONException;
@@ -39,6 +44,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 
 import retrofit.http.Body;
 import retrofit.http.Field;
@@ -67,11 +73,13 @@ import static com.idea.net.PARSE_CONSTANTS.USER_CLASS_NAME;
 public class ParseClient implements UserApiV2 {
 
     private static final String TAG = ParseClient.class.getSimpleName();
-    private static boolean initialised = false;
+    public static final String PENDING_DP = "pendingDp";
     private static ParseClient INSTANCE;
     private DisplayPictureFileClient displayPictureFileClient;
+    private final Preprocessor preProcessor;
 
-    private ParseClient() {
+    private ParseClient(Preprocessor preProcessor) {
+        init(Config.getApplication());
         Map<String, String> credentials;//= UserManager.getInstance().getUserCredentials();
         credentials = new HashMap<>();
         //////////////////////////////////////////////////////////////////////////////
@@ -79,10 +87,23 @@ public class ParseClient implements UserApiV2 {
         credentials.put("password", "Dq8FLrF7HjeiyJBFGv9acNvOLV1Jqm");
         /////////////////////////////////////////////////////////////////////////////////////
         displayPictureFileClient = DisplayPictureFileClient.createInstance(credentials);
-
+        this.preProcessor = preProcessor == null ? dummyProcessor : preProcessor;
     }
 
-    public static void init(Application application) {
+    @SuppressWarnings("FieldCanBeLocal")
+    private final Preprocessor dummyProcessor = new Preprocessor() {
+        @Override
+        public void process(User user) {
+
+        }
+
+        @Override
+        public void process(Collection<User> users) {
+
+        }
+    };
+
+    private void init(Application application) {
         if (application == null) {
             throw new IllegalArgumentException("application is null!");
         }
@@ -96,19 +117,12 @@ public class ParseClient implements UserApiV2 {
         Parse.initialize(application, application.getString(R.string.parse_application_id), application.getString(R.string.parse_client_key));
 
         /******************************************************************************************************************/
-
-        synchronized (ParseClient.class) {
-            initialised = true;
-        }
     }
 
-    public static ParseClient getInstance() {
+    public static ParseClient getInstance(Preprocessor processor) {
         synchronized (ParseClient.class) {
-            if (!initialised) {
-                throw new IllegalStateException("did you forget to init() the client?");
-            }
             if (INSTANCE == null) {
-                INSTANCE = new ParseClient();
+                INSTANCE = new ParseClient(processor);
             }
         }
         return INSTANCE;
@@ -137,12 +151,14 @@ public class ParseClient implements UserApiV2 {
         });
     }
 
+    private final Object tokenLock = new Object();
+
     private void doRegisterUser(User user, final Callback<User> callback) {
         String _id = user.getUserId(),
                 name = user.getName(),
                 password = user.getPassword(),
                 country = user.getCountry();
-        synchronized (token) {
+        synchronized (tokenLock) {
             token = genVerificationToken();
         }
 //         if (true) {
@@ -243,7 +259,7 @@ public class ParseClient implements UserApiV2 {
 
     private void doLogIn(User user, Callback<User> callback) {
         ParseQuery<ParseObject> query = makeParseQuery();
-        synchronized (token) {
+        synchronized (tokenLock) {
             token = genVerificationToken();
         }
         try {
@@ -293,9 +309,9 @@ public class ParseClient implements UserApiV2 {
             List<ParseObject> objects = query.whereContainedIn(FIELD_ID, userIds).find();
             List<User> users = new ArrayList<>(objects.size());
             for (ParseObject object : objects) {
-                processParseObject(object);
                 users.add(parseObjectToUser(object));
             }
+            preProcessor.process(users);
             notifyCallback(callback, null, users);
         } catch (ParseException e) {
             notifyCallback(callback, e, null);
@@ -314,8 +330,9 @@ public class ParseClient implements UserApiV2 {
     public void doGetUser(@Path(Message.FIELD_ID) String id, Callback<User> response) {
         try {
             ParseObject object = makeParseQuery(USER_CLASS_NAME).whereEqualTo(FIELD_ID, id).getFirst();
-            processParseObject(object);
-            notifyCallback(response, null, parseObjectToUser(object));
+            User user = parseObjectToUser(object);
+            preProcessor.process(user);
+            notifyCallback(response, null, user);
         } catch (ParseException e) {
             notifyCallback(response, prepareErrorReport(e), null);
         }
@@ -337,6 +354,12 @@ public class ParseClient implements UserApiV2 {
             for (ParseObject object : objects) {
                 groups.add(parseObjectToGroup(object));
             }
+            preProcessor.process(groups);
+            List<User> admins = new ArrayList<>(groups.size());
+            for (User group : groups) {
+                admins.add(group.getAdmin());
+            }
+            preProcessor.process(admins);
             notifyCallback(response, null, groups);
         } catch (ParseException e) {
             notifyCallback(response, prepareErrorReport(e), null);
@@ -357,29 +380,36 @@ public class ParseClient implements UserApiV2 {
             throw new IllegalArgumentException("unknown placeholder");
         }
 
-        displayPictureFileClient.saveFileToBackend(new File(file.file().getAbsolutePath()), new FileApi.FileSaveCallback() {
-
+        displayPictureFileClient.changeDp(id, new File(file.file().getAbsolutePath()), new FileApi.FileSaveCallback() {
             @Override
             public void done(FileClientException e, String url) {
                 if (e == null) {
-                    // FIXME: 10/3/2015 remove this
-                    // STOPSHIP: 10/3/2015  
-                    // if (true) {
-                    //     notifyCallback(response, null, new HttpResponse(200, url));
-                    //     return;
-                    // }
+                    PLog.d(TAG, "dp: " + url);
+                    notifyCallback(response, null, new HttpResponse(200, url));
+                    try {
+                        dpLock.acquire();
+                    } catch (InterruptedException e1) {
+                        dpLock.release();
+                        PLog.d(TAG, "thread: %s interrupted while waiting to acquire semaphore", "" + Thread.currentThread().getId());
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
                     try {
                         ParseQuery<ParseObject> userOrGroupQuery = makeParseQuery(userOrGroup.equals("users") ? USER_CLASS_NAME : GROUP_CLASS_NAME);
                         ParseObject object = userOrGroupQuery.whereEqualTo(FIELD_ID, id).getFirst();
-                        object.put(FIELD_DP, url);
-                        try {
+                        String dp = object.getString(FIELD_DP);
+                        if (dp != null && dp.equals(url)) {
+                            PLog.d(TAG, "dp already changed... nothing will be done");
+                        } else {
+                            object.put(FIELD_DP, url);
                             object.save();
-                            notifyCallback(response, null, new HttpResponse(200, url));
-                        } catch (ParseException e2) {
-                            notifyCallback(response, prepareErrorReport(e2), new HttpResponse(400, "error while processing file"));
                         }
                     } catch (ParseException e2) {
-                        notifyCallback(response, prepareErrorReport(e2), new HttpResponse(400, "error while processing file"));
+                        PLog.d(TAG, "error while changing dp: " + e2.getMessage(), e2.getCause());
+                        SharedPreferences preferences = getPendingDpChanges();
+                        preferences.edit().putString(id + PENDING_DP, url).apply();
+                    } finally {
+                        dpLock.release();
                     }
                 } else {
                     notifyCallback(response, e, new HttpResponse(400, "error during dp change"));
@@ -388,14 +418,13 @@ public class ParseClient implements UserApiV2 {
         }, new FileApi.ProgressListener() {
             @Override
             public void onProgress(long expected, long transferred) {
-                PLog.i(TAG, "dp change progress %s", ((expected *100) / transferred));
+                PLog.i(TAG, "dp change progress %s", ((transferred * 100) / expected));
             }
         });
     }
 
     @Override
     public void createGroup(@Field("createdBy") final String by, @Field("name") final String name, @Field("starters") final Collection<String> members, final Callback<User> response) {
-
         TaskManager.execute(new Runnable() {
             public void run() {
                 doCreateGroup(by, name, members, response);
@@ -451,8 +480,8 @@ public class ParseClient implements UserApiV2 {
             ParseObject object = makeParseQuery(GROUP_CLASS_NAME).whereEqualTo(FIELD_ID, id).getFirst();
             User group = parseObjectToGroup(object);
             final ParseObject adminObj = object.getParseObject(FIELD_ADMIN).fetchIfNeeded();
-            processParseObject(adminObj);
             group.setAdmin(parseObjectToUser(adminObj));
+            preProcessor.process(group);
             notifyCallback(callback, null, group);
         } catch (ParseException e) {
             notifyCallback(callback, prepareErrorReport(e), null);
@@ -473,11 +502,11 @@ public class ParseClient implements UserApiV2 {
 
             List<String> membersId = makeParseQuery(GROUP_CLASS_NAME).whereEqualTo(FIELD_ID, id).getFirst().getList(FIELD_MEMBERS);
             final List<ParseObject> groupMembers = makeParseQuery(USER_CLASS_NAME).whereContainedIn(FIELD_ID, membersId).find();
-            processParseObjects(groupMembers);
             Set<User> members = new HashSet<>(groupMembers.size());
             for (ParseObject groupMember : groupMembers) {
                 members.add(parseObjectToUser(groupMember));
             }
+            preProcessor.process(members);
             notifyCallback(response, null, new ArrayList<>(members));
         } catch (ParseException e) {
             if (BuildConfig.DEBUG) {
@@ -494,7 +523,7 @@ public class ParseClient implements UserApiV2 {
     //for eg +233 20 444 1069 could be stored in multiple unpredictable ways.
     //the contact manager can retrieve all the contacts standardised them to how
     //we store user ids and return them so that we do a quick hit test to map
-    // the names to our parse objects(we will not persist those names)
+    // the names to our parse objects(we will not persist those names on the backend)
     private void processParseObject(final ParseObject object) {
         ContactsManager.getInstance().findAllContactsSync(new ContactsManager.Filter<ContactsManager.Contact>() {
             @Override
@@ -518,14 +547,13 @@ public class ParseClient implements UserApiV2 {
                 if (processed.size() == objects.size()) {
                     throw new AbortOperation("done");
                 }
-                if (processed.contains(contact.numberInIEE_Format)) {
+                if (!processed.add(contact.numberInIEE_Format)) {
                     return false; //we don't care about return values
                 }
                 for (ParseObject groupMember : objects) {
                     final String userId = groupMember.getString(PARSE_CONSTANTS.FIELD_ID);
                     if (contact.numberInIEE_Format.equals(userId)) {
                         groupMember.put(PARSE_CONSTANTS.FIELD_NAME, contact.name);//we will not save this change
-                        processed.add(userId);
                         break;
                     }
                 }
@@ -643,7 +671,7 @@ public class ParseClient implements UserApiV2 {
     }
 
     private void doResendToken(@Path("id") String userId, @Field("password") String password, Callback<HttpResponse> response) {
-        synchronized (token) {
+        synchronized (tokenLock) {
             token = genVerificationToken();
         }
         try {
@@ -693,15 +721,6 @@ public class ParseClient implements UserApiV2 {
 //        }
 //    }
 
-    private String hashPassword(String password) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA1");
-            return new String(digest.digest(password.getBytes()));
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException();
-        }
-    }
-
     private Exception prepareErrorReport(ParseException e) {
         String message;
         if (e.getCode() == ParseException.CONNECTION_FAILED) {
@@ -722,10 +741,11 @@ public class ParseClient implements UserApiV2 {
 
     @NonNull
     private User parseObjectToUser(ParseObject object) {
+        PLog.v(TAG, "processing: " + object.toString());
         User user = new User();
         user.setName(object.getString(FIELD_NAME));
         user.setUserId(object.getString(FIELD_ID));
-        user.setDP(resolveDp(object.getString(FIELD_DP)));
+        user.setDP(resolveDp(object));
         user.setLastActivity(object.getDate(FIELD_LAST_ACTIVITY).getTime());
         user.setCountry(object.getString(FIELD_COUNTRY));
         user.setHasCall(object.getBoolean(FIELD_HAS_CALL));
@@ -733,26 +753,49 @@ public class ParseClient implements UserApiV2 {
         return user;
     }
 
-    private String resolveDp(String userDp) {
-        // STOPSHIP
-        if(TextUtils.isEmpty(userDp)){
-            throw new RuntimeException("user dp cannot be empty");
-        }
-        if (userDp.lastIndexOf('/') != -1) {
-            File file = new File(Config.getAppProfilePicsBaseDir(), userDp.substring(userDp.lastIndexOf('/')));
-            if (file.exists()) {
-                userDp = file.getAbsolutePath();
+    private final Semaphore dpLock = new Semaphore(1, true);
+
+    private String resolveDp(ParseObject object) {
+        String userId = object.getString(FIELD_ID),
+                userDp = object.getString(FIELD_DP);
+        String pendingDp = userDp;
+        PLog.d(TAG, "user dp");
+        try {
+            dpLock.acquire();
+
+            SharedPreferences preferences = getPendingDpChanges();
+            pendingDp = preferences.getString(userId + PENDING_DP, userDp);
+            if (!pendingDp.equals(userDp)) {
+                try {
+                    object.save();
+                    preferences.edit().remove(userId + PENDING_DP).apply();
+                    PLog.v(TAG, "user with id: " + userId + " changed dp to " + pendingDp);
+                } catch (ParseException ignored) {
+
+                }
             }
+        } catch (InterruptedException ignore) {
+            PLog.d(TAG, "thread: %s interrupted while waiting to acquire semaphore", Thread.currentThread().getId());
+            Thread.currentThread().interrupt();
+        } finally {
+            dpLock.release();
         }
-        return userDp;
+        return pendingDp;
+    }
+
+    private SharedPreferences getPendingDpChanges() {
+        String prefs = ParseInstallation.getCurrentInstallation().getString(FIELD_ID);
+        return Config.getApplicationContext()
+                .getSharedPreferences(prefs, Context.MODE_PRIVATE);
     }
 
     @NonNull
     private User parseObjectToGroup(ParseObject object) throws ParseException {
+        PLog.v(TAG, "processing: " + object.toString());
         User user = new User();
         user.setName(object.getString(FIELD_NAME));
         user.setUserId(object.getString(FIELD_ID));
-        user.setDP(resolveDp(object.getString(FIELD_DP)));
+        user.setDP(resolveDp(object));
         final ParseObject parseObject = object.getParseObject(FIELD_ADMIN);
         parseObject.fetchIfNeeded();
         user.setType(User.TYPE_GROUP);
@@ -793,6 +836,7 @@ public class ParseClient implements UserApiV2 {
             Config.getApplicationContext().getContentResolver().delete(Uri.parse("content://sms/outbox"), "address = ? and body = ?",
                     new String[]{recipient, messageBody});
         } catch (Exception e) {
+            PLog.d(TAG, "error while deleting message " + e.getMessage(), e.getCause());
             // if(BuildConfig.DEBUG){
 
             // }
@@ -801,7 +845,7 @@ public class ParseClient implements UserApiV2 {
     }
 
     //todo send as a mail
-    public void sendFeedBack(JSONObject report) {
+    public static void sendFeedBack(JSONObject report) {
         ParseObject object = new ParseObject(PARSE_CONSTANTS.FEEDBACK_CLASS_NAME);
         try {
             Iterator keys = report.keys();
@@ -834,6 +878,35 @@ public class ParseClient implements UserApiV2 {
         }
         sendToken(userId, token);
         notifyCallback(callback, null, new HttpResponse(200, "sent token"));
+    }
+
+    @Override
+    public void removeGroup(String adminId, String groupId, Callback<HttpResponse> callback) {
+        ParseQuery<ParseObject> query = makeParseQuery(GROUP_CLASS_NAME);
+        Context applicationContext = Config.getApplicationContext();
+        try {
+            ParseObject object = query.whereEqualTo(FIELD_ID, groupId).getFirst(),
+                    admin = object.getParseObject(FIELD_ADMIN).fetchIfNeeded();
+            if (!admin.getString(FIELD_ID).equals(adminId)) {
+                notifyCallback(callback, new PairappException(applicationContext.getString(R.string.not_permitted_group), "notPermitted"), new HttpResponse(401, "Unauthorised"));
+                return;
+            }
+            object.delete();
+            notifyCallback(callback, null, new HttpResponse(200, "sucess"));
+        } catch (ParseException e) {
+            // TODO: 10/25/2015 handle error
+            String message;
+            if (e.getCode() == ParseException.CONNECTION_FAILED) {
+                message = applicationContext.getString(R.string.st_unable_to_connect);
+            } else if (e.getCode() == ParseException.OPERATION_FORBIDDEN) {
+                message = applicationContext.getString(R.string.not_permitted_group);
+            } else if (e.getCode() == ParseException.OBJECT_NOT_FOUND) {
+                message = applicationContext.getString(R.string.group_not_found);
+            } else {
+                message = applicationContext.getString(R.string.an_error_occurred);
+            }
+            notifyCallback(callback, new Exception(message), new HttpResponse(-1, "error occured"));
+        }
     }
 
     private class RequiredFieldsError extends Exception {

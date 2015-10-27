@@ -112,7 +112,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                     dispatchToGroup(message, User.aggregateUserIds(user.getMembers(), USER_FILTER));
                 } else {
                     //give the user manager a hint to sync the members.
-                    UserManager.getInstance().refreshGroup(message.getTo());
+                    UserManager.getInstance().refreshUserDetails(message.getTo());
                     //we are going to run some minutes later hoping that the members are 'sync'ed'.
                     timer.schedule(new SendLaterTimerTask(message), AlarmManager.INTERVAL_FIFTEEN_MINUTES / 3);
                 }
@@ -292,7 +292,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         public void run() {
             final Realm realm = User.Realm(Config.getApplicationContext());
             User user = realm.where(User.class).equalTo(User.FIELD_ID, message.getTo()).findFirst();
-            if (user != null && user.getMembers().size() > 3) {
+            if (user != null && user.getMembers().size() >= 2) {
                 dispatchToGroup(message, User.aggregateUserIds(user.getMembers(), USER_FILTER));
             } else {
                 onFailed(message.getId(), MessageUtils.ERROR_RECIPIENT_NOT_FOUND);

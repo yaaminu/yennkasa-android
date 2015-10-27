@@ -2,6 +2,7 @@ package com.idea.messenger;
 
 import com.idea.data.Message;
 import com.idea.data.MessageJsonAdapter;
+import com.idea.pairapp.R;
 import com.idea.util.Config;
 import com.idea.util.PLog;
 import com.parse.ParseCloud;
@@ -72,7 +73,7 @@ class ParseDispatcher extends AbstractMessageDispatcher {
 
     private String prepareReport(ParseException e) {
         if (e.getCode() == ParseException.CONNECTION_FAILED) {
-            return Config.getApplicationContext().getString(R.string.unable_to_connect);
+            return Config.getApplicationContext().getString(R.string.st_unable_to_connect);
         }
         return "Sorry an unknown error occurred";
     }

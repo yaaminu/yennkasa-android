@@ -29,6 +29,5 @@ dependencies {
     compile 'io.realm:realm-android:0.80.3'
     compile 'com.parse.bolts:bolts-android:1.2.0'
     compile project(':fileclient')
-    compile project(':error')
     compile project(':utils')
 }

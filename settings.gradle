@@ -1,2 +1,2 @@
-include ':app', ':lib', ':daos', ':error', ':messenger', ':sockets_io_client', ':utils', ':textRenderer', ':calligraphy-2.1.0', ':fileclient'
+include ':app', ':lib', ':daos', ':sockets_io_client', ':utils', ':textRenderer', ':fileclient'
 include ':pullToRefresh'

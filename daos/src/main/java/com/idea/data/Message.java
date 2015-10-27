@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import android.text.TextUtils;
 import com.idea.Errors.PairappException;
 import com.idea.data.util.MessageUtils;
 import com.idea.util.Config;
@@ -22,6 +23,8 @@ import io.realm.Realm;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.RealmClass;
+import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 /**
  * this class represents a particular message sent by a given {@link User}.
@@ -408,5 +411,19 @@ public class Message extends RealmObject {
 
     public void setState(int state) {
         this.state = state;
+    }
+
+    public static String toJSON(Message message) {
+        if (message == null) {
+            throw new IllegalArgumentException("message == null");
+        }
+        return MessageJsonAdapter.INSTANCE.toJson(message).toString();
+    }
+
+    public static Message fromJSON(String json) {
+        if (TextUtils.isEmpty(json)) {
+            throw new IllegalArgumentException("json == null || json is empty");
+        }
+        return MessageJsonAdapter.INSTANCE.fromJson(json);
     }
 }

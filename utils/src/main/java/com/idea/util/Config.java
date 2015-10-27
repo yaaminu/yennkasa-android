@@ -49,7 +49,7 @@ public class Config {
 
     public static void init(Application pairApp) {
         Config.application = pairApp;
-       // SCREEN_DENSITY = pairApp.getResources().getDisplayMetrics().density;
+        // SCREEN_DENSITY = pairApp.getResources().getDisplayMetrics().density;
         setUpDirs();
     }
 
@@ -220,7 +220,7 @@ public class Config {
 
     public static String getLiveEndpoint() {
         //STOPSHIP
-        if (isEmulator()&& false) {
+        if (isEmulator() && false) {
             return LIVE_SOCKET_API_LOCAL;
         } else {
             return LIVE_SOCKET_API_REMOTE;
@@ -237,4 +237,13 @@ public class Config {
     }
 
     private static final Map<String, String> properties = new HashMap<>();
+
+    public static String getFilesMetaDataApiUrl() {
+        //STOPSHIP
+        if (isEmulator()) {
+            return "http://10.0.3.2:6000/meta";
+        } else {
+            return "https://pairapp-file-meta.herokuapp.com/meta";
+        }
+    }
 }

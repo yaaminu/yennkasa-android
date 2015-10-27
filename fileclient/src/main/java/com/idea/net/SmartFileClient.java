@@ -1,5 +1,7 @@
 package com.idea.net;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.text.TextUtils;
 import android.util.Base64;
 
@@ -13,10 +15,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -31,21 +33,23 @@ import retrofit.mime.TypedFile;
 abstract class SmartFileClient implements FileApi {
 
     private static final String TAG = SmartFileClient.class.getSimpleName();
+    private final String linksPrefsKey;
     private static final Executor WORKER = Executors.newCachedThreadPool();
-    public static final String CACHED_LINKS = "cachedLinks";
     private final String authorization;
-    private static final String ENDPOINT = Config.getMessageApiEndpoint();
-    // "https://app.smartfile.com/api/2";
+    private static final String ENDPOINT = //Config.getMessageApiEndpoint();//STOPSHIP
+            "https://app.smartfile.com/api/2";
     private final SmartFileService api;
     private final String dir;
+    private final MetaApi metaApi;
 
     SmartFileClient(String key, String password, String dir) {
         if (TextUtils.isEmpty(key) || TextUtils.isEmpty(password) || TextUtils.isEmpty(dir)) {
             throw new IllegalArgumentException("either key or password or dir is invalid");
         }
-        dir = "dummy"; //STOPSHIP
+        // dir = "dummy"; //STOPSHIP
         this.dir = dir;
         authorization = "Basic " + Base64.encodeToString((key + ":" + password).getBytes(), Base64.NO_WRAP);
+        linksPrefsKey = TAG + this.dir;
         RequestInterceptor reqInterceptor = new RequestInterceptor() {
             @Override
             public void intercept(RequestFacade requestFacade) {
@@ -64,10 +68,21 @@ abstract class SmartFileClient implements FileApi {
         };
         api = new RestAdapter.Builder().setEndpoint(ENDPOINT)
                 .setLog(logger)
-                .setLogLevel(RestAdapter.LogLevel.FULL)
+                .setLogLevel(BuildConfig.DEBUG ? RestAdapter.LogLevel.FULL : RestAdapter.LogLevel.NONE)
                 .setExecutors(WORKER, WORKER)
                 .setRequestInterceptor(reqInterceptor)
                 .build().create(SmartFileService.class);
+
+        metaApi = new RestAdapter.Builder().setEndpoint(Config.getFilesMetaDataApiUrl())
+                .setLog(logger)
+                .setLogLevel(BuildConfig.DEBUG ? RestAdapter.LogLevel.FULL : RestAdapter.LogLevel.NONE)
+                .setRequestInterceptor(new RequestInterceptor() {
+                    @Override
+                    public void intercept(RequestFacade requestFacade) {
+                        requestFacade.addHeader("Authorization", "kiibodaS3crite");
+                    }
+                })
+                .build().create(MetaApi.class);
     }
 
 
@@ -96,11 +111,21 @@ abstract class SmartFileClient implements FileApi {
             String cachedLink = getCachedLink();
             String url;
             if (TextUtils.isEmpty(cachedLink)) {
-                Calendar calendar = new GregorianCalendar();
-                calendar.set(Calendar.YEAR, 2038);
-                JsonObject object = api.getLink(true, true, calendar.getTime().getTime(), this.dir);
+                JsonObject object = api.getLink(true, true, 31536000, this.dir);
                 final String link = object.getAsJsonArray("results").get(0).getAsJsonObject().get("href").getAsString();
                 url = link + countingTypedFile.fileName();
+                final Map<String, String> body = new HashMap<>();
+                body.put("link", url);
+                body.put("dir", this.dir);
+                body.put("auth", this.authorization);
+
+                try {
+                    metaApi.saveLink(body);
+                    PLog.d(TAG, "success, linked saved on the backend");
+                } catch (RetrofitError e) {
+                    callback.done(new FileClientException(e.getCause(), -1), null);
+                    return;
+                }
                 cacheLink(link);
             } else {
                 url = cachedLink + countingTypedFile.fileName();
@@ -124,12 +149,19 @@ abstract class SmartFileClient implements FileApi {
     }
 
     private void cacheLink(String link) {
-        Config.getApplicationWidePrefs().edit().putString(SmartFileClient.class.getName() + this.dir, link).apply();
+        Context context = Config.getApplicationContext();
+        SharedPreferences preferences = context.getSharedPreferences(linksPrefsKey, Context.MODE_PRIVATE);
+        preferences.edit().putString(getKey(), link).apply();
+    }
 
+    private String getKey() {
+        return FileUtils.hash((this.authorization + this.dir).getBytes());
     }
 
     private String getCachedLink() {
-        return Config.getApplicationWidePrefs().getString(SmartFileClient.class.getName() + this.dir, "");
+        Context context = Config.getApplicationContext();
+        SharedPreferences preferences = context.getSharedPreferences(linksPrefsKey, Context.MODE_PRIVATE);
+        return preferences.getString(getKey(), null);
     }
 
     @Override
@@ -165,7 +197,10 @@ abstract class SmartFileClient implements FileApi {
                         //quick fix to force progress to be noticeable
                         try {
                             Thread.sleep(50);
-                        } catch (InterruptedException ignored) {
+                        } catch (InterruptedException e) {
+                            PLog.d(TAG, "interrupted while uploading file!");
+                            Thread.currentThread().interrupt();
+                            return;
                         }
                     }
                 }

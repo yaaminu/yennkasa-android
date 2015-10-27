@@ -5,6 +5,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
 
+import com.idea.data.ContactSyncService;
 import com.idea.data.Message;
 import com.idea.data.UserManager;
 import com.idea.messenger.MessageCenter;
@@ -12,11 +13,10 @@ import com.idea.messenger.MessageProcessor;
 import com.idea.messenger.PairAppClient;
 import com.idea.pairapp.BuildConfig;
 import com.idea.pairapp.R;
-import com.idea.net.ParseClient;
 import com.idea.util.Config;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
-import com.idea.workers.ContactSyncService;
+import com.parse.ParseCrashReporting;
 
 /**
  * @author Null-Pointer on 6/6/2015.
@@ -79,10 +79,10 @@ public class PairApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        PLog.setLogLevel(BuildConfig.DEBUG ? PLog.LEVEL_VERBOSE : PLog.LEVEL_ERROR);
+        PLog.setLogLevel(BuildConfig.DEBUG ? PLog.LEVEL_VERBOSE : PLog.LEVEL_FATAL);
         TaskManager.init(this);
         Config.init(this);
-        ParseClient.init(this);
+        ParseCrashReporting.enable(this);
         if (UserManager.getInstance().isUserVerified()) {
             PairAppClient.startIfRequired(this);
         }

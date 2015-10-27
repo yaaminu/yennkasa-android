@@ -1,0 +1,58 @@
+[{
+    "key": "Notifications",
+    "standAlone": false,
+    "type": 1,
+    "order": 10
+}, {
+    "key": "Storage",
+    "standAlone": false,
+    "type": 1,
+    "order": 20
+}, {
+    "key": "Network",
+    "standAlone": false,
+    "type": 1,
+    "order": 30
+}, {
+    "key": "autoDownloadMessage",
+    "order": 31,
+    "standAlone": false,
+    "type": 4,
+    "defaultValue": false
+}, {
+    "key": "deleteAttachementsOnMessageDelete",
+    "order": 21,
+    "standAlone": false,
+    "type": 2,
+    "defaultValue": false
+}, {
+    "key": "deleteOldMessages",
+    "order": 22,
+    "standAlone": false,
+    "type": 8,
+    "defaultValue": false
+}, {
+    "key": "inAppNotifications",
+    "order": 11,
+    "standAlone": false,
+    "type": 2,
+    "defaultValue": true
+}, {
+    "key": "newMessageTone",
+    "order": 12,
+    "standAlone": false,
+    "type": 4,
+    "defaultValue": "default"
+}, {
+    "key": "vibrateOnNewMessage",
+    "order": 13,
+    "standAlone": false,
+    "type": 2,
+    "defaultValue": false
+}, {
+    "key": "litLightOnNewMessage",
+    "order": 14,
+    "standAlone": false,
+    "type": 2,
+    "defaultValue": true
+}]

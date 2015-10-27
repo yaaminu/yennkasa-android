@@ -14,6 +14,7 @@ import com.idea.Errors.PairappException;
 import com.idea.data.Message;
 import com.idea.data.UserManager;
 import com.idea.net.ParseClient;
+import com.idea.pairapp.BuildConfig;
 import com.idea.util.Config;
 import com.idea.util.L;
 import com.idea.util.LiveCenter;
@@ -292,13 +293,9 @@ public class PairAppClient extends Service {
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
-                ParseClient.getInstance().sendFeedBack(report);
+                ParseClient.sendFeedBack(report);
             }
         });
-    }
-
-    public static void download(Message message) {
-        MessageProcessor.download(message);
     }
 
     public class PairAppClientInterface extends Binder {
@@ -332,6 +329,13 @@ public class PairAppClient extends Service {
         @SuppressWarnings("unused")
         public void callUser(String userId) {
             oops();
+        }
+
+        public void downloadAttachment(Message message) {
+            if (message == null) {
+                throw new IllegalArgumentException("message is null");
+            }
+            Worker.download(PairAppClient.this, message);
         }
 
         public void registerUINotifier(final Notifier notifier) {
@@ -439,9 +443,7 @@ public class PairAppClient extends Service {
                     sendMessageInternal(message);
                 }
             };
-            if (!TaskManager.executeNow(sendTask)) {
-                TaskManager.execute(sendTask);
-            }
+            TaskManager.executeNow(sendTask,true);
         }
 
         private void doSendMessages(Collection<Message> messages) {

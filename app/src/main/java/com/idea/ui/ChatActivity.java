@@ -29,7 +29,6 @@ import com.idea.data.Conversation;
 import com.idea.data.Message;
 import com.idea.data.User;
 import com.idea.data.UserManager;
-import com.idea.messenger.PairAppClient;
 import com.idea.pairapp.R;
 import com.idea.util.FileUtils;
 import com.idea.util.LiveCenter;
@@ -45,9 +44,14 @@ import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
+import io.realm.RealmQuery;
 
 import static com.idea.data.Message.TYPE_TEXT_MESSAGE;
 
@@ -61,8 +65,8 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private static final String MENTION_PATTERN = "@.*";
     private static Message selectedMessage;
     private static int cursor = -1; //static so that it can resist activity restarts.
-    boolean wasTyping = false;
-    boolean outOfSync = false;
+    private boolean wasTyping = false,
+            outOfSync = false;
 
     private final MessagesAdapter.Delegate delegate = new MessagesAdapter.Delegate() {
         @Override
@@ -82,15 +86,19 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
         @Override
         public int getProgress(Message message) {
-            if(message.getState() == Message.STATE_PENDING) {
+            if (Message.isIncoming(message) || message.getState() == Message.STATE_PENDING) {
                 return getMessageProgress(message);
             }
-            return  -1;
+            return -1;
         }
 
         @Override
         public void download(Message message) {
-            PairAppClient.download(message);
+            if (bound) {
+                pairAppClientInterface.downloadAttachment(message);
+            } else {
+                bind();
+            }
         }
 
         @Override
@@ -144,16 +152,30 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
-        peer = userManager.fetchUserIfRequired(usersRealm, peerId);
+        peer = userManager.fetchUserIfRequired(usersRealm, peerId,true);
         String peerName = peer.getName();
         //noinspection ConstantConditions
         final ActionBar actionBar = getSupportActionBar();
         actionBar.setTitle(peerName);
         actionBar.setDisplayHomeAsUpEnabled(true);
-        messages = messageConversationRealm.where(Message.class).equalTo(Message.FIELD_FROM, peer.getUserId())
-                .or()
-                .equalTo(Message.FIELD_TO, peer.getUserId())
-                .findAllSorted(Message.FIELD_DATE_COMPOSED, true, Message.FIELD_TYPE, false);
+        RealmQuery<Message> messageQuery = messageConversationRealm.where(Message.class);
+        String mainUserId = getMainUserId();
+        if (User.isGroup(peer)) {
+            messageQuery.equalTo(Message.FIELD_TO, peer.getUserId())
+                    .or()
+                    .equalTo(Message.FIELD_FROM, peer.getUserId());
+        } else {
+            messageQuery.beginGroup()
+                    .equalTo(Message.FIELD_FROM, peer.getUserId())
+                    .equalTo(Message.FIELD_TO, mainUserId)
+                    .endGroup()
+                    .or()
+                    .beginGroup()
+                    .equalTo(Message.FIELD_FROM, mainUserId)
+                    .equalTo(Message.FIELD_TO, peerId)
+                    .endGroup();
+        }
+        messages = messageQuery.findAllSorted(Message.FIELD_DATE_COMPOSED, true, Message.FIELD_TYPE, false);
         setUpCurrentConversation();
         sendButton.setOnClickListener(this);
         messageEt.addTextChangedListener(this);
@@ -200,6 +222,15 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 //        }else {
         menu = toolBar.getMenu();
         if (menu != null && menu.size() > 0) { //required for toolbar to behave on older platforms <=10
+            //quick fix for menu items appearing twice on the toolbar. this is a bug in the library am using
+            int menuSize = menu.size();
+            Set<Integer> items = new HashSet<>(menuSize + 2);
+            for (int i = 0; i < menu.size(); i++) {
+                MenuItem item = menu.getItem(i);
+                if (!items.add(item.getItemId())) {
+                    item.setVisible(false);
+                }
+            }
             User mainUser = getCurrentUser();
             final User admin = peer.getAdmin();
             menu.findItem(R.id.action_invite_friends)
@@ -474,7 +505,8 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     public void notifyUser(Context context, final Message message, String sender) {
         //noinspection StatementWithEmptyBody
-        if (sender.equals(peer.getName())) {
+        if (message.getTo().equals(peer.getUserId()) || message.getFrom().equals(peer.getUserId())
+                || peer.getName().equals(sender)) {
             // TODO: 8/17/2015 give user a tiny hint of new messages and allow fast scroll
         } else {
             super.notifyUser(this, message, sender);

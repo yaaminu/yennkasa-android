@@ -2,6 +2,9 @@ package com.idea.util;
 
 import android.app.Application;
 
+import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -27,6 +30,20 @@ public class TaskManager {
         if (!initialised.getAndSet(true)) {
             PLog.w(TAG, "initialising %s", TAG);
             // TODO: 9/28/2015 look up for all pending tasks like dp change
+            final Timer timer = new Timer("cleanup Timer", true);
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    try {
+                        org.apache.commons.io.FileUtils.cleanDirectory(Config.getTempDir());
+                    } catch (IOException ignored) {
+
+                    } finally {
+                        timer.cancel();
+                    }
+                }
+            }, 1); //immediately
+
         }
     }
 

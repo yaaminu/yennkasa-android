@@ -46,86 +46,6 @@ public class MessageProcessor extends IntentService {
     }
 
 
-    private static final Set<String> downloading = new HashSet<>();
-
-    public static void download(final Message message) {
-        synchronized (downloading) {
-            if (!downloading.add(message.getId())) {
-                PLog.w(TAG, "already  downloading message");
-                return;
-            }
-        }
-        try {
-            LiveCenter.acquireProgressTag(message.getId());
-        } catch (PairappException e) {
-            throw new RuntimeException(e.getCause());
-        }
-
-        final String messageId = message.getId(),
-                messageBody = message.getMessageBody();
-        final int type = message.getType();
-        TaskManager.execute(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-                        Realm realm = null;
-                        final File finalFile;
-                        String destination = messageBody.substring(messageBody.lastIndexOf('/'));
-
-                        switch (type) {
-                            case Message.TYPE_VIDEO_MESSAGE:
-                                finalFile = new File(Config.getAppVidMediaBaseDir(), destination);
-                                break;
-                            case Message.TYPE_PICTURE_MESSAGE:
-                                finalFile = new File(Config.getAppImgMediaBaseDir(), destination);
-                                break;
-                            case Message.TYPE_BIN_MESSAGE:
-                                finalFile = new File(Config.getAppBinFilesBaseDir(), destination);
-                                break;
-                            default:
-                                throw new AssertionError("should never happen");
-                        }
-                        FileUtils.ProgressListener listener = new FileUtils.ProgressListener() {
-                            @Override
-                            public void onProgress(long expected, long processed) {
-                                double ratio = ((double) processed) / expected;
-                                final int progress = (int) (100 * ratio);
-                                LiveCenter.updateProgress(messageId, progress);
-                            }
-                        };
-                        try {
-                            FileUtils.save(finalFile, messageBody, listener);
-                            realm = Message.REALM(Config.getApplicationContext());
-                            realm.beginTransaction();
-                            Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
-                            toBeUpdated.setMessageBody(finalFile.getAbsolutePath());
-                            realm.commitTransaction();
-                            onComplete(null);
-                        } catch (IOException e) {
-                            PLog.d(TAG, e.getMessage(), e.getCause());
-                            Exception error = new Exception(Config.getApplicationContext().getString(com.idea.data.R.string.st_unable_to_connect));
-                            onComplete(error);
-                        } finally {
-                            if (realm != null) {
-                                realm.close();
-                            }
-                        }
-                    }
-
-                    private void onComplete(final Exception error) {
-                        LiveCenter.releaseProgressTag(messageId);
-                        synchronized (downloading) {
-                            downloading.remove(messageId);
-                        }
-                        if (error != null) {
-                            ErrorCenter.reportError(messageId + TAG + "download", error.getMessage());
-                        }
-                    }
-                });
-    }
-
-
     @Override
     protected void onHandleIntent(final Intent intent) {
 
@@ -181,7 +101,7 @@ public class MessageProcessor extends IntentService {
                 }
                 realm.close();
             } else if (type.equals(UPDATE)) {
-                PLog.i(TAG, "update available, latest version: %s",data1.getString(PairAppClient.VERSION));
+                PLog.i(TAG, "update available, latest version: %s", data1.getString(PairAppClient.VERSION));
             } else {
                 throw new JSONException("unknown message");
             }
@@ -222,7 +142,7 @@ public class MessageProcessor extends IntentService {
                 peerId = message.getTo();
                 if (!UserManager.getInstance().isGroup(peerId)) {
                     PLog.d(TAG, "message from unknown group %s, dropped", peerId);
-                    UserManager.getInstance().refreshGroup(peerId);
+                    UserManager.getInstance().refreshUserDetails(peerId);
                     return;
                 }
             } else {
@@ -271,13 +191,12 @@ public class MessageProcessor extends IntentService {
             MessageCenter.notifyReceived(message);
             if (!Message.isTextMessage(message)) {
                 if (ConnectionUtils.isWifiConnected() || UserManager.getInstance().getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE, false)) {
-                    download(message);
+                    Worker.download(this, message);
                 }
             }
         } finally {
             realm.close();
         }
     }
-
 
 }

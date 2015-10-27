@@ -90,7 +90,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                 final int default_fragment = intent.getIntExtra(DEFAULT_FRAGMENT, savedPosition);
                 savedPosition = Math.min(default_fragment, MyFragmentStatePagerAdapter.POSITION_SETTINGS_FRAGMENT);
                 savedPosition = Math.max(MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT, default_fragment);
-                //testChatActivity();
+//                testChatActivity();
             } else {
                 UiHelpers.gotoSetUpActivity(this);
             }
@@ -212,9 +212,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         @Override
         public void onChange() {
             checkIfUserAvailable();
-            if (!noUserAvailable) {
-                pager.getAdapter().notifyDataSetChanged();
-            }
+            pager.getAdapter().notifyDataSetChanged();
         }
     };
     private Realm realm;

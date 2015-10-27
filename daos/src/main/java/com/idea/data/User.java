@@ -31,7 +31,8 @@ public class User extends RealmObject {
             FIELD_LAST_ACTIVITY = "lastActivity",
             FIELD_PASSWORD = "password",
             FIELD_COUNTRY = "country",
-            FIELD_HAS_CALL = "hasCall";
+            FIELD_HAS_CALL = "hasCall",
+            FIELD_DP = "DP";
     private static final String TAG = User.class.getSimpleName();
     @PrimaryKey
     private String userId;

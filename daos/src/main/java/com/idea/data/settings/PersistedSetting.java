@@ -29,7 +29,6 @@ public class PersistedSetting extends RealmObject {
             FIELD_SUMMARY = "summary",
             FIELD_TITLE = "title",
             FIELD_TYPE = "type";
-    public static final String SILENT = "silent";
     @PrimaryKey
     private String key;
 

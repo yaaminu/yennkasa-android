@@ -137,7 +137,7 @@ public class SettingsFragment extends ListFragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK && requestCode == PICK_RINGTONE_REQUEST_CODE) {
-            String ringToneUri = PersistedSetting.SILENT;
+            String ringToneUri = UserManager.SILENT;
             Uri uri = data.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI);
             String title = getString(R.string.silent);
             if (uri != null) {
@@ -146,7 +146,7 @@ public class SettingsFragment extends ListFragment {
                 try {
                     String[] projection = {MediaStore.MediaColumns.TITLE};
                     cursor = getContext().getContentResolver().query(uri, projection, null, null, null);
-                    if (cursor.getCount() > 0) {
+                    if (cursor != null && cursor.getCount() > 0) {
                         cursor.moveToFirst();
                         int columnIndex = cursor.getColumnIndex(MediaStore.MediaColumns.TITLE);
                         title = columnIndex == -1 ? getString(R.string.no_name) : cursor.getString(columnIndex);

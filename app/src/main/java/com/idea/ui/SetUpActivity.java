@@ -9,7 +9,7 @@ import android.support.v4.app.Fragment;
 import com.idea.PairApp;
 import com.idea.messenger.PairAppClient;
 import com.idea.util.UiHelpers;
-import com.idea.workers.ContactSyncService;
+import com.idea.data.ContactSyncService;
 import com.idea.Errors.ErrorCenter;
 import com.idea.data.UserManager;
 import com.idea.pairapp.R;

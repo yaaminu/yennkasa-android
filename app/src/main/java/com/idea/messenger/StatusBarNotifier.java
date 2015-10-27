@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.media.AudioAttributes;
-import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -24,6 +23,7 @@ import com.idea.ui.ChatActivity;
 import com.idea.ui.MainActivity;
 import com.idea.util.Config;
 import com.idea.util.LiveCenter;
+import com.idea.util.MediaUtils;
 import com.idea.util.PLog;
 
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ import io.realm.Realm;
 /**
  * @author Null-Pointer on 8/12/2015.
  */
-public class StatusBarNotifier implements Notifier {
+class StatusBarNotifier implements Notifier {
     private final static int MESSAGE_NOTIFICATION_ID = 1001;
     private final static int MESSAGE_PENDING_INTENT_REQUEST_CODE = 1002;
     private static final String TAG = StatusBarNotifier.class.getSimpleName();
@@ -56,7 +56,7 @@ public class StatusBarNotifier implements Notifier {
             action = new Intent(context, MainActivity.class);
         } else {
             action = new Intent(context, ChatActivity.class);
-            action.putExtra(ChatActivity.EXTRA_PEER_ID, message.getFrom());
+            action.putExtra(ChatActivity.EXTRA_PEER_ID, Message.isGroupMessage(message) ? message.getTo() : message.getFrom());
         }
 
         PendingIntent pendingIntent = PendingIntent.getActivity(Config.getApplicationContext(),
@@ -102,7 +102,10 @@ public class StatusBarNotifier implements Notifier {
     }
 
     private static void playToneIfAllowed(Context context) {
-        String uriString = UserManager.getInstance().getStringPref(UserManager.NEW_MESSAGE_TONE, "");
+        String uriString = UserManager.getInstance().getStringPref(UserManager.NEW_MESSAGE_TONE, UserManager.SILENT);
+        if(uriString.equals(UserManager.SILENT)){
+            PLog.d(TAG,"silent, aborting ringtone playing");
+        }
         Uri uri;
         if (TextUtils.isEmpty(uriString) || uriString.equals(UserManager.DEFAULT)) {
             uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -113,12 +116,7 @@ public class StatusBarNotifier implements Notifier {
             uri = Uri.parse(uriString);
         }
         PLog.d(TAG, "Retrieved ringtone %s", uri + "");
-        Ringtone ringtone = RingtoneManager.getRingtone(context, uri);
-        if (ringtone != null) {
-            ringtone.play();
-        } else {
-            PLog.d(TAG, "unable to play ringtone");
-        }
+        MediaUtils.playTone(context, uri);
     }
 
     private static void vibrateIfAllowed(Context context) {
@@ -169,9 +167,9 @@ public class StatusBarNotifier implements Notifier {
             case 1:
                 if (unReadMessages == 1) {
                     String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(applicationContext, message.getType());
-                    text = sender + ":  " + messageBody;
+                    text = (Message.isGroupMessage(message) ? sender + "@" + recentChatList.get(0) : sender) + ":  " + messageBody;
                 } else {
-                    text = unReadMessages + " " + getString(R.string.new_message_from) + " " + sender;
+                    text = unReadMessages + " " + getString(R.string.new_message_from) + " " + (Message.isGroupMessage(message) ? sender + "@" + recentChatList.get(0) : sender);
                 }
                 break;
             case 2:

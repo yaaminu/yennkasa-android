@@ -108,11 +108,28 @@ public class FileUtils {
     }
 
     public static String getExtension(String path) {
+        return getExtension(path, null);
+    }
+
+    public static String getExtension(String path, String fallback) {
         String extension = FilenameUtils.getExtension(path);
-        if (extension == null) return "";
+        if (extension == null || extension.length() < 1) return fallback;
         return extension;
     }
 
+    public static String hash(byte[] source) {
+        if (source == null) {
+            throw new IllegalArgumentException("stream == null");
+        }
+
+        String hashString = "";
+        //noinspection ForLoopReplaceableByForEach
+        for (int i = 0; i < source.length; i++) {
+            hashString += Integer.toString((source[i] & 0xff) + 0x100, 16).substring(1);
+        }
+        PLog.d(TAG, "hash: " + hashString);
+        return hashString;
+    }
 
     public static void save(File file, String url) throws IOException {
         save(file, url, null);
@@ -140,7 +157,7 @@ public class FileUtils {
         }
     }
 
-    public static String hashFile(File source){
+    public static String hashFile(File source) {
         try {
             MessageDigest digest = MessageDigest.getInstance("sha1");
             digest.reset();
@@ -227,7 +244,7 @@ public class FileUtils {
         if (source == null || destination == null) {
             throw new NullPointerException("null!");
         }
-        if (destination.exists() && destination.isDirectory()) {
+        if (destination.isDirectory()) {
             throw new IllegalArgumentException("destination file is a directory");
         }
         if (destination.getCanonicalPath().equals(source.getCanonicalPath())) { //same file?

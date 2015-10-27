@@ -36,6 +36,7 @@ import com.idea.util.ViewUtils;
 import com.idea.view.FrameLayout;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.widget.FloatingActionButton;
+import com.squareup.okhttp.Call;
 import com.squareup.picasso.Callback;
 
 import java.io.File;
@@ -107,6 +108,14 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                         }
                     }, null);
                     break;
+                case R.id.bt_dissolve_group:
+                    UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), R.string.dissolve_group_prompt, R.string.yes, android.R.string.no, new UiHelpers.Listener() {
+                        @Override
+                        public void onClick() {
+                            dissolveGroup();
+                        }
+                    }, null);
+                    break;
                 case R.id.bt_call:
                     Intent intent = new Intent(Intent.ACTION_DIAL);
                     intent.setData(Uri.parse("tel:" + phoneInlocalFormat));
@@ -161,6 +170,20 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             }
         }
     };
+
+    private void dissolveGroup() {
+        final ProgressDialog dialog = new ProgressDialog(getContext());
+        dialog.setMessage(getString(R.string.st_please_wait));
+        dialog.setCancelable(false);
+        dialog.show();
+        UserManager.getInstance().dissolveGroup(user, new UserManager.CallBack() {
+            @Override
+            public void done(Exception e) {
+                dialog.dismiss();
+                getActivity().finish();
+            }
+        });
+    }
 
     public ProfileFragment() {
         // Required empty public constructor

@@ -1,4 +1,4 @@
-package com.idea.workers;
+package com.idea.data;
 
 import android.app.AlarmManager;
 import android.app.IntentService;
@@ -6,8 +6,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
-import com.idea.data.ContactsManager;
-import com.idea.data.UserManager;
 import com.idea.util.PLog;
 
 import java.util.ArrayList;

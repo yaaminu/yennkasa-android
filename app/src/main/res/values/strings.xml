@@ -227,4 +227,5 @@
     <string name="silent">Silent</string>
     <string name="send_token_notice">Your phone number needs to be verified. Ensure you have a working SMS plan. Click send token when you are ready</string>
     <string name="send_token">Send token</string>
+    <string name="dissolve_group_prompt">Sure you want to permanently dissolve this group? This action cannot be undone.</string>
 </resources>

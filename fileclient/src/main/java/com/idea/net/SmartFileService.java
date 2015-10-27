@@ -3,15 +3,10 @@ package com.idea.net;
 import com.google.gson.JsonObject;
 
 import retrofit.client.Response;
-import retrofit.http.DELETE;
-import retrofit.http.Field;
-import retrofit.http.FormUrlEncoded;
-import retrofit.http.Multipart;
-import retrofit.http.POST;
-import retrofit.http.PUT;
-import retrofit.http.Part;
-import retrofit.http.Path;
+import retrofit.http.*;
 import retrofit.mime.TypedFile;
+
+import java.util.Map;
 
 public interface SmartFileService {
 
@@ -28,7 +23,7 @@ public interface SmartFileService {
     @POST("/link")
     JsonObject getLink(@Field("read") boolean read,
                        @Field("list") boolean list,
-                       @Field("cahe")long age,
+                       @Field("cahe") long age,
                        @Field("path") String name);
 
     @FormUrlEncoded

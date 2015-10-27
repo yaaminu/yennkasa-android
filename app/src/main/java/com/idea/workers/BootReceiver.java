@@ -3,6 +3,7 @@ package com.idea.workers;
 import android.content.Context;
 import android.content.Intent;
 
+import com.idea.data.ContactSyncService;
 import com.idea.data.UserManager;
 import com.idea.messenger.PairAppClient;
 import com.idea.util.PLog;
