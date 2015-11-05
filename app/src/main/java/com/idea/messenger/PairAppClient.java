@@ -1,6 +1,8 @@
 package com.idea.messenger;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -9,12 +11,17 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.util.Pair;
 
 import com.idea.Errors.PairappException;
 import com.idea.data.Message;
 import com.idea.data.UserManager;
 import com.idea.net.ParseClient;
 import com.idea.pairapp.BuildConfig;
+import com.idea.pairapp.R;
+import com.idea.ui.ChatActivity;
 import com.idea.util.Config;
 import com.idea.util.L;
 import com.idea.util.LiveCenter;
@@ -24,11 +31,13 @@ import com.idea.util.ThreadUtils;
 
 import org.json.JSONObject;
 
+import java.security.SecureRandom;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.realm.Realm;
@@ -41,11 +50,13 @@ public class PairAppClient extends Service {
     public static final String ACTION_SEND_ALL_UNSENT = "send unsent messages";
     public static final String ACTION = "action";
     static final String VERSION = "version";
+    public static final int not_id = 10987;
+    static final int notId = new SecureRandom().nextInt();
     private static Dispatcher<Message> SOCKETSIO_DISPATCHER;
     private static AtomicBoolean isClientStarted = new AtomicBoolean(false);
     private static MessagesProvider messageProvider = new ParseMessageProvider();
     private static Stack<Activity> backStack = new Stack<>();
-    private final PairAppClientInterface INTERFACE = new PairAppClientInterface();
+    private PairAppClientInterface INTERFACE;// = new PairAppClientInterface();
     private Dispatcher<Message> PARSE_MESSAGE_DISPATCHER;
     private WorkerThread WORKER_THREAD;
     private static final Map<String, String> credentials;
@@ -189,6 +200,7 @@ public class PairAppClient extends Service {
 
     private synchronized void bootClient() {
         if (!isClientStarted.get()) {
+            INTERFACE = new PairAppClientInterface();
             PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance(credentials);
             monitorDispatcher(PARSE_MESSAGE_DISPATCHER);
             isClientStarted.set(true);
@@ -207,6 +219,7 @@ public class PairAppClient extends Service {
             MessageCenter.stopListeningForSocketMessages();
             isClientStarted.set(false);
             PLog.i(TAG, TAG + ": bye");
+            INTERFACE = null;
             return;
         }
         L.w(TAG, "shutting down pairapp client when it is already shut down");
@@ -239,21 +252,61 @@ public class PairAppClient extends Service {
     }
 
     private final Dispatcher.DispatcherMonitor monitor = new Dispatcher.DispatcherMonitor() {
+        final Map<String, Pair<String, Integer>> progressMap = new ConcurrentHashMap<>();
+
         @Override
-        public void onDispatchFailed(String reason, String objectIdentifier) {
-            PLog.d(TAG, "message with id : %s dispatch failed with reason: " + reason, objectIdentifier);
-            LiveCenter.releaseProgressTag(objectIdentifier);
+        public void onDispatchFailed(String reason, String messageId) {
+            PLog.d(TAG, "message with id : %s dispatch failed with reason: " + reason, messageId);
+            LiveCenter.releaseProgressTag(messageId);
+            progressMap.remove(messageId);
+            cancelNotification(messageId);
         }
 
         @Override
-        public void onDispatchSucceed(String objectIdentifier) {
-            PLog.d(TAG, "message with id : %s dispatched successfully", objectIdentifier);
-            LiveCenter.releaseProgressTag(objectIdentifier);
+        public void onDispatchSucceed(String messageId) {
+            PLog.d(TAG, "message with id : %s dispatched successfully", messageId);
+            LiveCenter.releaseProgressTag(messageId);
+            progressMap.remove(messageId);
+            cancelNotification(messageId);
+        }
+
+        private void cancelNotification(String messageId) {
+            NotificationManagerCompat manager = NotificationManagerCompat.from(PairAppClient.this);// get
+            manager.cancel(messageId, not_id);
         }
 
         @Override
         public void onProgress(String id, int progress, int max) {
             LiveCenter.updateProgress(id, progress);
+            Pair<String, Integer> previousProgress = progressMap.get(id);
+            if (previousProgress != null && previousProgress.first != null && previousProgress.second != null) {
+                if (previousProgress.second >= progress) {
+                    PLog.d(TAG, "late progress report");
+                    return;
+                }
+            } else {
+                Realm messageRealm = Message.REALM(PairAppClient.this);
+                Message message = messageRealm.where(Message.class).equalTo(Message.FIELD_ID, id).findFirst();
+                if (message == null) {
+                    return;
+                }
+                previousProgress = new Pair<>(message.getTo(), progress);
+                progressMap.put(id, previousProgress);
+                messageRealm.close();
+            }
+
+            PairAppClient self = PairAppClient.this;
+            Intent intent = new Intent(self, ChatActivity.class);
+                intent.putExtra(ChatActivity.EXTRA_PEER_ID, previousProgress.first);
+                Notification notification = new NotificationCompat.Builder(self)
+                        .setContentTitle(getString(R.string.upload_progress))
+                        .setProgress(100, progress, progress <= 0)
+                        .setAutoCancel(true)
+                        .setContentIntent(PendingIntent.getActivity(self, 1003, intent, PendingIntent.FLAG_UPDATE_CURRENT))
+                        .setContentText(progress > 0 ? progress + "/" + max : getString(R.string.loading))
+                        .setSmallIcon(R.drawable.ic_launcher).build();
+                NotificationManagerCompat manager = NotificationManagerCompat.from(self);// getSystemService(NOTIFICATION_SERVICE));
+                manager.notify(id, not_id, notification);
         }
 
         @Override
@@ -443,7 +496,7 @@ public class PairAppClient extends Service {
                     sendMessageInternal(message);
                 }
             };
-            TaskManager.executeNow(sendTask,true);
+            TaskManager.executeNow(sendTask, true);
         }
 
         private void doSendMessages(Collection<Message> messages) {

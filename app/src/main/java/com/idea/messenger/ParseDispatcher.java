@@ -39,28 +39,37 @@ class ParseDispatcher extends AbstractMessageDispatcher {
 
     @Override
     public void dispatchToGroup(final Message message, List<String> members) {
-        finallyDispatch(message, members, true);
+        finallyDispatch(message, members);
     }
 
     @Override
     public void dispatchToUser(final Message message) {
-        List<String> target = new ArrayList<>(1);
-        target.add(message.getTo());
-        finallyDispatch(message,target);
+        finallyDispatch(message,message.getTo(),false);
     }
 
     private void finallyDispatch(Message message, List<String> target) {
         PLog.d(TAG, "dispatching message: " + message.getMessageBody()
                 + " from " + message.getFrom()
                 + " to " + message.getTo());
-        finallyDispatch(message, target, false);
+        // StringBuilder dirtyJson = new StringBuilder("\"[");
+        // int counter = 1;
+        // target.remove(message.getFrom());
+        // for(String recipient:target){
+        //     if(counter > 1 && counter++ < target.size()){
+        //       dirtyJson.append(",");
+        //     }
+        //     dirtyJson.append(recipient);
+        // }
+        // dirtyJson.append("]\"");
+        // PLog.d(TAG,"receipeints: %s",dirtyJson.toString());
+        finallyDispatch(message,target, true);
     }
 
     private void finallyDispatch(Message message, Object target, boolean isGroupMessage) {
         String messageJson = MessageJsonAdapter.INSTANCE.toJson(message).toString();
         try {
             Map<String, Object> params = new HashMap<>(3);
-            params.put(TO, message.getTo());
+            params.put(TO, target);
             params.put(IS_GROUP_MESSAGE, isGroupMessage);
             params.put(FROM,message.getFrom());
             params.put(MESSAGE,messageJson);
@@ -72,6 +81,7 @@ class ParseDispatcher extends AbstractMessageDispatcher {
     }
 
     private String prepareReport(ParseException e) {
+        PLog.d(TAG,e.getMessage(),e.getCause());
         if (e.getCode() == ParseException.CONNECTION_FAILED) {
             return Config.getApplicationContext().getString(R.string.st_unable_to_connect);
         }

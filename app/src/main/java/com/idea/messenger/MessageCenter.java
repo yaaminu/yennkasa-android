@@ -143,6 +143,7 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             obj.put(SocketIoClient.MSG_STS_MESSAGE_ID, message.getId());
             obj.put(SocketIoClient.MSG_STS_STATUS, Message.STATE_RECEIVED);
             obj.put(MessageProcessor.MESSAGE_STATUS, "messageStatus");
+            obj.put(SocketIoClient.PROPERTY_FROM,message.getTo());
         } catch (JSONException e) {
             throw new RuntimeException(e.getCause());
         }
@@ -202,6 +203,7 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             obj.put(SocketIoClient.MSG_STS_MESSAGE_ID, message.getId());
             obj.put(SocketIoClient.MSG_STS_STATUS, Message.STATE_SEEN);
             obj.put(MessageProcessor.MESSAGE_STATUS, "messageStatus");
+            obj.put(SocketIoClient.PROPERTY_FROM,message.getTo());
         } catch (JSONException e) {
             throw new RuntimeException(e.getCause());
         }
@@ -225,9 +227,9 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        L.d(TAG, "push recieved");
+        PLog.d(TAG, "push recieved");
         String data = intent.getStringExtra(ParsePushBroadcastReceiver.KEY_PUSH_DATA);
-        L.d(TAG, data);
+        PLog.d(TAG, data);
         try {
             JSONObject pushMessage = new JSONObject(data);
 

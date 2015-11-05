@@ -41,6 +41,7 @@ public class Config {
     private static String APP_NAME = "PairApp";
     private static Application application;
     private static AtomicBoolean isChatRoomOpen = new AtomicBoolean(false);
+    private static volatile String currentPeer = null;
 
     private static boolean isExternalStorageAvailable() {
         String state = Environment.getExternalStorageState();
@@ -245,5 +246,16 @@ public class Config {
         } else {
             return "https://pairapp-file-meta.herokuapp.com/meta";
         }
+    }
+
+    private static final Object peerLock = new Object();
+
+    public static void setCurrentActivePeer(String peer) {
+        ThreadUtils.ensureMain();
+        currentPeer = peer;
+    }
+
+    public static String getCurrentActivePeer() {
+        return currentPeer;
     }
 }

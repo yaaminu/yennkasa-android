@@ -47,11 +47,15 @@ dependencies {
     compile project(':pullToRefresh')
     compile project(':textRenderer')
     compile files('libs/sinch-android-rtc-3.6.0.jar')
+    //noinspection GradleDependency
     compile 'com.android.support:appcompat-v7:22.1.1'
+    //noinspection GradleDependency
     compile 'com.android.support:cardview-v7:22.1.1'
     compile 'com.parse.bolts:bolts-android:1.2.0'
+    //noinspection GradleDependency
     compile 'com.android.support:support-v4:23.0.1'
-    compile 'uk.co.chrisjenx:calligraphy:2.1.0'
-    compile files('libs/ParseCrashReporting-1.9.4.jar')
+//    //noinspection GradleDependency
+//    compile 'com.theartofdev.edmodo:android-image-cropper:1.0.+'
+  //  compile 'uk.co.chrisjenx:calligraphy:2.1.0'
     compile project(':sockets_io_client')
 }

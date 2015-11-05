@@ -3,6 +3,7 @@ package com.idea.net;
 import com.idea.util.Config;
 import com.idea.util.FileUtils;
 import com.idea.util.PLog;
+import com.idea.util.SimpleDateUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,7 +16,7 @@ public class SmartFileMessageClient extends SmartFileClient {
     private final String userId;
 
     public SmartFileMessageClient(String key, String password, String userId) {
-        super(key, password, "Attachments");
+        super(key, password, "AttachmentsFiles");
         this.userId = userId;
     }
 
@@ -23,7 +24,7 @@ public class SmartFileMessageClient extends SmartFileClient {
     public void saveFileToBackend(File file, final FileSaveCallback callback, ProgressListener listener) {
         //noinspection StringBufferReplaceableByString
         StringBuilder hash = new StringBuilder(FileUtils.hashFile(file));
-        hash.append("_").append((userId + "_" + file.getName().split("\\Q.\\E")[0]).replaceAll("[\\W]+", "_"));
+        hash.append("_").append(SimpleDateUtil.timeStampNow()).append((userId + "_" + file.getName().split("\\Q.\\E")[0]).replaceAll("[\\W]+", "_"));
         final File tmp = new File(Config.getTempDir(), hash.toString() + "." + FileUtils.getExtension(file.getAbsolutePath(), "bin"));
         try {
             FileUtils.copyTo(file, tmp);

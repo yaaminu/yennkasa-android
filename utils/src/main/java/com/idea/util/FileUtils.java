@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.text.TextUtils;
@@ -34,6 +35,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import static org.apache.commons.io.FileUtils.ONE_GB;
 import static org.apache.commons.io.FileUtils.ONE_KB;
 
 
@@ -119,16 +121,23 @@ public class FileUtils {
 
     public static String hash(byte[] source) {
         if (source == null) {
-            throw new IllegalArgumentException("stream == null");
+            throw new IllegalArgumentException("source == null");
         }
-
-        String hashString = "";
-        //noinspection ForLoopReplaceableByForEach
-        for (int i = 0; i < source.length; i++) {
-            hashString += Integer.toString((source[i] & 0xff) + 0x100, 16).substring(1);
+        try {
+            MessageDigest digest = MessageDigest.getInstance("sha1");
+            digest.reset();
+            //re-use param source
+            source = digest.digest(source);
+            String hashString = "";
+            //noinspection ForLoopReplaceableByForEach
+            for (int i = 0; i < source.length; i++) {
+                hashString += Integer.toString((source[i] & 0xff) + 0x100, 16).substring(1);
+            }
+            PLog.d(TAG, "hash: " + hashString);
+            return hashString;
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e.getCause());
         }
-        PLog.d(TAG, "hash: " + hashString);
-        return hashString;
     }
 
     public static void save(File file, String url) throws IOException {
@@ -204,6 +213,8 @@ public class FileUtils {
         int read;
         long processed = 0;
         try {
+            listener.onProgress(bytesExpected, 0);
+            SystemClock.sleep(0);
             while ((read = bIn.read(buffer, 0, 1024)) != -1) {
                 bOut.write(buffer, 0, read);
                 processed += read;
@@ -211,6 +222,7 @@ public class FileUtils {
                     throw new IllegalStateException("inconsistent stream length");
                 }
                 listener.onProgress(bytesExpected, processed);
+                SystemClock.sleep(100);
             }
             //noinspection ResultOfMethodCallIgnored
             temp.renameTo(fileToSave);
@@ -225,6 +237,7 @@ public class FileUtils {
 
         URL location = new URL(url);
         HttpURLConnection connection = ((HttpURLConnection) location.openConnection());
+        connection.setReadTimeout(10000);
         long contentLength = connection.getContentLength();
         final InputStream in = location.openStream();//the stream will be closed later see save(file,InputStream)
         if (contentLength == -1 || listener == null) {
@@ -247,7 +260,7 @@ public class FileUtils {
         if (destination.isDirectory()) {
             throw new IllegalArgumentException("destination file is a directory");
         }
-        if (destination.getCanonicalPath().equals(source.getCanonicalPath())) { //same file?
+        if (destination.exists() && destination.getCanonicalPath().equals(source.getCanonicalPath())) { //same file?
             return;
         }
         save(destination, new FileInputStream(source));
@@ -274,15 +287,11 @@ public class FileUtils {
         }
     }
 
-    public static String sizeInLowestPrecision(String filePath) throws IOException {
-        File file = new File(filePath);
+    public static String sizeInLowestPrecision(long fileSizeBytes) {
         final Context applicationContext = Config.getApplicationContext();
-        if (!file.exists()) {
-            throw new FileNotFoundException(applicationContext.getString(R.string.file_not_found));
-        }
-        final long fileSizeBytes = file.length();
-        if (fileSizeBytes == 0) {
-            throw new IOException(applicationContext.getString(R.string.file_size_invalid));
+
+        if (fileSizeBytes <= 0) {
+            throw new IllegalArgumentException(applicationContext.getString(R.string.file_size_invalid));
         }
         if (fileSizeBytes < ONE_KB) {
             return (int) fileSizeBytes + " " + applicationContext.getString(R.string.Byte);
@@ -290,10 +299,19 @@ public class FileUtils {
         if (fileSizeBytes < ONE_MB) {
             return ((int) (fileSizeBytes / ONE_KB)) + applicationContext.getString(R.string.kilobytes);
         }
-        if (fileSizeBytes <= 8 * ONE_MB) {
+        if (fileSizeBytes <= ONE_GB) {
             return ((int) (fileSizeBytes / ONE_MB)) + applicationContext.getString(R.string.megabytes);
         }
-        throw new IOException(applicationContext.getString(R.string.file_too_large));
+        return ((int) (fileSizeBytes / ONE_GB)) + applicationContext.getString(R.string.gigabytes);
+    }
+
+    public static String sizeInLowestPrecision(String filePath) throws IOException {
+        File file = new File(filePath);
+        final Context applicationContext = Config.getApplicationContext();
+        if (!file.exists()) {
+            throw new FileNotFoundException(applicationContext.getString(R.string.file_not_found));
+        }
+        return sizeInLowestPrecision(file.length());
     }
 
     public interface ProgressListener {
@@ -302,7 +320,7 @@ public class FileUtils {
 
 
     /**
-     * the below code was copied from shamelessly copied from paulBurke: https://github.com/ipaulPro/aFileChooser
+     * the below code was  shamelessly copied from paulBurke: https://github.com/ipaulPro/aFileChooser
      * licensed under the apache licence
      */
 

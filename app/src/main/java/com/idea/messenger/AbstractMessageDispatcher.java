@@ -18,10 +18,11 @@ import com.idea.util.PLog;
 import com.idea.util.ThreadUtils;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -40,7 +41,6 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         }
     };
     protected static final String ERR_USER_OFFLINE = "user offline";
-    public static final int MAX = 100;
 
     private class ProgressListenerImpl implements FileApi.ProgressListener {
 
@@ -53,12 +53,11 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         @Override
         public void onProgress(long expected, long processed) {
             //do nothing
-            double ratio = ((double) processed) / expected;
-            final int progress = (int) (MAX * ratio);
+            final int progress = (int) ((100 * processed) / expected);
             PLog.d(TAG, "progress : %s", progress + "%");
             synchronized (monitors) {
                 for (DispatcherMonitor monitor : monitors) {
-                    monitor.onProgress(this.message.getId(), progress, MAX);
+                    monitor.onProgress(this.message.getId(), progress, 100);
                 }
             }
         }
@@ -66,7 +65,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
 
     public static final String KEY = "key";
     public static final String PASSWORD = "password";
-    private final List<DispatcherMonitor> monitors = new ArrayList<>();
+    private final Set<DispatcherMonitor> monitors = new HashSet<>();
     private final FileApi file_service;
     private Timer timer = new Timer(TAG, false);
 
@@ -129,6 +128,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
      * @param reason  reason the dispatch failed
      * @deprecated use {@link #onFailed(String, String)}rather
      */
+    @SuppressWarnings("unused")
     @Deprecated
     protected final void onFailed(Message message, String reason) {
         onFailed(message.getId(), reason);
@@ -200,6 +200,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     }
 
 
+    @SuppressWarnings("unused")
     protected final void onAllSent() {
         synchronized (monitors) {
             for (DispatcherMonitor monitor : monitors) {

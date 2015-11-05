@@ -190,7 +190,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 return getString(R.string.new_message);
             case 1:
                 if (unReadMessages == 1) {
-                    String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(this, message.getType());
+                    String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(this, message);
                     text = (Message.isGroupMessage(message) ? sender + "@" + recentChatList.get(0) : sender) + ":  " + messageBody;
                 } else {
                     text = unReadMessages + " " + getString(R.string.new_message_from) + " " + (Message.isGroupMessage(message) ? sender + "@" + recentChatList.get(0) : sender);

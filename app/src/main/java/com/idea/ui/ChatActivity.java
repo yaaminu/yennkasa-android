@@ -44,14 +44,12 @@ import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import io.realm.Realm;
-import io.realm.RealmResults;
 import io.realm.RealmQuery;
+import io.realm.RealmResults;
 
 import static com.idea.data.Message.TYPE_TEXT_MESSAGE;
 
@@ -152,7 +150,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
-        peer = userManager.fetchUserIfRequired(usersRealm, peerId,true);
+        peer = userManager.fetchUserIfRequired(usersRealm, peerId, true);
         String peerName = peer.getName();
         //noinspection ConstantConditions
         final ActionBar actionBar = getSupportActionBar();
@@ -272,7 +270,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             LiveCenter.notifyInChatRoom(peer.getUserId());
             LiveCenter.registerTypingListener(this);
         } else {
-            getSupportActionBar().setSubtitle(GroupsAdapter.join(this, ",", peer.getMembers()));
+            getSupportActionBar().setSubtitle(GroupsAdapter.join(",", peer.getMembers()));
         }
         adapter.notifyDataSetChanged();
     }
@@ -282,6 +280,18 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         if (currConversation != null) {
             messageConversationRealm.beginTransaction();
             currConversation.setActive(false);
+            if (messages != null && !messages.isEmpty()) {
+                final Message currConversationLastMessage = currConversation.getLastMessage();
+                if (currConversationLastMessage == null || !messages.last().getId().equals(currConversationLastMessage.getId())) {
+                    for (int i = messages.size() - 1; i >= 0; i--) {
+                        Message lastMessage = messages.get(i);
+                        if (!Message.isDateMessage(lastMessage) || !Message.isTypingMessage(lastMessage)) {
+                            currConversation.setLastMessage(lastMessage);
+                            break;
+                        }
+                    }
+                }
+            }
             messageConversationRealm.commitTransaction();
         }
         if (!userManager.isGroup(peer.getUserId())) {

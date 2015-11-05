@@ -15,9 +15,8 @@ import com.idea.ui.DPLoader;
 import com.idea.util.PLog;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.ViewUtils;
-
-import java.util.List;
-
+import android.text.TextUtils;
+import java.util.*;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
 
@@ -30,19 +29,12 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
         super(context, realmResults, true);
     }
 
-    public static String join(Context context, CharSequence delimiter, List<User> users) {
-        StringBuilder sb = new StringBuilder(users.size() * 10);
-        String mainUserId = UserManager.getMainUserId();
-
-        sb.append(context.getString(R.string.you));
+    public static String join(CharSequence delimiter, List<User> users) {
+        Set<String> names = new HashSet<>();
         for (User user : users) {
-            if (mainUserId.equals(user.getUserId())) {
-                continue;
-            }
-            sb.append(delimiter);
-            sb.append(user.getName());
+            names.add(user.getName());
         }
-        return sb.toString();
+        return TextUtils.join(delimiter,names);
     }
 
     @Override
@@ -69,7 +61,7 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
                 .resize(150, 150)
                 .into(holder.groupIcon);
 
-        String users = join(context, ",", group.getMembers());
+        String users = join(",", group.getMembers());
         holder.groupMembers.setText(users);
         View.OnClickListener listener = new View.OnClickListener() {
             @Override

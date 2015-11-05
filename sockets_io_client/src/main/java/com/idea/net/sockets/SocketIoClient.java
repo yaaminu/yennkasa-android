@@ -35,11 +35,12 @@ import static com.github.nkzawa.socketio.client.Socket.Listener;
 
 public class SocketIoClient implements Closeable {
 
-    public static final String TAG = "SocketsIOClient";
-    public static final int PING_DELAY = 60000;
-    public static final String PING = "ping",
-            PONG = "pong",
-            RECONNECT_AND_PING_TIMER_TIMER = "reconnectAndPingTimer timer",
+    private final String TAG;
+    private static final int PING_DELAY = 60000;
+            private static final String PING = "ping",
+            PONG = "pong",  RECONNECT_AND_PING_TIMER_TIMER = "reconnectAndPingTimer timer";
+
+    public static final String
             TYPING = "typing",
             TRACK_USER = "trackUser",
             IS_ONLINE = "isOnline",
@@ -52,7 +53,9 @@ public class SocketIoClient implements Closeable {
             EVENT_MESSAGE = "message",
             EVENT_MSG_STATUS = "msgStatus",
             MSG_STS_STATUS = "status",
-            MSG_STS_MESSAGE_ID = "messageId";
+            MSG_STS_MESSAGE_ID = "messageId",
+            DISCONNECT = EVENT_DISCONNECT,
+            CONNECT = EVENT_CONNECT;
     private static final WeakHashMap<String, SocketIoClient> instances = new WeakHashMap<>();
     private final AtomicBoolean initialised = new AtomicBoolean(false),
             ready = new AtomicBoolean(false),
@@ -138,9 +141,8 @@ public class SocketIoClient implements Closeable {
     };
 
     private SocketIoClient(String endPoint, String userId) {
-        //if we are in a testing environment we cannot use handlers
-        //more so if we are initialised from a thread with no looper
         initialise(endPoint, userId);
+        TAG = SocketIoClient.class.getSimpleName() + ":" + endPoint;
         this.endPoint = endPoint;
         this.userId = userId;
     }
@@ -229,7 +231,7 @@ public class SocketIoClient implements Closeable {
         SecureRandom random = new SecureRandom();
         int ONE_MINUTE = 60 * 1000;
         int deviation = (int) Math.abs(random.nextDouble() * (ONE_MINUTE * 5 - ONE_MINUTE) + ONE_MINUTE);
-        //EXPONENTIAL
+        //LINEAR
         return currentDelay * 2 + deviation;
     }
 

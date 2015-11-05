@@ -23,7 +23,7 @@ public interface SmartFileService {
     @POST("/link")
     JsonObject getLink(@Field("read") boolean read,
                        @Field("list") boolean list,
-                       @Field("cahe") long age,
+                       @Field("cache") int cache,
                        @Field("path") String name);
 
     @FormUrlEncoded

@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This class is the heart of all real-time events of the program.
@@ -54,8 +55,31 @@ public class LiveCenter {
             }
         }
     };
+    public static final Emitter.Listener disConnectReceiver = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            synchronized (TYPING_AND_ACTIVE_USERS_LOCK) {
+                connected.set(false);
+                activeUsers.clear();
+                typing.clear();
+            }
+        }
+    };
 
     private static int totalUnreadMessages = 0;
+    private static Emitter.Listener connectReceiver = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            synchronized (TYPING_AND_ACTIVE_USERS_LOCK) {
+                connected.set(true);
+                Set<String> tmp = activeUsers;
+                activeUsers = new HashSet<>();
+                for (String activeUser : tmp) {
+                    trackUser(activeUser);
+                }
+            }
+        }
+    };
 
 
     /**
@@ -143,7 +167,8 @@ public class LiveCenter {
         preferences.edit().remove(peerId).apply();
     }
 
-    private static final Set<String> activeUsers = new HashSet<>(),
+    private static Set<String> activeUsers = new HashSet<>();
+    private static final Set<String>
             typing = new HashSet<>(),
             PEERS_IN_CHATROOM = new HashSet<>();
     private static final Object TYPING_AND_ACTIVE_USERS_LOCK = new Object();
@@ -174,6 +199,10 @@ public class LiveCenter {
                 PLog.d(TAG, "typing event");
                 if (isTyping) {
                     typing.add(typingUser);
+                    if(!activeUsers.contains(typingUser)){
+                        activeUsers.add(typingUser);
+                        notifyUserStatusChanged(typingUser,true);
+                    }
                 } else {
                     typing.remove(typingUser);
                 }
@@ -212,17 +241,7 @@ public class LiveCenter {
                     //if user is not online then he can't be typing too
                     typing.remove(userId);
                 }
-                TaskManager.executeOnMainThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (typingListener != null) {
-                            LiveCenterListener listener = typingListener.get();
-                            if (listener != null) {
-                                listener.onUserStatusChanged(userId, isOnline);
-                            }
-                        }
-                    }
-                });
+                notifyUserStatusChanged(userId,isOnline);
             }
 //            Context applicationContext = Config.getApplicationContext();
 //            Realm realm = User.Realm(applicationContext);
@@ -236,6 +255,19 @@ public class LiveCenter {
         }
     }
 
+   private static void notifyUserStatusChanged(final String userId,final boolean isOnline){
+    TaskManager.executeOnMainThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (typingListener != null) {
+                            LiveCenterListener listener = typingListener.get();
+                            if (listener != null) {
+                                listener.onUserStatusChanged(userId, isOnline);
+                            }
+                        }
+                    }
+                });
+   }
     /**
      * starts the {@link LiveCenter} class. until this method is called
      * this class is not usable.
@@ -259,11 +291,15 @@ public class LiveCenter {
         }
     }
 
+    private static final AtomicBoolean connected = new AtomicBoolean(false);
+
     private static void doStart() {
         liveClient = SocketIoClient.getInstance(Config.getLiveEndpoint(), UserManager.getMainUserId());
         liveClient.registerForEvent(SocketIoClient.TYPING, TYPING_RECEIVER);
         liveClient.registerForEvent(SocketIoClient.IS_ONLINE, ONLINE_RECEIVER);
         liveClient.registerForEvent(SocketIoClient.EVENT_CHAT_ROOM, CHAT_ROOM_RECEIVER);
+        liveClient.registerForEvent(SocketIoClient.CONNECT, connectReceiver);
+        liveClient.registerForEvent(SocketIoClient.DISCONNECT, disConnectReceiver);
         try {
             JSONObject object = new JSONObject();
             object.put(SocketIoClient.PROPERTY_TO, UserManager.getMainUserId());
@@ -284,6 +320,8 @@ public class LiveCenter {
         liveClient.unRegisterEvent(SocketIoClient.IS_ONLINE, ONLINE_RECEIVER);
         liveClient.unRegisterEvent(SocketIoClient.TYPING, TYPING_RECEIVER);
         liveClient.unRegisterEvent(SocketIoClient.EVENT_CHAT_ROOM, CHAT_ROOM_RECEIVER);
+        liveClient.unRegisterEvent(SocketIoClient.CONNECT, connectReceiver);
+        liveClient.unRegisterEvent(SocketIoClient.DISCONNECT, disConnectReceiver);
         liveClient.close();
     }
 
@@ -295,10 +333,8 @@ public class LiveCenter {
      * in all such situations,this method will fail silently
      *
      * @param userId the userId of the user to track
-     * @throws IllegalStateException if the call is not made on the main thread
      */
     public static void trackUser(String userId) {
-        ThreadUtils.ensureMain();
         if (WORKER_THREAD != null && WORKER_THREAD.isAlive()) {
             Message msg = Message.obtain();
             msg.what = WorkerThread.TRACK_USER;
@@ -339,6 +375,7 @@ public class LiveCenter {
         ThreadUtils.ensureMain();
         synchronized (PEERS_IN_CHATROOM) {
             PEERS_IN_CHATROOM.add(userId);
+            Config.setCurrentActivePeer(userId);
         }
         if (WORKER_THREAD != null && WORKER_THREAD.isAlive()) {
             Message msg = Message.obtain();
@@ -358,6 +395,7 @@ public class LiveCenter {
         ThreadUtils.ensureMain();
         synchronized (PEERS_IN_CHATROOM) {
             PEERS_IN_CHATROOM.remove(userId);
+            Config.setCurrentActivePeer(null);
         }
         if (WORKER_THREAD != null && WORKER_THREAD.isAlive()) {
             Message msg = Message.obtain();
@@ -581,7 +619,7 @@ public class LiveCenter {
      * this is to ensure that progress updates are received in the order they were published.
      * if the progress is less than the existing progress which may be normally caused by unordered publishing of progress
      * updates an exception is thrown. also the progress must not be less than 0.
-     * <p/>
+     * <p>
      * clients must ensure they have acquired this tag before they update its progress
      *
      * @param tag      the tag that identifies this task may not be null
@@ -704,7 +742,7 @@ public class LiveCenter {
     /**
      * registers a listener for all events(progress) one must {@link #stopListeningForAllProgress(ProgressListener)}
      * when they no more need to listen to events.
-     * <p/>
+     * <p>
      * note that listeners are kept internally as weak references so you may not pass anonymous instances
      *
      * @param listener the listener to be registered may not be null

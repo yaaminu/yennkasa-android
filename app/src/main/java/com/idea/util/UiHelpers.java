@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.util.Pair;
@@ -29,7 +30,6 @@ import com.idea.ui.ChatActivity;
 import com.idea.ui.CreateMessageActivity;
 import com.idea.ui.ImageViewer;
 import com.idea.ui.MainActivity;
-import com.idea.ui.PairAppBaseActivity;
 import com.idea.ui.ProfileActivity;
 import com.idea.ui.SetUpActivity;
 import com.idea.ui.SettingsActivity;
@@ -117,15 +117,15 @@ public class UiHelpers {
         builder.setMessage(message).setTitle(R.string.error).setCancelable(cancelable).setPositiveButton(android.R.string.ok, listener).create().show();
     }
 
-    public static void showErrorDialog(PairAppBaseActivity context, String message) {
+    public static void showErrorDialog(FragmentActivity context, String message) {
         showErrorDialog(context, message, null);
     }
 
-    public static void showErrorDialog(PairAppBaseActivity context, int message) {
+    public static void showErrorDialog(FragmentActivity context, int message) {
         showErrorDialog(context, getString(context, message));
     }
 
-    public static void showErrorDialog(PairAppBaseActivity context, String message, final Listener listener) {
+    public static void showErrorDialog(FragmentActivity context, String message, final Listener listener) {
         SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
             @Override
             protected void onBuildDone(Dialog dialog) {
@@ -148,7 +148,7 @@ public class UiHelpers {
         showErrorDialogInternal(context, message, fragment);
     }
 
-    private static void showErrorDialogInternal(PairAppBaseActivity context, String message, DialogFragment fragment) {
+    private static void showErrorDialogInternal(FragmentActivity context, String message, DialogFragment fragment) {
         try {
             fragment.show(context.getSupportFragmentManager(), null);
         } catch (Exception e) { //bad tokens,transaction after onsavedInstanceState, etc
@@ -160,7 +160,7 @@ public class UiHelpers {
         }
     }
 
-    public static void showErrorDialog(PairAppBaseActivity context,
+    public static void showErrorDialog(FragmentActivity context,
                                        String message,
                                        String okText, String noText, final Listener ok, final Listener no) {
 
@@ -196,7 +196,7 @@ public class UiHelpers {
         showErrorDialogInternal(context, message, fragment);
     }
 
-    public static void showErrorDialog(PairAppBaseActivity context,
+    public static void showErrorDialog(FragmentActivity context,
                                        int message,
                                        int okText, int noText, final Listener ok, final Listener no) {
         String messageText = getString(context, message),
@@ -226,11 +226,11 @@ public class UiHelpers {
         return fragment;
     }
 
-    public static void showStopAnnoyingMeDialog(PairAppBaseActivity activity, final String key, int message, int ok, int no, Listener okListener, Listener noListener) {
+    public static void showStopAnnoyingMeDialog(FragmentActivity activity, final String key, int message, int ok, int no, Listener okListener, Listener noListener) {
         showStopAnnoyingMeDialog(activity, key, getString(activity, message), getString(activity, ok), getString(activity, no), okListener, noListener);
     }
 
-    public static void showStopAnnoyingMeDialog(PairAppBaseActivity activity, final String key, final String message, String ok, String no, final Listener okListener, final Listener noListener) {
+    public static void showStopAnnoyingMeDialog(FragmentActivity activity, final String key, final String message, String ok, String no, final Listener okListener, final Listener noListener) {
         boolean stopAnnoyingMe = UserManager.getInstance().getBoolPref(key, false);
         if (stopAnnoyingMe) {
             if (okListener != null) {
@@ -292,7 +292,7 @@ public class UiHelpers {
         return context.getString(resId);
     }
 
-    public static void promptAndExit(final PairAppBaseActivity toFinish) {
+    public static void promptAndExit(final FragmentActivity toFinish) {
         final UiHelpers.Listener cancelProgress = new UiHelpers.Listener() {
             @Override
             public void onClick() {
@@ -352,23 +352,23 @@ public class UiHelpers {
         context.startActivity(intent);
     }
 
-    public static void attach(PairAppBaseActivity appBaseActivity) {
+    public static void attach(FragmentActivity appBaseActivity) {
         AlertDialog.Builder builder = new AlertDialog.Builder(appBaseActivity);
         builder.setItems(R.array.attach_options, dialogListener);
         AlertDialog dialog = builder.create();
         dialog.show();
     }
 
-    public static void gotoCreateMessageActivity(PairAppBaseActivity context) {
+    public static void gotoCreateMessageActivity(FragmentActivity context) {
         final Intent intent = new Intent(context, CreateMessageActivity.class);
         context.startActivity(intent);
     }
 
-    public static void attemptToViewFile(PairAppBaseActivity context, String path) throws PairappException {
+    public static void attemptToViewFile(FragmentActivity context, String path) throws PairappException {
         attemptToViewFile(context, new File(path));
     }
 
-    public static void attemptToViewFile(PairAppBaseActivity context, File file) throws PairappException {
+    public static void attemptToViewFile(FragmentActivity context, File file) throws PairappException {
         if (file.exists()) {
             Intent intent;
             if (MediaUtils.isImage(file.getAbsolutePath())) {
@@ -388,7 +388,7 @@ public class UiHelpers {
         }
     }
 
-    public static void gotoMainActivity(PairAppBaseActivity activity) {
+    public static void gotoMainActivity(FragmentActivity activity) {
         final Intent intent = new Intent(activity, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
@@ -399,7 +399,7 @@ public class UiHelpers {
         activity.finish();
     }
 
-    public static void gotoSetUpActivity(PairAppBaseActivity context) {
+    public static void gotoSetUpActivity(FragmentActivity context) {
         Intent intent = new Intent(context, SetUpActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

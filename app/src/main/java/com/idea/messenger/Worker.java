@@ -1,33 +1,40 @@
 package com.idea.messenger;
 
 import android.app.IntentService;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.LocalBroadcastManager;
+import android.widget.Toast;
 
+import com.google.gson.JsonObject;
 import com.idea.Errors.ErrorCenter;
 import com.idea.Errors.PairappException;
 import com.idea.data.Message;
+import com.idea.pairapp.R;
+import com.idea.ui.ChatActivity;
 import com.idea.util.Config;
 import com.idea.util.FileUtils;
 import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
+import com.idea.util.UiHelpers;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Semaphore;
 
 import io.realm.Realm;
-import retrofit.RequestInterceptor;
-import retrofit.RestAdapter;
-import retrofit.RetrofitError;
-import retrofit.android.AndroidLog;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
- * <p/>
+ * <p>
  */
 public class Worker extends IntentService {
     private static final String DOWNLOAD = "com.idea.messenger.action.download";
@@ -43,21 +50,8 @@ public class Worker extends IntentService {
         context.startService(intent);
     }
 
-    AttachmentsApi api;
-
     public Worker() {
         super("Worker");
-        RestAdapter adapter = new RestAdapter.Builder()
-                .setEndpoint(Config.getFilesMetaDataApiUrl())
-                .setLog(new AndroidLog(TAG))
-                .setLogLevel(com.idea.net.file_service.BuildConfig.DEBUG ? RestAdapter.LogLevel.FULL : RestAdapter.LogLevel.NONE)
-                .setRequestInterceptor(new RequestInterceptor() {
-                    @Override
-                    public void intercept(RequestFacade requestFacade) {
-                        requestFacade.addHeader("Authorization", "kiibodaS3crite");
-                    }
-                }).build();
-        api = adapter.create(AttachmentsApi.class);
     }
 
     @Override
@@ -65,19 +59,34 @@ public class Worker extends IntentService {
         if (intent != null) {
             final String action = intent.getAction();
             if (DOWNLOAD.equals(action)) {
-                final String messageJson = intent.getStringExtra(MESSAGE_JSON);
-                Message message = Message.fromJSON(messageJson);
-                download(message);
+                try {
+                    if (!lock.tryAcquire()) {
+                        if (Config.isAppOpen()) {
+                            UiHelpers.showPlainOlDialog(this, getString(R.string.max_download_reached), false);
+                        } else {
+                            UiHelpers.showToast(R.string.max_download_reached);
+                        }
+                        return;
+                    }
+                    final String messageJson = intent.getStringExtra(MESSAGE_JSON);
+                    Message message = Message.fromJSON(messageJson);
+                    download(message);
+                } finally {
+                    lock.release();
+                }
             }
         }
     }
 
     private static final Set<String> downloading = new HashSet<>();
 
+    private final Semaphore lock = new Semaphore(3, true);
+
     private void download(final Message message) {
         synchronized (downloading) {
             if (!downloading.add(message.getId())) {
-                PLog.w(TAG, "already  downloading message");
+                PLog.w(TAG, "already  downloading message with id %s", message.getId());
+                Toast.makeText(this, R.string.busy, Toast.LENGTH_SHORT).show();
                 return;
             }
         }
@@ -88,7 +97,8 @@ public class Worker extends IntentService {
         }
 
         final String messageId = message.getId(),
-                messageBody = message.getMessageBody();
+                messageBody = message.getMessageBody(),
+                peer = Message.isGroupMessage(message) ? message.getTo() : message.getFrom();
         final int type = message.getType();
         TaskManager.execute(
                 new Runnable() {
@@ -113,11 +123,32 @@ public class Worker extends IntentService {
                                 throw new AssertionError("should never happen");
                         }
                         FileUtils.ProgressListener listener = new FileUtils.ProgressListener() {
+                            boolean done = false;
+
                             @Override
                             public void onProgress(long expected, long processed) {
-                                double ratio = ((double) processed) / expected;
-                                final int progress = (int) (100 * ratio);
+                                if (done) {
+                                    return;
+                                }
+                                int progress = (int) ((100 * processed) / expected);
                                 LiveCenter.updateProgress(messageId, progress);
+
+                                if (!peer.equals(Config.getCurrentActivePeer())) {
+                                    Intent intent = new Intent(Worker.this, ChatActivity.class);
+                                    intent.putExtra(ChatActivity.EXTRA_PEER_ID, peer);
+                                    Notification notification = new NotificationCompat.Builder(Worker.this)
+                                            .setContentTitle(getString(R.string.downloading))
+                                            .setProgress(100, progress, progress <= 0)
+                                            .setAutoCancel(true)
+                                            .setContentIntent(PendingIntent.getActivity(Worker.this, 1003, intent, PendingIntent.FLAG_UPDATE_CURRENT))
+                                            .setSubText(progress > 0 ? getString(R.string.downloaded) + FileUtils.sizeInLowestPrecision(processed) + "/" + FileUtils.sizeInLowestPrecision(expected) : getString(R.string.loading))
+                                            .setSmallIcon(R.drawable.ic_launcher).build();
+                                    NotificationManagerCompat manager = NotificationManagerCompat.from(Worker.this);// getSystemService(NOTIFICATION_SERVICE));
+                                    manager.notify(messageId, PairAppClient.notId, notification);
+                                }
+                                if (progress == 100 && !done) {
+                                    done = true;
+                                }
                             }
                         };
                         try {
@@ -130,7 +161,7 @@ public class Worker extends IntentService {
                             onComplete(null);
                         } catch (IOException e) {
                             PLog.d(TAG, e.getMessage(), e.getCause());
-                            Exception error = new Exception(Config.getApplicationContext().getString(com.idea.data.R.string.st_unable_to_connect));
+                            Exception error = new Exception(Config.getApplicationContext().getString(R.string.download_failed));
                             onComplete(error);
                         } finally {
                             if (realm != null) {
@@ -144,14 +175,22 @@ public class Worker extends IntentService {
                         synchronized (downloading) {
                             downloading.remove(messageId);
                         }
-                        if (error != null) {
-                            ErrorCenter.reportError(TAG + "download", error.getMessage());
-                        } else {
-                            try {
-                                api.markForDeletion(messageBody);
-                            } catch (RetrofitError err) {
 
-                            }
+                        Intent intent = new Intent();
+                        if (error != null) {
+                            NotificationManagerCompat manager = NotificationManagerCompat.from(Worker.this);// getSystemService(NOTIFICATION_SERVICE));
+                            manager.cancel(messageId, PairAppClient.notId);
+                            intent.setClass(Worker.this, ChatActivity.class);
+                            intent.putExtra(ChatActivity.EXTRA_PEER_ID, peer);
+                            ErrorCenter.reportError(messageId, error.getMessage(), intent);
+                        } else {
+                            intent.setAction("com.idea.pairapp.markDelete");
+                            JsonObject object = new JsonObject();
+                            object.addProperty("link", messageBody);
+                            object.addProperty("isAttachment", true);
+                            object.addProperty("userId", peer);
+                            intent.putExtra("body", object.toString());
+                            LocalBroadcastManager.getInstance(Config.getApplicationContext()).sendBroadcast(intent);
                         }
                     }
                 });

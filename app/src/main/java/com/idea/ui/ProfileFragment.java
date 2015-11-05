@@ -23,20 +23,19 @@ import com.idea.data.User;
 import com.idea.data.UserManager;
 import com.idea.pairapp.R;
 import com.idea.util.Config;
-import com.idea.util.ConnectionUtils;
 import com.idea.util.FileUtils;
 import com.idea.util.LiveCenter;
 import com.idea.util.MediaUtils;
 import com.idea.util.PLog;
 import com.idea.util.PhoneNumberNormaliser;
 import com.idea.util.ScreenUtility;
+import com.idea.util.SimpleDateUtil;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
 import com.idea.view.FrameLayout;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.widget.FloatingActionButton;
-import com.squareup.okhttp.Call;
 import com.squareup.picasso.Callback;
 
 import java.io.File;
@@ -71,11 +70,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private final UserManager.CallBack DP_CALLBACK = new UserManager.CallBack() {
         @Override
         public void done(Exception e) {
-            if (image_capture_out_put_uri != null) {
-                File file = new File(image_capture_out_put_uri.getPath());
-                //noinspection ResultOfMethodCallIgnored
-                file.delete();
-            }
             hideProgressView();
             changingDp = false;
             ViewUtils.showViews(changeDpButton, changeDpButton2);
@@ -101,7 +95,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     break;
                 case R.id.bt_exit_group:
                     hideProgressView();
-                    UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), R.string.leave_group_prompt, R.string.yes, android.R.string.no, new UiHelpers.Listener() {
+                    UiHelpers.showErrorDialog(getActivity(), R.string.leave_group_prompt, R.string.yes, android.R.string.no, new UiHelpers.Listener() {
                         @Override
                         public void onClick() {
                             leaveGroup();
@@ -109,7 +103,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     }, null);
                     break;
                 case R.id.bt_dissolve_group:
-                    UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), R.string.dissolve_group_prompt, R.string.yes, android.R.string.no, new UiHelpers.Listener() {
+                    UiHelpers.showErrorDialog(getActivity(), R.string.dissolve_group_prompt, R.string.yes, android.R.string.no, new UiHelpers.Listener() {
                         @Override
                         public void onClick() {
                             dissolveGroup();
@@ -152,7 +146,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                         return;
                     }
                     ViewUtils.hideViews(changeDpButton, changeDpButton2);
-                    File file = new File(Config.getTempDir(), user.getUserId() + ".jpg");
+                    File file = new File(Config.getTempDir(), SimpleDateUtil.timeStampNow() + "_dp" + ".jpg");
                     image_capture_out_put_uri = Uri.fromFile(file);
                     MediaUtils.takePhoto(ProfileFragment.this, image_capture_out_put_uri, TAKE_PHOTO_REQUEST);
                     break;
@@ -180,7 +174,11 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             @Override
             public void done(Exception e) {
                 dialog.dismiss();
-                getActivity().finish();
+                if(e != null){
+                    UiHelpers.showErrorDialog(getActivity(),e.getMessage());
+                }else {
+                    getActivity().finish();
+                }
             }
         });
     }
@@ -266,6 +264,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         } else {
             setUpViewSingleUserWay();
         }
+        //noinspection deprecation
         final ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
         //noinspection ConstantConditions
         if (userManager.isCurrentUser(user.getUserId())) {
@@ -330,8 +329,10 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         callButton.setVisibility(View.GONE);
         if (userManager.isAdmin(user.getUserId())) {
             deleteGroup.setVisibility(View.VISIBLE);
+            deleteGroup.setOnClickListener(clickListener);
             exitGroupButton.setVisibility(View.GONE);
         } else {
+            exitGroupButton.setVisibility(View.VISIBLE);
             exitGroupButton.setOnClickListener(clickListener);
             deleteGroup.setVisibility(View.GONE);
         }
@@ -428,13 +429,13 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         File file = new File(filePath);
 
         if (!file.exists()) {
-            UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.invalid_image));
+            UiHelpers.showErrorDialog(getActivity(), getString(R.string.invalid_image));
             ViewUtils.showViews(changeDpButton, changeDpButton2);
         } else if (!MediaUtils.isImage(filePath)) {
-            UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.not_a_bitmap));
+            UiHelpers.showErrorDialog(getActivity(), getString(R.string.not_a_bitmap));
             ViewUtils.showViews(changeDpButton, changeDpButton2);
         } else if (file.length() > FileUtils.ONE_MB * 8) {
-            UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.image_size_too_large));
+            UiHelpers.showErrorDialog(getActivity(), getString(R.string.image_size_too_large));
             ViewUtils.showViews(changeDpButton, changeDpButton2);
         } else {
             ViewUtils.hideViews(changeDpButton, changeDpButton2);
@@ -506,6 +507,16 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 }
             }
         });
+    }
+
+    @Override
+    public void onStop() {
+        if (image_capture_out_put_uri != null) {
+            File file = new File(image_capture_out_put_uri.getPath());
+            //noinspection ResultOfMethodCallIgnored
+            file.delete();
+        }
+        super.onStop();
     }
 
     ProgressDialog pDialog;

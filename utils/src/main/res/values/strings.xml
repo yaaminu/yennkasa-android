@@ -8,4 +8,5 @@
     <string name="file_not_found">File does not exist</string>
     <string name="file_size_invalid">Could not determine file size</string>
     <string name="error_saving">Error saving file</string>
+    <string name="gigabytes"> GB</string>
 </resources>

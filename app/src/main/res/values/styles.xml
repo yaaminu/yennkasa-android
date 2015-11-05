@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
     </style>
 
@@ -59,12 +59,12 @@
         <item name="android:textSize">@dimen/standard_text_size</item>
     </style>
 
-    <style name="TabRippleStyle" parent="Material.Drawable.Ripple.Wave">
+    <style name="TabRippleStyle" parent="Material.Drawable.Ripple.Touch.Light">
         <item name="android:background">@null</item>
         <item name="rd_rippleColor">@color/colorPrimaryDark</item>
         <item name="rd_rippleAnimDuration">300</item>
-        <item name="rd_maskType">rectangle</item>
-        <item name="rd_cornerRadius">0dp</item>
+        <item name="rd_maskType">oval</item>
+        <item name="rd_cornerRadius">4dp</item>
         <item name="rd_padding">0dp</item>
     </style>
 
@@ -170,43 +170,43 @@
         <item name="rd_cornerRadius">4dp</item>
     </style>
 
-    <style name="RaiseButtonRippleStyle" parent="Material.Drawable.Ripple.Touch.Light">
-        <item name="android:background">@drawable/bg_bt_raise</item>
-        <item name="rd_leftPadding">1dp</item>
-        <item name="rd_topPadding">1dp</item>
-        <item name="rd_rightPadding">1dp</item>
-        <item name="rd_bottomPadding">2dp</item>
-    </style>
+    <!--<style name="RaiseButtonRippleStyle" parent="Material.Drawable.Ripple.Touch.Light">-->
+        <!--<item name="android:background">@drawable/bg_bt_raise</item>-->
+        <!--<item name="rd_leftPadding">1dp</item>-->
+        <!--<item name="rd_topPadding">1dp</item>-->
+        <!--<item name="rd_rightPadding">1dp</item>-->
+        <!--<item name="rd_bottomPadding">2dp</item>-->
+    <!--</style>-->
 
-    <style name="RaiseWaveButtonRippleStyle" parent="Material.Drawable.Ripple.Wave.Light">
-        <item name="android:background">@drawable/bg_bt_raise</item>
-        <item name="rd_leftPadding">1dp</item>
-        <item name="rd_topPadding">1dp</item>
-        <item name="rd_rightPadding">1dp</item>
-        <item name="rd_bottomPadding">2dp</item>
-    </style>
+    <!--<style name="RaiseWaveButtonRippleStyle" parent="Material.Drawable.Ripple.Wave.Light">-->
+        <!--<item name="android:background">@drawable/bg_bt_raise</item>-->
+        <!--<item name="rd_leftPadding">1dp</item>-->
+        <!--<item name="rd_topPadding">1dp</item>-->
+        <!--<item name="rd_rightPadding">1dp</item>-->
+        <!--<item name="rd_bottomPadding">2dp</item>-->
+    <!--</style>-->
 
-    <style name="RaiseColorButtonRippleStyle" parent="Material.Drawable.Ripple.Touch.Light">
-        <item name="rd_rippleColor">@color/colorPrimaryDark</item>
-        <item name="rd_leftPadding">1dp</item>
-        <item name="rd_topPadding">1dp</item>
-        <item name="rd_rightPadding">1dp</item>
-        <item name="rd_bottomPadding">2dp</item>
-    </style>
+    <!--<style name="RaiseColorButtonRippleStyle" parent="Material.Drawable.Ripple.Touch.Light">-->
+        <!--<item name="rd_rippleColor">@color/colorPrimaryDark</item>-->
+        <!--<item name="rd_leftPadding">1dp</item>-->
+        <!--<item name="rd_topPadding">1dp</item>-->
+        <!--<item name="rd_rightPadding">1dp</item>-->
+        <!--<item name="rd_bottomPadding">2dp</item>-->
+    <!--</style>-->
 
-    <style name="RaiseWaveColorButtonRippleStyle" parent="Material.Drawable.Ripple.Wave.Light">
-        <item name="rd_rippleColor">@color/colorPrimaryDark</item>
-        <item name="rd_leftPadding">1dp</item>
-        <item name="rd_topPadding">1dp</item>
-        <item name="rd_rightPadding">1dp</item>
-        <item name="rd_bottomPadding">2dp</item>
-    </style>
+    <!--<style name="RaiseWaveColorButtonRippleStyle" parent="Material.Drawable.Ripple.Wave.Light">-->
+        <!--<item name="rd_rippleColor">@color/colorPrimaryDark</item>-->
+        <!--<item name="rd_leftPadding">1dp</item>-->
+        <!--<item name="rd_topPadding">1dp</item>-->
+        <!--<item name="rd_rightPadding">1dp</item>-->
+        <!--<item name="rd_bottomPadding">2dp</item>-->
+    <!--</style>-->
 
     <!-- Switch Style -->
 
     <style name="RadioButtonDrawable" parent="Material.Drawable.RadioButton"/>
 
-    <style name="CheckBoxDrawable" parent="Material.Drawable.CheckBox"></style>
+    <style name="CheckBoxDrawable" parent="Material.Drawable.CheckBox"/>
 
     <!-- SnackBar Style -->
 

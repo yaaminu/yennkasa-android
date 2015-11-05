@@ -36,7 +36,9 @@
     <string name="group_already_exist">Group already exists</string>
     <string name="login_error_message">No account is associated with your phone number, You might want to register/sign up instead.</string>
     <string name="dp_change_in_progress">A dp change is in progress</string>
-    <string name="dp_change_failed">DP change failed</string>
+    <string name="dp_change_failed">DP change failed, click to retry</string>
     <string name="not_permitted_group">you don\'t have the authority to add/remove a member or dissolve this group</string>
     <string name="group_not_found">Group not found</string>
+    <string name="you">you</string>
+    <string name="invalid_verification_code">Wrong verification code</string>
 </resources>

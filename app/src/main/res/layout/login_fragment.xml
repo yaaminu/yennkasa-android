@@ -86,7 +86,7 @@
 
             <com.rey.material.widget.Button
                 android:id="@+id/bt_loginButton"
-                style="@style/RaiseButtonRippleStyle"
+                style="@style/FlatButtonRippleStyle"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/big_button_height"
                 android:layout_marginTop="@dimen/padding_ll_login_fragment_top"

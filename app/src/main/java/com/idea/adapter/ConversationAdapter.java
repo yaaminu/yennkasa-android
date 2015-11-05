@@ -8,16 +8,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.idea.PairApp;
-import com.idea.ui.PairAppBaseActivity;
-import com.idea.util.UiHelpers;
 import com.idea.data.Conversation;
 import com.idea.data.Message;
 import com.idea.data.User;
 import com.idea.data.UserManager;
 import com.idea.pairapp.R;
 import com.idea.ui.DPLoader;
+import com.idea.ui.PairAppBaseActivity;
 import com.idea.util.PLog;
 import com.idea.util.TypeFaceUtil;
+import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
 
 import java.util.Date;
@@ -53,7 +53,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
             holder.peerName = (TextView) convertView.findViewById(R.id.tv_sender);
             holder.senderAvatar = (ImageView) convertView.findViewById(R.id.iv_user_avatar);
             holder.newMessagesCount = (TextView) convertView.findViewById(R.id.tv_new_messages_count);
-            ViewUtils.setTypeface(holder.newMessagesCount, TypeFaceUtil.two_d_font);
+            ViewUtils.setTypeface(holder.newMessagesCount, TypeFaceUtil.ROBOTO_REGULAR_TTF);
             ViewUtils.setTypeface(holder.chatSummary, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
             ViewUtils.setTypeface(holder.peerName, TypeFaceUtil.DROID_SERIF_BOLD_TTF);
             ViewUtils.setTypeface(holder.dateLastActive, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
@@ -107,13 +107,16 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
                 summary.append(message.getMessageBody());
                 // holder.mediaMessageIcon.setVisibility(View.GONE);
             } else {
-                summary.append(PairApp.typeToString(context, message.getType()));
+                summary.append(PairApp.typeToString(context, message));
             }
         }
-        if (message != null && Message.isIncoming(message) && message.getState() != Message.STATE_SEEN) {
-            holder.chatSummary.setTextColor(context.getResources().getColor(R.color.black));
-        } else {
-            holder.chatSummary.setTextColor(context.getResources().getColor(R.color.light_gray));
+        holder.chatSummary.setTextColor(context.getResources().getColor(R.color.light_gray));
+        if (message != null) {
+            if (Message.isIncoming(message) && message.getState() != Message.STATE_SEEN) {
+                holder.chatSummary.setTextColor(context.getResources().getColor(R.color.black));
+            } else if (message.getState() == Message.STATE_SEND_FAILED) {
+                holder.chatSummary.setTextColor(context.getResources().getColor(R.color.red));
+            } 
         }
         holder.chatSummary.setText(summary);
         holder.peerId = conversation.getPeerId();

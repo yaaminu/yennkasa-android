@@ -228,4 +228,15 @@
     <string name="send_token_notice">Your phone number needs to be verified. Ensure you have a working SMS plan. Click send token when you are ready</string>
     <string name="send_token">Send token</string>
     <string name="dissolve_group_prompt">Sure you want to permanently dissolve this group? This action cannot be undone.</string>
+    <string name="document">Document</string>
+    <string name="text_file">Text file</string>
+    <string name="application">Application</string>
+    <string name="presentation">Presentation</string>
+    <string name="archive">Archive</string>
+    <string name="audio">Audio message</string>
+    <string name="download_failed">Download failed</string>
+    <string name="downloading">Downloading</string>
+    <string name="downloaded">Downloaded  </string>
+    <string name="upload_progress">Upload progress</string>
+    <string name="max_download_reached">Maximum number of parallel downloads reached, you may wait for other downloads to complete</string>
 </resources>

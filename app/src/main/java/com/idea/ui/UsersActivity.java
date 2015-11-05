@@ -31,11 +31,12 @@ import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Set;
 
 import io.realm.Realm;
-import io.realm.RealmList;
 import io.realm.RealmResults;
 
 public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.OnFragmentInteractionListener {
@@ -241,7 +242,7 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
                     }
             );
             if (to == null) {
-                ErrorCenter.reportError(TAG,getString(R.string.invalid_message));
+                ErrorCenter.reportError(TAG, getString(R.string.invalid_message));
             } else {
                 UiHelpers.enterChatRoom(UsersActivity.this, to);
                 finish();
@@ -251,10 +252,17 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
 
     public class MembersAdapter extends UsersAdapter {
 
-        private RealmList<User> entries;
+        private List<User> entries;
 
-        public MembersAdapter(Context context, Realm realm, RealmList<User> entries) {
+        public MembersAdapter(Context context, Realm realm, List<User> entries) {
             super(context, realm, null);
+            entries = User.copy(entries);
+            Collections.sort(entries, new Comparator<User>() {
+                @Override
+                public int compare(User lhs, User rhs) {
+                    return lhs.getName().compareToIgnoreCase(rhs.getName());
+                }
+            });
             this.entries = entries;
         }
 

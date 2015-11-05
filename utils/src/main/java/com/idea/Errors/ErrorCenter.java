@@ -1,8 +1,13 @@
 package com.idea.Errors;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.idea.util.Config;
 import com.idea.util.NavigationManager;
 import com.idea.util.TaskManager;
 import com.idea.util.ThreadUtils;
@@ -37,6 +42,7 @@ public class ErrorCenter {
     public static void reportError(String errorId, String errorMessage) {
         reportError(errorId, errorMessage, INDEFINITE);
     }
+
 
     /**
      * @param errorId      a unique identifier for this error. this is useful if a component needs to update
@@ -76,6 +82,19 @@ public class ErrorCenter {
         waitingError = new Error(errorId, errorMessage, timeout);
     }
 
+    public static synchronized void reportError(String id, String errorMessage, Intent action) {
+        Intent intent = new Intent("com.idea.pairapp.report");
+        intent.putExtra("message", errorMessage);
+        Context applicationContext = Config.getApplicationContext();
+        if (action == null) {
+            action = new Intent();
+            action.setComponent(new ComponentName(applicationContext, "com.idea.ui.MainActivity"));
+        }
+        intent.putExtra("id", id);
+        intent.putExtra("action", action);
+        LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent);
+    }
+
     /**
      * cancels a pending error report
      *
@@ -90,11 +109,11 @@ public class ErrorCenter {
     }
 
     /**
-     * register a new error shower. We don't hold a strong reference to the object so
+     * register a new error shower. We don't hold a strong references so
      * you may not pass an anonymous instance.
      *
      * @param errorShower the error shower to register, may not be null
-     * @throws IllegalArgumentException if null is passed
+     * @throws IllegalArgumentException if errorShow is null
      */
     public static synchronized void registerErrorShower(ErrorShower errorShower) {
         if (errorShower == null) throw new IllegalArgumentException("null!");
@@ -132,6 +151,7 @@ public class ErrorCenter {
                 reportError(waitingError.id, waitingError.message, waitingError.timeout);
             }
             waitingError = null;
+            return;
         }
         Log.d(TAG, "no error to show either they have time out or there is none at all");
     }
@@ -149,5 +169,9 @@ public class ErrorCenter {
             this.message = message;
             this.timeout = System.currentTimeMillis() + timeout;
         }
+    }
+
+    public enum ReportStyle {
+        DIALOG, NOTIFICATION, DIALOG_NOT
     }
 }

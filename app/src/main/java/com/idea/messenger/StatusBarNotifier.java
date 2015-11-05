@@ -65,7 +65,8 @@ class StatusBarNotifier implements Notifier {
                 PendingIntent.FLAG_CANCEL_CURRENT);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(Config.getApplication());
         builder.setTicker(notificationMessage)
-                .setContentTitle(context.getString(R.string.new_message));
+                .setContentTitle(context.getString(R.string.new_message))
+                .setAutoCancel(true);
 
         builder.setContentText(notificationMessage);
 
@@ -103,8 +104,8 @@ class StatusBarNotifier implements Notifier {
 
     private static void playToneIfAllowed(Context context) {
         String uriString = UserManager.getInstance().getStringPref(UserManager.NEW_MESSAGE_TONE, UserManager.SILENT);
-        if(uriString.equals(UserManager.SILENT)){
-            PLog.d(TAG,"silent, aborting ringtone playing");
+        if (uriString.equals(UserManager.SILENT)) {
+            PLog.d(TAG, "silent, aborting ringtone playing");
         }
         Uri uri;
         if (TextUtils.isEmpty(uriString) || uriString.equals(UserManager.DEFAULT)) {
@@ -166,7 +167,7 @@ class StatusBarNotifier implements Notifier {
                 return getString(R.string.new_message);
             case 1:
                 if (unReadMessages == 1) {
-                    String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(applicationContext, message.getType());
+                    String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(applicationContext, message);
                     text = (Message.isGroupMessage(message) ? sender + "@" + recentChatList.get(0) : sender) + ":  " + messageBody;
                 } else {
                     text = unReadMessages + " " + getString(R.string.new_message_from) + " " + (Message.isGroupMessage(message) ? sender + "@" + recentChatList.get(0) : sender);
