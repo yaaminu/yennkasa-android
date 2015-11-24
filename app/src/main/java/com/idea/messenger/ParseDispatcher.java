@@ -1,14 +1,12 @@
 package com.idea.messenger;
 
 import com.idea.data.Message;
-import com.idea.data.MessageJsonAdapter;
 import com.idea.pairapp.R;
 import com.idea.util.Config;
 import com.idea.util.PLog;
 import com.parse.ParseCloud;
 import com.parse.ParseException;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +64,7 @@ class ParseDispatcher extends AbstractMessageDispatcher {
     }
 
     private void finallyDispatch(Message message, Object target, boolean isGroupMessage) {
-        String messageJson = MessageJsonAdapter.INSTANCE.toJson(message).toString();
+        String messageJson = Message.toJSON(message);
         try {
             Map<String, Object> params = new HashMap<>(3);
             params.put(TO, target);

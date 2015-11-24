@@ -16,12 +16,13 @@
 
     <style name="incoming_message_body_root_view">
         <item name="android:layout_alignParentLeft">true</item>
-        <item name="android:background">@drawable/bg_msg_incoming</item>
+        <item name="android:background">@drawable/bg_msg_incoming_normal</item>
+        <item name="android:gravity">center_vertical</item>
     </style>
 
     <style name="outgoing_message_body_root_view">
         <item name="android:layout_alignParentRight">true</item>
-        <item name="android:background">@drawable/bg_msg_outgoing</item>
+        <item name="android:background">@drawable/bg_msg_outgoing_normal</item>
     </style>
 
     <style name="message_incoming" parent="base_message_style">
@@ -42,6 +43,7 @@
         <item name="android:singleLine">true</item>
         <item name="android:textColor">@color/white</item>
         <item name="android:textSize">@dimen/standard_text_size_small</item>
+        <item name="android:gravity">bottom</item>
     </style>
 
     <style name="message_incoming_date" parent="base_date_style">
@@ -56,5 +58,5 @@
         <item name="android:paddingLeft">@dimen/message_padding</item>
     </style>
 
-    <item name="fl_message_body_view" type="id" />
+    <item name="fl_message_body_view" type="id"/>
 </resources>

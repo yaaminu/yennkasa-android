@@ -74,6 +74,21 @@ public class GcmUtils {
 
     }
 
+    public static boolean hasGcm() {
+        return getResultsCode() == ConnectionResult.SUCCESS || getResultsCode() == ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED;
+    }
+
+    public static boolean gcmUpdateRequired() {
+        return getResultsCode() == ConnectionResult.SERVICE_VERSION_UPDATE_REQUIRED;
+
+    }
+
+    private static int getResultsCode() {
+        int resultCode = GooglePlayServicesUtil.isGooglePlayServicesAvailable(Config.getApplicationContext());
+        PLog.i(TAG, "results code: " + resultCode);
+        return resultCode;
+    }
+
     public interface UnregisterCallback {
         void done(Exception e);
     }
@@ -124,6 +139,7 @@ public class GcmUtils {
         class GcmRegResults {
             Exception error;
             String regId;
+
             GcmRegResults(String regId, Exception error) {
                 this.regId = regId;
                 this.error = error;

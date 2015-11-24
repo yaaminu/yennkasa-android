@@ -139,8 +139,9 @@ public class Conversation extends RealmObject {
         }
         return newConversation;
     }
+
     public static Realm Realm(Context context) {
-        return Realm.getInstance(context);
+        return Message.REALM(context);
     }
 
     public static Conversation copy(Conversation conversation) {

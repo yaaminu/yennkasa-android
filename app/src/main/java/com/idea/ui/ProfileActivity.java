@@ -14,6 +14,7 @@ import com.rey.material.widget.SnackBar;
 public class ProfileActivity extends PairAppActivity {
 
     public static final String EXTRA_USER_ID = "user id";
+    public static final String EXTRA_AVARTAR_PLACEHOLDER = "profileActivity.placeholder", EXTRA_AVARTAR_ERROR = "profileActivity.errorDrable";
     private ToolbarManager manager;
     private Toolbar toolBar;
 
@@ -43,7 +44,7 @@ public class ProfileActivity extends PairAppActivity {
         }
         Fragment fragment = new ProfileFragment();
         bundle = new Bundle();
-        bundle.putString(ProfileFragment.ARG_USER_ID, id);
+        bundle.putAll(getIntent().getExtras());
         fragment.setArguments(bundle);
         getSupportFragmentManager()
                 .beginTransaction()

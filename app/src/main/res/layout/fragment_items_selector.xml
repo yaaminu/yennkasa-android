@@ -1,35 +1,12 @@
-<com.idea.view.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                            xmlns:tools="http://schemas.android.com/tools"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:orientation="vertical"
-                            tools:context="com.idea.ui.ItemsSelector"
-                            tools:ignore="RtlHardcoded">
-
-    <EditText
-        android:id="@+id/tv_selected_tems"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@null"
-        android:cursorVisible="false"
-        android:editable="false"
-        android:fadingEdge="none"
-        android:gravity="center"
-        android:maxHeight="@dimen/selected_items_view"
-        android:padding="2dp"
-        android:textIsSelectable="false"
-        tools:ignore="Deprecated"/>
-
-    <EditText
-        android:id="@+id/et_filter_input_box"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:drawableLeft="@drawable/ic_action_search"
-        android:ems="10"
-        android:hint="@string/abc_search_hint"
-        android:inputType="textFilter"
-        android:textSize="@dimen/edit_text_size"
-        android:visibility="visible"/>
+<com.idea.view.LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    tools:context="com.idea.ui.ItemsSelector"
+    tools:ignore="RtlHardcoded">
 
     <com.idea.view.FrameLayout
         android:layout_width="match_parent"
@@ -66,18 +43,4 @@
             android:fadingEdge="none"
             android:transcriptMode="disabled"/>
     </com.idea.view.FrameLayout>
-
-    <Button
-        android:id="@id/bt_add"
-        style="@style/TabRippleStyle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_margin="4dp"
-        android:background="@color/colorPrimary"
-        android:minHeight="@dimen/action_bar_height"
-        android:padding="2dp"
-        android:text="@string/add_custom"
-        android:textColor="@color/white"
-        android:visibility="visible"/>
 </com.idea.view.LinearLayout>

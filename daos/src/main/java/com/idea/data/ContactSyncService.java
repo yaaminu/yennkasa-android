@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
+import com.idea.util.Config;
 import com.idea.util.PLog;
 
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class ContactSyncService extends IntentService {
         if (!UserManager.getInstance().isUserVerified()) {
             return;
         }
-        Intent intent = new Intent(context, ContactSyncService.class);
+        Intent intent = new Intent(Config.getApplicationContext(), ContactSyncService.class);
         intent.putExtra(ContactSyncService.ACTION, ContactSyncService.SYNC_CONTACTS);
         PendingIntent operation = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager manager = ((AlarmManager) context.getSystemService(Context.ALARM_SERVICE));

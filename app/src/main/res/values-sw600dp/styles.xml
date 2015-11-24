@@ -2,7 +2,7 @@
 <resources>
 
     <style name="TabPageIndicator" parent="Material.Widget.TabPageIndicator.Light">
-        <item name="tpi_tabRipple">@style/TabRippleStyle</item>
+        <item name="tpi_tabRipple">@style/FlatButtonRippleStyle</item>
         <item name="tpi_indicatorHeight">@dimen/tab_pager_indicator_height</item>
         <item name="tpi_indicatorColor">@color/white</item>
         <item name="android:layout_width">match_parent</item>

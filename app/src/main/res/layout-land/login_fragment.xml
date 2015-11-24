@@ -20,15 +20,15 @@
         android:textStyle="bold"/>
 
     <!--<TextView-->
-        <!--android:id="@+id/tv_sub_title"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_below="@+id/tv_app_name"-->
-        <!--android:layout_centerHorizontal="true"-->
-        <!--android:text="@string/subtitle"-->
-        <!--android:textColor="@android:color/white"-->
-        <!--android:textSize="@dimen/sub_title_text_size"-->
-        <!--android:textStyle="bold|italic"/>-->
+    <!--android:id="@+id/tv_sub_title"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:layout_below="@+id/tv_app_name"-->
+    <!--android:layout_centerHorizontal="true"-->
+    <!--android:text="@string/subtitle"-->
+    <!--android:textColor="@android:color/white"-->
+    <!--android:textSize="@dimen/sub_title_text_size"-->
+    <!--android:textStyle="bold|italic"/>-->
 
     <com.idea.view.RelativeLayout
         android:id="@+id/login_sign_up_pane"
@@ -67,6 +67,7 @@
                 app:spn_arrowInterpolator="@android:anim/decelerate_interpolator"
                 app:spn_arrowSwitchMode="true"
                 app:spn_labelTextSize="@dimen/standard_text_size">
+
                 <requestFocus/>
             </com.rey.material.widget.Spinner>
 
@@ -89,9 +90,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/big_button_height"
                 android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
+                android:background="@color/colorPrimaryDark"
                 android:gravity="center"
                 android:text="@string/log_in_button_label"
-                android:textColor="#000"
+                android:textColor="@color/white"
                 android:textSize="@dimen/login_signup_text_size"/>
 
         </com.idea.view.LinearLayout>
@@ -110,6 +112,7 @@
         android:padding="@dimen/padding_ll_login_fragment_top"
         android:text="@string/dont_have_an_account_sign_up"
         android:textColor="@android:color/white"
+        android:background="#4000"
         android:textSize="@dimen/signup_have_an_account_size"/>
 
     <include layout="@layout/copyright_text_view"/>

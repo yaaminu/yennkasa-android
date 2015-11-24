@@ -7,16 +7,15 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.idea.util.UiHelpers;
 import com.idea.data.User;
-import com.idea.data.UserManager;
 import com.idea.pairapp.R;
-import com.idea.ui.DPLoader;
+import com.idea.ui.ImageLoader;
 import com.idea.util.PLog;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.ViewUtils;
-import android.text.TextUtils;
-import java.util.*;
+
+import java.util.List;
+
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
 
@@ -25,16 +24,24 @@ import io.realm.RealmResults;
  */
 public class GroupsAdapter extends RealmBaseAdapter<User> {
     private static final String TAG = GroupsAdapter.class.getSimpleName();
+
     public GroupsAdapter(Context context, RealmResults<User> realmResults) {
         super(context, realmResults, true);
     }
 
     public static String join(CharSequence delimiter, List<User> users) {
-        Set<String> names = new HashSet<>();
-        for (User user : users) {
-            names.add(user.getName());
+        //copied from android.text.TextUtils#join
+        StringBuilder sb = new StringBuilder();
+        boolean firstTime = true;
+        for (User token : users) {
+            if (firstTime) {
+                firstTime = false;
+            } else {
+                sb.append(delimiter);
+            }
+            sb.append(token.getName());
         }
-        return TextUtils.join(delimiter,names);
+        return sb.toString();
     }
 
     @Override
@@ -55,22 +62,17 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
             holder = ((ViewHolder) convertView.getTag());
         }
         holder.groupName.setText(group.getName());
-        DPLoader.load(context, group.getDP())
+        TargetOnclick targetOnclick = new TargetOnclick(holder.groupIcon, group.getUserId());
+        ImageLoader.load(context, group.getDP())
                 .placeholder(R.drawable.group_avatar)
                 .error(R.drawable.group_avatar)
-                .resize(150, 150)
-                .into(holder.groupIcon);
+                .resize((int) context.getResources().getDimension(R.dimen.thumbnail_width), (int) context.getResources().getDimension(R.dimen.thumbnail_height))
+                .onlyScaleDown().into(targetOnclick);
 
         String users = join(",", group.getMembers());
         holder.groupMembers.setText(users);
-        View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                UiHelpers.gotoProfileActivity(v.getContext(), group.getUserId());
-            }
-        };
-        holder.groupIcon.setOnClickListener(listener);
-        holder.groupName.setOnClickListener(listener);
+        holder.groupIcon.setOnClickListener(targetOnclick);
+        holder.groupName.setOnClickListener(targetOnclick);
         PLog.i(TAG, "Display Picture: " + group.getDP());
         return convertView;
     }

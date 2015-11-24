@@ -23,7 +23,7 @@ import android.widget.ListView;
 import com.idea.adapter.SettingsAdapter;
 import com.idea.util.UiHelpers;
 import com.idea.data.UserManager;
-import com.idea.data.settings.PersistedSetting;
+import com.idea.data.PersistedSetting;
 import com.idea.pairapp.R;
 import com.idea.util.PLog;
 import com.rey.material.app.DialogFragment;

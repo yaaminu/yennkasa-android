@@ -1,33 +1,33 @@
 
 
------ pid 18960 at 2015-09-21 11:51:32 -----
-Cmd line: com.pair.pairapp
+----- pid 3505 at 2015-11-20 10:15:28 -----
+Cmd line: com.idea.pairapp
 
 DALVIK THREADS:
 (mutexes: tll=0 tsl=0 tscl=0 ghl=0 hwl=0 hwll=0)
 "main" prio=5 tid=1 MONITOR
-  | group="main" sCount=1 dsCount=0 obj=0xb5ff1c40 self=0x8be8e40
-  | sysTid=18960 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=-2145989792
-  | schedstat=( 1343361035 708403822 6376 )
+  | group="main" sCount=1 dsCount=0 obj=0xb60ccc40 self=0x82e9e40
+  | sysTid=3505 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=-2145989792
+  | schedstat=( 35770178784 26259457680 41062 )
   at io.realm.Realm.createAndValidate(Realm.java:~480)
-  - waiting to lock <0xb6583f80> (a java.lang.Class) held by threadid=38 (Thread-163)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
   at io.realm.Realm.create(Realm.java:471)
-  at io.realm.Realm.getInstance(Realm.java:389)
-  at io.realm.Realm.getInstance(Realm.java:351)
-  at io.realm.Realm.getInstance(Realm.java:332)
-  at com.pair.adapter.ConversationAdapter.getPeer(ConversationAdapter.java:121)
-  at com.pair.adapter.ConversationAdapter.getView(ConversationAdapter.java:56)
-  at android.widget.AbsListView.obtainView(AbsListView.java:1409)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.User.Realm(User.java:246)
+  at com.idea.data.UserManager.fetchUserIfRequired(UserManager.java:1298)
+  at com.idea.adapter.ConversationAdapter.getView(ConversationAdapter.java:75)
+  at android.widget.AbsListView.obtainView(AbsListView.java:1430)
   at android.widget.ListView.makeAndAddView(ListView.java:1745)
-  at android.widget.ListView.fillUp(ListView.java:700)
-  at android.widget.ListView.layoutChildren(ListView.java:1579)
+  at android.widget.ListView.fillDown(ListView.java:670)
+  at android.widget.ListView.fillFromTop(ListView.java:727)
+  at android.widget.ListView.layoutChildren(ListView.java:1598)
   at android.widget.AbsListView.onLayout(AbsListView.java:1260)
   at android.view.View.layout(View.java:7175)
   at android.widget.RelativeLayout.onLayout(RelativeLayout.java:912)
   at android.view.View.layout(View.java:7175)
   at android.widget.FrameLayout.onLayout(FrameLayout.java:338)
   at android.view.View.layout(View.java:7175)
-  at android.support.v4.view.ViewPager.onLayout(ViewPager.java:1593)
+  at android.support.v4.view.ViewPager.onLayout(ViewPager.java:1627)
   at android.view.View.layout(View.java:7175)
   at android.widget.LinearLayout.setChildFrame(LinearLayout.java:1254)
   at android.widget.LinearLayout.layoutVertical(LinearLayout.java:1130)
@@ -62,489 +62,685 @@ DALVIK THREADS:
   at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:597)
   at dalvik.system.NativeStart.main(Native Method)
 
-"Thread-192" prio=5 tid=55 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb692e338 self=0x912fb20
-  | sysTid=19517 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149575256
-  | schedstat=( 2905637 16023053 160 )
-  at org.apache.harmony.luni.platform.OSNetworkSystem.connect(Native Method)
-  at dalvik.system.BlockGuard$WrappedNetworkSystem.connect(BlockGuard.java:357)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:204)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:437)
-  at java.net.Socket.connect(Socket.java:983)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:75)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:48)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection$Address.connect(HttpConnection.java:322)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnectionPool.get(HttpConnectionPool.java:89)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHttpConnection(HttpURLConnectionImpl.java:285)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.makeConnection(HttpURLConnectionImpl.java:267)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.retrieveResponse(HttpURLConnectionImpl.java:1018)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHeaderFields(HttpURLConnectionImpl.java:491)
-  at com.github.nkzawa.engineio.client.transports.PollingXHR$Request$1.run(PollingXHR.java:202)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"Thread-190" prio=5 tid=51 SUSPENDED
-  | group="main" sCount=1 dsCount=0 obj=0xb69349a0 self=0x912f6b8
-  | sysTid=19515 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=151376096
-  | schedstat=( 4688059 17334900 161 )
-  at org.apache.harmony.luni.platform.OSNetworkSystem.connect(Native Method)
-  at dalvik.system.BlockGuard$WrappedNetworkSystem.connect(BlockGuard.java:357)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:204)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:437)
-  at java.net.Socket.connect(Socket.java:983)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:75)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:48)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection$Address.connect(HttpConnection.java:322)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnectionPool.get(HttpConnectionPool.java:89)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHttpConnection(HttpURLConnectionImpl.java:285)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.makeConnection(HttpURLConnectionImpl.java:267)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.retrieveResponse(HttpURLConnectionImpl.java:1018)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHeaderFields(HttpURLConnectionImpl.java:491)
-  at com.github.nkzawa.engineio.client.transports.PollingXHR$Request$1.run(PollingXHR.java:202)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"Thread-166" prio=5 tid=52 MONITOR
-  | group="main" sCount=1 dsCount=0 obj=0xb686ea18 self=0x90a3038
-  | sysTid=19432 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=151863856
-  | schedstat=( 232591 2300372 7 )
+"Thread-1235" prio=5 tid=39 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6d2e5a0 self=0x8b4c2b8
+  | sysTid=14107 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=146276224
+  | schedstat=( 170732501 295572838 72 )
   at io.realm.Realm.createAndValidate(Realm.java:~480)
-  - waiting to lock <0xb6583f80> (a java.lang.Class) held by threadid=38 (Thread-163)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
   at io.realm.Realm.create(Realm.java:473)
-  at io.realm.Realm.getInstance(Realm.java:389)
-  at io.realm.Realm.getInstance(Realm.java:351)
-  at io.realm.Realm.getInstance(Realm.java:332)
-  at com.pair.data.ContactsManager.doFindAllContacts(ContactsManager.java:78)
-  at com.pair.data.ContactsManager.findAllContactsSync(ContactsManager.java:46)
-  at com.pair.data.ContactsManager$1.run(ContactsManager.java:55)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
   at java.lang.Thread.run(Thread.java:1019)
 
-"Thread-163" prio=5 tid=38 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb68b10e0 self=0x90cb690
-  | sysTid=19429 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=150289408
-  | schedstat=( 9048146 33019259 23 )
-  at io.realm.internal.SharedGroup.nativePromoteToWrite(Native Method)
-  at io.realm.internal.SharedGroup.promoteToWrite(SharedGroup.java:95)
-  at io.realm.internal.ImplicitTransaction.promoteToWrite(ImplicitTransaction.java:37)
-  at io.realm.Realm.beginTransaction(Realm.java:1301)
-  at io.realm.Realm.initializeRealm(Realm.java:540)
+"Thread-1234" prio=5 tid=75 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6e90658 self=0x8ae88c0
+  | sysTid=14092 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=141087760
+  | schedstat=( 253641481 320815429 105 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1233" prio=5 tid=69 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6e90a60 self=0x87e7108
+  | sysTid=14091 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=142359464
+  | schedstat=( 162189360 397608811 72 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1232" prio=5 tid=49 SUSPENDED
+  | group="main" sCount=1 dsCount=0 obj=0xb6e91190 self=0x887f0d0
+  | sysTid=14090 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=147051888
+  | schedstat=( 198600524 380030748 93 )
+  at java.util.regex.Pattern.matcher(Pattern.java:~290)
+  at com.google.i18n.phonenumbers.PhoneNumberUtil.maybeStripNationalPrefixAndCarrierCode(PhoneNumberUtil.java:2647)
+  at com.google.i18n.phonenumbers.PhoneNumberUtil.parseHelper(PhoneNumberUtil.java:2956)
+  at com.google.i18n.phonenumbers.PhoneNumberUtil.parse(PhoneNumberUtil.java:2765)
+  at com.google.i18n.phonenumbers.PhoneNumberUtil.parse(PhoneNumberUtil.java:2755)
+  at com.idea.util.PhoneNumberNormaliser.toIEE(PhoneNumberNormaliser.java:32)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1231" prio=5 tid=48 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6e91368 self=0x88ba7f8
+  | sysTid=14089 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=141403032
+  | schedstat=( 234208383 420947200 109 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1230" prio=5 tid=44 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6e94fe8 self=0x8796d80
+  | sysTid=14088 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=146559408
+  | schedstat=( 202432405 241851061 95 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1229" prio=5 tid=42 TIMED_WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb6ddbd98 self=0x8b0bfd0
+  | sysTid=13940 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=145622952
+  | schedstat=( 0 22467485 4 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb6e2ebb8> (a java.lang.VMThread)
+  at java.lang.Thread.parkFor(Thread.java:1424)
+  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
+  at sun.misc.Unsafe.park(Unsafe.java:337)
+  at java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:197)
+  at java.util.concurrent.SynchronousQueue$TransferStack.awaitFulfill(SynchronousQueue.java:429)
+  at java.util.concurrent.SynchronousQueue$TransferStack.transfer(SynchronousQueue.java:328)
+  at java.util.concurrent.SynchronousQueue.poll(SynchronousQueue.java:879)
+  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
+  at com.idea.util.TaskManager$SmartThread.run(TaskManager.java:102)
+
+"Thread-1225" prio=5 tid=41 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6b22f28 self=0x87b3210
+  | sysTid=13852 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=145807552
+  | schedstat=( 1600250411 2848630430 583 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1224" prio=5 tid=74 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6d440d0 self=0x8879150
+  | sysTid=13808 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=142301120
+  | schedstat=( 1771216004 3944920897 734 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1223" prio=5 tid=73 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6d46a20 self=0x8383160
+  | sysTid=13807 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=141429352
+  | schedstat=( 1823402593 3722184626 752 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1222" prio=5 tid=72 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6d4a700 self=0x8920998
+  | sysTid=13806 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=142119640
+  | schedstat=( 1965389113 3502328381 783 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1221" prio=5 tid=62 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6d59410 self=0x873ff98
+  | sysTid=13805 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=143362072
+  | schedstat=( 1945460097 3861963064 753 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1220" prio=5 tid=43 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6d5b010 self=0x8a49df0
+  | sysTid=13804 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=141759720
+  | schedstat=( 1719250263 2861496587 693 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1211" prio=5 tid=71 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6d12a28 self=0x89a6c98
+  | sysTid=13724 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=144403160
+  | schedstat=( 2475008100 5780582130 970 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1210" prio=5 tid=70 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6d159d8 self=0x87c2b68
+  | sysTid=13723 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=142501936
+  | schedstat=( 2185391457 4247188326 826 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1209" prio=5 tid=47 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6d198a8 self=0x882efa0
+  | sysTid=13722 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=146666624
+  | schedstat=( 2327579494 4940534172 931 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1208" prio=5 tid=46 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6d1c438 self=0x8627128
+  | sysTid=13721 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=137719384
+  | schedstat=( 2405133891 4765157837 920 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1207" prio=5 tid=45 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6d1e420 self=0x8811d88
+  | sysTid=13720 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=142603176
+  | schedstat=( 2474285346 4465892007 960 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1204" prio=5 tid=68 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6dc8e10 self=0x8b4efa0
+  | sysTid=13598 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=145004360
+  | schedstat=( 3491302956 6686323991 1320 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1203" prio=5 tid=67 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb67fe990 self=0x8b72d28
+  | sysTid=13482 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=145808984
+  | schedstat=( 3913806139 7502691888 1504 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1202" prio=5 tid=66 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6acedc0 self=0x87a4f20
+  | sysTid=13475 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=144516392
+  | schedstat=( 3724629765 8021811079 1478 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1201" prio=5 tid=65 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6ae23e8 self=0x886e868
+  | sysTid=13474 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=143059344
+  | schedstat=( 4216697585 7417511400 1607 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1200" prio=5 tid=64 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6af6808 self=0x8935100
+  | sysTid=13473 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=143366504
+  | schedstat=( 3954175974 7713773224 1613 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1199" prio=5 tid=63 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6b58348 self=0x8b09400
+  | sysTid=13472 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=146521544
+  | schedstat=( 3823426114 7982425728 1531 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1197" prio=5 tid=61 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6c1c788 self=0x8a46600
+  | sysTid=13429 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=144542960
+  | schedstat=( 4208463664 7467942024 1626 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1196" prio=5 tid=60 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6c8fc00 self=0x86d7058
+  | sysTid=13418 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=141390208
+  | schedstat=( 4237531906 8250307588 1640 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1195" prio=5 tid=59 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6c989b8 self=0x88ddc00
+  | sysTid=13417 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=142235592
+  | schedstat=( 4295898695 9985121606 1674 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1194" prio=5 tid=58 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6ca5f18 self=0x88ddad8
+  | sysTid=13416 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=142235240
+  | schedstat=( 4237088639 7437473626 1708 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1193" prio=5 tid=57 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6afdeb0 self=0x87aaad8
+  | sysTid=13372 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=140836360
+  | schedstat=( 4619550195 9570497466 1925 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1192" prio=5 tid=56 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6b0eda0 self=0x896c808
+  | sysTid=13371 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=142035456
+  | schedstat=( 4800361256 9824748880 1893 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1191" prio=5 tid=55 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6b145f0 self=0x864ef40
+  | sysTid=13370 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=143028992
+  | schedstat=( 4877798773 8973498793 1968 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1190" prio=5 tid=54 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6905598 self=0x8689880
+  | sysTid=13341 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=144127056
+  | schedstat=( 4838164421 10671038914 2007 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1189" prio=5 tid=53 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6c02348 self=0x88a01e0
+  | sysTid=13340 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=144125160
+  | schedstat=( 5104249260 11290452892 2034 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1188" prio=5 tid=52 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6ac9498 self=0x8781d08
+  | sysTid=13339 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=142092096
+  | schedstat=( 5186695637 9814807752 2042 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1187" prio=5 tid=51 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6a429f0 self=0x89a59e8
+  | sysTid=13253 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=144104576
+  | schedstat=( 6060983718 11815768329 2323 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1186" prio=5 tid=40 MONITOR
+  | group="main" sCount=1 dsCount=0 obj=0xb6940d48 self=0x886bbf0
+  | sysTid=13252 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=141390816
+  | schedstat=( 6162723313 10362437285 2342 )
+  at io.realm.Realm.createAndValidate(Realm.java:~480)
+  - waiting to lock <0xb670d9d0> (a java.lang.Class) held by threadid=15 (Thread-1185)
+  at io.realm.Realm.create(Realm.java:473)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Thread-1185" prio=5 tid=15 SUSPENDED
+  | group="main" sCount=1 dsCount=0 obj=0xb6957d98 self=0x886bac8
+  | sysTid=13251 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=141098472
+  | schedstat=( 6053626312 13192908981 2394 )
+  at java.lang.String.hashCode(String.java:~1060)
+  at java.util.HashMap.put(HashMap.java:394)
+  at io.realm.UserRealmProxy.validateTable(UserRealmProxy.java:233)
+  at io.realm.DefaultRealmModuleMediator.validateTable(DefaultRealmModuleMediator.java:69)
+  at io.realm.Realm.initializeRealm(Realm.java:553)
   at io.realm.Realm.createAndValidate(Realm.java:516)
   at io.realm.Realm.create(Realm.java:473)
-  at io.realm.Realm.getInstance(Realm.java:389)
-  at io.realm.Realm.getInstance(Realm.java:351)
-  at io.realm.Realm.getInstance(Realm.java:332)
-  at com.pair.data.ContactsManager.doFindAllContacts(ContactsManager.java:78)
-  at com.pair.data.ContactsManager.findAllContactsSync(ContactsManager.java:46)
-  at com.pair.data.ContactsManager$1.run(ContactsManager.java:55)
+  at io.realm.Realm.getInstance(Realm.java:444)
+  at com.idea.data.PersistedSetting.REALM(PersistedSetting.java:129)
+  at com.idea.data.UserManager.getSessionStringPref(UserManager.java:316)
+  at com.idea.data.UserManager.isEveryThingSetup(UserManager.java:288)
+  at com.idea.data.UserManager.isUserLoggedIn(UserManager.java:278)
+  at com.idea.data.UserManager.getUserCountryISO(UserManager.java:1191)
+  at com.idea.data.ContactsManager.doFindAllContacts(ContactsManager.java:130)
+  at com.idea.data.ContactsManager.findAllContactsSync(ContactsManager.java:48)
+  at com.idea.data.ContactsManager$1.run(ContactsManager.java:92)
   at java.lang.Thread.run(Thread.java:1019)
 
-"Thread-162" prio=5 tid=46 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb676f540 self=0x8f98da0
-  | sysTid=19393 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149706928
-  | schedstat=( 7602751 47055333 399 )
-  at org.apache.harmony.luni.platform.OSNetworkSystem.connect(Native Method)
-  at dalvik.system.BlockGuard$WrappedNetworkSystem.connect(BlockGuard.java:357)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:204)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:437)
-  at java.net.Socket.connect(Socket.java:983)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:75)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:48)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection$Address.connect(HttpConnection.java:322)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnectionPool.get(HttpConnectionPool.java:89)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHttpConnection(HttpURLConnectionImpl.java:285)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.makeConnection(HttpURLConnectionImpl.java:267)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.retrieveResponse(HttpURLConnectionImpl.java:1018)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHeaderFields(HttpURLConnectionImpl.java:491)
-  at com.github.nkzawa.engineio.client.transports.PollingXHR$Request$1.run(PollingXHR.java:202)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"Thread-160" prio=5 tid=45 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb682e3c8 self=0x9207f38
-  | sysTid=19391 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=150294088
-  | schedstat=( 6409451 56909705 401 )
-  at org.apache.harmony.luni.platform.OSNetworkSystem.connect(Native Method)
-  at dalvik.system.BlockGuard$WrappedNetworkSystem.connect(BlockGuard.java:357)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:204)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:437)
-  at java.net.Socket.connect(Socket.java:983)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:75)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:48)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection$Address.connect(HttpConnection.java:322)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnectionPool.get(HttpConnectionPool.java:89)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHttpConnection(HttpURLConnectionImpl.java:285)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.makeConnection(HttpURLConnectionImpl.java:267)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.retrieveResponse(HttpURLConnectionImpl.java:1018)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHeaderFields(HttpURLConnectionImpl.java:491)
-  at com.github.nkzawa.engineio.client.transports.PollingXHR$Request$1.run(PollingXHR.java:202)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"Thread-145" prio=5 tid=54 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb66d38d8 self=0x90db0c0
-  | sysTid=19289 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=151892456
-  | schedstat=( 21470284 48182884 629 )
-  at org.apache.harmony.luni.platform.OSNetworkSystem.connect(Native Method)
-  at dalvik.system.BlockGuard$WrappedNetworkSystem.connect(BlockGuard.java:357)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:204)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:437)
-  at java.net.Socket.connect(Socket.java:983)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:75)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:48)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection$Address.connect(HttpConnection.java:322)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnectionPool.get(HttpConnectionPool.java:89)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHttpConnection(HttpURLConnectionImpl.java:285)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.makeConnection(HttpURLConnectionImpl.java:267)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.retrieveResponse(HttpURLConnectionImpl.java:1018)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHeaderFields(HttpURLConnectionImpl.java:491)
-  at com.github.nkzawa.engineio.client.transports.PollingXHR$Request$1.run(PollingXHR.java:202)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"Thread-143" prio=5 tid=53 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb68371f8 self=0x905dca0
-  | sysTid=19286 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149590376
-  | schedstat=( 13864192 58690704 627 )
-  at org.apache.harmony.luni.platform.OSNetworkSystem.connect(Native Method)
-  at dalvik.system.BlockGuard$WrappedNetworkSystem.connect(BlockGuard.java:357)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:204)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:437)
-  at java.net.Socket.connect(Socket.java:983)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:75)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:48)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection$Address.connect(HttpConnection.java:322)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnectionPool.get(HttpConnectionPool.java:89)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHttpConnection(HttpURLConnectionImpl.java:285)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.makeConnection(HttpURLConnectionImpl.java:267)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.retrieveResponse(HttpURLConnectionImpl.java:1018)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHeaderFields(HttpURLConnectionImpl.java:491)
-  at com.github.nkzawa.engineio.client.transports.PollingXHR$Request$1.run(PollingXHR.java:202)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"Thread-101" prio=5 tid=50 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb684ba70 self=0x905e460
-  | sysTid=19152 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149998080
-  | schedstat=( 23511283 81307909 851 )
-  at org.apache.harmony.luni.platform.OSNetworkSystem.connect(Native Method)
-  at dalvik.system.BlockGuard$WrappedNetworkSystem.connect(BlockGuard.java:357)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:204)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:437)
-  at java.net.Socket.connect(Socket.java:983)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:75)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:48)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection$Address.connect(HttpConnection.java:322)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnectionPool.get(HttpConnectionPool.java:89)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHttpConnection(HttpURLConnectionImpl.java:285)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.makeConnection(HttpURLConnectionImpl.java:267)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.retrieveResponse(HttpURLConnectionImpl.java:1018)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHeaderFields(HttpURLConnectionImpl.java:491)
-  at com.github.nkzawa.engineio.client.transports.PollingXHR$Request$1.run(PollingXHR.java:202)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"Thread-99" prio=5 tid=49 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb68a7d68 self=0x90ba2e8
-  | sysTid=19150 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=153125008
-  | schedstat=( 25247170 98900905 847 )
-  at org.apache.harmony.luni.platform.OSNetworkSystem.connect(Native Method)
-  at dalvik.system.BlockGuard$WrappedNetworkSystem.connect(BlockGuard.java:357)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:204)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:437)
-  at java.net.Socket.connect(Socket.java:983)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:75)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:48)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection$Address.connect(HttpConnection.java:322)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnectionPool.get(HttpConnectionPool.java:89)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHttpConnection(HttpURLConnectionImpl.java:285)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.makeConnection(HttpURLConnectionImpl.java:267)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.retrieveResponse(HttpURLConnectionImpl.java:1018)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHeaderFields(HttpURLConnectionImpl.java:491)
-  at com.github.nkzawa.engineio.client.transports.PollingXHR$Request$1.run(PollingXHR.java:202)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"pool-14-thread-1" prio=5 tid=43 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb664d2c8 self=0x90910a8
-  | sysTid=19142 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=151589896
-  | schedstat=( 977731 1156533 24 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb6660830> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
-  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
-  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1050)
-  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:778)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"pool-13-thread-1" prio=5 tid=42 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb67151b0 self=0x8ed18a0
-  | sysTid=19140 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=152521352
-  | schedstat=( 941800 360026 24 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb66b6298> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
-  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
-  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1050)
-  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:778)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"Picasso-Idle" prio=5 tid=48 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb665bef0 self=0x91fe128
-  | sysTid=19090 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=150573232
-  | schedstat=( 430277 4327121 6 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb6613fe0> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
-  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
-  at java.util.concurrent.PriorityBlockingQueue.take(PriorityBlockingQueue.java:228)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-  at com.squareup.picasso.Utils$PicassoThread.run(Utils.java:394)
-
-"pool-1-thread-7" prio=5 tid=47 TIMED_WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb68c9998 self=0x8fa31f0
-  | sysTid=19076 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=150625496
-  | schedstat=( 6121260 40215146 24 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb66a0ce0> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:197)
-  at java.util.concurrent.SynchronousQueue$TransferStack.awaitFulfill(SynchronousQueue.java:429)
-  at java.util.concurrent.SynchronousQueue$TransferStack.transfer(SynchronousQueue.java:328)
-  at java.util.concurrent.SynchronousQueue.poll(SynchronousQueue.java:879)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"pool-1-thread-5" prio=5 tid=41 TIMED_WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb66352c8 self=0x90c15d0
-  | sysTid=19070 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=150294224
-  | schedstat=( 2628002 8185432 22 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb6611ac0> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:197)
-  at java.util.concurrent.SynchronousQueue$TransferStack.awaitFulfill(SynchronousQueue.java:429)
-  at java.util.concurrent.SynchronousQueue$TransferStack.transfer(SynchronousQueue.java:328)
-  at java.util.concurrent.SynchronousQueue.poll(SynchronousQueue.java:879)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"Picasso-Idle" prio=5 tid=40 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb669d508 self=0x8e9f428
-  | sysTid=19069 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=151382328
-  | schedstat=( 407304 4531104 7 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb66f8bc8> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
-  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
-  at java.util.concurrent.PriorityBlockingQueue.take(PriorityBlockingQueue.java:228)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-  at com.squareup.picasso.Utils$PicassoThread.run(Utils.java:394)
-
-"AsyncTask #5" prio=5 tid=39 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb66a7d70 self=0x8e9f300
-  | sysTid=19068 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=149548448
-  | schedstat=( 342195 5774077 8 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb670dae0> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
-  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
-  at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:411)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"pool-1-thread-4" prio=5 tid=37 TIMED_WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb6819860 self=0x905e2d0
-  | sysTid=19066 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=151380984
-  | schedstat=( 7026153 4122839 29 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb6685b50> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:197)
-  at java.util.concurrent.SynchronousQueue$TransferStack.awaitFulfill(SynchronousQueue.java:429)
-  at java.util.concurrent.SynchronousQueue$TransferStack.transfer(SynchronousQueue.java:328)
-  at java.util.concurrent.SynchronousQueue.poll(SynchronousQueue.java:879)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"AsyncTask #4" prio=5 tid=36 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb68341a8 self=0x90a5d90
-  | sysTid=19065 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=151690632
-  | schedstat=( 232209 5465525 8 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb64f3468> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
-  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
-  at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:411)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"pool-1-thread-3" prio=5 tid=33 TIMED_WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb6862e78 self=0x8f554a0
-  | sysTid=19064 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=150296008
-  | schedstat=( 2586840 7601067 19 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb6547338> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:197)
-  at java.util.concurrent.SynchronousQueue$TransferStack.awaitFulfill(SynchronousQueue.java:429)
-  at java.util.concurrent.SynchronousQueue$TransferStack.transfer(SynchronousQueue.java:328)
-  at java.util.concurrent.SynchronousQueue.poll(SynchronousQueue.java:879)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"Picasso-Idle" prio=5 tid=26 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb68a7b88 self=0x8efb978
-  | sysTid=19061 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=149928608
-  | schedstat=( 477285 7867100 8 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb66179b8> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
-  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
-  at java.util.concurrent.PriorityBlockingQueue.take(PriorityBlockingQueue.java:228)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-  at com.squareup.picasso.Utils$PicassoThread.run(Utils.java:394)
-
-"AsyncTask #3" prio=5 tid=24 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb686dc10 self=0x8eff2e8
-  | sysTid=19063 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=149463952
-  | schedstat=( 718059 11140017 11 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb6589d70> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
-  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
-  at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:411)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"AsyncTask #2" prio=5 tid=11 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb68b7e68 self=0x8e87d98
-  | sysTid=19060 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=147577872
-  | schedstat=( 360004 7447915 13 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb663fe48> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
-  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
-  at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:411)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"messageHandlerThread" prio=5 tid=8 MONITOR
-  | group="main" sCount=1 dsCount=0 obj=0xb6934c28 self=0x8e91188
-  | sysTid=19059 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=151820976
-  | schedstat=( 6210566 63429558 44 )
-  at io.realm.Realm.createAndValidate(Realm.java:~480)
-  - waiting to lock <0xb6583f80> (a java.lang.Class) held by threadid=38 (Thread-163)
-  at io.realm.Realm.create(Realm.java:471)
-  at io.realm.Realm.getInstance(Realm.java:389)
-  at io.realm.Realm.getInstance(Realm.java:351)
-  at io.realm.Realm.getInstance(Realm.java:332)
-  at com.pair.data.Message.REALM(Message.java:188)
-  at com.pair.data.Message.generateIdPossiblyUnique(Message.java:170)
-  at com.pair.data.Message.makeNew(Message.java:271)
-  at com.pair.ui.MessageActivity$Worker.createMessage(MessageActivity.java:191)
-  at com.pair.ui.MessageActivity$Worker.createMessage(MessageActivity.java:178)
-  at com.pair.ui.MessageActivity$Worker.handleMessage(MessageActivity.java:108)
-  at android.os.Handler.dispatchMessage(Handler.java:95)
-  at android.os.Looper.loop(Looper.java:130)
-  at android.os.HandlerThread.run(HandlerThread.java:60)
-
-"pool-1-thread-2" prio=5 tid=9 TIMED_WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb68d7768 self=0x8ea6878
-  | sysTid=19016 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149567424
-  | schedstat=( 2905344 254974 15 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb68d7890> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:197)
-  at java.util.concurrent.SynchronousQueue$TransferStack.awaitFulfill(SynchronousQueue.java:429)
-  at java.util.concurrent.SynchronousQueue$TransferStack.transfer(SynchronousQueue.java:328)
-  at java.util.concurrent.SynchronousQueue.poll(SynchronousQueue.java:879)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"Binder Thread #3" prio=5 tid=35 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6662d48 self=0x8ea78f0
-  | sysTid=19014 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149584464
-  | schedstat=( 2095672 31824897 60 )
+"Binder Thread #3" prio=5 tid=17 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb6959748 self=0x873d488
+  | sysTid=11240 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=141063144
+  | schedstat=( 95693346 485671119 962 )
   at dalvik.system.NativeStart.run(Native Method)
 
-"Timer-0" prio=5 tid=34 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb65b0230 self=0x8cbdcb0
-  | sysTid=19013 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147578328
-  | schedstat=( 101106 11437641 3 )
+"Picasso-Idle" prio=5 tid=14 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb67ecd50 self=0x866bff0
+  | sysTid=3575 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=140537960
+  | schedstat=( 1618319728 2499358133 266 )
   at java.lang.Object.wait(Native Method)
-  - waiting on <0xb65b0230> (a java.util.Timer$TimerImpl)
-  at java.lang.Object.wait(Object.java:358)
-  at java.util.Timer$TimerImpl.run(Timer.java:214)
-
-"Picasso-Idle" prio=5 tid=15 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb656ef18 self=0x8efc600
-  | sysTid=19012 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=149757344
-  | schedstat=( 562661 13644842 8 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb656f0e0> (a java.lang.VMThread)
+  - waiting on <0xb67edc68> (a java.lang.VMThread)
   at java.lang.Thread.parkFor(Thread.java:1424)
   at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
   at sun.misc.Unsafe.park(Unsafe.java:337)
@@ -557,58 +753,112 @@ DALVIK THREADS:
   at java.lang.Thread.run(Thread.java:1019)
   at com.squareup.picasso.Utils$PicassoThread.run(Utils.java:394)
 
-"Picasso-refQueue" daemon prio=5 tid=31 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb6696ae0 self=0x8ef8d68
-  | sysTid=19007 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=149917328
-  | schedstat=( 89235 70165664 3 )
+"pool-13-thread-1" prio=5 tid=12 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb6939730 self=0x864b3e8
+  | sysTid=3562 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140535064
+  | schedstat=( 0 15652178 8 )
   at java.lang.Object.wait(Native Method)
-  - waiting on <0xb66263b8> (a java.lang.ref.ReferenceQueue)
+  - waiting on <0xb6779a38> (a java.lang.VMThread)
+  at java.lang.Thread.parkFor(Thread.java:1424)
+  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
+  at sun.misc.Unsafe.park(Unsafe.java:337)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
+  at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:411)
+  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Picasso-Idle" prio=5 tid=38 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb66f9548 self=0x8604a50
+  | sysTid=3550 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=140325224
+  | schedstat=( 792546735 3684663232 336 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb675c398> (a java.lang.VMThread)
+  at java.lang.Thread.parkFor(Thread.java:1424)
+  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
+  at sun.misc.Unsafe.park(Unsafe.java:337)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
+  at java.util.concurrent.PriorityBlockingQueue.take(PriorityBlockingQueue.java:228)
+  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
+  at java.lang.Thread.run(Thread.java:1019)
+  at com.squareup.picasso.Utils$PicassoThread.run(Utils.java:394)
+
+"Picasso-Idle" prio=5 tid=37 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb6746950 self=0x864d070
+  | sysTid=3549 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=140824984
+  | schedstat=( 2304555691 4186394980 849 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb673bf48> (a java.lang.VMThread)
+  at java.lang.Thread.parkFor(Thread.java:1424)
+  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
+  at sun.misc.Unsafe.park(Unsafe.java:337)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
+  at java.util.concurrent.PriorityBlockingQueue.take(PriorityBlockingQueue.java:228)
+  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
+  at java.lang.Thread.run(Thread.java:1019)
+  at com.squareup.picasso.Utils$PicassoThread.run(Utils.java:394)
+
+"Picasso-Idle" prio=5 tid=36 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb66a2b60 self=0x8647ba8
+  | sysTid=3548 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=140803280
+  | schedstat=( 562830638 2229947744 191 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb66a2da0> (a java.lang.VMThread)
+  at java.lang.Thread.parkFor(Thread.java:1424)
+  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
+  at sun.misc.Unsafe.park(Unsafe.java:337)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
+  at java.util.concurrent.PriorityBlockingQueue.take(PriorityBlockingQueue.java:228)
+  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
+  at java.lang.Thread.run(Thread.java:1019)
+  at com.squareup.picasso.Utils$PicassoThread.run(Utils.java:394)
+
+"Picasso-refQueue" daemon prio=5 tid=35 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb6697ca0 self=0x85d4860
+  | sysTid=3547 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=140331400
+  | schedstat=( 0 61699809 12 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb66978e0> (a java.lang.ref.ReferenceQueue)
   at java.lang.Object.wait(Object.java:395)
   at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:107)
   at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:80)
   at com.squareup.picasso.Picasso$CleanupThread.run(Picasso.java:601)
 
-"Picasso-Dispatcher" prio=5 tid=30 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6615618 self=0x8e9d5c0
-  | sysTid=19006 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=149542632
-  | schedstat=( 5508632 60162807 96 )
+"Picasso-Dispatcher" prio=5 tid=34 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb66e1258 self=0x85d43c0
+  | sysTid=3546 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=140330216
+  | schedstat=( 32979898 329667842 119 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
-"pool-4-thread-1" prio=5 tid=29 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb65d0958 self=0x8e9cb50
-  | sysTid=19005 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149539960
-  | schedstat=( 39533505 84972799 91 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb6600680> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
-  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
-  at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:411)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"Picasso-Stats" prio=5 tid=28 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb664e2e8 self=0x8ed3a30
-  | sysTid=19004 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=149764952
-  | schedstat=( 1259832 62504172 33 )
+"Picasso-Stats" prio=5 tid=33 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb66e0320 self=0x85cec08
+  | sysTid=3545 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=140044832
+  | schedstat=( 22495373 579063730 183 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
-"AsyncTask #1" prio=5 tid=27 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb65969b0 self=0x8e933f0
-  | sysTid=19003 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=149501208
-  | schedstat=( 1690303 30175612 17 )
+"pool-12-thread-1" prio=5 tid=31 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb66478a0 self=0x8600998
+  | sysTid=3543 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140661168
+  | schedstat=( 7315240026 5843384359 4592 )
   at java.lang.Object.wait(Native Method)
-  - waiting on <0xb6574a28> (a java.lang.VMThread)
+  - waiting on <0xb65bae28> (a java.lang.VMThread)
   at java.lang.Thread.parkFor(Thread.java:1424)
   at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
   at sun.misc.Unsafe.park(Unsafe.java:337)
@@ -620,175 +870,21 @@ DALVIK THREADS:
   at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
   at java.lang.Thread.run(Thread.java:1019)
 
-"pool-11-thread-2" prio=5 tid=25 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb664a148 self=0x8ec4f68
-  | sysTid=18989 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149705320
-  | schedstat=( 50459396 87258773 75 )
+"AbstractMessageDispatcher" prio=5 tid=20 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb66ae788 self=0x85fc5d0
+  | sysTid=3542 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140497504
+  | schedstat=( 0 0 3 )
   at java.lang.Object.wait(Native Method)
-  - waiting on <0xb664a290> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
-  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
-  at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:411)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
+  - waiting on <0xb66ae788> (a java.util.Timer$TimerImpl)
+  at java.lang.Object.wait(Object.java:358)
+  at java.util.Timer$TimerImpl.run(Timer.java:214)
 
-"pool-11-thread-1" prio=5 tid=23 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb6647728 self=0x8ec34e0
-  | sysTid=18987 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149694432
-  | schedstat=( 31718813 45824323 84 )
+"pool-11-thread-1" prio=5 tid=30 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb66b5038 self=0x85d52b0
+  | sysTid=3540 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140363400
+  | schedstat=( 84459989 52649827 941 )
   at java.lang.Object.wait(Native Method)
-  - waiting on <0xb6647940> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
-  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
-  at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:411)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"PairAppClient" prio=5 tid=22 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6642448 self=0x8cbe140
-  | sysTid=18986 nice=5 sched=0/0 cgrp=[no-cpu-subsys] handle=147579496
-  | schedstat=( 295280 4684679 5 )
-  at android.os.MessageQueue.nativePollOnce(Native Method)
-  at android.os.MessageQueue.next(MessageQueue.java:119)
-  at android.os.Looper.loop(Looper.java:117)
-  at android.os.HandlerThread.run(HandlerThread.java:60)
-
-"pool-10-thread-1" prio=5 tid=21 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb66404c0 self=0x8ea8088
-  | sysTid=18985 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149586352
-  | schedstat=( 1363861 2224837 6 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb6640628> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
-  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
-  at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:411)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"Thread-23" prio=5 tid=20 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6630c20 self=0x8ea1ef0
-  | sysTid=18983 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149662840
-  | schedstat=( 25424305 186041180 1066 )
-  at org.apache.harmony.luni.platform.OSNetworkSystem.connect(Native Method)
-  at dalvik.system.BlockGuard$WrappedNetworkSystem.connect(BlockGuard.java:357)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:204)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:437)
-  at java.net.Socket.connect(Socket.java:983)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:75)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:48)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection$Address.connect(HttpConnection.java:322)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnectionPool.get(HttpConnectionPool.java:89)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHttpConnection(HttpURLConnectionImpl.java:285)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.makeConnection(HttpURLConnectionImpl.java:267)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.retrieveResponse(HttpURLConnectionImpl.java:1018)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHeaderFields(HttpURLConnectionImpl.java:491)
-  at com.github.nkzawa.engineio.client.transports.PollingXHR$Request$1.run(PollingXHR.java:202)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"pool-8-thread-1" prio=5 tid=19 TIMED_WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb66238f0 self=0x8eb93d8
-  | sysTid=18982 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149597712
-  | schedstat=( 1201681 7995471 28 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb6623a58> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:197)
-  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:2063)
-  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1061)
-  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:778)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"Thread-21" prio=5 tid=18 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb661c820 self=0x8ea86e0
-  | sysTid=18981 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149593600
-  | schedstat=( 22832021 157653431 1066 )
-  at org.apache.harmony.luni.platform.OSNetworkSystem.connect(Native Method)
-  at dalvik.system.BlockGuard$WrappedNetworkSystem.connect(BlockGuard.java:357)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:204)
-  at org.apache.harmony.luni.net.PlainSocketImpl.connect(PlainSocketImpl.java:437)
-  at java.net.Socket.connect(Socket.java:983)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:75)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection.<init>(HttpConnection.java:48)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnection$Address.connect(HttpConnection.java:322)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpConnectionPool.get(HttpConnectionPool.java:89)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHttpConnection(HttpURLConnectionImpl.java:285)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.makeConnection(HttpURLConnectionImpl.java:267)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.retrieveResponse(HttpURLConnectionImpl.java:1018)
-  at org.apache.harmony.luni.internal.net.www.protocol.http.HttpURLConnectionImpl.getHeaderFields(HttpURLConnectionImpl.java:491)
-  at com.github.nkzawa.engineio.client.transports.PollingXHR$Request$1.run(PollingXHR.java:202)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"pool-7-thread-1" prio=5 tid=17 TIMED_WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb6602db0 self=0x8ebd7d0
-  | sysTid=18980 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149674232
-  | schedstat=( 1036863 19194784 27 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb6602ff0> (a java.lang.VMThread)
-  at java.lang.Thread.parkFor(Thread.java:1424)
-  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
-  at sun.misc.Unsafe.park(Unsafe.java:337)
-  at java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:197)
-  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.awaitNanos(AbstractQueuedSynchronizer.java:2063)
-  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1061)
-  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:778)
-  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
-  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
-  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
-  at java.lang.Thread.run(Thread.java:1019)
-
-"reconnectAndPingTimer timer" prio=5 tid=16 TIMED_WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb65f5a80 self=0x8ea7708
-  | sysTid=18979 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149580624
-  | schedstat=( 126285 16468749 8 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb65f5a80> (a java.util.Timer$TimerImpl)
-  at java.lang.Object.wait(Object.java:395)
-  at java.util.Timer$TimerImpl.run(Timer.java:238)
-
-"reconnectAndPingTimer timer" prio=5 tid=14 TIMED_WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb65d59e0 self=0x8ea3f58
-  | sysTid=18977 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149569664
-  | schedstat=( 185891 395263 4 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb65d59e0> (a java.util.Timer$TimerImpl)
-  at java.lang.Object.wait(Object.java:395)
-  at java.util.Timer$TimerImpl.run(Timer.java:238)
-
-"livecenter" prio=5 tid=13 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb65c7368 self=0x8ea1cf8
-  | sysTid=18976 nice=5 sched=0/0 cgrp=[no-cpu-subsys] handle=149560864
-  | schedstat=( 2878377 24845220 16 )
-  at android.os.MessageQueue.nativePollOnce(Native Method)
-  at android.os.MessageQueue.next(MessageQueue.java:119)
-  at android.os.Looper.loop(Looper.java:117)
-  at android.os.HandlerThread.run(HandlerThread.java:60)
-
-"pool-6-thread-1" prio=5 tid=12 WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb65b94e8 self=0x8e92030
-  | sysTid=18975 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149496152
-  | schedstat=( 21673557 14779126 191 )
-  at java.lang.Object.wait(Native Method)
-  - waiting on <0xb65b9650> (a java.lang.VMThread)
+  - waiting on <0xb66b9078> (a java.lang.VMThread)
   at java.lang.Thread.parkFor(Thread.java:1424)
   at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
   at sun.misc.Unsafe.park(Unsafe.java:337)
@@ -801,66 +897,312 @@ DALVIK THREADS:
   at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
   at java.lang.Thread.run(Thread.java:1019)
 
-"ParseCommandCache.runLoop()" prio=5 tid=10 TIMED_WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb657bdf8 self=0x8e81d70
-  | sysTid=18971 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149428504
-  | schedstat=( 1469792 11682016 20 )
+"PairAppClient" prio=5 tid=29 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb665d338 self=0x85d5608
+  | sysTid=3541 nice=5 sched=0/0 cgrp=[no-cpu-subsys] handle=140334896
+  | schedstat=( 3980068 48000862 29 )
+  at android.os.MessageQueue.nativePollOnce(Native Method)
+  at android.os.MessageQueue.next(MessageQueue.java:119)
+  at android.os.Looper.loop(Looper.java:117)
+  at android.os.HandlerThread.run(HandlerThread.java:60)
+
+"pool-8-thread-1" prio=5 tid=26 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb661d398 self=0x85d3608
+  | sysTid=3537 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140335680
+  | schedstat=( 104527297 63278566 1066 )
   at java.lang.Object.wait(Native Method)
-  - waiting on <0xb6579cc0> (a java.lang.Object)
+  - waiting on <0xb65bf140> (a java.lang.VMThread)
+  at java.lang.Thread.parkFor(Thread.java:1424)
+  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
+  at sun.misc.Unsafe.park(Unsafe.java:337)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
+  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1050)
+  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:778)
+  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"pool-10-thread-1" prio=5 tid=28 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb6669110 self=0x85d54e0
+  | sysTid=3539 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140520976
+  | schedstat=( 4992815 31862113 16 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb666a428> (a java.lang.VMThread)
+  at java.lang.Thread.parkFor(Thread.java:1424)
+  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
+  at sun.misc.Unsafe.park(Unsafe.java:337)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
+  at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:411)
+  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"pool-9-thread-1" prio=5 tid=27 TIMED_WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb663d288 self=0x85bac40
+  | sysTid=3538 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140225896
+  | schedstat=( 15575220 19586706 34 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb663d370> (a java.lang.VMThread)
+  at java.lang.Thread.parkFor(Thread.java:1424)
+  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
+  at sun.misc.Unsafe.park(Unsafe.java:337)
+  at java.util.concurrent.locks.LockSupport.parkNanos(LockSupport.java:197)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2169)
+  at com.parse.PushConnection$EventSet.timedAwait(PushConnection.java:881)
+  at com.parse.PushConnection$WaitRetryState.runState(PushConnection.java:461)
+  at com.parse.PushConnection$State.run(PushConnection.java:218)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1088)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"pool-7-thread-1" prio=5 tid=24 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb662c4b0 self=0x85ce058
+  | sysTid=3535 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140359840
+  | schedstat=( 37305952 37407560 165 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb6629978> (a java.lang.VMThread)
+  at java.lang.Thread.parkFor(Thread.java:1424)
+  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
+  at sun.misc.Unsafe.park(Unsafe.java:337)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
+  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1050)
+  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:778)
+  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"reconnectAndPingTimer timer" prio=5 tid=25 TIMED_WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb6744ce8 self=0x85d7520
+  | sysTid=3533 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140172312
+  | schedstat=( 0 21554799 14 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb6744ce8> (a java.util.Timer$TimerImpl)
+  at java.lang.Object.wait(Object.java:395)
+  at java.util.Timer$TimerImpl.run(Timer.java:238)
+
+"pool-6-thread-1" prio=5 tid=23 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb65b9548 self=0x86013b8
+  | sysTid=3530 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140514528
+  | schedstat=( 28761490 41149775 193 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb65b96d8> (a java.lang.VMThread)
+  at java.lang.Thread.parkFor(Thread.java:1424)
+  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
+  at sun.misc.Unsafe.park(Unsafe.java:337)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
+  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1050)
+  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:778)
+  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"NotificationManagerCompat" prio=5 tid=22 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb667ef80 self=0x85edbb0
+  | sysTid=3531 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140507352
+  | schedstat=( 0 3234211 8 )
+  at android.os.MessageQueue.nativePollOnce(Native Method)
+  at android.os.MessageQueue.next(MessageQueue.java:119)
+  at android.os.Looper.loop(Looper.java:117)
+  at android.os.HandlerThread.run(HandlerThread.java:60)
+
+"Timer-0" prio=5 tid=21 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb66a8958 self=0x86006a8
+  | sysTid=3529 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140511184
+  | schedstat=( 0 12787152 3 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb66a8958> (a java.util.Timer$TimerImpl)
+  at java.lang.Object.wait(Object.java:358)
+  at java.util.Timer$TimerImpl.run(Timer.java:214)
+
+"reconnectAndPingTimer timer" prio=5 tid=19 TIMED_WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb66bdea8 self=0x85ebde0
+  | sysTid=3527 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140427016
+  | schedstat=( 0 20214816 17 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb66bdea8> (a java.util.Timer$TimerImpl)
+  at java.lang.Object.wait(Object.java:395)
+  at java.util.Timer$TimerImpl.run(Timer.java:238)
+
+"livecenter" prio=5 tid=18 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb665a8f0 self=0x85eb628
+  | sysTid=3526 nice=5 sched=0/0 cgrp=[no-cpu-subsys] handle=140307400
+  | schedstat=( 4000000 80532502 28 )
+  at android.os.MessageQueue.nativePollOnce(Native Method)
+  at android.os.MessageQueue.next(MessageQueue.java:119)
+  at android.os.Looper.loop(Looper.java:117)
+  at android.os.HandlerThread.run(HandlerThread.java:60)
+
+"pool-5-thread-1" prio=5 tid=16 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb666fde8 self=0x85c6898
+  | sysTid=3524 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138115248
+  | schedstat=( 38426204 62185395 215 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb65fc9b8> (a java.lang.VMThread)
+  at java.lang.Thread.parkFor(Thread.java:1424)
+  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
+  at sun.misc.Unsafe.park(Unsafe.java:337)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
+  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1050)
+  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:778)
+  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"ParseCommandCache.runLoop()" prio=5 tid=13 TIMED_WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb6723860 self=0x85baf10
+  | sysTid=3520 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140225320
+  | schedstat=( 20564908 26907173 72 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb67216d8> (a java.lang.Object)
   at java.lang.Object.wait(Object.java:395)
   at com.parse.ParseCommandCache.maybeRunAllCommandsNow(ParseCommandCache.java:564)
+  at com.parse.ParseCommandCache.maybeRunAllCommandsNow(ParseCommandCache.java:574)
+  at com.parse.ParseCommandCache.maybeRunAllCommandsNow(ParseCommandCache.java:574)
+  at com.parse.ParseCommandCache.maybeRunAllCommandsNow(ParseCommandCache.java:574)
+  at com.parse.ParseCommandCache.maybeRunAllCommandsNow(ParseCommandCache.java:574)
   at com.parse.ParseCommandCache.runLoop(ParseCommandCache.java:624)
   at com.parse.ParseCommandCache.access$000(ParseCommandCache.java:30)
   at com.parse.ParseCommandCache$2.run(ParseCommandCache.java:157)
 
+"Crashlytics Exception Handler1" prio=5 tid=11 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb66fa798 self=0x85ae938
+  | sysTid=3518 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=140166024
+  | schedstat=( 10713195 187857959 31 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb66faa28> (a java.lang.VMThread)
+  at java.lang.Thread.parkFor(Thread.java:1424)
+  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
+  at sun.misc.Unsafe.park(Unsafe.java:337)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
+  at java.util.concurrent.LinkedBlockingQueue.take(LinkedBlockingQueue.java:411)
+  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
+  at io.fabric.sdk.android.services.common.ExecutorUtils$1$1.onRun(ExecutorUtils.java:75)
+  at io.fabric.sdk.android.services.common.BackgroundPriorityRunnable.run(BackgroundPriorityRunnable.java:30)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Answers Events Handler1" prio=5 tid=10 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb66f0cd8 self=0x85ab948
+  | sysTid=3517 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=140163696
+  | schedstat=( 479857308 1208392381 357 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb66f0ef0> (a java.lang.VMThread)
+  at java.lang.Thread.parkFor(Thread.java:1424)
+  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
+  at sun.misc.Unsafe.park(Unsafe.java:337)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
+  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:1050)
+  at java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue.take(ScheduledThreadPoolExecutor.java:778)
+  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
+  at io.fabric.sdk.android.services.common.ExecutorUtils$1$1.onRun(ExecutorUtils.java:75)
+  at io.fabric.sdk.android.services.common.BackgroundPriorityRunnable.run(BackgroundPriorityRunnable.java:30)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Queue" prio=10 tid=9 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb6643fa0 self=0x8584710
+  | sysTid=3516 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=140003384
+  | schedstat=( 24763819 312102452 32 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb66440e8> (a java.lang.VMThread)
+  at java.lang.Thread.parkFor(Thread.java:1424)
+  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
+  at sun.misc.Unsafe.park(Unsafe.java:337)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
+  at java.util.concurrent.PriorityBlockingQueue.take(PriorityBlockingQueue.java:228)
+  at io.fabric.sdk.android.services.concurrency.DependencyPriorityBlockingQueue.performOperation(DependencyPriorityBlockingQueue.java:197)
+  at io.fabric.sdk.android.services.concurrency.DependencyPriorityBlockingQueue.get(DependencyPriorityBlockingQueue.java:236)
+  at io.fabric.sdk.android.services.concurrency.DependencyPriorityBlockingQueue.take(DependencyPriorityBlockingQueue.java:65)
+  at io.fabric.sdk.android.services.concurrency.DependencyPriorityBlockingQueue.take(DependencyPriorityBlockingQueue.java:46)
+  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
+  at java.lang.Thread.run(Thread.java:1019)
+
+"Queue" prio=10 tid=8 WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb6643d70 self=0x85845e8
+  | sysTid=3515 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=139998376
+  | schedstat=( 75340784 138439577 22 )
+  at java.lang.Object.wait(Native Method)
+  - waiting on <0xb6643f50> (a java.lang.VMThread)
+  at java.lang.Thread.parkFor(Thread.java:1424)
+  at java.lang.LangAccessImpl.parkFor(LangAccessImpl.java:48)
+  at sun.misc.Unsafe.park(Unsafe.java:337)
+  at java.util.concurrent.locks.LockSupport.park(LockSupport.java:157)
+  at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:2016)
+  at java.util.concurrent.PriorityBlockingQueue.take(PriorityBlockingQueue.java:228)
+  at io.fabric.sdk.android.services.concurrency.DependencyPriorityBlockingQueue.performOperation(DependencyPriorityBlockingQueue.java:197)
+  at io.fabric.sdk.android.services.concurrency.DependencyPriorityBlockingQueue.get(DependencyPriorityBlockingQueue.java:236)
+  at io.fabric.sdk.android.services.concurrency.DependencyPriorityBlockingQueue.take(DependencyPriorityBlockingQueue.java:65)
+  at io.fabric.sdk.android.services.concurrency.DependencyPriorityBlockingQueue.take(DependencyPriorityBlockingQueue.java:46)
+  at java.util.concurrent.ThreadPoolExecutor.getTask(ThreadPoolExecutor.java:1021)
+  at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1081)
+  at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:581)
+  at java.lang.Thread.run(Thread.java:1019)
+
 "Binder Thread #2" prio=5 tid=7 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb656c2c8 self=0x8ddd628
-  | sysTid=18968 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147800496
-  | schedstat=( 10217767 59190646 81 )
+  | group="main" sCount=1 dsCount=0 obj=0xb6606240 self=0x854db60
+  | sysTid=3513 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138366560
+  | schedstat=( 166488824 571395836 1018 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "Binder Thread #1" prio=5 tid=6 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb64e41d8 self=0x8cfde40
-  | sysTid=18966 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147241120
-  | schedstat=( 10927598 69533072 78 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65c0458 self=0x83fed60
+  | sysTid=3512 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=139400392
+  | schedstat=( 123397952 522970918 988 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "JDWP" daemon prio=5 tid=5 VMWAIT
-  | group="system" sCount=1 dsCount=0 obj=0xb64e04a0 self=0x8c6b138
-  | sysTid=18965 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147234848
-  | schedstat=( 20543611 32169249 474 )
+  | group="system" sCount=1 dsCount=0 obj=0xb65bc720 self=0x836d5d0
+  | sysTid=3511 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=137811344
+  | schedstat=( 2367398562 1767130588 24536 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "Signal Catcher" daemon prio=5 tid=4 RUNNABLE
-  | group="system" sCount=0 dsCount=0 obj=0xb64e03e0 self=0x8c72208
-  | sysTid=18964 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147236152
-  | schedstat=( 1386241 55909 5 )
+  | group="system" sCount=0 dsCount=0 obj=0xb65bc660 self=0x83fd5d0
+  | sysTid=3510 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=137808000
+  | schedstat=( 27721456 27492838 15 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "GC" daemon prio=5 tid=3 VMWAIT
-  | group="system" sCount=1 dsCount=0 obj=0xb64e0338 self=0x8c6aee8
-  | sysTid=18963 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147243896
-  | schedstat=( 109759624 171229224 80 )
+  | group="system" sCount=1 dsCount=0 obj=0xb65bc5b8 self=0x836c758
+  | sysTid=3509 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138365576
+  | schedstat=( 5509527288 4086166241 1747 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "HeapWorker" daemon prio=5 tid=2 VMWAIT
-  | group="system" sCount=1 dsCount=0 obj=0xb64e0280 self=0x8c6a410
-  | sysTid=18962 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147243832
-  | schedstat=( 55010282 33555200 187 )
+  | group="system" sCount=1 dsCount=0 obj=0xb65bc500 self=0x836c050
+  | sysTid=3508 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138365512
+  | schedstat=( 26390998733 13941427669 5482 )
   at dalvik.system.NativeStart.run(Native Method)
 
------ end 18960 -----
+----- end 3505 -----
 
 
------ pid 165 at 2015-09-21 11:51:32 -----
+----- pid 8788 at 2015-11-20 10:15:28 -----
 Cmd line: system_server
 
 DALVIK THREADS:
 (mutexes: tll=0 tsl=0 tscl=0 ghl=0 hwl=0 hwll=0)
 "main" prio=5 tid=1 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb5ff1c40 self=0x8be8e40
-  | sysTid=165 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=-2145989792
-  | schedstat=( 865883617 1223147509 18891 )
+  | group="main" sCount=1 dsCount=0 obj=0xb60ccc40 self=0x82e9e40
+  | sysTid=8788 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=-2145989792
+  | schedstat=( 502444660 1043069524 2342 )
   at com.android.server.SystemServer.init1(Native Method)
   at com.android.server.SystemServer.main(SystemServer.java:636)
   at java.lang.reflect.Method.invokeNative(Native Method)
@@ -869,69 +1211,78 @@ DALVIK THREADS:
   at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:597)
   at dalvik.system.NativeStart.main(Native Method)
 
-"DHCP Handler Thread" prio=5 tid=48 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6700c18 self=0x8f0e900
-  | sysTid=485 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149400256
-  | schedstat=( 19854110 10832323 293 )
-  at android.os.MessageQueue.nativePollOnce(Native Method)
-  at android.os.MessageQueue.next(MessageQueue.java:119)
-  at android.os.Looper.loop(Looper.java:117)
-  at android.os.HandlerThread.run(HandlerThread.java:60)
-
-"Binder Thread #5" prio=5 tid=47 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb66a0de8 self=0x8c81f38
-  | sysTid=356 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=150014896
-  | schedstat=( 1287672477 1607826652 19234 )
-  at dalvik.system.NativeStart.run(Native Method)
-
-"Binder Thread #4" prio=5 tid=46 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6614ca0 self=0x8f07d28
-  | sysTid=288 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149984040
-  | schedstat=( 866126944 1277192990 19336 )
-  at dalvik.system.NativeStart.run(Native Method)
-
-"Binder Thread #3" prio=5 tid=45 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6690f20 self=0x8cbc4d8
-  | sysTid=267 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147571512
-  | schedstat=( 1155978783 1505710822 19230 )
-  at dalvik.system.NativeStart.run(Native Method)
-
-"android.hardware.SensorManager$SensorThread" prio=5 tid=43 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb660cd78 self=0x8ea59b8
-  | sysTid=243 nice=-8 sched=0/0 cgrp=[no-cpu-subsys] handle=149594488
-  | schedstat=( 7896981852 8194334189 227694 )
+"android.hardware.SensorManager$SensorThread" prio=5 tid=51 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb6729108 self=0x8617e28
+  | sysTid=8963 nice=-8 sched=0/0 cgrp=[no-cpu-subsys] handle=140609000
+  | schedstat=( 3995727516 7355953253 95302 )
   at android.hardware.SensorManager.sensors_data_poll(Native Method)
   at android.hardware.SensorManager$SensorThread$SensorThreadRunnable.run(SensorManager.java:446)
   at java.lang.Thread.run(Thread.java:1019)
 
-"gps_state_thread" prio=5 tid=42 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb66a5260 self=0x8cbdc10
-  | sysTid=241 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147559000
-  | schedstat=( 70250 21527382 3 )
+"Binder Thread #8" prio=5 tid=50 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb6755a08 self=0x85e1b38
+  | sysTid=8935 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140661760
+  | schedstat=( 604997713 1002341649 2164 )
   at dalvik.system.NativeStart.run(Native Method)
 
-"GpsLocationProvider" prio=5 tid=38 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6636890 self=0x8cb8a58
-  | sysTid=238 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=149462832
-  | schedstat=( 38902953 13029832 123 )
+"Binder Thread #7" prio=5 tid=49 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb676a1f0 self=0x859f9d0
+  | sysTid=8934 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140661128
+  | schedstat=( 327302587 826118900 2163 )
+  at dalvik.system.NativeStart.run(Native Method)
+
+"Binder Thread #6" prio=5 tid=47 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb66afab8 self=0x859ea58
+  | sysTid=8912 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=139985752
+  | schedstat=( 389711403 880044912 2147 )
+  at dalvik.system.NativeStart.run(Native Method)
+
+"Binder Thread #5" prio=5 tid=46 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb669e778 self=0x862f1b8
+  | sysTid=8911 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140701984
+  | schedstat=( 665285522 1019821876 2117 )
+  at dalvik.system.NativeStart.run(Native Method)
+
+"Binder Thread #4" prio=5 tid=45 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb66a83e0 self=0x85e7e58
+  | sysTid=8910 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140468016
+  | schedstat=( 711220197 1237371320 2103 )
+  at dalvik.system.NativeStart.run(Native Method)
+
+"gps_state_thread" prio=5 tid=44 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb66d6098 self=0x85e82a8
+  | sysTid=8883 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=139984472
+  | schedstat=( 0 71910515 1 )
+  at dalvik.system.NativeStart.run(Native Method)
+
+"GpsLocationProvider" prio=5 tid=43 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb670bfe8 self=0x862f390
+  | sysTid=8881 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=140140016
+  | schedstat=( 21203351 379921313 65 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at com.android.server.location.GpsLocationProvider$GpsLocationProviderThread.run(GpsLocationProvider.java:1553)
 
+"Binder Thread #3" prio=5 tid=42 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb671d248 self=0x85a0240
+  | sysTid=8879 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140119120
+  | schedstat=( 703656779 1063680417 2318 )
+  at dalvik.system.NativeStart.run(Native Method)
+
 "ThrottleService" prio=5 tid=41 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6630370 self=0x8cbbc40
-  | sysTid=229 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147572928
-  | schedstat=( 64795937 16502000 231 )
+  | group="main" sCount=1 dsCount=0 obj=0xb66b4218 self=0x85a5530
+  | sysTid=8862 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140138072
+  | schedstat=( 28793825 145434210 62 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
 "LocationManagerService" prio=5 tid=40 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb66a7510 self=0x8efb8d0
-  | sysTid=228 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=149444872
-  | schedstat=( 2698881 72951477 40 )
+  | group="main" sCount=1 dsCount=0 obj=0xb668eb50 self=0x85a4a20
+  | sysTid=8860 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=140135240
+  | schedstat=( 7989007 284871953 20 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
@@ -939,18 +1290,18 @@ DALVIK THREADS:
   at java.lang.Thread.run(Thread.java:1019)
 
 "watchdog" prio=5 tid=39 TIMED_WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb64e9bd0 self=0x8ea47e8
-  | sysTid=224 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149466240
-  | schedstat=( 62473460 66465515 764 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65c4be0 self=0x857ef08
+  | sysTid=8857 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=139994344
+  | schedstat=( 36107141 125829432 324 )
   at java.lang.Object.wait(Native Method)
-  - waiting on <0xb64e9bd0> (a com.android.server.Watchdog)
+  - waiting on <0xb65c4be0> (a com.android.server.Watchdog)
   at java.lang.Object.wait(Object.java:395)
   at com.android.server.Watchdog.run(Watchdog.java:400)
 
-"GenydConnector" prio=5 tid=37 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6690920 self=0x8ea6520
-  | sysTid=220 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149754896
-  | schedstat=( 8428828 20155802 29 )
+"GenydConnector" prio=5 tid=38 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb6715340 self=0x8594158
+  | sysTid=8854 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138193408
+  | schedstat=( 6606459 18859417 23 )
   at android.net.LocalSocketImpl.readba_native(Native Method)
   at android.net.LocalSocketImpl.access$400(LocalSocketImpl.java:29)
   at android.net.LocalSocketImpl$SocketInputStream.read(LocalSocketImpl.java:92)
@@ -958,56 +1309,40 @@ DALVIK THREADS:
   at com.android.server.NativeDaemonConnector.run(NativeDaemonConnector.java:83)
   at java.lang.Thread.run(Thread.java:1019)
 
-"backup" prio=5 tid=32 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb666d3f0 self=0x8e8bc40
-  | sysTid=216 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=149450800
-  | schedstat=( 80022 633491 6 )
+"backup" prio=5 tid=37 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb6718bb8 self=0x83b7878
+  | sysTid=8844 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=138115488
+  | schedstat=( 0 239881396 5 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
-"SoundPoolThread" prio=5 tid=36 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb668e250 self=0x8efa320
-  | sysTid=215 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149918528
-  | schedstat=( 458757 2884870 25 )
+"SoundPool" prio=5 tid=36 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb67892d8 self=0x83b8188
+  | sysTid=8842 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140498272
+  | schedstat=( 0 23111603 1 )
   at dalvik.system.NativeStart.run(Native Method)
 
-"SoundPool" prio=5 tid=35 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb668e198 self=0x8ef9968
-  | sysTid=214 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149918296
-  | schedstat=( 37758 797325 1 )
+"SoundPoolThread" prio=5 tid=34 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb6789078 self=0x85f61d8
+  | sysTid=8843 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140498504
+  | schedstat=( 4000000 27004787 26 )
   at dalvik.system.NativeStart.run(Native Method)
 
-"WifiWatchdogThread" prio=5 tid=34 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb667ab58 self=0x8ef6e00
-  | sysTid=212 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149909288
-  | schedstat=( 195266 9253189 9 )
-  at android.os.MessageQueue.nativePollOnce(Native Method)
-  at android.os.MessageQueue.next(MessageQueue.java:119)
-  at android.os.Looper.loop(Looper.java:117)
-  at com.android.server.WifiWatchdogService$WifiWatchdogThread.run(WifiWatchdogService.java:979)
-
-"AudioService" prio=5 tid=33 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb65d4b30 self=0x8ef6c58
-  | sysTid=211 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149908864
-  | schedstat=( 485255 9313609 16 )
+"AudioService" prio=5 tid=35 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb6614a80 self=0x85fc238
+  | sysTid=8841 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140493664
+  | schedstat=( 3033857 32786676 19 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.media.AudioService$AudioSystemThread.run(AudioService.java:1502)
 
-"WifiMonitor" prio=5 tid=31 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb65a4328 self=0x8eedc80
-  | sysTid=209 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149872040
-  | schedstat=( 497527 4999090 7 )
-  at android.net.wifi.WifiNative.waitForEvent(Native Method)
-  at android.net.wifi.WifiMonitor$MonitorThread.run(WifiMonitor.java:172)
-
-"VoldConnector" prio=5 tid=30 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb654f258 self=0x8eede60
-  | sysTid=210 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149872520
-  | schedstat=( 802104 10626098 15 )
+"VoldConnector" prio=5 tid=33 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb66c8ad8 self=0x85ef810
+  | sysTid=8838 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140441912
+  | schedstat=( 4000000 27967808 13 )
   at android.net.LocalSocketImpl.readba_native(Native Method)
   at android.net.LocalSocketImpl.access$400(LocalSocketImpl.java:29)
   at android.net.LocalSocketImpl$SocketInputStream.read(LocalSocketImpl.java:92)
@@ -1015,46 +1350,71 @@ DALVIK THREADS:
   at com.android.server.NativeDaemonConnector.run(NativeDaemonConnector.java:83)
   at java.lang.Thread.run(Thread.java:1019)
 
-"MountService" prio=5 tid=29 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb664d790 self=0x8eecf10
-  | sysTid=208 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149868600
-  | schedstat=( 77217 577403 7 )
+"DHCP Handler Thread" prio=5 tid=32 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb66d0d08 self=0x85efc88
+  | sysTid=8839 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140345392
+  | schedstat=( 11678912 56773710 78 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
-"Tethering" prio=5 tid=28 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb659a698 self=0x8eebe80
-  | sysTid=206 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149864360
-  | schedstat=( 280467 3164461 10 )
+"MountService" prio=5 tid=31 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb66df010 self=0x85ee950
+  | sysTid=8837 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140438136
+  | schedstat=( 0 8075100 7 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
-"WifiService" prio=5 tid=26 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb66352a8 self=0x8eeb200
-  | sysTid=205 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149861160
-  | schedstat=( 29653343 43010470 55 )
+"Tethering" prio=5 tid=30 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb669adb0 self=0x85eba10
+  | sysTid=8834 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140426040
+  | schedstat=( 0 8000000 12 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
-"ConnectivityThread" prio=5 tid=27 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb65f60d0 self=0x8ee9478
-  | sysTid=203 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149853600
-  | schedstat=( 1212675331 1104433239 25895 )
+"WifiWatchdogThread" prio=5 tid=29 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb66d3c10 self=0x85ec8d8
+  | sysTid=8836 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140429824
+  | schedstat=( 4000000 16110712 13 )
+  at android.os.MessageQueue.nativePollOnce(Native Method)
+  at android.os.MessageQueue.next(MessageQueue.java:119)
+  at android.os.Looper.loop(Looper.java:117)
+  at com.android.server.WifiWatchdogService$WifiWatchdogThread.run(WifiWatchdogService.java:979)
+
+"WifiMonitor" prio=5 tid=28 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb66c3178 self=0x85ebea0
+  | sysTid=8835 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140427208
+  | schedstat=( 3963585 16147127 11 )
+  at android.net.wifi.WifiNative.waitForEvent(Native Method)
+  at android.net.wifi.WifiMonitor$MonitorThread.run(WifiMonitor.java:172)
+
+"WifiService" prio=5 tid=27 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb6619ee8 self=0x85eada0
+  | sysTid=8833 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140422856
+  | schedstat=( 0 12052932 26 )
+  at android.os.MessageQueue.nativePollOnce(Native Method)
+  at android.os.MessageQueue.next(MessageQueue.java:119)
+  at android.os.Looper.loop(Looper.java:117)
+  at android.os.HandlerThread.run(HandlerThread.java:60)
+
+"ConnectivityThread" prio=5 tid=26 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb66508b8 self=0x85e8ff8
+  | sysTid=8831 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140415264
+  | schedstat=( 170345326 467954740 10884 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at com.android.server.ConnectivityService$ConnectivityThread.run(ConnectivityService.java:232)
 
 "NetdConnector" prio=5 tid=25 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6557168 self=0x8ee88b0
-  | sysTid=202 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149849192
-  | schedstat=( 11246759 12454513 70 )
+  | group="main" sCount=1 dsCount=0 obj=0xb67142e0 self=0x85e8430
+  | sysTid=8830 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140410864
+  | schedstat=( 0 4058059 20 )
   at android.net.LocalSocketImpl.readba_native(Native Method)
   at android.net.LocalSocketImpl.access$400(LocalSocketImpl.java:29)
   at android.net.LocalSocketImpl$SocketInputStream.read(LocalSocketImpl.java:92)
@@ -1063,24 +1423,24 @@ DALVIK THREADS:
   at java.lang.Thread.run(Thread.java:1019)
 
 "BluetoothProfileState:0" prio=5 tid=24 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb65f4958 self=0x8edf520
-  | sysTid=201 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149812808
-  | schedstat=( 155452 4234935 7 )
+  | group="main" sCount=1 dsCount=0 obj=0xb671d308 self=0x85de6f8
+  | sysTid=8829 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140372000
+  | schedstat=( 0 23366105 6 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
 "InputReader" prio=10 tid=23 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb664d458 self=0x8edf940
-  | sysTid=199 nice=-8 sched=0/0 cgrp=[no-cpu-subsys] handle=149805904
-  | schedstat=( 197926753 453595722 2601 )
+  | group="main" sCount=1 dsCount=0 obj=0xb66aff58 self=0x85df4d0
+  | sysTid=8827 nice=-8 sched=0/0 cgrp=[no-cpu-subsys] handle=140367584
+  | schedstat=( 509280730 1376676664 881 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "InputDispatcher" prio=10 tid=22 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6695790 self=0x8edeac8
-  | sysTid=198 nice=-8 sched=0/0 cgrp=[no-cpu-subsys] handle=149800224
-  | schedstat=( 395551319 7691260103 15157 )
+  | group="main" sCount=1 dsCount=0 obj=0xb671fc00 self=0x85deb18
+  | sysTid=8826 nice=-8 sched=0/0 cgrp=[no-cpu-subsys] handle=140361904
+  | schedstat=( 1088888013 10450450991 6683 )
   at android.os.Process.sendSignal(Native Method)
   at com.android.server.am.ActivityManagerService.dumpStackTraces(ActivityManagerService.java:2762)
   at com.android.server.am.ActivityManagerService.appNotResponding(ActivityManagerService.java:2907)
@@ -1090,176 +1450,176 @@ DALVIK THREADS:
   at dalvik.system.NativeStart.run(Native Method)
 
 "BluetoothProfileState:1" prio=5 tid=21 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb664be98 self=0x8ede080
-  | sysTid=200 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149807528
-  | schedstat=( 63922 378740 7 )
+  | group="main" sCount=1 dsCount=0 obj=0xb6699e78 self=0x85ddc10
+  | sysTid=8828 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140369208
+  | schedstat=( 0 0 6 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
 "WindowManagerPolicy" prio=5 tid=20 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb65e84e8 self=0x8edb3c8
-  | sysTid=197 nice=-2 sched=0/0 cgrp=[no-cpu-subsys] handle=149796080
-  | schedstat=( 921461970 1664953812 10722 )
+  | group="main" sCount=1 dsCount=0 obj=0xb66b0b58 self=0x85da168
+  | sysTid=8825 nice=-2 sched=0/0 cgrp=[no-cpu-subsys] handle=140354192
+  | schedstat=( 1832090468 5353968639 6601 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at com.android.server.WindowManagerService$PolicyThread.run(WindowManagerService.java:623)
 
 "WindowManager" prio=5 tid=19 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb657f890 self=0x8ed8428
-  | sysTid=196 nice=-4 sched=0/0 cgrp=[no-cpu-subsys] handle=149783888
-  | schedstat=( 4215804040 4950170735 24618 )
+  | group="main" sCount=1 dsCount=0 obj=0xb6670470 self=0x85d7a50
+  | sysTid=8824 nice=-4 sched=0/0 cgrp=[no-cpu-subsys] handle=140346128
+  | schedstat=( 3246243601 9180842875 13510 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at com.android.server.WindowManagerService$WMThread.run(WindowManagerService.java:586)
 
 "PowerManagerService" prio=5 tid=18 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6564e68 self=0x8ed6ce8
-  | sysTid=195 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149753400
-  | schedstat=( 31026975 43816395 1351 )
+  | group="main" sCount=1 dsCount=0 obj=0xb666da08 self=0x85d5268
+  | sysTid=8823 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140300120
+  | schedstat=( 68069025 134155440 549 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
-"PowerManagerService.mScreenOffThread" prio=5 tid=17 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb65882c8 self=0x8ed4d48
-  | sysTid=194 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149769840
-  | schedstat=( 93025485 91956197 1401 )
+"PowerManagerService.mScreenOffThread" prio=5 tid=15 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb6670958 self=0x85d4bb8
+  | sysTid=8822 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140318560
+  | schedstat=( 31348461 48523533 521 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
-"Thread-19" prio=5 tid=16 TIMED_WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb657a9c8 self=0x8e907b0
-  | sysTid=193 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149490184
-  | schedstat=( 2391959209 526294993 4730 )
+"Thread-20" prio=5 tid=17 TIMED_WAIT
+  | group="main" sCount=1 dsCount=0 obj=0xb66885d0 self=0x85cccf0
+  | sysTid=8821 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140299800
+  | schedstat=( 1478798211 1137317286 2289 )
   at java.lang.VMThread.sleep(Native Method)
   at java.lang.Thread.sleep(Thread.java:1213)
   at java.lang.Thread.sleep(Thread.java:1195)
   at com.android.server.BatteryService$2.run(BatteryService.java:182)
 
-"UEventObserver" prio=5 tid=15 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb656dbf0 self=0x8ed2250
-  | sysTid=192 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149489936
-  | schedstat=( 53015 1775646 3 )
+"UEventObserver" prio=5 tid=16 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb660d570 self=0x85ccbc8
+  | sysTid=8820 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140314696
+  | schedstat=( 0 8079800 3 )
   at android.os.UEventObserver.next_event(Native Method)
   at android.os.UEventObserver.access$100(UEventObserver.java:39)
   at android.os.UEventObserver$UEventThread.run(UEventObserver.java:102)
 
 "SyncHandlerThread" prio=5 tid=14 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb65f0520 self=0x8ea46c0
-  | sysTid=190 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=149527880
-  | schedstat=( 811763 4354487 12 )
+  | group="main" sCount=1 dsCount=0 obj=0xb66b8650 self=0x8598be0
+  | sysTid=8818 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=140059552
+  | schedstat=( 4000000 8452475 12 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
 "AccountManagerService" prio=5 tid=13 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6670110 self=0x8eacb88
-  | sysTid=188 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149471480
-  | schedstat=( 76568 1044771 6 )
+  | group="main" sCount=1 dsCount=0 obj=0xb66d6c08 self=0x85765a8
+  | sysTid=8816 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=137796448
+  | schedstat=( 0 8503039 6 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
 "FileObserver" prio=5 tid=12 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb65967d0 self=0x8eac100
-  | sysTid=187 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149572024
-  | schedstat=( 9306451 21665924 410 )
+  | group="main" sCount=1 dsCount=0 obj=0xb66679b0 self=0x8598e60
+  | sysTid=8812 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140087176
+  | schedstat=( 16037189 28795847 158 )
   at android.os.FileObserver$ObserverThread.observe(Native Method)
   at android.os.FileObserver$ObserverThread.run(FileObserver.java:88)
 
 "PackageManager" prio=5 tid=11 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6528f08 self=0x8e80b30
-  | sysTid=185 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=149425240
-  | schedstat=( 12250549746 6337611485 4580 )
+  | group="main" sCount=1 dsCount=0 obj=0xb6602600 self=0x857c440
+  | sysTid=8804 nice=10 sched=0/0 cgrp=[no-cpu-subsys] handle=137796672
+  | schedstat=( 10962216861 5505540128 1811 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
 "ProcessStats" prio=5 tid=10 TIMED_WAIT
-  | group="main" sCount=1 dsCount=0 obj=0xb6523608 self=0x8e7b150
-  | sysTid=182 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149402232
-  | schedstat=( 83291437 4550158 41 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65fcb50 self=0x857bfc0
+  | sysTid=8803 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=139968744
+  | schedstat=( 41037089 75919961 35 )
   at java.lang.Object.wait(Native Method)
-  - waiting on <0xb6523608> (a com.android.server.am.ActivityManagerService$3)
+  - waiting on <0xb65fcb50> (a com.android.server.am.ActivityManagerService$3)
   at java.lang.Object.wait(Object.java:395)
   at com.android.server.am.ActivityManagerService$3.run(ActivityManagerService.java:1448)
 
 "ActivityManager" prio=5 tid=9 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb64eb900 self=0x8e75c18
-  | sysTid=178 nice=-2 sched=0/0 cgrp=[no-cpu-subsys] handle=149380416
-  | schedstat=( 807234901 1475607023 4419 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65c6910 self=0x8576b40
+  | sysTid=8801 nice=-2 sched=0/0 cgrp=[no-cpu-subsys] handle=139947112
+  | schedstat=( 1293661736 1936254712 2492 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at com.android.server.am.ActivityManagerService$AThread.run(ActivityManagerService.java:1336)
 
 "android.server.ServerThread" prio=5 tid=8 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb64e2f50 self=0x8e74b20
-  | sysTid=177 nice=-2 sched=0/0 cgrp=[no-cpu-subsys] handle=149376072
-  | schedstat=( 6459188649 1904002096 119896 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65bdf50 self=0x8575790
+  | sysTid=8799 nice=-2 sched=0/0 cgrp=[no-cpu-subsys] handle=139942072
+  | schedstat=( 4541900604 2815069745 50395 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at com.android.server.ServerThread.run(SystemServer.java:553)
 
 "Binder Thread #2" prio=5 tid=7 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb64df4f0 self=0x8d491f0
-  | sysTid=171 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147245424
-  | schedstat=( 1224656647 1627024726 19252 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65ba4f0 self=0x83fe998
+  | sysTid=8794 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138194272
+  | schedstat=( 446814539 962317585 2269 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "Binder Thread #1" prio=5 tid=6 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb64df430 self=0x8c72208
-  | sysTid=170 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147241120
-  | schedstat=( 1083454827 1488066713 19412 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65ba430 self=0x836d4e0
+  | sysTid=8793 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138400832
+  | schedstat=( 782407127 1276471323 2339 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "JDWP" daemon prio=5 tid=5 VMWAIT
-  | group="system" sCount=1 dsCount=0 obj=0xb64dd408 self=0x8c6c7c0
-  | sysTid=169 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147234848
-  | schedstat=( 1145824 3422993 26 )
+  | group="system" sCount=1 dsCount=0 obj=0xb65b8408 self=0x83cabb0
+  | sysTid=8792 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138401544
+  | schedstat=( 4000000 4778213 18 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "Signal Catcher" daemon prio=5 tid=4 RUNNABLE
-  | group="system" sCount=0 dsCount=0 obj=0xb64dd348 self=0x8c6aee8
-  | sysTid=168 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147236152
-  | schedstat=( 1463345 35263 4 )
+  | group="system" sCount=0 dsCount=0 obj=0xb65b8348 self=0x836c758
+  | sysTid=8791 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=137809016
+  | schedstat=( 19318988 76233452 20 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "GC" daemon prio=5 tid=3 VMWAIT
-  | group="system" sCount=1 dsCount=0 obj=0xb64dd2a0 self=0x8c6a410
-  | sysTid=167 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147243896
-  | schedstat=( 3001798915 744723314 1530 )
+  | group="system" sCount=1 dsCount=0 obj=0xb65b82a0 self=0x836c050
+  | sysTid=8790 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138365576
+  | schedstat=( 1748629783 838144688 527 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "HeapWorker" daemon prio=5 tid=2 VMWAIT
-  | group="system" sCount=1 dsCount=0 obj=0xb64dd1e8 self=0x8c699e8
-  | sysTid=166 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147243832
-  | schedstat=( 279942001 92412356 1092 )
+  | group="system" sCount=1 dsCount=0 obj=0xb65b81e8 self=0x836c2f0
+  | sysTid=8789 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138365512
+  | schedstat=( 580407957 391772426 897 )
   at dalvik.system.NativeStart.run(Native Method)
 
------ end 165 -----
+----- end 8788 -----
 
 
------ pid 233 at 2015-09-21 11:51:32 -----
+----- pid 8863 at 2015-11-20 10:15:28 -----
 Cmd line: com.android.phone
 
 DALVIK THREADS:
 (mutexes: tll=0 tsl=0 tscl=0 ghl=0 hwl=0 hwll=0)
 "main" prio=5 tid=1 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb5ff1c40 self=0x8be8e40
-  | sysTid=233 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=-2145989792
-  | schedstat=( 312334058 160978232 4455 )
+  | group="main" sCount=1 dsCount=0 obj=0xb60ccc40 self=0x82e9e40
+  | sysTid=8863 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=-2145989792
+  | schedstat=( 427287972 1288765086 2499 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
@@ -1270,55 +1630,61 @@ DALVIK THREADS:
   at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:597)
   at dalvik.system.NativeStart.main(Native Method)
 
+"Binder Thread #3" prio=5 tid=15 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb65eabb8 self=0x858b808
+  | sysTid=8955 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140022504
+  | schedstat=( 25610985 74712032 257 )
+  at dalvik.system.NativeStart.run(Native Method)
+
 "AsyncQueryWorker" prio=5 tid=14 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6507498 self=0x8e85d40
-  | sysTid=286 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149446248
-  | schedstat=( 343793 50907047 14 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65d6b68 self=0x8586d10
+  | sysTid=8952 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140013112
+  | schedstat=( 3993476 99974750 19 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
 "Stk Icon Loader" prio=5 tid=13 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6502348 self=0x8e84cb8
-  | sysTid=283 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149442016
-  | schedstat=( 73308 3989926 6 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65d1578 self=0x8585c88
+  | sysTid=8951 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140008880
+  | schedstat=( 0 31882227 7 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
 "RilMessageDecoder" prio=5 tid=12 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6501950 self=0x8e83ec0
-  | sysTid=282 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149438440
-  | schedstat=( 41945 196789 6 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65d0b80 self=0x8584f10
+  | sysTid=8948 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=139999008
+  | schedstat=( 0 42927819 6 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
 "Stk Telephony service" prio=5 tid=11 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6501668 self=0x8e83210
-  | sysTid=280 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149435192
-  | schedstat=( 54483 1395601 3 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65d0898 self=0x8584558
+  | sysTid=8946 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=139998944
+  | schedstat=( 0 18086153 3 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
 "GsmDataConnection-1" prio=5 tid=10 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb64f7f38 self=0x8e81fa0
-  | sysTid=278 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149430656
-  | schedstat=( 794489 35001787 17 )
+  | group="main" sCount=1 dsCount=0 obj=0xb6627ff0 self=0x8583078
+  | sysTid=8938 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=139996856
+  | schedstat=( 0 377586628 18 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
 "RILReceiver" prio=5 tid=9 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6527a10 self=0x8e80e60
-  | sysTid=276 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149426056
-  | schedstat=( 73450014 148508765 2356 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65f8168 self=0x85810e0
+  | sysTid=8931 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=139989512
+  | schedstat=( 30631437 232546699 1058 )
   at android.net.LocalSocketImpl.readba_native(Native Method)
   at android.net.LocalSocketImpl.access$400(LocalSocketImpl.java:29)
   at android.net.LocalSocketImpl$SocketInputStream.read(LocalSocketImpl.java:92)
@@ -1328,62 +1694,62 @@ DALVIK THREADS:
   at java.lang.Thread.run(Thread.java:1019)
 
 "RILSender" prio=5 tid=8 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6525618 self=0x8e803f0
-  | sysTid=275 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149422936
-  | schedstat=( 48588345 52981569 1196 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65f7d80 self=0x8580ed0
+  | sysTid=8926 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=139990928
+  | schedstat=( 11607234 63687929 587 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
 "Binder Thread #2" prio=5 tid=7 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb64eec80 self=0x8c6c7c0
-  | sysTid=261 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147800496
-  | schedstat=( 16606584 57585560 317 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65bf4d8 self=0x854da18
+  | sysTid=8888 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138366560
+  | schedstat=( 40295077 49035298 239 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "Binder Thread #1" prio=5 tid=6 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb64e44a0 self=0x8cfde40
-  | sysTid=260 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147241120
-  | schedstat=( 15490843 39816719 321 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65bf418 self=0x83fed60
+  | sysTid=8887 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=139400392
+  | schedstat=( 40977483 97261420 230 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "JDWP" daemon prio=5 tid=5 VMWAIT
-  | group="system" sCount=1 dsCount=0 obj=0xb64e0768 self=0x8c6b138
-  | sysTid=259 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147234848
-  | schedstat=( 976378 16055481 30 )
+  | group="system" sCount=1 dsCount=0 obj=0xb65bb768 self=0x836d5d0
+  | sysTid=8886 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=137811344
+  | schedstat=( 0 28401944 18 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "Signal Catcher" daemon prio=5 tid=4 RUNNABLE
-  | group="system" sCount=0 dsCount=0 obj=0xb64e06a8 self=0x8c72208
-  | sysTid=258 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147236152
-  | schedstat=( 1066987 15652745 4 )
+  | group="system" sCount=0 dsCount=0 obj=0xb65bb6a8 self=0x83fd5d0
+  | sysTid=8885 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=137808000
+  | schedstat=( 16972322 28465737 14 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "GC" daemon prio=5 tid=3 VMWAIT
-  | group="system" sCount=1 dsCount=0 obj=0xb64e0600 self=0x8c6aee8
-  | sysTid=257 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147243896
-  | schedstat=( 80419522 75074817 44 )
+  | group="system" sCount=1 dsCount=0 obj=0xb65bb600 self=0x836c758
+  | sysTid=8884 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138365576
+  | schedstat=( 81613367 168276780 43 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "HeapWorker" daemon prio=5 tid=2 VMWAIT
-  | group="system" sCount=1 dsCount=0 obj=0xb64e0548 self=0x8c6a410
-  | sysTid=256 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147243832
-  | schedstat=( 7986358 8980364 24 )
+  | group="system" sCount=1 dsCount=0 obj=0xb65bb548 self=0x836c050
+  | sysTid=8882 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138365512
+  | schedstat=( 6829033 63029591 22 )
   at dalvik.system.NativeStart.run(Native Method)
 
------ end 233 -----
+----- end 8863 -----
 
 
------ pid 234 at 2015-09-21 11:51:32 -----
+----- pid 8864 at 2015-11-20 10:15:28 -----
 Cmd line: com.android.systemui
 
 DALVIK THREADS:
 (mutexes: tll=0 tsl=0 tscl=0 ghl=0 hwl=0 hwll=0)
 "main" prio=5 tid=1 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb5ff1c40 self=0x8be8e40
-  | sysTid=234 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=-2145989792
-  | schedstat=( 152395270 226283908 780 )
+  | group="main" sCount=1 dsCount=0 obj=0xb60ccc40 self=0x82e9e40
+  | sysTid=8864 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=-2145989792
+  | schedstat=( 438811339 1542981529 880 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
@@ -1394,49 +1760,55 @@ DALVIK THREADS:
   at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:597)
   at dalvik.system.NativeStart.main(Native Method)
 
+"Binder Thread #3" prio=5 tid=9 NATIVE
+  | group="main" sCount=1 dsCount=0 obj=0xb65c5c50 self=0x85aaf70
+  | sysTid=9301 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=140101496
+  | schedstat=( 4000000 31250907 22 )
+  at dalvik.system.NativeStart.run(Native Method)
+
 "SystemUI StorageNotification" prio=5 tid=8 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb64f6630 self=0x8e73738
-  | sysTid=302 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=149370328
-  | schedstat=( 510450 27739613 10 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65c5310 self=0x8574c70
+  | sysTid=8927 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=139938576
+  | schedstat=( 0 43933578 11 )
   at android.os.MessageQueue.nativePollOnce(Native Method)
   at android.os.MessageQueue.next(MessageQueue.java:119)
   at android.os.Looper.loop(Looper.java:117)
   at android.os.HandlerThread.run(HandlerThread.java:60)
 
 "Binder Thread #2" prio=5 tid=7 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb6512630 self=0x8e4d8e8
-  | sysTid=274 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147800496
-  | schedstat=( 7637055 98983391 260 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65da9c0 self=0x854db60
+  | sysTid=8896 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138366560
+  | schedstat=( 16349289 108115449 78 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "Binder Thread #1" prio=5 tid=6 NATIVE
-  | group="main" sCount=1 dsCount=0 obj=0xb64e4920 self=0x8cfde40
-  | sysTid=272 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147241120
-  | schedstat=( 13276718 120367682 295 )
+  | group="main" sCount=1 dsCount=0 obj=0xb65bf920 self=0x83fed60
+  | sysTid=8895 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=139400392
+  | schedstat=( 7994315 76899410 84 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "JDWP" daemon prio=5 tid=5 VMWAIT
-  | group="system" sCount=1 dsCount=0 obj=0xb64e0be8 self=0x8c6b138
-  | sysTid=271 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147234848
-  | schedstat=( 1346283 48495490 32 )
+  | group="system" sCount=1 dsCount=0 obj=0xb65bbbe8 self=0x836d5d0
+  | sysTid=8894 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=137811344
+  | schedstat=( 3841782 23445823 21 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "Signal Catcher" daemon prio=5 tid=4 RUNNABLE
-  | group="system" sCount=0 dsCount=0 obj=0xb64e0b28 self=0x8c72208
-  | sysTid=270 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147236152
-  | schedstat=( 36907 34031 4 )
+  | group="system" sCount=0 dsCount=0 obj=0xb65bbb28 self=0x83fd5d0
+  | sysTid=8893 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=137808000
+  | schedstat=( 9289451 29200088 10 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "GC" daemon prio=5 tid=3 VMWAIT
-  | group="system" sCount=1 dsCount=0 obj=0xb64e0a80 self=0x8c6aee8
-  | sysTid=269 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147243896
-  | schedstat=( 5772979 13668475 12 )
+  | group="system" sCount=1 dsCount=0 obj=0xb65bba80 self=0x836c758
+  | sysTid=8892 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138365576
+  | schedstat=( 27655197 202881815 22 )
   at dalvik.system.NativeStart.run(Native Method)
 
 "HeapWorker" daemon prio=5 tid=2 VMWAIT
-  | group="system" sCount=1 dsCount=0 obj=0xb64e09c8 self=0x8c6a410
-  | sysTid=268 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=147243832
-  | schedstat=( 2051121 4469439 14 )
+  | group="system" sCount=1 dsCount=0 obj=0xb65bb9c8 self=0x836c050
+  | sysTid=8889 nice=0 sched=0/0 cgrp=[no-cpu-subsys] handle=138365512
+  | schedstat=( 4031799 61240715 15 )
   at dalvik.system.NativeStart.run(Native Method)
 
------ end 234 -----
+----- end 8864 -----

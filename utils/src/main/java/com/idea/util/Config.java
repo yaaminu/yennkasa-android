@@ -8,7 +8,6 @@ import android.os.Environment;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -19,11 +18,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Config {
 
     public static final String APP_PREFS = "prefs";
+    @SuppressWarnings("unused")
     public static final String APP_USER_AGENT = "pairapp-android-development-version";
     private static final String TAG = Config.class.getSimpleName();
     private static final String HOST_REAL_SERVER = "http://192.168.43.42:3000";
     private static final String LOCAL_HOST_GENYMOTION = "http://10.0.3.2:3000";
+    @SuppressWarnings("unused")
     private static final String DP_API_GENYMOTION = "http://10.0.3.2:5000/fileApi/dp";
+    @SuppressWarnings("unused")
     private static final String DP_API_REAL_PHONE = "http://192.168.43.42:5000/fileApi/dp";
     private static final String MESSAGE_API_GENY = "http://10.0.3.2:5000/fileApi/message";
     private static final String MESSAGE_API_REAL_PHONE = "http://192.168.43.42:5000/fileApi/message";
@@ -34,10 +36,10 @@ public class Config {
     private static final String ENV_PROD = "prod";
     private static final String ENV_DEV = "dev";
     public static final String PAIRAPP_ENV = getEnvironment();
+    @SuppressWarnings("unused")
     public static final String PAIRAPP_ENDPOINT = getEndPoint();
     private static final String logMessage = "calling getApplication when init has not be called";
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
-    private static float SCREEN_DENSITY;
     private static String APP_NAME = "PairApp";
     private static Application application;
     private static AtomicBoolean isChatRoomOpen = new AtomicBoolean(false);
@@ -123,15 +125,6 @@ public class Config {
         }
     }
 
-    public static String getDpEndpoint() {
-        if (PAIRAPP_ENV.equals(ENV_DEV)) {
-            return DP_API_GENYMOTION;
-        } else {
-            // TODO replace this with real url
-            return DP_API_REAL_PHONE;
-        }
-    }
-
     public static SharedPreferences getApplicationWidePrefs() {
         if (Config.application == null) {
             throw new IllegalStateException("application is null,did you forget to call init(Context) ?");
@@ -139,6 +132,7 @@ public class Config {
         return getApplication().getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
     }
 
+    @SuppressWarnings("unused") //used for testing
     public static String getMessageApiEndpoint() {
         if (PAIRAPP_ENV.equals(ENV_DEV)) {
             return MESSAGE_API_GENY;
@@ -173,18 +167,6 @@ public class Config {
                 .getExternalStoragePublicDirectory(APP_NAME), "TMP");
     }
 
-    public static String deviceArc() {
-        //noinspection deprecation
-        return System.getProperty("os.arch", Build.CPU_ABI).toLowerCase(Locale.US);
-    }
-
-    public static boolean supportsCalling() {
-        return deviceArc().contains("arm");
-    }
-
-    public static float getScreenDensity() {
-        return SCREEN_DENSITY;
-    }
 
     public synchronized static String get(String propertyName) {
         return internalGet(propertyName);
@@ -221,7 +203,8 @@ public class Config {
 
     public static String getLiveEndpoint() {
         //STOPSHIP
-        if (isEmulator() && false) {
+        //noinspection PointlessBooleanExpression,ConstantConditions
+        if (isEmulator() && false)  {
             return LIVE_SOCKET_API_LOCAL;
         } else {
             return LIVE_SOCKET_API_REMOTE;
@@ -229,7 +212,7 @@ public class Config {
     }
 
     public static String getMessageEndpoint() {
-        //STOPSHIP
+        //noinspection PointlessBooleanExpression,ConstantConditions
         if (isEmulator() && false) {
             return MESSAGE_SOCKET_API_LOCAL;
         } else {
@@ -240,15 +223,13 @@ public class Config {
     private static final Map<String, String> properties = new HashMap<>();
 
     public static String getFilesMetaDataApiUrl() {
-        //STOPSHIP
-        if (isEmulator()) {
+        if (isEmulator() && false ) {
             return "http://10.0.3.2:6000/meta";
         } else {
             return "https://pairapp-file-meta.herokuapp.com/meta";
         }
     }
 
-    private static final Object peerLock = new Object();
 
     public static void setCurrentActivePeer(String peer) {
         ThreadUtils.ensureMain();
@@ -257,5 +238,18 @@ public class Config {
 
     public static String getCurrentActivePeer() {
         return currentPeer;
+    }
+
+    public static String linksEndPoint() {
+        //noinspection PointlessBooleanExpression,ConstantConditions
+        if (isEmulator() && false) {
+            return "http://10.0.3.2:7000";
+        } else {
+            return "https://pairapp-link-maker.herokuapp.com";
+        }
+    }
+
+    public static SharedPreferences getPreferences(String s) {
+        return getApplicationContext().getSharedPreferences(s,Context.MODE_PRIVATE);
     }
 }

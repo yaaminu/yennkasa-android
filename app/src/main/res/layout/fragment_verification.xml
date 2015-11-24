@@ -1,42 +1,36 @@
-<com.idea.view.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/preferred_primary_color"
-    android:gravity="center_horizontal|top"
-    android:paddingTop="@dimen/login_in_fragment_margin_top"
-    tools:context="com.idea.ui.VerificationFragment">
-
-    <TextView
-        android:id="@+id/tv_verification_notice"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
-        android:gravity="center"
-        android:padding="@dimen/padding_ll_login_fragment_bottom"
-        android:text="@string/st_send_verification_notice"
-        android:textColor="@color/white"
-        android:textSize="@dimen/sub_title_text_size"
-        />
+<com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                              xmlns:app="http://schemas.android.com/apk/res-auto"
+                              android:layout_width="match_parent"
+                              android:layout_height="match_parent">
 
     <com.idea.view.RelativeLayout
         android:id="@+id/ll_edittext_pane"
-        android:layout_width="@dimen/login_signup_verificaton_panel_width"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/tv_verification_notice"
-        android:layout_centerHorizontal="true"
+        android:layout_centerInParent="true"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
-        android:background="#dfff"
         app:cardCornerRadius="0dp"
         app:cardElevation="0dp">
 
-        <com.idea.view.LinearLayout
+        <TextView
+            android:id="@+id/tv_verification_notice"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
+            android:gravity="center"
+            android:padding="@dimen/padding_ll_login_fragment_bottom"
+            android:text="@string/st_send_verification_notice"
+            android:textColor="@color/title_gray"
+            android:textSize="@dimen/standard_text_size"/>
+
+        <com.idea.view.LinearLayout
+            android:layout_width="@dimen/login_signup_verificaton_panel_width"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tv_verification_notice"
+            android:layout_centerHorizontal="true"
             android:background="@color/transparent"
+            android:gravity="center_horizontal"
             android:orientation="vertical"
             android:padding="@dimen/padding_ll_login_fragment_bottom">
 
@@ -50,52 +44,38 @@
 
             <com.rey.material.widget.Button
                 android:id="@+id/bt_verify"
-                style="@style/FlatButtonRippleStyle"
+                style="@style/FlatWaveButtonRippleStyle"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/big_button_height"
                 android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
-                android:background="#225eb964"
+                android:background="@drawable/button_background"
                 android:gravity="center"
                 android:text="@string/verify"
+                android:textColor="@color/white"
                 android:textSize="@dimen/standard_text_size"/>
 
             <com.rey.material.widget.Button
                 android:id="@+id/bt_resend_token"
-                style="@style/FlatButtonRippleStyle"
+                style="@style/FlatWaveButtonRippleStyle"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/big_button_height"
                 android:layout_marginTop="10dp"
-                android:background="#225eb964"
+                android:background="@drawable/button_background"
                 android:gravity="center"
                 android:text="@string/st_send_again"
+                android:textColor="@color/white"
                 android:textSize="@dimen/standard_text_size"/>
         </com.idea.view.LinearLayout>
     </com.idea.view.RelativeLayout>
 
     <com.rey.material.widget.TextView
-        android:id="@+id/tv_back_to_login"
-        style="@style/TabRippleStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/ll_edittext_pane"
-        android:layout_centerHorizontal="true"
-        android:clickable="true"
-        android:gravity="center"
-        android:padding="12dp"
-        android:text="@string/st_back_login"
-        android:textColor="@android:color/white"
-        android:textSize="@dimen/standard_text_size"/>
-
-    <com.rey.material.widget.TextView
+        android:id="@+id/copy_right"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:id="@+id/copy_right"
         android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
         android:text="@string/idea_inc"
-        android:textColor="@color/white"
-        android:textSize="@dimen/standard_text_size"
-        android:textStyle="bold"
-        />
+        android:textColor="@color/black"
+        android:textStyle="bold"/>
 </com.idea.view.RelativeLayout>

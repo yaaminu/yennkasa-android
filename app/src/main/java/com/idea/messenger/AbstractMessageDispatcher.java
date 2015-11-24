@@ -1,6 +1,7 @@
 package com.idea.messenger;
 
 import android.app.AlarmManager;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.idea.Errors.PairappException;
@@ -33,6 +34,7 @@ import io.realm.Realm;
  */
 abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     public static final String TAG = AbstractMessageDispatcher.class.getSimpleName();
+    public static final String UPLOAD_CACHE = "uploadCache" + TAG;
 
     private static final ContactsManager.Filter<User> USER_FILTER = new ContactsManager.Filter<User>() {
         @Override
@@ -86,18 +88,29 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                 return;
             }
 
-            final ProgressListenerImpl listener = new ProgressListenerImpl(message);
-            file_service.saveFileToBackend(actualFile, new FileApi.FileSaveCallback() {
-                @Override
-                public void done(FileClientException e, String locationUrl) {
-                    if (e == null) {
-                        message.setMessageBody(locationUrl); //do not persist this change.
-                        proceedToSend(message);
-                    } else {
-                        onFailed(message.getId(), MessageUtils.ERROR_FILE_UPLOAD_FAILED);
+            final String isAlreadyUploaded = actualFile.lastModified() + actualFile.getAbsolutePath();
+            final SharedPreferences preferences = Config.getPreferences(UPLOAD_CACHE);
+            String uri = preferences.getString(isAlreadyUploaded, null);
+            if (uri != null) {
+                PLog.d(TAG, "not uploading file at path: %s, because it's already uploaded");
+                message.setMessageBody(uri);
+                proceedToSend(message);
+            } else {
+                final ProgressListenerImpl listener = new ProgressListenerImpl(message);
+                file_service.saveFileToBackend(actualFile, new FileApi.FileSaveCallback() {
+                    @Override
+                    public void done(FileClientException e, String locationUrl) {
+                        if (e == null) {
+                            //cache the uri... all these bullshit will be a thing of the past once we add job manager
+                            preferences.edit().putString(isAlreadyUploaded, locationUrl).apply();
+                            message.setMessageBody(locationUrl); //do not persist this change.
+                            proceedToSend(message);
+                        } else {
+                            onFailed(message.getId(), MessageUtils.ERROR_FILE_UPLOAD_FAILED);
+                        }
                     }
-                }
-            }, listener);
+                }, listener);
+            }
         }
     }
 
@@ -107,11 +120,11 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             final Realm realm = User.Realm(Config.getApplicationContext());
             try {
                 User user = realm.where(User.class).equalTo(User.FIELD_ID, message.getTo()).findFirst();
-                if (user != null && user.getMembers().size() > 3) {
+                if (user != null && user.getMembers().size() > 1) {
                     dispatchToGroup(message, User.aggregateUserIds(user.getMembers(), USER_FILTER));
                 } else {
                     //give the user manager a hint to sync the members.
-                    UserManager.getInstance().refreshUserDetails(message.getTo());
+                    UserManager.getInstance().fetchUserIfRequired(realm, message.getTo());
                     //we are going to run some minutes later hoping that the members are 'sync'ed'.
                     timer.schedule(new SendLaterTimerTask(message), AlarmManager.INTERVAL_FIFTEEN_MINUTES / 3);
                 }
@@ -148,6 +161,11 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             if (realmMessage != null && realmMessage.isValid()) {
                 if (realmMessage.getState() == Message.STATE_PENDING) {
                     realmMessage.setState(Message.STATE_SEND_FAILED);
+                }
+                File file = new File(realmMessage.getMessageBody());
+                if (file.exists()) {
+                    SharedPreferences prefs = Config.getPreferences(UPLOAD_CACHE);
+                    prefs.edit().remove(file.lastModified() + file.getAbsolutePath()).apply();
                 }
             }
             realm.commitTransaction();
@@ -270,12 +288,17 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         }
     }
 
+
     @Override
-    public void close() {
-        //subclasses should override this if the need to free any resource
+    public final void close() {
         synchronized (monitors) {
             monitors.clear();
         }
+        doClose();
+    }
+
+    //subclasses should override this if the need to free any resource
+    protected void doClose() {
     }
 
     protected abstract void dispatchToGroup(Message message, List<String> members);

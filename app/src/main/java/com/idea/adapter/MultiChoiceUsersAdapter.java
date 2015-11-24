@@ -58,11 +58,11 @@ public class MultiChoiceUsersAdapter extends UsersAdapter {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked && selectedItems.add(userId)) {
-                     listView.setItemChecked(position, true);
-                    delegate.onItemSelected(((AdapterView) parent),view,position,-1, true);
+                    listView.setItemChecked(position, true);
+                    delegate.onItemSelected(((AdapterView) parent), view, position, -1, true);
                 } else if (selectedItems.remove(userId)) {
                     listView.setItemChecked(position, false);
-                    delegate.onItemSelected(((AdapterView) parent),view,position,-1, false);
+                    delegate.onItemSelected(((AdapterView) parent), view, position, -1, false);
                 }
             }
         });

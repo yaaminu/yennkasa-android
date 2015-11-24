@@ -11,6 +11,7 @@ import com.idea.util.TaskManager;
 import com.idea.util.ThreadUtils;
 
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 import io.realm.Realm;
 
@@ -111,4 +112,19 @@ final class NotificationManager {
         }
     }
 
+    void clearAllMessageNotifications() {
+        BACKGROUND_NOTIFIER.clearNotifications();
+    }
+
+    void reNotifyForReceivedMessages() {
+        Context con = Config.getApplicationContext();
+        Realm realm = Message.REALM(con);
+        List<Message> messages = realm.where(Message.class)
+                .notEqualTo(Message.FIELD_FROM, UserManager.getMainUserId())
+                .equalTo(Message.FIELD_STATE, Message.STATE_RECEIVED).findAllSorted(Message.FIELD_DATE_COMPOSED, true);
+        if (!messages.isEmpty()) {
+            Message message = messages.get(messages.size() - 1);
+            onNewMessage(con, message);
+        }
+    }
 }

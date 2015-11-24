@@ -1,12 +1,9 @@
 package com.idea.ui;
 
 import android.content.Context;
-import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,22 +14,15 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
 
-import com.idea.Errors.ErrorCenter;
-import com.idea.Errors.PairappException;
 import com.idea.adapter.UsersAdapter;
-import com.idea.data.Conversation;
-import com.idea.data.Message;
 import com.idea.data.User;
 import com.idea.pairapp.BuildConfig;
 import com.idea.pairapp.R;
-import com.idea.util.PLog;
 import com.idea.util.UiHelpers;
-import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -41,45 +31,56 @@ import io.realm.RealmResults;
 
 public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.OnFragmentInteractionListener {
 
-    public static final String EXTRA_GROUP_ID = "GROUPiD";
-    public static final String SEND = "send";
-    public static final String ACTION = "action";
+    public static final String EXTRA_USER_ID = "lnubj;l;l;k;ugvbbD";
     private ToolbarManager toolbarManager;
     private UsersAdapter usersAdapter;
     private BaseAdapter membersAdapter;
-    private String groupId;
+    private String userId;
+    private Toolbar toolBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_users);
         //noinspection ConstantConditions
-        Toolbar toolBar = (Toolbar) findViewById(R.id.main_toolbar);
+        toolBar = (Toolbar) findViewById(R.id.main_toolbar);
         toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
+        //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Realm realm = User.Realm(this);
         Bundle bundle = getIntent().getExtras();
 
         //where do we go?
-        groupId = getIntent().getStringExtra(EXTRA_GROUP_ID);
-        if (groupId == null) {
+        userId = getIntent().getStringExtra(EXTRA_USER_ID);
+        if (userId == null) {
             RealmResults<User> results = realm.where(User.class)
                     .notEqualTo(User.FIELD_ID, getMainUserId())
-                    .findAllSorted(User.FIELD_NAME, true);
+                    .findAllSorted(User.FIELD_NAME, true, User.FIELD_TYPE, true);
             usersAdapter = new UsersAdapter(this, realm, results);
         } else {
-            User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
-            if (group == null) {
+            User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
+            if (user == null) {
                 if (BuildConfig.DEBUG) {
                     throw new RuntimeException();
                 }
                 finish();
                 return;
             } else {
-                String title = group.getName() + "-" + getString(R.string.Members);
-                bundle.putString(MainActivity.ARG_TITLE, title);
-                membersAdapter = new MembersAdapter(this, realm, group.getMembers());
+                if (User.isGroup(user)) {
+                    String title = user.getName() + "-" + getString(R.string.Members);
+                    bundle.putString(MainActivity.ARG_TITLE, title);
+                    membersAdapter = new MembersAdapter(this, realm, user.getMembers());
+                } else {
+                    //mutual groups
+                    String title = getString(R.string.shared_groups);
+                    bundle.putString(MainActivity.ARG_TITLE, title);
+                    RealmResults<User> results = realm.where(User.class)
+                            .equalTo(User.FIELD_TYPE, User.TYPE_GROUP)
+                            .equalTo(User.FIELD_MEMBERS + "." + User.FIELD_ID, user.getUserId())
+                            .findAllSorted(User.FIELD_NAME, true);
+                    usersAdapter = new UsersAdapter(this, realm, results);
+                }
             }
         }
         Fragment fragment = new ItemsSelector();
@@ -119,7 +120,7 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
 
     @Override
     public BaseAdapter getAdapter() {
-        if (groupId != null) {
+        if (userId != null && userManager.isGroup(userId)) {
             return membersAdapter;
         }
         return usersAdapter;
@@ -127,7 +128,7 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
 
     @Override
     public Filterable filter() {
-        if (groupId != null) {
+        if (userId != null) {
             return null;
         }
         return usersAdapter;
@@ -169,85 +170,13 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
         if (userManager.isCurrentUser(user.getUserId())) {
             UiHelpers.gotoProfileActivity(this, user.getUserId());
         } else {
-            Intent mission = getIntent();
-            String action = mission.getStringExtra(ACTION);
-            if (action != null && action.equals(SEND)) {
-                String messageToBeSent = mission.getStringExtra(Intent.EXTRA_TEXT);
-                if (TextUtils.isEmpty(messageToBeSent)) {
-                    UiHelpers.enterChatRoom(this, user.getUserId());
-                } else {
-                    createMessageAndEnterChatRoom(messageToBeSent, user.getUserId());
-                }
-            } else {
-                UiHelpers.enterChatRoom(this, user.getUserId());
-            }
+            UiHelpers.enterChatRoom(this, user.getUserId());
         }
     }
 
-    private void createMessageAndEnterChatRoom(String messageToBeSent, String to) {
-        new CreateMessageTask().execute(messageToBeSent, to);
-    }
-
-    private class CreateMessageTask extends AsyncTask<String, Void, String> {
-        final String TAG = CreateMessageTask.class.getSimpleName();
-        DialogFragment dialogFragment;
-
-        @Override
-        protected void onPreExecute() {
-            dialogFragment = UiHelpers.newProgressDialog();
-            dialogFragment.show(getSupportFragmentManager(), null);
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-            String messageBody = params[0], to = params[1];
-            Realm realm = Message.REALM(UsersActivity.this);
-            Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, to).findFirst();
-            if (conversation == null) {
-                Conversation.newConversation(UsersActivity.this, to);
-            }
-            //round trips!
-            conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, to).findFirst();
-            realm.beginTransaction();
-            Message message;
-            try {
-                message = Message.makeNew(realm, messageBody, to, Message.TYPE_TEXT_MESSAGE);
-                message.setDateComposed(new Date(System.currentTimeMillis() + 1));
-                conversation.setLastMessage(message);
-                conversation.setActive(true);
-                conversation.setSummary(getString(R.string.you) + ": " + messageBody);
-                realm.commitTransaction();
-                return to;
-            } catch (PairappException e) {
-                PLog.e(TAG, "error while creating message", e.getCause());
-                realm.cancelTransaction();
-            } finally {
-                realm.close();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String to) {
-            findViewById(R.id.main_toolbar).post(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                dialogFragment.dismiss();
-                            } catch (Exception ignored) {
-                                //if user has navigated away
-                            }
-                        }
-                    }
-            );
-            if (to == null) {
-                ErrorCenter.reportError(TAG, getString(R.string.invalid_message));
-            } else {
-                UiHelpers.enterChatRoom(UsersActivity.this, to);
-                finish();
-            }
-        }
+    @Override
+    public ViewGroup searchBar() {
+        return ((ViewGroup) findViewById(R.id.search_bar));
     }
 
     public class MembersAdapter extends UsersAdapter {
@@ -295,5 +224,10 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
         public Filter getFilter() {
             throw new UnsupportedOperationException();
         }
+    }
+
+    @Override
+    public final View getToolBar() {
+        return toolBar;
     }
 }

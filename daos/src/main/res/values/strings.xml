@@ -41,4 +41,9 @@
     <string name="group_not_found">Group not found</string>
     <string name="you">you</string>
     <string name="invalid_verification_code">Wrong verification code</string>
+    <string name="busy">Busy</string>
+    <string name="server_down">The server is down</string>
+    <string name="encryptionNotAvailable">Your phone does not support encryption of data, your data will be saved without been encrypted</string>
+    <string name="not_connected">Can\'t connect, check your internet settings and try again.</string>
+    <string name="verification_code">Your verification code is</string>
 </resources>

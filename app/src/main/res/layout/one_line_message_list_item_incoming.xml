@@ -6,11 +6,26 @@
                               android:layout_height="wrap_content"
                               android:layout_margin="@dimen/message_body_margin">
 
+    <TextView
+        android:id="@+id/tv_sender_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/ll_message_body_view"
+        android:layout_alignStart="@+id/ll_message_body_view"
+        android:layout_marginBottom="@dimen/message_input_margin_4dp"
+        android:clickable="true"
+        android:ellipsize="end"
+        android:singleLine="true"
+        android:text="sender"
+        android:textSize="@dimen/standard_text_size"
+        tools:ignore="HardcodedText"/>
+
     <com.idea.view.LinearLayout
         android:id="@+id/ll_message_body_view"
         style="@style/incoming_message_body_root_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_sender_name"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -18,18 +33,10 @@
             android:id="@+id/tv_message_date"
             style="@style/message_incoming_date"
             android:layout_gravity="bottom"
-            android:gravity="center_vertical|end"
             android:padding="@dimen/padding_ll_login_fragment_left"
             android:singleLine="true"
             android:text="12-12-12"
             tools:ignore="HardcodedText"/>
-
-        <View
-            android:layout_width="@dimen/inbox_preferred_list_item_divider_height"
-            android:layout_height="match_parent"
-            android:layout_marginBottom="@dimen/padding_ll_login_fragment_left"
-            android:layout_marginTop="@dimen/padding_ll_login_fragment_left"
-            android:background="@color/black"/>
 
         <com.idea.view.FrameLayout
             android:id="@+id/fl_message_body_view"
@@ -42,7 +49,7 @@
                 android:id="@+id/tv_log_message"
                 style="@style/message_incoming"
                 android:singleLine="true"
-                android:text="hi when are you coming"
+                android:text="hi when are you coming was testing"
                 tools:ignore="HardcodedText"/>
         </com.idea.view.FrameLayout>
 
@@ -78,7 +85,7 @@
         android:contentDescription="@string/play_download_content_description"
         android:minHeight="@dimen/thumbnail_height"
         android:minWidth="@dimen/thumbnail_width"
-        android:src="@drawable/playvideo"
+        android:src="@drawable/ic_play_circle_outline_white_36dp"
         android:visibility="gone"/>
 
     <com.rey.material.widget.ProgressView

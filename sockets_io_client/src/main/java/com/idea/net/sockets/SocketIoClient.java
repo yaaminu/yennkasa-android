@@ -36,9 +36,9 @@ import static com.github.nkzawa.socketio.client.Socket.Listener;
 public class SocketIoClient implements Closeable {
 
     private final String TAG;
-    private static final int PING_DELAY = 60000;
-            private static final String PING = "ping",
-            PONG = "pong",  RECONNECT_AND_PING_TIMER_TIMER = "reconnectAndPingTimer timer";
+    private static final int PING_DELAY = 10*60000;
+    private static final String PING = "ping",
+            PONG = "pong", RECONNECT_AND_PING_TIMER_TIMER = "reconnectAndPingTimer timer";
 
     public static final String
             TYPING = "typing",
@@ -59,7 +59,8 @@ public class SocketIoClient implements Closeable {
     private static final WeakHashMap<String, SocketIoClient> instances = new WeakHashMap<>();
     private final AtomicBoolean initialised = new AtomicBoolean(false),
             ready = new AtomicBoolean(false),
-            pongedBack = new AtomicBoolean(false);
+            pongedBack = new AtomicBoolean(false),
+    isIdle = new AtomicBoolean(true);
     private final AtomicInteger referenceCount = new AtomicInteger(0), retryAttempts = new AtomicInteger(0);
     private final List<Pair<String, Object>> waitingBroadcasts = new ArrayList<>();
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
@@ -139,6 +140,7 @@ public class SocketIoClient implements Closeable {
             }
         }
     };
+    private SecureRandom random;
 
     private SocketIoClient(String endPoint, String userId) {
         initialise(endPoint, userId);
@@ -148,6 +150,7 @@ public class SocketIoClient implements Closeable {
     }
 
     public static SocketIoClient getInstance(String endPoint, String userId) {
+
         synchronized (instances) {
             SocketIoClient client = instances.get(endPoint);
             if (client == null) {
@@ -190,7 +193,6 @@ public class SocketIoClient implements Closeable {
                 URL url = new URL(endPoint); //this is just to ensure urls passed are valid.
                 IO.Options options = new IO.Options();
                 options.query = "userId=" + userId;
-                options.forceNew = true;
                 CLIENT = IO.socket(URI.create(endPoint), options);
                 CLIENT.on(EVENT_CONNECT, ON_CONNECTED);
                 CLIENT.on(EVENT_DISCONNECT, ON_DISCONNECTED);
@@ -222,13 +224,12 @@ public class SocketIoClient implements Closeable {
     }
 
     private int getDelay() {
-        SecureRandom random = new SecureRandom();
+        random = new SecureRandom();
         int deviation = (int) Math.abs(random.nextDouble() * (30000 - 1000) + 1000);
         return PING_DELAY + deviation;
     }
 
     private long getNextDelay(long currentDelay) {
-        SecureRandom random = new SecureRandom();
         int ONE_MINUTE = 60 * 1000;
         int deviation = (int) Math.abs(random.nextDouble() * (ONE_MINUTE * 5 - ONE_MINUTE) + ONE_MINUTE);
         //LINEAR
@@ -333,5 +334,9 @@ public class SocketIoClient implements Closeable {
 
     public String getEndPoint() {
         return endPoint;
+    }
+
+    public boolean isConnected() {
+        return ready.get();
     }
 }

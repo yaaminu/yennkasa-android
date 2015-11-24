@@ -1,27 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.idea.view.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
     android:id="@+id/date_header_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:background="@color/transparent"
+    android:layout_centerHorizontal="true"
+    android:layout_gravity="center_horizontal"
+    android:background="@drawable/balloon_incoming_normal_ext"
     android:gravity="center">
 
     <TextView
         android:id="@+id/tv_log_message"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_gravity="center"
-        android:background="#0000"
         android:gravity="center"
-        android:paddingBottom="@dimen/date_message_paddingTop"
-        android:paddingLeft="@dimen/date_message_paddingSides"
-        android:paddingRight="@dimen/date_message_paddingSides"
-        android:paddingTop="@dimen/date_message_paddingTop"
+        android:padding="@dimen/date_message_paddingTop"
         android:text="2/2/2015"
         android:textColor="@color/title_gray"
-        android:textSize="@dimen/log_message_text_size"
-        />
+        tools:ignore="HardcodedText"/>
 </com.idea.view.RelativeLayout>
 

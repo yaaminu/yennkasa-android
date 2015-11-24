@@ -13,7 +13,7 @@ import android.widget.TextView;
 import com.idea.data.User;
 import com.idea.data.UserManager;
 import com.idea.pairapp.R;
-import com.idea.ui.DPLoader;
+import com.idea.ui.ImageLoader;
 import com.idea.util.PhoneNumberNormaliser;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.ViewUtils;
@@ -88,11 +88,11 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
             holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId(), UserManager.getInstance().getUserCountryISO()));
         }
         if (!multiSelect) {
-            DPLoader.load(context, user.getDP())
+            ImageLoader.load(context, user.getDP())
                     .error(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                     .placeholder(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
-                    .resize(150, 150)
-                    .into(holder.iv);
+                    .resize((int) context.getResources().getDimension(R.dimen.thumbnail_width), (int) context.getResources().getDimension(R.dimen.thumbnail_height))
+                    .onlyScaleDown().into(new TargetOnclick(holder.iv, user.getUserId()));
         }
         return convertView;
     }
@@ -118,31 +118,11 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
                 if (results.values != null) {
-                    final RealmQuery<User> originalQuery = getOriginalQuery();
-                    if (originalQuery == null) {
-                        filterResults = realm.where(User.class)
-                                .beginGroup()
-                                .contains(User.FIELD_NAME, results.values.toString(), false).or()
-                                .beginGroup()
-                                .contains(User.FIELD_ID, results.values.toString())
-                                .notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
-                                .endGroup()
-                                .endGroup()
-                                .notEqualTo(User.FIELD_ID, UserManager.getInstance()
-                                        .getCurrentUser()
-                                        .getUserId())
-                                .findAllSorted(User.FIELD_NAME, false);
-                    } else {
-                        filterResults = originalQuery
-                                .beginGroup()
-                                .contains(User.FIELD_NAME, results.values.toString(), false).or()
-                                .beginGroup()
-                                .contains(User.FIELD_ID, results.values.toString())
-                                .notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
-                                .endGroup()
-                                .endGroup().findAllSorted(User.FIELD_NAME);
+                    RealmResults<User> filtered = doFilter(results.values.toString());
+                    if (filtered != null) {
+                        filterResults = filtered;
+                        notifyDataSetChanged();
                     }
-                    notifyDataSetChanged();
                 }
             }
 
@@ -171,7 +151,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
                     else {
                         return null;
                     }
-                    //the next condition will never have to worry about input like "00","011 as they will be sieved off!
+                    //the next condition will never have to worry about nput like "00","011 as they will be sieved off!
                 } else { //number in local format take of the trunk digit
                     if (constraintAsString.length() > 1) //avoid indexOutOfBoundException
                         constraintAsString = constraintAsString.substring(1);
@@ -184,9 +164,33 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
         };
     }
 
+    protected RealmResults<User> doFilter(String results) {
+        final RealmQuery<User> originalQuery = getOriginalQuery();
+        if (originalQuery == null) {
+            return realm.where(User.class)
+                    .beginGroup()
+                    .contains(User.FIELD_NAME, results, false).or()
+                    .contains(User.FIELD_ID, results)
+                    .notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
+                    .endGroup()
+                    .notEqualTo(User.FIELD_ID, UserManager.getInstance()
+                            .getCurrentUser()
+                            .getUserId())
+                    .findAllSorted(User.FIELD_NAME, true, User.FIELD_TYPE, false);
+        } else {
+            return originalQuery
+                    .beginGroup()
+                    .contains(User.FIELD_NAME, results, false).or()
+                    .contains(User.FIELD_ID, results)
+                    .endGroup()
+                    .findAllSorted(User.FIELD_NAME, true, User.FIELD_TYPE, false);
+        }
+    }
+
     private static class ViewHolder {
         private ImageView iv;
         private TextView userName, userPhone;
+        @SuppressWarnings("unused")
         private com.rey.material.widget.CheckBox checkBox;
     }
 

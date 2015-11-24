@@ -11,6 +11,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/cropper" />
             <option value="$PROJECT_DIR$/daos" />
             <option value="$PROJECT_DIR$/fileclient" />
             <option value="$PROJECT_DIR$/lib" />

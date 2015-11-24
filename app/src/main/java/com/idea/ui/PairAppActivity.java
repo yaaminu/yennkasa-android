@@ -4,11 +4,14 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.media.AudioManager;
-import android.media.SoundPool;
+import android.media.AudioAttributes;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Vibrator;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.View;
@@ -23,7 +26,9 @@ import com.idea.pairapp.BuildConfig;
 import com.idea.pairapp.R;
 import com.idea.util.Config;
 import com.idea.util.LiveCenter;
+import com.idea.util.MediaUtils;
 import com.idea.util.PLog;
+import com.idea.util.TaskManager;
 import com.idea.util.UiHelpers;
 import com.rey.material.widget.SnackBar;
 
@@ -88,8 +93,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         }
     };
     private SnackBar snackBar;
-    private SoundPool pool;
-    private int streamId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,7 +100,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         if (isUserVerified()) {
             messageRealm = Message.REALM(this);
             //noinspection deprecation
-            pool = new SoundPool(1, AudioManager.STREAM_NOTIFICATION, 0);
         }
     }
 
@@ -152,10 +154,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     @Override
     protected void onDestroy() {
         if (isUserVerified()) {
-            if (streamId != 0) {
-                pool.pause(streamId);
-            }
-            pool.release();
             messageRealm.close();
         }
         super.onDestroy();
@@ -246,8 +244,9 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 })
                 .duration(6000) //6 secs
                 .setOnClickListener(listener);
-        int id = pool.load(this, R.raw.sound_a, 1);
-        streamId = pool.play(id, 1, 1, 0, 1, 1);
+        // TODO: 11/7/2015 play tone
+        playNewMessageTone(this);
+        vibrateIfAllowed(this);
         snackBar.removeOnDismiss(true).show(this);
     }
 
@@ -277,11 +276,17 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     protected void onUnbind() {
     }
 
-    protected final void clearRecentChat(String peerId) {
+    protected final void clearRecentChat(final String peerId) {
         if (peerId == null) {
             throw new IllegalArgumentException("peer id is null!");
         }
-        LiveCenter.invalidateNewMessageCount(peerId);
+        final Runnable invalidateTask = new Runnable() {
+            @Override
+            public void run() {
+                LiveCenter.invalidateNewMessageCount(peerId);
+            }
+        };
+        TaskManager.executeNow(invalidateTask, true);
     }
 
     protected abstract SnackBar getSnackBar();
@@ -299,5 +304,49 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 doNotify(s);
             }
         }
+    }
+
+    private static void playNewMessageTone(Context context) {
+        String uriString = UserManager.getInstance().getStringPref(UserManager.NEW_MESSAGE_TONE, UserManager.SILENT);
+        if (uriString.equals(UserManager.SILENT)) {
+            PLog.d(TAG, "silent, aborting ringtone playing");
+        }
+        Uri uri;
+        if (TextUtils.isEmpty(uriString) || uriString.equals(UserManager.DEFAULT)) {
+            uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            if (uri == null) {
+                PLog.e(TAG, " unable to play default notification tone");
+            }
+        } else {
+            uri = Uri.parse(uriString);
+        }
+        PLog.d(TAG, "Retrieved ringtone %s", uri + "");
+        MediaUtils.playTone(context, uri);
+    }
+
+    public static final int VIBRATION_DURATION = 1000;
+
+    private static void vibrateIfAllowed(Context context) {
+        if (UserManager.getInstance().getBoolPref(UserManager.VIBRATE, false)) {
+            PLog.v(TAG, "vibrating....");
+            Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                if (vibrator.hasVibrator()) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        AudioAttributes audioAttributes = new AudioAttributes.Builder().setFlags(AudioAttributes.USAGE_NOTIFICATION).build();
+                        vibrator.vibrate(VIBRATION_DURATION, audioAttributes);
+                    } else {
+                        vibrator.vibrate(VIBRATION_DURATION);
+                    }
+                }
+            } else {
+                vibrator.vibrate(VIBRATION_DURATION);
+            }
+        }
+    }
+
+    @Override
+    public void clearNotifications() {
+        throw new UnsupportedOperationException();
     }
 }

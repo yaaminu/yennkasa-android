@@ -6,17 +6,15 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 
-import com.idea.PairApp;
-import com.idea.messenger.PairAppClient;
-import com.idea.util.UiHelpers;
-import com.idea.data.ContactSyncService;
 import com.idea.Errors.ErrorCenter;
+import com.idea.PairApp;
+import com.idea.data.ContactSyncService;
 import com.idea.data.UserManager;
+import com.idea.messenger.PairAppClient;
 import com.idea.pairapp.R;
 import com.idea.util.Config;
+import com.idea.util.UiHelpers;
 import com.rey.material.app.DialogFragment;
-
-import java.io.File;
 
 
 public class SetUpActivity extends PairAppBaseActivity implements VerificationFragment.Callbacks,
@@ -54,7 +52,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     }
 
     protected static int getStage() {
-        return getSharedPreferences().getInt(STAGE, UNKNOWN);
+        return UserManager.getInstance().getIntPref(STAGE, UNKNOWN);
     }
 
     @Override
@@ -67,17 +65,22 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     @Override
     protected void onResume() {
         super.onResume();
-        stage = getActivityPreferences().getInt(STAGE, UNKNOWN);
+        stage = userManager.getIntPref(STAGE, UNKNOWN);
         next();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        getActivityPreferences().edit().putInt(STAGE, stage).commit();
+        saveState();
+    }
+
+    private Object saveState() {
+        return userManager.putStandAlonePref(STAGE, stage);
     }
 
     private void next() {
+        saveState();
         Fragment fragment;// = getSupportFragmentManager().findFragmentById(R.id.container);
         if (stage == UNKNOWN) {
             if (isUserLoggedIn()) {
@@ -85,6 +88,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
                     stage = DP_STAGE;
                 } else {
                     stage = VERIFICATION_STAGE;
+                    return;
                 }
             } else {
                 stage = LOGIN_STAGE;
@@ -161,14 +165,14 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
 
     @Override
     public void onDp(final String newDp) {
-        if (!new File(newDp).exists()) {
-            return;
-        }
-        if (attempts++ > 3) {
+        if (newDp.equals(getCurrentUser().getDP())) {
+            stage = COMPLETE;
+            completeSetUp();
+        } else if (attempts++ > 3) {
             ErrorCenter.reportError(TAG, getString(R.string.permanently_disconnected));
-            return;
+        } else {
+            doChangeDp(newDp);
         }
-        doChangeDp(newDp);
     }
 
     private void doChangeDp(final String newDp) {

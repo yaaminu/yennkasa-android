@@ -3,6 +3,7 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
+
     </style>
 
 
@@ -25,8 +26,13 @@
     <!-- AppBar Style -->
     <style name="AppBar" parent="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
         <item name="selectableItemBackground">@null</item>
+        <item name="popupTheme">@style/popup_theme</item>
     </style>
 
+    <style name="popup_theme" parent="ThemeOverlay.AppCompat.Light">
+        <item name="android:background">@android:color/white</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
     <!-- Navigator Drawable -->
     <style name="NavigatorDrawableIcon" parent="Material.Drawable.NavigationDrawerIcon">
         <item name="lmd_strokeSize">3dp</item>
@@ -47,7 +53,7 @@
 
     <style name="TabPageIndicator" parent="Material.Widget.TabPageIndicator.Light">
         <item name="tpi_tabPadding">12dp</item>
-        <item name="tpi_tabRipple">@style/TabRippleStyle</item>
+        <item name="tpi_tabRipple">@style/FlatButtonRippleStyle</item>
         <item name="tpi_indicatorHeight">@dimen/tab_pager_indicator_height</item>
         <item name="tpi_indicatorColor">@color/white</item>
         <item name="android:textAppearance">@style/TabTextAppearance</item>
@@ -171,35 +177,35 @@
     </style>
 
     <!--<style name="RaiseButtonRippleStyle" parent="Material.Drawable.Ripple.Touch.Light">-->
-        <!--<item name="android:background">@drawable/bg_bt_raise</item>-->
-        <!--<item name="rd_leftPadding">1dp</item>-->
-        <!--<item name="rd_topPadding">1dp</item>-->
-        <!--<item name="rd_rightPadding">1dp</item>-->
-        <!--<item name="rd_bottomPadding">2dp</item>-->
+    <!--<item name="android:background">@drawable/bg_bt_raise</item>-->
+    <!--<item name="rd_leftPadding">1dp</item>-->
+    <!--<item name="rd_topPadding">1dp</item>-->
+    <!--<item name="rd_rightPadding">1dp</item>-->
+    <!--<item name="rd_bottomPadding">2dp</item>-->
     <!--</style>-->
 
     <!--<style name="RaiseWaveButtonRippleStyle" parent="Material.Drawable.Ripple.Wave.Light">-->
-        <!--<item name="android:background">@drawable/bg_bt_raise</item>-->
-        <!--<item name="rd_leftPadding">1dp</item>-->
-        <!--<item name="rd_topPadding">1dp</item>-->
-        <!--<item name="rd_rightPadding">1dp</item>-->
-        <!--<item name="rd_bottomPadding">2dp</item>-->
+    <!--<item name="android:background">@drawable/bg_bt_raise</item>-->
+    <!--<item name="rd_leftPadding">1dp</item>-->
+    <!--<item name="rd_topPadding">1dp</item>-->
+    <!--<item name="rd_rightPadding">1dp</item>-->
+    <!--<item name="rd_bottomPadding">2dp</item>-->
     <!--</style>-->
 
     <!--<style name="RaiseColorButtonRippleStyle" parent="Material.Drawable.Ripple.Touch.Light">-->
-        <!--<item name="rd_rippleColor">@color/colorPrimaryDark</item>-->
-        <!--<item name="rd_leftPadding">1dp</item>-->
-        <!--<item name="rd_topPadding">1dp</item>-->
-        <!--<item name="rd_rightPadding">1dp</item>-->
-        <!--<item name="rd_bottomPadding">2dp</item>-->
+    <!--<item name="rd_rippleColor">@color/colorPrimaryDark</item>-->
+    <!--<item name="rd_leftPadding">1dp</item>-->
+    <!--<item name="rd_topPadding">1dp</item>-->
+    <!--<item name="rd_rightPadding">1dp</item>-->
+    <!--<item name="rd_bottomPadding">2dp</item>-->
     <!--</style>-->
 
     <!--<style name="RaiseWaveColorButtonRippleStyle" parent="Material.Drawable.Ripple.Wave.Light">-->
-        <!--<item name="rd_rippleColor">@color/colorPrimaryDark</item>-->
-        <!--<item name="rd_leftPadding">1dp</item>-->
-        <!--<item name="rd_topPadding">1dp</item>-->
-        <!--<item name="rd_rightPadding">1dp</item>-->
-        <!--<item name="rd_bottomPadding">2dp</item>-->
+    <!--<item name="rd_rippleColor">@color/colorPrimaryDark</item>-->
+    <!--<item name="rd_leftPadding">1dp</item>-->
+    <!--<item name="rd_topPadding">1dp</item>-->
+    <!--<item name="rd_rightPadding">1dp</item>-->
+    <!--<item name="rd_bottomPadding">2dp</item>-->
     <!--</style>-->
 
     <!-- Switch Style -->
@@ -291,11 +297,18 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">@dimen/big_button_height</item>
         <item name="android:layout_marginLeft">5dp</item>
-        <item name="android:background">@drawable/button_background</item>
+        <item name="android:background">@drawable/button_background_color_primary</item>
         <item name="android:scaleType">fitCenter</item>
         <item name="android:layout_weight">1</item>
     </style>
 
+    <style name="round_button_style" parent="FlatWaveColorButtonRippleStyle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">@dimen/big_button_height</item>
+        <item name="android:layout_marginLeft">5dp</item>
+        <item name="android:background">@drawable/button_background</item>
+        <item name="android:layout_weight">1</item>
+    </style>
 
     <dimen name="profile_fragment_round_icons_padding">8dp</dimen>
     <dimen name="tab_pager_indicator_height">4dp</dimen>

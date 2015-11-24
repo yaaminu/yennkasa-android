@@ -1,13 +1,17 @@
 package com.idea.adapter;
 
-import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.provider.ContactsContract;
+import android.support.annotation.DrawableRes;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AlertDialog;
 import android.telephony.SmsManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,8 +21,8 @@ import android.widget.TextView;
 
 import com.idea.data.UserManager;
 import com.idea.pairapp.R;
-import com.idea.ui.DPLoader;
-import com.idea.ui.PairAppBaseActivity;
+import com.idea.ui.ImageLoader;
+import com.idea.util.PLog;
 import com.idea.util.PhoneNumberNormaliser;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
@@ -44,12 +48,22 @@ public class ContactsAdapter extends BaseAdapter {
     private List<Contact> contacts;
     private boolean isAddOrRemoveFromGroup;
     private FragmentActivity context;
+    private final Drawable[] bgColors = new Drawable[5];
 
     public ContactsAdapter(FragmentActivity context, List<Contact> contacts, boolean isAddOrRemoveFromGroup) {
         this.contacts = contacts;
         this.isAddOrRemoveFromGroup = isAddOrRemoveFromGroup;
         this.context = context;
         userIsoCountry = UserManager.getInstance().getUserCountryISO();
+        bgColors[0] = getDrawable(context, R.drawable.pink_round_back_ground);
+        bgColors[1] = getDrawable(context, R.drawable.blue_round_back_ground);
+        bgColors[2] = getDrawable(context, R.drawable.red_round_back_ground);
+        bgColors[3] = getDrawable(context, R.drawable.green_round_back_ground);
+        bgColors[4] = getDrawable(context, R.drawable.orange_round_back_ground);
+    }
+
+    private Drawable getDrawable(Context context, @DrawableRes int res) {
+        return context.getResources().getDrawable(res);
     }
 
     @Override
@@ -122,15 +136,17 @@ public class ContactsAdapter extends BaseAdapter {
             return convertView;
         }
         if (contact.isRegisteredUser) {
-            DPLoader.load(context, contact.DP)
+            TargetOnclick targetOnclick = new TargetOnclick(holder.userDp, contact.numberInIEE_Format);
+            ImageLoader.load(context, contact.DP)
                     .error(R.drawable.user_avartar)
                     .placeholder(R.drawable.user_avartar)
-                    .resize(150, 150)
+                    .resize((int) context.getResources().getDimension(R.dimen.thumbnail_width), (int) context.getResources().getDimension(R.dimen.thumbnail_height))
+                    .onlyScaleDown()
                     .centerInside()
-                    .into(holder.userDp);
+                    .into(targetOnclick);
             holder.userName.setClickable(true);
             holder.userDp.setClickable(true);
-            holder.userDp.setOnClickListener(listener);
+            holder.userDp.setOnClickListener(targetOnclick);
             holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat(getItem(position).numberInIEE_Format, userIsoCountry));
             holder.userPhone.setClickable(true);
             holder.userPhone.setOnClickListener(listener);
@@ -139,9 +155,6 @@ public class ContactsAdapter extends BaseAdapter {
             holder.userPhone.setOnClickListener(listener);
             holder.userName.setOnClickListener(listener);
             holder.inviteButton.setOnClickListener(listener);
-            if (contact.name.equalsIgnoreCase("awale")) {
-                Log.d(TAG, "break");
-            }
             if (contact.name.length() > 1) {
                 String[] parts = contact.name.trim().split("[\\s[^A-Za-z]]+");
                 if (parts.length > 1) {
@@ -163,8 +176,11 @@ public class ContactsAdapter extends BaseAdapter {
                     holder.initials.setText(contact.name.substring(0, 2).toUpperCase(Locale.getDefault()));
                 }
             } else {
-                holder.initials.setText(contact.name.toUpperCase(Locale.getDefault()));
+                holder.initials.setText(" " + contact.name.toUpperCase(Locale.getDefault()));
             }
+            int i = position % bgColors.length;
+            //noinspection deprecation
+            holder.initials.setBackgroundDrawable(bgColors[(i >= bgColors.length) ? i - bgColors.length : i]);
         }
 
         return convertView;
@@ -200,13 +216,55 @@ public class ContactsAdapter extends BaseAdapter {
     }
 
     private void invite(final Context context, final Contact contact) {
-        final UiHelpers.Listener listener = new UiHelpers.Listener() {
-            @Override
-            public void onClick() {
-                SmsManager.getDefault().sendTextMessage(contact.phoneNumber, null, context.getString(R.string.invite_message), null, null);
+        final String message = context.getString(R.string.invite_message);
+        PackageManager manager = context.getPackageManager();
+        final Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_TEXT, message);
+        // context.startActivity(intent);
+
+        final List<ResolveInfo> infos = manager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+//        List<ResolveInfo> noPairap = new Arr
+        PLog.d(TAG, "resolved: " + infos.size());
+        if (infos.isEmpty()) {
+            final UiHelpers.Listener listener = new UiHelpers.Listener() {
+                @Override
+                public void onClick() {
+                    SmsManager.getDefault().sendTextMessage("+" + contact.numberInIEE_Format, null, message, null, null);
+                }
+            };
+            UiHelpers.showErrorDialog((FragmentActivity) context,
+                    context.getString(R.string.charges_may_apply),
+                    context.getString(android.R.string.ok),
+                    context.getString(android.R.string.cancel),
+                    listener, null);
+        } else {
+            CharSequence[] titles = new String[infos.size() - 1]; //minus pairapp
+            Drawable[] icons = new Drawable[titles.length];
+            final ActivityInfo[] activityInfos = new ActivityInfo[icons.length];
+            int ourIndex = 0;
+            for (int i = 0; i < infos.size(); i++) {
+                ActivityInfo activityInfo = infos.get(i).activityInfo;
+                if (context.getPackageName().equals(activityInfo.packageName)) {
+                    continue;
+                }
+                titles[ourIndex] = activityInfo.loadLabel(manager);
+                icons[ourIndex] = activityInfo.loadIcon(manager);
+                activityInfos[ourIndex] = activityInfo;
+                ourIndex++;
             }
-        };
-        UiHelpers.showErrorDialog(((PairAppBaseActivity) context), R.string.charges_may_apply, android.R.string.ok, android.R.string.cancel, listener, null);
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            SimpleAdapter adapter = new SimpleAdapter(icons, titles);
+            builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    ActivityInfo activityInfo = activityInfos[which];
+                    intent.setClassName(activityInfo.packageName, activityInfo.name);
+                    context.startActivity(intent);
+                }
+            }).setTitle(context.getString(R.string.invite_via));
+            builder.create().show();
+        }
     }
 
 //    private class InviteContact implements View.OnClickListener {
@@ -218,32 +276,14 @@ public class ContactsAdapter extends BaseAdapter {
 //
 //        @Override
 //        public void onClick(View v) {
-//            final UiHelpers.Listener listener = new UiHelpers.Listener() {
-//                @Override
-//                public void onClick() {
-//
-//                }
-//            };
-//            UiHelpers.showErrorDialog(context, R.string.charges_may_apply, android.R.string.ok, android.R.string.cancel, listener, null);
-////            Uri uri = Uri.parse("sms:"+contact.phoneNumber);
-////            Intent intent = new Intent(Intent.ACTION_SENDTO);
-////            intent.setData(uri);
-////            intent.putExtra(Intent.EXTRA_TEXT, message);
-////            v.getContext().startActivity(intent);
+//            Uri uri = Uri.parse("sms:"+contact.phoneNumber);
+//            Intent intent = new Intent(Intent.ACTION_SENDTO);
+//            intent.setData(uri);
+//            intent.putExtra(Intent.EXTRA_TEXT, message);
+//            v.getContext().startActivity(intent);
 //        }
 //
 //    }
-
-    private void addToContacts(Context context, Contact contact) {
-        Intent intent = new Intent(ContactsContract.Intents.SHOW_OR_CREATE_CONTACT);
-        intent.setData(Uri.parse("tel:" + PhoneNumberNormaliser.toLocalFormat(contact.phoneNumber, userIsoCountry)));
-        try {
-            context.startActivity(intent);
-        } catch (ActivityNotFoundException e) {
-            // TODO: 8/23/2015 should we tell the user or is it that our intent was wrongly targeted?
-        }
-
-    }
 
     private class ViewHolder {
         private TextView userName, initials;

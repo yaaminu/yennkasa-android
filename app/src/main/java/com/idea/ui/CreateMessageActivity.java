@@ -11,7 +11,6 @@ import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
 import android.support.v4.util.Pair;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -19,8 +18,8 @@ import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
@@ -42,7 +41,6 @@ import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
 import com.rey.material.app.DialogFragment;
-import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.SnackBar;
 
@@ -54,6 +52,7 @@ import java.util.TreeSet;
 
 import io.realm.Realm;
 import io.realm.RealmQuery;
+import io.realm.RealmResults;
 
 public class CreateMessageActivity extends MessageActivity
         implements ItemsSelector.OnFragmentInteractionListener, TextWatcher, View.OnClickListener {
@@ -70,21 +69,41 @@ public class CreateMessageActivity extends MessageActivity
     private UsersAdapter adapter;
     private Realm realm;
     private Toolbar toolBar;
-    private ToolbarManager toolbarManager;
+    //    private ToolbarManager toolbarManager;
     private boolean isAttaching = false;
     private boolean isNotDefaultIntent = false;
     private Set<String> selectedUserNames = new TreeSet<>();
     private Fragment fragment;
+    View attachMenuItem, sendMenuItem;
+
+    View.OnClickListener listener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.tv_menu_item_attach:
+                    UiHelpers.attach(CreateMessageActivity.this);
+                    break;
+                case R.id.tv_menu_item_send:
+                    onSendMenuItemClicked();
+                    break;
+                default:
+                    throw new AssertionError();
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_message);
         toolBar = (Toolbar) findViewById(R.id.main_toolbar);
-
+        setSupportActionBar(toolBar);
         messageEt = ((EditText) findViewById(R.id.et_message));
         messageEt.addTextChangedListener(this);
-
+        sendMenuItem = findViewById(R.id.tv_menu_item_send);
+        attachMenuItem = findViewById(R.id.tv_menu_item_attach);
+        attachMenuItem.setOnClickListener(listener);
+        sendMenuItem.setOnClickListener(listener);
         attachmentPreview = findViewById(R.id.attachment_preview);
         View cancelAttachment = findViewById(R.id.cancel_attachment);
         tvAttachmentDescription = (TextView) findViewById(R.id.attachment_description);
@@ -94,8 +113,6 @@ public class CreateMessageActivity extends MessageActivity
 
         attachmentPreview.setOnClickListener(this);
         cancelAttachment.setOnClickListener(this);
-        toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
-
 
         selectedItems.clear();
         realm = User.Realm(this);
@@ -199,13 +216,14 @@ public class CreateMessageActivity extends MessageActivity
     }
 
     private RealmQuery<User> prepareQuery() {
-        RealmQuery<User> query = realm.where(User.class)
-                .notEqualTo(User.FIELD_ID, getMainUserId());
+        RealmQuery<User> query = realm.where(User.class);
+
         final String forwardedFrom = getIntent().getStringExtra(EXTRA_FORWARDED_FROM);
         if (forwardedFrom != null) {
             query.notEqualTo(User.FIELD_ID, forwardedFrom);
         }
-        return query;
+        return query.notEqualTo(User.FIELD_ID, getMainUserId());
+
     }
 
     @Override
@@ -215,71 +233,61 @@ public class CreateMessageActivity extends MessageActivity
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        toolbarManager.onPrepareMenu();
+//        toolbarManager.onPrepareMenu();
         final boolean showMenu = adapter.getCount() >= 1;
-        menu = toolBar.getMenu();
-        if (menu != null) { //required for toolbar to behave on older platforms <=10
-            MenuItem sendMessageMenuItem = menu.findItem(R.id.action_send_message);
-            if (sendMessageMenuItem == null) {
-                sendMessageMenuItem = menu.add(0, R.id.action_send_message, 100, R.string.send);
-                sendMessageMenuItem.setIcon(R.drawable.ic_send_white_24dp);
-                MenuItemCompat.setShowAsAction(sendMessageMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
-            }
-            sendMessageMenuItem.setVisible((!messageEt.getText().toString().isEmpty() || isAttaching)
-                    && !selectedItems.isEmpty() && showMenu);
-            MenuItem attachMenuItem = menu.findItem(R.id.action_attach);
-            if (attachMenuItem == null) {
-                attachMenuItem = menu.add(0, R.id.action_attach, 100, R.string.action_attach);
-                attachMenuItem.setIcon(R.drawable.ic_action_new_attachment_white);
-                MenuItemCompat.setShowAsAction(attachMenuItem, MenuItemCompat.SHOW_AS_ACTION_ALWAYS | MenuItemCompat.SHOW_AS_ACTION_WITH_TEXT);
-            }
-            attachMenuItem.setVisible(!selectedItems.isEmpty() && !isAttaching && !isNotDefaultIntent && showMenu);
-        }
+        ViewUtils.toggleVisibility(sendMenuItem, ((!messageEt.getText().toString().isEmpty() || isAttaching)
+                && !selectedItems.isEmpty() && showMenu));
+        ViewUtils.toggleVisibility(attachMenuItem, !selectedItems.isEmpty() && !isAttaching && !isNotDefaultIntent && showMenu);
         return super.onPrepareOptionsMenu(menu);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        //toolbarManager.createMenu(R.menu.menu_create_message);
-        return true;
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        // Inflate the menu; this adds items to the action bar if it is present.
+//        //toolBar.inflateMenu(R.menu.menu_create_message);
+//        return super.onCreateOptionsMenu(menu);
+//    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        // Handle action bar item clicks here. The action bar will
+//        // automatically handle clicks on the Home/Up button, so long
+//        // as you specify a parent activity in AndroidManifest.xml.
+//        int id = item.getItemId();
+//
+//        if (id == R.id.action_attach) {
+//            UiHelpers.attach(this);
+//            return true;
+//        } else if (id == R.id.action_send_message) {
+//            onSendMenuItemClicked();
+//            return true;
+//        }
+//        return super.onOptionsItemSelected(item);
+//    }
 
-        if (id == R.id.action_attach) {
-            UiHelpers.attach(this);
-            return true;
-        } else if (id == R.id.action_send_message) {
-            int type;
-            String messageBody;
-            if (isAttaching) {
-                type = attachmentType;
-                messageBody = attachmentBody;
-            } else {
-                messageBody = messageEt.getText().toString().trim();
-                if (TextUtils.isEmpty(messageBody)) {
-                    return true;
-                }
-                type = Message.TYPE_TEXT_MESSAGE;
+    private void onSendMenuItemClicked() {
+        int type;
+        String messageBody;
+        if (isAttaching) {
+            type = attachmentType;
+            messageBody = attachmentBody;
+        } else {
+            messageBody = messageEt.getText().toString().trim();
+            if (TextUtils.isEmpty(messageBody)) {
+                return;
             }
-            final DialogFragment progressDialog = UiHelpers.newProgressDialog();
-            progressDialog.show(getSupportFragmentManager(), null);
-            sendMessage(messageBody, selectedItems, type, new SendCallback() {
-                @Override
-                public void onSendComplete(Exception e) {
-                    UiHelpers.dismissProgressDialog(progressDialog);
-                    Intent intent = new Intent(CreateMessageActivity.this, MainActivity.class);
-                    NavUtils.navigateUpTo(CreateMessageActivity.this, intent);
-                }
-            });
+            type = Message.TYPE_TEXT_MESSAGE;
         }
-        return super.onOptionsItemSelected(item);
+        final DialogFragment progressDialog = UiHelpers.newProgressDialog();
+        progressDialog.show(getSupportFragmentManager(), null);
+        sendMessage(messageBody, selectedItems, type, new SendCallback() {
+            @Override
+            public void onSendComplete(Exception e) {
+                UiHelpers.dismissProgressDialog(progressDialog);
+                Intent intent = new Intent(CreateMessageActivity.this, MainActivity.class);
+                NavUtils.navigateUpTo(CreateMessageActivity.this, intent);
+            }
+        });
     }
 
     @Override
@@ -463,6 +471,11 @@ public class CreateMessageActivity extends MessageActivity
     }
 
     @Override
+    public ViewGroup searchBar() {
+        return ((ViewGroup) findViewById(R.id.search_bar));
+    }
+
+    @Override
     public void onBackPressed() {
         onAction();
     }
@@ -506,12 +519,33 @@ public class CreateMessageActivity extends MessageActivity
 
     private class CustomAdapter extends MultiChoiceUsersAdapter {
         private CustomAdapter() {
-            super(delegagte, realm, prepareQuery().findAllSorted(User.FIELD_NAME), selectedItems, R.id.cb_checked);
+            super(delegagte, realm, prepareQuery().findAllSorted(User.FIELD_NAME, true, User.FIELD_TYPE, false), selectedItems, R.id.cb_checked);
         }
 
         @Override
         protected RealmQuery<User> getOriginalQuery() {
             return prepareQuery();
         }
+
+        @Override
+        protected RealmResults<User> doFilter(String constraint) {
+            if (TextUtils.isEmpty(constraint)) {
+                return prepareQuery().findAllSorted(User.FIELD_NAME, true, User.FIELD_TYPE, false);
+            }
+            RealmQuery<User> query = realm.where(User.class);//.equalTo(User.FIELD_TYPE, User.TYPE_GROUP);
+
+            query.contains(User.FIELD_NAME, constraint, false);
+            final String forwardedFrom = getIntent().getStringExtra(EXTRA_FORWARDED_FROM);
+            if (forwardedFrom != null) {
+                query.notEqualTo(User.FIELD_ID, forwardedFrom);
+            }
+            query.notEqualTo(User.FIELD_ID, getMainUserId());
+            return query.findAllSorted(User.FIELD_NAME, true, User.FIELD_TYPE, false);
+        }
+    }
+
+    @Override
+    public final View getToolBar() {
+        return toolBar;
     }
 }

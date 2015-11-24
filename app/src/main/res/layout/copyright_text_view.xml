@@ -1,12 +1,13 @@
 <com.rey.material.widget.TextView
+    android:id="@+id/copy_right"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_alignParentBottom="true"
     android:layout_centerHorizontal="true"
-    android:id="@+id/copy_right"
     android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
+    android:background="#4000"
     android:text="@string/idea_inc"
     android:textColor="@color/white"
     android:textSize="@dimen/standard_text_size"
-    android:textStyle="bold"
-    xmlns:android="http://schemas.android.com/apk/res/android"/>
+    android:textStyle="bold"/>

@@ -48,6 +48,39 @@ public class ContactsManager {
         return doFindAllContacts(filter, comparator, getCursor(Config.getApplicationContext()));
     }
 
+    public final Contact findContact(String userId) {
+        Cursor cursor = getCursor(Config.getApplicationContext());
+        String phoneNumber, standardisedNumber;
+        try {
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract
+                            .CommonDataKinds.Phone.NUMBER));
+                    if (TextUtils.isEmpty(phoneNumber)) {
+                        PLog.i(TAG, "strange!: no phone number for this contact, ignoring");
+                        continue;
+                    }
+                    try {
+                        standardisedNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO());
+                        if (userId.equals(standardisedNumber)) {
+                            String name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                            if (TextUtils.isEmpty(name)) { //some users can store numbers with no name; am a victim :-P
+                                name = phoneNumber;
+                            }
+                            return new Contact(name, phoneNumber, false, "avatar_empty", standardisedNumber);
+                        }
+                    } catch (IllegalArgumentException | NumberParseException e) {
+                        PLog.e(TAG, "failed to format the number: " + phoneNumber + "to IEE number: " + e.getMessage());
+                    }
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return null;
+    }
 
     public void findAllContacts(final Filter<Contact> filter, final Comparator<Contact> comparator, final FindCallback<List<Contact>> callback) {
         //noinspection ConstantConditions
@@ -114,7 +147,7 @@ public class ContactsManager {
                 }
                 name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
                 if (TextUtils.isEmpty(name)) { //some users can store numbers with no name; am a victim :-P
-                    name = phoneNumber.substring(0, 4);
+                    name = phoneNumber;
                 }
                 ContactsManager.Contact contact = new ContactsManager.Contact(name, phoneNumber, isRegistered, DP, standardisedNumber);
                 try {
@@ -136,7 +169,6 @@ public class ContactsManager {
             realm.close();
         }
     }
-
 
     public interface FindCallback<T> {
         void done(T t);

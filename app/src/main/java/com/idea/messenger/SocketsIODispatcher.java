@@ -3,7 +3,6 @@ package com.idea.messenger;
 
 import com.github.nkzawa.emitter.Emitter;
 import com.idea.data.Message;
-import com.idea.data.MessageJsonAdapter;
 import com.idea.data.UserManager;
 import com.idea.net.sockets.SocketIoClient;
 import com.idea.util.Config;
@@ -76,11 +75,11 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
 
     @Override
     protected void dispatchToUser(Message message) {
-        socketIoClient.send(MessageJsonAdapter.INSTANCE.toJSON(message));
+        socketIoClient.send(Message.toJSON(message));
     }
 
     @Override
-    public void close() {
+    protected void doClose() {
         super.close();
         socketIoClient.unRegisterEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
         socketIoClient.close();

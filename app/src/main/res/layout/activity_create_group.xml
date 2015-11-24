@@ -1,59 +1,74 @@
-<com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                              xmlns:app="http://schemas.android.com/apk/res-auto"
-                              xmlns:tools="http://schemas.android.com/tools"
-                              android:layout_width="match_parent"
-                              android:layout_height="match_parent"
-                              tools:context="com.idea.ui.CreateGroupActivity">
+<com.idea.view.RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.idea.ui.CreateGroupActivity">
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/main_toolbar"
+    <FrameLayout
+        android:id="@+id/bar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/action_bar_height"
-        android:animateLayoutChanges="true"
-        android:background="?attr/colorPrimary"
-        android:minHeight="?attr/actionBarSize"
-        android:title="@string/app_name"
-        app:theme="@style/AppBar"
-        tools:ignore="UnusedAttribute">
+        android:layout_height="wrap_content">
 
-        <com.rey.material.widget.TextView
-            android:id="@+id/tv_menu_item_done"
-            style="@style/FlatWaveColorButtonRippleStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="end"
-            android:clickable="true"
-            android:drawableLeft="@drawable/ic_done_white_24dp"
-            android:drawableStart="@drawable/ic_done_white_24dp"
-            android:gravity="center_vertical"
-            android:text="@string/st_done"
-            android:textAppearance="@style/TabTextAppearance"
-            android:textColor="@color/white"
-            android:visibility="visible"
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/main_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/action_bar_height"
+            android:animateLayoutChanges="true"
+            android:background="?attr/colorPrimary"
+            android:minHeight="?attr/actionBarSize"
+            android:title="@string/app_name"
+            app:theme="@style/AppBar"
+            tools:ignore="UnusedAttribute">
+
+            <com.rey.material.widget.TextView
+                android:id="@+id/tv_menu_item_done"
+                style="@style/FlatWaveColorButtonRippleStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:clickable="true"
+                android:drawableLeft="@drawable/ic_done_white_24dp"
+                android:drawableStart="@drawable/ic_done_white_24dp"
+                android:gravity="center_vertical"
+                android:text="@string/st_done"
+                android:textAppearance="@style/TabTextAppearance"
+                android:textColor="@color/white"
+                android:visibility="visible"
+                tools:ignore="RtlHardcoded,RtlSymmetry"/>
+
+            <com.rey.material.widget.TextView
+                android:id="@+id/tv_menu_item_next"
+                style="style/FlatWaveColorButtonRippleStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="right"
+                android:clickable="true"
+                android:drawableEnd="@drawable/ic_arrow_forward_white_24dp"
+                android:drawableRight="@drawable/ic_arrow_forward_white_24dp"
+                android:gravity="center_vertical"
+                android:paddingRight="@dimen/abc_action_bar_overflow_padding_end_material"
+                android:text="@string/next"
+                android:textAppearance="@style/TabTextAppearance"
+                android:textColor="@color/white"
+                android:visibility="visible"
+                tools:ignore="RtlHardcoded,RtlSymmetry"
+                />
+        </android.support.v7.widget.Toolbar>
+
+        <include
+            layout="@layout/search_bar"
+            android:visibility="gone"
             />
 
-        <com.rey.material.widget.TextView
-            android:id="@+id/tv_menu_item_next"
-            style="style/FlatWaveColorButtonRippleStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="right"
-            android:clickable="true"
-            android:drawableEnd="@drawable/ic_arrow_forward_white_24dp"
-            android:drawableRight="@drawable/ic_arrow_forward_white_24dp"
-            android:gravity="center_vertical"
-            android:text="@string/next"
-            android:textAppearance="@style/TabTextAppearance"
-            android:textColor="@color/white"
-            android:visibility="visible"
-            />
-    </android.support.v7.widget.Toolbar>
+    </FrameLayout>
 
     <com.idea.view.RelativeLayout
         android:id="@+id/rl_main_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/main_toolbar"
+        android:layout_below="@+id/bar"
         android:layout_margin="8dp"
         android:gravity="center">
 
@@ -83,8 +98,9 @@
             tools:layout="@layout/fragment_choose_display_picture"
             >
         </fragment>
-
-        <include
-            layout="@layout/snack_bar"/>
     </com.idea.view.RelativeLayout>
+
+    <include
+        layout="@layout/snack_bar"
+        />
 </com.idea.view.RelativeLayout>

@@ -2,6 +2,7 @@ package com.idea.util;
 
 import android.app.Application;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -35,7 +36,10 @@ public class TaskManager {
                 @Override
                 public void run() {
                     try {
-                        org.apache.commons.io.FileUtils.cleanDirectory(Config.getTempDir());
+                        File file = Config.getTempDir();
+                        if (file.exists()) {
+                            org.apache.commons.io.FileUtils.cleanDirectory(Config.getTempDir());
+                        }
                     } catch (IOException ignored) {
 
                     } finally {
@@ -59,7 +63,7 @@ public class TaskManager {
 
 
     private static int expressQueueLength = 0;
-    private static final int maxLength = 10;
+    private static final int maxLength = Runtime.getRuntime().availableProcessors() * 15;
 
     public static boolean executeNow(Runnable runnable) {
         return executeNow(runnable, false);

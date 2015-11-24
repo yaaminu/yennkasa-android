@@ -1,11 +1,13 @@
 package com.idea.ui;
 
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.ContactsContract;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.text.ClipboardManager;
@@ -19,6 +21,7 @@ import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -33,19 +36,17 @@ import com.idea.pairapp.R;
 import com.idea.util.FileUtils;
 import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
+import com.idea.util.PhoneNumberNormaliser;
 import com.idea.util.SimpleDateUtil;
 import com.idea.util.TaskManager;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
-import com.jmpergar.awesometext.AwesomeTextHandler;
-import com.jmpergar.awesometext.HashtagsSpanRenderer;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
 
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Date;
 
 import io.realm.Realm;
 import io.realm.RealmQuery;
@@ -60,12 +61,16 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public static final String EXTRA_PEER_ID = "peer id";
     private static final String TAG = ChatActivity.class.getSimpleName();
     private static final int ADD_USERS_REQUEST = 0x5;
-    private static final String MENTION_PATTERN = "@.*";
+    public static final int TAKE_PHOTO_REQUEST = 0x0;
+    public static final int TAKE_VIDEO_REQUEST = 0x1;
+    public static final int PICK_PHOTO_REQUEST = 0x2;
+    public static final int PICK_VIDEO_REQUEST = 0x3;
+    public static final int PICK_FILE_REQUEST = 0x4;
+    public static final int ADD_TO_CONTACTS_REQUEST = 0x6;
     private static Message selectedMessage;
     private static int cursor = -1; //static so that it can resist activity restarts.
-    private boolean wasTyping = false,
+    private static boolean wasTyping = false,
             outOfSync = false;
-
     private final MessagesAdapter.Delegate delegate = new MessagesAdapter.Delegate() {
         @Override
         public boolean onDateSetChanged() {
@@ -120,11 +125,12 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     //    private SwipeDismissListViewTouchListener swipeDismissListViewTouchListener;
     private ListView messagesListView;
     private EditText messageEt;
-    private View sendButton, dateHeaderViewParent;
+    private View dateHeaderViewParent;
+    private ImageView sendButton;
     private MessagesAdapter adapter;
     private Toolbar toolBar;
     private ToolbarManager toolbarManager;
-    private AwesomeTextHandler awesomeTextViewHandler;
+    private TextView logTv;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,17 +139,13 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         handler = new Handler();
         toolBar = (Toolbar) findViewById(R.id.main_toolbar);
         toolBar.setOnClickListener(this);
+        logTv = (TextView) findViewById(R.id.tv_log_message);
         toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         messageEt = ((EditText) findViewById(R.id.et_message));
         ViewUtils.setTypeface(messageEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-        sendButton = findViewById(R.id.iv_send);
+        sendButton = (ImageView) findViewById(R.id.iv_send);
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
         dateHeaderViewParent = findViewById(R.id.date_header_parent);
-
-        awesomeTextViewHandler = new AwesomeTextHandler();
-        awesomeTextViewHandler
-                .addViewSpanRenderer(MENTION_PATTERN, new HashtagsSpanRenderer())
-                .setView((TextView) findViewById(R.id.tv_log_message));
 
         messageConversationRealm = Message.REALM(this);
         usersRealm = User.Realm(this);
@@ -158,11 +160,14 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         actionBar.setDisplayHomeAsUpEnabled(true);
         RealmQuery<Message> messageQuery = messageConversationRealm.where(Message.class);
         String mainUserId = getMainUserId();
+        boolean isGroupMessage;
         if (User.isGroup(peer)) {
+            isGroupMessage = true;
             messageQuery.equalTo(Message.FIELD_TO, peer.getUserId())
                     .or()
                     .equalTo(Message.FIELD_FROM, peer.getUserId());
         } else {
+            isGroupMessage = false;
             messageQuery.beginGroup()
                     .equalTo(Message.FIELD_FROM, peer.getUserId())
                     .equalTo(Message.FIELD_TO, mainUserId)
@@ -179,7 +184,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         messageEt.addTextChangedListener(this);
         setUpListView();
 //        final ImageView imageView = (ImageView) toolBar.findViewById(R.id.riv_peer_avatar);
-//        DPLoader.load(this, peer.getUserId(), peer.getDP())
+//        ImageLoader.load(this, peer.getUserId(), peer.getDP())
 //                .placeholder(userManager.isGroup(peer.getUserId()) ? R.drawable.group_avatar : R.drawable.user_avartar)
 //                .into(imageView);
         // TODO: 8/22/2015 in future we will move to the last  un seen message if any
@@ -187,7 +192,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     }
 
     private void setUpListView() {
-        adapter = new MessagesAdapter(delegate, messages, true);
+        adapter = new MessagesAdapter(delegate, messages,true);
         messagesListView.setAdapter(adapter);
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 //        swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(messagesListView, new SwipeDismissListViewTouchListener.OnDismissCallback() {
@@ -220,19 +225,13 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 //        }else {
         menu = toolBar.getMenu();
         if (menu != null && menu.size() > 0) { //required for toolbar to behave on older platforms <=10
-            //quick fix for menu items appearing twice on the toolbar. this is a bug in the library am using
-            int menuSize = menu.size();
-            Set<Integer> items = new HashSet<>(menuSize + 2);
-            for (int i = 0; i < menu.size(); i++) {
-                MenuItem item = menu.getItem(i);
-                if (!items.add(item.getItemId())) {
-                    item.setVisible(false);
-                }
-            }
             User mainUser = getCurrentUser();
             final User admin = peer.getAdmin();
             menu.findItem(R.id.action_invite_friends)
                     .setVisible(peer.getType() == User.TYPE_GROUP && admin != null && admin.getUserId().equals(mainUser.getUserId()));
+            boolean visible = peer.getType() != User.TYPE_GROUP
+                    && !peer.getInContacts();
+            menu.findItem(R.id.action_add_contact).setVisible(visible);
         }
 //        }
         return super.onPrepareOptionsMenu(menu);
@@ -255,6 +254,16 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             return true;
         } else if (id == R.id.action_attach) {
             UiHelpers.attach(this);
+            return true;
+        } else if (id == R.id.action_add_contact) {
+            Intent intent = new Intent(ContactsContract.Intents.SHOW_OR_CREATE_CONTACT);
+            intent.setData(Uri.parse("tel:" + PhoneNumberNormaliser.toLocalFormat(peer.getUserId(), peer.getCountry())));
+            try {
+                startActivityForResult(intent, ADD_TO_CONTACTS_REQUEST);
+            } catch (ActivityNotFoundException e) {
+                // TODO: 8/23/2015 should we tell the user or is it that our intent was wrongly targeted?
+                UiHelpers.showPlainOlDialog(this, getString(R.string.no_contact_app_on_device));
+            }
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -280,6 +289,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         if (currConversation != null) {
             messageConversationRealm.beginTransaction();
             currConversation.setActive(false);
+            currConversation.setLastActiveTime(new Date());
             if (messages != null && !messages.isEmpty()) {
                 final Message currConversationLastMessage = currConversation.getLastMessage();
                 if (currConversationLastMessage == null || !messages.last().getId().equals(currConversationLastMessage.getId())) {
@@ -320,7 +330,11 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         int id = v.getId();
         switch (id) {
             case R.id.iv_send:
-                sendTextMessage();
+                if (messageEt.getText().toString().isEmpty()) {
+                    UiHelpers.attach(this);
+                } else {
+                    sendTextMessage();
+                }
                 break;
             case R.id.main_toolbar:
                 UiHelpers.gotoProfileActivity(this, peer.getUserId());
@@ -346,7 +360,12 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         if (resultCode != RESULT_OK) {
             return;
         }
-        sendMessage(requestCode, data, peer.getUserId());
+        if (requestCode == ADD_TO_CONTACTS_REQUEST) {
+            userManager.fetchUserIfRequired(usersRealm, peer.getUserId());
+            supportInvalidateOptionsMenu();
+        } else {
+            sendMessage(requestCode, data, peer.getUserId());
+        }
     }
 
     @Override
@@ -370,7 +389,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             for (int i = firstVisibleItem + visibleItemCount - 1; i >= 0; i--) { //loop backwards
                 final Message message = messages.get(i);
                 if (Message.isDateMessage(message)) {
-                    awesomeTextViewHandler.setText("@" + SimpleDateUtil.formatDateRage(this, message.getDateComposed()));
+                    logTv.setText(SimpleDateUtil.formatDateRage(this, message.getDateComposed()));
                     return;
                 }
             }
@@ -384,7 +403,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         if (outOfSync) return;
 
-        User user = usersRealm.where(User.class).beginGroup().notEqualTo(User.FIELD_ID, getMainUserId()).notEqualTo(User.FIELD_ID, peer.getUserId()).endGroup().findFirst();
+        User user = usersRealm.where(User.class).notEqualTo(User.FIELD_ID, getMainUserId()).notEqualTo(User.FIELD_ID, peer.getUserId()).findFirst();
         boolean can4ward = user != null; //no other user apart from peer. cannot forward so lets hide it
 
 
@@ -396,9 +415,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         if (selectedMessage.getType() != Message.TYPE_DATE_MESSAGE && selectedMessage.getType() != Message.TYPE_TYPING_MESSAGE) {
             getMenuInflater().inflate(R.menu.message_context_menu, menu);
             menu.findItem(R.id.action_copy).setVisible(selectedMessage.getType() == TYPE_TEXT_MESSAGE);
-            menu.findItem(R.id.action_forward).setVisible(can4ward);
             if (selectedMessage.getType() != TYPE_TEXT_MESSAGE) {
-                menu.findItem(R.id.action_forward).setVisible(new File(selectedMessage.getMessageBody()).exists());
+                menu.findItem(R.id.action_forward).setVisible(can4ward && new File(selectedMessage.getMessageBody()).exists());
+            } else {
+                menu.findItem(R.id.action_forward).setVisible(can4ward);
             }
         }
     }
@@ -498,17 +518,19 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public void afterTextChanged(Editable s) {
         handler.removeCallbacks(runnable);
         if (!s.toString().trim().isEmpty()) {
-            ViewUtils.showViews(sendButton);
+            sendButton.setImageResource(R.drawable.ic_send_white_24dp);
             if (!wasTyping) {
                 wasTyping = true;
                 LiveCenter.notifyTyping(peer.getUserId());
             }
             //TODO add some deviation to the timeout
             handler.postDelayed(runnable, 10000);
-        } else if (wasTyping) {
+        } else {
+            sendButton.setImageResource(R.drawable.ic_action_new_attachment_white);
+        }
+        if (wasTyping) {
             wasTyping = false;
             LiveCenter.notifyNotTyping(peer.getUserId());
-            ViewUtils.hideViews(sendButton);
         }
     }
 

@@ -1,28 +1,32 @@
 package com.idea.ui;
 
-import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AlertDialog;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.idea.adapter.ConversationAdapter;
 import com.idea.data.Conversation;
 import com.idea.data.Message;
+import com.idea.data.User;
 import com.idea.data.UserManager;
 import com.idea.pairapp.R;
-import com.idea.util.Config;
 import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
 import com.idea.util.UiHelpers;
-import com.idea.view.SwipeDismissListViewTouchListener;
+import com.rey.material.app.DialogFragment;
 import com.rey.material.widget.FloatingActionButton;
 
 import java.io.File;
@@ -41,7 +45,6 @@ public class ConversationsFragment extends ListFragment {
     public static final String STOP_ANNOYING_ME = TAG + "askmeOndelete";
     private Realm realm;
     private RealmResults<Conversation> conversations;
-    private ConversationAdapter adapter;
     private Conversation deleted;
     private ConversationAdapter.Delegate delegate = new ConversationAdapter.Delegate() {
         @Override
@@ -60,11 +63,17 @@ public class ConversationsFragment extends ListFragment {
         }
 
         @Override
+        public Realm realm() {
+            return userRealm;
+        }
+
+        @Override
         public boolean autoUpdate() {
             return true;
         }
     };
     private Callbacks interactionListener;
+    private Realm userRealm;
 
     interface Callbacks {
         void onConversionClicked(Conversation conversation);
@@ -93,15 +102,16 @@ public class ConversationsFragment extends ListFragment {
     public View onCreateView(LayoutInflater inflater, final ViewGroup container, Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
         View view = inflater.inflate(R.layout.fragment_inbox, container, false);
-        realm = Conversation.Realm(Config.getApplicationContext());
+        realm = Conversation.Realm(getActivity());
+        userRealm = User.Realm(getActivity());//.Realm(Config.getApplicationContext());
         conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
-        adapter = new ConversationAdapter(delegate);
+        ConversationAdapter adapter = new ConversationAdapter(delegate);
         FloatingActionButton actionButton = ((FloatingActionButton) view.findViewById(R.id.fab_new_message));
         actionButton.setIcon(getResources().getDrawable(R.drawable.ic_mode_edit_white_24dp), false);
         actionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                UiHelpers.gotoCreateMessageActivity((PairAppBaseActivity) getActivity());
+                UiHelpers.gotoCreateMessageActivity(getActivity());
 
             }
         });
@@ -114,28 +124,77 @@ public class ConversationsFragment extends ListFragment {
         super.onActivityCreated(savedInstanceState);
         //noinspection ConstantConditions
         ((ActionBarActivity) getActivity()).getSupportActionBar().hide();
-        SwipeDismissListViewTouchListener swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(getListView(), new SwipeDismissListViewTouchListener.OnDismissCallback() {
+//        SwipeDismissListViewTouchListener swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(getListView(), new SwipeDismissListViewTouchListener.OnDismissCallback() {
+//            @Override
+//            public void onDismiss(ListView listView, final int[] reverseSortedPositions) {
+//                showAlertDialog(reverseSortedPositions);
+//            }
+//        });
+//        getListView().setOnTouchListener(swipeDismissListViewTouchListener);
+//        getListView().setOnScrollListener(swipeDismissListViewTouchListener.makeScrollListener());
+        getListView().setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
-            public void onDismiss(ListView listView, final int[] reverseSortedPositions) {
-                showAlertDialog(reverseSortedPositions);
+            public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
+                final Conversation conversation = ((Conversation) parent.getAdapter().getItem(position));
+                String[] contextMenuOptions = new String[2];
+
+                contextMenuOptions[0] = getString(R.string.action_delete_conversation);
+                final String peerId = conversation.getPeerId();
+                final UserManager userManager = UserManager.getInstance();
+                String name = userManager.getName(peerId);
+                if (TextUtils.isEmpty(name)) {
+                    name = userManager.getName(peerId);
+                }
+                contextMenuOptions[1] = userManager.isBlocked(peerId) ? getString(R.string.unblock, name) :
+                        getString(R.string.block, name);
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setAdapter(new ArrayAdapter<>(getActivity(),
+                        android.R.layout.simple_list_item_1, contextMenuOptions), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        final Runnable invalidateTask = new Runnable() {
+                            @Override
+                            public void run() {
+                                LiveCenter.invalidateNewMessageCount(peerId);
+                            }
+                        };
+                        TaskManager.executeNow(invalidateTask, true);
+                        switch (which) {
+                            case 0:
+                                deleted = deleteConversation(conversation);
+                                if (deleted != null) {
+                                    if (deleted.getLastMessage() != null) {
+                                        warnAndDelete();
+                                    }
+                                }
+                                break;
+                            case 1:
+                                if (userManager.isBlocked(peerId)) {
+                                    userManager.unBlockUser(peerId);
+                                } else {
+                                    userManager.blockUser(peerId);
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                });
+                builder.create().show();
+                return true;
             }
         });
-        getListView().setOnTouchListener(swipeDismissListViewTouchListener);
-        getListView().setOnScrollListener(swipeDismissListViewTouchListener.makeScrollListener());
     }
 
 
-    private void cleanMessages(Conversation conversation) {
+    private void cleanMessages(Conversation conversation, final Date toWhen) {
         final String peerId = conversation.getPeerId();
-        final Date date = new Date();
-        final ProgressDialog dialog = new ProgressDialog(getContext());
-        dialog.setCancelable(false);
-        dialog.setMessage(getString(R.string.st_please_wait));
-        dialog.show();
+        final DialogFragment dialogFragment = UiHelpers.newProgressDialog();
+        dialogFragment.show(getFragmentManager().beginTransaction(), "");
         TaskManager.executeNow(new Runnable() {
             @Override
             public void run() {
-                LiveCenter.invalidateNewMessageCount(peerId);
                 PLog.d(TAG, "deleting messages for conversion between user and %s", peerId);
                 Realm realm = Message.REALM(getActivity());
                 realm.beginTransaction(); //blocks all writes before runnig query because of the copyOnWrite style of realm
@@ -157,7 +216,7 @@ public class ConversationsFragment extends ListFragment {
                             .equalTo(Message.FIELD_TO, peerId)
                             .endGroup();
                 }
-                messages = messageQuery.lessThan(Message.FIELD_DATE_COMPOSED, date).findAll(); //new messages will be ignored
+                messages = messageQuery.lessThan(Message.FIELD_DATE_COMPOSED, toWhen).findAll(); //new messages will be ignored
                 if (UserManager.getInstance().getBoolPref(UserManager.DELETE_ATTACHMENT_ON_DELETE, false)) {
                     for (Message message : messages) {
                         if (Message.isVideoMessage(message) || Message.isPictureMessage(message) || Message.isBinMessage(message)) {
@@ -174,7 +233,12 @@ public class ConversationsFragment extends ListFragment {
                 realm.commitTransaction();
                 realm.close();
                 SystemClock.sleep(1000);
-                dialog.dismiss();
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        UiHelpers.dismissProgressDialog(dialogFragment);
+                    }
+                });
 
             }
         }
@@ -186,6 +250,20 @@ public class ConversationsFragment extends ListFragment {
         realm.beginTransaction();
         try {
             Conversation conversation = conversations.get(position);
+            Conversation copy = Conversation.copy(conversation);
+            conversation.removeFromRealm();
+            realm.commitTransaction();
+            return copy;
+        } catch (Exception e) {
+            realm.cancelTransaction();
+            PLog.e(TAG, e.getMessage(), e.getCause());
+        }
+        return null;
+    }
+
+    private Conversation deleteConversation(Conversation conversation) {
+        realm.beginTransaction();
+        try {
             Conversation copy = Conversation.copy(conversation);
             conversation.removeFromRealm();
             realm.commitTransaction();
@@ -211,21 +289,30 @@ public class ConversationsFragment extends ListFragment {
     private void showAlertDialog(int[] reverseSortedPositions) {
         for (int position : reverseSortedPositions) {
             deleted = deleteConversation(position);
-            UiHelpers.showStopAnnoyingMeDialog(((PairAppBaseActivity) getActivity()), STOP_ANNOYING_ME,
-                    getString(R.string.sure_you_want_to_delete_conversation), getString(android.R.string.ok), getString(R.string.no), new UiHelpers.Listener() {
-                        @Override
-                        public void onClick() {
-                            cleanMessages(deleted);
-                        }
-                    }, new UiHelpers.Listener() {
-                        @Override
-                        public void onClick() {
-                            realm.beginTransaction();
-                            realm.copyToRealm(deleted);
-                            realm.commitTransaction();
-                        }
-                    });
+            warnAndDelete();
         }
+    }
+
+    private void warnAndDelete() {
+        //in case user waits before accepting to delete and while waiting new message arrives we don't want the user
+        //to lose those messages too
+        final Date now = new Date();
+
+        UiHelpers.showStopAnnoyingMeDialog(getActivity(), STOP_ANNOYING_ME,
+                getString(R.string.sure_you_want_to_delete_conversation),
+                getString(android.R.string.ok), getString(R.string.no), new UiHelpers.Listener() {
+                    @Override
+                    public void onClick() {
+                        cleanMessages(deleted, now);
+                    }
+                }, new UiHelpers.Listener() {
+                    @Override
+                    public void onClick() {
+                        realm.beginTransaction();
+                        realm.copyToRealmOrUpdate(deleted);
+                        realm.commitTransaction();
+                    }
+                });
     }
 
 }

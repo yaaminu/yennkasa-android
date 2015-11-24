@@ -6,11 +6,11 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_alignParentBottom="true"
-    android:layout_alignParentRight="true"
     android:layout_alignParentEnd="true"
+    android:layout_alignParentRight="true"
     android:layout_marginBottom="@dimen/fab_delta_bottom"
-    android:layout_marginRight="@dimen/fab_delta_right"
     android:layout_marginEnd="@dimen/fab_delta_right"
+    android:layout_marginRight="@dimen/fab_delta_right"
     app:fab_iconLineMorphing="@style/FloatingActionButtonIcon"
     app:fab_iconSize="@dimen/fab_icon_size"
     app:fab_radius="@dimen/fab_icon_radius"/>

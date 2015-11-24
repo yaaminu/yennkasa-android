@@ -14,17 +14,16 @@
         android:layout_height="@dimen/thumbnail_height"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
         android:layout_margin="@dimen/thumbnail_margin"
         android:background="@drawable/green_round_back_ground"
         android:contentDescription="@string/content_desc_user_avatar"
         android:gravity="center"
-        android:layout_centerVertical="true"
         android:scaleType="centerCrop"
-        android:src="@drawable/user_avartar"
         android:text="AB"
         android:textColor="@color/white"
         android:textSize="@dimen/text_size_medium"
-        />
+        tools:ignore="HardcodedText"/>
 
     <TextView
         android:id="@+id/tv_user_name"
@@ -57,22 +56,21 @@
         android:layout_width="match_parent"
         android:layout_height="@dimen/inbox_preferred_list_item_divider_height"
         android:layout_alignLeft="@+id/tv_user_phone_group_admin"
-        android:layout_alignStart="@+id/tv_user_phone_group_admin"
         android:layout_alignParentBottom="true"
+        android:layout_alignStart="@+id/tv_user_phone_group_admin"
         android:layout_marginEnd="@dimen/divider_right_offset"
         android:layout_marginRight="@dimen/divider_right_offset"
         android:layout_marginTop="4dp"/>
 
     <com.rey.material.widget.Button
         android:id="@+id/bt_invite"
-        style="@style/FlatWaveColorButtonRippleStyle"
+        style="@style/round_button_style"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/tv_user_phone_group_admin"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
-        android:background="@drawable/round_corners"
         android:drawableEnd="@drawable/ic_action_email"
         android:drawableRight="@drawable/ic_action_email"
         android:padding="@dimen/padding_button"

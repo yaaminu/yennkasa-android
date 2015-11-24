@@ -1,5 +1,8 @@
 package com.idea.ui;
 
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
@@ -9,13 +12,18 @@ import com.idea.pairapp.R;
 import com.idea.util.UiHelpers;
 import com.rey.material.widget.SnackBar;
 import com.squareup.picasso.Callback;
-import com.squareup.picasso.Picasso;
 
 import java.io.File;
 
+import uk.co.senab.photoview.PhotoViewAttacher;
+
 public class ImageViewer extends PairAppActivity {
     private ImageView imageView;
-    private Picasso picasso;
+    private PhotoViewAttacher attacher;
+
+    public static final String EXTRA_TARGET_BITMAP = "IMAGEVIEW.TARGET_BITMAP";
+    public static final String EXTRA_PLACEHOLDER = "placeHolder";
+    public static final String EXTRA_ERROR = "placeHolder";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,7 +31,6 @@ public class ImageViewer extends PairAppActivity {
         setContentView(R.layout.activity_view_image);
         // Show the Up button in the action bar.
         imageView = (android.widget.ImageView) findViewById(R.id.imageView);
-        picasso = Picasso.with(this);
         showImage();
     }
 
@@ -34,23 +41,34 @@ public class ImageViewer extends PairAppActivity {
 
     private void showImage() {
         final Uri imageUri = getIntent().getData();
+        Bitmap image1 = getIntent().getParcelableExtra(EXTRA_PLACEHOLDER),
+                image2 = getIntent().getParcelableExtra(EXTRA_ERROR);
         if (imageUri == null) {
-            throw new RuntimeException("image viewer needs a uri");
+            throw new RuntimeException("image viewer needs a uri or a bitmap");
         }
 
-        String path = imageUri.getPath();
+        String path;
+        path = imageUri.getPath();
         File file = new File(path);
         if (file.exists()) {
-            picasso.invalidate(file);
-            picasso.load(file).into(imageView, callback);
+            path = file.getAbsolutePath();
+        } else if (imageUri.getScheme().equals("http") || imageUri.getScheme().equals("https") || imageUri.getScheme().equals("ftp")) {
+            path = imageUri.toString();
         } else {
-            if (imageUri.getScheme().equals("http") || imageUri.getScheme().equals("https") || imageUri.getScheme().equals("ftp")) {
-                picasso.load(imageUri.toString()).into(imageView, callback);
-                return;
-            }
-            UiHelpers.showErrorDialog(this, getString(R.string.error_failed_to_open_image), listener);
+            callback.onError();
+            return;
         }
+        Drawable placeHolder = null;
+        Drawable errorDrawable = null;
+        if (image1 != null) {
+            placeHolder = new BitmapDrawable(getResources(), image1);
+        }
+        if (image2 != null) {
+            errorDrawable = new BitmapDrawable(getResources(), image2);
+        }
+        ImageLoader.load(this, path, placeHolder, errorDrawable).noFade().into(imageView, callback);
     }
+
 
     private UiHelpers.Listener listener = new UiHelpers.Listener() {
         @Override
@@ -58,23 +76,40 @@ public class ImageViewer extends PairAppActivity {
             finish();
         }
     };
+    boolean errorOccurred = false;
     private final Callback callback = new Callback() {
         @Override
         public void onSuccess() {
-            findViewById(R.id.pb_progress).setVisibility(View.GONE);
+            setUpImageView();
         }
 
         @Override
         public void onError() {
+            errorOccurred = true;
             findViewById(R.id.pb_progress).setVisibility(View.GONE);
             UiHelpers.showErrorDialog(ImageViewer.this, getString(R.string.error_failed_to_open_image), listener);
             imageView.setVisibility(View.GONE);
         }
     };
 
+    private void setUpImageView() {
+        findViewById(R.id.pb_progress).setVisibility(View.GONE);
+        attacher = new PhotoViewAttacher(imageView, true);
+    }
+
     @Override
     public void onBackPressed() {
-        picasso.cancelRequest(imageView);
-        super.onBackPressed();
+        if (errorOccurred) {
+            finish();
+        } else if (attacher != null && attacher.getScale() == attacher.getMaximumScale()) {
+            attacher.setScale(attacher.getMediumScale(), true);
+        } else if (attacher != null && attacher.getScale() == attacher.getMediumScale()) {
+            attacher.update();
+            attacher.cleanup();
+            attacher = new PhotoViewAttacher(imageView, true);
+        } else {
+            super.onBackPressed();
+        }
     }
+
 }

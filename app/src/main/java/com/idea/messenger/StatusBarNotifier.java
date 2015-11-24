@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Vibrator;
 import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
 
 import com.idea.PairApp;
@@ -26,6 +27,7 @@ import com.idea.util.LiveCenter;
 import com.idea.util.MediaUtils;
 import com.idea.util.PLog;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -38,10 +40,10 @@ import io.realm.Realm;
  * @author Null-Pointer on 8/12/2015.
  */
 class StatusBarNotifier implements Notifier {
-    private final static int MESSAGE_NOTIFICATION_ID = 1001;
+    private final static int MESSAGE_NOTIFICATION_ID = new SecureRandom().nextInt();
     private final static int MESSAGE_PENDING_INTENT_REQUEST_CODE = 1002;
     private static final String TAG = StatusBarNotifier.class.getSimpleName();
-    public static final int VIBRATION_DURATION = 1000;
+    public static final int VIBRATION_DURATION = 500;
     private AtomicBoolean shouldPlayTone = new AtomicBoolean(true);
     Timer timer = new Timer();
 
@@ -70,7 +72,7 @@ class StatusBarNotifier implements Notifier {
 
         builder.setContentText(notificationMessage);
 
-        builder.setSmallIcon(android.R.drawable.stat_notify_chat)
+        builder.setSmallIcon(R.drawable.ic_stat_icon)
                 .setContentIntent(pendingIntent);
         if (UserManager.getInstance().getBoolPref(UserManager.LIGHTS, false)) {
             builder.setLights(Color.GREEN, 1500, 3000);
@@ -80,9 +82,7 @@ class StatusBarNotifier implements Notifier {
     }
 
     private void doNotify(Context context, Notification notification) {
-        android.app.NotificationManager notMgr = ((android.app.NotificationManager) Config.getApplicationContext()
-                .getSystemService(Context.NOTIFICATION_SERVICE));
-        notMgr.notify(MESSAGE_NOTIFICATION_ID, notification);
+        NotificationManagerCompat.from(context).notify(MESSAGE_NOTIFICATION_ID, notification);
         if (shouldPlayTone.getAndSet(false)) {
             timer.schedule(new TimerTask() {
                 @Override
@@ -90,13 +90,13 @@ class StatusBarNotifier implements Notifier {
                     if (!shouldPlayTone.get())
                         shouldPlayTone.set(true);
                 }
-            }, 15000);
+            }, 7000);
             onNotified(context);
         }
 
     }
 
-    static void onNotified(Context context) {
+    void onNotified(Context context) {
         vibrateIfAllowed(context);
         playToneIfAllowed(context);
 
@@ -120,22 +120,32 @@ class StatusBarNotifier implements Notifier {
         MediaUtils.playTone(context, uri);
     }
 
-    private static void vibrateIfAllowed(Context context) {
+    private void vibrateIfAllowed(final Context context) {
         if (UserManager.getInstance().getBoolPref(UserManager.VIBRATE, false)) {
-            PLog.v(TAG, "vibrating....");
-            Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                if (vibrator.hasVibrator()) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        AudioAttributes audioAttributes = new AudioAttributes.Builder().setFlags(AudioAttributes.USAGE_NOTIFICATION).build();
-                        vibrator.vibrate(VIBRATION_DURATION, audioAttributes);
-                    } else {
-                        vibrator.vibrate(VIBRATION_DURATION);
-                    }
+            doVibrate(context);
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    doVibrate(context);
                 }
-            } else {
-                vibrator.vibrate(VIBRATION_DURATION);
+            }, 700);
+        }
+    }
+
+    private static void doVibrate(Context context) {
+        PLog.v(TAG, "vibrating....");
+        Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            if (vibrator.hasVibrator()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    AudioAttributes audioAttributes = new AudioAttributes.Builder().setFlags(AudioAttributes.USAGE_NOTIFICATION).build();
+                    vibrator.vibrate(VIBRATION_DURATION, audioAttributes);
+                } else {
+                    vibrator.vibrate(VIBRATION_DURATION);
+                }
             }
+        } else {
+            vibrator.vibrate(VIBRATION_DURATION);
         }
     }
 
@@ -189,5 +199,10 @@ class StatusBarNotifier implements Notifier {
     private String getString(@StringRes int resId) {
         if (resId == 0) throw new IllegalArgumentException("invalid resource id");
         return Config.getApplicationContext().getString(resId);
+    }
+
+    @Override
+    public void clearNotifications() {
+        NotificationManagerCompat.from(Config.getApplicationContext()).cancel(MESSAGE_NOTIFICATION_ID);
     }
 }

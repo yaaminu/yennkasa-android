@@ -85,8 +85,11 @@ public class PhoneNumberNormaliser {
     public static String toLocalFormat(String phoneNumber, String userCountry) {
         final PhoneNumberUtil util = PhoneNumberUtil.getInstance();
         phoneNumber = cleanNonDialableChars(phoneNumber);
+        if (!phoneNumber.startsWith("+")) {
+            phoneNumber = "+" + phoneNumber;
+        }
         try {
-            return util.formatOutOfCountryCallingNumber((util.parse("+" + phoneNumber, null)), userCountry);
+            return util.formatOutOfCountryCallingNumber((util.parse(phoneNumber, null)), userCountry);
         } catch (NumberParseException e) {
             PLog.e(TAG, e.getMessage(), e.getCause());
             if (BuildConfig.DEBUG) {

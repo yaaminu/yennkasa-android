@@ -1,13 +1,12 @@
 package com.idea.net;
 
 
-import android.content.Intent;
-import android.support.v4.content.LocalBroadcastManager;
-
-import com.google.gson.JsonObject;
 import com.idea.util.Config;
 import com.idea.util.FileUtils;
+import com.idea.util.PLog;
+
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
 
@@ -16,11 +15,9 @@ import java.util.Map;
  */
 class DisplayPictureFileClient {
     private final FileClientImpl fileClient;
-    private final String dir;
-
+    private static final String TAG = DisplayPictureFileClient.class.getSimpleName();
     private DisplayPictureFileClient(String key, String password) {
-        dir = "DisplayPictures";
-        fileClient = new FileClientImpl(key, password, dir);
+        fileClient = new FileClientImpl(key, password, "DisplayPictures");
     }
 
     static DisplayPictureFileClient createInstance(Map<String, String> credentials) {
@@ -39,15 +36,20 @@ class DisplayPictureFileClient {
 
 
     void changeDp(final String userId, File file, final FileApi.FileSaveCallback callback, FileApi.ProgressListener listener) {
-        File dp = new File(Config.getAppProfilePicsBaseDir(),
-            userId.trim()+"."+FileUtils.getExtension(file.getAbsolutePath()));
-        FileUtils.copyTo(file,dp);
-        fileClient.saveFileToBackend(dp, new FileApi.FileSaveCallback() {
-            @Override
-            public void done(FileClientException e, String url) {
-                callback.done(e, url);
-            }
-        }, listener);
+        File dp = new File(Config.getTempDir(),
+                userId.trim() + ".jpg");
+        try {
+            FileUtils.copyTo(file, dp);
+            fileClient.saveFileToBackend(dp, new FileApi.FileSaveCallback() {
+                @Override
+                public void done(FileClientException e, String url) {
+                    callback.done(e, url);
+                }
+            }, listener);
+        } catch (IOException e) {
+            PLog.d(TAG,"failed to copy dp to profile photos dir",e.getCause());
+            callback.done(new FileClientException(e.getMessage(), -1), null);
+        }
     }
 
 

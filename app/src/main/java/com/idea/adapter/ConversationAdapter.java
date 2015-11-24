@@ -13,15 +13,15 @@ import com.idea.data.Message;
 import com.idea.data.User;
 import com.idea.data.UserManager;
 import com.idea.pairapp.R;
-import com.idea.ui.DPLoader;
+import com.idea.ui.ImageLoader;
 import com.idea.ui.PairAppBaseActivity;
 import com.idea.util.PLog;
 import com.idea.util.TypeFaceUtil;
-import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
 
 import java.util.Date;
 
+import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
 
@@ -43,7 +43,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder holder;
+        final ViewHolder holder;
         if (convertView == null) {
             LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(R.layout.inbox_list_item_row, parent, false);
@@ -73,14 +73,15 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
 
         holder.chatSummary.setText(conversation.getSummary());
         PLog.d(TAG, conversation.toString());
-        User peer = UserManager.getInstance().fetchUserIfRequired(conversation.getPeerId());
+        User peer = UserManager.getInstance().fetchUserIfRequired(delegate.realm(), conversation.getPeerId());
         String peerName = peer.getName();
         holder.peerName.setText(peerName);
-        DPLoader.load(context, peer.getDP())
+        TargetOnclick targetOnclick = new TargetOnclick(holder.senderAvatar, conversation.getPeerId());
+        ImageLoader.load(context, peer.getDP())
                 .error(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .placeholder(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)
-                .resize(150, 150)
-                .into(holder.senderAvatar);
+                .resize((int) context.getResources().getDimension(R.dimen.thumbnail_width), (int) context.getResources().getDimension(R.dimen.thumbnail_height))
+                .onlyScaleDown().into(targetOnclick);
         Message message = conversation.getLastMessage();
         StringBuilder summary = new StringBuilder();
         if (message == null) {
@@ -99,8 +100,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
                 if (Message.isOutGoing(message)) {
                     summary.append(context.getString(R.string.you)).append(":  ");
                 } else {
-                    User user = UserManager.getInstance().fetchUserIfRequired(message.getFrom());
-                    summary.append(user.getName()).append(":  ");
+                    summary.append(UserManager.getInstance().getName(message.getFrom())).append(":  ");
                 }
             }
             if (Message.isTextMessage(message)) {
@@ -116,18 +116,12 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
                 holder.chatSummary.setTextColor(context.getResources().getColor(R.color.black));
             } else if (message.getState() == Message.STATE_SEND_FAILED) {
                 holder.chatSummary.setTextColor(context.getResources().getColor(R.color.red));
-            } 
+            }
         }
         holder.chatSummary.setText(summary);
         holder.peerId = conversation.getPeerId();
 
-        final View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                UiHelpers.gotoProfileActivity(v.getContext(), conversation.getPeerId());
-            }
-        };
-        holder.senderAvatar.setOnClickListener(listener);
+        holder.senderAvatar.setOnClickListener(targetOnclick);
 
         return convertView;
     }
@@ -145,6 +139,9 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
 
         PairAppBaseActivity context();
 
+        Realm realm();
+
         boolean autoUpdate();
     }
+
 }

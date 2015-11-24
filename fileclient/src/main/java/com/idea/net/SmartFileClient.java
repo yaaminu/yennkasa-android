@@ -1,13 +1,12 @@
 package com.idea.net;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.text.TextUtils;
 import android.util.Base64;
 
 import com.google.gson.JsonObject;
 import com.idea.net.file_service.BuildConfig;
 import com.idea.util.Config;
+import com.idea.util.ConnectionUtils;
 import com.idea.util.FileUtils;
 import com.idea.util.PLog;
 
@@ -15,13 +14,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
+import java.security.SecureRandom;
+import java.util.UUID;
 
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
-import retrofit.android.AndroidLog;
 import retrofit.mime.TypedFile;
 
 /**
@@ -30,56 +30,42 @@ import retrofit.mime.TypedFile;
 abstract class SmartFileClient implements FileApi {
 
     private static final String TAG = SmartFileClient.class.getSimpleName();
-    private final String linksPrefsKey;
-    private static final Executor WORKER = Executors.newCachedThreadPool();
     private final String authorization;
     private static final String ENDPOINT = //Config.getMessageApiEndpoint();//STOPSHIP
-            "https://app.smartfile.com/api/2";
-    private final SmartFileService api;
+            "https://app.smartfile.com";
+    private final SmartFileService api, linkApi;
     private final String dir;
-    private final MetaApi metaApi;
 
     SmartFileClient(String key, String password, String dir) {
         if (TextUtils.isEmpty(key) || TextUtils.isEmpty(password) || TextUtils.isEmpty(dir)) {
             throw new IllegalArgumentException("either key or password or dir is invalid");
         }
-        // dir = "dummy"; //STOPSHIP
         this.dir = dir;
         authorization = "Basic " + Base64.encodeToString((key + ":" + password).getBytes(), Base64.NO_WRAP);
-        linksPrefsKey = TAG + this.dir;
         RequestInterceptor reqInterceptor = new RequestInterceptor() {
             @Override
             public void intercept(RequestFacade requestFacade) {
                 requestFacade.addHeader("Authorization", authorization);
             }
         };
-        RestAdapter.Log logger = new RestAdapter.Log() {
+
+        RestAdapter.Log log = new RestAdapter.Log() {
+
             @Override
             public void log(String s) {
-                try {
-                    PLog.v(TAG, s + "");
-                } catch (Exception e) { //testing environment
-                    System.out.println(TAG + " : " + s);
-                }
+                PLog.d(TAG, s);
             }
         };
         api = new RestAdapter.Builder().setEndpoint(ENDPOINT)
-                .setLog(new AndroidLog(TAG))
+                .setLog(log)
                 .setLogLevel(RestAdapter.LogLevel.FULL)
-                .setExecutors(WORKER, WORKER)
                 .setRequestInterceptor(reqInterceptor)
                 .build().create(SmartFileService.class);
-
-        metaApi = new RestAdapter.Builder().setEndpoint(Config.getFilesMetaDataApiUrl())
-                .setLog(new AndroidLog(TAG))
+        linkApi = new RestAdapter.Builder().setEndpoint(Config.linksEndPoint())
+                .setLog(log)
                 .setLogLevel(RestAdapter.LogLevel.FULL)
-                .setRequestInterceptor(new RequestInterceptor() {
-                    @Override
-                    public void intercept(RequestFacade requestFacade) {
-                        requestFacade.addHeader("Authorization", "kiibodaS3crite");
-                    }
-                })
-                .build().create(MetaApi.class);
+                .setRequestInterceptor(reqInterceptor)
+                .build().create(SmartFileService.class);
     }
 
 
@@ -101,20 +87,30 @@ abstract class SmartFileClient implements FileApi {
         if (TextUtils.isEmpty(mimeType)) {
             mimeType = "application/octet-stream";
         }
+
         try {
             final TypedFile countingTypedFile = new CountingTypedFile(mimeType, file, listener);
             api.saveFile(this.dir, countingTypedFile);
-            // create link
-            String link = getCachedLink();
-            String url;
-            if (TextUtils.isEmpty(link)) {
-                JsonObject object = api.getLink(true, true,0,this.dir);
-                PLog.d(TAG,object.toString());
-                link = object.get("href").getAsString();
-                cacheLink(link);
+            try {
+//                body.addProperty("read", true);
+//                body.addProperty("list", false);
+//                body.addProperty("cache", 31536000);
+                JsonObject object = linkApi.getLink(this.dir);
+                String link = object.get("href").getAsString();
+                link = link.trim() + (link.endsWith("/") ? "" : "/") + countingTypedFile.fileName();
+                PLog.d(TAG, link);
+                callback.done(null, link);
+            } catch (RetrofitError err) {
+                Throwable cause = err.getCause();
+                if (cause instanceof SocketTimeoutException
+                        || cause instanceof UnknownHostException) {
+                    if (ConnectionUtils.isActuallyConnected()) {
+                        //switch to a new heroku dyno.
+                    }
+                }
+                // TODO: 11/5/2015 more error handling like deleting the file etc
+                callback.done(new FileClientException(cause, err.getResponse().getStatus()), null);
             }
-            url = link + countingTypedFile.fileName();
-            callback.done(null, url);
         } catch (RetrofitError err) {
             if (err.getKind().equals(RetrofitError.Kind.HTTP)) {
                 int code = err.getResponse().getStatus();
@@ -123,33 +119,13 @@ abstract class SmartFileClient implements FileApi {
                         api.createDir(dir, "dummyField");
                         saveFileToBackend(file, callback, listener);
                     } catch (RetrofitError err2) {
-                        callback.done(new FileClientException(err2.getCause(), err.getResponse().getStatus()), null);
+                        callback.done(new FileClientException(err2.getCause(), err2.getResponse().getStatus()), null);
                     }
                     return;
                 }
             }
             callback.done(new FileClientException(err.getCause(), -1), null);
         }
-    }
-
-    private void cacheLink(String link) {
-        Context context = Config.getApplicationContext();
-        SharedPreferences preferences = context.getSharedPreferences(linksPrefsKey, Context.MODE_PRIVATE);
-        preferences.edit().putString(getKey(), link).apply();
-    }
-
-    private String getKey() {
-        return FileUtils.hash((this.authorization+":"+ this.dir+":"+TAG).getBytes());
-    }
-
-    private String getCachedLink() {
-        Context context = Config.getApplicationContext();
-        SharedPreferences preferences = context.getSharedPreferences(linksPrefsKey, Context.MODE_PRIVATE);
-        return preferences.getString(getKey(), null);
-    }
-
-    protected final String getAuthorization() {
-        return authorization;
     }
 
     @Override
@@ -203,4 +179,22 @@ abstract class SmartFileClient implements FileApi {
         }
     }
 
+    SecureRandom random = new SecureRandom();
+
+    private String randomString(int length) {
+        length = Math.min(120, length);
+        StringBuilder uid = new StringBuilder();
+        byte[] buffer = new byte[length];
+        while (uid.length() < length) {
+            random.nextBytes(buffer);
+            uid.append(UUID.nameUUIDFromBytes(buffer));
+        }
+
+        if (uid.length() > length) {
+            uid.substring(0, length);
+        }
+        PLog.i(TAG, "random string: " + uid.toString());
+        return uid.toString();
+
+    }
 }

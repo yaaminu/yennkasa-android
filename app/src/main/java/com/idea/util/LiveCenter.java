@@ -1,6 +1,6 @@
 package com.idea.util;
 
-import android.content.Context;
+import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -89,6 +89,7 @@ public class LiveCenter {
      * @param messageCount the number of unread messages to be added. may not be {@code < 1}
      * @see #incrementUnreadMessageForPeer(String)
      */
+    @SuppressLint("CommitPrefEdits")
     public static void incrementUnreadMessageForPeer(String peerId, int messageCount) {
         if (TextUtils.isEmpty(peerId)) {
             throw new IllegalArgumentException("null peer id");
@@ -99,7 +100,7 @@ public class LiveCenter {
 
         SharedPreferences preferences = getPreferences();
         int existing = preferences.getInt(peerId, 0) + messageCount;
-        preferences.edit().putInt(peerId, existing).apply();
+        preferences.edit().putInt(peerId, existing).commit();
         synchronized (unReadMessageLock) {
             if (totalUnreadMessages <= 0) {
                 totalUnreadMessages = 0;
@@ -113,7 +114,7 @@ public class LiveCenter {
     }
 
     private static SharedPreferences getPreferences() {
-        return Config.getApplication().getSharedPreferences("unreadMessages", Context.MODE_PRIVATE);
+        return Config.getPreferences("unreadMessages");
     }
 
     /**
@@ -152,6 +153,7 @@ public class LiveCenter {
      *
      * @param peerId the id of the  user in subject may not be null or empty
      */
+    @SuppressLint("CommitPrefEdits")
     public static void invalidateNewMessageCount(String peerId) {
         if (TextUtils.isEmpty(peerId)) {
             throw new IllegalArgumentException("null peerId");
@@ -164,7 +166,7 @@ public class LiveCenter {
                 totalUnreadMessages = 0;
             }
         }
-        preferences.edit().remove(peerId).apply();
+        preferences.edit().remove(peerId).commit();
     }
 
     private static Set<String> activeUsers = new HashSet<>();
@@ -199,9 +201,9 @@ public class LiveCenter {
                 PLog.d(TAG, "typing event");
                 if (isTyping) {
                     typing.add(typingUser);
-                    if(!activeUsers.contains(typingUser)){
+                    if (!activeUsers.contains(typingUser)) {
                         activeUsers.add(typingUser);
-                        notifyUserStatusChanged(typingUser,true);
+                        notifyUserStatusChanged(typingUser, true);
                     }
                 } else {
                     typing.remove(typingUser);
@@ -241,7 +243,7 @@ public class LiveCenter {
                     //if user is not online then he can't be typing too
                     typing.remove(userId);
                 }
-                notifyUserStatusChanged(userId,isOnline);
+                notifyUserStatusChanged(userId, isOnline);
             }
 //            Context applicationContext = Config.getApplicationContext();
 //            Realm realm = User.Realm(applicationContext);
@@ -251,23 +253,26 @@ public class LiveCenter {
 //            realm.commitTransaction();
 //            realm.close();
         } catch (JSONException e) {
-            throw new RuntimeException(e.getCause());
+            // FIXME: 11/8/2015 handle exception
+//            throw new RuntimeException(e.getCause());
+            PLog.d(TAG, e.getMessage(), e.getCause());
         }
     }
 
-   private static void notifyUserStatusChanged(final String userId,final boolean isOnline){
-    TaskManager.executeOnMainThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (typingListener != null) {
-                            LiveCenterListener listener = typingListener.get();
-                            if (listener != null) {
-                                listener.onUserStatusChanged(userId, isOnline);
-                            }
-                        }
+    private static void notifyUserStatusChanged(final String userId, final boolean isOnline) {
+        TaskManager.executeOnMainThread(new Runnable() {
+            @Override
+            public void run() {
+                if (typingListener != null) {
+                    LiveCenterListener listener = typingListener.get();
+                    if (listener != null) {
+                        listener.onUserStatusChanged(userId, isOnline);
                     }
-                });
-   }
+                }
+            }
+        });
+    }
+
     /**
      * starts the {@link LiveCenter} class. until this method is called
      * this class is not usable.
@@ -300,13 +305,6 @@ public class LiveCenter {
         liveClient.registerForEvent(SocketIoClient.EVENT_CHAT_ROOM, CHAT_ROOM_RECEIVER);
         liveClient.registerForEvent(SocketIoClient.CONNECT, connectReceiver);
         liveClient.registerForEvent(SocketIoClient.DISCONNECT, disConnectReceiver);
-        try {
-            JSONObject object = new JSONObject();
-            object.put(SocketIoClient.PROPERTY_TO, UserManager.getMainUserId());
-            liveClient.send(SocketIoClient.IS_ONLINE, object);
-        } catch (JSONException e) {
-            throw new RuntimeException(e.getCause());
-        }
         synchronized (TYPING_AND_ACTIVE_USERS_LOCK) {
             activeUsers.clear();
             typing.clear();
@@ -322,6 +320,13 @@ public class LiveCenter {
         liveClient.unRegisterEvent(SocketIoClient.EVENT_CHAT_ROOM, CHAT_ROOM_RECEIVER);
         liveClient.unRegisterEvent(SocketIoClient.CONNECT, connectReceiver);
         liveClient.unRegisterEvent(SocketIoClient.DISCONNECT, disConnectReceiver);
+        synchronized (TYPING_AND_ACTIVE_USERS_LOCK) {
+            activeUsers.clear();
+            typing.clear();
+        }
+        synchronized (PEERS_IN_CHATROOM) {
+            PEERS_IN_CHATROOM.clear();
+        }
         liveClient.close();
     }
 
@@ -619,7 +624,7 @@ public class LiveCenter {
      * this is to ensure that progress updates are received in the order they were published.
      * if the progress is less than the existing progress which may be normally caused by unordered publishing of progress
      * updates an exception is thrown. also the progress must not be less than 0.
-     * <p>
+     * <p/>
      * clients must ensure they have acquired this tag before they update its progress
      *
      * @param tag      the tag that identifies this task may not be null
@@ -742,7 +747,7 @@ public class LiveCenter {
     /**
      * registers a listener for all events(progress) one must {@link #stopListeningForAllProgress(ProgressListener)}
      * when they no more need to listen to events.
-     * <p>
+     * <p/>
      * note that listeners are kept internally as weak references so you may not pass anonymous instances
      *
      * @param listener the listener to be registered may not be null

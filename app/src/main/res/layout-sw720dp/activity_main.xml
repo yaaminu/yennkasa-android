@@ -1,0 +1,62 @@
+<com.idea.view.FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.idea.view.LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <com.idea.view.FrameLayout
+            android:id="@+id/container"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <com.idea.view.LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <com.rey.material.widget.TabPageIndicator
+                    android:id="@+id/pts_title_strip"
+                    style="@style/TabPageIndicator"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/colorPrimary"
+                    android:clipToPadding="false"
+                    android:foregroundGravity="center_vertical"
+                    android:minHeight="?attr/actionBarSize"/>
+
+                <com.idea.view.CustomViewPager
+                    android:id="@+id/vp_pager"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+
+            </com.idea.view.LinearLayout>
+        </com.idea.view.FrameLayout>
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/main_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"
+            android:gravity="center"
+            android:minHeight="?attr/actionBarSize"
+            android:title=""
+            android:visibility="gone"
+            app:theme="@style/AppBar"/>
+    </com.idea.view.LinearLayout>
+
+    <com.rey.material.widget.SnackBar
+        android:id="@+id/notification_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        android:minHeight="?attr/actionBarSize"
+        android:visibility="gone"
+        app:sb_actionText="@string/close"
+        app:sb_actionTextColor="@color/white"/>
+</com.idea.view.FrameLayout>

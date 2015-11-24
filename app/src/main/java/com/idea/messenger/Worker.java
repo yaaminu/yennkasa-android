@@ -7,10 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.widget.Toast;
 
-import com.google.gson.JsonObject;
 import com.idea.Errors.ErrorCenter;
 import com.idea.Errors.PairappException;
 import com.idea.data.Message;
@@ -21,20 +19,18 @@ import com.idea.util.FileUtils;
 import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
-import com.idea.util.UiHelpers;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.Semaphore;
 
 import io.realm.Realm;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
- * <p>
+ * <p/>
  */
 public class Worker extends IntentService {
     private static final String DOWNLOAD = "com.idea.messenger.action.download";
@@ -59,28 +55,20 @@ public class Worker extends IntentService {
         if (intent != null) {
             final String action = intent.getAction();
             if (DOWNLOAD.equals(action)) {
-                try {
-                    if (!lock.tryAcquire()) {
-                        if (Config.isAppOpen()) {
-                            UiHelpers.showPlainOlDialog(this, getString(R.string.max_download_reached), false);
-                        } else {
-                            UiHelpers.showToast(R.string.max_download_reached);
-                        }
+                synchronized (downloading) {
+                    if (downloading.size() > 8) {
+                        ErrorCenter.reportError(TAG + "duplicate", getString(R.string.max_download_reached), null);
                         return;
                     }
-                    final String messageJson = intent.getStringExtra(MESSAGE_JSON);
-                    Message message = Message.fromJSON(messageJson);
-                    download(message);
-                } finally {
-                    lock.release();
                 }
+                final String messageJson = intent.getStringExtra(MESSAGE_JSON);
+                Message message = Message.fromJSON(messageJson);
+                download(message);
             }
         }
     }
 
     private static final Set<String> downloading = new HashSet<>();
-
-    private final Semaphore lock = new Semaphore(3, true);
 
     private void download(final Message message) {
         synchronized (downloading) {
@@ -139,10 +127,9 @@ public class Worker extends IntentService {
                                     Notification notification = new NotificationCompat.Builder(Worker.this)
                                             .setContentTitle(getString(R.string.downloading))
                                             .setProgress(100, progress, progress <= 0)
-                                            .setAutoCancel(true)
                                             .setContentIntent(PendingIntent.getActivity(Worker.this, 1003, intent, PendingIntent.FLAG_UPDATE_CURRENT))
                                             .setSubText(progress > 0 ? getString(R.string.downloaded) + FileUtils.sizeInLowestPrecision(processed) + "/" + FileUtils.sizeInLowestPrecision(expected) : getString(R.string.loading))
-                                            .setSmallIcon(R.drawable.ic_launcher).build();
+                                            .setSmallIcon(R.drawable.ic_stat_icon).build();
                                     NotificationManagerCompat manager = NotificationManagerCompat.from(Worker.this);// getSystemService(NOTIFICATION_SERVICE));
                                     manager.notify(messageId, PairAppClient.notId, notification);
                                 }
@@ -183,14 +170,6 @@ public class Worker extends IntentService {
                             intent.setClass(Worker.this, ChatActivity.class);
                             intent.putExtra(ChatActivity.EXTRA_PEER_ID, peer);
                             ErrorCenter.reportError(messageId, error.getMessage(), intent);
-                        } else {
-                            intent.setAction("com.idea.pairapp.markDelete");
-                            JsonObject object = new JsonObject();
-                            object.addProperty("link", messageBody);
-                            object.addProperty("isAttachment", true);
-                            object.addProperty("userId", peer);
-                            intent.putExtra("body", object.toString());
-                            LocalBroadcastManager.getInstance(Config.getApplicationContext()).sendBroadcast(intent);
                         }
                     }
                 });

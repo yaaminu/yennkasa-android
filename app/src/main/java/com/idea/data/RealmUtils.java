@@ -87,7 +87,7 @@ public class RealmUtils {
         message.setFrom(sender);
         message.setType(type);
         message.setMessageBody(messageBody);
-        message.setId(Message.generateIdPossiblyUnique());
+        message.setId(Message.generateIdPossiblyUnique(recipient));
         message.setState(Message.STATE_PENDING);
         message.setDateComposed(new Date());
         return message;
@@ -104,7 +104,7 @@ public class RealmUtils {
             message.setFrom(user.getUserId());
             message.setMessageBody("message body " + i);
             message.setType(Message.TYPE_TEXT_MESSAGE);
-            message.setId(Message.generateIdPossiblyUnique());
+            message.setId(Message.generateIdPossiblyUnique("0266349205"));
             message.setState(Message.STATE_PENDING);
             message.setDateComposed(new Date());
             messages.add(message);

@@ -8,6 +8,7 @@ import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Filterable;
@@ -62,13 +63,14 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
     private View menuItemDone;
     private Set<String> selectedUserNames = new TreeSet<>();
     private ItemsSelector fragment;
+    private Toolbar toolBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_invite);
-        Toolbar toolBar = (Toolbar) findViewById(R.id.main_toolbar);
+        toolBar = (Toolbar) findViewById(R.id.main_toolbar);
         menuItemDone = toolBar.findViewById(R.id.tv_menu_item_done);
         menuItemDone.setOnClickListener(listener);
 
@@ -263,6 +265,10 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
 //
 //        supportInvalidateOptionsMenu();
     }
+    @Override
+    public ViewGroup searchBar() {
+        return ((ViewGroup) findViewById(R.id.search_bar));
+    }
 
     private final MultiChoiceUsersAdapter.Delegate delegate = new MultiChoiceUsersAdapter.Delegate() {
 
@@ -307,5 +313,9 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
         protected RealmQuery<User> getOriginalQuery() {
             return prepareQuery();
         }
+    }
+    @Override
+    public final View getToolBar(){
+        return toolBar;
     }
 }

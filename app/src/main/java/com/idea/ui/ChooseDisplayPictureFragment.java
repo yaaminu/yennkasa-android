@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,6 +40,7 @@ public class ChooseDisplayPictureFragment extends Fragment {
 
     public static final int TAKE_PHOTO_REQUEST = 1001;
     public static final int PICK_PHOTO_REQUEST = 1002;
+    public static final int CROP_PHOTO_REQUEST = 1003;
     public static final String TAG = ChooseDisplayPictureFragment.class.getSimpleName();
     private static String dp;
     private Callbacks callback;
@@ -104,7 +106,7 @@ public class ChooseDisplayPictureFragment extends Fragment {
                 displayPicture.setImageResource(placeHolderDp);
             } else {
                 displayPicture.setImageBitmap(bitmap);
-                UiHelpers.showErrorDialog(((PairAppBaseActivity) getActivity()), getString(R.string.dp_prompt),
+                UiHelpers.showErrorDialog(getActivity(), getString(R.string.dp_prompt),
                         getString(R.string.yes), getString(R.string.no), new UiHelpers.Listener() {
                             @Override
                             public void onClick() {
@@ -162,7 +164,7 @@ public class ChooseDisplayPictureFragment extends Fragment {
         previewLabel = ((TextView) view.findViewById(R.id.tv_dp_preview_label));
         ViewUtils.setTypeface(previewLabel, TypeFaceUtil.ROBOTO_REGULAR_TTF);
 
-        TextView takePhotoButton =(TextView) view.findViewById(R.id.bt_take_photo_change_dp);
+        TextView takePhotoButton = (TextView) view.findViewById(R.id.bt_take_photo_change_dp);
         takePhotoButton.setOnClickListener(listener);
         ViewUtils.setTypeface(takePhotoButton, TypeFaceUtil.ROBOTO_REGULAR_TTF);
 
@@ -172,7 +174,7 @@ public class ChooseDisplayPictureFragment extends Fragment {
 
         displayPicture = ((ImageView) view.findViewById(R.id.riv_group_avatar_preview));
         final View cancelButton = view.findViewById(R.id.choose_dp_later);
-        ViewUtils.setTypeface((TextView) cancelButton,TypeFaceUtil.ROBOTO_REGULAR_TTF);
+        ViewUtils.setTypeface((TextView) cancelButton, TypeFaceUtil.ROBOTO_REGULAR_TTF);
 
         if (!callback.allowCancelling()) {
             cancelButton.setVisibility(View.GONE);
@@ -202,52 +204,42 @@ public class ChooseDisplayPictureFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         dpShown = false;
-        boolean dpChanged = false;
-        String newDp = null;
+        String newDp;
         if (resultCode == Activity.RESULT_OK) {
             switch (requestCode) {
                 case PICK_PHOTO_REQUEST:
-                    Uri uri = data.getData();
-                    if (uri != null) {
-                        newDp = FileUtils.resolveContentUriToFilePath(uri);
-                        if (!MediaUtils.isImage(newDp)) {
-                            ErrorCenter.reportError(TAG, getString(R.string.not_a_bitmap));
-                        } else {
-                            dpChanged = true;
-                        }
-                    }
-                    break;
+                    outPutUri = data.getData();
+                    //fall through
                 case TAKE_PHOTO_REQUEST:
                     if (outPutUri != null) {
-                        //noinspection ConstantConditions
-                        newDp = outPutUri.getPath();
-                        if (newDp != null && new File(newDp).exists()) {
-                            newDp = outPutUri.getPath();
-                            if (!MediaUtils.isImage(newDp)) {
-                                ErrorCenter.reportError(TAG, getString(R.string.not_a_bitmap));
-                            } else {
-                                dpChanged = true;
-                            }
+                        newDp = FileUtils.resolveContentUriToFilePath(outPutUri);
+                        if (TextUtils.isEmpty(newDp) || !new File(newDp).exists() || !MediaUtils.isImage(newDp)) {
+                            ErrorCenter.reportError(TAG, getString(R.string.not_a_bitmap));
+                            break;
+                        } else {
+                            Intent intent = new Intent(getActivity(), ImageCropper.class);
+                            intent.putExtra(ImageCropper.IMAGE_TO_CROP, newDp);
+                            startActivityForResult(intent, CROP_PHOTO_REQUEST);
                         }
-
                     }
                     break;
+                case CROP_PHOTO_REQUEST:
+                    outPutUri = data.getData();
+                    if (outPutUri != null) {
+                        dp = outPutUri.getPath();
+                        loadDp();
+                    }
+                    break;
+                default:
+                    throw new AssertionError();
             }
-        }
-        if (newDp != null && new File(newDp).exists() && new File(newDp).length() > 8 * FileUtils.ONE_MB) {
-            ErrorCenter.reportError(TAG, getString(R.string.image_size_too_large));
-        } else {
-            dpChanged = true;
-            dp = newDp;
-        }
-        if (dpChanged) {
-            loadDp();
         }
     }
 
     private void loadDp() {
         if (dp != null && !dpShown) {
-            if (dp.startsWith("http")) {
+            dp = dp.trim();
+            if (dp.startsWith("http") || dp.startsWith("ftp")) {
                 dpShown = true;
                 picasso.load(dp)
                         .placeholder(placeHolderDp)

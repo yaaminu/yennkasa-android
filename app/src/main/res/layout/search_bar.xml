@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/search_bar"
+    style="@style/FlatWaveButtonRippleStyle"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/action_bar_height"
+    android:animateLayoutChanges="true"
+    android:background="?attr/colorPrimary"
+    android:minHeight="?attr/actionBarSize"
+    android:padding="@dimen/padding_ll_login_fragment_left"
+    android:title="@string/app_name"
+    tools:ignore="UnusedAttribute">
+
+    <EditText
+        android:id="@+id/et_filter_input_box"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_weight="1"
+        android:background="@color/transparent"
+        android:ems="10"
+        android:hint="@string/abc_search_hint"
+        android:imeActionId="@integer/imei_search_add"
+        android:inputType="textFilter"
+        android:paddingRight="@dimen/padding_ll_login_fragment_right"
+        android:textColor="@android:color/white"
+        android:textSize="@dimen/edit_text_size"
+        android:visibility="visible" />
+
+    <ImageView
+        android:id="@+id/cancel_search_filter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|center_vertical"
+        android:layout_marginEnd="@dimen/padding_ll_login_fragment_right"
+        android:layout_marginRight="@dimen/padding_ll_login_fragment_right"
+        android:contentDescription="@string/cancel"
+        android:gravity="center_vertical"
+        android:padding="0dp"
+        android:src="@drawable/ic_clear_white_24dp" />
+</LinearLayout>

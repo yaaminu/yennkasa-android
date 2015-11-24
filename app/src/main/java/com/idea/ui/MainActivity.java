@@ -12,11 +12,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Gravity;
 import android.widget.LinearLayout;
 
-import com.google.gson.JsonObject;
 import com.idea.PairApp;
 import com.idea.data.Conversation;
 import com.idea.data.Message;
-import com.idea.data.MessageJsonAdapter;
 import com.idea.data.RealmUtils;
 import com.idea.data.User;
 import com.idea.data.UserManager;
@@ -25,7 +23,6 @@ import com.idea.pairapp.R;
 import com.idea.util.Config;
 import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
-import com.idea.util.TaskManager;
 import com.idea.util.UiHelpers;
 import com.parse.ParseAnalytics;
 import com.rey.material.app.ToolbarManager;
@@ -38,27 +35,30 @@ import java.util.TimerTask;
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
 
+//import com.digits.sdk.android.Digits;
+
 /**
  * @author Null-Pointer on 6/6/2015.
  */
 public class MainActivity extends PairAppActivity implements NoticeFragment.NoticeFragmentCallback, ConversationsFragment.Callbacks {
+
     public static final String DEFAULT_FRAGMENT = "default_fragment";
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final String ARG_TITLE = "title";
-    private static boolean cleanedMessages = false;
     private static int savedPosition = MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT;
     private ViewPager pager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+//        TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
         final Intent intent = getIntent();
         handleIntent(intent);
-        // STOPSHIP: 9/27/2015 remove this
-        if (!cleanedMessages) {
-            cleanedMessages = true;
-            RealmUtils.runRealmOperation(this);
-        }
+//        // STOPSHIP: 9/27/2015 remove this
+//        if (!cleanedMessages) {
+//            cleanedMessages = true;
+//            RealmUtils.runRealmOperation(this);
+//        }
     }
 
     @Override
@@ -204,6 +204,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     @Override
     public void onAction() {
         pager.setCurrentItem(MyFragmentStatePagerAdapter.POSITION_CONTACTS_FRAGMENT, true);
+
     }
 
     private boolean noUserAvailable = false;
@@ -218,11 +219,17 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     private Realm realm;
 
     private void checkIfUserAvailable() {
-        if (realm == null) {
-            realm = User.Realm(MainActivity.this);
+        if (noUserAvailable) {
+            if (realm == null)
+                realm = User.Realm(MainActivity.this);
             realm.addChangeListener(changeListener);
+            noUserAvailable = realm.where(User.class).notEqualTo(User.FIELD_ID, getMainUserId()).findFirst() == null;
+            if (!noUserAvailable) {
+                realm.removeChangeListener(changeListener);
+                realm.close();
+                realm = null;
+            }
         }
-        noUserAvailable = realm.where(User.class).notEqualTo(User.FIELD_ID, getMainUserId()).findFirst() == null;
     }
 
     @Override
@@ -237,15 +244,6 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     @Override
     public void onConversionClicked(Conversation conversation) {
         final String peerId = conversation.getPeerId();
-        final Runnable invalidateTask = new Runnable() {
-            @Override
-            public void run() {
-                LiveCenter.invalidateNewMessageCount(peerId); //FIXME this might block for long enough
-            }
-        };
-        if (!TaskManager.executeNow(invalidateTask)) {
-            TaskManager.execute(invalidateTask);
-        }
         UiHelpers.enterChatRoom(this, peerId);
     }
 
@@ -257,6 +255,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     /**
      * code purposely for testing we will take this off in production
      */
+    @SuppressWarnings("unused")
     private static void testChatActivity() {
         final String senderId = "233541730101";
         timer = new Timer(true);
@@ -274,10 +273,9 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     static Timer timer;
 
     private static void testMessageProcessor(Message messages) {
-        JsonObject object = MessageJsonAdapter.INSTANCE.toJson(messages);
         Context context = Config.getApplicationContext();
         Bundle bundle = new Bundle();
-        bundle.putString("message", object.toString());
+        bundle.putString("message", Message.toJSON(messages));
         Intent intent = new Intent(context, MessageProcessor.class);
         intent.putExtras(bundle);
         context.startService(intent);

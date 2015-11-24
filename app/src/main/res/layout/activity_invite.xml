@@ -30,12 +30,18 @@
                 android:drawableLeft="@drawable/ic_done_white_24dp"
                 android:drawableStart="@drawable/ic_done_white_24dp"
                 android:gravity="center_vertical"
+                android:paddingRight="@dimen/abc_action_bar_overflow_padding_end_material"
                 android:text="@string/st_done"
                 android:textAppearance="@style/TabTextAppearance"
                 android:textColor="@color/white"
                 android:visibility="visible"
-                />
+                tools:ignore="RtlSymmetry"/>
         </android.support.v7.widget.Toolbar>
+
+        <include
+            layout="@layout/search_bar"
+            android:visibility="gone"
+            />
 
         <include
             layout="@layout/snack_bar"/>

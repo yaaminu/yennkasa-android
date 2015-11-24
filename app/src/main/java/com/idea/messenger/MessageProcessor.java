@@ -6,16 +6,11 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.text.TextUtils;
 
-import com.idea.Errors.ErrorCenter;
-import com.idea.Errors.PairappException;
 import com.idea.data.Conversation;
 import com.idea.data.Message;
-import com.idea.data.MessageJsonAdapter;
 import com.idea.data.UserManager;
 import com.idea.net.sockets.SocketIoClient;
-import com.idea.util.Config;
 import com.idea.util.ConnectionUtils;
-import com.idea.util.FileUtils;
 import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
@@ -23,12 +18,8 @@ import com.idea.util.TaskManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import io.realm.Realm;
 import io.realm.exceptions.RealmException;
@@ -74,6 +65,7 @@ public class MessageProcessor extends IntentService {
         try {
             final JSONObject data1 = new JSONObject(data);
             String type = getType(data1);
+            //noinspection IfCanBeSwitch
             if (type.equals(SYNC_MESSAGES)) {
                 MessagesProvider provider = PairAppClient.getMessageProvider();
                 List<Message> messages = provider.retrieveMessages();
@@ -81,7 +73,7 @@ public class MessageProcessor extends IntentService {
                     doProcessMessage(message);
                 }
             } else if (type.equals(MESSAGE)) {
-                Message message = MessageJsonAdapter.INSTANCE.fromJson(data);
+                Message message = Message.fromJSON(data);
                 doProcessMessage(message);
             } else if (type.equals(MESSAGE_STATUS)) {
                 Realm realm = Message.REALM(MessageProcessor.this);
@@ -101,7 +93,7 @@ public class MessageProcessor extends IntentService {
                 }
                 realm.close();
             } else if (type.equals(UPDATE)) {
-                PLog.i(TAG, "update available, latest version: %s", data1.getString(PairAppClient.VERSION));
+                PairAppClient.notifyUpdateAvailable(data1);
             } else {
                 throw new JSONException("unknown message");
             }
@@ -140,15 +132,14 @@ public class MessageProcessor extends IntentService {
             //and the members the senders
             if (Message.isGroupMessage(message)) {
                 peerId = message.getTo();
-                if (!UserManager.getInstance().isGroup(peerId)) {
-                    PLog.d(TAG, "message from unknown group %s, dropped", peerId);
-                    UserManager.getInstance().refreshUserDetails(peerId);
-                    return;
-                }
             } else {
                 peerId = message.getFrom();
             }
-
+            if (UserManager.getInstance().isBlocked(peerId)) {
+                PLog.d(TAG, "message from a blocked user, dropping message");
+                PLog.d(TAG, "%s is blocked",peerId);
+                return;
+            }
             UserManager.getInstance().fetchUserIfRequired(peerId);
             //all other operations are deferred till we set up the conversation
             Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
@@ -174,7 +165,7 @@ public class MessageProcessor extends IntentService {
                 message = realm.copyToRealm(message);
                 conversation.setLastMessage(message);
             } catch (RealmException primaryKey) {
-                //lets eat up this error
+                //lets eat up this exception
                 realm.cancelTransaction();
                 PLog.d(TAG, primaryKey.getMessage());
                 PLog.d(TAG, "failed to process message");

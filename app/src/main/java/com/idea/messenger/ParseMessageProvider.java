@@ -3,7 +3,6 @@ package com.idea.messenger;
 import android.app.AlarmManager;
 
 import com.idea.data.Message;
-import com.idea.data.MessageJsonAdapter;
 import com.idea.data.UserManager;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
@@ -46,7 +45,7 @@ class ParseMessageProvider implements MessagesProvider {
                 } else {
                     toBeUpdated.add(object);
                 }
-                Message message = MessageJsonAdapter.INSTANCE.fromJson(object.getString(MESSAGE));
+                Message message = Message.fromJSON(object.getString(MESSAGE));
                 messages.add(message);
             }
             TaskManager.execute(new Runnable() {

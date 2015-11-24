@@ -9,7 +9,7 @@ import android.widget.BaseAdapter;
 import android.widget.CompoundButton;
 
 import com.idea.data.UserManager;
-import com.idea.data.settings.PersistedSetting;
+import com.idea.data.PersistedSetting;
 import com.idea.pairapp.R;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.ViewUtils;

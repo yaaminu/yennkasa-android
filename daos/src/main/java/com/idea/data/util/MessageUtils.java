@@ -89,6 +89,10 @@ public class MessageUtils {
         }
     }
 
+    public static boolean isSendableMessage(Message message) {
+        return !(Message.isDateMessage(message) || Message.isTypingMessage(message));
+    }
+
     public interface Callback {
         void onDownloaded(Exception e, String messageId);
     }

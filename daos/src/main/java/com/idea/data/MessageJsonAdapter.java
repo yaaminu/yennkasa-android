@@ -20,7 +20,7 @@ import static com.idea.data.Message.FIELD_TYPE;
 /**
  * @author by Null-Pointer on 5/27/2015.
  */
-public class MessageJsonAdapter implements BaseJsonAdapter<Message> {
+class MessageJsonAdapter implements BaseJsonAdapter<Message> {
     @Override
     public JsonObject toJson(Message message) {
         JsonObject obj = new JsonObject();
@@ -35,6 +35,7 @@ public class MessageJsonAdapter implements BaseJsonAdapter<Message> {
         return obj;
     }
 
+    @SuppressWarnings("unused")
     public JSONObject toJSON(Message message) {
         try {
             JSONObject obj = new JSONObject();

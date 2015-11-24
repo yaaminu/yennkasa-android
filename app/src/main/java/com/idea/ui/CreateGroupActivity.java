@@ -12,6 +12,7 @@ import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.EditText;
@@ -73,12 +74,13 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
             }
         }
     };
+    private Toolbar toolBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_group);
-        Toolbar toolBar = ((Toolbar) findViewById(R.id.main_toolbar));
+        toolBar = ((Toolbar) findViewById(R.id.main_toolbar));
         menuItemDone = toolBar.findViewById(R.id.tv_menu_item_done);
         menuItemNext = toolBar.findViewById(R.id.tv_menu_item_next);
 
@@ -301,6 +303,11 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     }
 
     @Override
+    public ViewGroup searchBar() {
+        return ((ViewGroup) findViewById(R.id.search_bar));
+    }
+
+    @Override
     public BaseAdapter getAdapter() {
         return adapter;
     }
@@ -468,5 +475,10 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         protected RealmQuery<User> getOriginalQuery() {
             return getQuery();
         }
+    }
+
+    @Override
+    public final View getToolBar(){
+        return toolBar;
     }
 }

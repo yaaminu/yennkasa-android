@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.idea.view.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_margin="@dimen/message_body_margin">
+<com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                              xmlns:app="http://schemas.android.com/apk/res-auto"
+                              xmlns:tools="http://schemas.android.com/tools"
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:layout_margin="@dimen/message_body_margin">
 
     <com.idea.view.LinearLayout
         android:id="@+id/ll_message_body_view"
@@ -30,18 +29,12 @@
                 tools:ignore="HardcodedText"/>
         </com.idea.view.FrameLayout>
 
-        <View
-            android:layout_width="@dimen/inbox_preferred_list_item_divider_height"
-            android:layout_height="match_parent"
-            android:layout_marginBottom="@dimen/padding_ll_login_fragment_left"
-            android:layout_marginTop="@dimen/padding_ll_login_fragment_left"
-            android:background="@color/white"/>
-
         <TextView
             android:id="@+id/tv_message_date"
             style="@style/message_outgoing_date"
             android:layout_alignTop="@+id/fl_message_body_view"
             android:layout_gravity="bottom"
+            android:drawableLeft="@drawable/ic_vertical_align_top_white_18dp"
             android:gravity="center_vertical|end"
             android:padding="@dimen/padding_ll_login_fragment_left"
             android:singleLine="true"
@@ -49,14 +42,16 @@
             tools:ignore="HardcodedText"/>
     </com.idea.view.LinearLayout>
 
-    <com.idea.view.RoundedImageView
+    <ImageButton
         android:id="@+id/iv_retry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
+        android:layout_marginRight="@dimen/padding_ll_login_fragment_right"
         android:layout_toLeftOf="@+id/ll_message_body_view"
         android:layout_toStartOf="@+id/ll_message_body_view"
-        android:src="@drawable/ic_action_replay"/>
+        android:background="@color/transparent"
+        android:src="@drawable/ic_replay_black_24dp"/>
 
     <ImageView
         android:id="@+id/iv_message_preview"
@@ -79,7 +74,7 @@
         android:contentDescription="@string/play_download_content_description"
         android:minHeight="@dimen/thumbnail_height"
         android:minWidth="@dimen/thumbnail_width"
-        android:src="@drawable/playvideo"
+        android:src="@drawable/ic_play_circle_outline_white_36dp"
         android:visibility="gone"/>
 
     <com.rey.material.widget.ProgressView
@@ -92,4 +87,17 @@
         app:pv_circular="true"
         app:pv_progressMode="indeterminate"
         app:pv_progressStyle="@style/base_indeterminate_progress_style"/>
+
+    <TextView
+        android:id="@+id/tv_sender_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/ll_message_body_view"
+        android:layout_alignStart="@+id/ll_message_body_view"
+        android:layout_marginBottom="@dimen/message_input_margin_4dp"
+        android:clickable="true"
+        android:text="sender"
+        android:textSize="@dimen/standard_text_size"
+        android:visibility="gone"
+        tools:ignore="HardcodedText"/>
 </com.idea.view.RelativeLayout>

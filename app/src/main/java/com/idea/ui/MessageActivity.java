@@ -21,7 +21,6 @@ import com.idea.pairapp.R;
 import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
-import com.idea.util.ThreadUtils;
 import com.idea.util.UiHelpers;
 
 import java.util.Date;
@@ -41,7 +40,6 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
     private static final String TAG = MessageActivity.class.getSimpleName();
     private Worker worker;
 
-    //public for MessagesAdapter to access
     protected final void resendMessage(String messageId) {
         android.os.Message msg = android.os.Message.obtain();
         msg.what = Worker.RESEND_MESSAGE;
@@ -77,19 +75,6 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
             pairAppClientInterface.sendMessage(message);
         } else {
             bind(); //after binding all waiting messages will be  smartly sent.
-        }
-        final String messageId = message.getId();
-        if (ThreadUtils.isMainThread()) {
-            progresses.put(messageId, 0);
-            onMessageQueued(messageId);
-        } else {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    progresses.put(messageId, 0);
-                    onMessageQueued(messageId);
-                }
-            });
         }
     }
 
@@ -148,34 +133,37 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         final ProgressDialog dialog = new ProgressDialog(this);
         dialog.setCancelable(false);
         dialog.setMessage(getString(R.string.st_please_wait));
-        dialog.show();
-        final Runnable runnable = new Runnable() {
+        runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    Pair<String, Integer> pathAndType = UiHelpers.completeAttachIntent(requestCode, data);
-                    sendMessage(pathAndType.first, recipient, pathAndType.second);
-                } catch (final PairappException e) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            dialog.dismiss();
-                            UiHelpers.showErrorDialog(MessageActivity.this, e.getMessage());
-                        }
-                    });
-                    return;
-                }
-                runOnUiThread(new Runnable() {
+                dialog.show();
+
+                final Runnable runnable = new Runnable() {
                     @Override
                     public void run() {
-                        dialog.dismiss();
+                        try {
+                            Pair<String, Integer> pathAndType = UiHelpers.completeAttachIntent(requestCode, data);
+                            sendMessage(pathAndType.first, recipient, pathAndType.second);
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    dialog.dismiss();
+                                }
+                            });
+                        } catch (final PairappException e) {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    dialog.dismiss();
+                                    UiHelpers.showErrorDialog(MessageActivity.this, e.getMessage());
+                                }
+                            });
+                        }
                     }
-                });
+                };
+                TaskManager.executeNow(runnable, true);
             }
-        };
-        if (!TaskManager.executeNow(runnable)) {
-            new Thread(runnable).start();
-        }
+        });
     }
 
     protected final void sendMessage(String messageBody, String recipient, int type, boolean active) {
@@ -215,7 +203,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         }
 
         @Override
-        public boolean handleMessage(android.os.Message msg) {
+        public boolean handleMessage(final android.os.Message msg) {
             switch (msg.what) {
                 case STOP:
                     doStop();
@@ -223,6 +211,18 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                 case SEND_MESSAGE:
                     try {
                         Message message = createMessage(msg.getData());
+                        final String messageId = message.getId();
+                        final boolean notTextMessage = message.getType() != Message.TYPE_TEXT_MESSAGE;
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                onMessageQueued(messageId);
+                                if (notTextMessage) {
+                                    progresses.put(messageId, 0);
+                                    reportProgress(messageId, 0);
+                                }
+                            }
+                        });
                         doSendMessage(message);
                     } catch (PairappException e) {
                         // TODO: 9/20/2015 handle error well
@@ -232,13 +232,24 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                 case SEND_MESSAGE_TO_MANY:
                     throw new UnsupportedOperationException();
                 case RESEND_MESSAGE:
-                    String msgId = ((String) msg.obj);
+                    final String msgId = ((String) msg.obj);
                     Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
                     if (message != null) {
                         if (message.getState() == Message.STATE_SEND_FAILED) {
                             realm.beginTransaction();
                             message.setState(Message.STATE_PENDING);
                             realm.commitTransaction();
+                            final boolean notTextMessage = message.getType() != Message.TYPE_TEXT_MESSAGE;
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    onMessageQueued(msgId);
+                                    if (notTextMessage) {
+                                        progresses.put(msgId, 0);
+                                        reportProgress(msgId, 0);
+                                    }
+                                }
+                            });
                             doSendMessage(message);
                             break;
                         }
@@ -315,8 +326,8 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
             try {
                 Message message = Message.makeNew(realm, messageBody, recipient, type);
                 if (newDay) {
-                    //realm is so fast that it takes less than a millisecond to create an object. this has an undesirable effect of making our date waitingMessages
-                    // and the first message of the day have the same date in milliseconds precision which in return can cause sorting problems.
+                    //realm dates are in seconds not milliseconds. this has an undesirable effect of making our date waitingMessages
+                    // and the first message of the day have the same date in seconds precision which in return can cause sorting problems.
                     // to curb this we force this message to be newer than the date message. by first committing the transaction and also making the message
                     // to be sent newer
                     realm.commitTransaction();
@@ -374,45 +385,44 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
 
     @Override
     public final void onProgress(final Object tag, final int progress) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Integer stored = progresses.get(tag);
-                    if (stored == null) {
-                        stored = progress-1;
-                    }
-                    if (stored >= progress) {
-                        PLog.d(TAG, "late progress report");
-                        return;
-                    }
-                    PLog.d(TAG, stored + "");
-                    progresses.put(tag, progress);
-                    reportProgress((String) tag, progress);
-                } catch (ClassCastException e) {
-                    throw new RuntimeException(e.getCause());
-                }
+        synchronized (progresses) {
+            Integer stored = progresses.get(tag);
+            if (stored == null) {
+                stored = progress - 1;
             }
-        });
+            if (stored >= progress) {
+                PLog.d(TAG, "late progress report");
+                return;
+            }
+            PLog.d(TAG, stored + "");
+            progresses.put(tag, progress);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    reportProgress((String) tag, progress);
+                }
+            });
+        }
     }
 
     protected final int getMessageProgress(Message message) {
-        return LiveCenter.getProgress(message.getId());
+        synchronized (progresses) {
+            Integer integer = progresses.get(message.getId());
+            return integer == null ? -1 : integer;
+        }
     }
 
     @Override
     public final void doneOrCancelled(final Object tag) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    progresses.remove(tag);
+        synchronized (progresses) {
+            progresses.remove(tag);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
                     onCancelledOrDone(((String) tag));
-                } catch (ClassCastException e) {
-                    throw new RuntimeException(e.getCause());
                 }
-            }
-        });
+            });
+        }
     }
 
     protected interface SendCallback {

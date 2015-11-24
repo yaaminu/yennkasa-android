@@ -3,8 +3,9 @@ package com.idea.data;
 import android.app.Application;
 import android.content.Context;
 import android.support.annotation.NonNull;
-
 import android.text.TextUtils;
+
+import com.idea.Errors.ErrorCenter;
 import com.idea.Errors.PairappException;
 import com.idea.data.util.MessageUtils;
 import com.idea.util.Config;
@@ -21,10 +22,10 @@ import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmObject;
+import io.realm.annotations.Index;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.RealmClass;
-import org.json.JSONObject;
-import org.w3c.dom.Text;
+import io.realm.exceptions.RealmException;
 
 /**
  * this class represents a particular message sent by a given {@link User}.
@@ -42,11 +43,11 @@ public class Message extends RealmObject {
 
     public static final int NEVER_DELETE = 0, AFTER_FIVE_DAYS = 1, AFTER_TEN_DAYS = 2, AFTER_30_DAYS = 3;
 
-    public static final int STATE_PENDING = 1001,
-            STATE_SENT = 1002,
-            STATE_RECEIVED = 1003,
-            STATE_SEEN = 1004,
-            STATE_SEND_FAILED = 1005;
+    public static final int STATE_PENDING = 0x3e9,
+            STATE_SENT = 0x3ea, //if you change this remember to update the socket io server too
+            STATE_RECEIVED = 0x3eb,
+            STATE_SEEN = 0x3ec,
+            STATE_SEND_FAILED = 0x3ed; //and this one too
 
     /***********************************
      * the order of these fields i.e. TYPE_* is relevant to some components for sorting purposes
@@ -69,7 +70,9 @@ public class Message extends RealmObject {
     private final static Object idLock = new Object();
     @PrimaryKey
     private String id;
+    @Index
     private String from; //sender's id
+    @Index
     private String to; //recipient's id
     private String messageBody;
     private Date dateComposed;
@@ -102,13 +105,18 @@ public class Message extends RealmObject {
     /**
      * @return a new id that is likely unique.there is no guarantee that this will be unique
      */
-    public static String generateIdPossiblyUnique() {
+    public static String generateIdPossiblyUnique(String to) {
+        //before changing how we generate ids make sure all components relying on this behaviour are updated
+        //eg: MessageActivity (the name might have changed)
+        if (to == null) {
+            throw new IllegalArgumentException("to == null");
+        }
         Application appContext = Config.getApplication();
         Realm realm = REALM(appContext);
         String id;
         synchronized (idLock) {
-            long count = realm.where(Message.class).count() + 1;
-            id = count + "@" + UserManager.getInstance().getCurrentUser().getUserId() + "@" + System.nanoTime();
+            long count = realm.where(Message.class).equalTo(FIELD_ID, to).count() + 1;
+            id = count + "@" + UserManager.getMainUserId() + "@" + to + "@" + System.currentTimeMillis();
         }
         PLog.i(TAG, "generated message id: " + id);
         realm.close();
@@ -122,7 +130,13 @@ public class Message extends RealmObject {
      * @return a {@link Realm that is guaranteed to work with messages all the time}
      */
     public static Realm REALM(Context context) {
-        return Realm.getInstance(context);
+        File dataFile = context.getDir("messages_crypt", Context.MODE_PRIVATE);
+        try {
+            return Realm.getInstance(dataFile, UserManager.getKey());
+        } catch (RealmException e) {
+            ErrorCenter.reportError("realmSecureError", Config.getApplicationContext().getString(R.string.encryptionNotAvailable), null);
+            return Realm.getInstance(dataFile);
+        }
     }
 
     public static boolean isTextMessage(Message message) {
@@ -205,7 +219,7 @@ public class Message extends RealmObject {
         Message message = theRealm.createObject(Message.class);
         message.setDateComposed(new Date());
         message.setMessageBody(body);
-        message.setId(generateIdPossiblyUnique());
+        message.setId(generateIdPossiblyUnique(to));
         message.setFrom(UserManager.getMainUserId());
         message.setState(Message.STATE_PENDING);
         message.setType(type);
@@ -238,7 +252,7 @@ public class Message extends RealmObject {
         Message message = new Message();
         message.setDateComposed(new Date());
         message.setMessageBody(body);
-        message.setId(generateIdPossiblyUnique());
+        message.setId(generateIdPossiblyUnique(to));
         message.setFrom(UserManager.getMainUserId());
         message.setState(Message.STATE_PENDING);
         message.setType(type);
@@ -417,7 +431,7 @@ public class Message extends RealmObject {
         if (message == null) {
             throw new IllegalArgumentException("message == null");
         }
-        return MessageJsonAdapter.INSTANCE.toJson(message).toString();
+        return MessageJsonAdapter.INSTANCE.toJSON(message).toString();
     }
 
     public static Message fromJSON(String json) {

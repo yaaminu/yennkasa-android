@@ -1,16 +1,18 @@
 package com.idea.data;
 
+import android.app.AlarmManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.v4.util.Pair;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.idea.Errors.ErrorCenter;
-import com.idea.data.settings.PersistedSetting;
 import com.idea.net.HttpResponse;
 import com.idea.net.ParseClient;
 import com.idea.net.UserApiV2;
@@ -20,6 +22,7 @@ import com.idea.util.FileUtils;
 import com.idea.util.PLog;
 import com.idea.util.PhoneNumberNormaliser;
 import com.idea.util.TaskManager;
+import com.idea.util.ThreadUtils;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
@@ -29,6 +32,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -44,7 +49,6 @@ import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.RealmResults;
-import retrofit.mime.TypedFile;
 
 /**
  * @author by Null-Pointer on 5/27/2015.
@@ -52,9 +56,11 @@ import retrofit.mime.TypedFile;
 public final class UserManager {
 
     public static final String SILENT = "silent";
-    private static final String TAG = UserManager.class.getSimpleName(),
-            KEY_USER_PASSWORD = "klfiildelklaklier",
-            KEY_SESSION_ID = "lfl/-90-09=klvj8ejf",
+    private static final String TAG = UserManager.class.getSimpleName();
+    public static final String BLOCKED_USERS = FileUtils.hash(TAG + "blocked.users.messages");
+    public static final String KEY = TAG + "blocked.users.messages",
+    //            KEY_USER_PASSWORD = "klfiildelklaklier",
+    KEY_SESSION_ID = "lfl/-90-09=klvj8ejf",
             KEY_USER_VERIFIED = "vvlaikkljhf",
             DEFAULT_VALUE = "defaultValue",
             sessionPrefFileName = "slfdafks",
@@ -63,8 +69,10 @@ public final class UserManager {
     private static final UserManager INSTANCE = new UserManager();
     private static final String CLEANED_UP = "lkfakfalkfclkieifklaklf";
     public static final String KEY_ACCESS_TOKEN = "accessToken";
-    public static final String CHANGE_DP_KEY = "changeDp";
-    public static final String NO_DP_CHANGE = "noDpChange";
+    private static final String CHANGE_DP_KEY = "dpChange";
+    private static final String NO_DP_CHANGE = "no dp change";
+    private static final String PART_2 = FileUtils.hash("kloi3jlalfak982bbc,avqaafafals");
+    private static final String PART_1 = FileUtils.hash("vncewe4209ipk;lj82lkja90");
     private final File sessionFile;
     private final Object mainUserLock = new Object();
     private final Exception NO_CONNECTION_ERROR;
@@ -83,7 +91,8 @@ public final class UserManager {
     public static final String DEFAULT = "default";
     /***********************************************************************/
     private static final Set<String> protectedKeys = new HashSet<>();
-    private final Map<String, String> dpChangeInProgress = new HashMap<>();
+    private final Set<String> dpChangeInProgress = new HashSet<>();
+    private final Map<Object, Long> rateLimiter = new HashMap<>();
 
     static {
         Collections.addAll(protectedKeys, IN_APP_NOTIFICATIONS,
@@ -117,13 +126,18 @@ public final class UserManager {
                 }
                 if (userId.equals(getMainUserId())) {
                     user.setName(Config.getApplicationContext().getString(R.string.you));
+                    idsAndNames.put(userId, user.getName());
                     return;
+                } else {
+                    idsAndNames.put(userId, user.getName());
                 }
                 ContactsManager.getInstance().findAllContactsSync(new ContactsManager.Filter<ContactsManager.Contact>() {
                     @Override
                     public boolean accept(ContactsManager.Contact contact) throws AbortOperation {
                         if (contact.numberInIEE_Format.equals(userId)) {
                             user.setName(contact.name);
+                            idsAndNames.put(userId, contact.name);
+                            user.setInContacts(true);
                             throw new AbortOperation("done"); //contact manager will stop processing contacts
                         }
                         return false; //we don't care about return values
@@ -136,11 +150,16 @@ public final class UserManager {
 
         @Override
         public void process(final Collection<User> users) {
-            if (users.isEmpty()) {
-                return;
-            }
-            for (User user : users) {
-                process(user);
+            try {
+                processLock.lock();
+                if (users.isEmpty()) {
+                    return;
+                }
+                for (User user : users) {
+                    process(user);
+                }
+            } finally {
+                processLock.unlock();
             }
         }
 
@@ -148,33 +167,14 @@ public final class UserManager {
             final String userId = user.getUserId();
             String userDp = getStringPref(userId + CHANGE_DP_KEY, NO_DP_CHANGE);
             File file = new File(userDp);
-            if (!file.exists()) { //try to extract the one from the backend
-                userDp = user.getDP();
-                if (TextUtils.isEmpty(userDp)) {
-                    if (BuildConfig.DEBUG) {
-                        throw new IllegalStateException("dp == null");
-                    }
-                    user.setDP("avatar_empty");
-                } else {
-                    int idx = userDp.lastIndexOf("/");
-                    if (idx != -1) {
-                        //our dp format is such that, if user has not set any dp it  defaults to "avatar_empty"
-                        //hence so far as idx is not -1 we no user has set the dp
-                        String path = userDp.substring(idx + 1);
-                        file = new File(Config.getAppProfilePicsBaseDir(), path);
-                        if (file.exists()) {
-                            user.setDP(file.getAbsolutePath());
-                        }
-                    }
-                }
-            } else { //otherwise use the current one this user is changing
+            if (file.exists()) { //always users must see what they are changing
                 user.setDP(file.getAbsolutePath());
             }
         }
     };
 
     private UserManager() {
-        NO_CONNECTION_ERROR = new Exception(Config.getApplicationContext().getString(R.string.st_unable_to_connect));
+        NO_CONNECTION_ERROR = new Exception(Config.getApplicationContext().getString(R.string.not_connected));
         userApi = ParseClient.getInstance(preprocessor);
         userPrefsLocation = Config.getApplicationContext().getDir(USER_PREFS_FILE_NAME, Context.MODE_PRIVATE);
         sessionFile = Config.getApplicationContext().getDir(sessionPrefFileName, Context.MODE_PRIVATE);
@@ -199,17 +199,55 @@ public final class UserManager {
 
     private synchronized void saveMainUser(User user) {
         final Context context = Config.getApplicationContext();
+        putSessionPref(KEY_SESSION_ID, user.getUserId());
         Realm realm = User.Realm(context);
         realm.beginTransaction();
         realm.copyToRealmOrUpdate(user);
         realm.commitTransaction();
-        putSessionPref(KEY_SESSION_ID, user.getUserId());
-        putSessionPref(KEY_USER_PASSWORD, user.getPassword());
         realm.close();
+    }
+
+    static byte[] getKey() {
+        SharedPreferences preferences = Config.getPreferences("lskalkaiakf");
+        String part1 = preferences.getString(PART_1, null),
+                part2 = preferences.getString(PART_2, null);
+        if (part1 == null || part2 == null) {
+            genKey();
+            return getKey();
+        }
+        byte[] ret = new byte[64],
+                part1Byte = part1.getBytes(),
+                part2Byte = part2.getBytes();
+
+        if (part1Byte.length < 32 || part2Byte.length < 32) {
+            genKey();
+            return getKey();
+        }
+        for (int i = 0; i < 32; i++) { //shuffle the bytes
+            ret[i] = part1Byte[i];
+        }
+        for (int i = 0; i < 32; i++) { //shuffle the bytes
+            ret[i + 32] = part2Byte[i];
+        }
+        return ret;
+    }
+
+    private static void genKey() {
+        SecureRandom random = new SecureRandom();
+        SharedPreferences preferences = Config.getPreferences("lskalkaiakf");
+        byte[] randBytes = new byte[32];
+        random.nextBytes(randBytes);
+        String keyString = FileUtils.bytesToString(randBytes);
+        random.nextBytes(randBytes);
+        preferences.edit().putString(PART_1, keyString).apply();
+        keyString = FileUtils.bytesToString(randBytes);
+        preferences.edit().putString(PART_2, keyString)
+                .apply();
     }
 
 
     public User getCurrentUser() {
+
         synchronized (mainUserLock) {
             if (mainUser != null) {
                 return mainUser;
@@ -238,6 +276,9 @@ public final class UserManager {
     }
 
     private boolean isEveryThingSetup() {
+        if (!userApi.isUserAuthenticated()) {
+            return false;
+        }
         final User mainUser = getCurrentUser();
         if (mainUser == null || mainUser.getUserId().isEmpty() ||
                 mainUser.getName().isEmpty() ||
@@ -255,16 +296,21 @@ public final class UserManager {
 
 
     private void putSessionPref(String key, Object value) {
-        Realm realm = PersistedSetting.REALM(sessionFile);
-        realm.beginTransaction();
-        PersistedSetting setting = new PersistedSetting();
-        setting.setKey(key);
-        setting.setStandAlone(true);
-        if (!PersistedSetting.put(setting, value))
-            throw new RuntimeException();
-        realm.copyToRealmOrUpdate(setting);
-        realm.commitTransaction();
-        realm.close();
+        try {
+            Realm realm = PersistedSetting.REALM(sessionFile);
+            realm.beginTransaction();
+            PersistedSetting setting = new PersistedSetting();
+            setting.setKey(key);
+            setting.setStandAlone(true);
+            if (!PersistedSetting.put(setting, value))
+                throw new RuntimeException();
+            realm.copyToRealmOrUpdate(setting);
+            realm.commitTransaction();
+            realm.close();
+        } catch (Exception e) {
+            PLog.d(TAG, e.getMessage(), e.getCause());
+            throw new RuntimeException(e.getCause());
+        }
     }
 
     private String getSessionStringPref(String key, String defaultValue) {
@@ -323,14 +369,6 @@ public final class UserManager {
         return realm.where(User.class).equalTo(User.FIELD_ID, currUserId).findFirst();
     }
 
-    private String getUserPassword() {
-        String password = getSessionStringPref(KEY_USER_PASSWORD, null);
-        if (password == null) {
-            // TODO: 7/19/2015 logout user and clean up realm as we suspect intruders
-            throw new IllegalStateException("session data tampered with");
-        }
-        return password;
-    }
 
     public boolean isCurrentUser(String userId) {
         if (TextUtils.isEmpty(userId)) {
@@ -341,6 +379,7 @@ public final class UserManager {
     }
 
     public void createGroup(final String groupName, final Set<String> membersId, final CreateGroupCallBack callBack) {
+
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             callBack.done(NO_CONNECTION_ERROR, null);
             return;
@@ -600,10 +639,14 @@ public final class UserManager {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             return;
         }
+        if (!rateLimitNotExceeded("refreshGroups", 5 * 60 * 1000)) {
+            PLog.d(TAG, "not refreshing... refreshed not too long ago");
+            return;
+        }
         Worker.getGroups();
     }
 
-    public void refreshUserDetails(final String userId) {
+    private void refreshUserDetails(final String userId) {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             return;
         }
@@ -619,7 +662,7 @@ public final class UserManager {
         }
 
         String wasChangingDp = getStringPref(userId + CHANGE_DP_KEY, NO_DP_CHANGE);
-        if (!wasChangingDp.equals(NO_DP_CHANGE)) {
+        if (!wasChangingDp.equals(NO_DP_CHANGE) && !dpChangeInProgress.contains(userId)) {
             if (new File(wasChangingDp).exists()) {
                 changeDp(userId, wasChangingDp, new CallBack() {
                     @Override
@@ -631,7 +674,7 @@ public final class UserManager {
         }
     }
 
-    private void doRefreshUser(String userId) {
+    private void doRefreshUser(final String userId) {
         userApi.getUser(userId, new UserApiV2.Callback<User>() {
             @Override
             public void done(Exception e, User onlineUser) {
@@ -642,6 +685,7 @@ public final class UserManager {
                     realm.commitTransaction();
                     realm.close();
                 } else {
+                    mapUserToContactName(userId);
                     PLog.w(TAG, "refreshing user failed with reason: " + e.getMessage());
                 }
             }
@@ -710,40 +754,26 @@ public final class UserManager {
             return;
         }
         synchronized (dpChangeInProgress) {
-            String inProgress = dpChangeInProgress.get(userId);
-            if (inProgress != null && inProgress.equals(imageFile.getAbsolutePath())) {
+            if (!dpChangeInProgress.add(userId)) {
                 PLog.d(TAG, "already changing dp");
+                doNotify(new Exception(Config.getApplicationContext().getString(R.string.busy)), callback);
                 return;
             }
-            dpChangeInProgress.put(userId, imageFile.getAbsolutePath());
         }
-        Realm realm = User.Realm(Config.getApplicationContext());
-        User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
-        if (user != null) {
-            if (!user.getDP().equals(imageFile.getAbsolutePath())) {
-                realm.beginTransaction();
-                user.setDP(imageFile.getAbsolutePath());
-                realm.commitTransaction();
-                doChangeDp(userId, imageFile.getAbsolutePath());
-            } else {
-                PLog.d(TAG, "same dp ");
-            }
-            doNotify(null, callback);
-        } else {
-            PLog.f(TAG, "user changing dp vanished");
-            doNotify(new Exception(Config.getApplicationContext().getString(R.string.an_error_occurred)), callback);
-        }
-        realm.close();
+        // TODO: 11/5/2015 replace this with a job
+        doChangeDp(userId, imagePath, callback);
     }
 
-    private void doChangeDp(final String userId, final String imagePath) {
+    private void doChangeDp(final String userId, final String imagePath, final CallBack callback) {
         TaskManager.executeNow(new Runnable() {
             @Override
             public void run() {
                 final File dpFile = saveDpLocally(userId, new File(imagePath));
                 if (dpFile != null) {
+                    doNotify(null, callback);
                     Worker.changeDp(userId, dpFile.getAbsolutePath());
                 } else {
+                    doNotify(new Exception(Config.getApplicationContext().getString(R.string.an_error_occurred)), callback);
                     Intent intent = new Intent(Config.getApplicationContext(), Worker.class);
                     intent.setAction(Worker.CHANGE_DP);
                     intent.putExtra(User.FIELD_ID, userId);
@@ -756,29 +786,6 @@ public final class UserManager {
                 }
             }
         }, true);
-    }
-
-
-    void completeDpChange(final String userId, String dpFile) {
-        putStandAlonePref(userId + CHANGE_DP_KEY, dpFile);
-        if (!ConnectionUtils.isConnectedOrConnecting()) {
-            synchronized (dpChangeInProgress) {
-                dpChangeInProgress.remove(userId);
-            }
-            return;
-        }
-        String placeHolder = isGroup(userId) ? "groups" : "users";
-        userApi.changeDp(placeHolder, userId, new TypedFile("image/*", new File(dpFile)), new UserApiV2.Callback<HttpResponse>() {
-            @Override
-            public void done(Exception e, final HttpResponse response) {
-                synchronized (dpChangeInProgress) {
-                    dpChangeInProgress.remove(userId);
-                }
-                if (e == null) {
-                    putStandAlonePref(userId + CHANGE_DP_KEY, NO_DP_CHANGE);
-                }
-            }
-        });
     }
 
     private File saveDpLocally(String userId, File imageFile) {
@@ -816,6 +823,28 @@ public final class UserManager {
         return null;
     }
 
+    void completeDpChange(final String userId, String dpFile) {
+        putStandAlonePref(userId + CHANGE_DP_KEY, dpFile);
+        if (!ConnectionUtils.isConnectedOrConnecting()) {
+            synchronized (dpChangeInProgress) {
+                dpChangeInProgress.remove(userId);
+            }
+            return;
+        }
+        String placeHolder = isGroup(userId) ? "groups" : "users";
+        userApi.changeDp(placeHolder, userId, new File(dpFile), new UserApiV2.Callback<HttpResponse>() {
+            @Override
+            public void done(Exception e, final HttpResponse response) {
+                synchronized (dpChangeInProgress) {
+                    dpChangeInProgress.remove(userId);
+                }
+                if (e == null) {
+                    putStandAlonePref(userId + CHANGE_DP_KEY, NO_DP_CHANGE);
+                }
+            }
+        });
+    }
+
     public void logIn(final String phoneNumber, final String userIso2LetterCode, final CallBack callback) {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             doNotify(NO_CONNECTION_ERROR, callback);
@@ -848,8 +877,6 @@ public final class UserManager {
         }
         user.setUserId(phoneNumber);
         user.setCountry(userIso2LetterCode);
-        String password = Base64.encodeToString(phoneNumber.getBytes(), Base64.DEFAULT);
-        user.setPassword(password);
         doLogIn(user, callback);
     }
 
@@ -858,7 +885,6 @@ public final class UserManager {
             @Override
             public void done(Exception e, User backendUser) {
                 if (e == null) {
-                    backendUser.setPassword(user.getPassword());
                     saveMainUser(backendUser);
                     doRefreshGroups(); //async
                     doNotify(null, callback);
@@ -899,33 +925,38 @@ public final class UserManager {
                           final String phoneNumber,
                           final String countryIso,
                           final CallBack callback) {
-        String thePhoneNumber;
-        try {
-            thePhoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, countryIso);
-        } catch (NumberParseException e) {
-            PLog.e(TAG, e.getMessage());
-            doNotify(e, callback);
-            return;
-        }
-        final User user = new User();
-        user.setUserId(thePhoneNumber);
-        String password = Base64.encodeToString(user.getUserId().getBytes(), Base64.DEFAULT);
-        user.setPassword(password);
-        user.setName(name);
-        user.setCountry(countryIso);
-        userApi.registerUser(user, new UserApiV2.Callback<User>() {
-            @Override
-            public void done(Exception e, User backEndUser) {
-                if (e == null) {
-                    backEndUser.setPassword(user.getPassword());
-                    saveMainUser(backEndUser);
-                    doNotify(null, callback);
-                } else {
-                    doNotify(e, callback);
-                }
+        if (rateLimitNotExceeded("signup", 60000)) {
+            String thePhoneNumber;
+            try {
+                thePhoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, countryIso);
+            } catch (NumberParseException e) {
+                PLog.e(TAG, e.getMessage());
+                doNotify(e, callback);
+                return;
             }
+            final User user = new User();
+            user.setUserId(thePhoneNumber);
+            user.setName(name);
+            user.setCountry(countryIso);
+            userApi.registerUser(user, new UserApiV2.Callback<User>() {
+                @Override
+                public void done(Exception e, User backEndUser) {
+                    if (e == null) {
+                        saveMainUser(backEndUser);
+                        doNotify(null, callback);
+                    } else {
+                        doNotify(e, callback);
+                    }
+                }
 
-        });
+            });
+        } else {
+            doNotify(new Exception(getString(R.string.busy)), callback);
+        }
+    }
+
+    private String getString(@StringRes int res) {
+        return Config.getApplicationContext().getString(res);
     }
 
     public void verifyUser(final String token, final CallBack callBack) {
@@ -944,19 +975,23 @@ public final class UserManager {
         if (!isUserLoggedIn()) {
             throw new IllegalStateException("no user logged for verification");
         }
-        userApi.verifyUser(getCurrentUser().getUserId(), token, new UserApiV2.Callback<UserApiV2.SessionData>() {
-            @Override
-            public void done(Exception e, UserApiV2.SessionData data) {
-                if (e == null) {
-                    putSessionPref(KEY_ACCESS_TOKEN, data.accessToken);
-                    putSessionPref(KEY_USER_VERIFIED, true);
-                    initialiseSettings();
-                    doNotify(null, callBack);
-                } else {
-                    doNotify(e, callBack);
+        if (rateLimitNotExceeded("verifyUser", 30000)) {
+            userApi.verifyUser(getCurrentUser().getUserId(), token, new UserApiV2.Callback<UserApiV2.SessionData>() {
+                @Override
+                public void done(Exception e, UserApiV2.SessionData data) {
+                    if (e == null) {
+                        putSessionPref(KEY_ACCESS_TOKEN, data.accessToken);
+                        putSessionPref(KEY_USER_VERIFIED, true);
+                        initialiseSettings();
+                        doNotify(null, callBack);
+                    } else {
+                        doNotify(e, callBack);
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            doNotify(new Exception(getString(R.string.busy)), callBack);
+        }
     }
 
     private void initialiseSettings() {
@@ -975,12 +1010,20 @@ public final class UserManager {
         if (BuildConfig.DEBUG && isUserVerified()) {
             throw new IllegalStateException();
         }
-        userApi.sendVerificationToken(getMainUserId(), new UserApiV2.Callback<HttpResponse>() {
-            @Override
-            public void done(Exception e, HttpResponse aBoolean) {
-                doNotify(e, callback);
-            }
-        });
+        if (!ConnectionUtils.isConnected()) {
+            doNotify(NO_CONNECTION_ERROR, callback);
+            return;
+        }
+        if (rateLimitNotExceeded("sendToken", AlarmManager.INTERVAL_FIFTEEN_MINUTES / 30)) {
+            userApi.sendVerificationToken(getMainUserId(), new UserApiV2.Callback<HttpResponse>() {
+                @Override
+                public void done(Exception e, HttpResponse aBoolean) {
+                    doNotify(e, callback);
+                }
+            });
+        } else {
+            doNotify(new Exception(getString(R.string.busy)), callback);
+        }
     }
 
     public void resendToken(final CallBack callBack) {
@@ -995,35 +1038,39 @@ public final class UserManager {
             doNotify(NO_CONNECTION_ERROR, callBack);
             return;
         }
-        userApi.resendToken(getCurrentUser().getUserId(), getUserPassword(), new UserApiV2.Callback<HttpResponse>() {
-            @Override
-            public void done(Exception e, HttpResponse response) {
-                doNotify(e, callBack);
-            }
-        });
+        if (rateLimitNotExceeded("resendToken", AlarmManager.INTERVAL_FIFTEEN_MINUTES / 30)) {
+            userApi.resendToken(getCurrentUser().getUserId(), null, new UserApiV2.Callback<HttpResponse>() {
+                @Override
+                public void done(Exception e, HttpResponse response) {
+                    doNotify(e, callBack);
+                }
+            });
+        } else {
+            doNotify(new Exception(getString(R.string.busy)), callBack);
+        }
     }
 
-    @SuppressWarnings("unused")
-    public void logOut(Context context, final CallBack logOutCallback) {
-
-        oops();
-        //TODO logout user from backend
-        String userId = getSessionStringPref(KEY_SESSION_ID, null);
-        if ((userId == null)) {
-            throw new AssertionError("calling logout when no user is logged in"); //security hole!
-        }
-
-        Realm realm = User.Realm(context);
-        // TODO: 6/14/2015 remove this in production code.
-        User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
-        if (user == null) {
-            throw new IllegalStateException("existing session id with no corresponding User in the database");
-        }
-        realm.clear(User.class);
-        realm.clear(Message.class);
-        realm.clear(Conversation.class);
-        realm.close();
-    }
+//    @SuppressWarnings("unused")
+//    public void logOut(Context context, final CallBack logOutCallback) {
+//
+//        oops();
+//        //TODO logout user from backend
+//        String userId = getSessionStringPref(KEY_SESSION_ID, null);
+//        if ((userId == null)) {
+//            throw new AssertionError("calling logout when no user is logged in"); //security hole!
+//        }
+//
+//        Realm realm = User.Realm(context);
+//        // TODO: 6/14/2015 remove this in production code.
+//        User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
+//        if (user == null) {
+//            throw new IllegalStateException("existing session id with no corresponding User in the database");
+//        }
+//        realm.clear(User.class);
+//        realm.clear(Message.class);
+//        realm.clear(Conversation.class);
+//        realm.close();
+//    }
 
     private void oops() {
         throw new UnsupportedOperationException();
@@ -1033,14 +1080,48 @@ public final class UserManager {
         if (!ConnectionUtils.isConnected()) {
             return;
         }
-        userApi.syncContacts(array, new UserApiV2.Callback<List<User>>() {
-            @Override
-            public void done(Exception e, List<User> users) {
-                if (e == null) {
-                    saveFreshUsers(users);
+        final String syncContacts = "syncContacts";
+
+        if (rateLimitNotExceeded(syncContacts, AlarmManager.INTERVAL_FIFTEEN_MINUTES / 3)) {
+            userApi.syncContacts(array, new UserApiV2.Callback<List<User>>() {
+                @Override
+                public void done(Exception e, List<User> users) {
+                    if (e == null) {
+                        saveFreshUsers(users);
+                    } else {
+                        resetRateLimit(syncContacts);
+                    }
+                }
+            });
+        } else {
+            PLog.d(TAG, "sync aborted... last synced was not too long ago");
+        }
+    }
+
+    private void resetRateLimit(Object tag) {
+        synchronized (rateLimiter) {
+            rateLimiter.remove(tag);
+        }
+    }
+
+    private boolean rateLimitNotExceeded(Object tag, long interval) {
+        if (tag == null) {
+            throw new IllegalArgumentException("tag == null");
+        }
+        if (interval <= 0) {
+            throw new IllegalArgumentException("interval <=0 ");
+        }
+        synchronized (rateLimiter) {
+            Long lastUpdated = rateLimiter.get(tag);
+            if (lastUpdated != null) {
+                long delta = SystemClock.uptimeMillis() - lastUpdated;
+                if (delta < interval) {
+                    return false;
                 }
             }
-        });
+            rateLimiter.put(tag, SystemClock.uptimeMillis());
+        }
+        return true;
     }
 
     public void leaveGroup(final String id, final CallBack callBack) {
@@ -1050,7 +1131,11 @@ public final class UserManager {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             doNotify(NO_CONNECTION_ERROR, callBack);
         }
-        userApi.leaveGroup(id, getCurrentUser().getUserId(), getUserPassword(), new UserApiV2.Callback<HttpResponse>() {
+        if (!rateLimitNotExceeded("leaveGroup", 60000)) {
+            doNotify(new Exception(getString(R.string.busy)), callBack);
+            return;
+        }
+        userApi.leaveGroup(id, getCurrentUser().getUserId(), null, new UserApiV2.Callback<HttpResponse>() {
 
             @Override
             public void done(Exception e, HttpResponse response) {
@@ -1223,29 +1308,74 @@ public final class UserManager {
         return fetchUserIfRequired(realm, userId, false);
     }
 
-    public User fetchUserIfRequired(Realm realm, String userId, boolean refresh) {
+    public User fetchUserIfRequired(Realm realm, final String userId, boolean refresh) {
         User peer = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
 
         if (peer == null) {
-            if (userId.contains("@")) {
-                throw new IllegalStateException("should not happen");
-            }
-            realm.beginTransaction();
             peer = new User();
             peer.setUserId(userId);
-            peer.setHasCall(false); //we cannot tell for now
-            peer.setDP(userId);
-            peer.setName(PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO()));
-            peer.setType(User.TYPE_NORMAL_USER);
+            if (userId.contains("@")) {
+                peer.setType(User.TYPE_GROUP);
+                peer.setMembers(new RealmList<User>());
+                String[] parts = userId.split("\\Q@\\E");
+                peer.setName(parts[0]);
+                User admin = fetchUserIfRequired(realm, parts[1]);
+                peer.setAdmin(admin);
+                peer.getMembers().add(admin);
+                if (!isCurrentUser(parts[1])) {
+                    //noinspection ConstantConditions,ConstantConditions
+                    peer.getMembers().add(getCurrentUser(realm));
+                }
+                peer.setInContacts(false);
+                peer.setDP("avatar_empty");
+                refresh(userId, refresh);
+            } else {
+                peer.setInContacts(false); //we cannot tell for now
+                peer.setDP("avatar_empty");
+                peer.setType(User.TYPE_NORMAL_USER);
+                peer.setName(PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO()));
+                refresh(userId, refresh);
+            }
+            realm.beginTransaction();
             realm.copyToRealmOrUpdate(peer);
             realm.commitTransaction();
-            refreshUserDetails(userId);
-        } else {
-            if (refresh) {
-                refreshUserDetails(userId);
-            }
+        } else if (!peer.getInContacts()) {
+            refresh(userId, refresh);
         }
         return peer;
+    }
+
+    private void refresh(final String userId, final boolean refresh) {
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                if (refresh && ConnectionUtils.isConnected()) {
+                    if (rateLimitNotExceeded("refreshUser" + userId, 2 * 60 * 1000)) {
+                        refreshUserDetails(userId);
+                        return;
+                    }
+                    PLog.d(TAG, "not refreshing, user... refreshed not too long ago");
+                }
+                mapUserToContactName(userId);
+            }
+        }, true);
+    }
+
+    private void mapUserToContactName(String userId) {
+        ThreadUtils.ensureNotMain();
+        ContactsManager.Contact contact = ContactsManager.getInstance().findContact(userId);
+        if (contact != null) {
+            Realm realm = User.Realm(Config.getApplicationContext());
+            User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
+            if (user != null) {
+                realm.beginTransaction();
+                user.setName(contact.name);
+                idsAndNames.put(userId, contact.name);
+                user.setInContacts(true);
+                realm.commitTransaction();
+            }
+            realm.close();
+        }
     }
 
     @SuppressWarnings("unused")
@@ -1263,8 +1393,11 @@ public final class UserManager {
 
     public Object putStandAlonePref(String key, Object value) {
         ensureNotProtectedKey(key);
-        if (value == null || key == null) {
+        if (key == null) {
             throw new IllegalArgumentException("null!");
+        }
+        if (value == null) {
+            return null;
         }
         Realm realm = PersistedSetting.REALM(userPrefsLocation);
 
@@ -1521,6 +1654,46 @@ public final class UserManager {
         });
     }
 
+    private final Lock blockLock = new ReentrantLock(true);
+
+    private void ensureNotNull(Object o) {
+        if (o == null) {
+            throw new IllegalArgumentException("null!");
+        }
+    }
+
+    public void blockUser(final String peerId) {
+        ensureNotNull(peerId);
+        try {
+            blockLock.lock();
+            SharedPreferences preferences = Config.getPreferences(BLOCKED_USERS);
+            preferences.edit().putString(BLOCKED_USERS + peerId, peerId).apply();
+        } finally {
+            blockLock.unlock();
+        }
+    }
+
+    public boolean isBlocked(String userId) {
+        ensureNotNull(userId);
+        try {
+            blockLock.lock();
+            return Config.getPreferences(BLOCKED_USERS).contains(BLOCKED_USERS + userId);
+        } finally {
+            blockLock.unlock();
+        }
+    }
+
+    public void unBlockUser(String userId) {
+        ensureNotNull(userId);
+        try {
+            blockLock.lock();
+            SharedPreferences preferences = Config.getPreferences(BLOCKED_USERS);
+            preferences.edit().remove(BLOCKED_USERS + userId).apply();
+        } finally {
+            blockLock.unlock();
+        }
+    }
+
     public interface CallBack {
         void done(Exception e);
     }
@@ -1528,4 +1701,35 @@ public final class UserManager {
     public interface CreateGroupCallBack {
         void done(Exception e, String groupId);
     }
+
+    public String getName(String userId) {
+        if (TextUtils.isEmpty(userId)) {
+            throw new IllegalArgumentException("userid == null");
+        }
+        String userName = idsAndNames.get(userId);
+        if (userName == null) {
+            Realm realm = User.Realm(Config.getApplicationContext());
+            User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
+            if (user != null) {
+                idsAndNames.put(userId, user.getName());
+            } else {
+                userName = userId;
+            }
+            realm.close();
+        }
+        return userName;
+    }
+
+    @SuppressWarnings("unused")
+    private void indexUserNames() {
+        ThreadUtils.ensureNotMain();
+        Realm realm = User.Realm(Config.getApplicationContext());
+        RealmResults<User> users = realm.where(User.class).findAll();
+        for (User user : users) {
+            idsAndNames.put(user.getUserId(), user.getName());
+        }
+        realm.close();
+    }
+
+    private final Map<String, String> idsAndNames = new ConcurrentHashMap<>();
 }

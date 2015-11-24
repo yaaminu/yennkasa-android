@@ -4,9 +4,9 @@ import com.google.gson.JsonObject;
 import com.idea.data.Message;
 import com.idea.data.User;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 import retrofit.http.Body;
 import retrofit.http.DELETE;
@@ -16,7 +16,6 @@ import retrofit.http.GET;
 import retrofit.http.POST;
 import retrofit.http.PUT;
 import retrofit.http.Path;
-import retrofit.mime.TypedFile;
 
 /**
  * @author by Null-Pointer on 5/27/2015.
@@ -49,7 +48,7 @@ public interface UserApiV2 {
     void getGroups(@Path(Message.FIELD_ID) String id, Callback<List<User>> response);
 
     @PUT("/api/v1/{placeHolder}/{id}/dp")
-    void changeDp(@Path("placeHolder") String userOrGroup, @Path(Message.FIELD_ID) String id, @Body TypedFile file, Callback<HttpResponse> response);
+    void changeDp(@Path("placeHolder") String userOrGroup, @Path(Message.FIELD_ID) String id, @Body File file, Callback<HttpResponse> response);
 
     @FormUrlEncoded
     @POST("/api/v1/groups/")
@@ -97,7 +96,7 @@ public interface UserApiV2 {
 
     void removeGroup(String adminId, String groupId, Callback<HttpResponse> callback);
 
-
+    boolean isUserAuthenticated();
     interface Callback<T> {
         void done(Exception e, T t);
     }

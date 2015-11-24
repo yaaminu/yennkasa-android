@@ -1,6 +1,8 @@
 package com.idea.adapter;
 
+import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.media.ThumbnailUtils;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -12,23 +14,23 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.idea.Errors.ErrorCenter;
 import com.idea.Errors.PairappException;
 import com.idea.data.Message;
+import com.idea.data.UserManager;
+import com.idea.data.util.MessageUtils;
 import com.idea.pairapp.R;
 import com.idea.ui.PairAppBaseActivity;
 import com.idea.util.PLog;
 import com.idea.util.PreviewsHelper;
 import com.idea.util.SimpleDateUtil;
 import com.idea.util.TaskManager;
+import com.idea.util.ThreadUtils;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
-import com.jmpergar.awesometext.AwesomeTextHandler;
-import com.jmpergar.awesometext.MentionSpanRenderer;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -56,14 +58,16 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             R.layout.one_line_message_list_item_incoming,
             R.layout.one_line_message_list_item_outgoing
     };
+    private final Drawable bgOut, bgOutXtra, bgIn, bgInXtra;
     private final SparseIntArray messageStates;
     private final Picasso PICASSO;
-    private final LruCache<String, Bitmap> thumbnailCache;
-    private final Delegate delegate;
-    private static final String MENTION_PATTERN = "(@.*)";
+    private static final LruCache<String, Bitmap> thumbnailCache = new LruCache<>(5);
 
-    public MessagesAdapter(Delegate delegate, RealmResults<Message> realmResults, boolean automaticUpdate) {
-        super(delegate.getContext(), realmResults, automaticUpdate);
+    private final Delegate delegate;
+    private final boolean isGroupMessages;
+
+    public MessagesAdapter(Delegate delegate, RealmResults<Message> realmResults, boolean isGroupMessages) {
+        super(delegate.getContext(), realmResults, true);
         this.delegate = delegate;
         messageStates = new SparseIntArray(4);
         messageStates.put(Message.STATE_PENDING, R.drawable.ic_vertical_align_top_white_18dp);
@@ -71,10 +75,22 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         messageStates.put(Message.STATE_SEND_FAILED, R.drawable.ic_error_white_18dp);
         messageStates.put(Message.STATE_SEEN, R.drawable.ic_visibility_white_18dp);
         messageStates.put(Message.STATE_RECEIVED, R.drawable.ic_done_all_white_18dp);
-        thumbnailCache = new LruCache<>(5);
+        this.isGroupMessages = isGroupMessages;
         PICASSO = Picasso.with(context);
-
+        Resources resources = context.getResources();
+        bgOut = resources.getDrawable(R.drawable.bg_msg_outgoing_normal);
+        bgOutXtra = resources.getDrawable(R.drawable.bg_msg_outgoing_normal_ext);
+        bgIn = resources.getDrawable(R.drawable.bg_msg_incoming_normal);
+        bgInXtra = resources.getDrawable(R.drawable.bg_msg_incoming_normal_ext);
     }
+
+    //optimisation as we are facing performance issues
+    //these two fields hold the current state of the message we showing in getView;
+    // they will be set in getItemViewType. Due to the fact that the all ui stuffs happen on one thread
+    // we will have no problem with this(race condition)
+
+    private int currentMessageType; //this holds the current message we showing.
+    private boolean isOutgoingMessage; //from who is the currently showing message.
 
     @Override
     public int getViewTypeCount() {
@@ -84,21 +100,26 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     @Override
     public int getItemViewType(int position) {
         Message message = getItem(position);
-        if (Message.isTypingMessage(message)) {
+        currentMessageType = message.getType();
+        isOutgoingMessage = Message.isOutGoing(message);
+        if (currentMessageType == Message.TYPE_TYPING_MESSAGE) {
             return TYPING_MESSAGE;
         }
 
-        if (Message.isDateMessage(message)) {
+        if (currentMessageType == Message.TYPE_DATE_MESSAGE) {
             return DATE_MESSAGE;
         }
 
         boolean useOneLine = false;
-        if (Message.isTextMessage(message)) {
-            int length = message.getMessageBody().length();
-            int dateLength = formatDateMessage(message.getDateComposed()).length();
-            useOneLine = length < dateLength * 4;
+        if (currentMessageType == Message.TYPE_TEXT_MESSAGE) {
+            String messageBody = message.getMessageBody();
+            //should we worry about '\r'?
+            int length = messageBody.length();
+            int dateLength = DateUtils.formatDateTime(context, message.getDateComposed().getTime(), DateUtils.FORMAT_SHOW_TIME).length();
+            useOneLine = length < dateLength * 4 && messageBody.indexOf('\n') == -1;
         }
-        if (Message.isOutGoing(message)) {
+
+        if (isOutgoingMessage) {
             return useOneLine ? OUTGOING_MESSAGE_ONE_LINE : OUTGOING_MESSAGE;
         }
         return useOneLine ? INCOMING_MESSAGE_ONE_LINE : INCOMING_MESSAGE;
@@ -109,7 +130,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     public View getView(final int position, View convertView, final ViewGroup parent) {
         final ViewHolder holder;
         final Message message = getItem(position);
-        attemptToMarkAsSeen(message); //async
+        attemptToMarkAsSeen(message);
         if (convertView == null) {
             convertView = hookupViews(messagesLayout[getItemViewType(position)], parent);
         }
@@ -122,36 +143,82 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                 return true;
             }
         };
-        if (Message.isDateMessage(message)) {
-            // TODO: 9/18/2015 improve this
+        if (currentMessageType == Message.TYPE_DATE_MESSAGE) {
             String formattedDate = SimpleDateUtil.formatDateRage(context, messageDateComposed);
-            AwesomeTextHandler awesomeTextViewHandler = new AwesomeTextHandler();
-            awesomeTextViewHandler
-                    .addViewSpanRenderer(MENTION_PATTERN, new MentionSpanRenderer())
-                    .setView(holder.textMessage);
-            awesomeTextViewHandler.setText("@" + formattedDate);
+            holder.textMessage.setText(formattedDate);
             convertView.setOnTouchListener(touchListener);
             return convertView;
-        } else if (Message.isTypingMessage(message)) {
+        } else if (currentMessageType == Message.TYPE_TYPING_MESSAGE) {
             convertView.setOnTouchListener(touchListener);
             return convertView;
         }
 
-        //hide all views and show only if it's required. life will be easier this way
+        //hide all views and show only if it's needed. life will be easier this way
         ViewUtils.hideViews(holder.preview,
                 holder.progressBarIndeterminate,
                 holder.playOrDownload,
                 holder.textMessage,
                 holder.retry,
                 holder.progressRootView,
-                holder.progressBarDeterminate);
+                holder.sendersName);
+
+        final View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    if (v.getId() == R.id.v_download_play) {
+                        ViewFileOrdownload(message);
+                    } else if (v.getId() == R.id.iv_message_preview) {
+                        ViewFileOrdownload(message);
+                    } else if (v.getId() == R.id.tv_sender_name) {
+                        UiHelpers.gotoProfileActivity(context, message.getFrom());
+                    } else if (v.getId() == R.id.iv_retry) {
+                        delegate.onReSendMessage(message);
+                    }
+                } catch (PairappException e) {
+                    ErrorCenter.reportError("viewFile", e.getMessage());
+                }
+            }
+        };
+
+        /////////////////////////////////////// if you think this can be re-written well try./////////////////////////////////////////
+        holder.rootView.setBackgroundDrawable(null);
+        //if the previous message was from the same user,we wont show it again but first ensure it's a sendable message
+        if (position > 0 /*avoid ouf of bound ex*/) { //this condition is almost always true
+            Message previous = getItem(position - 1);
+            if (MessageUtils.isSendableMessage(previous) && previous.getFrom().equals(message.getFrom())) {
+                holder.sendersName.setOnClickListener(null);
+                PLog.d(TAG, "same sender not showing name");
+                //set background to extra
+                holder.rootView.setBackgroundDrawable(isOutgoingMessage ? bgOutXtra : bgInXtra);
+            } else {
+                //set background to normal
+                holder.rootView.setBackgroundDrawable(isOutgoingMessage ? bgOutXtra : bgInXtra);
+                if (!isOutgoingMessage && isGroupMessages) {
+                    ViewUtils.showViews(holder.sendersName);
+                    holder.sendersName.setText(getSenderName(message));
+                    holder.sendersName.setOnClickListener(listener);
+                }
+            }
+        } else {
+            holder.rootView.setBackgroundDrawable(isOutgoingMessage ? bgOut: bgIn);
+            // almost always the first message for a conversation is date message which are screened off before we get here.
+            // this means currently this block will never get executed in practice. but do be aware that when the data set grows and we
+            // introduce paging the first message may not be a date message
+            if (!isOutgoingMessage && isGroupMessages) {
+                ViewUtils.showViews(holder.sendersName);
+                holder.sendersName.setText(getSenderName(message));
+                holder.sendersName.setOnClickListener(listener);
+            }
+        }
+        //////////////////////////////////*******************************************//////////////////////////////////
 
         holder.preview.setOnClickListener(null);
         holder.playOrDownload.setOnClickListener(null);
         //common to all
         holder.dateComposed.setVisibility(View.VISIBLE);
-        String dateComposed = formatDateMessage(messageDateComposed);
-        if (Message.isOutGoing(message)) {
+        String dateComposed = DateUtils.formatDateTime(context, messageDateComposed.getTime(), DateUtils.FORMAT_SHOW_TIME);
+        if (isOutgoingMessage) {
             holder.dateComposed.setText("  " + dateComposed);
             int drawableRes = messageStates.get(message.getState());
 
@@ -159,69 +226,46 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             holder.dateComposed.setCompoundDrawablesWithIntrinsicBounds(drawableRes, 0, 0, 0);
             if (message.getState() == Message.STATE_SEND_FAILED) {
                 holder.retry.setVisibility(View.VISIBLE);
-                holder.retry.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        delegate.onReSendMessage(message);
-                    }
-                });
+                holder.retry.setOnClickListener(listener);
             }
         } else {
             holder.dateComposed.setText(dateComposed);
         }
 
-        if (Message.isTextMessage(message)) {
+        String messageBody = message.getMessageBody();
+        if (currentMessageType == Message.TYPE_TEXT_MESSAGE) {
             //normal message
             //TODO use one of the variants of the spannableString classes.
             holder.textMessage.setVisibility(View.VISIBLE);
-            holder.textMessage.setText(message.getMessageBody());
+            holder.textMessage.setText(messageBody);
             return convertView;
         }
 
         //if we are here then the message is binary example picture message or video message
         holder.preview.setVisibility(View.VISIBLE);
         holder.preview.setOnLongClickListener(this);
-        final int placeHolderDrawable = PreviewsHelper.getPreview(message.getMessageBody());
-        final File messageFile = new File(message.getMessageBody());
-        final View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    if (v.getId() == R.id.v_download_play) {
-                        if (messageFile.exists()) {
-                            UiHelpers.attemptToViewFile((PairAppBaseActivity) context, messageFile);
-                        } else {
-                            delegate.download(message);
-                        }
-                    } else if (v.getId() == R.id.iv_message_preview) {
-                        UiHelpers.attemptToViewFile(((PairAppBaseActivity) context), messageFile);
-                    }
-                } catch (PairappException e) {
-                    ErrorCenter.reportError("viewFile", e.getMessage());
-                }
-            }
-        };
+        final int placeHolderDrawable = PreviewsHelper.getPreview(messageBody);
         final int progress = delegate.getProgress(message);
-        if (messageFile.exists()) {
+        if (!messageBody.startsWith("http")/*we only use http*/) {
             // this binary message is downloaded
-            if (Message.isVideoMessage(message)) {
-                holder.playOrDownload.setVisibility(View.VISIBLE);
-                holder.playOrDownload.setImageResource(R.drawable.playvideo);
+            if (currentMessageType == Message.TYPE_VIDEO_MESSAGE) {
+                ViewUtils.showViews(holder.progressRootView, holder.playOrDownload);
+                holder.playOrDownload.setImageResource(R.drawable.ic_play_circle_outline_white_36dp);
                 holder.playOrDownload.setOnClickListener(listener);
-                //we use the body of the message so that we will not have to
+                //we use the body of the message instead of id so that we will not have to
                 //create a thumbnail for the same file twice.
                 final Bitmap bitmap;
-                bitmap = thumbnailCache.get(messageFile.getAbsolutePath());
+                bitmap = thumbnailCache.get(messageBody);
                 if (bitmap == null) {
-                    makeThumbnail(messageFile.getAbsolutePath());
+                    makeThumbnail(messageBody);
                     holder.preview.setImageResource(placeHolderDrawable);
                 } else {
                     holder.preview.setImageBitmap(bitmap);
                 }
-            } else if (Message.isPictureMessage(message)) {
-                PICASSO.load(messageFile)
+            } else if (currentMessageType == Message.TYPE_PICTURE_MESSAGE) {
+                PICASSO.load(new File(messageBody))
                         .placeholder(placeHolderDrawable)
-                        .error(R.drawable.format_pic_broken)
+                        .error(R.drawable.nophotos)
                         .into(holder.preview);
             } else {
                 holder.preview.setImageResource(placeHolderDrawable);
@@ -230,27 +274,37 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         } else {
             holder.preview.setImageResource(placeHolderDrawable);
             if (progress <= -1) {
-                if (Message.isIncoming(message)) {
-                    ViewUtils.showViews(holder.playOrDownload);
-                    holder.playOrDownload.setImageResource(R.drawable.photoload);
+                if (!isOutgoingMessage) {
+                    ViewUtils.showViews(holder.progressRootView, holder.playOrDownload);
+                    holder.playOrDownload.setImageResource(R.drawable.ic_file_download_white_36dp);
                     holder.playOrDownload.setOnClickListener(listener);
                 }
             }
         }
-        if (progress > -1) {
-            if (progress == 0) {
-                ViewUtils.showViews(holder.progressBarIndeterminate);
-            } else {
-                ViewUtils.showViews(holder.progressRootView);
-                ViewUtils.showViews(holder.progressBarDeterminate);
-                holder.progressBarDeterminate.setProgress(progress);
-            }
+        if ((isOutgoingMessage && message.getState() == Message.STATE_PENDING) || progress >= 0) {
+//            if (progress == 0) {
+            ViewUtils.showViews(holder.progressRootView, holder.progressBarIndeterminate);
+//            }
+//            else {
+//                ViewUtils.showViews(holder.progressRootView);
+//                ViewUtils.showViews(holder.progressBarDeterminate);
+//                holder.progressBarDeterminate.setProgress(progress);
+//            }
         }
         return convertView;
     }
 
-    private String formatDateMessage(Date messageDateComposed) {
-        return DateUtils.formatDateTime(context, messageDateComposed.getTime(), DateUtils.FORMAT_SHOW_TIME);
+    private String getSenderName(Message message) {
+        return UserManager.getInstance().getName(message.getFrom());
+    }
+
+    private void ViewFileOrdownload(Message message) throws PairappException {
+        File messageFile = new File(message.getMessageBody());
+        if (messageFile.exists()) {
+            UiHelpers.attemptToViewFile((PairAppBaseActivity) context, messageFile);
+        } else {
+            delegate.download(message);
+        }
     }
 
     private void makeThumbnail(final String uri) {
@@ -266,6 +320,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                             try {
                                 notifyDataSetChanged();
                             } catch (Exception ignored) {
+                                PLog.d(TAG, ignored.getMessage(), ignored.getCause());
                             }
                         }
                     });
@@ -279,10 +334,12 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
 
 
     private void attemptToMarkAsSeen(Message message) {
+        ThreadUtils.ensureMain();
         if (message.getState() != Message.STATE_SEEN &&
-                !Message.isDateMessage(message) &&
-                !Message.isTypingMessage(message)
-                && Message.isIncoming(message)) {
+                !isOutgoingMessage &&
+                currentMessageType != Message.TYPE_DATE_MESSAGE &&
+                currentMessageType != Message.TYPE_TYPING_MESSAGE
+                ) {
             delegate.onMessageSeen(message);
         }
     }
@@ -294,6 +351,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         ViewHolder holder;
         convertView = LayoutInflater.from(parent.getContext()).inflate(layoutResource, parent, false);
         holder = new ViewHolder();
+        holder.rootView = convertView.findViewById(R.id.ll_message_body_view);
         holder.textMessage = ((TextView) convertView.findViewById(R.id.tv_log_message));
         holder.preview = (ImageView) convertView.findViewById(R.id.iv_message_preview);
         holder.dateComposed = ((TextView) convertView.findViewById(R.id.tv_message_date));
@@ -301,9 +359,9 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         holder.progressBarIndeterminate = convertView.findViewById(R.id.pb_download_progress_indeterminate);
         holder.retry = convertView.findViewById(R.id.iv_retry);
         holder.progressRootView = convertView.findViewById(R.id.fl_progress_root_view);
-        holder.progressBarDeterminate = (ProgressBar) convertView.findViewById(R.id.pb_download_progress_determinate);
+//        holder.progressBarDeterminate = (ProgressBar) convertView.findViewById(R.id.pb_download_progress_determinate);
+        holder.sendersName = ((TextView) convertView.findViewById(R.id.tv_sender_name));
         ViewUtils.setTypeface(holder.dateComposed, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-        ViewUtils.setTypeface(holder.textMessage, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
         convertView.setTag(holder);
         return convertView;
     }
@@ -344,7 +402,9 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         private ImageView preview, playOrDownload;
         private View progressBarIndeterminate;
         private View retry, progressRootView;
-        private ProgressBar progressBarDeterminate;
+        //        private ProgressBar progressBarDeterminate;
+        public TextView sendersName;
+        public View rootView;
         //TODO add more fields as we support different media/file types
     }
 }

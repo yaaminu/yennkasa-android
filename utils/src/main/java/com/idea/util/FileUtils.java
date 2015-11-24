@@ -119,25 +119,42 @@ public class FileUtils {
         return extension;
     }
 
+    public static String hash(String source) {
+        if (source == null) {
+            throw new IllegalArgumentException();
+        }
+        return hash(source.getBytes());
+    }
+
     public static String hash(byte[] source) {
         if (source == null) {
             throw new IllegalArgumentException("source == null");
         }
+        // FIXME: 11/10/2015 use salt
+        //noinspection unused
+        byte[] salt = {
+                1, 127, 0, 98, 83, 2, 89, 12, 12, 45, 90
+        };
         try {
             MessageDigest digest = MessageDigest.getInstance("sha1");
             digest.reset();
             //re-use param source
             source = digest.digest(source);
-            String hashString = "";
-            //noinspection ForLoopReplaceableByForEach
-            for (int i = 0; i < source.length; i++) {
-                hashString += Integer.toString((source[i] & 0xff) + 0x100, 16).substring(1);
-            }
+            String hashString = bytesToString(source);
             PLog.d(TAG, "hash: " + hashString);
             return hashString;
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e.getCause());
         }
+    }
+
+    public static String bytesToString(byte[] source) {
+        String hashString = "";
+        //noinspection ForLoopReplaceableByForEach
+        for (int i = 0; i < source.length; i++) {
+            hashString += Integer.toString((source[i] & 0xff) + 0x100, 16).substring(1);
+        }
+        return hashString;
     }
 
     public static void save(File file, String url) throws IOException {

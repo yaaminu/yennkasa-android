@@ -16,9 +16,9 @@
         android:gravity="start"
         android:minHeight="?attr/actionBarSize"
         android:title="@string/app_name"
+        app:popupTheme="@style/popup_theme"
         app:theme="@style/AppBar"
-        tools:ignore="UnusedAttribute">
-    </android.support.v7.widget.Toolbar>
+        tools:ignore="UnusedAttribute"/>
 
     <com.idea.view.RelativeLayout
         android:id="@+id/container"
@@ -35,8 +35,7 @@
         <com.idea.view.RelativeLayout
             android:id="@+id/attachment_picker_container"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            >
+            android:layout_height="wrap_content">
 
         </com.idea.view.RelativeLayout>
 
@@ -74,38 +73,50 @@
                 android:gravity="center"
                 tools:ignore="UnusedAttribute">
 
-                <EditText
-                    android:id="@+id/et_message"
-                    style="@style/message_edittext_style"
+                <LinearLayout
                     android:layout_width="0dp"
-                    android:layout_weight="1"/>
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/input"
+                    android:gravity="center"
+                    >
+
+                    <EditText
+                        android:id="@+id/et_message"
+                        style="@style/message_edittext_style"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@null"
+                        />
+                </LinearLayout>
+                <!--android:text="lll\nlkklkk\nkklkjkjlkk\nkljklkkjlklk\nkljkljklk"-->
 
                 <com.idea.view.FrameLayout
-                    android:id="@+id/iv_send"
+                    style="@style/FlatButtonRippleStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
                     android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
                     android:layout_marginStart="0dp"
                     android:background="@drawable/green_round_back_ground"
-                    android:foregroundGravity="center"
                     android:padding="@dimen/padding_ll_login_fragment_bottom"
-                    android:visibility="gone">
+                    android:visibility="visible">
 
                     <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/ic_send_white_24dp"/>
+                        android:id="@+id/iv_send"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:adjustViewBounds="true"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_action_new_attachment_white"/>
                 </com.idea.view.FrameLayout>
+
             </LinearLayout>
         </com.idea.view.LinearLayout>
 
-        <include
-            layout="@layout/message_item_log">
-        </include>
+        <include layout="@layout/message_item_log"/>
     </com.idea.view.RelativeLayout>
 
-    <include
-        layout="@layout/snack_bar"
-        />
+    <include layout="@layout/snack_bar"/>
 </com.idea.view.RelativeLayout>

@@ -18,7 +18,7 @@
             android:layout_height="match_parent"
             android:adjustViewBounds="true"
             android:contentDescription="@string/display_picture"
-            android:scaleType="fitXY"
+            android:scaleType="centerCrop"
             android:src="@drawable/group_avatar"/>
 
         <include

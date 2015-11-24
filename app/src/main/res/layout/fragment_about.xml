@@ -7,46 +7,47 @@
     tools:context="com.idea.ui.AboutFragment">
 
     <com.rey.material.widget.TextView
+        android:id="@+id/tv_app_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:text="@string/app_name_cap"
-        android:id="@+id/tv_app_name"
         android:textColor="@color/white"
         android:textSize="@dimen/title_text_size_large"
         android:textStyle="bold"
         />
 
     <com.rey.material.widget.TextView
+        android:id="@+id/tv_app_version"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/standard_text_size_small"
+        android:layout_below="@+id/tv_app_name"
+        android:layout_centerHorizontal="true"
         android:text="@string/app_version"
         android:textColor="@color/white"
-        android:id="@+id/tv_app_version"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@+id/tv_app_name"/>
+        android:textSize="@dimen/standard_text_size_small"/>
 
     <com.rey.material.widget.Button
+        android:id="@+id/bt_legal_notice"
+        style="@style/FlatButtonRippleStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/copy_right"
-        android:text="@string/legal_notice"
-        android:id="@+id/bt_legal_notice"
-        android:textColor="@color/white"
-        android:background="#5000"
-        style="@style/FlatButtonRippleStyle"
-        android:textSize="@dimen/standard_text_size"
         android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
+        android:background="#5000"
         android:minHeight="@dimen/big_button_height"
+        android:text="@string/legal_notice"
+        android:textColor="@color/white"
+        android:textSize="@dimen/standard_text_size"
+        android:visibility="gone"
         />
 
     <com.rey.material.widget.TextView
+        android:id="@+id/copy_right"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:id="@+id/copy_right"
         android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
         android:text="@string/idea_inc"
         android:textColor="@color/white"

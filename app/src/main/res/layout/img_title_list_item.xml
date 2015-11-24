@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          android:layout_width="wrap_content"
+          android:layout_height="match_parent"
+          android:drawableLeft="@drawable/ic_image_black_24dp"
+          android:drawableStart="@drawable/ic_image_black_24dp"
+          android:gravity="center_vertical"
+          android:orientation="horizontal"
+          android:padding="@dimen/padding_ll_login_fragment_bottom"
+          android:text="Take Picture"
+          android:textSize="@dimen/menu_text_size"
+          tools:ignore="HardcodedText">
+</TextView>

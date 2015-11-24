@@ -1,14 +1,18 @@
 package com.idea.Errors;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import com.idea.util.Config;
 import com.idea.util.NavigationManager;
+import com.idea.util.R;
 import com.idea.util.TaskManager;
 import com.idea.util.ThreadUtils;
 
@@ -83,16 +87,24 @@ public class ErrorCenter {
     }
 
     public static synchronized void reportError(String id, String errorMessage, Intent action) {
-        Intent intent = new Intent("com.idea.pairapp.report");
-        intent.putExtra("message", errorMessage);
+        // Intent intent = new Intent("com.idea.pairapp.report");
+        // intent.putExtra("message", errorMessage);
         Context applicationContext = Config.getApplicationContext();
         if (action == null) {
             action = new Intent();
             action.setComponent(new ComponentName(applicationContext, "com.idea.ui.MainActivity"));
         }
-        intent.putExtra("id", id);
-        intent.putExtra("action", action);
-        LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent);
+        // intent.putExtra("id", id);
+        // intent.putExtra("action", action);
+        // String message = intent.getStringExtra("message");
+        Notification notification = new NotificationCompat.Builder(applicationContext)
+                .setContentTitle(applicationContext.getString(R.string.error))
+                .setContentText(errorMessage)
+                .setAutoCancel(true)
+                .setContentIntent(PendingIntent.getActivity(applicationContext, id.hashCode(), action, PendingIntent.FLAG_UPDATE_CURRENT))
+                .setSmallIcon(R.drawable.ic_stat_icon).build();
+        NotificationManagerCompat manager = NotificationManagerCompat.from(applicationContext);// getSystemService(NOTIFICATION_SERVICE));
+        manager.notify(id, 100000111, notification);
     }
 
     /**

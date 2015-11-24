@@ -6,7 +6,10 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -29,6 +32,7 @@ import com.idea.util.PLog;
 import com.idea.util.TaskManager;
 import com.idea.util.ThreadUtils;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.security.SecureRandom;
@@ -38,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.realm.Realm;
@@ -49,6 +54,7 @@ public class PairAppClient extends Service {
     public static final String TAG = PairAppClient.class.getSimpleName();
     public static final String ACTION_SEND_ALL_UNSENT = "send unsent messages";
     public static final String ACTION = "action";
+    public static final String UPDATE_KEY = PairAppClient.class.getName() + "updateKey";
     static final String VERSION = "version";
     public static final int not_id = 10987;
     static final int notId = new SecureRandom().nextInt();
@@ -59,17 +65,8 @@ public class PairAppClient extends Service {
     private PairAppClientInterface INTERFACE;// = new PairAppClientInterface();
     private Dispatcher<Message> PARSE_MESSAGE_DISPATCHER;
     private WorkerThread WORKER_THREAD;
-    private static final Map<String, String> credentials;
+    private static Map<String, String> credentials;
 
-    static {
-        Map<String, String> userCredentials = UserManager.getInstance().getUserCredentials();
-        credentials = new HashMap<>(userCredentials.size() + 3);
-        credentials.putAll(userCredentials);
-        //////////////////////////////////////////////////////////////////////////////
-        credentials.put(AbstractMessageDispatcher.KEY, "doTbKQlpZyNZohX7KPYGNQXIghATCx");
-        credentials.put(AbstractMessageDispatcher.PASSWORD, "Dq8FLrF7HjeiyJBFGv9acNvOLV1Jqm");
-        /////////////////////////////////////////////////////////////////////////////////////
-    }
 
     public static void startIfRequired(Context context) {
         if (!UserManager.getInstance().isUserVerified()) {
@@ -77,6 +74,15 @@ public class PairAppClient extends Service {
             return;
         }
         if (!isClientStarted.get()) {
+            credentials = new HashMap<>();
+            if (UserManager.getInstance().isUserVerified()) {
+                Map<String, String> userCredentials = UserManager.getInstance().getUserCredentials();
+                credentials.putAll(userCredentials);
+                //////////////////////////////////////////////////////////////////////////////
+                credentials.put(AbstractMessageDispatcher.KEY, "doTbKQlpZyNZohX7KPYGNQXIghATCx");
+                credentials.put(AbstractMessageDispatcher.PASSWORD, "Dq8FLrF7HjeiyJBFGv9acNvOLV1Jqm");
+                /////////////////////////////////////////////////////////////////////////////////////
+            }
             Intent pairAppClient = new Intent(context, PairAppClient.class);
             pairAppClient.putExtra(PairAppClient.ACTION, PairAppClient.ACTION_SEND_ALL_UNSENT);
             context.startService(pairAppClient);
@@ -101,12 +107,19 @@ public class PairAppClient extends Service {
         }
 
         if (backStack.isEmpty()) {
-            LiveCenter.stop();
-            MessageCenter.stopListeningForSocketMessages();
-            if (SOCKETSIO_DISPATCHER != null) {
-                SOCKETSIO_DISPATCHER.close();
-                SOCKETSIO_DISPATCHER = null;
-            }
+
+            TaskManager.executeNow(new Runnable() {
+                @Override
+                public void run() {
+                    LiveCenter.stop();
+                    MessageCenter.stopListeningForSocketMessages();
+                    if (SOCKETSIO_DISPATCHER != null) {
+                        SOCKETSIO_DISPATCHER.close();
+                        SOCKETSIO_DISPATCHER = null;
+                    }
+                    NotificationManager.INSTANCE.reNotifyForReceivedMessages();
+                }
+            }, true);
         }
     }
 
@@ -117,8 +130,14 @@ public class PairAppClient extends Service {
             throw new IllegalArgumentException();
         }
         if (backStack.isEmpty()) {
-            LiveCenter.start();
-            MessageCenter.startListeningForSocketMessages();
+            TaskManager.executeNow(new Runnable() {
+                @Override
+                public void run() {
+                    LiveCenter.start();
+                    MessageCenter.startListeningForSocketMessages();
+                    NotificationManager.INSTANCE.clearAllMessageNotifications();
+                }
+            }, true);
         }
         backStack.add(activity);
     }
@@ -134,6 +153,8 @@ public class PairAppClient extends Service {
         }
     }
 
+    private static final Semaphore updateLock = new Semaphore(1, true);
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -141,15 +162,76 @@ public class PairAppClient extends Service {
             WORKER_THREAD = new WorkerThread();
             WORKER_THREAD.start();
         }
-
-        if (!isClientStarted.get()) {
-            TaskManager.execute(new Runnable() {
-                @Override
-                public void run() {
-                    if (!isClientStarted.get())
-                        bootClient();
+        if (!updateLock.tryAcquire()) {
+            PLog.d(TAG, "update lock held, deferring update check from prefs");
+            return;
+        }
+        try {
+            final SharedPreferences applicationWidePrefs = Config.getApplicationWidePrefs();
+            String updateJson = applicationWidePrefs.getString(UPDATE_KEY, null);
+            if (updateJson != null) {
+                try {
+                    final JSONObject object = new JSONObject(updateJson);
+                    int versionCode = object.getInt("versionCode");
+                    if (versionCode > BuildConfig.VERSION_CODE) {
+                        TaskManager.execute(new Runnable(){
+                            public void run(){
+                              try{
+                              notifyUpdateAvailable(object);   
+                              }catch(JSONException e){
+                    PLog.d(TAG, "error while trying to deserialize update data");
+                    applicationWidePrefs.edit().remove(UPDATE_KEY).apply();
+                              }                             
+                            }
+                        });
+                    } else {
+                        applicationWidePrefs.edit().remove(UPDATE_KEY).apply();
+                    }
+                } catch (JSONException e) {
+                    PLog.d(TAG, "error while trying to deserialize update data");
+                    applicationWidePrefs.edit().remove(UPDATE_KEY).apply();
                 }
-            });
+            }
+        } finally {
+            updateLock.release();
+        }
+    }
+
+    static void notifyUpdateAvailable(JSONObject data1) throws JSONException {
+        ThreadUtils.ensureNotMain();
+        try {
+            updateLock.acquire();
+            final String version = data1.getString(PairAppClient.VERSION);
+            final int versionCode = data1.getInt("versionCode");
+            if (versionCode > BuildConfig.VERSION_CODE) {
+                PLog.i(TAG, "update available, latest version: %s", version);
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(data1.getString("link")));
+                final Context applicationContext = Config.getApplicationContext();
+                Notification notification = new NotificationCompat.Builder(applicationContext)
+                        .setContentTitle(applicationContext.getString(R.string.update_available))
+                        .setContentIntent(PendingIntent.getActivity(applicationContext, 1003, intent, PendingIntent.FLAG_UPDATE_CURRENT))
+                        .setSubText(applicationContext.getString(R.string.download_update))
+                        .setSmallIcon(R.drawable.ic_stat_icon).build();
+                NotificationManagerCompat manager = NotificationManagerCompat.from(applicationContext);// getSystemService(NOTIFICATION_SERVICE));
+                manager.notify("update" + TAG, PairAppClient.notId, notification);
+                SharedPreferences preferences = Config.getApplicationWidePrefs();
+                final String savedUpdate = preferences.getString(PairAppClient.UPDATE_KEY, null);
+                if (savedUpdate != null) {
+                    JSONObject object = new JSONObject(savedUpdate);
+                    if (object.optInt("versionCode", versionCode) >= versionCode) {
+                        PLog.d(TAG, "push for update arrived late");
+                        return;
+                    }
+                }
+                preferences.edit().putString(PairAppClient.UPDATE_KEY, data1.toString()).apply();
+            } else {
+                PLog.d(TAG, "client up to date");
+            }
+        } catch (InterruptedException e) {
+            PLog.d(TAG, "itterupted while wating to acquire update lock");
+        } finally {
+            updateLock.release();
         }
     }
 
@@ -163,23 +245,20 @@ public class PairAppClient extends Service {
         }
 
         PLog.i(TAG, "starting pairapp client");
-        if (intent != null && isClientStarted.get()) {
-            if (intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
-                attemptToSendAllUnsentMessages();
-            }
-        }
+//        if (intent != null && isClientStarted.get()) {
+//            if (intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
+//                attemptToSendAllUnsentMessages();
+//            }
+//        }
         return START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         if (UserManager.getInstance().isUserVerified()) {
-            if (!isClientStarted.get()) {
-                bootClient();
-            }
-            if (intent != null && intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
-                attemptToSendAllUnsentMessages();
-            }
+//            if (intent != null && intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
+//                attemptToSendAllUnsentMessages();
+//            }
             return INTERFACE;
         }
         throw new IllegalStateException("user must be logged in");
@@ -192,8 +271,6 @@ public class PairAppClient extends Service {
 
     @Override
     public void onDestroy() {
-        shutDown();
-        //order is important
         WORKER_THREAD.shutDown();
         super.onDestroy();
     }
@@ -297,16 +374,15 @@ public class PairAppClient extends Service {
 
             PairAppClient self = PairAppClient.this;
             Intent intent = new Intent(self, ChatActivity.class);
-                intent.putExtra(ChatActivity.EXTRA_PEER_ID, previousProgress.first);
-                Notification notification = new NotificationCompat.Builder(self)
-                        .setContentTitle(getString(R.string.upload_progress))
-                        .setProgress(100, progress, progress <= 0)
-                        .setAutoCancel(true)
-                        .setContentIntent(PendingIntent.getActivity(self, 1003, intent, PendingIntent.FLAG_UPDATE_CURRENT))
-                        .setContentText(progress > 0 ? progress + "/" + max : getString(R.string.loading))
-                        .setSmallIcon(R.drawable.ic_launcher).build();
-                NotificationManagerCompat manager = NotificationManagerCompat.from(self);// getSystemService(NOTIFICATION_SERVICE));
-                manager.notify(id, not_id, notification);
+            intent.putExtra(ChatActivity.EXTRA_PEER_ID, previousProgress.first);
+            Notification notification = new NotificationCompat.Builder(self)
+                    .setContentTitle(getString(R.string.upload_progress))
+                    .setProgress(100, progress, progress <= 0)
+                    .setContentIntent(PendingIntent.getActivity(self, 1003, intent, PendingIntent.FLAG_UPDATE_CURRENT))
+                    .setContentText(progress > 0 ? progress + "/" + max : getString(R.string.loading))
+                    .setSmallIcon(R.drawable.ic_stat_icon).build();
+            NotificationManagerCompat manager = NotificationManagerCompat.from(self);// getSystemService(NOTIFICATION_SERVICE));
+            manager.notify(id, not_id, notification);
         }
 
         @Override
@@ -339,10 +415,6 @@ public class PairAppClient extends Service {
     }
 
     public static void sendFeedBack(final JSONObject report) {
-        if (report == null || !report.keys().hasNext()) {
-            throw new IllegalArgumentException("empty report");
-        }
-
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
@@ -353,20 +425,12 @@ public class PairAppClient extends Service {
 
     public class PairAppClientInterface extends Binder {
         public void sendMessage(Message message) {
-            if (!isClientStarted.get()) {
-                bootClient();
-            }
-            if (WORKER_THREAD.isAlive()) //worker thread will send all pending messages immediately it comes alive
-                WORKER_THREAD.sendMessage(message.isValid() ? Message.copy(message) : message); //detach the message from realm
+            WORKER_THREAD.sendMessage(message.isValid() ? Message.copy(message) : message); //detach the message from realm
         }
 
+        @SuppressWarnings("unused")
         public void sendMessages(Collection<Message> tobeSent) {
-            if (!isClientStarted.get()) {
-
-                bootClient();
-            }
-            if (WORKER_THREAD.isAlive()) //worker thread will send all pending messages immediately it come alive
-                WORKER_THREAD.sendMessages(Message.copy(tobeSent)); //detach from realm
+            WORKER_THREAD.sendMessages(Message.copy(tobeSent)); //detach from realm
         }
 
         @SuppressWarnings("unused")
@@ -392,17 +456,7 @@ public class PairAppClient extends Service {
         }
 
         public void registerUINotifier(final Notifier notifier) {
-            if (!isClientStarted.get()) {
-                TaskManager.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        bootClient();
-                        NotificationManager.INSTANCE.registerUI_Notifier(notifier);
-                    }
-                });
-            } else {
-                NotificationManager.INSTANCE.registerUI_Notifier(notifier);
-            }
+            NotificationManager.INSTANCE.registerUI_Notifier(notifier);
         }
 
         public void unRegisterUINotifier(Notifier notifier) {
@@ -423,6 +477,7 @@ public class PairAppClient extends Service {
 
         @Override
         protected void onLooperPrepared() {
+            bootClient();
             handler = new MessageHandler(getLooper());
             attemptToSendAllUnsentMessages();
         }
@@ -481,8 +536,14 @@ public class PairAppClient extends Service {
                     doSendMessages((Collection<Message>) msg.obj);
                     break;
                 case SHUT_DOWN:
-                    //noinspection ConstantConditions
-                    Looper.myLooper().quit();
+                    shutDown();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        //noinspection ConstantConditions
+                        Looper.myLooper().quitSafely();
+                    } else {
+                        //noinspection ConstantConditions
+                        Looper.myLooper().quit();
+                    }
                     break;
                 default:
                     throw new AssertionError("unknown signal");

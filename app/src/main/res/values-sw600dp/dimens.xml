@@ -31,7 +31,6 @@
     <dimen name="tab_pager_indicator_height">4dp</dimen>
     <dimen name="fab_delta_bottom">48dp</dimen>
     <dimen name="fab_delta_right">48dp</dimen>
-    <dimen name="fab_icon_size">72dp</dimen>
     <dimen name="fab_icon_radius">48dp</dimen>
     <dimen name="list_item_height">128dp</dimen>
     <dimen name="thumbnail_width">100dp</dimen>
@@ -64,4 +63,5 @@
     <dimen name="stroke_width">4dp</dimen>
     <dimen name="title_text_size_large">70sp</dimen>
     <dimen name="login_signup_verificaton_panel_width">500dp</dimen>
+    <dimen name="menu_text_size">32sp</dimen>
 </resources>

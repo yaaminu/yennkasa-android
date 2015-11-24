@@ -24,7 +24,7 @@
                 android:layout_height="match_parent"
                 android:contentDescription="@string/display_picture"
                 android:adjustViewBounds="true"
-                android:scaleType="fitXY"
+                android:scaleType="centerCrop"
                 android:src="@drawable/group_avatar"/>
             <include
                 android:id="@+id/pb_progress"

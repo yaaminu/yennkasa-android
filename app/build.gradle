@@ -1,4 +1,10 @@
 apply plugin: 'com.android.application'
+apply plugin: 'io.fabric'
+
+repositories {
+    maven { url 'https://maven.fabric.io/public' }
+}
+
 
 android {
     compileSdkVersion 21
@@ -12,7 +18,7 @@ android {
         minSdkVersion 9
         targetSdkVersion 22
         versionCode 1
-        versionName "1.0"
+        versionName "0.0.1 beta"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -46,7 +52,8 @@ dependencies {
     compile project(':utils')
     compile project(':pullToRefresh')
     compile project(':textRenderer')
-    compile files('libs/sinch-android-rtc-3.6.0.jar')
+    compile project(':cropper')
+//    compile files('libs/sinch-android-rtc-3.6.0.jar')
     //noinspection GradleDependency
     compile 'com.android.support:appcompat-v7:22.1.1'
     //noinspection GradleDependency
@@ -56,6 +63,24 @@ dependencies {
     compile 'com.android.support:support-v4:23.0.1'
 //    //noinspection GradleDependency
 //    compile 'com.theartofdev.edmodo:android-image-cropper:1.0.+'
-  //  compile 'uk.co.chrisjenx:calligraphy:2.1.0'
+    //  compile 'uk.co.chrisjenx:calligraphy:2.1.0'
     compile project(':sockets_io_client')
+    compile('com.crashlytics.sdk.android:crashlytics:2.5.2@aar') {
+        transitive = true;
+    }
+//    compile('com.crashlytics.sdk.android:crashlytics-ndk:1.1.2@aar') {
+//        transitive = true;
+//    }
+//    compile('com.digits.sdk.android:digits:1.9.0@aar') {
+//        transitive = true;
+////        exclude module:  'retrofit';
+////        exclude module: 'gson';
+//    }
+    compile 'com.commit451:PhotoView:1.2.4'
+}
+
+crashlytics {
+//    enableNdk true
+//    androidNdkOut 'src/main/obj'
+//    androidNdkLibsOut 'src/main/libs'
 }

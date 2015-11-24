@@ -3,8 +3,10 @@ package com.idea.data;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
+import com.idea.Errors.ErrorCenter;
 import com.idea.util.PLog;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -12,8 +14,10 @@ import java.util.List;
 import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
+import io.realm.annotations.Index;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.RealmClass;
+import io.realm.exceptions.RealmException;
 
 /**
  * @author by Null-Pointer on 5/27/2015.
@@ -29,51 +33,51 @@ public class User extends RealmObject {
             FIELD_MEMBERS = "members",
             FIELD_TYPE = Message.FIELD_TYPE,
             FIELD_LAST_ACTIVITY = "lastActivity",
-            FIELD_PASSWORD = "password",
             FIELD_COUNTRY = "country",
-            FIELD_HAS_CALL = "hasCall",
+            FIELD_IN_CONTACTS = "inContacts",
             FIELD_DP = "DP";
     private static final String TAG = User.class.getSimpleName();
     @PrimaryKey
     private String userId;
 
-    private String name, password, DP, country;
+    @Index
+    private String name;
+    private String DP, country;
     private long lastActivity, accountCreated;
     private RealmList<User> members; //a group will be a user with its members represented by this field.
     private User admin; // this represents admins for a group
     private int type;
-    private boolean hasCall;
+    private boolean inContacts;
 
     //required no-arg c'tor
     public User() {
     }
 
-    //copy constructor
-    @Deprecated
-    public User(User other) {
-        //realm forces us to use setters and getters everywhere for predictable results
-        //null check because is good not to throw in constructors(not so sure if its true)
-        if (other != null) {
-            this.setUserId(other.getUserId());
-            this.setAccountCreated(other.getAccountCreated());
-            this.setPassword(other.getPassword());
-            this.setLastActivity(other.getLastActivity());
-            this.setName(other.getName());
-            this.setType(other.getType());
-            this.setAdmin(other.getAdmin());
-            this.setDP(other.getDP());
-            this.setCountry(other.getCountry());
-            this.setMembers(other.getMembers());
-            this.setHasCall(other.getHasCall());
-        }
+//    //copy constructor
+//    @Deprecated
+//    public User(User other) {
+//        //realm forces us to use setters and getters everywhere for predictable results
+//        //null check because is good not to throw in constructors(not so sure if its true)
+//        if (other != null) {
+//            this.setUserId(other.getUserId());
+//            this.setAccountCreated(other.getAccountCreated());
+//            this.setLastActivity(other.getLastActivity());
+//            this.setName(other.getName());
+//            this.setType(other.getType());
+//            this.setAdmin(other.getAdmin());
+//            this.setDP(other.getDP());
+//            this.setCountry(other.getCountry());
+//            this.setMembers(other.getMembers());
+//            this.setInContacts(other.getInContacts());
+//        }
+//    }
+
+    public boolean getInContacts() {
+        return inContacts;
     }
 
-    public boolean getHasCall() {
-        return hasCall;
-    }
-
-    public void setHasCall(boolean hasCall) {
-        this.hasCall = hasCall;
+    public void setInContacts(boolean inContacts) {
+        this.inContacts = inContacts;
     }
 
     public String getCountry() {
@@ -124,15 +128,6 @@ public class User extends RealmObject {
         this.name = name;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-
     public long getLastActivity() {
         return lastActivity;
     }
@@ -170,7 +165,6 @@ public class User extends RealmObject {
         User clone = new User();
         clone.setUserId(other.getUserId());
         clone.setAccountCreated(other.getAccountCreated());
-        clone.setPassword(other.getPassword());
         clone.setLastActivity(other.getLastActivity());
         clone.setName(other.getName());
         clone.setType(other.getType());
@@ -178,7 +172,7 @@ public class User extends RealmObject {
         clone.setMembers(other.getMembers());
         clone.setDP(other.getDP());
         clone.setCountry(other.getCountry());
-        clone.setHasCall(other.getHasCall());
+        clone.setInContacts(other.getInContacts());
         return clone;
     }
 
@@ -240,12 +234,19 @@ public class User extends RealmObject {
                 }
             } catch (ContactsManager.Filter.AbortOperation e) {
                 PLog.d(TAG, "aggregate user operation aborted");
+                break;
             }
         }
         return members;
     }
 
     public static Realm Realm(Context context) {
-        return Realm.getInstance(context);
+        File dataFile = context.getDir("users", Context.MODE_PRIVATE);
+        try {
+            return Realm.getInstance(dataFile, UserManager.getKey());
+        } catch (RealmException e) {
+            ErrorCenter.reportError("realmSecureError", context.getString(R.string.encryptionNotAvailable), null);
+            return Realm.getInstance(dataFile);
+        }
     }
 }
