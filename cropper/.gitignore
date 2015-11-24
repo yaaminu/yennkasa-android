@@ -2,3 +2,5 @@
 /libs
 /*.iml
 *.navigation/
+/bin
+/gen
