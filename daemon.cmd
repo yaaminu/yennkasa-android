@@ -1,0 +1,1 @@
+nodemon -e xml,java -i */build -x build.cmd
