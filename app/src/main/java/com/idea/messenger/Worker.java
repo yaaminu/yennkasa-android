@@ -57,7 +57,10 @@ public class Worker extends IntentService {
             if (DOWNLOAD.equals(action)) {
                 synchronized (downloading) {
                     if (downloading.size() > 8) {
-                        ErrorCenter.reportError(TAG + "duplicate", getString(R.string.max_download_reached), null);
+                        if (Config.isAppOpen())
+                            Toast.makeText(Worker.this, getString(R.string.max_download_reached), Toast.LENGTH_SHORT).show();
+                        else
+                            ErrorCenter.reportError(TAG + "duplicate", getString(R.string.max_download_reached), null);
                         return;
                     }
                 }

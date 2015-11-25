@@ -377,9 +377,9 @@ public class PairAppClient extends Service {
             intent.putExtra(ChatActivity.EXTRA_PEER_ID, previousProgress.first);
             Notification notification = new NotificationCompat.Builder(self)
                     .setContentTitle(getString(R.string.upload_progress))
-                    .setProgress(100, progress, progress <= 0)
+                    .setProgress(100, 1, true)
                     .setContentIntent(PendingIntent.getActivity(self, 1003, intent, PendingIntent.FLAG_UPDATE_CURRENT))
-                    .setContentText(progress > 0 ? progress + "/" + max : getString(R.string.loading))
+                    .setContentText(getString(R.string.loading))
                     .setSmallIcon(R.drawable.ic_stat_icon).build();
             NotificationManagerCompat manager = NotificationManagerCompat.from(self);// getSystemService(NOTIFICATION_SERVICE));
             manager.notify(id, not_id, notification);

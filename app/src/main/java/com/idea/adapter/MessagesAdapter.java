@@ -1,6 +1,5 @@
 package com.idea.adapter;
 
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.media.ThumbnailUtils;
 import android.provider.MediaStore;
@@ -30,6 +29,7 @@ import com.idea.util.ThreadUtils;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
+import com.idea.view.ProgressWheel;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
@@ -76,17 +76,17 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         messageStates.put(Message.STATE_RECEIVED, R.drawable.ic_done_all_white_18dp);
         this.isGroupMessages = isGroupMessages;
         PICASSO = Picasso.with(context);
-        Resources resources = context.getResources();
+//        Resources resources = context.getResources();
 //        bgOut = resources.getDrawable(R.drawable.bg_msg_outgoing_normal);
 //        bgOutXtra = resources.getDrawable(R.drawable.bg_msg_outgoing_normal_ext);
 //        bgIn = resources.getDrawable(R.drawable.bg_msg_incoming_normal);
 //        bgInXtra = resources.getDrawable(R.drawable.bg_msg_incoming_normal_ext);
     }
 
-    //optimisation as we are facing performance issues
+    //optimisations as we are facing performance issues
     //these two fields hold the current state of the message we showing in getView;
-    // they will be set in getItemViewType. Due to the fact that the all ui stuffs happen on one thread
-    // we will have no problem with this(race condition)
+    // they will be set in getItemViewType. Due to the fact that all ui stuffs happen on one thread
+    // we will have no problem with race condition
 
     private int currentMessageType; //this holds the current message we showing.
     private boolean isOutgoingMessage; //from who is the currently showing message.
@@ -154,7 +154,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
 
         //hide all views and show only if it's needed. life will be easier this way
         ViewUtils.hideViews(holder.preview,
-                holder.progressBarIndeterminate,
+                holder.progressBar,
                 holder.playOrDownload,
                 holder.textMessage,
                 holder.retry,
@@ -283,14 +283,12 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             }
         }
         if ((isOutgoingMessage && message.getState() == Message.STATE_PENDING) || progress >= 0) {
-//            if (progress == 0) {
-            ViewUtils.showViews(holder.progressRootView, holder.progressBarIndeterminate);
-//            }
-//            else {
-//                ViewUtils.showViews(holder.progressRootView);
-//                ViewUtils.showViews(holder.progressBarDeterminate);
-//                holder.progressBarDeterminate.setProgress(progress);
-//            }
+            ViewUtils.showViews(holder.progressRootView, holder.progressBar);
+            if (progress == 0 || isOutgoingMessage/* currently upload progress is fake and cannot be relied upon*/) {
+                holder.progressBar.spin();
+            } else {
+                holder.progressBar.setProgress(progress);
+            }
         }
         return convertView;
     }
@@ -352,12 +350,11 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         ViewHolder holder;
         convertView = LayoutInflater.from(parent.getContext()).inflate(layoutResource, parent, false);
         holder = new ViewHolder();
-        holder.rootView = convertView.findViewById(R.id.ll_message_body_view);
         holder.textMessage = ((TextView) convertView.findViewById(R.id.tv_log_message));
         holder.preview = (ImageView) convertView.findViewById(R.id.iv_message_preview);
         holder.dateComposed = ((TextView) convertView.findViewById(R.id.tv_message_date));
         holder.playOrDownload = ((ImageView) convertView.findViewById(R.id.v_download_play));
-        holder.progressBarIndeterminate = convertView.findViewById(R.id.pb_download_progress_indeterminate);
+        holder.progressBar = (ProgressWheel) convertView.findViewById(R.id.pb_download_progress_indeterminate);
         holder.retry = convertView.findViewById(R.id.iv_retry);
         holder.progressRootView = convertView.findViewById(R.id.fl_progress_root_view);
 //        holder.progressBarDeterminate = (ProgressBar) convertView.findViewById(R.id.pb_download_progress_determinate);
@@ -399,13 +396,11 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     }
 
     private class ViewHolder {
-        private TextView textMessage, dateComposed;
+        private TextView textMessage, dateComposed, sendersName;
         private ImageView preview, playOrDownload;
-        private View progressBarIndeterminate;
-        private View retry, progressRootView;
-        //        private ProgressBar progressBarDeterminate;
-        public TextView sendersName;
-        public View rootView;
+        private View retry;
+        private View progressRootView;
+        private ProgressWheel progressBar;
         //TODO add more fields as we support different media/file types
     }
 }

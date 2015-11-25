@@ -46,11 +46,14 @@
 
             <FrameLayout
                 android:id="@+id/fl_progress_root_view"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:background="@drawable/progress_bar_shape"
-                android:visibility="gone">
+                android:minHeight="@dimen/thumbnail_height"
+                android:minWidth="@dimen/thumbnail_width"
+                android:padding="@dimen/padding_ll_login_fragment_bottom"
+                android:visibility="visible">
 
                 <!--&lt;!&ndash;android:id="@+id/pb_download_progress_determinate"&ndash;&gt;-->
                 <!--<ProgressBar-->
@@ -65,16 +68,15 @@
                 <!--android:progressDrawable="@drawable/progress_bar_drawable"-->
                 <!--/>-->
 
-                <com.rey.material.widget.ProgressView
+                <com.idea.view.ProgressWheel
                     android:id="@+id/pb_download_progress_indeterminate"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:visibility="visible"
-                    app:pv_autostart="true"
-                    app:pv_circular="true"
-                    app:pv_progressMode="indeterminate"
-                    app:pv_progressStyle="@style/base_indeterminate_progress_stroke_white"/>
+                    app:matProg_barColor="@color/white"
+                    app:matProg_progressIndeterminate="true"
+                    />
 
                 <ImageView
                     android:id="@+id/v_download_play"
@@ -83,8 +85,6 @@
                     android:layout_gravity="center"
                     android:background="#0000"
                     android:contentDescription="@string/play_download_content_description"
-                    android:minHeight="@dimen/thumbnail_height"
-                    android:minWidth="@dimen/thumbnail_width"
                     android:src="@drawable/ic_play_circle_outline_white_36dp"
                     android:visibility="visible"/>
 
