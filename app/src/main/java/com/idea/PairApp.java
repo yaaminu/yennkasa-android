@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import com.crashlytics.android.Crashlytics;
+import com.digits.sdk.android.Digits;
 import com.idea.data.ContactSyncService;
 import com.idea.data.Message;
 import com.idea.data.UserManager;
@@ -18,6 +19,8 @@ import com.idea.util.Config;
 import com.idea.util.FileUtils;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
+import com.twitter.sdk.android.core.TwitterAuthConfig;
+import com.twitter.sdk.android.core.TwitterCore;
 
 import java.util.regex.Pattern;
 
@@ -28,9 +31,9 @@ import io.fabric.sdk.android.Fabric;
  */
 public class PairApp extends Application {
     public static final String TAG = PairApp.class.getName();
-//    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
-//    private static final String TWITTER_KEY = "p1KaIqoXt9ujhMaOPcQY4Xxi9";
-//    private static final String TWITTER_SECRET = "0m16n21jk5jNpyTusC6DrGvxmLlMcEfRUCRIkINfJoFy8oM1rZ";
+    //    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
+    private static final String TWITTER_KEY = "p1KaIqoXt9ujhMaOPcQY4Xxi9";
+    private static final String TWITTER_SECRET = "0m16n21jk5jNpyTusC6DrGvxmLlMcEfRUCRIkINfJoFy8oM1rZ";
 
     private static void enableComponent(Class clazz) {
         PLog.d(TAG, "enabling " + clazz.getSimpleName());
@@ -116,9 +119,9 @@ public class PairApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Fabric.with(this, new Crashlytics());
+        TwitterAuthConfig config = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
+        Fabric.with(this, new Crashlytics(), new TwitterCore(config), new Digits());
         PLog.setLogLevel(BuildConfig.DEBUG ? PLog.LEVEL_VERBOSE : PLog.LEVEL_FATAL);
-//        TwitterAuthConfig config = new TwitterAuthConfig(TWITTER_KEY,TWITTER_SECRET);
         Config.init(this);
         TaskManager.init(this);
         if (UserManager.getInstance().isUserVerified())

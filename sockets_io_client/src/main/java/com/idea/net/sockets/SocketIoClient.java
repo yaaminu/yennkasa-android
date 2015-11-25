@@ -326,6 +326,7 @@ public class SocketIoClient implements Closeable {
                 }
             }
         };
+
         long delay = reconnectionDelay.addAndGet(getNextDelay(reconnectionDelay.get()));
         PLog.d(TAG, retryAttempts.get() + " attempt(s). retrying after " + delay + "ms");
         reconnect_OR_PingTimer.schedule(task, delay);

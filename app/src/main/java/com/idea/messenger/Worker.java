@@ -196,6 +196,4 @@ public class Worker extends IntentService {
             }
         }
     }
-
-
 }
