@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import com.crashlytics.android.Crashlytics;
-import com.digits.sdk.android.Digits;
 import com.idea.data.ContactSyncService;
 import com.idea.data.Message;
 import com.idea.data.UserManager;
@@ -19,8 +18,6 @@ import com.idea.util.Config;
 import com.idea.util.FileUtils;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
-import com.twitter.sdk.android.core.TwitterAuthConfig;
-import com.twitter.sdk.android.core.TwitterCore;
 
 import java.util.regex.Pattern;
 
@@ -119,8 +116,8 @@ public class PairApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        TwitterAuthConfig config = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
-        Fabric.with(this, new Crashlytics(), new TwitterCore(config), new Digits());
+//        TwitterAuthConfig config = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
+        Fabric.with(this, new Crashlytics());
         PLog.setLogLevel(BuildConfig.DEBUG ? PLog.LEVEL_VERBOSE : PLog.LEVEL_FATAL);
         Config.init(this);
         TaskManager.init(this);

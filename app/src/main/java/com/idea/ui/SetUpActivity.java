@@ -6,10 +6,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 
-import com.digits.sdk.android.AuthCallback;
-import com.digits.sdk.android.Digits;
-import com.digits.sdk.android.DigitsException;
-import com.digits.sdk.android.DigitsSession;
 import com.idea.Errors.ErrorCenter;
 import com.idea.PairApp;
 import com.idea.data.ContactSyncService;
@@ -98,26 +94,9 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
                 stage = LOGIN_STAGE;
             }
         }
-        if (stage == VERIFICATION_STAGE) {
-            Digits.authenticate(callback, R.style.AppTheme, UserManager.getInstance().getCurrentUser().getUserId(), false);
-        } else {
-            fragment = findFragment();
-            addFragment(fragment);
-        }
+        fragment = findFragment();
+        addFragment(fragment);
     }
-
-    private final AuthCallback callback = new AuthCallback() {
-        @Override
-        public void success(DigitsSession digitsSession, String s) {
-            onVerified();
-        }
-
-        @Override
-        public void failure(DigitsException e) {
-            //do nothing
-            UiHelpers.showToast(R.string.verification_failed);
-        }
-    };
 
     @NonNull
     private Fragment findFragment() {
