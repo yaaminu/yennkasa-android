@@ -7,6 +7,7 @@ import com.idea.data.User;
 import com.idea.data.UserManager;
 import com.idea.pairapp.R;
 import com.idea.util.Config;
+import com.idea.util.PLog;
 import com.idea.util.TaskManager;
 import com.idea.util.ThreadUtils;
 
@@ -55,6 +56,7 @@ final class NotificationManager {
     }
 
     private void notifyUser(final Context context, final Message message, final String sendersName) {
+
         if (Config.isAppOpen() && UserManager.getInstance().getBoolPref(UserManager.IN_APP_NOTIFICATIONS, false)) {
             //Toast.makeText(Config.getApplicationContext(), message.getFrom() + " : " + message.getMessageBody(), Toast.LENGTH_LONG).show();
             if (UI_NOTIFIER != null) {

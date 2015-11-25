@@ -174,14 +174,14 @@ public class PairAppClient extends Service {
                     final JSONObject object = new JSONObject(updateJson);
                     int versionCode = object.getInt("versionCode");
                     if (versionCode > BuildConfig.VERSION_CODE) {
-                        TaskManager.execute(new Runnable(){
-                            public void run(){
-                              try{
-                              notifyUpdateAvailable(object);   
-                              }catch(JSONException e){
-                    PLog.d(TAG, "error while trying to deserialize update data");
-                    applicationWidePrefs.edit().remove(UPDATE_KEY).apply();
-                              }                             
+                        TaskManager.execute(new Runnable() {
+                            public void run() {
+                                try {
+                                    notifyUpdateAvailable(object);
+                                } catch (JSONException e) {
+                                    PLog.d(TAG, "error while trying to deserialize update data");
+                                    applicationWidePrefs.edit().remove(UPDATE_KEY).apply();
+                                }
                             }
                         });
                     } else {
@@ -414,11 +414,11 @@ public class PairAppClient extends Service {
         dispatcher.addMonitor(monitor);
     }
 
-    public static void sendFeedBack(final JSONObject report) {
+    public static void sendFeedBack(final JSONObject report, final List<String> attachments) {
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
-                ParseClient.sendFeedBack(report);
+                ParseClient.sendFeedBack(report, attachments);
             }
         });
     }

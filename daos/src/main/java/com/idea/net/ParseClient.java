@@ -18,19 +18,24 @@ import com.idea.data.User;
 import com.idea.util.Config;
 import com.idea.util.FileUtils;
 import com.idea.util.L;
+import com.idea.util.MediaUtils;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
 import com.parse.Parse;
 import com.parse.ParseACL;
 import com.parse.ParseException;
+import com.parse.ParseFile;
 import com.parse.ParseInstallation;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
+import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -103,7 +108,7 @@ public class ParseClient implements UserApiV2 {
         defaultAcl.setPublicReadAccess(true);
         defaultAcl.setPublicWriteAccess(true);
         ParseACL.setDefaultACL(defaultAcl, true);
-        Parse.setLogLevel(Parse.LOG_LEVEL_VERBOSE);
+        Parse.setLogLevel(BuildConfig.DEBUG ? Parse.LOG_LEVEL_VERBOSE : Parse.LOG_LEVEL_NONE);
         /***************************************KEYS***************************************************************************/
 
         Parse.initialize(application, application.getString(R.string.parse_application_id), application.getString(R.string.parse_client_key));
@@ -847,13 +852,27 @@ public class ParseClient implements UserApiV2 {
     }
 
     //todo send as a mail
-    public static void sendFeedBack(JSONObject report) {
+    public static void sendFeedBack(JSONObject report, List<String> files) {
         ParseObject object = new ParseObject(PARSE_CONSTANTS.FEEDBACK_CLASS_NAME);
         object.put("message", report.toString());
+        for (int i = 0; i < files.size(); i++) {
+            File file = new File(files.get(i));
+            if (file.exists() && MediaUtils.isImage(file.getAbsolutePath())) {
+                try {
+                    ParseFile parseFile = new ParseFile(file.getName(), IOUtils.toByteArray(new FileInputStream(file)));
+                    parseFile.save();
+                    object.put("screenShot" + (i + 1), parseFile);
+                } catch (IOException e) {
+                    PLog.d(TAG, e.getMessage(), e.getCause());
+                } catch (ParseException e) { // FIXME: 11/25/2015 handle this error well
+                    PLog.d(TAG, "send feedback: unknown error while saving parseFile");
+                }
+            }
+        }
         object.saveEventually();
     }
 
-    private volatile int token = -1;
+    private static volatile int token = -1;
 
     @Override
     public synchronized void sendVerificationToken(String userId, Callback<HttpResponse> callback) {

@@ -78,10 +78,11 @@ class StatusBarNotifier implements Notifier {
             builder.setLights(Color.GREEN, 1500, 3000);
         }
         Notification notification = builder.build();
-        doNotify(context, notification);
+        doNotify(context, notification, message);
     }
 
-    private void doNotify(Context context, Notification notification) {
+    private void doNotify(Context context, Notification notification, Message message) {
+        String senderId = Message.isGroupMessage(message) ? message.getTo() : message.getFrom();
         NotificationManagerCompat.from(context).notify(MESSAGE_NOTIFICATION_ID, notification);
         if (shouldPlayTone.getAndSet(false)) {
             timer.schedule(new TimerTask() {
@@ -91,27 +92,34 @@ class StatusBarNotifier implements Notifier {
                         shouldPlayTone.set(true);
                 }
             }, 7000);
-            onNotified(context);
+            onNotified(context, senderId);
         }
 
     }
 
-    void onNotified(Context context) {
+    void onNotified(Context context, String senderId) {
+        if (UserManager.getInstance().isMuted(senderId)) {
+            PLog.d(TAG, " %s is muted not playing tone", senderId);
+            return;
+        }
         vibrateIfAllowed(context);
         playToneIfAllowed(context);
 
     }
 
     private static void playToneIfAllowed(Context context) {
+
         String uriString = UserManager.getInstance().getStringPref(UserManager.NEW_MESSAGE_TONE, UserManager.SILENT);
         if (uriString.equals(UserManager.SILENT)) {
             PLog.d(TAG, "silent, aborting ringtone playing");
+            return;
         }
         Uri uri;
         if (TextUtils.isEmpty(uriString) || uriString.equals(UserManager.DEFAULT)) {
             uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             if (uri == null) {
                 PLog.e(TAG, " unable to play default notification tone");
+                return;
             }
         } else {
             uri = Uri.parse(uriString);

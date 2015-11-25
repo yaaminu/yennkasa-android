@@ -12,6 +12,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Vibrator;
+import android.support.v4.util.Pair;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.View;
@@ -28,7 +29,6 @@ import com.idea.util.Config;
 import com.idea.util.LiveCenter;
 import com.idea.util.MediaUtils;
 import com.idea.util.PLog;
-import com.idea.util.TaskManager;
 import com.idea.util.UiHelpers;
 import com.rey.material.widget.SnackBar;
 
@@ -165,7 +165,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
-    private String formatNotificationMessage(Message message, String sender) {
+    private Pair<String, String> formatNotificationMessage(Message message, String sender) {
         String text;
         List<String> recentChatList = new ArrayList<>(LiveCenter.getAllPeersWithUnreadMessages());
         Realm realm = User.Realm(this);
@@ -182,10 +182,11 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         if (unReadMessages < 1) {
             return null;
         }
+        String peerId = Message.isGroupMessage(message) ? message.getTo() : message.getFrom();
         switch (recentCount) {
             case 0:
                 if (BuildConfig.DEBUG) throw new AssertionError();
-                return getString(R.string.new_message);
+                return new Pair<>(peerId, getString(R.string.new_message));
             case 1:
                 if (unReadMessages == 1) {
                     String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(this, message);
@@ -204,7 +205,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 text = "" + recentCount + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + (recentCount - 1) + getString(R.string.others);
                 break; //redundant but safe
         }
-        return text;
+        return new Pair<>(peerId, text);
     }
 
     @Override
@@ -229,7 +230,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         new notifyTask().execute(message, sender);
     }
 
-    private void doNotify(String text) {
+    private void doNotify(String userId, String text) {
         snackBar.text(text)
                 .ellipsize(TextUtils.TruncateAt.END)
                 .maxLines(2)
@@ -244,9 +245,12 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 })
                 .duration(6000) //6 secs
                 .setOnClickListener(listener);
-        // TODO: 11/7/2015 play tone
-        playNewMessageTone(this);
-        vibrateIfAllowed(this);
+
+
+        if (!userManager.isMuted(userId)) {
+            playNewMessageTone(this);
+            vibrateIfAllowed(this);
+        }
         snackBar.removeOnDismiss(true).show(this);
     }
 
@@ -280,28 +284,22 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         if (peerId == null) {
             throw new IllegalArgumentException("peer id is null!");
         }
-        final Runnable invalidateTask = new Runnable() {
-            @Override
-            public void run() {
-                LiveCenter.invalidateNewMessageCount(peerId);
-            }
-        };
-        TaskManager.executeNow(invalidateTask, true);
+        LiveCenter.invalidateNewMessageCount(peerId);
     }
 
     protected abstract SnackBar getSnackBar();
 
 
-    private class notifyTask extends AsyncTask<Object, Void, String> {
+    private class notifyTask extends AsyncTask<Object, Void, Pair<String, String>> {
         @Override
-        protected String doInBackground(Object... params) {
+        protected Pair<String, String> doInBackground(Object... params) {
             return formatNotificationMessage((Message) params[0], (String) params[1]);
         }
 
         @Override
-        protected void onPostExecute(String s) {
+        protected void onPostExecute(Pair<String, String> s) {
             if (s != null) {
-                doNotify(s);
+                doNotify(s.first, s.second);
             }
         }
     }

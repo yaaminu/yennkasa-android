@@ -3,14 +3,13 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
        android:shape="rectangle">
     <solid android:color="@android:color/white"/>
-    <corners android:radius="5dp"/>
+   
     <padding
         android:bottom="6dp"
         android:left="30dp"
         android:right="30dp"
-        android:top="4dp"/>
+        android:top="6dp"/>
     <stroke
         android:width="@dimen/stroke_width"
-        android:color="@color/preferred_primary_color"/>
-
+        android:color="@color/colorPrimary"/>
 </shape>

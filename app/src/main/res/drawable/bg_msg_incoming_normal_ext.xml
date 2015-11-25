@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@drawable/balloon_incoming_normal_ext_pressed" android:state_pressed="true"
-          android:state_selected="true"
-        >
-    </item>
-    <item android:drawable="@drawable/balloon_incoming_normal_ext"/>
-</selector>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+       android:shape="rectangle">
+
+    <!-- view background color -->
+    <solid android:color="@color/color_msg_incoming">
+    </solid>
+
+    <corners
+        android:bottomLeftRadius="10dp"
+        android:bottomRightRadius="10dp"
+        android:topLeftRadius="0dp"
+        android:topRightRadius="0dp"/>
+
+</shape>

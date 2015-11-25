@@ -102,7 +102,7 @@ public class ErrorCenter {
                 .setContentText(errorMessage)
                 .setAutoCancel(true)
                 .setContentIntent(PendingIntent.getActivity(applicationContext, id.hashCode(), action, PendingIntent.FLAG_UPDATE_CURRENT))
-                .setSmallIcon(R.drawable.ic_stat_icon).build();
+                .setSmallIcon(android.R.drawable.stat_notify_error).build();
         NotificationManagerCompat manager = NotificationManagerCompat.from(applicationContext);// getSystemService(NOTIFICATION_SERVICE));
         manager.notify(id, 100000111, notification);
     }

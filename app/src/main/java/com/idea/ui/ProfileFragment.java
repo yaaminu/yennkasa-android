@@ -170,6 +170,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             }
         }
     };
+    private ActionBar actionBar;
 
     private void dissolveGroup() {
         final ProgressDialog dialog = new ProgressDialog(getContext());
@@ -204,6 +205,34 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
     }
+
+    private final LiveCenter.LiveCenterListener listener = new LiveCenter.LiveCenterListener() {
+        @Override
+        public void onTyping(String userId) {
+            if (user.getUserId().equals(userId)) {
+                actionBar.setSubtitle(getString(R.string.writing));
+            }
+        }
+
+        @Override
+        public void onStopTyping(String userId) {
+            if (user.getUserId().equals(userId))
+                if (LiveCenter.isOnline(userId))
+                    actionBar.setSubtitle(getString(R.string.st_online));
+                else
+                    actionBar.setSubtitle(getString(R.string.st_offline));
+        }
+
+        @Override
+        public void onUserStatusChanged(String userId, boolean isOnline) {
+            if (user.getUserId().equals(userId))
+                if (isOnline)
+                    actionBar.setSubtitle(getString(R.string.st_online));
+                else
+                    actionBar.setSubtitle(getString(R.string.st_offline));
+
+        }
+    };
 
     @SuppressLint("CutPasteId")
     @Override
@@ -271,7 +300,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             setUpViewSingleUserWay();
         }
         //noinspection deprecation
-        final ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
+        actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
         //noinspection ConstantConditions
         if (userManager.isCurrentUser(user.getUserId())) {
             //noinspection ConstantConditions
@@ -282,6 +311,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             actionBar.setTitle(user.getName());
             if (!User.isGroup(user)) {
                 actionBar.setSubtitle(LiveCenter.isOnline(user.getUserId()) ? R.string.st_online : R.string.st_offline);
+                LiveCenter.registerTypingListener(listener);
             }
         }
         pDialog = new ProgressDialog(getActivity());
@@ -579,6 +609,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     @Override
     public void onDestroy() {
         realm.close();
+        LiveCenter.unRegisterTypingListener(listener);
         super.onDestroy();
     }
 

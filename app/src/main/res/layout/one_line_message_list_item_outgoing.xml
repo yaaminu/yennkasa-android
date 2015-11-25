@@ -51,7 +51,8 @@
         android:layout_toLeftOf="@+id/ll_message_body_view"
         android:layout_toStartOf="@+id/ll_message_body_view"
         android:background="@color/transparent"
-        android:src="@drawable/ic_replay_black_24dp"/>
+        android:contentDescription="@string/retry_sending_message"
+        android:src="@drawable/ic_action_replay"/>
 
     <ImageView
         android:id="@+id/iv_message_preview"

@@ -39,7 +39,7 @@
         android:largeHeap="true"
         android:theme="@style/Theme.AppTheme"
         tools:ignore="UnusedAttribute"
-        tools:replace="allowBackup">
+        >
         <activity
             android:name="com.idea.ui.MainActivity"
             android:label="@string/app_name"

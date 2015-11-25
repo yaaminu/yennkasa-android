@@ -15,14 +15,10 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_gravity="center_horizontal"
-        android:background="@drawable/orange_rect_back_ground"
         android:gravity="center"
-        android:paddingLeft="@dimen/date_message_paddingSides"
-        android:paddingRight="@dimen/date_message_paddingSides"
-        android:paddingTop="@dimen/date_message_paddingTop"
-        android:paddingBottom="@dimen/date_message_paddingTop"
+        android:padding="@dimen/date_message_paddingTop"
         android:text="2/2/2015"
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         android:textSize="@dimen/log_message_text_size"
         tools:ignore="HardcodedText"/>
 </com.idea.view.RelativeLayout>

@@ -77,7 +77,6 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:background="@drawable/input"
                     android:gravity="center"
                     >
 
@@ -86,12 +85,14 @@
                         style="@style/message_edittext_style"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:background="@null"
+                        android:background="@drawable/messge_edit_text_background"
+                        android:gravity="bottom"
+                        android:padding="@dimen/padding_ll_login_fragment_right"
                         />
                 </LinearLayout>
-                <!--android:text="lll\nlkklkk\nkklkjkjlkk\nkljklkkjlklk\nkljkljklk"-->
 
                 <com.idea.view.FrameLayout
+                    android:id="@+id/iv_send"
                     style="@style/FlatButtonRippleStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -103,13 +104,12 @@
                     android:visibility="visible">
 
                     <ImageView
-                        android:id="@+id/iv_send"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_gravity="center"
                         android:adjustViewBounds="true"
                         android:scaleType="centerInside"
-                        android:src="@drawable/ic_action_new_attachment_white"/>
+                        android:src="@drawable/ic_send_white_24dp"/>
                 </com.idea.view.FrameLayout>
 
             </LinearLayout>

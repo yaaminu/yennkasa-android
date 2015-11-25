@@ -134,18 +134,19 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/input"
-            android:gravity="center"
             android:layout_margin="@dimen/padding_ll_login_fragment_right"
+            android:gravity="center"
             >
+
             <EditText
                 android:id="@+id/et_message"
                 style="@style/message_edittext_style"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@null"
+                android:background="@drawable/messge_edit_text_background"
+                android:padding="@dimen/padding_ll_login_fragment_right"
                 />
-                <!--android:text="lll\nlkklkk\nkklkjkjlkk\nkljklkkjlklk\nkljkljklkklk"-->
+            <!--android:text="lll\nlkklkk\nkklkjkjlkk\nkljklkkjlklk\nkljkljklkklk"-->
         </LinearLayout>
     </com.idea.view.LinearLayout>
 

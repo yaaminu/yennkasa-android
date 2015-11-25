@@ -1,6 +1,5 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -11,26 +10,18 @@
     android:weightSum="1"
     tools:context="com.idea.ui.FeedBackFragment">
 
-    <com.rey.material.widget.EditText
+    <EditText
         android:id="@+id/et_feedback_subject"
         style="@style/Material.Widget.EditText.Light"
 
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:ellipsize="end"
         android:hint="@string/feedback_subject"
+        android:maxLength="40"
         android:singleLine="true"
-        android:textAppearance="@style/Base.TextAppearance.AppCompat.Body1"
         android:textColor="#FF000000"
-        app:et_dividerErrorColor="#FFFF0000"
-        app:et_helper="@string/helper_feedback_subject"
-        app:et_inputId="@+id/feedback_subject_id"
-        app:et_labelTextColor="@drawable/color_label"
-        app:et_labelTextSize="@dimen/standard_text_size"
-        app:et_supportMaxChars="40"
-        app:et_supportMode="charCounter"
-        app:et_supportSingleLine="true"
-        app:et_supportTextErrorColor="#FFFF0000"
-        app:et_supportTextSize="@dimen/edit_text_size"/>
+        android:textSize="@dimen/edit_text_size"/>
 
     <EditText
         android:id="@+id/et_feedback_body"
@@ -70,10 +61,11 @@
             style="@style/FlatWaveColorButtonRippleStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/round_corners"
+            android:background="@drawable/button_background"
             android:padding="@dimen/padding_button"
             android:text="@string/submit"
             android:textColor="@color/white"
             android:textSize="@dimen/standard_text_size"/>
     </LinearLayout>
+
 </LinearLayout>

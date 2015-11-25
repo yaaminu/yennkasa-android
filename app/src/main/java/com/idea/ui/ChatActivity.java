@@ -21,7 +21,6 @@ import android.view.View;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -126,7 +125,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private ListView messagesListView;
     private EditText messageEt;
     private View dateHeaderViewParent;
-    private ImageView sendButton;
+    private View sendButton;
     private MessagesAdapter adapter;
     private Toolbar toolBar;
     private ToolbarManager toolbarManager;
@@ -143,7 +142,8 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         messageEt = ((EditText) findViewById(R.id.et_message));
         ViewUtils.setTypeface(messageEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-        sendButton = (ImageView) findViewById(R.id.iv_send);
+        sendButton = findViewById(R.id.iv_send);
+        ViewUtils.hideViews(sendButton);
         messagesListView = ((ListView) findViewById(R.id.lv_messages));
         dateHeaderViewParent = findViewById(R.id.date_header_parent);
 
@@ -160,14 +160,11 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         actionBar.setDisplayHomeAsUpEnabled(true);
         RealmQuery<Message> messageQuery = messageConversationRealm.where(Message.class);
         String mainUserId = getMainUserId();
-        boolean isGroupMessage;
         if (User.isGroup(peer)) {
-            isGroupMessage = true;
             messageQuery.equalTo(Message.FIELD_TO, peer.getUserId())
                     .or()
                     .equalTo(Message.FIELD_FROM, peer.getUserId());
         } else {
-            isGroupMessage = false;
             messageQuery.beginGroup()
                     .equalTo(Message.FIELD_FROM, peer.getUserId())
                     .equalTo(Message.FIELD_TO, mainUserId)
@@ -189,10 +186,32 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 //                .into(imageView);
         // TODO: 8/22/2015 in future we will move to the last  un seen message if any
 //        inContextualMode = false;
+        if (userManager.isBlocked(peerId)) {
+            userWasBlocked = true;
+            UiHelpers.showStopAnnoyingMeDialog(ChatActivity.this, "blcokUser" + TAG, getString(R.string.stop_annoying_me),
+                    getString(R.string.blocked_user_notice),
+                    getString(android.R.string.ok), getString(R.string.cancel), okListener, noListener);
+        }
     }
 
+
+    private boolean acceptedToUblock = false, userWasBlocked = false;
+    private final UiHelpers.Listener noListener = new UiHelpers.Listener() {
+        @Override
+        public void onClick() {
+            finish();
+        }
+    }, okListener = new UiHelpers.Listener() {
+        @Override
+        public void onClick() {
+            acceptedToUblock = true;
+            userManager.unBlockUser(peer.getUserId());
+            UiHelpers.showToast(getString(R.string.user_unblocked));
+        }
+    };
+
     private void setUpListView() {
-        adapter = new MessagesAdapter(delegate, messages,true);
+        adapter = new MessagesAdapter(delegate, messages, userManager.isGroup(usersRealm, peer.getUserId()));
         messagesListView.setAdapter(adapter);
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
 //        swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(messagesListView, new SwipeDismissListViewTouchListener.OnDismissCallback() {
@@ -253,6 +272,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             startActivityForResult(intent, ADD_USERS_REQUEST);
             return true;
         } else if (id == R.id.action_attach) {
+            if (!acceptedToUblock && userWasBlocked) {
+                userManager.unBlockUser(peer.getUserId());
+                UiHelpers.showToast(R.string.user_unblocked);
+            }
             UiHelpers.attach(this);
             return true;
         } else if (id == R.id.action_add_contact) {
@@ -328,13 +351,14 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     public void onClick(View v) {
         int id = v.getId();
+        if (!acceptedToUblock && userWasBlocked) {
+            userManager.unBlockUser(peer.getUserId());
+            UiHelpers.showToast(R.string.user_unblocked);
+        }
         switch (id) {
             case R.id.iv_send:
-                if (messageEt.getText().toString().isEmpty()) {
-                    UiHelpers.attach(this);
-                } else {
+                if (!messageEt.getText().toString().trim().isEmpty())
                     sendTextMessage();
-                }
                 break;
             case R.id.main_toolbar:
                 UiHelpers.gotoProfileActivity(this, peer.getUserId());
@@ -393,9 +417,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                     return;
                 }
             }
-            //if we've got here then somehow a  session was not set up correctly.
-            // do we have to clean that mess or
-            //do this: throw new IllegalStateException("impossible");
         }
     }
 
@@ -518,7 +539,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public void afterTextChanged(Editable s) {
         handler.removeCallbacks(runnable);
         if (!s.toString().trim().isEmpty()) {
-            sendButton.setImageResource(R.drawable.ic_send_white_24dp);
+            ViewUtils.showViews(sendButton);
             if (!wasTyping) {
                 wasTyping = true;
                 LiveCenter.notifyTyping(peer.getUserId());
@@ -526,7 +547,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             //TODO add some deviation to the timeout
             handler.postDelayed(runnable, 10000);
         } else {
-            sendButton.setImageResource(R.drawable.ic_action_new_attachment_white);
+            ViewUtils.hideViews(sendButton);
         }
         if (wasTyping) {
             wasTyping = false;

@@ -88,9 +88,10 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                 setupViews();
                 checkIfUserAvailable();
                 final int default_fragment = intent.getIntExtra(DEFAULT_FRAGMENT, savedPosition);
-                savedPosition = Math.min(default_fragment, MyFragmentStatePagerAdapter.POSITION_SETTINGS_FRAGMENT);
-                savedPosition = Math.max(MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT, default_fragment);
-//                testChatActivity();
+                if (default_fragment >= MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT
+                        && default_fragment <= MyFragmentStatePagerAdapter.POSITION_SETTINGS_FRAGMENT)
+                    savedPosition = default_fragment;
+                testChatActivity();
             } else {
                 UiHelpers.gotoSetUpActivity(this);
             }
@@ -141,9 +142,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
 
 
     void setPagePosition(int newPosition) {
-        if (newPosition < 0 || newPosition >= pager.getAdapter().getCount() || pager.getCurrentItem() == newPosition) {
-            //do nothing
-        } else {
+        if (newPosition >= 0 && newPosition < pager.getAdapter().getCount() && pager.getCurrentItem() != newPosition) {
             pager.setCurrentItem(newPosition, true);
         }
     }
@@ -207,7 +206,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
 
     }
 
-    private boolean noUserAvailable = false;
+    private boolean noUserAvailable = true;
 
     private final RealmChangeListener changeListener = new RealmChangeListener() {
         @Override
@@ -264,10 +263,10 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
             public void run() {
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_LOWEST);
                 testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, UserManager.getMainUserId()));
-                testMessageProcessor(RealmUtils.seedIncomingMessages("233268866434", UserManager.getMainUserId()));
+                testMessageProcessor(RealmUtils.seedIncomingMessages("233", UserManager.getMainUserId()));
             }
         };
-        timer.scheduleAtFixedRate(task, 5000, 20000);
+        timer.scheduleAtFixedRate(task, 5000, 5000);
     }
 
     static Timer timer;

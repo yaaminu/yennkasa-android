@@ -6,4 +6,5 @@
     <item name="latest_message" type="id" />
     <item name="bt_add" type="id" />
     <item name="tag" type="id"/>
+    <item name="action_attach_fedback" type="id"/>
 </resources>

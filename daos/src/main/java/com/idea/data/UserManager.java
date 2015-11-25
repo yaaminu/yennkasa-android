@@ -4,6 +4,8 @@ import android.app.AlarmManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
@@ -73,6 +75,7 @@ public final class UserManager {
     private static final String NO_DP_CHANGE = "no dp change";
     private static final String PART_2 = FileUtils.hash("kloi3jlalfak982bbc,avqaafafals");
     private static final String PART_1 = FileUtils.hash("vncewe4209ipk;lj82lkja90");
+    public static final String MUTED_USERS = "MUTED)USERS";
     private final File sessionFile;
     private final Object mainUserLock = new Object();
     private final Exception NO_CONNECTION_ERROR;
@@ -694,9 +697,16 @@ public final class UserManager {
 
     public boolean isGroup(String userId) {
         Realm realm = User.Realm(Config.getApplicationContext());
-        User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).equalTo(User.FIELD_TYPE, User.TYPE_GROUP).findFirst();
-        realm.close();
-        return user != null;
+        try {
+            return isGroup(realm, userId);
+        } finally {
+            realm.close();
+        }
+
+    }
+
+    public boolean isGroup(Realm realm, String userId) {
+        return realm.where(User.class).equalTo(User.FIELD_ID, userId).equalTo(User.FIELD_TYPE, User.TYPE_GROUP).findFirst() != null;
     }
 
     void doRefreshGroups() {
@@ -990,7 +1000,21 @@ public final class UserManager {
                 }
             });
         } else {
-            doNotify(new Exception(getString(R.string.busy)), callBack);
+            Long remaining;
+            synchronized (rateLimiter) {
+                remaining = rateLimiter.get("verifyUser");
+                if (remaining != null) {
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            verifyUser(token, callBack);
+                        }
+                    }, remaining);
+                    return;
+                }
+            }
+            verifyUser(token, callBack); //if we are here it means the rate limit has exceeded
         }
     }
 
@@ -1022,7 +1046,21 @@ public final class UserManager {
                 }
             });
         } else {
-            doNotify(new Exception(getString(R.string.busy)), callback);
+            Long remaining;
+            synchronized (rateLimiter) {
+                remaining = rateLimiter.get("sendToken");
+                if (remaining != null) {
+                    Handler handler = new Handler(Looper.getMainLooper());
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            sendVerificationToken(callback);
+                        }
+                    }, remaining);
+                    return;
+                }
+            }
+            sendVerificationToken(callback); //if we are here it means the rate limit has exceeded
         }
     }
 
@@ -1654,7 +1692,8 @@ public final class UserManager {
         });
     }
 
-    private final Lock blockLock = new ReentrantLock(true);
+    private final Lock blockLock = new ReentrantLock(true),
+            muteLock = new ReentrantLock(true);
 
     private void ensureNotNull(Object o) {
         if (o == null) {
@@ -1675,12 +1714,8 @@ public final class UserManager {
 
     public boolean isBlocked(String userId) {
         ensureNotNull(userId);
-        try {
-            blockLock.lock();
-            return Config.getPreferences(BLOCKED_USERS).contains(BLOCKED_USERS + userId);
-        } finally {
-            blockLock.unlock();
-        }
+        return Config.getPreferences(BLOCKED_USERS).contains(BLOCKED_USERS + userId);
+
     }
 
     public void unBlockUser(String userId) {
@@ -1692,6 +1727,36 @@ public final class UserManager {
         } finally {
             blockLock.unlock();
         }
+    }
+
+
+    public boolean isMuted(String peerId) {
+        ensureNotNull(peerId);
+        return Config.getPreferences(MUTED_USERS).contains(MUTED_USERS + peerId);
+    }
+
+    public boolean muteUser(String peerId) {
+        ensureNotNull(peerId);
+        try {
+            muteLock.lock();
+            SharedPreferences preferences = Config.getPreferences(MUTED_USERS);
+            preferences.edit().putString(MUTED_USERS + peerId, peerId).apply();
+        } finally {
+            muteLock.unlock();
+        }
+        return true;
+    }
+
+    public boolean unMuteUser(String peerId) {
+        ensureNotNull(peerId);
+        try {
+            muteLock.lock();
+            SharedPreferences preferences = Config.getPreferences(MUTED_USERS);
+            preferences.edit().remove(MUTED_USERS + peerId).apply();
+        } finally {
+            muteLock.unlock();
+        }
+        return true;
     }
 
     public interface CallBack {

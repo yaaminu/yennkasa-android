@@ -14,7 +14,7 @@
     <string name="content_desc_user_avatar">user DP thumbnail</string>
     <string name="st_empty_contacts">It\'s Lonely Here, No contact</string>
     <string name="action_call_sender">Call sender</string>
-    <string name="action_delete_conversation">Delete</string>
+    <string name="action_delete_conversation">Delete conversation</string>
     <string name="title_pick_recipient">Pick recipient</string>
     <string name="action_attach">Attach</string>
     <string name="error_sorry_no_application_to_open_file">No App on your phone can open this file type</string>
@@ -207,7 +207,7 @@
     <string name="preferences">Preferences</string>
     <string name="error_use_file_manager">An error occurred while processing the attachment. Try using a file manager to pick the file if the problem persists</string>
     <string name="restore_defaults">Restore defaults</string>
-    <string name="feedback_subject">Optional subject</string>
+    <string name="feedback_subject">Optional subject, must be <![CDATA[<=]]> 40 characters</string>
     <string name="helper_feedback_subject">at most 40 letters</string>
     <string name="feedback_here">Feedback Here</string>
     <string name="add_device_info">Include System Information</string>
@@ -258,4 +258,17 @@
     <string name="device_out_of_ram">Failed to load image, your device might have run ouf of RAM</string>
     <string name="stop_annoying_me">stop annoying me</string>
     <string name="content_des_send_message_agin">retry sending message</string>
+    <string name="retry_sending_message">Retry sending message</string>
+    <string name="blocked_user_notice">Sending a message to this blocked user, you agree that this user will be automatically unblocked</string>
+    <string name="user_unblocked">unblocked successfully</string>
+    <string name="delete_success">Deleted successfully</string>
+    <string name="user_blocked">blocked successfully</string>
+    <string name="unmuted_user">success</string>
+    <string name="muted_user">success</string>
+    <string name="mute">Mute %s</string>
+    <string name="unmute">Unmute %s</string>
+    <string name="attach_failed_feedback">failed to attach file</string>
+    <string name="attachment_added_feedback">attachment added</string>
+    <string name="max_attachment_reached">maximum of 5 attachments can be added per report</string>
+    <string name="action_delete">Delete message</string>
 </resources>

@@ -14,7 +14,7 @@ import com.idea.util.TypeFaceUtil;
 import com.idea.util.ViewUtils;
 
 /**
- * Created by Null-Pointer on 11/9/2015.
+ * @author Null-Pointer on 11/9/2015.
  */
 public class SimpleAdapter extends BaseAdapter {
 

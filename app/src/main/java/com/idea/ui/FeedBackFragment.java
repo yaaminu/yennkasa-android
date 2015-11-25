@@ -1,25 +1,31 @@
 package com.idea.ui;
 
 
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import android.net.Uri;
 import com.idea.data.UserManager;
 import com.idea.messenger.PairAppClient;
 import com.idea.pairapp.BuildConfig;
 import com.idea.pairapp.R;
+import com.idea.util.FileUtils;
 import com.idea.util.GcmUtils;
+import com.idea.util.MediaUtils;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
@@ -28,13 +34,17 @@ import com.rey.material.widget.CheckBox;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 /**
  * A simple {@link Fragment} subclass.
  */
 public class FeedBackFragment extends Fragment {
+
 
     EditText subject;
     private View.OnClickListener onClickListener = new View.OnClickListener() {
@@ -46,7 +56,7 @@ public class FeedBackFragment extends Fragment {
             String feedbackBody = subject.getText().toString().trim();
             subject.setText("");
             if (TextUtils.isEmpty(feedbackBody)) {
-                UiHelpers.showErrorDialog(((PairAppBaseActivity) getActivity()), getString(R.string.error_feedback_body_empty));
+                UiHelpers.showErrorDialog(getActivity(), getString(R.string.error_feedback_body_empty));
                 return;
             }
 
@@ -67,10 +77,12 @@ public class FeedBackFragment extends Fragment {
                     reportObject.put("manufacturer", Build.MANUFACTURER);
                     reportObject.put("reportedBy", UserManager.getMainUserId());
                     reportObject.put("time", new Date());
-                    reportObject.put("pairapVersion", BuildConfig.VERSION_NAME);
+                    reportObject.put("pairapVersion", BuildConfig.VERSION_NAME + " release" + BuildConfig.VERSION_CODE);
                     reportObject.put("pairapVersionCode", BuildConfig.VERSION_CODE);
                     reportObject.put("apiVersion", Build.VERSION.SDK_INT);
                     reportObject.put("hasGooglePlayServices", GcmUtils.hasGcm());
+                    reportObject.put("title", title);
+
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         reportObject.put("arc", TextUtils.join(",", Build.SUPPORTED_ABIS));
                     } else {
@@ -84,14 +96,14 @@ public class FeedBackFragment extends Fragment {
                     reportObject.put("locale", Locale.getDefault().getDisplayCountry());
                 }
 
-                Intent intent = new Intent(Intent.ACTION_SENDTO,Uri.parse("mailto:team.pairapp.android@gmail.com"));
+                Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:team.pairapp.android@gmail.com"));
                 intent.putExtra(Intent.EXTRA_TEXT, reportObject.toString());
                 intent.putExtra(Intent.EXTRA_SUBJECT, title);
                 try {
                     startActivity(intent);
+                    throw new ActivityNotFoundException();
                 } catch (ActivityNotFoundException e) {
-                    reportObject.put("title", title);
-                    PairAppClient.sendFeedBack(reportObject);
+                    PairAppClient.sendFeedBack(reportObject, attachments);
                     UiHelpers.showToast(R.string.feedback_sent_successfully);
                 }
             } catch (JSONException e) {
@@ -99,12 +111,19 @@ public class FeedBackFragment extends Fragment {
             }
         }
     };
-    private com.rey.material.widget.EditText titleEt;
+    private EditText titleEt;
+    private List<String> attachments = new ArrayList<>();
 
     public FeedBackFragment() {
         // Required empty public constructor
     }
 
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+        setRetainInstance(true);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -115,7 +134,7 @@ public class FeedBackFragment extends Fragment {
         Button submit = (Button) view.findViewById(R.id.bt_submit);
         ViewUtils.setTypeface(submit, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         submit.setOnClickListener(onClickListener);
-        titleEt = ((com.rey.material.widget.EditText) view.findViewById(R.id.et_feedback_subject));
+        titleEt = (EditText) view.findViewById(R.id.et_feedback_subject);
         subject = ((EditText) view.findViewById(R.id.et_feedback_body));
         ViewUtils.setTypeface(submit, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         ViewUtils.setTypeface(titleEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
@@ -125,5 +144,47 @@ public class FeedBackFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == Activity.RESULT_OK && requestCode == ChatActivity.PICK_PHOTO_REQUEST) {
+            String path = FileUtils.resolveContentUriToFilePath(data.getData());
+            if (path != null) {
+                if (attachments.size() > 5) {
+                    UiHelpers.showPlainOlDialog(getActivity(), getString(R.string.max_attachment_reached));
+                    return;
+                }
+                if (!MediaUtils.isImage(path)) {
+                    UiHelpers.showToast(R.string.not_a_bitmap);
+                    return;
+                }
+                if (new File(path).length() > FileUtils.ONE_MB * 8) {
+                    UiHelpers.showToast(R.string.error_file_too_large);
+                    return;
+                }
+                attachments.add(path);
+                UiHelpers.showToast(getString(R.string.attachment_added_feedback));
+            } else {
+                UiHelpers.showToast(getString(R.string.attach_failed_feedback));
+            }
+        }
+    }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_feedback, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_attach) {
+            Intent attachIntent;
+            attachIntent = new Intent(Intent.ACTION_GET_CONTENT);
+            attachIntent.setType("image/*");
+            attachIntent.addCategory(Intent.CATEGORY_DEFAULT);
+            startActivityForResult(attachIntent, ChatActivity.PICK_PHOTO_REQUEST);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }

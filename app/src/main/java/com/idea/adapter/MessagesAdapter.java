@@ -2,7 +2,6 @@ package com.idea.adapter;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
 import android.media.ThumbnailUtils;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -51,14 +50,14 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             OUTGOING_MESSAGE_ONE_LINE = 0x5;
 
     private static final int[] messagesLayout = {
-            R.layout.message_item_log,
+            R.layout.list_item_date_log,
             R.layout.list_item_message_outgoing,
             R.layout.list_item_message_incoming,
             R.layout.typing_dots,
             R.layout.one_line_message_list_item_incoming,
             R.layout.one_line_message_list_item_outgoing
     };
-    private final Drawable bgOut, bgOutXtra, bgIn, bgInXtra;
+    //    private final Drawable bgOut, bgOutXtra, bgIn, bgInXtra;
     private final SparseIntArray messageStates;
     private final Picasso PICASSO;
     private static final LruCache<String, Bitmap> thumbnailCache = new LruCache<>(5);
@@ -78,10 +77,10 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         this.isGroupMessages = isGroupMessages;
         PICASSO = Picasso.with(context);
         Resources resources = context.getResources();
-        bgOut = resources.getDrawable(R.drawable.bg_msg_outgoing_normal);
-        bgOutXtra = resources.getDrawable(R.drawable.bg_msg_outgoing_normal_ext);
-        bgIn = resources.getDrawable(R.drawable.bg_msg_incoming_normal);
-        bgInXtra = resources.getDrawable(R.drawable.bg_msg_incoming_normal_ext);
+//        bgOut = resources.getDrawable(R.drawable.bg_msg_outgoing_normal);
+//        bgOutXtra = resources.getDrawable(R.drawable.bg_msg_outgoing_normal_ext);
+//        bgIn = resources.getDrawable(R.drawable.bg_msg_incoming_normal);
+//        bgInXtra = resources.getDrawable(R.drawable.bg_msg_incoming_normal_ext);
     }
 
     //optimisation as we are facing performance issues
@@ -182,7 +181,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         };
 
         /////////////////////////////////////// if you think this can be re-written well try./////////////////////////////////////////
-        holder.rootView.setBackgroundDrawable(null);
+//        holder.rootView.setBackgroundDrawable(null);
         //if the previous message was from the same user,we wont show it again but first ensure it's a sendable message
         if (position > 0 /*avoid ouf of bound ex*/) { //this condition is almost always true
             Message previous = getItem(position - 1);
@@ -190,10 +189,10 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                 holder.sendersName.setOnClickListener(null);
                 PLog.d(TAG, "same sender not showing name");
                 //set background to extra
-                holder.rootView.setBackgroundDrawable(isOutgoingMessage ? bgOutXtra : bgInXtra);
+//                holder.rootView.setBackgroundDrawable(isOutgoingMessage ? bgOutXtra : bgInXtra);
             } else {
                 //set background to normal
-                holder.rootView.setBackgroundDrawable(isOutgoingMessage ? bgOutXtra : bgInXtra);
+//                holder.rootView.setBackgroundDrawable(isOutgoingMessage ? bgOutXtra : bgInXtra);
                 if (!isOutgoingMessage && isGroupMessages) {
                     ViewUtils.showViews(holder.sendersName);
                     holder.sendersName.setText(getSenderName(message));
@@ -201,7 +200,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                 }
             }
         } else {
-            holder.rootView.setBackgroundDrawable(isOutgoingMessage ? bgOut: bgIn);
+//            holder.rootView.setBackgroundDrawable(isOutgoingMessage ? bgOut: bgIn);
             // almost always the first message for a conversation is date message which are screened off before we get here.
             // this means currently this block will never get executed in practice. but do be aware that when the data set grows and we
             // introduce paging the first message may not be a date message
@@ -249,15 +248,17 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         if (!messageBody.startsWith("http")/*we only use http*/) {
             // this binary message is downloaded
             if (currentMessageType == Message.TYPE_VIDEO_MESSAGE) {
-                ViewUtils.showViews(holder.progressRootView, holder.playOrDownload);
-                holder.playOrDownload.setImageResource(R.drawable.ic_play_circle_outline_white_36dp);
-                holder.playOrDownload.setOnClickListener(listener);
+                if (progress < 0) {
+                    ViewUtils.showViews(holder.progressRootView, holder.playOrDownload);
+                    holder.playOrDownload.setImageResource(R.drawable.ic_play_circle_outline_white_36dp);
+                    holder.playOrDownload.setOnClickListener(listener);
+                }
                 //we use the body of the message instead of id so that we will not have to
                 //create a thumbnail for the same file twice.
                 final Bitmap bitmap;
                 bitmap = thumbnailCache.get(messageBody);
                 if (bitmap == null) {
-                    makeThumbnail(messageBody);
+                    makeThumbnail(messageBody); //async
                     holder.preview.setImageResource(placeHolderDrawable);
                 } else {
                     holder.preview.setImageBitmap(bitmap);

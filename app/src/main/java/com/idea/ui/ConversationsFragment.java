@@ -136,7 +136,7 @@ public class ConversationsFragment extends ListFragment {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
                 final Conversation conversation = ((Conversation) parent.getAdapter().getItem(position));
-                String[] contextMenuOptions = new String[2];
+                String[] contextMenuOptions = new String[3];
 
                 contextMenuOptions[0] = getString(R.string.action_delete_conversation);
                 final String peerId = conversation.getPeerId();
@@ -147,6 +147,9 @@ public class ConversationsFragment extends ListFragment {
                 }
                 contextMenuOptions[1] = userManager.isBlocked(peerId) ? getString(R.string.unblock, name) :
                         getString(R.string.block, name);
+
+                contextMenuOptions[2] = userManager.isMuted(peerId) ? getString(R.string.unmute, name) :
+                        getString(R.string.mute, name);
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                 builder.setAdapter(new ArrayAdapter<>(getActivity(),
@@ -162,18 +165,32 @@ public class ConversationsFragment extends ListFragment {
                         TaskManager.executeNow(invalidateTask, true);
                         switch (which) {
                             case 0:
-                                deleted = deleteConversation(conversation);
-                                if (deleted != null) {
-                                    if (deleted.getLastMessage() != null) {
-                                        warnAndDelete();
-                                    }
+                                deleted = conversations.get(position);
+                                if (deleted.getLastMessage() != null) {
+                                    warnAndDelete();
+                                } else {
+                                    realm.beginTransaction();
+                                    deleted.removeFromRealm();
+                                    realm.commitTransaction();
+                                    UiHelpers.showToast(R.string.delete_success);
                                 }
                                 break;
                             case 1:
                                 if (userManager.isBlocked(peerId)) {
                                     userManager.unBlockUser(peerId);
+                                    UiHelpers.showToast(R.string.user_unblocked);
                                 } else {
                                     userManager.blockUser(peerId);
+                                    UiHelpers.showToast(R.string.user_blocked);
+                                }
+                                break;
+                            case 2:
+                                if (userManager.isMuted(peerId)) {
+                                    userManager.unMuteUser(peerId);
+                                    UiHelpers.showToast(R.string.unmuted_user);
+                                } else {
+                                    userManager.muteUser(peerId);
+                                    UiHelpers.showToast(R.string.muted_user);
                                 }
                                 break;
                             default:
@@ -188,8 +205,7 @@ public class ConversationsFragment extends ListFragment {
     }
 
 
-    private void cleanMessages(Conversation conversation, final Date toWhen) {
-        final String peerId = conversation.getPeerId();
+    private void cleanMessages(final String peerId, final Date toWhen) {
         final DialogFragment dialogFragment = UiHelpers.newProgressDialog();
         dialogFragment.show(getFragmentManager().beginTransaction(), "");
         TaskManager.executeNow(new Runnable() {
@@ -246,35 +262,6 @@ public class ConversationsFragment extends ListFragment {
                 , true);
     }
 
-    private Conversation deleteConversation(int position) {
-        realm.beginTransaction();
-        try {
-            Conversation conversation = conversations.get(position);
-            Conversation copy = Conversation.copy(conversation);
-            conversation.removeFromRealm();
-            realm.commitTransaction();
-            return copy;
-        } catch (Exception e) {
-            realm.cancelTransaction();
-            PLog.e(TAG, e.getMessage(), e.getCause());
-        }
-        return null;
-    }
-
-    private Conversation deleteConversation(Conversation conversation) {
-        realm.beginTransaction();
-        try {
-            Conversation copy = Conversation.copy(conversation);
-            conversation.removeFromRealm();
-            realm.commitTransaction();
-            return copy;
-        } catch (Exception e) {
-            realm.cancelTransaction();
-            PLog.e(TAG, e.getMessage(), e.getCause());
-        }
-        return null;
-    }
-
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         interactionListener.onConversionClicked(((Conversation) l.getAdapter().getItem(position)));
@@ -286,12 +273,6 @@ public class ConversationsFragment extends ListFragment {
         super.onDestroy();
     }
 
-    private void showAlertDialog(int[] reverseSortedPositions) {
-        for (int position : reverseSortedPositions) {
-            deleted = deleteConversation(position);
-            warnAndDelete();
-        }
-    }
 
     private void warnAndDelete() {
         //in case user waits before accepting to delete and while waiting new message arrives we don't want the user
@@ -303,16 +284,13 @@ public class ConversationsFragment extends ListFragment {
                 getString(android.R.string.ok), getString(R.string.no), new UiHelpers.Listener() {
                     @Override
                     public void onClick() {
-                        cleanMessages(deleted, now);
-                    }
-                }, new UiHelpers.Listener() {
-                    @Override
-                    public void onClick() {
+                        String peerId = deleted.getPeerId();
                         realm.beginTransaction();
-                        realm.copyToRealmOrUpdate(deleted);
+                        deleted.removeFromRealm();
                         realm.commitTransaction();
+                        cleanMessages(peerId, now);
                     }
-                });
+                }, null);
     }
 
 }
