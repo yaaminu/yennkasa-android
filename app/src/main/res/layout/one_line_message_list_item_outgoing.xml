@@ -34,7 +34,7 @@
             style="@style/message_outgoing_date"
             android:layout_alignTop="@+id/fl_message_body_view"
             android:layout_gravity="bottom"
-            android:drawableLeft="@drawable/ic_vertical_align_top_white_18dp"
+            android:drawableLeft="@drawable/ic_msg_status_pending"
             android:gravity="center_vertical|end"
             android:padding="@dimen/padding_ll_login_fragment_left"
             android:singleLine="true"

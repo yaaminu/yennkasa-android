@@ -18,12 +18,14 @@ import com.idea.util.Config;
 import com.idea.util.FileUtils;
 import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
-import com.idea.util.TaskManager;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 
 import io.realm.Realm;
 
@@ -55,15 +57,6 @@ public class Worker extends IntentService {
         if (intent != null) {
             final String action = intent.getAction();
             if (DOWNLOAD.equals(action)) {
-                synchronized (downloading) {
-                    if (downloading.size() > 8) {
-                        if (Config.isAppOpen())
-                            Toast.makeText(Worker.this, getString(R.string.max_download_reached), Toast.LENGTH_SHORT).show();
-                        else
-                            ErrorCenter.reportError(TAG + "duplicate", getString(R.string.max_download_reached), null);
-                        return;
-                    }
-                }
                 final String messageJson = intent.getStringExtra(MESSAGE_JSON);
                 Message message = Message.fromJSON(messageJson);
                 download(message);
@@ -72,6 +65,8 @@ public class Worker extends IntentService {
     }
 
     private static final Set<String> downloading = new HashSet<>();
+
+    private static Semaphore downloadLock = new Semaphore(8, true);
 
     private void download(final Message message) {
         synchronized (downloading) {
@@ -83,98 +78,124 @@ public class Worker extends IntentService {
         }
         try {
             LiveCenter.acquireProgressTag(message.getId());
+            service.execute(new DownloadRunnable(message));
         } catch (PairappException e) {
             throw new RuntimeException(e.getCause());
         }
-
-        final String messageId = message.getId(),
-                messageBody = message.getMessageBody(),
-                peer = Message.isGroupMessage(message) ? message.getTo() : message.getFrom();
-        final int type = message.getType();
-        TaskManager.execute(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-                        Realm realm = null;
-                        final File finalFile;
-                        String destination = messageBody.substring(messageBody.lastIndexOf('/'));
-
-                        switch (type) {
-                            case Message.TYPE_VIDEO_MESSAGE:
-                                finalFile = new File(Config.getAppVidMediaBaseDir(), destination);
-                                break;
-                            case Message.TYPE_PICTURE_MESSAGE:
-                                finalFile = new File(Config.getAppImgMediaBaseDir(), destination);
-                                break;
-                            case Message.TYPE_BIN_MESSAGE:
-                                finalFile = new File(Config.getAppBinFilesBaseDir(), destination);
-                                break;
-                            default:
-                                throw new AssertionError("should never happen");
-                        }
-                        FileUtils.ProgressListener listener = new FileUtils.ProgressListener() {
-                            boolean done = false;
-
-                            @Override
-                            public void onProgress(long expected, long processed) {
-                                if (done) {
-                                    return;
-                                }
-                                int progress = (int) ((100 * processed) / expected);
-                                LiveCenter.updateProgress(messageId, progress);
-
-                                if (!peer.equals(Config.getCurrentActivePeer())) {
-                                    Intent intent = new Intent(Worker.this, ChatActivity.class);
-                                    intent.putExtra(ChatActivity.EXTRA_PEER_ID, peer);
-                                    Notification notification = new NotificationCompat.Builder(Worker.this)
-                                            .setContentTitle(getString(R.string.downloading))
-                                            .setProgress(100, progress, progress <= 0)
-                                            .setContentIntent(PendingIntent.getActivity(Worker.this, 1003, intent, PendingIntent.FLAG_UPDATE_CURRENT))
-                                            .setSubText(progress > 0 ? getString(R.string.downloaded) + FileUtils.sizeInLowestPrecision(processed) + "/" + FileUtils.sizeInLowestPrecision(expected) : getString(R.string.loading))
-                                            .setSmallIcon(R.drawable.ic_stat_icon).build();
-                                    NotificationManagerCompat manager = NotificationManagerCompat.from(Worker.this);// getSystemService(NOTIFICATION_SERVICE));
-                                    manager.notify(messageId, PairAppClient.notId, notification);
-                                }
-                                if (progress == 100 && !done) {
-                                    done = true;
-                                }
-                            }
-                        };
-                        try {
-                            FileUtils.save(finalFile, messageBody, listener);
-                            realm = Message.REALM(Config.getApplicationContext());
-                            realm.beginTransaction();
-                            Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
-                            toBeUpdated.setMessageBody(finalFile.getAbsolutePath());
-                            realm.commitTransaction();
-                            onComplete(null);
-                        } catch (IOException e) {
-                            PLog.d(TAG, e.getMessage(), e.getCause());
-                            Exception error = new Exception(Config.getApplicationContext().getString(R.string.download_failed));
-                            onComplete(error);
-                        } finally {
-                            if (realm != null) {
-                                realm.close();
-                            }
-                        }
-                    }
-
-                    private void onComplete(final Exception error) {
-                        LiveCenter.releaseProgressTag(messageId);
-                        synchronized (downloading) {
-                            downloading.remove(messageId);
-                        }
-
-                        Intent intent = new Intent();
-                        if (error != null) {
-                            NotificationManagerCompat manager = NotificationManagerCompat.from(Worker.this);// getSystemService(NOTIFICATION_SERVICE));
-                            manager.cancel(messageId, PairAppClient.notId);
-                            intent.setClass(Worker.this, ChatActivity.class);
-                            intent.putExtra(ChatActivity.EXTRA_PEER_ID, peer);
-                            ErrorCenter.reportError(messageId, error.getMessage(), intent);
-                        }
-                    }
-                });
     }
+
+
+    private static final ExecutorService service = Executors.newCachedThreadPool();
+
+    private static class DownloadRunnable implements Runnable {
+
+        private final String messageId;
+        private final String messageBody;
+        private final String peer;
+        private int type;
+
+        public DownloadRunnable(Message message) {
+            messageId = message.getId();
+            messageBody = message.getMessageBody();
+            peer = Message.isGroupMessage(message) ? message.getTo() : message.getFrom();
+            type = message.getType();
+        }
+
+        @Override
+        public void run() {
+            try {
+                downloadLock.acquire();
+                doDownload();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                downloadLock.release();
+            }
+        }
+
+
+        private void doDownload() {
+            android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+            Realm realm = null;
+            final File finalFile;
+            String destination = messageBody.substring(messageBody.lastIndexOf('/'));
+
+            switch (type) {
+                case Message.TYPE_VIDEO_MESSAGE:
+                    finalFile = new File(Config.getAppVidMediaBaseDir(), destination);
+                    break;
+                case Message.TYPE_PICTURE_MESSAGE:
+                    finalFile = new File(Config.getAppImgMediaBaseDir(), destination);
+                    break;
+                case Message.TYPE_BIN_MESSAGE:
+                    finalFile = new File(Config.getAppBinFilesBaseDir(), destination);
+                    break;
+                default:
+                    throw new AssertionError("should never happen");
+            }
+            FileUtils.ProgressListener listener = new FileUtils.ProgressListener() {
+                boolean done = false;
+
+                @Override
+                public void onProgress(long expected, long processed) {
+                    if (done) {
+                        return;
+                    }
+                    int progress = (int) ((100 * processed) / expected);
+                    LiveCenter.updateProgress(messageId, progress);
+
+                    if (!peer.equals(Config.getCurrentActivePeer())) {
+                        Intent intent = new Intent(Config.getApplicationContext(), ChatActivity.class);
+                        intent.putExtra(ChatActivity.EXTRA_PEER_ID, peer);
+                        Notification notification = new NotificationCompat.Builder(Config.getApplicationContext())
+                                .setContentTitle(Config.getApplicationContext().getString(R.string.downloading))
+                                .setProgress(100, progress, progress <= 0)
+                                .setContentIntent(PendingIntent.getActivity(Config.getApplicationContext(), 1003, intent, PendingIntent.FLAG_UPDATE_CURRENT))
+                                .setSubText(progress > 0 ? Config.getApplicationContext().getString(R.string.downloaded) + FileUtils.sizeInLowestPrecision(processed) + "/" + FileUtils.sizeInLowestPrecision(expected) : Config.getApplicationContext().getString(R.string.loading))
+                                .setSmallIcon(R.drawable.ic_stat_icon).build();
+                        NotificationManagerCompat manager = NotificationManagerCompat.from(Config.getApplicationContext());// getSystemService(NOTIFICATION_SERVICE));
+                        manager.notify(messageId, PairAppClient.notId, notification);
+                    }
+                    if (progress == 100 && !done) {
+                        done = true;
+                    }
+                }
+            };
+            try {
+                FileUtils.save(finalFile, messageBody, listener);
+                realm = Message.REALM(Config.getApplicationContext());
+                realm.beginTransaction();
+                Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
+                toBeUpdated.setMessageBody(finalFile.getAbsolutePath());
+                realm.commitTransaction();
+                onComplete(messageId, null);
+            } catch (IOException e) {
+                PLog.d(TAG, e.getMessage(), e.getCause());
+                Exception error = new Exception(Config.getApplicationContext().getString(R.string.download_failed));
+                onComplete(messageId, error);
+            } finally {
+                if (realm != null) {
+                    realm.close();
+                }
+            }
+        }
+
+        private void onComplete(String messageId, final Exception error) {
+            LiveCenter.releaseProgressTag(messageId);
+            synchronized (downloading) {
+                downloading.remove(messageId);
+            }
+
+            Intent intent = new Intent();
+            if (error != null) {
+                NotificationManagerCompat manager = NotificationManagerCompat.from(Config.getApplicationContext());// getSystemService(NOTIFICATION_SERVICE));
+                manager.cancel(messageId, PairAppClient.notId);
+                intent.setClass(Config.getApplicationContext(), ChatActivity.class);
+                intent.putExtra(ChatActivity.EXTRA_PEER_ID, peer);
+                ErrorCenter.reportError(messageId, error.getMessage(), intent);
+            }
+        }
+    }
+
+
 }

@@ -116,17 +116,14 @@ public class PairApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        Fabric.with(this, new Crashlytics());
         PLog.setLogLevel(BuildConfig.DEBUG ? PLog.LEVEL_VERBOSE : PLog.LEVEL_FATAL);
 //        TwitterAuthConfig config = new TwitterAuthConfig(TWITTER_KEY,TWITTER_SECRET);
         Config.init(this);
         TaskManager.init(this);
         if (UserManager.getInstance().isUserVerified())
-            PairAppClient.startIfRequired(PairApp.this);
-        new Thread() {
-            public void run() {
-                Fabric.with(PairApp.this, new Crashlytics());
-            }
-        }.start();
+            PairAppClient.startIfRequired(this);
+
     }
 
 }

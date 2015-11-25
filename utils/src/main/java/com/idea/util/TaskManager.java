@@ -1,14 +1,22 @@
 package com.idea.util;
 
 import android.app.Application;
+import android.os.Handler;
+import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -21,16 +29,26 @@ public class TaskManager {
 
     private static ThreadFactory factory = new ThreadFactory() {
         @Override
-        public Thread newThread(Runnable r) {
+        public Thread newThread(@NonNull Runnable r) {
             return new SmartThread(r);
         }
     };
     private static ExecutorService cachedThreadPool = Executors.newCachedThreadPool(factory);
+    private static final int CPU_COUNT = Runtime.getRuntime().availableProcessors();
+    private static final int CORE_POOL_SIZE = CPU_COUNT + 4;
+    private static final int MAXIMUM_POOL_SIZE = CPU_COUNT * 4 + 4;
+    private static final int KEEP_ALIVE = 4;
+
+    private static final BlockingQueue<Runnable> sPoolWorkQueue =
+            new LinkedBlockingQueue<>(128);
+
+    public static final Executor THREAD_POOL_EXECUTOR
+            = new ThreadPoolExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE,
+            TimeUnit.SECONDS, sPoolWorkQueue);
 
     public static void init(Application application) {
         if (!initialised.getAndSet(true)) {
             PLog.w(TAG, "initialising %s", TAG);
-            // TODO: 9/28/2015 look up for all pending tasks like dp change
             final Timer timer = new Timer("cleanup Timer", true);
             timer.schedule(new TimerTask() {
                 @Override
@@ -51,16 +69,16 @@ public class TaskManager {
         }
     }
 
+
     public static void executeOnMainThread(Runnable r) {
         ensureInitialised();
-        AndroidExecutors.uiThread().execute(r);
+        new Handler(Looper.getMainLooper()).post(r);
     }
 
     public static void execute(Runnable r) {
         ensureInitialised();
-        AndroidExecutors.threadPool().execute(r);
+        THREAD_POOL_EXECUTOR.execute(r);
     }
-
 
     private static int expressQueueLength = 0;
     private static final int maxLength = Runtime.getRuntime().availableProcessors() * 15;

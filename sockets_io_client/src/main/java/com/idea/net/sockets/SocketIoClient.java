@@ -35,11 +35,6 @@ import static com.github.nkzawa.socketio.client.Socket.Listener;
 
 public class SocketIoClient implements Closeable {
 
-    private final String TAG;
-    private static final int PING_DELAY = 10*60000;
-    private static final String PING = "ping",
-            PONG = "pong", RECONNECT_AND_PING_TIMER_TIMER = "reconnectAndPingTimer timer";
-
     public static final String
             TYPING = "typing",
             TRACK_USER = "trackUser",
@@ -56,11 +51,15 @@ public class SocketIoClient implements Closeable {
             MSG_STS_MESSAGE_ID = "messageId",
             DISCONNECT = EVENT_DISCONNECT,
             CONNECT = EVENT_CONNECT;
+    private static final int PING_DELAY = 10 * 60000;
+    private static final String PING = "ping",
+            PONG = "pong", RECONNECT_AND_PING_TIMER_TIMER = "reconnectAndPingTimer timer";
     private static final WeakHashMap<String, SocketIoClient> instances = new WeakHashMap<>();
+    private final String TAG;
     private final AtomicBoolean initialised = new AtomicBoolean(false),
             ready = new AtomicBoolean(false),
             pongedBack = new AtomicBoolean(false),
-    isIdle = new AtomicBoolean(true);
+            isIdle = new AtomicBoolean(true);
     private final AtomicInteger referenceCount = new AtomicInteger(0), retryAttempts = new AtomicInteger(0);
     private final List<Pair<String, Object>> waitingBroadcasts = new ArrayList<>();
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
@@ -119,6 +118,7 @@ public class SocketIoClient implements Closeable {
     private String endPoint;
     private AtomicLong reconnectionDelay = new AtomicLong(30 * 1000); //30 seconds
     private AtomicBoolean reconnecting = new AtomicBoolean(false);
+    private SecureRandom random;
     private final Listener ON_RECONNECT = new Listener() {
         @Override
         public void call(Object... args) {
@@ -140,7 +140,6 @@ public class SocketIoClient implements Closeable {
             }
         }
     };
-    private SecureRandom random;
 
     private SocketIoClient(String endPoint, String userId) {
         initialise(endPoint, userId);
@@ -337,6 +336,6 @@ public class SocketIoClient implements Closeable {
     }
 
     public boolean isConnected() {
-        return ready.get();
+        return ready.get() && isConnected();
     }
 }

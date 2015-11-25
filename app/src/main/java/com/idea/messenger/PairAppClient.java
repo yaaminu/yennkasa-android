@@ -35,7 +35,6 @@ import com.idea.util.ThreadUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.security.SecureRandom;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -57,7 +56,7 @@ public class PairAppClient extends Service {
     public static final String UPDATE_KEY = PairAppClient.class.getName() + "updateKey";
     static final String VERSION = "version";
     public static final int not_id = 10987;
-    static final int notId = new SecureRandom().nextInt();
+    static final int notId = 10983;
     private static Dispatcher<Message> SOCKETSIO_DISPATCHER;
     private static AtomicBoolean isClientStarted = new AtomicBoolean(false);
     private static MessagesProvider messageProvider = new ParseMessageProvider();
