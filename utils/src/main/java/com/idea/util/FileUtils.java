@@ -255,7 +255,8 @@ public class FileUtils {
         URL location = new URL(url);
         HttpURLConnection connection = ((HttpURLConnection) location.openConnection());
         connection.setReadTimeout(10000);
-        long contentLength = connection.getContentLength();
+        long contentLength = connection.getHeaderFieldInt("Content-Length", -1);
+
         final InputStream in = location.openStream();//the stream will be closed later see save(file,InputStream)
         if (contentLength == -1 || listener == null) {
             save(file, in);
