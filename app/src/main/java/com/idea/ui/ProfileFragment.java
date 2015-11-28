@@ -576,7 +576,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     }
                 }
             }
-        });
+        },false);
     }
 
     private final Callback dpLoadedCallback = new Callback() {

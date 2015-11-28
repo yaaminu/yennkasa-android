@@ -144,7 +144,7 @@ public class ParseClient implements UserApiV2 {
             public void run() {
                 doRegisterUser(user, callback);
             }
-        });
+        }, true);
     }
 
 
@@ -233,7 +233,7 @@ public class ParseClient implements UserApiV2 {
             public void run() {
                 doLogIn(user, callback);
             }
-        });
+        }, true);
     }
 
 
@@ -306,7 +306,7 @@ public class ParseClient implements UserApiV2 {
             public void run() {
                 doSyncContacts(userIds, callback);
             }
-        });
+        }, true);
     }
 
     public void doSyncContacts(List<String> userIds, Callback<List<User>> callback) {
@@ -330,7 +330,7 @@ public class ParseClient implements UserApiV2 {
             public void run() {
                 doGetUser(id, response);
             }
-        });
+        }, true);
     }
 
     public void doGetUser(@Path(Message.FIELD_ID) String id, Callback<User> response) {
@@ -350,7 +350,7 @@ public class ParseClient implements UserApiV2 {
             public void run() {
                 doGetGroups(id, response);
             }
-        });
+        }, true);
     }
 
     private void doGetGroups(@Path(Message.FIELD_ID) String id, Callback<List<User>> response) {
@@ -378,7 +378,7 @@ public class ParseClient implements UserApiV2 {
             public void run() {
                 doChangeDp(userOrGroup, id, file, response);
             }
-        });
+        }, true);
     }
 
     private void doChangeDp(@Path("placeHolder") final String userOrGroup, @Path(Message.FIELD_ID) final String id, @Body final File file, final Callback<HttpResponse> response) {
@@ -422,7 +422,7 @@ public class ParseClient implements UserApiV2 {
             public void run() {
                 doCreateGroup(by, name, members, response);
             }
-        });
+        }, true);
     }
 
     private void doCreateGroup(@Field("createdBy") String by, @Field("name") String name, @Field("starters") Collection<String> members, Callback<User> response) {
@@ -466,7 +466,7 @@ public class ParseClient implements UserApiV2 {
             public void run() {
                 doGetGroup(id, callback);
             }
-        });
+        }, true);
     }
 
     private void doGetGroup(@Path(Message.FIELD_ID) String id, Callback<User> callback) {
@@ -487,7 +487,7 @@ public class ParseClient implements UserApiV2 {
             public void run() {
                 doGetGroupMembers(id, response);
             }
-        });
+        }, true);
     }
 
     private void doGetGroupMembers(@Path(Message.FIELD_ID) String id, Callback<List<User>> response) {
@@ -561,7 +561,7 @@ public class ParseClient implements UserApiV2 {
             public void run() {
                 doAddMembersToGroup(id, members, response);
             }
-        });
+        }, true);
     }
 
     private void doAddMembersToGroup(@Path(Message.FIELD_ID) String id, @Field(User.FIELD_MEMBERS) Collection<String> members, Callback<HttpResponse> response) {
@@ -585,7 +585,7 @@ public class ParseClient implements UserApiV2 {
             public void run() {
                 doRemoveMembersFromGroup(id, members, response);
             }
-        });
+        }, true);
     }
 
     private void doRemoveMembersFromGroup(@Path(Message.FIELD_ID) String id, @Field(User.FIELD_MEMBERS) List<String> members, Callback<HttpResponse> response) {
@@ -609,7 +609,7 @@ public class ParseClient implements UserApiV2 {
             public void run() {
                 doLeaveGroup(id, userId, response);
             }
-        });
+        }, true);
     }
 
     private void doLeaveGroup(@Path("id") String id, @Field("leaver") String userId, Callback<HttpResponse> response) {
@@ -636,7 +636,7 @@ public class ParseClient implements UserApiV2 {
             public void run() {
                 doVerifyUser(userId, token, callback);
             }
-        });
+        }, true);
     }
 
     private void doVerifyUser(@Path("id") String userId, @Field("token") String token, Callback<SessionData> callback) {
@@ -672,7 +672,7 @@ public class ParseClient implements UserApiV2 {
             public void run() {
                 doResendToken(userId, password, response);
             }
-        });
+        }, true);
     }
 
     private synchronized void doResendToken(@Path("id") String userId, @Field("password") String password, Callback<HttpResponse> response) {
@@ -892,7 +892,7 @@ public class ParseClient implements UserApiV2 {
             public void run() {
                 doRemoveGroup(adminId, groupId, callback);
             }
-        });
+        }, true);
     }
 
     private void doRemoveGroup(String adminId, String groupId, Callback<HttpResponse> callback) {

@@ -522,7 +522,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                     }
                 }
             }
-        });
+        },false);
     }
 
     @Override

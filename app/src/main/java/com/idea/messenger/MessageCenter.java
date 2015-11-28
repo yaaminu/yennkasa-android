@@ -125,7 +125,7 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             public void run() {
                 doNotify(message, Message.STATE_RECEIVED);
             }
-        });
+        }, true);
 
     }
 
@@ -155,19 +155,18 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
     }
 
     static synchronized void notifyMessageSeen(final Message message) {
-        //noinspection StatementWithEmptyBody
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
                 doNotify(message, Message.STATE_SEEN);
             }
-        });
+        }, true);
     }
 
     private synchronized static void doNotify(Message message, int state) {
         if (Message.isGroupMessage(message))
             return;
-        
+
         JSONObject obj = new JSONObject();
         try {
             obj.put(SocketIoClient.PROPERTY_TO, message.getFrom());

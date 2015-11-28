@@ -326,9 +326,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                 }
             }
         };
-        if (!TaskManager.executeNow(runnable)) {
-            TaskManager.execute(runnable);
-        }
+        TaskManager.executeNow(runnable,false);
     }
 
 

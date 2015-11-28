@@ -9,6 +9,7 @@ import com.idea.util.Config;
 import com.idea.util.ConnectionUtils;
 import com.idea.util.FileUtils;
 import com.idea.util.PLog;
+import com.idea.util.ThreadUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -71,6 +72,7 @@ abstract class SmartFileClient implements FileApi {
 
     @Override
     public void saveFileToBackend(File file, FileApi.FileSaveCallback callback, FileApi.ProgressListener listener) {
+        ThreadUtils.ensureNotMain();
         if (callback == null) {
             throw new IllegalArgumentException("callback is required");
         }

@@ -162,7 +162,7 @@ public class ConversationsFragment extends ListFragment {
                                 LiveCenter.invalidateNewMessageCount(peerId);
                             }
                         };
-                        TaskManager.executeNow(invalidateTask, true);
+                        TaskManager.executeNow(invalidateTask, false);
                         switch (which) {
                             case 0:
                                 deleted = conversations.get(position);
@@ -259,7 +259,7 @@ public class ConversationsFragment extends ListFragment {
             }
         }
 
-                , true);
+                , false);
     }
 
     @Override
