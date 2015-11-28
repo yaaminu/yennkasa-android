@@ -48,7 +48,7 @@ final class NotificationManager {
                 public void run() {
                     notifyUser(context, message, retrieveSendersName(message));
                 }
-            });
+            }, false);
         } else {
             notifyUser(context, message, retrieveSendersName(message));
         }

@@ -118,7 +118,7 @@ public class PairAppClient extends Service {
                     }
                     NotificationManager.INSTANCE.reNotifyForReceivedMessages();
                 }
-            }, true);
+            }, false);
         }
     }
 
@@ -132,9 +132,9 @@ public class PairAppClient extends Service {
             TaskManager.executeNow(new Runnable() {
                 @Override
                 public void run() {
+                    NotificationManager.INSTANCE.clearAllMessageNotifications();
                     LiveCenter.start();
                     MessageCenter.startListeningForSocketMessages();
-                    NotificationManager.INSTANCE.clearAllMessageNotifications();
                 }
             }, true);
         }
@@ -182,7 +182,7 @@ public class PairAppClient extends Service {
                                     applicationWidePrefs.edit().remove(UPDATE_KEY).apply();
                                 }
                             }
-                        });
+                        }, false);
                     } else {
                         applicationWidePrefs.edit().remove(UPDATE_KEY).apply();
                     }
@@ -324,7 +324,7 @@ public class PairAppClient extends Service {
                 }
             }
         };
-        TaskManager.execute(task);
+        TaskManager.execute(task, true);
     }
 
     private final Dispatcher.DispatcherMonitor monitor = new Dispatcher.DispatcherMonitor() {
@@ -419,7 +419,7 @@ public class PairAppClient extends Service {
             public void run() {
                 ParseClient.sendFeedBack(report, attachments);
             }
-        });
+        }, true);
     }
 
     public class PairAppClientInterface extends Binder {

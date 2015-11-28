@@ -53,7 +53,7 @@ class ParseMessageProvider implements MessagesProvider {
                 public void run() {
                     runUpdates(toBeDeleted, toBeUpdated);
                 }
-            });
+            },true);
             return messages;
         } catch (ParseException e) {
             PLog.e(TAG, "error retrieving messages: " + e.getMessage());

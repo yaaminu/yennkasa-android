@@ -58,7 +58,7 @@ public class MessageProcessor extends IntentService {
                     wakeLock.release();
                 }
             }
-        }, true);
+        }, false);
     }
 
     private void handleMessage(String data) {

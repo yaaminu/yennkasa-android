@@ -56,7 +56,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
             public void run() {
                 LiveCenter.listenForAllProgress(MessageActivity.this);
             }
-        }, true);
+        }, false);
     }
 
     @Override
@@ -66,7 +66,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
             public void run() {
                 LiveCenter.stopListeningForAllProgress(MessageActivity.this);
             }
-        }, true);
+        }, false);
         super.onPause();
     }
 
@@ -161,7 +161,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                         }
                     }
                 };
-                TaskManager.executeNow(runnable, true);
+                TaskManager.executeNow(runnable, false);
             }
         });
     }

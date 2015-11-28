@@ -291,7 +291,7 @@ public final class UserManager {
                 public void run() {
                     cleanUp();
                 }
-            });
+            },false);
             return false;
         }
         return true;
@@ -795,7 +795,7 @@ public final class UserManager {
                     }
                 }
             }
-        }, true);
+        }, false);
     }
 
     private File saveDpLocally(String userId, File imageFile) {
@@ -1248,7 +1248,7 @@ public final class UserManager {
                 cleanUp();
                 doNotify(null, callBack);
             }
-        });
+        },true);
     }
 
     private void doNotify(final Exception e, final CallBack callBack) {
@@ -1656,7 +1656,7 @@ public final class UserManager {
                 }
             }
         };
-        TaskManager.executeNow(runnable, true);
+        TaskManager.executeNow(runnable, false);
     }
 
     public Map<String, String> getUserCredentials() {

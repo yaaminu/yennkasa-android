@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.view.View;
 
@@ -125,7 +124,7 @@ public class ImageCropper extends PairAppActivity {
                         });
                     }
                 }
-            }, true);
+            }, false);
         }
     }
 
