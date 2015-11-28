@@ -338,7 +338,7 @@ public class FileUtils {
 
 
     /**
-     * the below code was  shamelessly copied from paulBurke: https://github.com/ipaulPro/aFileChooser
+     * the code below was  shamelessly copied from paulBurke: https://github.com/ipaulPro/aFileChooser
      * licensed under the apache licence
      */
 
