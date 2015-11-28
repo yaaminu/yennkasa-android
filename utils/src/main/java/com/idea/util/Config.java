@@ -126,10 +126,10 @@ public class Config {
     }
 
     public static SharedPreferences getApplicationWidePrefs() {
-        if (Config.application == null) {
+        if (application == null) {
             throw new IllegalStateException("application is null,did you forget to call init(Context) ?");
         }
-        return getApplication().getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
+        return application.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
     }
 
     @SuppressWarnings("unused") //used for testing
@@ -204,7 +204,7 @@ public class Config {
     public static String getLiveEndpoint() {
         //STOPSHIP
         //noinspection PointlessBooleanExpression,ConstantConditions
-        if (isEmulator() && false)  {
+        if (isEmulator() && false) {
             return LIVE_SOCKET_API_LOCAL;
         } else {
             return LIVE_SOCKET_API_REMOTE;
@@ -223,7 +223,7 @@ public class Config {
     private static final Map<String, String> properties = new HashMap<>();
 
     public static String getFilesMetaDataApiUrl() {
-        if (isEmulator() && false ) {
+        if (isEmulator() && false) {
             return "http://10.0.3.2:6000/meta";
         } else {
             return "https://pairapp-file-meta.herokuapp.com/meta";
@@ -250,6 +250,6 @@ public class Config {
     }
 
     public static SharedPreferences getPreferences(String s) {
-        return getApplicationContext().getSharedPreferences(s,Context.MODE_PRIVATE);
+        return getApplicationContext().getSharedPreferences(s, Context.MODE_PRIVATE);
     }
 }

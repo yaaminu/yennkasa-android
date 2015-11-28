@@ -23,7 +23,7 @@ public class GcmUtils {
     private static final String TAG = GcmUtils.class.getSimpleName();
 
     public static void register(Activity context, GCMRegCallback callback) {
-        String gcmRegId = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE).getString(GCM_REG_ID, null);
+        String gcmRegId = Config.getPreferences(Config.APP_PREFS).getString(GCM_REG_ID, null);
         if (gcmRegId == null) {
             new RegisterTask(context, callback).execute();
         } else {
@@ -53,7 +53,7 @@ public class GcmUtils {
                 GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(context);
                 try {
                     gcm.unregister();
-                    SharedPreferences sharedPreferences = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
+                    SharedPreferences sharedPreferences = Config.getPreferences(Config.APP_PREFS);
                     sharedPreferences.edit().remove(GCM_REG_ID).commit();
                     return null;
                 } catch (IOException e) {
@@ -113,7 +113,7 @@ public class GcmUtils {
             if (true) {
                 return new GcmRegResults("kflafkdl;fk", null);
             }
-            SharedPreferences sharedPreferences = context.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences = Config.getPreferences(Config.APP_PREFS);
             String regId = sharedPreferences.getString(GCM_REG_ID, null);
             if (regId != null) {
                 return new GcmRegResults(regId, null);

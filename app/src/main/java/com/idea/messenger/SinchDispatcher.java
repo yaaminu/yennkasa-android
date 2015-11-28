@@ -97,7 +97,7 @@ abstract class SinchDispatcher extends AbstractMessageDispatcher {
 //        String messageId = MessageJsonAdapter.INSTANCE.fromJson(message.getTextBody()).getId();
 //        //persist the id of this sinch message and the messageId it maps see the how we report delivery report
 //        SharedPreferences sinchMessageIdToOurMessageIdMapper =
-//                Config.getApplicationContext().getSharedPreferences(MESSAGE_ID_MAPPER, Context.MODE_PRIVATE);
+//                Config.Preferences(MESSAGE_ID_MAPPER, Context.MODE_PRIVATE);
 //        sinchMessageIdToOurMessageIdMapper.edit().putString(message.getMessageId(), messageId).apply();
 //        onSent(MessageJsonAdapter.INSTANCE.fromJson(message.getTextBody()).getId());
 //    }
@@ -143,8 +143,7 @@ abstract class SinchDispatcher extends AbstractMessageDispatcher {
 //    }
 //
 //    private void onDelivered(MessageDeliveryInfo messageDeliveryInfo) {
-//        String ourMessageId = Config.getApplicationContext()
-//                .getSharedPreferences(MESSAGE_ID_MAPPER, Context.MODE_PRIVATE).getString(messageDeliveryInfo.getMessageId(), null);
+//        String ourMessageId = Config.getPreferences(MESSAGE_ID_MAPPER, Context.MODE_PRIVATE).getString(messageDeliveryInfo.getMessageId(), null);
 //        if (ourMessageId != null) {
 //            onDelivered(ourMessageId);
 //            return;

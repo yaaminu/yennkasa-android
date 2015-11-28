@@ -69,7 +69,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         super(delegate.getContext(), realmResults, true);
         this.delegate = delegate;
         messageStates = new SparseIntArray(4);
-        messageStates.put(Message.STATE_PENDING, R.drawable.ic_msg_status_pending);
+        messageStates.put(Message.STATE_PENDING, R.drawable.ic_vertical_align_top_white_18dp);
         messageStates.put(Message.STATE_SENT, R.drawable.ic_done_white_18dp);
         messageStates.put(Message.STATE_SEND_FAILED, R.drawable.ic_error_white_18dp);
         messageStates.put(Message.STATE_SEEN, R.drawable.ic_visibility_white_18dp);
@@ -326,7 +326,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                 }
             }
         };
-        TaskManager.executeNow(runnable,false);
+        TaskManager.executeNow(runnable, false);
     }
 
 

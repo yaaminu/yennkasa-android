@@ -1,6 +1,5 @@
 package com.idea.ui;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -44,7 +43,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     };
 
     private static SharedPreferences getSharedPreferences() {
-        return Config.getApplicationContext().getSharedPreferences(SETUP_PREFS_KEY, Context.MODE_PRIVATE);
+        return Config.getPreferences(SETUP_PREFS_KEY);
     }
 
     protected static boolean isEveryThingOk() {

@@ -792,8 +792,7 @@ public class ParseClient implements UserApiV2 {
 
     private SharedPreferences getPendingDpChanges() {
         String prefs = ParseInstallation.getCurrentInstallation().getString(FIELD_ID);
-        return Config.getApplicationContext()
-                .getSharedPreferences(prefs, Context.MODE_PRIVATE);
+        return Config.getPreferences(prefs);
     }
 
     @NonNull
