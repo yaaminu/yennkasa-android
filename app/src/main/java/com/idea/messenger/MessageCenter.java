@@ -2,7 +2,6 @@ package com.idea.messenger;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 
 import com.github.nkzawa.emitter.Emitter;
 import com.idea.data.Message;
@@ -12,8 +11,8 @@ import com.idea.util.Config;
 import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
+import com.idea.util.ThreadUtils;
 import com.parse.ParseCloud;
-import com.parse.ParseException;
 import com.parse.ParsePushBroadcastReceiver;
 
 import org.json.JSONException;
@@ -21,7 +20,6 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import io.realm.Realm;
 
@@ -57,7 +55,6 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             }
         }
     };
-    private static final String key = "reports" + MessageCenter.TAG;
 
     private static void updateMessageStatus(String messageId, int status) throws JSONException {
         Realm realm = Message.REALM(Config.getApplicationContext());
@@ -119,13 +116,8 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
     }
 
     static synchronized void notifyReceived(final Message message) {
-        //noinspection StatementWithEmptyBody
-        TaskManager.execute(new Runnable() {
-            @Override
-            public void run() {
-                doNotify(message, Message.STATE_RECEIVED);
-            }
-        }, true);
+        NotifyMessageStatusJob job = NotifyMessageStatusJob.makeNew(Message.STATE_RECEIVED, message);
+        TaskManager.runJob(job);
 
     }
 
@@ -135,35 +127,16 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
         intent = new Intent(context, MessageProcessor.class);
         intent.putExtra(KEY_MESSAGE, data);
         context.startService(intent);
-        retryAllReports();
     }
 
-    private static void retryAllReports() {
-        SharedPreferences preferences = Config.getPreferences(key);
-        //noinspection unchecked
-        Map<String, Integer> all = (Map<String, Integer>) preferences.getAll();
-        Set<String> allKeys = all.keySet();
-        Realm realm = Message.REALM(Config.getApplicationContext());
-        for (String key : allKeys) {
-            Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, key).findFirst();
-            if (message != null) {
-                PLog.d(TAG, "reporting status of message: %s", message.getId());
-                doNotify(message, all.get(key));
-            }
-        }
-        realm.close();
-    }
 
     static synchronized void notifyMessageSeen(final Message message) {
-        TaskManager.execute(new Runnable() {
-            @Override
-            public void run() {
-                doNotify(message, Message.STATE_SEEN);
-            }
-        }, true);
+        NotifyMessageStatusJob job = NotifyMessageStatusJob.makeNew(Message.STATE_SEEN, message);
+        TaskManager.runJob(job);
     }
 
-    private synchronized static void doNotify(Message message, int state) {
+    synchronized static void doNotify(Message message, int state) throws com.parse.ParseException {
+        ThreadUtils.ensureNotMain();
         if (Message.isGroupMessage(message))
             return;
 
@@ -184,7 +157,6 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
                 initClient();
             }
             messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
-            Config.getPreferences(key).edit().remove(message.getId()).apply();
         } else {
             //maybe push
             Map<String, Object> params = new HashMap<>(3);
@@ -192,12 +164,7 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             params.put(IS_GROUP_MESSAGE, false);
             params.put(FROM, message.getTo());
             params.put(MESSAGE, obj);
-            try {
-                ParseCloud.callFunction("pushToSyncMessages", params);
-                Config.getPreferences(key).edit().remove(message.getId()).apply();
-            } catch (ParseException e) {
-                Config.getPreferences(key).edit().putInt(message.getId(), message.getState()).apply();
-            }
+            ParseCloud.callFunction("pushToSyncMessages", params);
         }
     }
 

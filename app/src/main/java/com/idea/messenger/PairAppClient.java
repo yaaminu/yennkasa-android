@@ -277,8 +277,7 @@ public class PairAppClient extends Service {
     private synchronized void bootClient() {
         if (!isClientStarted.get()) {
             INTERFACE = new PairAppClientInterface();
-            PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance(credentials);
-            monitorDispatcher(PARSE_MESSAGE_DISPATCHER);
+            PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance(credentials,monitor);
             isClientStarted.set(true);
         }
     }
@@ -400,8 +399,7 @@ public class PairAppClient extends Service {
         }
         if (LiveCenter.isOnline(message.getTo()) && !UserManager.getInstance().isGroup(message.getTo())) {
             if (SOCKETSIO_DISPATCHER == null) {
-                SOCKETSIO_DISPATCHER = SocketsIODispatcher.newInstance(credentials);
-                monitorDispatcher(SOCKETSIO_DISPATCHER);
+                SOCKETSIO_DISPATCHER = SocketsIODispatcher.getInstance(credentials,monitor);
             }
             SOCKETSIO_DISPATCHER.dispatch(message);
         } else {
@@ -409,9 +407,6 @@ public class PairAppClient extends Service {
         }
     }
 
-    private void monitorDispatcher(Dispatcher dispatcher) {
-        dispatcher.addMonitor(monitor);
-    }
 
     public static void sendFeedBack(final JSONObject report, final List<String> attachments) {
         TaskManager.execute(new Runnable() {

@@ -71,7 +71,10 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     private final FileApi file_service;
     private Timer timer = new Timer(TAG, false);
 
-    AbstractMessageDispatcher(Map<String, String> credentials) {
+    AbstractMessageDispatcher(Map<String, String> credentials, DispatcherMonitor monitor) {
+        if (credentials == null || monitor == null) {
+            throw new IllegalArgumentException("invalid args");
+        }
         this.file_service = //MessageFileClient.createInstance(Config.getMessageApiEndpoint(), credentials);//Config.getme
                 new SmartFileMessageClient(credentials.get(KEY), credentials.get(PASSWORD), UserManager.getMainUserId());
     }
@@ -270,7 +273,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     }
 
     @Override
-    public final void addMonitor(DispatcherMonitor monitor) {
+    public final void registerMonitor(DispatcherMonitor monitor) {
         if (monitor == null) {
             throw new IllegalArgumentException("monitor may not be null");
         }
@@ -280,7 +283,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     }
 
     @Override
-    public final void removeMonitor(DispatcherMonitor toBeRemoved) {
+    public final void unRegisterMonitor(DispatcherMonitor toBeRemoved) {
         if (toBeRemoved != null) {
             synchronized (monitors) {
                 monitors.remove(toBeRemoved);
@@ -291,15 +294,15 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
 
     @Override
     public final void close() {
-        synchronized (monitors) {
-            monitors.clear();
+        if (doClose()) {
+            synchronized (monitors) {
+                monitors.clear();
+            }
         }
-        doClose();
     }
 
     //subclasses should override this if the need to free any resource
-    protected void doClose() {
-    }
+    protected abstract boolean doClose();
 
     protected abstract void dispatchToGroup(Message message, List<String> members);
 

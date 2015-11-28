@@ -2,12 +2,14 @@ package com.idea.util;
 
 import android.util.Log;
 
+import com.path.android.jobqueue.log.CustomLogger;
+
 /**
  * An encapsulation of {@link Log}, enable log level and print log with parameters.
  *
  * @author http://www.liaohuqiu.net/
  */
-public class PLog {
+public class PLog implements CustomLogger {
 
     public static final int LEVEL_VERBOSE = 0;
     public static final int LEVEL_DEBUG = 1;
@@ -17,6 +19,14 @@ public class PLog {
     public static final int LEVEL_FATAL = 5;
 
     private static int sLevel = LEVEL_VERBOSE;
+    private final String TAG;
+
+    PLog(String tag) {
+        if (tag == null) {
+            throw new IllegalArgumentException("tag == null");
+        }
+        TAG = tag;
+    }
 
     /**
      * set log level, the level lower than this level will not be logged
@@ -288,5 +298,26 @@ public class PLog {
             return;
         }
         Log.wtf(tag, msg, throwable);
+    }
+
+    @Override
+    public boolean isDebugEnabled() {
+        // STOPSHIP: 11/28/2015
+        return true;
+    }
+
+    @Override
+    public void d(String s, Object... objects) {
+        PLog.d(TAG, s, objects);
+    }
+
+    @Override
+    public void e(Throwable throwable, String s, Object... objects) {
+        PLog.e(TAG, s, throwable, objects);
+    }
+
+    @Override
+    public void e(String s, Object... objects) {
+        PLog.e(TAG, s, objects);
     }
 }

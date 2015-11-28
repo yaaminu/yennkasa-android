@@ -25,7 +25,6 @@ import com.idea.util.PLog;
 import com.idea.util.PreviewsHelper;
 import com.idea.util.SimpleDateUtil;
 import com.idea.util.TaskManager;
-import com.idea.util.ThreadUtils;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
@@ -331,7 +330,6 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
 
 
     private void attemptToMarkAsSeen(Message message) {
-        ThreadUtils.ensureMain();
         if (message.getState() != Message.STATE_SEEN &&
                 !isOutgoingMessage &&
                 currentMessageType != Message.TYPE_DATE_MESSAGE &&

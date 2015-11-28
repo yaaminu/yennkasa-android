@@ -180,10 +180,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
 
     protected final void onMessageSeen(Message message) {
         if (message.getState() != Message.STATE_SEEN) {
-            android.os.Message msg = android.os.Message.obtain();
-            msg.what = Worker.MARK_AS_SEEN;
-            msg.obj = message.getId();
-            worker.sendMessage(msg);
+            PairAppClient.notifyMessageSeen(message);
         }
     }
 
@@ -260,17 +257,6 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                         break;
                     }
                     PLog.w(MessageActivity.TAG, "failed to resend message, reason: message deleted");
-                    break;
-                case MARK_AS_SEEN:
-                    String id = ((String) msg.obj);
-                    message = realm.where(Message.class).equalTo(Message.FIELD_ID, id).findFirst();
-                    if (message != null && message.isValid()) {
-                        realm.beginTransaction();
-                        message.setState(Message.STATE_SEEN);
-                        realm.commitTransaction();
-                        message = Message.copy(message);
-                        PairAppClient.notifyMessageSeen(message);
-                    }
                     break;
                 default:
                     throw new AssertionError();

@@ -21,11 +21,13 @@ interface Dispatcher<T> extends Closeable {
 
     boolean cancelDispatchMayPossiblyFail(T t);
 
-    void addMonitor(DispatcherMonitor monitor);
+    void registerMonitor(DispatcherMonitor monitor);
 
-    void removeMonitor(DispatcherMonitor monitor);
+    void unRegisterMonitor(DispatcherMonitor monitor);
 
     void close(); //overriden to undo the throws IOException signature
+
+    boolean isClosed();
 
     /**
      * an interface to be implemented if one wants to monitor

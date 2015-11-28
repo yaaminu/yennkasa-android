@@ -13,6 +13,7 @@ import org.json.JSONObject;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * an implementation of {@link Dispatcher} that uses web sockets(socketIo) to be
@@ -26,6 +27,7 @@ import java.util.Map;
 
 class SocketsIODispatcher extends AbstractMessageDispatcher {
     private static final String TAG = SocketsIODispatcher.class.getSimpleName();
+    private static final String ERR_SOCKET_DICONNECTED = "socket disconnected";
 
     private final Emitter.Listener ON_MESSAGE_STATUS = new Emitter.Listener() {
         @Override
@@ -49,23 +51,29 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
             }
         }
     };
-    private final SocketIoClient socketIoClient;
+    private SocketIoClient socketIoClient;
 
-    private SocketsIODispatcher(Map<String, String> credentials) {
-        super(credentials);
+    private static SocketsIODispatcher INSTANCE;
+
+    private SocketsIODispatcher(Map<String, String> credentials, DispatcherMonitor monitor) {
+        super(credentials, monitor);
         socketIoClient = SocketIoClient.getInstance(Config.getMessageEndpoint(), UserManager.getMainUserId());
         socketIoClient.registerForEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
     }
 
     /**
-     * create a new an instance of {@link SocketsIODispatcher}.
-     * <p/>
-     * remember to close it when you are done.
+     * returns the singleton instance. this is reference counted so
+     * remember to pair every call to this method with {@link #close()}
      *
-     * @return an instance of this class.
+     * @param credentials a key value pair of credentials for file uploads and other services
+     * @return the singleton instance
      */
-    static Dispatcher<Message> newInstance(Map<String, String> credentials) {
-        return new SocketsIODispatcher(credentials);
+    static synchronized Dispatcher<Message> getInstance(Map<String, String> credentials, DispatcherMonitor monitor) {
+        refCount.incrementAndGet();
+        if (INSTANCE == null || INSTANCE.isClosed()) {
+            INSTANCE = new SocketsIODispatcher(credentials, monitor);
+        }
+        return INSTANCE;
     }
 
     @Override
@@ -75,14 +83,26 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
 
     @Override
     protected void dispatchToUser(Message message) {
+        if (!socketIoClient.isConnected()) {
+            onFailed(message.getId(), ERR_SOCKET_DICONNECTED);
+        }
         socketIoClient.send(Message.toJSON(message));
     }
 
+    private static final AtomicInteger refCount = new AtomicInteger(0);
+
     @Override
-    protected void doClose() {
-        super.close();
-        socketIoClient.unRegisterEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
-        socketIoClient.close();
+    protected boolean doClose() {
+        if (refCount.decrementAndGet() <= 0) {
+            socketIoClient.unRegisterEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
+            socketIoClient.close();
+            return true;
+        }
+        return false;
+    }
+
+    public synchronized final boolean isClosed() {
+        return refCount.intValue() == 0;
     }
 
     private void oops() {

@@ -18,6 +18,8 @@ import com.idea.util.Config;
 import com.idea.util.FileUtils;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
+import com.path.android.jobqueue.Job;
+import com.path.android.jobqueue.di.DependencyInjector;
 
 import java.util.regex.Pattern;
 
@@ -31,6 +33,12 @@ public class PairApp extends Application {
     //    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
     private static final String TWITTER_KEY = "p1KaIqoXt9ujhMaOPcQY4Xxi9";
     private static final String TWITTER_SECRET = "0m16n21jk5jNpyTusC6DrGvxmLlMcEfRUCRIkINfJoFy8oM1rZ";
+    private DependencyInjector injector = new DependencyInjector() {
+        @Override
+        public void inject(Job job) {
+
+        }
+    };
 
     private static void enableComponent(Class clazz) {
         PLog.d(TAG, "enabling " + clazz.getSimpleName());
@@ -120,7 +128,7 @@ public class PairApp extends Application {
         Fabric.with(this, new Crashlytics());
         PLog.setLogLevel(BuildConfig.DEBUG ? PLog.LEVEL_VERBOSE : PLog.LEVEL_FATAL);
         Config.init(this);
-        TaskManager.init(this);
+        TaskManager.init(this, injector);
         if (UserManager.getInstance().isUserVerified())
             PairAppClient.startIfRequired(this);
 

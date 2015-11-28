@@ -5,8 +5,9 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 
-import com.path.android.jobqueue.Job;
 import com.path.android.jobqueue.JobManager;
+import com.path.android.jobqueue.config.Configuration;
+import com.path.android.jobqueue.di.DependencyInjector;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,9 +55,15 @@ public class TaskManager {
 
     private static JobManager jobManager;
 
-    public static void init(Application application) {
+
+    public static void init(Application application, DependencyInjector injector) {
         if (!initialised.getAndSet(true)) {
-            jobManager = new JobManager(application);
+            Configuration config = new Configuration.Builder(application)
+                    .injector(injector)
+                    .customLogger(new PLog("JobManager"))
+                    .jobSerializer(new Task.JobSerializer())
+                    .build();
+            jobManager = new JobManager(application, config);
             jobManager.start();
             PLog.w(TAG, "initialising %s", TAG);
             final Timer timer = new Timer("cleanup Timer", true);
@@ -80,7 +87,10 @@ public class TaskManager {
     }
 
     @SuppressWarnings("unused")
-    public static long runJob(Job job) {
+    public static long runJob(Task job) {
+        if (job == null || !job.isValid()) {
+            throw new IllegalArgumentException("invalid job");
+        }
         return jobManager.addJob(job);
     }
 
@@ -141,6 +151,5 @@ public class TaskManager {
     }
 
     private static final Object expressQueueLock = new Object();
-
 
 }
