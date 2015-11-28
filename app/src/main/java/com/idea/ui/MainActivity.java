@@ -9,9 +9,8 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
-import android.view.Gravity;
-import android.widget.LinearLayout;
 
+import com.google.samples.apps.iosched.ui.widget.SlidingTabLayout;
 import com.idea.PairApp;
 import com.idea.data.Conversation;
 import com.idea.data.Message;
@@ -22,12 +21,10 @@ import com.idea.messenger.MessageProcessor;
 import com.idea.pairapp.R;
 import com.idea.util.Config;
 import com.idea.util.LiveCenter;
-import com.idea.util.PLog;
 import com.idea.util.UiHelpers;
 import com.parse.ParseAnalytics;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
-import com.rey.material.widget.TabPageIndicator;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -104,17 +101,16 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     private void setupViews() {
         setContentView(R.layout.activity_main);
         pager = ((ViewPager) findViewById(R.id.vp_pager));
-        TabPageIndicator tabStrip = ((TabPageIndicator) findViewById(R.id.pts_title_strip));
-        try {
-            ((LinearLayout) tabStrip.getChildAt(0)).setGravity(Gravity.CENTER_HORIZONTAL);
-        } catch (Exception ignored) { //this could raise an exception
-            PLog.e(TAG, ignored.getMessage());
-        }
+        SlidingTabLayout tabStrip = (SlidingTabLayout) findViewById(R.id.pts_title_strip);
         Toolbar toolBar = (Toolbar) findViewById(R.id.main_toolbar);
         toolBar.setTitle("");
         //noinspection unused
         ToolbarManager toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         pager.setAdapter(new MyFragmentStatePagerAdapter(getSupportFragmentManager()));
+        boolean distributeEvenly = getResources().getBoolean(R.bool.is_big_screen) || getResources().getBoolean(R.bool.isLandscape);
+        tabStrip.setDistributeEvenly(distributeEvenly);
+        tabStrip.setCustomTabView(R.layout.tab_view, android.R.id.text1);
+        tabStrip.setSelectedIndicatorColors(getResources().getColor(R.color.white));
         tabStrip.setViewPager(pager);
     }
 

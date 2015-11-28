@@ -137,7 +137,7 @@ public class MessageProcessor extends IntentService {
             }
             if (UserManager.getInstance().isBlocked(peerId)) {
                 PLog.d(TAG, "message from a blocked user, dropping message");
-                PLog.d(TAG, "%s is blocked",peerId);
+                PLog.d(TAG, "%s is blocked", peerId);
                 return;
             }
             UserManager.getInstance().fetchUserIfRequired(peerId);
@@ -159,7 +159,6 @@ public class MessageProcessor extends IntentService {
 
             //force the new message to be newer than the session start up time
             message.setDateComposed(new Date(System.currentTimeMillis() + 10));
-            message.setState(Message.STATE_RECEIVED);
             conversation.setLastActiveTime(new Date());//now
             try {
                 message = realm.copyToRealm(message);

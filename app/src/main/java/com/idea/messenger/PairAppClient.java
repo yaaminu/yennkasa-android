@@ -143,7 +143,7 @@ public class PairAppClient extends Service {
 
     public static void notifyMessageSeen(Message message) {
         ensureUserLoggedIn();
-        MessageCenter.notifyMessageSeen(message);
+        MessageCenter.notifyMessageSeen(Message.copy(message));
     }
 
     private static void ensureUserLoggedIn() {
@@ -277,7 +277,7 @@ public class PairAppClient extends Service {
     private synchronized void bootClient() {
         if (!isClientStarted.get()) {
             INTERFACE = new PairAppClientInterface();
-            PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance(credentials,monitor);
+            PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance(credentials, monitor);
             isClientStarted.set(true);
         }
     }
@@ -317,7 +317,8 @@ public class PairAppClient extends Service {
                         PLog.d(TAG, "all messages sent");
                     } else {
                         for (Message message : copy) {
-                            sendMessageInternal(message);
+                            if (Message.isOutGoing(message)) //new incoming messages that have not been  reported still have their state set to pending
+                                sendMessageInternal(message);
                         }
                     }
                 }
@@ -377,7 +378,7 @@ public class PairAppClient extends Service {
                     .setContentTitle(getString(R.string.upload_progress))
                     .setProgress(100, 1, true)
                     .setContentIntent(PendingIntent.getActivity(self, 1003, intent, PendingIntent.FLAG_UPDATE_CURRENT))
-                    .setContentText(getString(R.string.loading))
+                    .setContentText(getString(R.string.uploading))
                     .setSmallIcon(R.drawable.ic_stat_icon).build();
             NotificationManagerCompat manager = NotificationManagerCompat.from(self);// getSystemService(NOTIFICATION_SERVICE));
             manager.notify(id, not_id, notification);
@@ -399,7 +400,7 @@ public class PairAppClient extends Service {
         }
         if (LiveCenter.isOnline(message.getTo()) && !UserManager.getInstance().isGroup(message.getTo())) {
             if (SOCKETSIO_DISPATCHER == null) {
-                SOCKETSIO_DISPATCHER = SocketsIODispatcher.getInstance(credentials,monitor);
+                SOCKETSIO_DISPATCHER = SocketsIODispatcher.getInstance(credentials, monitor);
             }
             SOCKETSIO_DISPATCHER.dispatch(message);
         } else {

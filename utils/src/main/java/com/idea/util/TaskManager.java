@@ -86,8 +86,8 @@ public class TaskManager {
         }
     }
 
-    @SuppressWarnings("unused")
     public static long runJob(Task job) {
+        ThreadUtils.ensureNotMain();
         if (job == null || !job.isValid()) {
             throw new IllegalArgumentException("invalid job");
         }

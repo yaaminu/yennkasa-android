@@ -72,7 +72,7 @@ public class Worker extends IntentService {
         synchronized (downloading) {
             if (!downloading.add(message.getId())) {
                 PLog.w(TAG, "already  downloading message with id %s", message.getId());
-                Toast.makeText(this, R.string.busy, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, R.string.already_downloading, Toast.LENGTH_SHORT).show();
                 return;
             }
         }

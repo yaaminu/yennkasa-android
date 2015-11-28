@@ -116,8 +116,13 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
     }
 
     static synchronized void notifyReceived(final Message message) {
-        NotifyMessageStatusJob job = NotifyMessageStatusJob.makeNew(Message.STATE_RECEIVED, message);
-        TaskManager.runJob(job);
+        TaskManager.execute(new Runnable() {
+            @Override
+            public void run() {
+                NotifyMessageStatusJob job = NotifyMessageStatusJob.makeNew(Message.STATE_RECEIVED, message);
+                TaskManager.runJob(job);
+            }
+        }, true);
 
     }
 
@@ -131,8 +136,14 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
 
 
     static synchronized void notifyMessageSeen(final Message message) {
-        NotifyMessageStatusJob job = NotifyMessageStatusJob.makeNew(Message.STATE_SEEN, message);
-        TaskManager.runJob(job);
+        TaskManager.execute(new Runnable() {
+            @Override
+            public void run() {
+                NotifyMessageStatusJob job = NotifyMessageStatusJob.makeNew(Message.STATE_SEEN, message);
+                TaskManager.runJob(job);
+            }
+        }, true);
+
     }
 
     synchronized static void doNotify(Message message, int state) throws com.parse.ParseException {

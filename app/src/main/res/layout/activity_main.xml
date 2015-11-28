@@ -19,9 +19,8 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical">
 
-                <com.rey.material.widget.TabPageIndicator
+                <com.google.samples.apps.iosched.ui.widget.SlidingTabLayout
                     android:id="@+id/pts_title_strip"
-                    style="@style/TabPageIndicator"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="?attr/colorPrimary"

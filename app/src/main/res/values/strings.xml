@@ -272,4 +272,6 @@
     <string name="max_attachment_reached">maximum of 5 attachments can be added per report</string>
     <string name="action_delete">Delete message</string>
     <string name="verification_failed">verification failed</string>
+    <string name="already_downloading">already_downloading</string>
+    <string name="uploading">uploading</string>
 </resources>

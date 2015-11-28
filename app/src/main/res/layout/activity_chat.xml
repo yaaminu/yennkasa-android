@@ -87,6 +87,7 @@
                         android:layout_height="match_parent"
                         android:background="@drawable/messge_edit_text_background"
                         android:gravity="bottom"
+                        android:inputType="textMultiLine|textLongMessage"
                         android:padding="@dimen/padding_ll_login_fragment_right"
                         />
                 </LinearLayout>
@@ -113,6 +114,62 @@
                 </com.idea.view.FrameLayout>
 
             </LinearLayout>
+
+            <!--<android.support.v7.widget.Toolbar-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_marginTop="@dimen/padding_ll_login_fragment_top"-->
+                <!--android:background="#ccc"-->
+                <!--android:minHeight="34dp">-->
+
+                <!--<com.idea.view.LinearLayout-->
+                    <!--android:layout_width="match_parent"-->
+                    <!--android:layout_height="match_parent"-->
+                    <!--android:background="@color/transparent"-->
+                    <!--android:gravity="center">-->
+
+                    <!--<ImageButton-->
+                        <!--android:layout_width="0dp"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:layout_weight="1"-->
+                        <!--android:background="@color/transparent"-->
+                        <!--android:paddingRight="@dimen/padding_ll_login_fragment_right"-->
+                        <!--android:src="@drawable/ic_photo_camera_black_24dp"-->
+                        <!--tools:ignore="RtlSymmetry"/>-->
+
+                    <!--<ImageButton-->
+                        <!--android:layout_width="0dp"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:layout_weight="1"-->
+                        <!--android:background="@color/transparent"-->
+                        <!--android:paddingRight="@dimen/padding_ll_login_fragment_right"-->
+                        <!--android:src="@drawable/ic_image_black_24dp"/>-->
+
+                    <!--<ImageButton-->
+                        <!--android:layout_width="0dp"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:layout_weight="1"-->
+                        <!--android:background="@color/transparent"-->
+                        <!--android:paddingRight="@dimen/padding_ll_login_fragment_right"-->
+                        <!--android:src="@drawable/ic_videocam_black_24dp"/>-->
+
+                    <!--<ImageButton-->
+                        <!--android:layout_width="0dp"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:layout_weight="1"-->
+                        <!--android:background="@color/transparent"-->
+                        <!--android:paddingRight="@dimen/padding_ll_login_fragment_right"-->
+                        <!--android:src="@drawable/ic_movie_black_24dp"/>-->
+
+                    <!--<ImageButton-->
+                        <!--android:layout_width="0dp"-->
+                        <!--android:layout_height="wrap_content"-->
+                        <!--android:layout_weight="1"-->
+                        <!--android:background="@color/transparent"-->
+                        <!--android:paddingRight="@dimen/padding_ll_login_fragment_right"-->
+                        <!--android:src="@drawable/ic_folder_black_24dp"/>-->
+                <!--</com.idea.view.LinearLayout>-->
+            <!--</android.support.v7.widget.Toolbar>-->
         </com.idea.view.LinearLayout>
 
         <include layout="@layout/message_item_log"/>

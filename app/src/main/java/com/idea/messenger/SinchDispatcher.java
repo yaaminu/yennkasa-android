@@ -10,8 +10,8 @@ abstract class SinchDispatcher extends AbstractMessageDispatcher {
     private static final String TAG = SinchDispatcher.class.getSimpleName();
     private static final String MESSAGE_ID_MAPPER = "sichMessageIdToOurMessageIdMapper";
 
-    public SinchDispatcher(Map<String,String> credentials){
-        super(credentials);
+    public SinchDispatcher(Map<String, String> credentials, DispatcherMonitor monitor) {
+        super(credentials, monitor);
     }
 //    private MessageClient messageClient;
 //    private static SinchDispatcher INSTANCE;
