@@ -347,14 +347,7 @@ public class UiHelpers {
     }
 
     private static String getActualPath(Intent data) {
-        String actualPath;
-        Uri uri = data.getData();
-        if (uri.getScheme().equals("content")) {
-            actualPath = FileUtils.resolveContentUriToFilePath(uri, true);
-        } else {
-            actualPath = uri.getPath();
-        }
-        return actualPath;
+        return FileUtils.resolveContentUriToFilePath(data.getData(), true);
     }
 
     public static Pair<String, Integer> completeAttachIntent(int requestCode, Intent data) throws PairappException {
