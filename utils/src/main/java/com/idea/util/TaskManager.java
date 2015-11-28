@@ -125,7 +125,9 @@ public class TaskManager {
     }
 
     private static boolean expressExecutionQueueTooLong() {
-        return expressQueueLength >= maxLength;
+        synchronized (expressQueueLock) {
+            return expressQueueLength >= maxLength;
+        }
     }
 
     private static void ensureInitialised() {
