@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.res.Configuration;
 import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -322,7 +323,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         MediaUtils.playTone(context, uri);
     }
 
-    public static final int VIBRATION_DURATION = 1000;
+    public static final int VIBRATION_DURATION = 500;
 
     private static void vibrateIfAllowed(Context context) {
         if (UserManager.getInstance().getBoolPref(UserManager.VIBRATE, false)) {
@@ -346,5 +347,11 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     @Override
     public void clearNotifications() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+//        newConfig.
+//        super.onConfigurationChanged(newConfig);
     }
 }

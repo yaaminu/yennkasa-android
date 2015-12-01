@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 import android.text.ClipboardManager;
@@ -66,9 +67,16 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public static final int PICK_VIDEO_REQUEST = 0x3;
     public static final int PICK_FILE_REQUEST = 0x4;
     public static final int ADD_TO_CONTACTS_REQUEST = 0x6;
-    private static Message selectedMessage;
-    private static int cursor = -1; //static so that it can resist activity restarts.
-    private static boolean wasTyping = false,
+    public static final String TYPING_MESSAGE = "typingMessage";
+    public static final String CURSOR = "cursor";
+    public static final String SELECTED_MESSAGE = "selectedMessage";
+    public static final String WAS_TYPING = "wasTyping";
+    public static final String SCROLL_POSITION = "scrollPosition";
+    public static final String WAS_BLOCKED = "wasBlocked";
+    public static final String UN_BLOCK = "block";
+    private String selectedMessage;
+    private int cursor = -1;
+    private boolean wasTyping = false,
             outOfSync = false;
     private final MessagesAdapter.Delegate delegate = new MessagesAdapter.Delegate() {
         @Override
@@ -188,20 +196,13 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 //        inContextualMode = false;
         if (userManager.isBlocked(peerId)) {
             userWasBlocked = true;
-            UiHelpers.showStopAnnoyingMeDialog(ChatActivity.this, "blcokUser" + TAG, getString(R.string.stop_annoying_me),
-                    getString(R.string.blocked_user_notice),
-                    getString(android.R.string.ok), getString(R.string.cancel), okListener, noListener);
+            UiHelpers.showErrorDialog(ChatActivity.this,getString(R.string.blocked_user_notice),okListener);
         }
     }
 
 
     private boolean acceptedToUblock = false, userWasBlocked = false;
-    private final UiHelpers.Listener noListener = new UiHelpers.Listener() {
-        @Override
-        public void onClick() {
-            finish();
-        }
-    }, okListener = new UiHelpers.Listener() {
+    private final UiHelpers.Listener okListener = new UiHelpers.Listener() {
         @Override
         public void onClick() {
             acceptedToUblock = true;
@@ -429,15 +430,14 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
 
         AdapterView.AdapterContextMenuInfo info = ((AdapterView.AdapterContextMenuInfo) menuInfo);
-        selectedMessage = messages.get(info.position);
+        Message message = messages.get(info.position);
+        selectedMessage = message.getId();
         cursor = info.position;
-        if (cursor <= 0)
-            return; //if a message managed to be first before any date lets return
-        if (selectedMessage.getType() != Message.TYPE_DATE_MESSAGE && selectedMessage.getType() != Message.TYPE_TYPING_MESSAGE) {
+        if (message.getType() != Message.TYPE_DATE_MESSAGE && message.getType() != Message.TYPE_TYPING_MESSAGE) {
             getMenuInflater().inflate(R.menu.message_context_menu, menu);
-            menu.findItem(R.id.action_copy).setVisible(selectedMessage.getType() == TYPE_TEXT_MESSAGE);
-            if (selectedMessage.getType() != TYPE_TEXT_MESSAGE) {
-                menu.findItem(R.id.action_forward).setVisible(can4ward && new File(selectedMessage.getMessageBody()).exists());
+            menu.findItem(R.id.action_copy).setVisible(message.getType() == TYPE_TEXT_MESSAGE);
+            if (message.getType() != TYPE_TEXT_MESSAGE) {
+                menu.findItem(R.id.action_forward).setVisible(can4ward && new File(message.getMessageBody()).exists());
             } else {
                 menu.findItem(R.id.action_forward).setVisible(can4ward);
             }
@@ -447,10 +447,15 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         int itemId = item.getItemId();
+        Message message = messageConversationRealm.where(Message.class).equalTo(Message.FIELD_ID, selectedMessage).findFirst();
+        if (message == null) {
+            UiHelpers.showPlainOlDialog(this, getString(R.string.err_message_not_found));
+            return false;
+        }
         if (itemId == R.id.action_copy) {
             @SuppressWarnings("deprecation")
             ClipboardManager manager = ((ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE));
-            manager.setText(selectedMessage.getMessageBody());
+            manager.setText(message.getMessageBody());
             return true;
         } else if (itemId == R.id.action_delete) {
             deleteMessage(cursor);
@@ -460,12 +465,12 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             intent.setComponent(new ComponentName(this, CreateMessageActivity.class));
             intent.putExtra(MainActivity.ARG_TITLE, getString(R.string.forward_to));
             intent.putExtra(CreateMessageActivity.EXTRA_FORWARDED_FROM, peer.getUserId());
-            if (Message.isTextMessage(selectedMessage)) {
-                intent.putExtra(Intent.EXTRA_TEXT, selectedMessage.getMessageBody());
+            if (Message.isTextMessage(message)) {
+                intent.putExtra(Intent.EXTRA_TEXT, message.getMessageBody());
                 intent.setType("text/*");
                 startActivity(intent);
             } else {
-                final File file = new File(selectedMessage.getMessageBody());
+                final File file = new File(message.getMessageBody());
                 if (file.exists()) {
                     intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
                     intent.setType(FileUtils.getMimeType(file.getAbsolutePath()));
@@ -522,7 +527,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                     }
                 }
             }
-        },false);
+        }, false);
     }
 
     @Override
@@ -599,5 +604,42 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     protected void onCancelledOrDone(String messageid) {
         adapter.notifyDataSetChanged();
+    }
+
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        Bundle b = savedInstanceState.getBundle(peer.getUserId());
+        cursor = b.getInt(CURSOR, -1);
+        int scrollPosition = b.getInt(SCROLL_POSITION, messages.size());
+        messagesListView.setSelection(scrollPosition);
+        selectedMessage = b.getString(SELECTED_MESSAGE);
+        if (selectedMessage == null) {
+            selectedMessage = "";
+        }
+        wasTyping = b.getBoolean(WAS_TYPING, false);
+        String typingMessage = b.getString(TYPING_MESSAGE);
+        if (typingMessage != null) {
+            messageEt.setText(typingMessage);
+        }
+        acceptedToUblock = b.getBoolean(UN_BLOCK, acceptedToUblock);
+        userWasBlocked = b.getBoolean(WAS_BLOCKED, userWasBlocked);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        Bundle b = new Bundle();
+        b.putString(TYPING_MESSAGE, messageEt.getText().toString());
+        b.putInt(SCROLL_POSITION, messagesListView.getLastVisiblePosition());
+        if (cursor > -1) {
+            b.putInt(CURSOR, cursor);
+            b.putString(SELECTED_MESSAGE, selectedMessage);
+        }
+        b.putBoolean(UN_BLOCK, acceptedToUblock);
+        b.putBoolean(WAS_BLOCKED, userWasBlocked);
+        b.putBoolean(WAS_TYPING, wasTyping);
+        outState.putParcelable(peer.getUserId(), b);
+        super.onSaveInstanceState(outState);
     }
 }

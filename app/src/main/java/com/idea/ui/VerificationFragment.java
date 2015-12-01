@@ -26,6 +26,7 @@ import com.rey.material.app.DialogFragment;
 public class VerificationFragment extends Fragment {
     private static final String TAG = VerificationFragment.class.getSimpleName();
     private static final String KEY_TOKEN_SENT = "tokenSent" + TAG;
+    public static final String VERIFICATION_TOKEN = "verificationToken";
     private DialogFragment progressDialog;
     private EditText etVerification;
     private Callbacks callback;
@@ -98,6 +99,12 @@ public class VerificationFragment extends Fragment {
         ViewUtils.setTypeface(notice, TypeFaceUtil.ROBOTO_LIGHT_TTF);
         setUpViews(buttonVerify, resendToken, notice);
         progressDialog = UiHelpers.newProgressDialog();
+        if (savedInstanceState != null) {
+            String token = savedInstanceState.getString(VERIFICATION_TOKEN);
+            if (token != null) {
+                etVerification.setText(token);
+            }
+        }
         return view;
     }
 
@@ -114,8 +121,8 @@ public class VerificationFragment extends Fragment {
 
     private void doVerifyUser() {
         final String code = etVerification.getText().toString().trim();
-        if (TextUtils.isEmpty(code) || code.length() < 4) {
-            UiHelpers.showErrorDialog(getActivity(), getString(R.string.token_required));
+        if (TextUtils.isEmpty(code) || code.length() < 4 && !TextUtils.isDigitsOnly(code)) {
+            UiHelpers.showErrorDialog(getActivity(), getString(R.string.token_invalid));
         } else {
             progressDialog.show(getFragmentManager(), null);
             UserManager.getInstance().verifyUser(code, new UserManager.CallBack() {
@@ -131,6 +138,12 @@ public class VerificationFragment extends Fragment {
             });
         }
 
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putString(VERIFICATION_TOKEN, etVerification.getText().toString());
+        super.onSaveInstanceState(outState);
     }
 
     private void resendToken() {

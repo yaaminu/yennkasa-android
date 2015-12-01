@@ -8,6 +8,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
 import android.support.v4.util.Pair;
@@ -46,7 +47,9 @@ import com.rey.material.widget.SnackBar;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -59,7 +62,16 @@ public class CreateMessageActivity extends MessageActivity
 
     static final String EXTRA_FORWARDED_FROM = "fLKDFAJKAom"; //reduce the likeliness of conflict
     private static final String TAG = CreateMessageActivity.class.getSimpleName();
-    private final Set<String> selectedItems = new HashSet<>();
+    public static final String SELECTED_USERS = "selectedUsers";
+    public static final String TYPING_MESSAGE = "typingMessage";
+    public static final String SELECTED_USER_NAMES = "selectedUserNames";
+    public static final String FORWARD_FROM = "forwardFrom";
+    public static final String NOT_DEFAULT_INTENT = "notDefaultIntent";
+    public static final String WAS_ATTACHING = "wasAttaching";
+    public static final String ATTACHMENT_PATH = "attachmentPath";
+    public static final String ATTACHMENT_TYPE = "attachmentType";
+    public static final String ATTACHMENT_DESCRIPTION = "attachmentDescription";
+    private Set<String> selectedItems = new HashSet<>();
     private EditText messageEt;
     private TextView tvAttachmentDescription;
     private View attachmentPreview;
@@ -91,6 +103,8 @@ public class CreateMessageActivity extends MessageActivity
             }
         }
     };
+    private String forwardedFrom;
+    private String attachmentDescription;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,13 +122,22 @@ public class CreateMessageActivity extends MessageActivity
         View cancelAttachment = findViewById(R.id.cancel_attachment);
         tvAttachmentDescription = (TextView) findViewById(R.id.attachment_description);
 
-        ViewUtils.setTypeface(tvAttachmentDescription, TypeFaceUtil.DROID_SERIF_BOLD_TTF);
+        ViewUtils.setTypeface(tvAttachmentDescription, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         ViewUtils.setTypeface(messageEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
 
         attachmentPreview.setOnClickListener(this);
         cancelAttachment.setOnClickListener(this);
 
         selectedItems.clear();
+        if (savedInstanceState != null) {
+            List<String> selectedUsers = savedInstanceState.getStringArrayList(SELECTED_USERS),
+                    selectedUserNames = savedInstanceState.getStringArrayList(SELECTED_USER_NAMES);
+            if (selectedUserNames != null && selectedUsers != null) {//both must be valid before we use them
+                this.selectedItems = new HashSet<>(selectedUsers);
+                this.selectedUserNames = new HashSet<>(selectedUserNames);
+                adapter.notifyDataSetChanged();
+            }
+        }
         realm = User.Realm(this);
         adapter = new CustomAdapter();
         final Intent intent = getIntent();
@@ -164,6 +187,34 @@ public class CreateMessageActivity extends MessageActivity
 
         if (adapter.getCount() >= 1) {
             fragment = new ItemsSelector();
+            if (savedInstanceState != null) {
+                String typingMessage = savedInstanceState.getString(TYPING_MESSAGE);
+                if (typingMessage != null) {
+                    messageEt.setText(typingMessage);
+                    ViewUtils.hideViews(attachmentPreview);
+                    ViewUtils.showViews(messageEt);
+                } else {
+                    isAttaching = savedInstanceState.getBoolean(WAS_ATTACHING, false);
+                    if (isAttaching) {
+                        int type = savedInstanceState.getInt(ATTACHMENT_TYPE, -1);
+                        typingMessage = savedInstanceState.getString(ATTACHMENT_PATH);
+                        String attachmentDescription = savedInstanceState.getString(ATTACHMENT_DESCRIPTION);
+                        if (type != -1 && typingMessage != null && attachmentDescription != null) {
+                            attachmentBody = typingMessage;
+                            attachmentType = type;
+                            ViewUtils.showViews(attachmentPreview);
+                            tvAttachmentDescription.setText(attachmentDescription);
+                            ViewUtils.hideViews(messageEt);
+                        } else {
+                            ViewUtils.hideViews(attachmentPreview);
+                            ViewUtils.hideViews(messageEt);
+                        }
+                    } else {
+                        ViewUtils.hideViews(attachmentPreview);
+                        ViewUtils.hideViews(messageEt);
+                    }
+                }
+            }
         } else {
             ViewUtils.hideViews(attachmentPreview);
             ViewUtils.hideViews(messageEt);
@@ -218,7 +269,7 @@ public class CreateMessageActivity extends MessageActivity
     private RealmQuery<User> prepareQuery() {
         RealmQuery<User> query = realm.where(User.class);
 
-        final String forwardedFrom = getIntent().getStringExtra(EXTRA_FORWARDED_FROM);
+        forwardedFrom = getIntent().getStringExtra(EXTRA_FORWARDED_FROM);
         if (forwardedFrom != null) {
             query.notEqualTo(User.FIELD_ID, forwardedFrom);
         }
@@ -330,7 +381,7 @@ public class CreateMessageActivity extends MessageActivity
     }
 
     private void doAttach(Pair<String, Integer> pathAndType) throws IOException {
-        String attachmentDescription = new File(pathAndType.first).getName() + "\n" + FileUtils.sizeInLowestPrecision(pathAndType.first);
+        attachmentDescription = new File(pathAndType.first).getName() + "\n" + FileUtils.sizeInLowestPrecision(pathAndType.first);
         attachmentBody = pathAndType.first;
         attachmentType = pathAndType.second;
         isAttaching = true;
@@ -547,5 +598,26 @@ public class CreateMessageActivity extends MessageActivity
     @Override
     public final View getToolBar() {
         return toolBar;
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putString(TYPING_MESSAGE, messageEt.getText().toString());
+        outState.putStringArrayList(SELECTED_USERS, new ArrayList<>(selectedItems));
+        outState.putStringArrayList(SELECTED_USER_NAMES, new ArrayList<>(selectedUserNames));
+        outState.putBoolean(WAS_ATTACHING, isAttaching);
+        if (!TextUtils.isEmpty(forwardedFrom)) {
+            outState.putString(FORWARD_FROM, forwardedFrom);
+        }
+        outState.putBoolean(NOT_DEFAULT_INTENT, isNotDefaultIntent);
+        outState.putString(ATTACHMENT_PATH, attachmentBody);
+        outState.putInt(ATTACHMENT_TYPE, attachmentType);
+        outState.putString(ATTACHMENT_DESCRIPTION, attachmentDescription);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
     }
 }

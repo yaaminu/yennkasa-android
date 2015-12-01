@@ -37,7 +37,7 @@ public abstract class Task extends com.path.android.jobqueue.Job {
 
     static class JobSerializer implements SqliteJobQueue.JobSerializer {
 
-        public static final String CLASS = "class";
+        private static final String CLASS = "class";
 
         @Override
         public byte[] serialize(Object o) throws IOException {
@@ -56,7 +56,7 @@ public abstract class Task extends com.path.android.jobqueue.Job {
                 }
                 return task.toString().getBytes();
             }
-            throw new IllegalArgumentException("this serializer only works with com.idea.util.TaskManager$Task and its subclasses");
+            throw new IllegalArgumentException("this serializer only works with com.idea.util.Task and its subclasses");
         }
 
         @SuppressWarnings("unchecked")

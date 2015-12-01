@@ -163,6 +163,9 @@ public class UiHelpers {
         showStopAnnoyingMeDialog(activity, key, getString(activity, message), getString(activity, ok), getString(activity, no), okListener, noListener);
     }
 
+    public static void showStopAnnoyingMeDialog(FragmentActivity activity, final String key, int stopAnnoyingMe, int message, int ok, int no, Listener okListener, Listener noListener) {
+        showStopAnnoyingMeDialog(activity, key, getString(activity, stopAnnoyingMe), getString(activity, message), getString(activity, ok), getString(activity, no), okListener, noListener);
+    }
 
     private static String getString(Context context, int resId) {
         return context.getString(resId);

@@ -85,6 +85,7 @@
             android:label="@string/title_activity_set_up"/>
         <activity
             android:name="com.idea.ui.ChatActivity"
+            android:configChanges="orientation"
             android:label="@string/title_activity_chat"
             android:parentActivityName="com.idea.ui.MainActivity"
             android:windowSoftInputMode="stateHidden|adjustResize"
@@ -95,11 +96,12 @@
         </activity>
         <activity
             android:name="com.idea.ui.ImageCropper"
-            android:configChanges="orientation|keyboardHidden"
+            android:configChanges="orientation|keyboardHidden|fontScale"
             android:excludeFromRecents="true"
             android:exported="false"/>
         <activity
             android:name="com.idea.ui.ProfileActivity"
+            android:configChanges="keyboardHidden|fontScale"
             android:label="@string/title_activity_profile"
             android:launchMode="singleTop"
             android:parentActivityName="com.idea.ui.MainActivity"
@@ -110,6 +112,7 @@
         </activity>
         <activity
             android:name="com.idea.ui.InviteActivity"
+            android:configChanges="orientation|keyboardHidden|fontScale|locale"
             android:label="@string/title_invite_friends"
             android:parentActivityName="com.idea.ui.MainActivity"
             tools:ignore="UnusedAttribute">
@@ -119,6 +122,7 @@
         </activity>
         <activity
             android:name="com.idea.ui.UsersActivity"
+            android:configChanges="orientation|keyboardHidden|fontScale|locale"
             android:label="@string/title_activity_users"
             android:parentActivityName="com.idea.ui.MainActivity"
             tools:ignore="UnusedAttribute">
@@ -128,9 +132,11 @@
         </activity>
         <activity
             android:name="com.idea.ui.ImageViewer"
+            android:configChanges="orientation|keyboardHidden|fontScale|locale"
             android:theme="@style/Theme.AppCompat.NoActionBar"/>
         <activity
             android:name="com.idea.ui.CreateGroupActivity"
+            android:configChanges="orientation|keyboardHidden|fontScale|locale"
             android:label="@string/title_activity_create_group"
             android:parentActivityName="com.idea.ui.MainActivity"
             tools:ignore="UnusedAttribute">
@@ -140,6 +146,7 @@
         </activity>
         <activity
             android:name="com.idea.ui.CreateMessageActivity"
+            android:configChanges="orientation|keyboardHidden|fontScale|locale"
             android:label="@string/title_activity_create_message"
             android:parentActivityName="com.idea.ui.MainActivity"
             tools:ignore="UnusedAttribute">

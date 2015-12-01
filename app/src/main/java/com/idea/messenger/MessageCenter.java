@@ -122,7 +122,7 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
                 NotifyMessageStatusJob job = NotifyMessageStatusJob.makeNew(Message.STATE_RECEIVED, message);
                 TaskManager.runJob(job);
             }
-        }, true);
+        }, false);
 
     }
 
@@ -142,7 +142,7 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
                 NotifyMessageStatusJob job = NotifyMessageStatusJob.makeNew(Message.STATE_SEEN, message);
                 TaskManager.runJob(job);
             }
-        }, true);
+        }, false);
 
     }
 
@@ -162,11 +162,10 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             throw new RuntimeException(e.getCause());
         }
 
-        if (LiveCenter.isOnline(message.getFrom())) {
+        if ( messagingClient != null 
+            && messagingClient.isConnected()
+            && LiveCenter.isOnline(message.getFrom())  ) {
             //use socketsIO
-            if (messagingClient == null) {
-                initClient();
-            }
             messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
         } else {
             //maybe push

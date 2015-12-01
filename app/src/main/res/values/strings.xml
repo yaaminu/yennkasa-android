@@ -274,4 +274,6 @@
     <string name="verification_failed">verification failed</string>
     <string name="already_downloading">already_downloading</string>
     <string name="uploading">uploading</string>
+    <string name="err_message_not_found">The message you selected was not found, did you delete it?</string>
+    <string name="token_invalid">Token is not valid,Check your SMS inbox for the token.</string>
 </resources>

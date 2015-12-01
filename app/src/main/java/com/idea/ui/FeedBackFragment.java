@@ -46,28 +46,32 @@ import java.util.Locale;
 public class FeedBackFragment extends Fragment {
 
 
-    EditText subject;
+    private static final String ADD_SYSTEM_INFO = "addSystemInfo";
+    private static final String SUBJECT = "subject";
+    private static final String MESSAGE = "message";
+    public static final String ATTACHMENTS = "attachments";
+    private EditText feedbackBody;
     private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             //noinspection ConstantConditions
-            CheckBox checkBox = ((CheckBox) getView().findViewById(R.id.cb_checked));
+            checkBox = ((CheckBox) getView().findViewById(R.id.cb_checked));
 
-            String feedbackBody = subject.getText().toString().trim();
-            subject.setText("");
+            String feedbackBody = FeedBackFragment.this.feedbackBody.getText().toString().trim();
+            FeedBackFragment.this.feedbackBody.setText("");
             if (TextUtils.isEmpty(feedbackBody)) {
                 UiHelpers.showErrorDialog(getActivity(), getString(R.string.error_feedback_body_empty));
                 return;
             }
 
-            String title = titleEt.getText().toString().trim();
+            String title = subjectEt.getText().toString().trim();
             if (TextUtils.isEmpty(title)) {
                 title = "no subject";
             } else if (title.length() > 40) {
                 UiHelpers.showErrorDialog(getActivity(), getString(R.string.error_feedback_subject_too_lonng));
                 return;
             }
-            titleEt.setText("");
+            subjectEt.setText("");
             JSONObject reportObject = new JSONObject();
             try {
                 reportObject.put("body", feedbackBody);
@@ -111,8 +115,9 @@ public class FeedBackFragment extends Fragment {
             }
         }
     };
-    private EditText titleEt;
-    private List<String> attachments = new ArrayList<>();
+    private EditText subjectEt;
+    private ArrayList<String> attachments = new ArrayList<>();
+    private CheckBox checkBox;
 
     public FeedBackFragment() {
         // Required empty public constructor
@@ -134,13 +139,27 @@ public class FeedBackFragment extends Fragment {
         Button submit = (Button) view.findViewById(R.id.bt_submit);
         ViewUtils.setTypeface(submit, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         submit.setOnClickListener(onClickListener);
-        titleEt = (EditText) view.findViewById(R.id.et_feedback_subject);
-        subject = ((EditText) view.findViewById(R.id.et_feedback_body));
+        subjectEt = (EditText) view.findViewById(R.id.et_feedback_subject);
+        feedbackBody = ((EditText) view.findViewById(R.id.et_feedback_body));
         ViewUtils.setTypeface(submit, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-        ViewUtils.setTypeface(titleEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+        ViewUtils.setTypeface(subjectEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         TextView addDeviceInfo = ((TextView) view.findViewById(R.id.tv_add_device_info));
         ViewUtils.setTypeface(addDeviceInfo, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-
+        if (savedInstanceState != null) {
+            String title = savedInstanceState.getString(SUBJECT);
+            if (title != null) {
+                subjectEt.setText(title);
+            }
+            title = savedInstanceState.getString(MESSAGE);
+            if (title != null) {
+                feedbackBody.setText(title);
+            }
+            checkBox.setChecked(savedInstanceState.getBoolean(ADD_SYSTEM_INFO, false));
+            List<String> saved = savedInstanceState.getStringArrayList(ATTACHMENTS);
+            if (saved != null && !saved.isEmpty()) {
+                attachments = new ArrayList<>(saved);
+            }
+        }
         return view;
     }
 
@@ -186,5 +205,14 @@ public class FeedBackFragment extends Fragment {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(ADD_SYSTEM_INFO, checkBox.isChecked());
+        outState.putString(SUBJECT, subjectEt.getText().toString());
+        outState.putString(MESSAGE, feedbackBody.getText().toString());
+        outState.putStringArrayList(ATTACHMENTS, attachments);
+        super.onSaveInstanceState(outState);
     }
 }

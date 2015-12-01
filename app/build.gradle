@@ -53,7 +53,7 @@ dependencies {
     compile project(':pullToRefresh')
     compile project(':textRenderer')
     compile project(':cropper')
-//    compile files('libs/sinch-android-rtc-3.6.0.jar')
+    //    compile files('libs/sinch-android-rtc-3.6.0.jar')
     //noinspection GradleDependency
     compile 'com.android.support:appcompat-v7:22.1.1'
     //noinspection GradleDependency
@@ -61,22 +61,23 @@ dependencies {
     compile 'com.parse.bolts:bolts-android:1.2.0'
     //noinspection GradleDependency
     compile 'com.android.support:support-v4:23.0.1'
-//    //noinspection GradleDependency
-//    compile 'com.theartofdev.edmodo:android-image-cropper:1.0.+'
+    //    //noinspection GradleDependency
+    //    compile 'com.theartofdev.edmodo:android-image-cropper:1.0.+'
     //  compile 'uk.co.chrisjenx:calligraphy:2.1.0'
     compile project(':sockets_io_client')
     compile('com.crashlytics.sdk.android:crashlytics:2.5.2@aar') {
         transitive = true;
     }
-//    compile('com.crashlytics.sdk.android:crashlytics-ndk:1.1.2@aar') {
-//        transitive = true;
-//    }
-//    compile('com.digits.sdk.android:digits:1.9.0@aar') {
-//        transitive = true;
-////        exclude module:  'retrofit';
-////        exclude module: 'gson';
-//    }
+    //    compile('com.crashlytics.sdk.android:crashlytics-ndk:1.1.2@aar') {
+    //        transitive = true;
+    //    }
+    //    compile('com.digits.sdk.android:digits:1.9.0@aar') {
+    //        transitive = true;
+    ////        exclude module:  'retrofit';
+    ////        exclude module: 'gson';
+    //    }
     compile 'com.commit451:PhotoView:1.2.4'
+    compile files('libs/sinch-android-rtc-3.7.2-VIDEO-SNAPSHOT.jar')
 }
 
 crashlytics {

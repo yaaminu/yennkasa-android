@@ -56,21 +56,21 @@ public class TaskManager {
     private static JobManager jobManager;
 
 
-    public static void init(Application application, DependencyInjector injector) {
+    public static void init(final Application application, DependencyInjector injector) {
         if (!initialised.getAndSet(true)) {
-            Configuration config = new Configuration.Builder(application)
+            PLog.w(TAG, "initialising %s", TAG);
+            final Configuration config = new Configuration.Builder(application)
                     .injector(injector)
                     .customLogger(new PLog("JobManager"))
                     .jobSerializer(new Task.JobSerializer())
                     .build();
-            jobManager = new JobManager(application, config);
-            jobManager.start();
-            PLog.w(TAG, "initialising %s", TAG);
             final Timer timer = new Timer("cleanup Timer", true);
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
                     try {
+                        jobManager = new JobManager(application, config);
+                        jobManager.start();
                         File file = Config.getTempDir();
                         if (file.exists()) {
                             org.apache.commons.io.FileUtils.cleanDirectory(Config.getTempDir());

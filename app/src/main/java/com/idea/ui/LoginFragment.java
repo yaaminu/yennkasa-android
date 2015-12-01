@@ -47,10 +47,15 @@ import io.realm.Realm;
 public class LoginFragment extends Fragment {
     public static final String TAG = LoginFragment.class.getSimpleName();
     public static final String LOCALE_KEY = "locale";
+    public static final String SPINER_POSITION = "spinerPosition";
+    public static final String USER_NAME = "userName";
+    public static final String USER_ID = "userId";
+    public static final String LOGGIN_IN = "logginIn";
+    public static final String COUNTRY = "country";
     private Button loginButton;
     private EditText usernameEt, phoneNumberEt;
     private Realm realm;
-    private boolean isCLoggingIn = true;
+    private boolean isLoggingIn = true;
     private Spinner spinner;
     private String userName, phoneNumber, userCountry;
     private FormValidator validator;
@@ -89,7 +94,7 @@ public class LoginFragment extends Fragment {
     }, usernameStrategy = new FormValidator.ValidationStrategy() {
         @Override
         public boolean validate() {
-            if (isCLoggingIn) return true;
+            if (isLoggingIn) return true;
             if (TextUtils.isEmpty(userName)) {
                 showRequiredFieldDialog(getString(R.string.username_hint));
                 usernameEt.requestFocus();
@@ -97,7 +102,7 @@ public class LoginFragment extends Fragment {
             } else {
                 android.support.v4.util.Pair<String, String> errorNamePair = UserManager.getInstance().isValidUserName(userName);
                 if (errorNamePair.second != null) {
-                    UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), errorNamePair.second);
+                    UiHelpers.showErrorDialog(getActivity(), errorNamePair.second);
                     usernameEt.requestFocus();
                     return false;
                 }
@@ -121,7 +126,7 @@ public class LoginFragment extends Fragment {
                         doAttemptCLogin();
                     }
                 };
-                UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(),
+                UiHelpers.showErrorDialog(getActivity(),
                         getString(R.string.st_invalid_phone_number_message, phoneNumber).toUpperCase(),
                         getString(R.string.yes).toUpperCase(),
                         getString(android.R.string.cancel).toUpperCase(), okListener, null);
@@ -184,7 +189,7 @@ public class LoginFragment extends Fragment {
             if (v.getId() == R.id.bt_loginButton) {
                 validateAndContinue();
             } else if (v.getId() == R.id.tv_signup) {
-                toggleSignUpLogin(((TextView) v));
+                toggleSignUpLogin();
             } else {
                 throw new AssertionError();
             }
@@ -249,6 +254,7 @@ public class LoginFragment extends Fragment {
         }
 
     };
+    private TextView signUpLoginNotice;
 
     public LoginFragment() {
     }
@@ -256,8 +262,6 @@ public class LoginFragment extends Fragment {
     @Override
     public void onAttach(Context activity) {
         super.onAttach(activity);
-        setRetainInstance(true);
-
         try {
             callback = (Callbacks) activity;
         } catch (ClassCastException e) {
@@ -287,10 +291,9 @@ public class LoginFragment extends Fragment {
         validator.addStrategy(phoneNumberStrategy)
                 .addStrategy(usernameStrategy);
         setUpSpinner();
-
-        TextView tv = (TextView) view.findViewById(R.id.tv_signup);
-        ViewUtils.setTypeface(tv, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-        tv.setOnClickListener(listener);
+        signUpLoginNotice = (TextView) view.findViewById(R.id.tv_signup);
+        ViewUtils.setTypeface(signUpLoginNotice, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+        signUpLoginNotice.setOnClickListener(listener);
 
         loginButton.setOnClickListener(listener);
 
@@ -298,9 +301,50 @@ public class LoginFragment extends Fragment {
         ViewUtils.setTypeface(appName, TypeFaceUtil.two_d_font);
 
 
-
         android.widget.TextView copyRight = ((android.widget.TextView) view.findViewById(R.id.copy_right));
         ViewUtils.setTypeface(copyRight, TypeFaceUtil.two_d_font);
+        if (savedInstanceState != null) {
+            String savedCountry = savedInstanceState.getString(COUNTRY);
+            if (savedCountry != null) {
+                int savedPosition = savedInstanceState.getInt(SPINER_POSITION, 0);
+                if (savedPosition > 0 &&/*avoid out of bound during times the spinner's connect might have changed*/ spinner.getAdapter().getCount() > savedPosition) {
+                    Country country = (Country) spinner.getAdapter().getItem(savedPosition);
+                    if (country.getIso2letterCode().equals(savedCountry)) {
+                        spinner.setSelection(savedPosition);
+                    } else {
+                        int itemsCount = spinner.getAdapter().getCount();
+                        for (int i = 0; i < itemsCount; i++) {
+                            Country c = ((Country) spinner.getAdapter().getItem(i));
+                            if (c.getIso2letterCode().equals(savedCountry)) {
+                                spinner.setSelection(i);
+                                onItemSelectedListener.onItemSelected(spinner, null, i, -1);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            isLoggingIn = savedInstanceState.getBoolean(LOGGIN_IN, true);
+            if (isLoggingIn) {
+                signUpLoginNotice.setText(R.string.dont_have_an_account_sign_up);
+                usernameEt.setVisibility(View.GONE);
+                phoneNumberEt.requestFocus();
+                loginButton.setText(R.string.log_in_button_label);
+            } else {
+                signUpLoginNotice.setText(R.string.st_already_have_an_account);
+                usernameEt.setVisibility(View.VISIBLE);
+                usernameEt.requestFocus();
+                loginButton.setText(R.string.sign_up_button_label);
+            }
+            String userName = savedInstanceState.getString(USER_NAME);
+            if (userName != null) {
+                usernameEt.setText(userName);
+            }
+            userName = savedInstanceState.getString(USER_ID);
+            if (userName != null) {
+                phoneNumberEt.setText(userName);
+            }
+        }
 
 //        //re-use appName
 //        appName = ((android.widget.TextView) view.findViewById(R.id.tv_app_name));
@@ -347,16 +391,16 @@ public class LoginFragment extends Fragment {
         }
     }
 
-    private void toggleSignUpLogin(TextView v) {
-        if (isCLoggingIn) {
-            isCLoggingIn = false;
-            v.setText(R.string.st_already_have_an_account);
+    private void toggleSignUpLogin() {
+        if (isLoggingIn) {
+            isLoggingIn = false;
+            signUpLoginNotice.setText(R.string.st_already_have_an_account);
             usernameEt.setVisibility(View.VISIBLE);
             usernameEt.requestFocus();
             loginButton.setText(R.string.sign_up_button_label);
         } else {
-            isCLoggingIn = true;
-            v.setText(R.string.dont_have_an_account_sign_up);
+            isLoggingIn = true;
+            signUpLoginNotice.setText(R.string.dont_have_an_account_sign_up);
             usernameEt.setVisibility(View.GONE);
             phoneNumberEt.requestFocus();
             loginButton.setText(R.string.log_in_button_label);
@@ -368,7 +412,7 @@ public class LoginFragment extends Fragment {
     }
 
     private void doAttemptCLogin() {
-        if (isCLoggingIn) {
+        if (isLoggingIn) {
             callback.onLogin(phoneNumber, userCountry);
         } else {
             callback.onSignUp(userName, phoneNumber, userCountry);
@@ -376,7 +420,7 @@ public class LoginFragment extends Fragment {
     }
 
     private void showRequiredFieldDialog(String field) {
-        UiHelpers.showErrorDialog((PairAppBaseActivity) getActivity(), getString(R.string.required_field_error, field));
+        UiHelpers.showErrorDialog(getActivity(), getString(R.string.required_field_error, field));
     }
 
     private void setUpSpinner() {
@@ -385,6 +429,19 @@ public class LoginFragment extends Fragment {
         spinner.setAdapter(countriesSpinnerAdapter);
         spinner.setSelection(0);
         spinner.setOnItemSelectedListener(onItemSelectedListener);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        int selectedItemPosition = spinner.getSelectedItemPosition();
+        outState.putInt(SPINER_POSITION, selectedItemPosition);
+        outState.putString(USER_NAME, usernameEt.getText().toString());
+        outState.putString(USER_ID, phoneNumberEt.getText().toString());
+        outState.putBoolean(LOGGIN_IN, isLoggingIn);
+        if (selectedItemPosition >= 1) {
+            outState.putString(COUNTRY, ((Country) spinner.getAdapter().getItem(selectedItemPosition)).getIso2letterCode());
+        }
+        super.onSaveInstanceState(outState);
     }
 
     interface Callbacks {

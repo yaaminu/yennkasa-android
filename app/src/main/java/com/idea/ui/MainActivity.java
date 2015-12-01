@@ -202,6 +202,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
 
     }
 
+
     private boolean noUserAvailable = true;
 
     private final RealmChangeListener changeListener = new RealmChangeListener() {
@@ -275,4 +276,5 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         intent.putExtras(bundle);
         context.startService(intent);
     }
+
 }

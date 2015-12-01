@@ -53,9 +53,9 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
         if (!promptShown) {
             promptShown = true;
             if (!GcmUtils.hasGcm()) {
-                UiHelpers.showStopAnnoyingMeDialog(this, "gcmUnavialble" + TAG, R.string.no_gcm_error_message, R.string.i_know, android.R.string.cancel, null, null);
+                UiHelpers.showStopAnnoyingMeDialog(this, "gcmUnavialble" + TAG, R.string.stop_annoying_me, R.string.no_gcm_error_message, R.string.i_know, android.R.string.cancel, null, null);
             } else if (GcmUtils.gcmUpdateRequired()) {
-                UiHelpers.showStopAnnoyingMeDialog(this, "gcmUnavialble" + TAG, R.string.gcm_update_required_prompt, R.string.i_know, android.R.string.cancel, null, null);
+                UiHelpers.showStopAnnoyingMeDialog(this, "gcmUnavialble" + TAG, R.string.stop_annoying_me, R.string.gcm_update_required_prompt, R.string.i_know, android.R.string.cancel, null, null);
             }
         }
     }

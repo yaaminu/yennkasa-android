@@ -33,6 +33,7 @@ import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.SnackBar;
 import com.rey.material.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -46,6 +47,8 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
 
 
     public static final String EXTRA_GROUP_ID = "groupId";
+    public static final String SELECTED_USER_NAMES = "selectedUserNames";
+    public static final String SELECTED_USERS = "selectedUsers";
     private final Set<String> existingGroupMembers = new HashSet<>();
     private String TAG = InviteActivity.class.getSimpleName();
     private Realm realm;
@@ -80,7 +83,18 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         groupId = getIntent().getStringExtra(EXTRA_GROUP_ID);
-        selectedUsers = new HashSet<>();
+        if (savedInstanceState != null) {
+            List<String> tmp = savedInstanceState.getStringArrayList(SELECTED_USERS),
+                    tmp2 = savedInstanceState.getStringArrayList(SELECTED_USER_NAMES);
+            if (tmp != null && tmp2 != null) {
+                selectedUsers = new HashSet<>(tmp);
+                selectedUserNames = new HashSet<>(tmp2);
+            }
+        } else {
+            selectedUsers = new HashSet<>();
+            selectedUserNames = new HashSet<>();
+
+        }
         realm = User.Realm(this);
         usersAdapter = new CustomUserAdapter(prepareQuery().findAllSorted(User.FIELD_NAME));
         fragment = new ItemsSelector();
@@ -265,6 +279,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
 //
 //        supportInvalidateOptionsMenu();
     }
+
     @Override
     public ViewGroup searchBar() {
         return ((ViewGroup) findViewById(R.id.search_bar));
@@ -314,8 +329,17 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
             return prepareQuery();
         }
     }
+
     @Override
-    public final View getToolBar(){
+    public final View getToolBar() {
         return toolBar;
     }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putStringArrayList(SELECTED_USERS, new ArrayList<>(selectedUsers));
+        outState.putStringArrayList(SELECTED_USER_NAMES, new ArrayList<>(selectedUserNames));
+        super.onSaveInstanceState(outState);
+    }
+
 }
