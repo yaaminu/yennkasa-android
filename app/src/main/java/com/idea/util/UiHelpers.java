@@ -349,6 +349,15 @@ public class UiHelpers {
         }
     }
 
+    public static void recordAudio() {
+        try {
+            mMediaUri = FileUtils.getOutputUri(FileUtils.MEDIA_TYPE_AUDIO);
+            MediaUtils.recordAudio(NavigationManager.getCurrentActivity(), mMediaUri, ChatActivity.RECORD_AUDIO_REQUEST);
+        } catch (NavigationManager.NoActiveActivityException | IOException e) {
+            crashAndBurn(e);
+        }
+    }
+
     private static String getActualPath(Intent data) {
         return FileUtils.resolveContentUriToFilePath(data.getData(), true);
     }
@@ -359,6 +368,8 @@ public class UiHelpers {
         //a well-known android app com.estrongs.android.pop-1 (Es File Explorer) allows users
         //to pick any file type irrespective of the mime type bundle with the intent.
         switch (requestCode) {
+            case ChatActivity.RECORD_AUDIO_REQUEST:
+                //fall through
             case ChatActivity.TAKE_PHOTO_REQUEST:
                 //fall through
             case ChatActivity.TAKE_VIDEO_REQUEST:

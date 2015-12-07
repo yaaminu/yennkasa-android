@@ -96,10 +96,10 @@
                 <!--/>-->
                 <com.idea.view.ProgressWheel
                     android:id="@+id/pb_download_progress_indeterminate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:layout_gravity="center"
-                    android:visibility="gone"
+                    android:visibility="visible"
                     app:matProg_barColor="@color/white"
                     app:matProg_progressIndeterminate="true"
                     />
@@ -111,7 +111,7 @@
                     android:layout_gravity="center"
                     android:background="#0000"
                     android:src="@drawable/ic_file_download_white_36dp"
-                    android:visibility="visible"/>
+                    android:visibility="gone"/>
             </FrameLayout>
         </com.idea.view.FrameLayout>
 

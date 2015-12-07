@@ -82,11 +82,13 @@
             android:name="com.idea.ui.SetUpActivity"
             android:configChanges="orientation|keyboardHidden"
             android:excludeFromRecents="true"
+            android:launchMode="singleTask"
             android:label="@string/title_activity_set_up"/>
         <activity
             android:name="com.idea.ui.ChatActivity"
             android:configChanges="orientation"
             android:label="@string/title_activity_chat"
+
             android:parentActivityName="com.idea.ui.MainActivity"
             android:windowSoftInputMode="stateHidden|adjustResize"
             tools:ignore="UnusedAttribute">

@@ -13,6 +13,5 @@
     android:layout_marginRight="@dimen/fab_delta_bottom_small"
     android:layout_marginEnd="@dimen/fab_delta_bottom_small"
     app:fab_iconLineMorphing="@style/FloatingActionButtonIcon"
-    app:fab_iconSize="@dimen/fab_icon_size_small"
     app:fab_backgroundColor="#fff"
     app:fab_radius="@dimen/fab_icon_radius_small"/>

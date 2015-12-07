@@ -12,5 +12,4 @@
     android:layout_marginEnd="@dimen/fab_delta_right"
     android:layout_marginRight="@dimen/fab_delta_right"
     app:fab_iconLineMorphing="@style/FloatingActionButtonIcon"
-    app:fab_iconSize="@dimen/fab_icon_size"
     app:fab_radius="@dimen/fab_icon_radius"/>

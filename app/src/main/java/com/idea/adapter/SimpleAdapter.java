@@ -13,6 +13,8 @@ import com.idea.pairapp.R;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.ViewUtils;
 
+import java.util.List;
+
 /**
  * @author Null-Pointer on 11/9/2015.
  */
@@ -32,6 +34,11 @@ public class SimpleAdapter extends BaseAdapter {
     public SimpleAdapter(Drawable[] imgRes, CharSequence[] data) {
         this.imgRes = imgRes;
         this.data = data;
+    }
+
+    public SimpleAdapter(List<Drawable> imgRes, List<CharSequence> data) {
+        this.imgRes = imgRes.toArray(new Drawable[imgRes.size()]);
+        this.data = data.toArray(new CharSequence[imgRes.size()]);
     }
 
     @Override

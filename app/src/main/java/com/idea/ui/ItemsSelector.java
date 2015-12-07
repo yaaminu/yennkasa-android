@@ -6,7 +6,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -228,16 +227,13 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
         if (interactionListener.supportAddCustom() || interactionListener.filter() != null) {
             final long itemCount = interactionListener.getAdapter().getCount();
             if (!interactionListener.supportAddCustom() && interactionListener.filter() != null) { //show the filterEditText if clients support adding custom
-                filterEditText.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_action_search, 0, 0, 0);
                 filterEditText.setHint(R.string.abc_search_hint);
 
             } else {
                 if (itemCount > 0) {
                     filterEditText.setHint(R.string.search_or_add_custom);
-                    filterEditText.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_action_search, 0, 0, 0);
                 } else {
                     filterEditText.setHint(R.string.add_custom);
-                    filterEditText.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
                 }
             }
         }
@@ -277,14 +273,6 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
         } else {
             filterEditText.setHint(R.string.abc_search_hint);
         }
-        //clear exiting drawables
-        filterEditText.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
-
-        if (TextUtils.isEmpty(ss))
-            filterEditText.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_action_search, 0, 0, 0);
-        else
-            filterEditText.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
-
     }
 
     @Override

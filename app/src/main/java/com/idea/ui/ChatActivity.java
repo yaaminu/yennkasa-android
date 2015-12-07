@@ -67,6 +67,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public static final int PICK_VIDEO_REQUEST = 0x3;
     public static final int PICK_FILE_REQUEST = 0x4;
     public static final int ADD_TO_CONTACTS_REQUEST = 0x6;
+    public static final int RECORD_AUDIO_REQUEST = 0x7;
     public static final String TYPING_MESSAGE = "typingMessage";
     public static final String CURSOR = "cursor";
     public static final String SELECTED_MESSAGE = "selectedMessage";
@@ -74,6 +75,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public static final String SCROLL_POSITION = "scrollPosition";
     public static final String WAS_BLOCKED = "wasBlocked";
     public static final String UN_BLOCK = "block";
+    public static final String EXTRA_SCROLL_TO_MESSAGE = "SCROLLTO";
     private String selectedMessage;
     private int cursor = -1;
     private boolean wasTyping = false,
@@ -158,6 +160,16 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         messageConversationRealm = Message.REALM(this);
         usersRealm = User.Realm(this);
 
+        handleIntent();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleIntent();
+    }
+
+    private void handleIntent() {
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
         peer = userManager.fetchUserIfRequired(usersRealm, peerId, true);
@@ -196,18 +208,30 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 //        inContextualMode = false;
         if (userManager.isBlocked(peerId)) {
             userWasBlocked = true;
-            UiHelpers.showErrorDialog(ChatActivity.this,getString(R.string.blocked_user_notice),okListener);
+            UiHelpers.showErrorDialog(ChatActivity.this, R.string.blocked_user_notice, R.string.agree, R.string.disagree, okListener, noListener);
         }
     }
 
 
     private boolean acceptedToUblock = false, userWasBlocked = false;
-    private final UiHelpers.Listener okListener = new UiHelpers.Listener() {
+    private final UiHelpers.Listener noListener = new UiHelpers.Listener() {
+        @Override
+        public void onClick() {
+            finish();
+        }
+    }, okListener = new UiHelpers.Listener() {
         @Override
         public void onClick() {
             acceptedToUblock = true;
-            userManager.unBlockUser(peer.getUserId());
-            UiHelpers.showToast(getString(R.string.user_unblocked));
+
+            final String userId = peer.getUserId();
+            TaskManager.executeNow(new Runnable() {
+                @Override
+                public void run() {
+                    userManager.unBlockUser(userId);
+                    UiHelpers.showToast(getString(R.string.user_unblocked));
+                }
+            }, false);
         }
     };
 
@@ -642,4 +666,5 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         outState.putParcelable(peer.getUserId(), b);
         super.onSaveInstanceState(outState);
     }
+
 }

@@ -54,8 +54,6 @@ public class FeedBackFragment extends Fragment {
     private View.OnClickListener onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            //noinspection ConstantConditions
-            checkBox = ((CheckBox) getView().findViewById(R.id.cb_checked));
 
             String feedbackBody = FeedBackFragment.this.feedbackBody.getText().toString().trim();
             FeedBackFragment.this.feedbackBody.setText("");
@@ -141,6 +139,7 @@ public class FeedBackFragment extends Fragment {
         submit.setOnClickListener(onClickListener);
         subjectEt = (EditText) view.findViewById(R.id.et_feedback_subject);
         feedbackBody = ((EditText) view.findViewById(R.id.et_feedback_body));
+        checkBox = ((CheckBox) view.findViewById(R.id.cb_checked));
         ViewUtils.setTypeface(submit, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         ViewUtils.setTypeface(subjectEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         TextView addDeviceInfo = ((TextView) view.findViewById(R.id.tv_add_device_info));

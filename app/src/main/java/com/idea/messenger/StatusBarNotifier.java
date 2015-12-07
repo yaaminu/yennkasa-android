@@ -27,7 +27,6 @@ import com.idea.util.LiveCenter;
 import com.idea.util.MediaUtils;
 import com.idea.util.PLog;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
@@ -40,10 +39,10 @@ import io.realm.Realm;
  * @author Null-Pointer on 8/12/2015.
  */
 class StatusBarNotifier implements Notifier {
-    private final static int MESSAGE_NOTIFICATION_ID = new SecureRandom().nextInt();
+    private final static int MESSAGE_NOTIFICATION_ID = 19928;
     private final static int MESSAGE_PENDING_INTENT_REQUEST_CODE = 1002;
     private static final String TAG = StatusBarNotifier.class.getSimpleName();
-    public static final int VIBRATION_DURATION = 500;
+    public static final int VIBRATION_DURATION = 250;
     private AtomicBoolean shouldPlayTone = new AtomicBoolean(true);
     Timer timer = new Timer();
 
@@ -136,7 +135,7 @@ class StatusBarNotifier implements Notifier {
                 public void run() {
                     doVibrate(context);
                 }
-            }, 700);
+            }, 500);
         }
     }
 

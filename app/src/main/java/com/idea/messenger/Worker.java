@@ -5,6 +5,7 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.widget.Toast;
@@ -66,7 +67,7 @@ public class Worker extends IntentService {
 
     private static final Set<String> downloading = new HashSet<>();
 
-    private static Semaphore downloadLock = new Semaphore(8, true);
+    private static Semaphore downloadLock = new Semaphore(5, true);
 
     private void download(final Message message) {
         synchronized (downloading) {
@@ -118,7 +119,7 @@ public class Worker extends IntentService {
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
             Realm realm = null;
             final File finalFile;
-            String destination = messageBody.substring(messageBody.lastIndexOf('/'));
+            String destination = Uri.parse(messageBody).getPath();//.substring(messageBody.lastIndexOf('/'));
 
             switch (type) {
                 case Message.TYPE_VIDEO_MESSAGE:
@@ -164,10 +165,14 @@ public class Worker extends IntentService {
             try {
                 FileUtils.save(finalFile, messageBody, listener);
                 realm = Message.REALM(Config.getApplicationContext());
-                realm.beginTransaction();
                 Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
-                toBeUpdated.setMessageBody(finalFile.getAbsolutePath());
-                realm.commitTransaction();
+                if (toBeUpdated != null) {
+                    realm.beginTransaction();
+                    toBeUpdated.setMessageBody(finalFile.getAbsolutePath());
+                    realm.commitTransaction();
+                } else {
+                    PLog.d(TAG, "message not available for update, was it deleted?");
+                }
                 onComplete(messageId, null);
             } catch (IOException e) {
                 PLog.d(TAG, e.getMessage(), e.getCause());
@@ -192,7 +197,8 @@ public class Worker extends IntentService {
                 manager.cancel(messageId, PairAppClient.notId);
                 intent.setClass(Config.getApplicationContext(), ChatActivity.class);
                 intent.putExtra(ChatActivity.EXTRA_PEER_ID, peer);
-                ErrorCenter.reportError(messageId, error.getMessage(), intent);
+                intent.putExtra(ChatActivity.EXTRA_SCROLL_TO_MESSAGE, messageId);
+                ErrorCenter.reportError("downloadFailed", error.getMessage(), intent);
             }
         }
     }

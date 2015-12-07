@@ -1,5 +1,6 @@
 package com.idea.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
@@ -12,6 +13,7 @@ import com.idea.messenger.PairAppClient;
 import com.idea.pairapp.R;
 import com.idea.util.GcmUtils;
 import com.idea.util.NavigationManager;
+import com.idea.util.TaskManager;
 import com.idea.util.UiHelpers;
 
 import java.util.HashSet;
@@ -52,11 +54,27 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
         ErrorCenter.showPendingError();
         if (!promptShown) {
             promptShown = true;
-            if (!GcmUtils.hasGcm()) {
-                UiHelpers.showStopAnnoyingMeDialog(this, "gcmUnavialble" + TAG, R.string.stop_annoying_me, R.string.no_gcm_error_message, R.string.i_know, android.R.string.cancel, null, null);
-            } else if (GcmUtils.gcmUpdateRequired()) {
-                UiHelpers.showStopAnnoyingMeDialog(this, "gcmUnavialble" + TAG, R.string.stop_annoying_me, R.string.gcm_update_required_prompt, R.string.i_know, android.R.string.cancel, null, null);
-            }
+            TaskManager.executeNow(new Runnable() {
+                @Override
+                public void run() {
+                    int message = 0;
+                    if (!GcmUtils.hasGcm()) {
+                        message = R.string.no_gcm_error_message;
+                    } else if (GcmUtils.gcmUpdateRequired()) {
+                        message = R.string.gcm_update_required_prompt;
+                    }
+                    if (message != 0) {
+                        final int tmp = message;
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                UiHelpers.showStopAnnoyingMeDialog(PairAppBaseActivity.this,
+                                        "gcmUnavialble" + TAG, R.string.stop_annoying_me, tmp, R.string.i_know, android.R.string.cancel, null, null);
+                            }
+                        });
+                    }
+                }
+            }, false);
         }
     }
 
@@ -88,6 +106,11 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
         ErrorCenter.unRegisterErrorShower(this);
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+    }
 
     @Override
     protected void onDestroy() {

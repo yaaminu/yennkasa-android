@@ -43,6 +43,12 @@ public class ConnectionUtils {
         return type == ConnectivityManager.TYPE_WIFI;
     }
 
+    public static boolean isMobileConnected(){
+        NetworkInfo info = getNetworkInfo();
+        int type = info.getType();
+        return type == ConnectivityManager.TYPE_MOBILE;
+        }
+
     public static boolean isActuallyConnected() {
         ThreadUtils.ensureNotMain();
         return isConnected() && isReallyReallyConnected();

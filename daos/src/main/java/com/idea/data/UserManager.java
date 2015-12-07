@@ -89,7 +89,8 @@ public final class UserManager {
     public static final String IN_APP_NOTIFICATIONS = "inAppNotifications",
             NEW_MESSAGE_TONE = "newMessageTone", VIBRATE = "vibrateOnNewMessage",
             LIGHTS = "litLightOnNewMessage", DELETE_ATTACHMENT_ON_DELETE = "deleteAttachmentsOnMessageDelete",
-            DELETE_OLDER_MESSAGE = "deleteOldMessages", AUTO_DOWNLOAD_MESSAGE = "autoDownloadMessage",
+            DELETE_OLDER_MESSAGE = "deleteOldMessages", 
+            AUTO_DOWNLOAD_MESSAGE_WIFI = "autoDownloadMessageWifi",AUTO_DOWNLOAD_MESSAGE_MOBILE= "autoDownloadMessageMobile",
             NOTIFICATION = "Notification", STORAGE = "Storage", NETWORK = "Network";
     public static final String DEFAULT = "default";
     /***********************************************************************/
@@ -100,7 +101,7 @@ public final class UserManager {
     static {
         Collections.addAll(protectedKeys, IN_APP_NOTIFICATIONS,
                 NEW_MESSAGE_TONE, VIBRATE, LIGHTS, DELETE_ATTACHMENT_ON_DELETE, DELETE_OLDER_MESSAGE,
-                AUTO_DOWNLOAD_MESSAGE, NOTIFICATION, STORAGE, NETWORK);
+                AUTO_DOWNLOAD_MESSAGE_MOBILE,AUTO_DOWNLOAD_MESSAGE_WIFI, NOTIFICATION, STORAGE, NETWORK);
 
         if (BuildConfig.DEBUG && protectedKeys.size() != 10) {
             throw new AssertionError();
@@ -283,16 +284,28 @@ public final class UserManager {
             return false;
         }
         final User mainUser = getCurrentUser();
-        if (mainUser == null || mainUser.getUserId().isEmpty() ||
-                mainUser.getName().isEmpty() ||
-                mainUser.getCountry().isEmpty() || getSessionStringPref(KEY_SESSION_ID, "").isEmpty()) {
-            TaskManager.execute(new Runnable() {
-                @Override
-                public void run() {
-                    cleanUp();
-                }
-            },false);
-            return false;
+        if (!BuildConfig.DEBUG) {
+            if (mainUser == null || !getSessionStringPref(KEY_SESSION_ID, "").equals(mainUser.getUserId())) {
+                TaskManager.executeNow(new Runnable() {
+                    @Override
+                    public void run() {
+                        cleanUp();
+                    }
+                }, false);
+                return false;
+            }
+        } else {
+            if (mainUser == null || mainUser.getUserId().isEmpty() ||
+                    mainUser.getName().isEmpty() ||
+                    mainUser.getCountry().isEmpty() || !getSessionStringPref(KEY_SESSION_ID, "").equals(mainUser.getUserId())) {
+                TaskManager.executeNow(new Runnable() {
+                    @Override
+                    public void run() {
+                        cleanUp();
+                    }
+                }, false);
+                return false;
+            }
         }
         return true;
     }
@@ -1248,7 +1261,7 @@ public final class UserManager {
                 cleanUp();
                 doNotify(null, callBack);
             }
-        },true);
+        }, true);
     }
 
     private void doNotify(final Exception e, final CallBack callBack) {

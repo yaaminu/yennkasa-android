@@ -1,4 +1,4 @@
-apply plugin: 'com.android.application'
+ apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
 
 repositories {
@@ -77,7 +77,7 @@ dependencies {
     ////        exclude module: 'gson';
     //    }
     compile 'com.commit451:PhotoView:1.2.4'
-    compile files('libs/sinch-android-rtc-3.7.2-VIDEO-SNAPSHOT.jar')
+    compile files('libs/sinch-android-rtc-3.7.1.jar')
 }
 
 crashlytics {

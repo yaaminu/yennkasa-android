@@ -70,8 +70,8 @@
 
                 <com.idea.view.ProgressWheel
                     android:id="@+id/pb_download_progress_indeterminate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:layout_gravity="center"
                     android:visibility="visible"
                     app:matProg_barColor="@color/white"
@@ -86,7 +86,7 @@
                     android:background="#0000"
                     android:contentDescription="@string/play_download_content_description"
                     android:src="@drawable/ic_play_circle_outline_white_36dp"
-                    android:visibility="visible"/>
+                    android:visibility="gone"/>
 
             </FrameLayout>
 

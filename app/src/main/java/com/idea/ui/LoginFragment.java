@@ -18,6 +18,7 @@ import com.idea.data.Country;
 import com.idea.data.UserManager;
 import com.idea.pairapp.BuildConfig;
 import com.idea.pairapp.R;
+import com.idea.util.Config;
 import com.idea.util.FormValidator;
 import com.idea.util.PLog;
 import com.idea.util.PhoneNumberNormaliser;
@@ -204,7 +205,7 @@ public class LoginFragment extends Fragment {
 
         @Override
         protected Void doInBackground(Void... params) {
-            Realm realm = Country.REALM(getActivity());
+            Realm realm = Country.REALM(Config.getApplicationContext());
             try {
                 // TODO: 8/4/2015 change this and pass the input stream directly to realm
                 JSONArray array = new JSONArray(IOUtils.toString(getActivity().getAssets().open("countries.json"), Charsets.UTF_8));

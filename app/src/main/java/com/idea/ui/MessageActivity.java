@@ -9,13 +9,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.v4.util.Pair;
+import android.view.View;
 
 import com.idea.Errors.ErrorCenter;
 import com.idea.Errors.PairappException;
 import com.idea.data.Conversation;
 import com.idea.data.Message;
 import com.idea.data.util.MessageUtils;
-import com.idea.messenger.PairAppClient;
 import com.idea.pairapp.BuildConfig;
 import com.idea.pairapp.R;
 import com.idea.util.LiveCenter;
@@ -180,7 +180,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
 
     protected final void onMessageSeen(Message message) {
         if (message.getState() != Message.STATE_SEEN) {
-            PairAppClient.notifyMessageSeen(message);
+            pairAppClientInterface.notifyMessageSeen(message);
         }
     }
 
@@ -409,6 +409,13 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                 }
             });
         }
+    }
+
+    public void attachCamera(View view) {
+        UiHelpers.takePhoto();
+    }
+
+    public void attachVoiceNote(View view) {
     }
 
     protected interface SendCallback {

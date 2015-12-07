@@ -1,5 +1,6 @@
 package com.idea.ui;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -59,6 +60,11 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
         super.onCreate(savedInstanceState);
         setContentView(R.layout.set_up_activity);
         progressDialog = UiHelpers.newProgressDialog();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
     }
 
     @Override

@@ -23,4 +23,4 @@
     android:paddingLeft="16dp"
     android:paddingRight="16dp"
     android:textColor="@color/white"
-    android:textSize="14sp"/>
+    android:textSize="@dimen/standard_text_size"/>

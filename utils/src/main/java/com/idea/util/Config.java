@@ -129,7 +129,7 @@ public class Config {
         if (application == null) {
             throw new IllegalStateException("application is null,did you forget to call init(Context) ?");
         }
-        return application.getSharedPreferences(Config.APP_PREFS, Context.MODE_PRIVATE);
+        return getPreferences(Config.APP_PREFS);
     }
 
     @SuppressWarnings("unused") //used for testing
@@ -144,12 +144,17 @@ public class Config {
 
     public static File getAppBinFilesBaseDir() {
         return new File(Environment
-                .getExternalStoragePublicDirectory(APP_NAME), "Files");
+                .getExternalStoragePublicDirectory(APP_NAME), getApplicationContext().getString(R.string.folder_name_files));
     }
 
     public static File getAppImgMediaBaseDir() {
         return new File(Environment
                 .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), APP_NAME);
+    }
+
+    public static File appAudioBaseDir() {
+        return new File(Environment
+                .getExternalStoragePublicDirectory(APP_NAME), getApplicationContext().getString(R.string.folder_name_voice_notes));
     }
 
     public static File getAppVidMediaBaseDir() {
@@ -159,7 +164,7 @@ public class Config {
 
     public static File getAppProfilePicsBaseDir() {
         return new File(Environment
-                .getExternalStoragePublicDirectory(APP_NAME), "profile");
+                .getExternalStoragePublicDirectory(APP_NAME), getApplicationContext().getString(R.string.folder_name_profile));
     }
 
     public static File getTempDir() {
@@ -252,4 +257,5 @@ public class Config {
     public static SharedPreferences getPreferences(String s) {
         return getApplicationContext().getSharedPreferences(s, Context.MODE_PRIVATE);
     }
+
 }

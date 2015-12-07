@@ -135,7 +135,7 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
     }
 
 
-    static synchronized void notifyMessageSeen(final Message message) {
+    static  void notifyMessageSeen(final Message message) {
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
@@ -143,7 +143,6 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
                 TaskManager.runJob(job);
             }
         }, false);
-
     }
 
     synchronized static void doNotify(Message message, int state) throws com.parse.ParseException {
@@ -162,9 +161,9 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             throw new RuntimeException(e.getCause());
         }
 
-        if ( messagingClient != null 
-            && messagingClient.isConnected()
-            && LiveCenter.isOnline(message.getFrom())  ) {
+        if (messagingClient != null
+                && messagingClient.isConnected()
+                && LiveCenter.isOnline(message.getFrom())) {
             //use socketsIO
             messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
         } else {
@@ -180,8 +179,8 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        PLog.d(TAG, "push recieved");
-        String data = intent.getStringExtra(ParsePushBroadcastReceiver.KEY_PUSH_DATA);
+        PLog.d(TAG, "incoming message");
+        String data = intent.getStringExtra(KEY_PUSH_DATA);
         PLog.d(TAG, data);
         try {
             JSONObject pushMessage = new JSONObject(data);
@@ -190,7 +189,7 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             if (!tmp.equals(MessageProcessor.SYNC_MESSAGES)) {
                 data = tmp;
             }
-            PLog.d(TAG, "mainPushMessage: %s", data);
+            PLog.d(TAG, "main Message: %s", data);
         } catch (JSONException e) {
             throw new RuntimeException(e.getCause());
         }

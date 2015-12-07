@@ -8,10 +8,10 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.v4.BuildConfig;
+import android.support.v4.app.FragmentActivity;
 
 import java.util.ArrayList;
 import java.util.List;
-
 
 
 /**
@@ -59,7 +59,7 @@ public class MediaUtils {
         Intent attachIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
         attachIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputUri);
         attachIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
-        attachIntent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 7.5*FileUtils.ONE_MB);
+        attachIntent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 7.5 * FileUtils.ONE_MB);
         activity.startActivityForResult(attachIntent, requestCode);
     }
 
@@ -67,7 +67,7 @@ public class MediaUtils {
         Intent attachIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
         attachIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputUri);
         attachIntent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 1);
-        attachIntent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 7.5*FileUtils.ONE_MB);
+        attachIntent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 7.5 * FileUtils.ONE_MB);
         fragment.startActivityForResult(attachIntent, requestCode);
     }
 
@@ -88,5 +88,9 @@ public class MediaUtils {
         } else {
             PLog.d(TAG, "unable to play ringtone");
         }
+    }
+
+    public static void recordAudio(FragmentActivity currentActivity, Uri mMediaUri, int recordAudioRequest) {
+        throw new UnsupportedOperationException();
     }
 }

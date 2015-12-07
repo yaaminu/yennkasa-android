@@ -14,7 +14,7 @@ public class ThreadUtils {
     public static void ensureNotMain() {
         if (BuildConfig.DEBUG) {
             if (isMainThread()) {
-                oops("main thread!");
+                oops("call must be made off the main thread!");
             }
         }
     }

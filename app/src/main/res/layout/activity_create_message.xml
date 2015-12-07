@@ -130,24 +130,101 @@
             </LinearLayout>
         </android.support.v7.widget.CardView>
 
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/padding_ll_login_fragment_right"
-            android:gravity="center"
-            >
+            android:layout_gravity="bottom"
+            android:animateLayoutChanges="true"
+            android:background="@drawable/compose_panel"
+            android:baselineAligned="false"
+            android:gravity="bottom"
+            android:paddingBottom="8dp"
+            android:paddingLeft="@dimen/padding_ll_login_fragment_left"
+            android:paddingRight="@dimen/padding_ll_login_fragment_right"
+            android:paddingTop="8dp"
+            tools:ignore="UnusedAttribute">
 
-            <EditText
-                android:id="@+id/et_message"
-                style="@style/message_edittext_style"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/messge_edit_text_background"
-                android:padding="@dimen/padding_ll_login_fragment_right"
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
+                android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
+                android:adjustViewBounds="true"
+                android:background="@color/transparent"
+                android:onClick="attachCamera"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_msg_panel_smiles"
                 />
-            <!--android:text="lll\nlkklkk\nkklkjkjlkk\nkljklkkjlklk\nkljkljklkklk"-->
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                >
+
+                <EditText
+                    android:id="@+id/et_message"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@color/transparent"
+                    android:gravity="bottom"
+                    android:hint="@string/message_box_hint"
+                    android:inputType="textMultiLine|textLongMessage"
+                    android:maxHeight="@dimen/multiline_text_box_max_height"
+                    android:padding="@dimen/padding_ll_login_fragment_right"
+                    android:textSize="@dimen/edit_text_size"
+                    />
+                <!--android:text="llaaal\nlkklkk\nkklkjkjlkk\nkljklkkjlklk\nkljkljklkklk"-->
+            </LinearLayout>
+
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:adjustViewBounds="true"
+                android:background="@color/transparent"
+                android:onClick="attachCamera"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_photo_camera_black_24dp"
+                />
+
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
+                android:adjustViewBounds="true"
+                android:background="@color/transparent"
+                android:onClick="attachVoiceNote"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_mic_black_24dp"
+                />
+
+            <com.idea.view.FrameLayout
+                android:id="@+id/iv_send"
+                style="@style/FlatButtonRippleStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
+                android:background="@drawable/green_round_back_ground"
+                android:padding="@dimen/padding_ll_login_fragment_bottom"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:adjustViewBounds="true"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_send_white_24dp"/>
+
+            </com.idea.view.FrameLayout>
+
         </LinearLayout>
+
     </com.idea.view.LinearLayout>
 
     <include

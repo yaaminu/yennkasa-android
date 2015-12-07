@@ -29,6 +29,7 @@ import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
 import com.rey.material.widget.Button;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -226,44 +227,54 @@ public class ContactsAdapter extends BaseAdapter {
         final List<ResolveInfo> infos = manager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
 //        List<ResolveInfo> noPairap = new Arr
         PLog.d(TAG, "resolved: " + infos.size());
-        if (infos.isEmpty()) {
-            final UiHelpers.Listener listener = new UiHelpers.Listener() {
+         final UiHelpers.Listener listener = new UiHelpers.Listener() {
                 @Override
                 public void onClick() {
                     SmsManager.getDefault().sendTextMessage("+" + contact.numberInIEE_Format, null, message, null, null);
                 }
             };
+        if (infos.isEmpty()) {
             UiHelpers.showErrorDialog((FragmentActivity) context,
                     context.getString(R.string.charges_may_apply),
                     context.getString(android.R.string.ok),
                     context.getString(android.R.string.cancel),
                     listener, null);
         } else {
-            CharSequence[] titles = new String[infos.size() - 1]; //minus pairapp
-            Drawable[] icons = new Drawable[titles.length];
-            final ActivityInfo[] activityInfos = new ActivityInfo[icons.length];
-            int ourIndex = 0;
+            List<CharSequence> titles = new ArrayList<>();
+            List<Drawable> icons = new ArrayList<>();
+            final List<ActivityInfo> activityInfos = new ArrayList<>();
             for (int i = 0; i < infos.size(); i++) {
                 ActivityInfo activityInfo = infos.get(i).activityInfo;
-                if (context.getPackageName().equals(activityInfo.packageName)) {
-                    continue;
+                String packageName = activityInfo.packageName;
+                if (packageName.contains("whatsapp") || packageName.contains("viber") || packageName.contains("telegram")
+                        || packageName.contains("facebook")
+                        || packageName.contains("twitter")
+                        || packageName.contains("tango")
+                        || packageName.contains("messaging")) {
+                    titles.add(activityInfo.loadLabel(manager));
+                    icons.add(activityInfo.loadIcon(manager));
+                    activityInfos.add(activityInfo);
                 }
-                titles[ourIndex] = activityInfo.loadLabel(manager);
-                icons[ourIndex] = activityInfo.loadIcon(manager);
-                activityInfos[ourIndex] = activityInfo;
-                ourIndex++;
             }
+            if(activityInfos.isEmpty()){
+               UiHelpers.showErrorDialog((FragmentActivity) context,
+                    context.getString(R.string.charges_may_apply),
+                    context.getString(android.R.string.ok),
+                    context.getString(android.R.string.cancel),
+                    listener, null);
+            }else{
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
             SimpleAdapter adapter = new SimpleAdapter(icons, titles);
             builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    ActivityInfo activityInfo = activityInfos[which];
+                    ActivityInfo activityInfo = activityInfos.get(which);
                     intent.setClassName(activityInfo.packageName, activityInfo.name);
                     context.startActivity(intent);
                 }
             }).setTitle(context.getString(R.string.invite_via));
             builder.create().show();
+          }
         }
     }
 

@@ -2,4 +2,5 @@
 <resources>
     <bool name="single_line">true</bool>
     <bool name="isLandscape">false</bool>
+    <bool name="is_very_large">false</bool>
 </resources>

@@ -136,19 +136,20 @@ public class ConversationsFragment extends ListFragment {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
                 final Conversation conversation = ((Conversation) parent.getAdapter().getItem(position));
-                String[] contextMenuOptions = new String[3];
+                String[] contextMenuOptions = new String[4];
 
-                contextMenuOptions[0] = getString(R.string.action_delete_conversation);
+                contextMenuOptions[0] = getString(R.string.clear_messages);
+                contextMenuOptions[1] = getString(R.string.action_delete_conversation);
                 final String peerId = conversation.getPeerId();
                 final UserManager userManager = UserManager.getInstance();
                 String name = userManager.getName(peerId);
                 if (TextUtils.isEmpty(name)) {
                     name = userManager.getName(peerId);
                 }
-                contextMenuOptions[1] = userManager.isBlocked(peerId) ? getString(R.string.unblock, name) :
+                contextMenuOptions[2] = userManager.isBlocked(peerId) ? getString(R.string.unblock, name) :
                         getString(R.string.block, name);
 
-                contextMenuOptions[2] = userManager.isMuted(peerId) ? getString(R.string.unmute, name) :
+                contextMenuOptions[3] = userManager.isMuted(peerId) ? getString(R.string.unmute, name) :
                         getString(R.string.mute, name);
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -167,6 +168,12 @@ public class ConversationsFragment extends ListFragment {
                             case 0:
                                 deleted = conversations.get(position);
                                 if (deleted.getLastMessage() != null) {
+                                    warnAndDelete(getString(R.string.warn_msg_clear_conversation_messages));
+                                }
+                                break;
+                            case 1:
+                                deleted = conversations.get(position);
+                                if (deleted.getLastMessage() != null) {
                                     warnAndDelete();
                                 } else {
                                     realm.beginTransaction();
@@ -175,7 +182,7 @@ public class ConversationsFragment extends ListFragment {
                                     UiHelpers.showToast(R.string.delete_success);
                                 }
                                 break;
-                            case 1:
+                            case 2:
                                 if (userManager.isBlocked(peerId)) {
                                     userManager.unBlockUser(peerId);
                                     UiHelpers.showToast(R.string.user_unblocked);
@@ -184,7 +191,7 @@ public class ConversationsFragment extends ListFragment {
                                     UiHelpers.showToast(R.string.user_blocked);
                                 }
                                 break;
-                            case 2:
+                            case 3:
                                 if (userManager.isMuted(peerId)) {
                                     userManager.unMuteUser(peerId);
                                     UiHelpers.showToast(R.string.unmuted_user);
@@ -273,6 +280,22 @@ public class ConversationsFragment extends ListFragment {
         super.onDestroy();
     }
 
+
+    private void warnAndDelete(String message) {
+        //in case user waits before accepting to delete and while waiting new message arrives we don't want the user
+        //to lose those messages too
+        final Date now = new Date();
+
+        UiHelpers.showStopAnnoyingMeDialog(getActivity(), STOP_ANNOYING_ME,
+                message,
+                getString(android.R.string.ok), getString(R.string.no), new UiHelpers.Listener() {
+                    @Override
+                    public void onClick() {
+                        String peerId = deleted.getPeerId();
+                        cleanMessages(peerId, now);
+                    }
+                }, null);
+    }
 
     private void warnAndDelete() {
         //in case user waits before accepting to delete and while waiting new message arrives we don't want the user

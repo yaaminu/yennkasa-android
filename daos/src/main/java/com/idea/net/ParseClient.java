@@ -17,7 +17,6 @@ import com.idea.data.R;
 import com.idea.data.User;
 import com.idea.util.Config;
 import com.idea.util.FileUtils;
-import com.idea.util.L;
 import com.idea.util.MediaUtils;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
@@ -111,7 +110,7 @@ public class ParseClient implements UserApiV2 {
         Parse.setLogLevel(BuildConfig.DEBUG ? Parse.LOG_LEVEL_VERBOSE : Parse.LOG_LEVEL_NONE);
         /***************************************KEYS***************************************************************************/
 
-        Parse.initialize(application, application.getString(R.string.parse_application_id), application.getString(R.string.parse_client_key));
+                Parse.initialize(application,"RcCxnXwO1mpkSNrU9u4zMtxQac4uabLNIFa662ZY","f1ad1Vfjisr7mVBDSeoFO1DobD6OaLkggHvT2Nk4");
 
         /******************************************************************************************************************/
     }
@@ -152,7 +151,6 @@ public class ParseClient implements UserApiV2 {
         String _id = user.getUserId(),
                 name = user.getName(),
                 country = user.getCountry();
-        token = genVerificationToken();
         if (true) {
             user.setDP("avartarempty");
             notifyCallback(callback, null, user);
@@ -168,7 +166,6 @@ public class ParseClient implements UserApiV2 {
             parseUser.put(FIELD_COUNTRY, country);
             parseUser.put(FIELD_ACCOUNT_CREATED, new Date());
             parseUser.put(FIELD_LAST_ACTIVITY, new Date());
-            parseUser.put(FIELD_TOKEN, "" + token);
             parseUser.put(FIELD_VERIFIED, false);
             parseUser.put(FIELD_DP, "avatar_empty");
             parseUser.signUp();
@@ -219,7 +216,7 @@ public class ParseClient implements UserApiV2 {
 
     @Override
     public void logIn(final User user, final Callback<User> callback) {
-        L.d(TAG, "logging in user: " + user.getUserId());
+        PLog.d(TAG, "logging in user: " + user.getUserId());
 //         if (true) {
 //             User copy = User.copy(user);
 //             copy.setName("@unnamed");
@@ -245,8 +242,6 @@ public class ParseClient implements UserApiV2 {
                 ParseUser.logOut();
             }
             parseUser = ParseUser.logIn(user.getUserId(), makePass(user));
-            token = genVerificationToken();
-            parseUser.put(FIELD_TOKEN, "" + token);
             parseUser.put(FIELD_VERIFIED, false);
             user = parseObjectToUser(parseUser);
             parseUser.save();
@@ -589,7 +584,7 @@ public class ParseClient implements UserApiV2 {
     }
 
     private void doRemoveMembersFromGroup(@Path(Message.FIELD_ID) String id, @Field(User.FIELD_MEMBERS) List<String> members, Callback<HttpResponse> response) {
-        if (members.size() > 0) {
+        if (members.size() <= 0) {
             notifyCallback(response, new Exception("at least one member is required"), new HttpResponse(400, " bad request"));
             return;
         }
@@ -641,12 +636,28 @@ public class ParseClient implements UserApiV2 {
 
     private void doVerifyUser(@Path("id") String userId, @Field("token") String token, Callback<SessionData> callback) {
         try {
-            ParseObject object = makeUserParseQuery().whereEqualTo(FIELD_ID, userId).whereEqualTo(FIELD_TOKEN, token).getFirst();
-            object.put(FIELD_VERIFIED, true);
-            object.save();
-            registerForPushes(userId);
-            final String accessToken = ParseInstallation.getCurrentInstallation().getObjectId();
-            notifyCallback(callback, null, new SessionData(FileUtils.hash(accessToken.getBytes()), userId));
+            ParseObject object = ParseUser.getCurrentUser();
+            if (object == null) {
+                throw new IllegalStateException("user cannot be null");
+            }
+            if (!object.has(FIELD_TOKEN)) {
+                throw new IllegalStateException("token not sent");
+            }
+
+            String token1 = object.getString(FIELD_TOKEN);
+            if (token1 == null || token.isEmpty()) {
+                throw new IllegalStateException("token malformed");
+            }
+            if (token1.equals(token)) {
+                object.put(FIELD_VERIFIED, true);
+                object.save();
+                registerForPushes(userId);
+                final String accessToken = ParseInstallation.getCurrentInstallation().getObjectId();
+                notifyCallback(callback, null, new SessionData(FileUtils.hash(accessToken.getBytes()), userId));
+            } else {
+                String errorMessage = Config.getApplicationContext().getString(R.string.invalid_verification_code);
+                notifyCallback(callback, new Exception(errorMessage), null);
+            }
         } catch (ParseException e) {
             int errorCode = e.getCode();
             int errorMessageRes;
@@ -677,8 +688,11 @@ public class ParseClient implements UserApiV2 {
 
     private synchronized void doResendToken(@Path("id") String userId, @Field("password") String password, Callback<HttpResponse> response) {
         try {
-            token = genVerificationToken();
-            ParseObject object = makeUserParseQuery().whereEqualTo(FIELD_ID, userId).getFirst();
+            int token = genVerificationToken();
+            ParseObject object = ParseUser.getCurrentUser();
+            if (object == null) {
+                throw new IllegalStateException("user cannot be null");
+            }
             object.put(FIELD_TOKEN, "" + token);
             object.save();
             sendToken(userId, token);
@@ -871,17 +885,19 @@ public class ParseClient implements UserApiV2 {
         object.saveEventually();
     }
 
-    private static volatile int token = -1;
-
     @Override
-    public synchronized void sendVerificationToken(String userId, Callback<HttpResponse> callback) {
-        ParseObject object = ParseUser.getCurrentUser();
-        if (object == null) {
-            throw new IllegalStateException("user cannot be null");
-        }
-        token = Integer.parseInt(object.getString(PARSE_CONSTANTS.FIELD_TOKEN));
-        sendToken(userId, token);
-        notifyCallback(callback, null, new HttpResponse(200, "sent token"));
+    public synchronized void sendVerificationToken(final String userId, final Callback<HttpResponse> callback) {
+        TaskManager.execute(new Runnable() {
+            public void run() {
+//                ParseObject object = ParseUser.getCurrentUser();
+//                if (object == null) {
+//                    throw new IllegalStateException("user cannot be null");
+//                }
+//                int token = Integer.parseInt(object.getString(PARSE_CONSTANTS.FIELD_TOKEN));
+//                sendToken(userId, token);
+                notifyCallback(callback, null, new HttpResponse(200, "sent token"));
+            }
+        }, true);
     }
 
     @Override

@@ -26,7 +26,6 @@
                     android:layout_height="wrap_content"
                     android:background="?attr/colorPrimary"
                     android:clipToPadding="false"
-                    android:foregroundGravity="center_vertical"
                     android:minHeight="?attr/actionBarSize"/>
 
                 <com.idea.view.CustomViewPager

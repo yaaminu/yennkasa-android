@@ -16,21 +16,29 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.util.Pair;
 
 import com.idea.Errors.PairappException;
 import com.idea.data.Message;
 import com.idea.data.UserManager;
 import com.idea.net.ParseClient;
+import com.idea.net.sockets.SocketIoClient;
 import com.idea.pairapp.BuildConfig;
 import com.idea.pairapp.R;
 import com.idea.ui.ChatActivity;
 import com.idea.util.Config;
-import com.idea.util.L;
 import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
 import com.idea.util.ThreadUtils;
+import com.sinch.android.rtc.PushPair;
+import com.sinch.android.rtc.SinchClient;
+import com.sinch.android.rtc.messaging.MessageClient;
+import com.sinch.android.rtc.messaging.MessageClientListener;
+import com.sinch.android.rtc.messaging.MessageDeliveryInfo;
+import com.sinch.android.rtc.messaging.MessageFailureInfo;
+import com.sinch.android.rtc.messaging.WritableMessage;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -57,19 +65,21 @@ public class PairAppClient extends Service {
     static final String VERSION = "version";
     public static final int not_id = 10987;
     static final int notId = 10983;
+    public static final String ACTION_START_SINCH_CLIENT = "sinchClientStartProblem";
     private static Dispatcher<Message> SOCKETSIO_DISPATCHER;
     private static AtomicBoolean isClientStarted = new AtomicBoolean(false);
     private static MessagesProvider messageProvider = new ParseMessageProvider();
     private static Stack<Activity> backStack = new Stack<>();
     private PairAppClientInterface INTERFACE;// = new PairAppClientInterface();
-    private Dispatcher<Message> PARSE_MESSAGE_DISPATCHER;
+    private Dispatcher<Message> PARSE_MESSAGE_DISPATCHER, SINCHDISPATCHER;
     private WorkerThread WORKER_THREAD;
     private static Map<String, String> credentials;
+    private SinchClient client;
 
 
     public static void startIfRequired(Context context) {
         if (!UserManager.getInstance().isUserVerified()) {
-            L.w(TAG, " pariapp client wont start when a user is not logged in");
+            PLog.w(TAG, " pariapp client wont start when a user is not logged in");
             return;
         }
         if (!isClientStarted.get()) {
@@ -111,12 +121,10 @@ public class PairAppClient extends Service {
                 @Override
                 public void run() {
                     LiveCenter.stop();
-                    MessageCenter.stopListeningForSocketMessages();
                     if (SOCKETSIO_DISPATCHER != null) {
                         SOCKETSIO_DISPATCHER.close();
                         SOCKETSIO_DISPATCHER = null;
                     }
-                    NotificationManager.INSTANCE.reNotifyForReceivedMessages();
                 }
             }, false);
         }
@@ -132,18 +140,11 @@ public class PairAppClient extends Service {
             TaskManager.executeNow(new Runnable() {
                 @Override
                 public void run() {
-                    NotificationManager.INSTANCE.clearAllMessageNotifications();
                     LiveCenter.start();
-                    MessageCenter.startListeningForSocketMessages();
                 }
             }, true);
         }
         backStack.add(activity);
-    }
-
-    public static void notifyMessageSeen(Message message) {
-        ensureUserLoggedIn();
-        MessageCenter.notifyMessageSeen(Message.copy(message));
     }
 
     private static void ensureUserLoggedIn() {
@@ -157,10 +158,12 @@ public class PairAppClient extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        if (WORKER_THREAD == null || !WORKER_THREAD.isAlive()) {
-            WORKER_THREAD = new WorkerThread();
-            WORKER_THREAD.start();
+        if (WORKER_THREAD != null && WORKER_THREAD.isAlive()) {
+            WORKER_THREAD.quit();
         }
+
+        WORKER_THREAD = new WorkerThread();
+        WORKER_THREAD.start();
         if (!updateLock.tryAcquire()) {
             PLog.d(TAG, "update lock held, deferring update check from prefs");
             return;
@@ -244,11 +247,21 @@ public class PairAppClient extends Service {
         }
 
         PLog.i(TAG, "starting pairapp client");
+        if (intent != null) {
+            String action = intent.getStringExtra(ACTION);
+            if (action != null
+                    && action.equals(ACTION_START_SINCH_CLIENT)
+                    && isClientStarted.get()) {
+                android.os.Message message = android.os.Message.obtain();
+                message.what = MessageHandler.START_SINCH;
+                WORKER_THREAD.handler.sendMessage(message);
+            }
 //        if (intent != null && isClientStarted.get()) {
 //            if (intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
 //                attemptToSendAllUnsentMessages();
 //            }
 //        }
+        }
         return START_STICKY;
     }
 
@@ -270,19 +283,34 @@ public class PairAppClient extends Service {
 
     @Override
     public void onDestroy() {
-        WORKER_THREAD.shutDown();
+        WORKER_THREAD.attemptShutDown();
         super.onDestroy();
     }
 
     private synchronized void bootClient() {
+        ThreadUtils.ensureNotMain();
         if (!isClientStarted.get()) {
             INTERFACE = new PairAppClientInterface();
             PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance(credentials, monitor);
+            setUpSinch();
             isClientStarted.set(true);
+//            MessageCenter.startListeningForSocketMessages();
         }
     }
 
+    private void setUpSinch() {
+        client = SinchUtils.makeSinchClient(this, UserManager.getMainUserId());
+        client.setSupportMessaging(true);
+        client.setSupportActiveConnectionInBackground(true);
+        client.startListeningOnActiveConnection();
+        client.start();
+        MessageClient messageClient = client.getMessageClient();
+        SINCHDISPATCHER = SinchDispatcher.createInstance(credentials, monitor, messageClient);
+        messageClient.addMessageClientListener(new IncomingMessageListener());
+    }
+
     private synchronized void shutDown() {
+        ThreadUtils.ensureNotMain();
         if (isClientStarted.get()) {
             if (PARSE_MESSAGE_DISPATCHER != null) {
                 PARSE_MESSAGE_DISPATCHER.close();
@@ -291,13 +319,16 @@ public class PairAppClient extends Service {
             if (SOCKETSIO_DISPATCHER != null) {
                 SOCKETSIO_DISPATCHER.close();
             }
-            MessageCenter.stopListeningForSocketMessages();
+            SINCHDISPATCHER.close();
+            client.stopListeningOnActiveConnection();
+            client.terminateGracefully();
+//            MessageCenter.stopListeningForSocketMessages();
             isClientStarted.set(false);
             PLog.i(TAG, TAG + ": bye");
             INTERFACE = null;
             return;
         }
-        L.w(TAG, "shutting down pairapp client when it is already shut down");
+        PLog.w(TAG, "shutting down pairapp client when it is already shut down");
     }
 
     private void attemptToSendAllUnsentMessages() {
@@ -398,14 +429,15 @@ public class PairAppClient extends Service {
                 throw new RuntimeException(e.getCause());
             }
         }
-        if (LiveCenter.isOnline(message.getTo()) && !UserManager.getInstance().isGroup(message.getTo())) {
-            if (SOCKETSIO_DISPATCHER == null) {
-                SOCKETSIO_DISPATCHER = SocketsIODispatcher.getInstance(credentials, monitor);
-            }
-            SOCKETSIO_DISPATCHER.dispatch(message);
-        } else {
-            PARSE_MESSAGE_DISPATCHER.dispatch(message);
-        }
+//        if (LiveCenter.isOnline(message.getTo()) && !UserManager.getInstance().isGroup(message.getTo())) {
+//            if (SOCKETSIO_DISPATCHER == null) {
+//                SOCKETSIO_DISPATCHER = SocketsIODispatcher.getInstance(credentials, monitor);
+//            }
+//            SOCKETSIO_DISPATCHER.dispatch(message);
+//        } else {
+//            PARSE_MESSAGE_DISPATCHER.dispatch(message);
+//        }
+        SINCHDISPATCHER.dispatch(message);
     }
 
 
@@ -450,6 +482,17 @@ public class PairAppClient extends Service {
             Worker.download(PairAppClient.this, message);
         }
 
+        public void notifyMessageSeen(Message message) {
+//            MessageCenter.notifyMessageSeen(Message.copy(message));
+            if (message.getState() != Message.STATE_SEEN) {
+                message = Message.copy(message);
+                android.os.Message message1 = android.os.Message.obtain();
+                message1.what = MessageHandler.NOTIFY_MESSAGE_SEEN;
+                message1.obj = message;
+                WORKER_THREAD.handler.sendMessage(message1);
+            }
+        }
+
         public void registerUINotifier(final Notifier notifier) {
             NotificationManager.INSTANCE.registerUI_Notifier(notifier);
         }
@@ -472,8 +515,8 @@ public class PairAppClient extends Service {
 
         @Override
         protected void onLooperPrepared() {
-            bootClient();
             handler = new MessageHandler(getLooper());
+            bootClient();
             attemptToSendAllUnsentMessages();
         }
 
@@ -495,7 +538,7 @@ public class PairAppClient extends Service {
             }
         }
 
-        public synchronized void shutDown() {
+        private void attemptShutDown() {
             android.os.Message message = android.os.Message.obtain();
             message.what = MessageHandler.SHUT_DOWN;
             handler.sendMessage(message);
@@ -514,7 +557,7 @@ public class PairAppClient extends Service {
     }
 
     private class MessageHandler extends Handler {
-        public static final int SEND_MESSAGE = 0x0, SEND_BATCH = 0x01, SHUT_DOWN = 0x2;
+        private static final int SEND_MESSAGE = 0x0, SEND_BATCH = 0x01, SHUT_DOWN = 0x2, START_SINCH = 0x3, NOTIFY_MESSAGE_SEEN = 0x4;
 
         public MessageHandler(Looper looper) {
             super(looper);
@@ -540,6 +583,39 @@ public class PairAppClient extends Service {
                         Looper.myLooper().quit();
                     }
                     break;
+                case START_SINCH:
+                    if (client == null) {
+                        setUpSinch();
+                    } else {
+                        client.start();
+                    }
+                    break;
+                case NOTIFY_MESSAGE_SEEN:
+                    Message message = (Message) msg.obj;
+                    if (Message.isGroupMessage(message)) {
+                        PLog.d(TAG, "message status of group message are not sent");
+                        return;
+                    }
+                    JSONObject obj = new JSONObject();
+                    try {
+                        obj.put(SocketIoClient.PROPERTY_TO, message.getFrom());
+                        obj.put(SocketIoClient.MSG_STS_MESSAGE_ID, message.getId());
+                        obj.put(SocketIoClient.MSG_STS_STATUS, Message.STATE_SEEN);
+                        obj.put(SocketIoClient.PROPERTY_FROM, message.getTo());
+                        obj.put(MessageProcessor.MESSAGE_STATUS, "messageStatus");
+                        client.getMessageClient().send(new WritableMessage(message.getFrom(), obj.toString()));
+                        Realm realm = Message.REALM(PairAppClient.this);
+                        message = realm.where(Message.class).equalTo(Message.FIELD_ID, message.getId()).findFirst();
+                        if (message != null) {
+                            realm.beginTransaction();
+                            message.setState(Message.STATE_SEEN);
+                            realm.commitTransaction();
+                        }
+                        realm.close();
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e.getCause());
+                    }
+                    break;
                 default:
                     throw new AssertionError("unknown signal");
             }
@@ -562,4 +638,40 @@ public class PairAppClient extends Service {
         }
     }
 
+
+    private class IncomingMessageListener implements MessageClientListener {
+
+        @Override
+        public void onIncomingMessage(MessageClient messageClient, com.sinch.android.rtc.messaging.Message message) {
+           PLog.d(TAG, "message received from %s", message.getTextBody());
+           Intent intent;
+           intent = new Intent(Config.getApplicationContext(), MessageProcessor.class);
+           intent.putExtra(MessageCenter.KEY_MESSAGE, message.getTextBody());
+           startService(intent);
+            // Context applicationContext = Config.getApplicationContext();
+            // Intent intent = new Intent(applicationContext, MessageCenter.class);
+            // intent.putExtra(MessageCenter.KEY_PUSH_DATA, message.getTextBody());
+            // LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent);
+        }
+
+        @Override
+        public void onMessageSent(MessageClient messageClient, com.sinch.android.rtc.messaging.Message message, String s) {
+
+        }
+
+        @Override
+        public void onMessageFailed(MessageClient messageClient, com.sinch.android.rtc.messaging.Message message, MessageFailureInfo messageFailureInfo) {
+
+        }
+
+        @Override
+        public void onMessageDelivered(MessageClient messageClient, MessageDeliveryInfo messageDeliveryInfo) {
+
+        }
+
+        @Override
+        public void onShouldSendPushData(MessageClient messageClient, com.sinch.android.rtc.messaging.Message message, List<PushPair> list) {
+
+        }
+    }
 }

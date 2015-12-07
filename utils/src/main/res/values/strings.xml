@@ -10,4 +10,7 @@
     <string name="error_saving">Error saving file</string>
     <string name="gigabytes"> GB</string>
     <string name="error">Pairapp Error</string>
+    <string name="folder_name_files">Files</string>
+    <string name="folder_name_voice_notes">Voice Notes</string>
+    <string name="folder_name_profile">profile</string>
 </resources>

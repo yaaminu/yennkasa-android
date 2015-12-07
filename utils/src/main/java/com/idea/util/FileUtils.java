@@ -45,15 +45,25 @@ import static org.apache.commons.io.FileUtils.ONE_KB;
 public class FileUtils {
     public static final String TAG = FileUtils.class.getSimpleName();
     public static final int MEDIA_TYPE_IMAGE = 0x0;
-    public static final int MEDIA_TYPE_VIDEO = 0x1;
+    public static final int MEDIA_TYPE_VIDEO = 0x1, MEDIA_TYPE_AUDIO = 0x2;
     public static final long ONE_MB = org.apache.commons.io.FileUtils.ONE_MB;
 
     public static Uri getOutputUri(int mediaType) throws IOException {
-        if (mediaType != MEDIA_TYPE_IMAGE && mediaType != MEDIA_TYPE_VIDEO) {
-            throw new IllegalArgumentException("you can only pass either: " + MEDIA_TYPE_IMAGE + " or " + MEDIA_TYPE_VIDEO);
-        }
-        StringBuilder pathBuilder = new StringBuilder((mediaType == MEDIA_TYPE_IMAGE) ? "IMG_" : "VID_");
-        File file = (mediaType == MEDIA_TYPE_IMAGE) ? Config.getAppImgMediaBaseDir() : Config.getAppVidMediaBaseDir();
+
+        File file;//(mediaType == MEDIA_TYPE_IMAGE) ?  : Config.getAppVidMediaBaseDir();
+        StringBuilder pathBuilder;
+        if (mediaType == MEDIA_TYPE_IMAGE) {
+            pathBuilder = new StringBuilder("IMG_");
+            file = Config.getAppImgMediaBaseDir();
+        } else if (mediaType == MEDIA_TYPE_VIDEO) {
+            pathBuilder = new StringBuilder("VID_");
+            file = Config.getAppVidMediaBaseDir();
+        } else if (mediaType == MEDIA_TYPE_AUDIO) {
+            pathBuilder = new StringBuilder("AUD_");
+            file = Config.appAudioBaseDir();
+        } else{
+            throw new IllegalStateException("unknown media type");}
+
         Date now = new Date();
         pathBuilder.append(new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(now));
         switch (mediaType) {
@@ -62,6 +72,9 @@ public class FileUtils {
                 return doCreateOutputFile(pathBuilder.toString(), file);
             case MEDIA_TYPE_VIDEO:
                 pathBuilder.append(".mp4");
+                return doCreateOutputFile(pathBuilder.toString(), file);
+            case MEDIA_TYPE_AUDIO:
+                pathBuilder.append(".amr");
                 return doCreateOutputFile(pathBuilder.toString(), file);
             default:
                 return null;

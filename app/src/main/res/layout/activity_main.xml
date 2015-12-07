@@ -22,10 +22,9 @@
                 <com.google.samples.apps.iosched.ui.widget.SlidingTabLayout
                     android:id="@+id/pts_title_strip"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="?attr/actionBarSize"
                     android:background="?attr/colorPrimary"
                     android:clipToPadding="false"
-                    android:foregroundGravity="center_vertical"
                     android:minHeight="?attr/actionBarSize"/>
 
                 <com.idea.view.CustomViewPager
@@ -51,10 +50,11 @@
     <com.rey.material.widget.SnackBar
         android:id="@+id/notification_bar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorPrimary"
+        android:layout_height="?attr/actionBarSize"
         android:minHeight="?attr/actionBarSize"
         android:visibility="gone"
         app:sb_actionText="@string/close"
-        app:sb_actionTextColor="@color/white"/>
+        app:sb_actionTextColor="@color/white"
+        app:sb_ellipsize="end"
+        app:sb_textColor="@color/white"/>
 </com.idea.view.FrameLayout>

@@ -3,8 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_margin="@dimen/padding_ll_login_fragment_bottom"
-    android:layout_marginTop="@dimen/activity_vertical_margin"
+    android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
+    android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
+    android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
+    android:layout_marginTop="@dimen/padding_ll_login_fragment_bottom"
     android:gravity="center_horizontal"
     android:orientation="vertical"
     android:weightSum="1"
@@ -12,8 +14,6 @@
 
     <EditText
         android:id="@+id/et_feedback_subject"
-        style="@style/Material.Widget.EditText.Light"
-
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ellipsize="end"
@@ -37,12 +37,14 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
         android:gravity="center_vertical">
 
         <com.rey.material.widget.CheckBox
             android:id="@+id/cb_checked"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:checked="true"
             />
 
@@ -50,22 +52,22 @@
             android:id="@+id/tv_add_device_info"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:layout_weight="1"
             android:text="@string/add_device_info"
             android:textColor="@color/black"
             android:textSize="@dimen/standard_text_size"/>
-
-
-        <com.rey.material.widget.Button
-            android:id="@+id/bt_submit"
-            style="@style/FlatWaveColorButtonRippleStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/button_background"
-            android:padding="@dimen/padding_button"
-            android:text="@string/submit"
-            android:textColor="@color/white"
-            android:textSize="@dimen/standard_text_size"/>
     </LinearLayout>
+
+    <com.rey.material.widget.Button
+        android:id="@+id/bt_submit"
+        style="@style/round_button_style_no_weight"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/big_button_height"
+        android:padding="@dimen/padding_button"
+        android:text="@string/submit"
+        android:textColor="@color/white"
+        android:textSize="@dimen/standard_text_size"/>
 
 </LinearLayout>

@@ -1,17 +1,19 @@
 package com.idea.ui;
 
+import android.annotation.TargetApi;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.res.Configuration;
 import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Vibrator;
 import android.support.v4.util.Pair;
 import android.text.Spanned;
@@ -30,11 +32,15 @@ import com.idea.util.Config;
 import com.idea.util.LiveCenter;
 import com.idea.util.MediaUtils;
 import com.idea.util.PLog;
+import com.idea.util.TaskManager;
 import com.idea.util.UiHelpers;
 import com.rey.material.widget.SnackBar;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.realm.Realm;
 
@@ -45,6 +51,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     public static final int DELAY_MILLIS = 2000;
     public static final String TAG = PairAppActivity.class.getSimpleName();
     static private volatile Message latestMessage;
+    private static Timer timer;
     protected PairAppClient.PairAppClientInterface pairAppClientInterface;
     protected boolean bound = false;
 
@@ -249,11 +256,27 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
 
         if (!userManager.isMuted(userId)) {
-            playNewMessageTone(this);
-            vibrateIfAllowed(this);
+            if (shouldPlayTone.getAndSet(false)) {
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (!shouldPlayTone.get()) //hopefully we might avoid race conditions
+                            shouldPlayTone.set(true);
+                    }
+                }, 3000);
+                TaskManager.executeNow(new Runnable() {
+                    public void run() {
+                        playNewMessageTone(PairAppActivity.this);
+                        vibrateIfAllowed(PairAppActivity.this);
+                    }
+                }, false);
+            }
+
         }
         snackBar.removeOnDismiss(true).show(this);
     }
+
+    private final AtomicBoolean shouldPlayTone = new AtomicBoolean(true);
 
     @Override
     public final location where() {
@@ -285,7 +308,12 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         if (peerId == null) {
             throw new IllegalArgumentException("peer id is null!");
         }
-        LiveCenter.invalidateNewMessageCount(peerId);
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                LiveCenter.invalidateNewMessageCount(peerId);
+            }
+        }, false);
     }
 
     protected abstract SnackBar getSnackBar();
@@ -323,7 +351,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         MediaUtils.playTone(context, uri);
     }
 
-    public static final int VIBRATION_DURATION = 500;
+    public static final int VIBRATION_DURATION = 150;
 
     private static void vibrateIfAllowed(Context context) {
         if (UserManager.getInstance().getBoolPref(UserManager.VIBRATE, false)) {
@@ -333,14 +361,35 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 if (vibrator.hasVibrator()) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         AudioAttributes audioAttributes = new AudioAttributes.Builder().setFlags(AudioAttributes.USAGE_NOTIFICATION).build();
-                        vibrator.vibrate(VIBRATION_DURATION, audioAttributes);
+                        doVibrate(vibrator, audioAttributes);//.vibrate(VIBRATION_DURATION, audioAttributes);
                     } else {
-                        vibrator.vibrate(VIBRATION_DURATION);
+                        doVibrate(vibrator, null);
                     }
                 }
             } else {
-                vibrator.vibrate(VIBRATION_DURATION);
+                doVibrate(vibrator, null);
             }
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private static void doVibrate(final Vibrator vibrator, final AudioAttributes attributes) {
+        final Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                if (attributes == null) {
+                    vibrator.vibrate(VIBRATION_DURATION);
+                } else {
+                    vibrator.vibrate(VIBRATION_DURATION, attributes);
+                }
+                timer.cancel();
+            }
+        }, 500);
+        if (attributes == null) {
+            vibrator.vibrate(VIBRATION_DURATION);
+        } else {
+            vibrator.vibrate(VIBRATION_DURATION, attributes);
         }
     }
 
@@ -349,9 +398,4 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-//        newConfig.
-//        super.onConfigurationChanged(newConfig);
-    }
 }

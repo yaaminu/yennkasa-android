@@ -3,6 +3,7 @@ package com.idea.ui;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
@@ -37,8 +38,7 @@ public class ImageCropper extends PairAppActivity {
     private int mAspectRatioX = DEFAULT_ASPECT_RATIO_VALUES;
     private int mAspectRatioY = DEFAULT_ASPECT_RATIO_VALUES;
     private CropImageView cropImageView;
-    Bitmap croppedImage;
-    ProgressDialog dialog;
+    private ProgressDialog dialog;
 
     // Saves the state upon rotating the screen/restarting the activity
     @Override
@@ -99,33 +99,37 @@ public class ImageCropper extends PairAppActivity {
 
 
     private void tryCropAndReturn() {
-        croppedImage = cropImageView.getCroppedImage();
+        Bitmap croppedImage = cropImageView.getCroppedImage();
         int height = croppedImage.getHeight(), width = croppedImage.getWidth();
         if (((double) height) / width > 1.5) {
             UiHelpers.showPlainOlDialog(ImageCropper.this, getString(R.string.image_too_narrow));
         } else if (((double) width) / height > 1.5) {
             UiHelpers.showPlainOlDialog(ImageCropper.this, getString(R.string.image_too_short));
         } else {
-            TaskManager.executeNow(new Runnable() {
-                @Override
-                public void run() {
-                    final File file = new File(Config.getTempDir(), SimpleDateUtil.timeStampNow() + ".jpg");
-                    try {
-                        croppedImage.compress(Bitmap.CompressFormat.JPEG, 100, new FileOutputStream(file));
-                        Intent intent = new Intent();
-                        intent.setData(Uri.fromFile(file));
-                        setResult(RESULT_OK, intent);
-                        finish();
-                    } catch (FileNotFoundException e) {
-                        runOnUiThread(new Runnable(){
-                            public void run(){
-                                UiHelpers.showPlainOlDialog(ImageCropper.this, getString(R.string.error_unable_to_crop));
-                            }
-                        });
-                    }
-                }
-            }, false);
+            doCrop(croppedImage);
         }
+    }
+
+    private void doCrop(final Bitmap croppedImage) {
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                final File file = new File(Config.getTempDir(), SimpleDateUtil.timeStampNow() + ".jpg");
+                try {
+                    croppedImage.compress(Bitmap.CompressFormat.JPEG, 100, new FileOutputStream(file));
+                    Intent intent = new Intent();
+                    intent.setData(Uri.fromFile(file));
+                    setResult(RESULT_OK, intent);
+                    finish();
+                } catch (FileNotFoundException e) {
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            UiHelpers.showPlainOlDialog(ImageCropper.this, getString(R.string.error_unable_to_crop));
+                        }
+                    });
+                }
+            }
+        }, false);
     }
 
     private final Target target = new Target() {
@@ -137,18 +141,38 @@ public class ImageCropper extends PairAppActivity {
             dialog.show();
         }
 
+        DialogInterface.OnClickListener finishListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                setResult(RESULT_CANCELED);
+                finish();
+            }
+        };
+
         @Override
         public void onBitmapLoaded(Bitmap arg0, LoadedFrom arg1) {
+            int height = arg0.getHeight(),
+                    width = arg0.getWidth();
             dialog.dismiss();
-            ViewUtils.showViews(findViewById(R.id.ll_bt_panel));
-            cropImageView.setImageBitmap(arg0);
+            if (height < 512 || width < 512) {
+                if (((double) height) / width > 1.5) {
+                    UiHelpers.showPlainOlDialog(ImageCropper.this, getString(R.string.image_too_narrow), finishListener, false);
+                } else if (((double) width) / height > 1.5) {
+                    UiHelpers.showPlainOlDialog(ImageCropper.this, getString(R.string.image_too_short), finishListener, false);
+                } else {
+                    doCrop(arg0);
+                }
+            } else {
+                ViewUtils.showViews(findViewById(R.id.ll_bt_panel));
+                cropImageView.setImageBitmap(arg0);
+            }
         }
 
         @Override
         public void onBitmapFailed(Drawable arg0) {
             dialog.dismiss();
             AlertDialog.Builder builder = new AlertDialog.Builder(ImageCropper.this);
-            builder.setTitle(R.string.error).setMessage(R.string.error_failed_to_open_image).setPositiveButton(android.R.string.ok, null).create().show();
+            builder.setTitle(R.string.error).setMessage(R.string.error_failed_to_open_image).setPositiveButton(android.R.string.ok, finishListener).create().show();
         }
     };
 }

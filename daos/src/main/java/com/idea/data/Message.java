@@ -68,6 +68,7 @@ public class Message extends RealmObject {
             FIELD_MESSAGE_BODY = "messageBody";
     private static final String TAG = Message.class.getSimpleName();
     private final static Object idLock = new Object();
+    public static final String SENDABLE_MESSAGE = "sendableMessage";
     @PrimaryKey
     private String id;
     @Index

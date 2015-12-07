@@ -157,7 +157,7 @@
     <string name="add_custom">Add custom number</string>
     <string name="add_custom_number">You can add other users who are not in your contacts by adding their numbers directly.\n They only have to be registered members of PairApp. It\'s that simple! :-)</string>
     <string name="title_activity_create_message">New Message</string>
-    <string name="message_box_hint">type message here…</string>
+    <string name="message_box_hint">message here…</string>
     <string name="st_group_name_hit">Name, e.g Brothers From One Hood</string>
     <string name="content_description_remove_attachment">remove attachment</string>
     <string name="send_to">Send to…</string>
@@ -207,7 +207,7 @@
     <string name="preferences">Preferences</string>
     <string name="error_use_file_manager">An error occurred while processing the attachment. Try using a file manager to pick the file if the problem persists</string>
     <string name="restore_defaults">Restore defaults</string>
-    <string name="feedback_subject">Optional subject, must be <![CDATA[<=]]> 40 characters</string>
+    <string name="feedback_subject">Title (optional)</string>
     <string name="helper_feedback_subject">at most 40 letters</string>
     <string name="feedback_here">Feedback Here</string>
     <string name="add_device_info">Include System Information</string>
@@ -259,21 +259,26 @@
     <string name="stop_annoying_me">stop annoying me</string>
     <string name="content_des_send_message_agin">retry sending message</string>
     <string name="retry_sending_message">Retry sending message</string>
-    <string name="blocked_user_notice">Sending a message to this blocked user, you agree that this user will be automatically unblocked</string>
+    <string name="blocked_user_notice">By sending a message to this blocked user, you agree that this user will be automatically unblocked</string>
     <string name="user_unblocked">unblocked successfully</string>
     <string name="delete_success">Deleted successfully</string>
     <string name="user_blocked">blocked successfully</string>
-    <string name="unmuted_user">success</string>
-    <string name="muted_user">success</string>
+    <string name="unmuted_user">un-muted</string>
+    <string name="muted_user">muted</string>
     <string name="mute">Mute %s</string>
-    <string name="unmute">Unmute %s</string>
+    <string name="unmute">Un-mute %s</string>
     <string name="attach_failed_feedback">failed to attach file</string>
     <string name="attachment_added_feedback">attachment added</string>
     <string name="max_attachment_reached">maximum of 5 attachments can be added per report</string>
     <string name="action_delete">Delete message</string>
     <string name="verification_failed">verification failed</string>
-    <string name="already_downloading">already_downloading</string>
+    <string name="already_downloading">already downloading</string>
     <string name="uploading">uploading</string>
     <string name="err_message_not_found">The message you selected was not found, did you delete it?</string>
     <string name="token_invalid">Token is not valid,Check your SMS inbox for the token.</string>
+    <string name="agree">I agree</string>
+    <string name="disagree">Disagree</string>
+    <string name="err_problem_setting_sinch_up">We are facing problems setting things up, ensure your device\'s date is set properly</string>
+    <string name="warn_msg_clear_conversation_messages">Sure you want to clear all messages in this conversation?</string>
+    <string name="clear_messages">Clear messages</string>
 </resources>

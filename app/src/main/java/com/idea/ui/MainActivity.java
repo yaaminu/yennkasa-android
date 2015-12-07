@@ -107,7 +107,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         //noinspection unused
         ToolbarManager toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         pager.setAdapter(new MyFragmentStatePagerAdapter(getSupportFragmentManager()));
-        boolean distributeEvenly = getResources().getBoolean(R.bool.is_big_screen) || getResources().getBoolean(R.bool.isLandscape);
+        boolean distributeEvenly = getResources().getBoolean(R.bool.is_very_large) || getResources().getBoolean(R.bool.isLandscape);
         tabStrip.setDistributeEvenly(distributeEvenly);
         tabStrip.setCustomTabView(R.layout.tab_view, android.R.id.text1);
         tabStrip.setSelectedIndicatorColors(getResources().getColor(R.color.white));
@@ -263,7 +263,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                 testMessageProcessor(RealmUtils.seedIncomingMessages("233", UserManager.getMainUserId()));
             }
         };
-        timer.scheduleAtFixedRate(task, 5000, 5000);
+      //  timer.scheduleAtFixedRate(task, 5000, 45000);
     }
 
     static Timer timer;

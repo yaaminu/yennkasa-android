@@ -20,6 +20,8 @@ import org.json.JSONObject;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import io.realm.Realm;
 import io.realm.exceptions.RealmException;
@@ -31,6 +33,7 @@ public class MessageProcessor extends IntentService {
     private static final String UNKNOWN = "unknown";
     static final String MESSAGE_STATUS = "messageStatus";
     static final String UPDATE = "update";
+    private final Lock processLock = new ReentrantLock(true);
 
     public MessageProcessor() {
         super(TAG);
@@ -121,71 +124,80 @@ public class MessageProcessor extends IntentService {
     }
 
     private void doProcessMessage(Message message) {
-        if (message.getFrom().equals(UserManager.getMainUserId())) {
-            //how did this happen?
-            return;
-        }
-        Realm realm = Message.REALM(this);
         try {
-            String peerId;
-            //for messages sent to groups, the group is always the recipient
-            //and the members the senders
-            if (Message.isGroupMessage(message)) {
-                peerId = message.getTo();
-            } else {
-                peerId = message.getFrom();
-            }
-            if (UserManager.getInstance().isBlocked(peerId)) {
-                PLog.d(TAG, "message from a blocked user, dropping message");
-                PLog.d(TAG, "%s is blocked", peerId);
+            processLock.lock();
+            if (message.getFrom().equals(UserManager.getMainUserId())) {
+                //how did this happen?
                 return;
             }
-            UserManager.getInstance().fetchUserIfRequired(peerId);
-            //all other operations are deferred till we set up the conversation
-            Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
-
-            //WATCH OUT! don't touch this block!
-            //////////////////////////////////////////////////////////////////////////////////////////
-            //ensure the conversation and session is set up
-            // before persisting the message
-            if (conversation == null) { //create a new one
-                conversation = Conversation.newConversation(realm, peerId);
-                realm.beginTransaction();
-            } else {
-                realm.beginTransaction();
-                Conversation.newSession(realm, conversation);
-            }
-            ///////////////////////////////////////////////////////////////////////////////////////////
-
-            //force the new message to be newer than the session start up time
-            message.setDateComposed(new Date(System.currentTimeMillis() + 10));
-            conversation.setLastActiveTime(new Date());//now
+            Realm realm = Message.REALM(this);
             try {
-                message = realm.copyToRealm(message);
-                conversation.setLastMessage(message);
-            } catch (RealmException primaryKey) {
-                //lets eat up this exception
-                realm.cancelTransaction();
-                PLog.d(TAG, primaryKey.getMessage());
-                PLog.d(TAG, "failed to process message");
-                return;
-            }
-            conversation.setSummary(Message.isTextMessage(message) ? message.getMessageBody() : ""); //ui elements must detect this
-            message = Message.copy(message);
-            if (!conversation.isActive()) { //hopefully we might be able to void race conditions
-                LiveCenter.incrementUnreadMessageForPeer(conversation.getPeerId());
-            }
-            realm.commitTransaction();
-            realm.close();
-            NotificationManager.INSTANCE.onNewMessage(this, message);
-            MessageCenter.notifyReceived(message);
-            if (!Message.isTextMessage(message)) {
-                if (ConnectionUtils.isWifiConnected() || UserManager.getInstance().getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE, false)) {
-                    Worker.download(this, message);
+                String peerId;
+                //for messages sent to groups, the group is always the recipient
+                //and the members the senders
+                if (Message.isGroupMessage(message)) {
+                    peerId = message.getTo();
+                } else {
+                    peerId = message.getFrom();
                 }
+                UserManager userManager = UserManager.getInstance();
+                if (userManager.isBlocked(peerId)) {
+                    PLog.d(TAG, "message from a blocked user, dropping message");
+                    PLog.d(TAG, "%s is blocked", peerId);
+                    return;
+                }
+                userManager.fetchUserIfRequired(peerId);
+                //all other operations are deferred till we set up the conversation
+                Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
+
+                //WATCH OUT! don't touch this block!
+                //////////////////////////////////////////////////////////////////////////////////////////
+                //ensure the conversation and session is set up
+                // before persisting the message
+                if (conversation == null) { //create a new one
+                    conversation = Conversation.newConversation(realm, peerId);
+                    realm.beginTransaction();
+                } else {
+                    realm.beginTransaction();
+                    Conversation.newSession(realm, conversation);
+                }
+                ///////////////////////////////////////////////////////////////////////////////////////////
+
+                //force the new message to be newer than the session start up time
+                message.setDateComposed(new Date(System.currentTimeMillis() + 10));
+                message.setState(Message.STATE_RECEIVED);
+                conversation.setLastActiveTime(new Date());//now
+                try {
+                    message = realm.copyToRealm(message);
+                    conversation.setLastMessage(message);
+                } catch (RealmException primaryKey) {
+                    //lets eat up this exception
+                    realm.cancelTransaction();
+                    PLog.d(TAG, primaryKey.getMessage());
+                    PLog.d(TAG, "failed to process message");
+                    return;
+                }
+                conversation.setSummary(Message.isTextMessage(message) ? message.getMessageBody() : ""); //ui elements must detect this
+                message = Message.copy(message);
+                if (!conversation.isActive()) { //hopefully we might be able to void race conditions
+                    LiveCenter.incrementUnreadMessageForPeer(conversation.getPeerId());
+                }
+                realm.commitTransaction();
+                NotificationManager.INSTANCE.onNewMessage(this, message);
+//            MessageCenter.notifyReceived(message);
+                if (!Message.isTextMessage(message)) {
+                    if ((ConnectionUtils.isWifiConnected()
+                            && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_WIFI, false))
+                            || (ConnectionUtils.isMobileConnected()
+                            && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_MOBILE, false))) {
+                        Worker.download(this, message);
+                    }
+                }
+            } finally {
+                realm.close();
             }
         } finally {
-            realm.close();
+            processLock.unlock();
         }
     }
 

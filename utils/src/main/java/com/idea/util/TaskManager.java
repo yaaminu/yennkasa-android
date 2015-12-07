@@ -99,7 +99,6 @@ public class TaskManager {
         new Handler(Looper.getMainLooper()).post(r);
     }
 
-
     public static Future<?> execute(Runnable task, boolean requiresNetwork) {
         ensureInitialised();
         if (requiresNetwork) {
