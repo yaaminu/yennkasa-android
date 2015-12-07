@@ -8,7 +8,7 @@
     <color name="white">#ffffff</color>
     <color name="out_going_message_text_color">#000</color>
     <color name="color_msg_outgoing">#5eb964</color>
-    <color name="color_msg_incoming">#88bbbbbb</color>
+    <color name="color_msg_incoming">#eeee</color>
     <color name="color_msg_date">#cccccc</color>
     <color name="msg_border_color">#a1a1a1</color>
     <color name="bg_btn_join">#1e6258</color>

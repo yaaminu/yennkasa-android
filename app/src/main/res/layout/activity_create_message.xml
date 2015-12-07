@@ -145,6 +145,7 @@
             tools:ignore="UnusedAttribute">
 
             <ImageButton
+                android:id="@+id/ib_attach_emoji"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
@@ -152,7 +153,7 @@
                 android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
                 android:adjustViewBounds="true"
                 android:background="@color/transparent"
-                android:onClick="attachCamera"
+                android:onClick="toggleEmoji"
                 android:scaleType="centerInside"
                 android:src="@drawable/ic_msg_panel_smiles"
                 />
@@ -164,7 +165,7 @@
                 android:gravity="center_vertical"
                 >
 
-                <EditText
+                <com.rockerhieu.emojicon.EmojiconEditText
                     android:id="@+id/et_message"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -175,22 +176,26 @@
                     android:maxHeight="@dimen/multiline_text_box_max_height"
                     android:padding="@dimen/padding_ll_login_fragment_right"
                     android:textSize="@dimen/edit_text_size"
+                    app:emojiconSize="@dimen/edit_text_size"
                     />
                 <!--android:text="llaaal\nlkklkk\nkklkjkjlkk\nkljklkkjlklk\nkljkljklkklk"-->
             </LinearLayout>
 
             <ImageButton
+                android:id="@+id/ib_attach_capture_photo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:adjustViewBounds="true"
                 android:background="@color/transparent"
                 android:onClick="attachCamera"
+                android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
                 android:scaleType="centerInside"
                 android:src="@drawable/ic_photo_camera_black_24dp"
                 />
 
             <ImageButton
+                android:id="@+id/ib_attach_record_audio"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
@@ -202,31 +207,18 @@
                 android:src="@drawable/ic_mic_black_24dp"
                 />
 
-            <com.idea.view.FrameLayout
-                android:id="@+id/iv_send"
-                style="@style/FlatButtonRippleStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
-                android:background="@drawable/green_round_back_ground"
-                android:padding="@dimen/padding_ll_login_fragment_bottom"
-                android:visibility="gone">
-
-                <ImageView
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:adjustViewBounds="true"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/ic_send_white_24dp"/>
-
-            </com.idea.view.FrameLayout>
 
         </LinearLayout>
 
+        <FrameLayout
+            android:id="@+id/emoji_pannel_slot"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            >
+        </FrameLayout>
     </com.idea.view.LinearLayout>
 
     <include
         layout="@layout/snack_bar"/>
 </com.idea.view.RelativeLayout>
+

@@ -1,4 +1,4 @@
- apply plugin: 'com.android.application'
+apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
 
 repositories {
@@ -53,6 +53,7 @@ dependencies {
     compile project(':pullToRefresh')
     compile project(':textRenderer')
     compile project(':cropper')
+    compile project(':library')
     //    compile files('libs/sinch-android-rtc-3.6.0.jar')
     //noinspection GradleDependency
     compile 'com.android.support:appcompat-v7:22.1.1'

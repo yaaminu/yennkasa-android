@@ -3,6 +3,7 @@ package com.idea.ui;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -107,10 +108,12 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         //noinspection unused
         ToolbarManager toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         pager.setAdapter(new MyFragmentStatePagerAdapter(getSupportFragmentManager()));
-        boolean distributeEvenly = getResources().getBoolean(R.bool.is_very_large) || getResources().getBoolean(R.bool.isLandscape);
+        Resources resources = getResources();
+        boolean distributeEvenly = resources.getBoolean(R.bool.is_very_large) ||
+                (resources.getBoolean(R.bool.is_big_screen) && resources.getBoolean(R.bool.isLandscape));
         tabStrip.setDistributeEvenly(distributeEvenly);
         tabStrip.setCustomTabView(R.layout.tab_view, android.R.id.text1);
-        tabStrip.setSelectedIndicatorColors(getResources().getColor(R.color.white));
+        tabStrip.setSelectedIndicatorColors(resources.getColor(R.color.white));
         tabStrip.setViewPager(pager);
     }
 
@@ -198,8 +201,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
 
     @Override
     public void onAction() {
-        pager.setCurrentItem(MyFragmentStatePagerAdapter.POSITION_CONTACTS_FRAGMENT, true);
-
+         UiHelpers.doInvite(this,null);
     }
 
 
@@ -260,10 +262,10 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
             public void run() {
                 android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_LOWEST);
                 testMessageProcessor(RealmUtils.seedIncomingMessages(senderId, UserManager.getMainUserId()));
-                testMessageProcessor(RealmUtils.seedIncomingMessages("233", UserManager.getMainUserId()));
+                testMessageProcessor(RealmUtils.seedIncomingMessages("233542385277", UserManager.getMainUserId(), Message.TYPE_TEXT_MESSAGE, "Hello where have you been"));
             }
         };
-      //  timer.scheduleAtFixedRate(task, 5000, 45000);
+//        timer.scheduleAtFixedRate(task, 5000, 45000);
     }
 
     static Timer timer;

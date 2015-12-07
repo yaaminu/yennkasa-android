@@ -10,7 +10,7 @@
         pairapp:showAsAction="always"/>
     <item
         android:id="@+id/action_copy"
-        android:icon="@drawable/ic_action_copy"
+        android:icon="@drawable/abc_ic_menu_copy_mtrl_am_alpha"
         android:title="@android:string/copy"
         pairapp:showAsAction="always"/>
     <item

@@ -21,7 +21,7 @@
             <!-- the max with on the textView is due to the width of the @+id/iv_message_preview
              take it off and see the outcome
              -->
-            <TextView
+            <com.rockerhieu.emojicon.EmojiconTextView
                 android:id="@+id/tv_log_message"
                 style="@style/message_outgoing"
                 android:text="a sample message that spans across multiple lines dones it look nice or bad. i am just testing"

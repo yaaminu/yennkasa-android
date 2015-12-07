@@ -20,6 +20,7 @@ import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.View;
 
+import com.idea.Errors.ErrorCenter;
 import com.idea.PairApp;
 import com.idea.data.Message;
 import com.idea.data.User;
@@ -33,6 +34,7 @@ import com.idea.util.LiveCenter;
 import com.idea.util.MediaUtils;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
+import com.idea.util.ThreadUtils;
 import com.idea.util.UiHelpers;
 import com.rey.material.widget.SnackBar;
 
@@ -54,7 +56,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     private static Timer timer;
     protected PairAppClient.PairAppClientInterface pairAppClientInterface;
     protected boolean bound = false;
-
+    private volatile int totalUnreadMessages = 0;
 
     private ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -81,7 +83,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
             snackBar.dismiss();
             PairAppActivity self = PairAppActivity.this;
 
-            final int totalUnreadMessages = LiveCenter.getTotalUnreadMessages();
             if (totalUnreadMessages < 1) {
                 PLog.w(TAG, "snackbar visible yet no unread message");
                 return;
@@ -186,8 +187,9 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
             recentChatList.set(i, user.getName());
         }
         realm.close();
-        final int recentCount = recentChatList.size(), unReadMessages = LiveCenter.getTotalUnreadMessages();
-        if (unReadMessages < 1) {
+        final int recentCount = recentChatList.size();
+        totalUnreadMessages = LiveCenter.getTotalUnreadMessages();
+        if (totalUnreadMessages < 1) {
             return null;
         }
         String peerId = Message.isGroupMessage(message) ? message.getTo() : message.getFrom();
@@ -196,18 +198,18 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 if (BuildConfig.DEBUG) throw new AssertionError();
                 return new Pair<>(peerId, getString(R.string.new_message));
             case 1:
-                if (unReadMessages == 1) {
+                if (totalUnreadMessages == 1) {
                     String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(this, message);
                     text = (Message.isGroupMessage(message) ? sender + "@" + recentChatList.get(0) : sender) + ":  " + messageBody;
                 } else {
-                    text = unReadMessages + " " + getString(R.string.new_message_from) + " " + (Message.isGroupMessage(message) ? sender + "@" + recentChatList.get(0) : sender);
+                    text = totalUnreadMessages + " " + getString(R.string.new_message_from) + " " + (Message.isGroupMessage(message) ? sender + "@" + recentChatList.get(0) : sender);
                 }
                 break;
             case 2:
-                text = unReadMessages + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + recentChatList.get(1);
+                text = totalUnreadMessages + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + recentChatList.get(1);
                 break;
             case 3:
-                text = unReadMessages + "  " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + ", " + recentChatList.get(1) + getString(R.string.and) + recentChatList.get(2);
+                text = totalUnreadMessages + "  " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + ", " + recentChatList.get(1) + getString(R.string.and) + recentChatList.get(2);
                 break;
             default:
                 text = "" + recentCount + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + (recentCount - 1) + getString(R.string.others);
@@ -239,6 +241,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     }
 
     private void doNotify(String userId, String text) {
+        snackBar.dismiss();
         snackBar.text(text)
                 .ellipsize(TextUtils.TruncateAt.END)
                 .maxLines(2)
@@ -254,25 +257,23 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 .duration(6000) //6 secs
                 .setOnClickListener(listener);
 
-
-        if (!userManager.isMuted(userId)) {
-            if (shouldPlayTone.getAndSet(false)) {
-                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (!shouldPlayTone.get()) //hopefully we might avoid race conditions
-                            shouldPlayTone.set(true);
-                    }
-                }, 3000);
-                TaskManager.executeNow(new Runnable() {
-                    public void run() {
-                        playNewMessageTone(PairAppActivity.this);
-                        vibrateIfAllowed(PairAppActivity.this);
-                    }
-                }, false);
-            }
+        if (shouldPlayTone.getAndSet(false)) {
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (!shouldPlayTone.get()) //hopefully we might avoid race conditions
+                        shouldPlayTone.set(true);
+                }
+            }, 3000);
+            TaskManager.executeNow(new Runnable() {
+                public void run() {
+                    playNewMessageTone(PairAppActivity.this);
+                    vibrateIfAllowed(PairAppActivity.this);
+                }
+            }, false);
 
         }
+        isStickyMessageShown = false;
         snackBar.removeOnDismiss(true).show(this);
     }
 
@@ -308,12 +309,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         if (peerId == null) {
             throw new IllegalArgumentException("peer id is null!");
         }
-        TaskManager.executeNow(new Runnable() {
-            @Override
-            public void run() {
-                LiveCenter.invalidateNewMessageCount(peerId);
-            }
-        }, false);
+        LiveCenter.invalidateNewMessageCount(peerId);
     }
 
     protected abstract SnackBar getSnackBar();
@@ -398,4 +394,54 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         throw new UnsupportedOperationException();
     }
 
+    private boolean isStickyMessageShown = false;
+
+    public void notifySticky(Context context, final String message) {
+        final Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                snackBar.dismiss();
+                snackBar.text(message)
+                        .ellipsize(TextUtils.TruncateAt.END)
+                        .maxLines(2)
+                        .actionText(R.string.close)
+                        .actionClickListener(new SnackBar.OnActionClickListener() {
+                            @Override
+                            public void onActionClick(SnackBar sb, int actionId) {
+                                if (sb.getState() == SnackBar.STATE_SHOWN) {
+                                    sb.dismiss();
+                                    isStickyMessageShown = false;
+                                }
+                            }
+                        })
+                        .duration(0);
+                snackBar.removeOnDismiss(true).show(PairAppActivity.this);
+                isStickyMessageShown = true;
+            }
+        };
+        if (!ThreadUtils.isMainThread()) {
+            runOnUiThread(runnable);
+        } else {
+            runnable.run();
+        }
+    }
+
+    @Override
+    public void showError(ErrorCenter.Error error) {
+        if (error.style == ErrorCenter.ReportStyle.STICKY) {
+            notifySticky(this, error.message);
+        } else {
+            super.showError(error);
+        }
+    }
+
+    @Override
+    public void disMissError(String errorId) {
+        if (isStickyMessageShown) {
+            snackBar.dismiss();
+            isStickyMessageShown = false;
+        }else {
+            super.disMissError(errorId);
+        }
+    }
 }

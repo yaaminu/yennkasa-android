@@ -127,7 +127,7 @@ public class PersistedSetting extends RealmObject {
             throw new IllegalArgumentException("writable folder is not a directory");
         }
         try {
-            return Realm.getInstance(writableFolder, UserManager.getKey());
+            return Realm.getInstance(writableFolder/*, UserManager.getKey()*/);
         } catch (RealmException e) {
             ErrorCenter.reportError("realmSecureError", Config.getApplicationContext().getString(R.string.encryptionNotAvailable), null);
             return Realm.getInstance(writableFolder);

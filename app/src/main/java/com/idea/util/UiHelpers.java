@@ -4,15 +4,19 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
+import android.telephony.SmsManager;
 import android.text.TextUtils;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
@@ -20,6 +24,7 @@ import android.widget.Toast;
 
 import com.idea.Errors.PairappException;
 import com.idea.adapter.SimpleAdapter;
+import com.idea.data.ContactsManager;
 import com.idea.data.Message;
 import com.idea.data.UserManager;
 import com.idea.data.util.MessageUtils;
@@ -32,7 +37,6 @@ import com.idea.ui.MainActivity;
 import com.idea.ui.ProfileActivity;
 import com.idea.ui.SetUpActivity;
 import com.idea.ui.SettingsActivity;
-import com.idea.ui.UsersActivity;
 import com.rey.material.app.Dialog;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.SimpleDialog;
@@ -41,6 +45,8 @@ import com.rey.material.widget.TextView;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static android.widget.Toast.LENGTH_LONG;
 import static android.widget.Toast.LENGTH_SHORT;
@@ -227,13 +233,6 @@ public class UiHelpers {
 
     public static void gotoProfileActivity(Context context, String id) {
         gotoProfileActivity(context, id, null, null);
-    }
-
-    public static void pickRecipient(Context context, Bundle bundle) {
-        bundle.putString(MainActivity.ARG_TITLE, context.getString(R.string.title_pick_recipient));
-        final Intent intent = new Intent(context, UsersActivity.class);
-        intent.putExtras(bundle);
-        context.startActivity(intent);
     }
 
     public static void attach(FragmentActivity appBaseActivity) {
@@ -426,6 +425,79 @@ public class UiHelpers {
         Intent intent = new Intent(context, SettingsActivity.class);
         intent.putExtra(SettingsActivity.EXTRA_ITEM, item);
         context.startActivity(intent);
+    }
+
+    public static void doInvite(final Context context, final ContactsManager.Contact contact) {
+        final String message = context.getString(R.string.invite_message);
+        PackageManager manager = context.getPackageManager();
+        final Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_TEXT, message);
+        // context.startActivity(intent);
+
+        final List<ResolveInfo> infos = manager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+//        List<ResolveInfo> noPairap = new Arr
+        PLog.d(TAG, "resolved: " + infos.size());
+        if (infos.isEmpty() && contact == null) {
+            showToast(context.getString(R.string.no_app_for_sharing));
+        }
+
+        if (contact != null && infos.isEmpty()) {
+            final Listener listener = new Listener() {
+                @Override
+                public void onClick() {
+                    SmsManager.getDefault().sendTextMessage("+" + contact.numberInIEE_Format, null, message, null, null);
+                }
+            };
+            showErrorDialog((FragmentActivity) context,
+                    context.getString(R.string.charges_may_apply),
+                    context.getString(android.R.string.ok),
+                    context.getString(android.R.string.cancel),
+                    listener, null);
+        }
+        if (!infos.isEmpty()) {
+            List<CharSequence> titles = new ArrayList<>();
+            List<Drawable> icons = new ArrayList<>();
+            final List<ActivityInfo> activityInfos = new ArrayList<>();
+            for (int i = 0; i < infos.size(); i++) {
+                ActivityInfo activityInfo = infos.get(i).activityInfo;
+                String packageName = activityInfo.packageName;
+                if (packageName.contains("whatsapp") || packageName.contains("viber") || packageName.contains("telegram")
+                        || packageName.contains("facebook")
+                        || packageName.contains("twitter")
+                        || packageName.contains("tango")
+                        || packageName.contains("com.android.mms")) {
+                    titles.add(activityInfo.loadLabel(manager));
+                    icons.add(activityInfo.loadIcon(manager));
+                    activityInfos.add(activityInfo);
+                }
+            }
+            if (activityInfos.isEmpty() && contact != null) {
+                final Listener listener = new Listener() {
+                    @Override
+                    public void onClick() {
+                        SmsManager.getDefault().sendTextMessage("+" + contact.numberInIEE_Format, null, message, null, null);
+                    }
+                };
+                showErrorDialog((FragmentActivity) context,
+                        context.getString(R.string.charges_may_apply),
+                        context.getString(android.R.string.ok),
+                        context.getString(android.R.string.cancel),
+                        listener, null);
+            } else {
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                SimpleAdapter adapter = new SimpleAdapter(icons, titles);
+                builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        ActivityInfo activityInfo = activityInfos.get(which);
+                        intent.setClassName(activityInfo.packageName, activityInfo.name);
+                        context.startActivity(intent);
+                    }
+                }).setTitle(context.getString(R.string.invite_via));
+                builder.create().show();
+            }
+        }
     }
 
     public interface Listener {

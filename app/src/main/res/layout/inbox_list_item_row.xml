@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.idea.view.RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_item_height"
@@ -22,7 +23,7 @@
         android:scaleType="centerCrop"
         android:src="@drawable/user_avartar"/>
 
-    <TextView
+    <com.rockerhieu.emojicon.EmojiconTextView
         android:id="@+id/tv_chat_summary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -33,9 +34,11 @@
         android:maxLines="@integer/summary_lines"
         android:paddingBottom="2dp"
         android:singleLine="@bool/single_line"
-        android:text="Summary of conversation with a very long message"
+        android:text="Summary of conversation with a very long message "
         android:textColor="@color/light_gray"
         android:textSize="@dimen/standard_text_size"
+        app:emojiconAlignment="baseline"
+        app:emojiconSize="@dimen/standard_text_size"
         tools:ignore="HardcodedText"/>
 
 

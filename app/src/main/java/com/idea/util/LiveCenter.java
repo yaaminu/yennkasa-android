@@ -11,6 +11,7 @@ import com.github.nkzawa.emitter.Emitter;
 import com.idea.Errors.PairappException;
 import com.idea.data.UserManager;
 import com.idea.net.sockets.SocketIoClient;
+import com.idea.pairapp.BuildConfig;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -66,7 +67,6 @@ public class LiveCenter {
         }
     };
 
-    private static int totalUnreadMessages = 0;
     private static Emitter.Listener connectReceiver = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
@@ -101,20 +101,10 @@ public class LiveCenter {
         SharedPreferences preferences = getPreferences();
         int existing = preferences.getInt(peerId, 0) + messageCount;
         preferences.edit().putInt(peerId, existing).commit();
-        synchronized (unReadMessageLock) {
-            if (totalUnreadMessages <= 0) {
-                totalUnreadMessages = 0;
-                for (String s : getAllPeersWithUnreadMessages()) {
-                    totalUnreadMessages += getUnreadMessageFor(s);
-                }
-            } else {
-                totalUnreadMessages += messageCount;
-            }
-        }
     }
 
     private static SharedPreferences getPreferences() {
-        return Config.getPreferences("unreadMessages");
+        return Config.getPreferences("unreadMessages" + TAG);
     }
 
     /**
@@ -143,9 +133,23 @@ public class LiveCenter {
      * @return number of all unread messages
      */
     public static int getTotalUnreadMessages() {
-        synchronized (unReadMessageLock) {
-            return totalUnreadMessages;
+//        synchronized (unReadMessageLock) {
+//            return totalUnreadMessages;
+//        }
+        int total = 0;
+        SharedPreferences preferences = getPreferences();
+        Set<String> keys = preferences.getAll().keySet();
+        int temp;
+        for (String key : keys) {
+            temp = preferences.getInt(key, 0);
+            if (BuildConfig.DEBUG) {
+                if (temp < 0) {
+                    throw new IllegalStateException("negative count");
+                }
+            }
+            total += temp;
         }
+        return total;
     }
 
     /**
@@ -159,13 +163,6 @@ public class LiveCenter {
             throw new IllegalArgumentException("null peerId");
         }
         final SharedPreferences preferences = getPreferences();
-        int newMessagesToPeerId = preferences.getInt(peerId, 0);
-        synchronized (unReadMessageLock) {
-            totalUnreadMessages -= newMessagesToPeerId;
-            if (totalUnreadMessages < 0) {
-                totalUnreadMessages = 0;
-            }
-        }
         preferences.edit().remove(peerId).commit();
     }
 
@@ -546,7 +543,6 @@ public class LiveCenter {
         return Collections.emptySet();
     }
 
-    private static final Object unReadMessageLock = new Object();
     private static final Object progressLock = new Object();
     private static final Map<Object, Integer> tagProgressMap = new HashMap<>();
 

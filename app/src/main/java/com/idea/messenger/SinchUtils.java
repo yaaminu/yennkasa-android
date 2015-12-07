@@ -32,12 +32,14 @@ class SinchUtils {
     private static final String APP_SECRET = "VtYW0Wn2DES2g7i5/6/zXw=="/*"6jnYbTKVb0ytmUfzsJUZMw=="*/, ENVIRONMENT = "sandbox.sinch.com";
     private static WeakReference<Looper> looperWeakReference;
     private static final String TAG = SinchUtils.class.getSimpleName();
+    private static final String SINCH_ERROR = "sinchError";
     private static SinchClientListener clientListener = new SinchClientListener() {
         private int retryCount = 0, backOf = 500;
 
         @Override
         public void onClientStarted(SinchClient sinchClient) {
             PLog.d(TAG, "client started! %s", new Date().toString());
+            ErrorCenter.cancel(SINCH_ERROR);
         }
 
         @Override
@@ -51,6 +53,7 @@ class SinchUtils {
             switch (sinchError.getErrorType()) {
                 case NETWORK:
                     synchronized (SinchUtils.class) {
+                        ErrorCenter.reportError(SINCH_ERROR, Config.getApplicationContext().getString(R.string.disconected), ErrorCenter.ReportStyle.STICKY, ErrorCenter.INDEFINITE);
                         if (retryCount > 15) {
                             PLog.d(TAG, "failed to start sinch client after %s  attempts", 15 + "");
                             sinchClient.stopListeningOnActiveConnection();

@@ -1,17 +1,11 @@
 package com.idea.adapter;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.support.annotation.DrawableRes;
 import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.AlertDialog;
-import android.telephony.SmsManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,14 +16,12 @@ import android.widget.TextView;
 import com.idea.data.UserManager;
 import com.idea.pairapp.R;
 import com.idea.ui.ImageLoader;
-import com.idea.util.PLog;
 import com.idea.util.PhoneNumberNormaliser;
 import com.idea.util.TypeFaceUtil;
 import com.idea.util.UiHelpers;
 import com.idea.util.ViewUtils;
 import com.rey.material.widget.Button;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -216,69 +208,11 @@ public class ContactsAdapter extends BaseAdapter {
         }
     }
 
-    private void invite(final Context context, final Contact contact) {
-        final String message = context.getString(R.string.invite_message);
-        PackageManager manager = context.getPackageManager();
-        final Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.setType("text/plain");
-        intent.putExtra(Intent.EXTRA_TEXT, message);
-        // context.startActivity(intent);
-
-        final List<ResolveInfo> infos = manager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
-//        List<ResolveInfo> noPairap = new Arr
-        PLog.d(TAG, "resolved: " + infos.size());
-         final UiHelpers.Listener listener = new UiHelpers.Listener() {
-                @Override
-                public void onClick() {
-                    SmsManager.getDefault().sendTextMessage("+" + contact.numberInIEE_Format, null, message, null, null);
-                }
-            };
-        if (infos.isEmpty()) {
-            UiHelpers.showErrorDialog((FragmentActivity) context,
-                    context.getString(R.string.charges_may_apply),
-                    context.getString(android.R.string.ok),
-                    context.getString(android.R.string.cancel),
-                    listener, null);
-        } else {
-            List<CharSequence> titles = new ArrayList<>();
-            List<Drawable> icons = new ArrayList<>();
-            final List<ActivityInfo> activityInfos = new ArrayList<>();
-            for (int i = 0; i < infos.size(); i++) {
-                ActivityInfo activityInfo = infos.get(i).activityInfo;
-                String packageName = activityInfo.packageName;
-                if (packageName.contains("whatsapp") || packageName.contains("viber") || packageName.contains("telegram")
-                        || packageName.contains("facebook")
-                        || packageName.contains("twitter")
-                        || packageName.contains("tango")
-                        || packageName.contains("messaging")) {
-                    titles.add(activityInfo.loadLabel(manager));
-                    icons.add(activityInfo.loadIcon(manager));
-                    activityInfos.add(activityInfo);
-                }
-            }
-            if(activityInfos.isEmpty()){
-               UiHelpers.showErrorDialog((FragmentActivity) context,
-                    context.getString(R.string.charges_may_apply),
-                    context.getString(android.R.string.ok),
-                    context.getString(android.R.string.cancel),
-                    listener, null);
-            }else{
-            AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            SimpleAdapter adapter = new SimpleAdapter(icons, titles);
-            builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    ActivityInfo activityInfo = activityInfos.get(which);
-                    intent.setClassName(activityInfo.packageName, activityInfo.name);
-                    context.startActivity(intent);
-                }
-            }).setTitle(context.getString(R.string.invite_via));
-            builder.create().show();
-          }
-        }
+    private static void invite(final Context context, final Contact contact) {
+        UiHelpers.doInvite(context, contact);
     }
 
-//    private class InviteContact implements View.OnClickListener {
+    //    private class InviteContact implements View.OnClickListener {
 //        Contact contact;
 //
 //        public InviteContact(Contact contact) {

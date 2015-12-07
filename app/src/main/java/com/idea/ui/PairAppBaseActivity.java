@@ -138,8 +138,12 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
     }
 
     @Override
-    public final void showError(String errorMessage) {
-        UiHelpers.showErrorDialog(this, errorMessage);
+    public void showError(ErrorCenter.Error error) {
+        UiHelpers.showErrorDialog(this, error.message);
     }
 
+    @Override
+    public void disMissError(String errorId) {
+        //do nothing
+    }
 }

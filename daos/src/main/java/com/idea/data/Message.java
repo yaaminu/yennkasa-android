@@ -31,7 +31,7 @@ import io.realm.exceptions.RealmException;
  * this class represents a particular message sent by a given {@link User}.
  * it is normally used in conjunction with {@link Conversation}
  * the message may be attached to {@link Realm} or not.
- * <p/>
+ * <p>
  * one can detach the message from realm by using its {@link #copy} method
  * and using the returned message.
  *
@@ -133,7 +133,7 @@ public class Message extends RealmObject {
     public static Realm REALM(Context context) {
         File dataFile = context.getDir("messages_crypt", Context.MODE_PRIVATE);
         try {
-            return Realm.getInstance(dataFile, UserManager.getKey());
+            return Realm.getInstance(dataFile/*, UserManager.getKey()*/);
         } catch (RealmException e) {
             ErrorCenter.reportError("realmSecureError", Config.getApplicationContext().getString(R.string.encryptionNotAvailable), null);
             return Realm.getInstance(dataFile);

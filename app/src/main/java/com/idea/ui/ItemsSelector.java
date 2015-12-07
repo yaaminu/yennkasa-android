@@ -15,6 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
@@ -211,6 +212,8 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
                 if (toolBar != null) {
                     ViewUtils.hideViews(toolBar);
                 }
+                InputMethodManager manager = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                manager.showSoftInput(filterEditText, 0);
                 break;
             case R.id.action_add:
                 filterEditText.setImeActionLabel(getString(R.string.add_ime), getResources().getInteger(R.integer.imei_search_add));

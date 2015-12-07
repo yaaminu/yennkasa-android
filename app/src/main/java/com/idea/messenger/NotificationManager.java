@@ -5,8 +5,8 @@ import android.content.Context;
 import com.idea.data.Message;
 import com.idea.data.User;
 import com.idea.data.UserManager;
-import com.idea.pairapp.R;
 import com.idea.util.Config;
+import com.idea.util.PLog;
 import com.idea.util.TaskManager;
 import com.idea.util.ThreadUtils;
 
@@ -25,37 +25,17 @@ final class NotificationManager {
     private final Notifier BACKGROUND_NOTIFIER = new StatusBarNotifier();
     private volatile WeakReference<Notifier> UI_NOTIFIER;
 
-    static CharSequence messageTypeToString(int type) {
-        switch (type) {
-            case Message.TYPE_PICTURE_MESSAGE:
-                return Config.getApplicationContext().getString(R.string.picture);
-            case Message.TYPE_VIDEO_MESSAGE:
-                return Config.getApplicationContext().getString(R.string.video);
-            case Message.TYPE_BIN_MESSAGE:
-                return Config.getApplicationContext().getString(R.string.file);
-            default:
-                if (com.idea.pairapp.BuildConfig.DEBUG) {
-                    throw new AssertionError("Unknown message type");
-                }
-                return "";
-        }
-    }
-
     void onNewMessage(final Context context, final Message message) {
-        if (ThreadUtils.isMainThread()) {
-            TaskManager.execute(new Runnable() {
-                @Override
-                public void run() {
-                    notifyUser(context, message, retrieveSendersName(message));
-                }
-            }, false);
-        } else {
-            notifyUser(context, message, retrieveSendersName(message));
-        }
+        ThreadUtils.ensureNotMain();
+        notifyUser(context, message, retrieveSendersName(message));
     }
 
     private void notifyUser(final Context context, final Message message, final String sendersName) {
 
+        if (UserManager.getInstance().isMuted(Message.isGroupMessage(message) ? message.getTo() : message.getFrom())) {
+            PLog.d(TAG, "user muted not notifying");
+            return;
+        }
         if (Config.isAppOpen() && UserManager.getInstance().getBoolPref(UserManager.IN_APP_NOTIFICATIONS, false)) {
             //Toast.makeText(Config.getApplicationContext(), message.getFrom() + " : " + message.getMessageBody(), Toast.LENGTH_LONG).show();
             if (UI_NOTIFIER != null) {
@@ -73,6 +53,7 @@ final class NotificationManager {
         }
         BACKGROUND_NOTIFIER.notifyUser(context, message, sendersName);
     }
+
 
     private String retrieveSendersName(Message message) {
         ThreadUtils.ensureNotMain();

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <style name="Theme.AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -7,6 +8,7 @@
         <item name="colorControlNormal">@color/normalControlStates</item>
         <item name="colorControlActivated">@color/colorPrimaryDark</item>
         <item name="colorSwitchThumbNormal">@color/colorSwitchThumbNormal</item>
+        <item name="android:windowBackground">@color/white</item>
     </style>
 
 </resources>

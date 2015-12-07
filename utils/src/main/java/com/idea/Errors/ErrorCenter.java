@@ -62,18 +62,19 @@ public class ErrorCenter {
             timeout = Math.max(timeout, DEFAULT_TIMEOUT); //time out cannot be less than DefaultTimeout
         }
         NavigationManager.States currentActivityState = null;
+        final Error tmp = new Error(errorId, errorMessage, timeout);
         try {
             currentActivityState = NavigationManager.getCurrentActivityState();
             if (!currentActivityState.equals(NavigationManager.States.DESTROYED) || !currentActivityState.equals(NavigationManager.States.STOPPED)) {
                 final ErrorShower errorShower = ErrorCenter.errorShower.get();
                 if (errorShower != null) {
                     if (ThreadUtils.isMainThread()) {
-                        errorShower.showError(errorMessage);
+                        errorShower.showError(tmp);
                     } else {
                         TaskManager.executeOnMainThread(new Runnable() {
                             @Override
                             public void run() {
-                                errorShower.showError(errorMessage);
+                                errorShower.showError(tmp);
                             }
                         });
                     }
@@ -83,7 +84,7 @@ public class ErrorCenter {
         } catch (NavigationManager.NoActiveActivityException e) {
             Log.d(TAG, "no visible activity. waiting till an activity shows up");
         }
-        waitingError = new Error(errorId, errorMessage, timeout);
+        waitingError = tmp;
     }
 
     public static synchronized void reportError(String id, String errorMessage, Intent action) {
@@ -117,6 +118,10 @@ public class ErrorCenter {
         if (waitingError != null && waitingError.id.equals(errorId)) {
             Log.d(TAG, "cancelling error with id: " + errorId);
             waitingError = null;
+        } else if (errorShower != null) {
+            ErrorShower shower = ErrorCenter.errorShower.get();
+            if (shower != null)
+                shower.disMissError(errorId);
         }
     }
 
@@ -168,22 +173,39 @@ public class ErrorCenter {
         Log.d(TAG, "no error to show either they have time out or there is none at all");
     }
 
+    public static void reportError(String id, String message, ReportStyle style, int indefinite) {
+        Error tmp = new Error(id, message, indefinite, style);
+        if (errorShower != null && errorShower.get() != null) {
+            errorShower.get().showError(tmp);
+        } else {
+            waitingError = tmp;
+        }
+    }
+
     public interface ErrorShower {
-        void showError(String errorMessage);
+        void showError(Error error);
+
+        void disMissError(String errorId);
     }
 
     public static class Error {
-        String message, id;
-        long timeout;
+        public final String message, id;
+        public final long timeout;
+        public final ReportStyle style;
 
         private Error(String id, String message, long timeout) {
+            this(id, message, timeout, ReportStyle.DIALOG);
+        }
+
+        private Error(String id, String message, long timeout, ReportStyle style) {
             this.id = id;
             this.message = message;
             this.timeout = System.currentTimeMillis() + timeout;
+            this.style = style;
         }
     }
 
     public enum ReportStyle {
-        DIALOG, NOTIFICATION, DIALOG_NOT
+        DIALOG, NOTIFICATION, STICKY, DIALOG_NOT
     }
 }

@@ -281,4 +281,9 @@
     <string name="err_problem_setting_sinch_up">We are facing problems setting things up, ensure your device\'s date is set properly</string>
     <string name="warn_msg_clear_conversation_messages">Sure you want to clear all messages in this conversation?</string>
     <string name="clear_messages">Clear messages</string>
+    <string name="disconected">You are disconnected</string>
+    <string name="too_many_parralel_dowload">Too many silmoutaneous download, wait for some of the
+        pending downloads to complete
+    </string>
+    <string name="no_app_for_sharing">You have no application for sharing content</string>
 </resources>

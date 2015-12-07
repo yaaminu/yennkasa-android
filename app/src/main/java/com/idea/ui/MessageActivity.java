@@ -8,8 +8,15 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.util.Pair;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.ImageButton;
 
 import com.idea.Errors.ErrorCenter;
 import com.idea.Errors.PairappException;
@@ -22,6 +29,10 @@ import com.idea.util.LiveCenter;
 import com.idea.util.PLog;
 import com.idea.util.TaskManager;
 import com.idea.util.UiHelpers;
+import com.idea.util.ViewUtils;
+import com.rockerhieu.emojicon.EmojiconGridFragment;
+import com.rockerhieu.emojicon.EmojiconsFragment;
+import com.rockerhieu.emojicon.emoji.Emojicon;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -34,11 +45,15 @@ import io.realm.Realm;
 /**
  * @author by Null-Pointer on 9/19/2015.
  */
-public abstract class MessageActivity extends PairAppActivity implements LiveCenter.ProgressListener {
+public abstract class MessageActivity extends PairAppActivity implements LiveCenter.ProgressListener, TextWatcher, EmojiconsFragment.OnEmojiconBackspaceClickedListener, EmojiconGridFragment.OnEmojiconClickedListener {
 
     public static final String CONVERSATION_ACTIVE = "active";
     private static final String TAG = MessageActivity.class.getSimpleName();
+    public static final String EMOJI_FRAGMENT = "emojiFragment";
     private Worker worker;
+    private boolean isTypingEmoji = false;
+    private ImageButton emoji, camera, mic;
+    private EditText messageEt;
 
     protected final void resendMessage(String messageId) {
         android.os.Message msg = android.os.Message.obtain();
@@ -47,6 +62,41 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         worker.sendMessage(msg);
     }
 
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        messageEt = (EditText) findViewById(R.id.et_message);
+        emoji = ((ImageButton) findViewById(R.id.ib_attach_emoji));
+        camera = ((ImageButton) findViewById(R.id.ib_attach_capture_photo));
+        mic = ((ImageButton) findViewById(R.id.ib_attach_record_audio));
+        messageEt.addTextChangedListener(this);
+        messageEt.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    FragmentManager supportFragmentManager = getSupportFragmentManager();
+                    Fragment f = supportFragmentManager.findFragmentByTag(EMOJI_FRAGMENT);
+                    if (f != null) {
+                        supportFragmentManager.beginTransaction().remove(f).commit();
+                        emoji.setImageResource(R.drawable.ic_msg_panel_smiles);
+                        isTypingEmoji = false;
+                    }
+                }
+            }
+        });
+        messageEt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FragmentManager supportFragmentManager = getSupportFragmentManager();
+                Fragment f = supportFragmentManager.findFragmentByTag(EMOJI_FRAGMENT);
+                if (f != null) {
+                    supportFragmentManager.beginTransaction().remove(f).commit();
+                    emoji.setImageResource(R.drawable.ic_msg_panel_smiles);
+                    isTypingEmoji = false;
+                }
+            }
+        });
+    }
 
     @Override
     protected void onResume() {
@@ -178,10 +228,22 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         worker.sendMessage(message);
     }
 
-    protected final void onMessageSeen(Message message) {
+    protected final void onMessageSeen(final Message message) {
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                if (pairAppClientInterface != null) {
+                    pairAppClientInterface.notifyMessageSeen(message);
+                }
+            }
+        };
         if (message.getState() != Message.STATE_SEEN) {
-            pairAppClientInterface.notifyMessageSeen(message);
+            if (pairAppClientInterface != null) {
+                pairAppClientInterface.notifyMessageSeen(message);
+            }
+            new Handler().postDelayed(r, 1000);
         }
+
     }
 
     private final class Worker extends HandlerThread implements Handler.Callback {
@@ -411,11 +473,88 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         }
     }
 
-    public void attachCamera(View view) {
+    public final void attachCamera(View view) {
         UiHelpers.takePhoto();
     }
 
-    public void attachVoiceNote(View view) {
+    public final void attachVoiceNote(View view) {
+    }
+
+    public final void toggleEmoji(View view) {
+        ImageButton button = ((ImageButton) view);
+        Fragment emojiFragment = getSupportFragmentManager().findFragmentByTag(EMOJI_FRAGMENT);
+        InputMethodManager manager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        if (isTypingEmoji) {
+            //remove emojiFragment
+            if (emojiFragment != null) {
+                getSupportFragmentManager().beginTransaction().remove(emojiFragment).commit();
+            }
+            //show keyboard
+            manager.showSoftInput(messageEt, 0);
+
+            //set the icon to emoji
+            button.setImageResource(R.drawable.ic_msg_panel_smiles);
+        } else {
+            //hide keyboard
+            manager.hideSoftInputFromWindow(messageEt.getWindowToken(), 0);
+
+            //show emoji fragment
+            if (emojiFragment == null) {
+                emojiFragment = EmojiconsFragment.newInstance(false);
+            }
+            getSupportFragmentManager().beginTransaction().replace(R.id.emoji_pannel_slot, emojiFragment,
+                    EMOJI_FRAGMENT).commit();
+            //set the icon to keyboard
+            button.setImageResource(R.drawable.ic_msg_panel_kb);
+        }
+        isTypingEmoji = !isTypingEmoji;
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (isTypingEmoji) {
+            //remove emoji fragment
+            Fragment emojiFragment = getSupportFragmentManager().findFragmentByTag(EMOJI_FRAGMENT);
+            if (emojiFragment != null) {
+                getSupportFragmentManager().beginTransaction().remove(emojiFragment).commit();
+            }
+            //set the icon to emoji
+            emoji.setImageResource(R.drawable.ic_msg_panel_smiles);
+            isTypingEmoji = false;
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    public void onEmojiconClicked(Emojicon emojicon) {
+        EmojiconsFragment.input(messageEt, emojicon);
+    }
+
+    @Override
+    public void onEmojiconBackspaceClicked(View v) {
+        EmojiconsFragment.backspace(messageEt);
+    }
+
+    @Override
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+    }
+
+    @Override
+    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+    }
+
+    @Override
+    public void afterTextChanged(Editable s) {
+        if (s.length() == 0) {
+            //show camera and mic
+            ViewUtils.showViews(mic, camera);
+        } else {
+            //hide camera and mic
+            ViewUtils.hideViews(mic, camera);
+        }
     }
 
     protected interface SendCallback {

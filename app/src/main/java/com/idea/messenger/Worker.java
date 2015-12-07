@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.widget.Toast;
 
 import com.idea.Errors.ErrorCenter;
 import com.idea.Errors.PairappException;
@@ -41,6 +40,8 @@ public class Worker extends IntentService {
     private static final String MESSAGE_JSON = "com.idea.messenger.extra.MESSAGE";
 
     private static final String TAG = Worker.class.getName();
+    public static final String PARRALLEL_DOWNLOAD = "parrallelDownload";
+    public static final int MAX_PARRALLEL_DOWNLOAD = 10;
 
     public static void download(Context context, Message message) {
         Intent intent = new Intent(context, Worker.class);
@@ -67,13 +68,23 @@ public class Worker extends IntentService {
 
     private static final Set<String> downloading = new HashSet<>();
 
+    static int getCurrentActiveDownloads() {
+        synchronized (downloading) {
+            return downloading.size();
+        }
+    }
+
     private static Semaphore downloadLock = new Semaphore(5, true);
 
     private void download(final Message message) {
         synchronized (downloading) {
+            if (downloading.size() > MAX_PARRALLEL_DOWNLOAD) {
+                ErrorCenter.reportError(PARRALLEL_DOWNLOAD, getString(R.string.too_many_parralel_dowload), 1);
+                return;
+            }
             if (!downloading.add(message.getId())) {
                 PLog.w(TAG, "already  downloading message with id %s", message.getId());
-                Toast.makeText(this, R.string.already_downloading, Toast.LENGTH_SHORT).show();
+                ErrorCenter.reportError(PARRALLEL_DOWNLOAD, getString(R.string.already_downloading), 1);
                 return;
             }
         }
@@ -191,14 +202,8 @@ public class Worker extends IntentService {
                 downloading.remove(messageId);
             }
 
-            Intent intent = new Intent();
             if (error != null) {
-                NotificationManagerCompat manager = NotificationManagerCompat.from(Config.getApplicationContext());// getSystemService(NOTIFICATION_SERVICE));
-                manager.cancel(messageId, PairAppClient.notId);
-                intent.setClass(Config.getApplicationContext(), ChatActivity.class);
-                intent.putExtra(ChatActivity.EXTRA_PEER_ID, peer);
-                intent.putExtra(ChatActivity.EXTRA_SCROLL_TO_MESSAGE, messageId);
-                ErrorCenter.reportError("downloadFailed", error.getMessage(), intent);
+                ErrorCenter.reportError("downloadFailed", error.getMessage(), 1);
             }
         }
     }

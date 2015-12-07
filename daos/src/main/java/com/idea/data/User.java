@@ -243,8 +243,7 @@ public class User extends RealmObject {
     public static Realm Realm(Context context) {
         File dataFile = context.getDir("users", Context.MODE_PRIVATE);
         try {
-
-            return Realm.getInstance(dataFile, UserManager.getKey());
+            return Realm.getInstance(dataFile/*, UserManager.getKey()*/);
         } catch (RealmException e) {
             ErrorCenter.reportError("realmSecureError", context.getString(R.string.encryptionNotAvailable), null);
             return Realm.getInstance(dataFile);

@@ -185,7 +185,7 @@ public class MessageProcessor extends IntentService {
                 realm.commitTransaction();
                 NotificationManager.INSTANCE.onNewMessage(this, message);
 //            MessageCenter.notifyReceived(message);
-                if (!Message.isTextMessage(message)) {
+                if (!Message.isTextMessage(message) && Worker.getCurrentActiveDownloads() < Worker.MAX_PARRALLEL_DOWNLOAD) {
                     if ((ConnectionUtils.isWifiConnected()
                             && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_WIFI, false))
                             || (ConnectionUtils.isMobileConnected()
@@ -193,6 +193,7 @@ public class MessageProcessor extends IntentService {
                         Worker.download(this, message);
                     }
                 }
+
             } finally {
                 realm.close();
             }
