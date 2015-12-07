@@ -18,7 +18,6 @@
             <option value="$PROJECT_DIR$/library" />
             <option value="$PROJECT_DIR$/pullToRefresh" />
             <option value="$PROJECT_DIR$/sockets_io_client" />
-            <option value="$PROJECT_DIR$/textRenderer" />
             <option value="$PROJECT_DIR$/utils" />
           </set>
         </option>

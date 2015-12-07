@@ -51,7 +51,7 @@ dependencies {
     compile project(':daos')
     compile project(':utils')
     compile project(':pullToRefresh')
-    compile project(':textRenderer')
+//    compile project(':textRenderer')
     compile project(':cropper')
     compile project(':library')
     //    compile files('libs/sinch-android-rtc-3.6.0.jar')
