@@ -1,7 +1,7 @@
 package sockets;
 
 import com.github.nkzawa.emitter.Emitter;
-import com.idea.net.sockets.SocketIoClient;
+import com.pairapp.net.sockets.SocketIoClient;
 
 import org.junit.After;
 import org.junit.Before;

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/padding_ll_login_fragment_right"
+    android:background="@color/transparent"
+    android:orientation="vertical">
+    <EditText
+        android:id="@+id/et_input"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/padding_ll_login_fragment_right"
+        android:hint="@string/phone_hint"
+        android:inputType="phone"
+        android:maxLength="18"
+        android:singleLine="true"
+        android:textSize="@dimen/edit_text_size">
+        <requestFocus/>
+    </EditText>
+</LinearLayout>

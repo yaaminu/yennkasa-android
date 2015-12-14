@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.idea.view.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -25,4 +25,4 @@
         android:text="@string/st_please_wait"
         android:textColor="@color/colorPrimary"
         android:textSize="@dimen/standard_text_size" />
-</com.idea.view.LinearLayout>
+</com.pairapp.view.LinearLayout>

@@ -1,4 +1,4 @@
-<com.idea.view.RelativeLayout
+<com.pairapp.view.RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -8,7 +8,7 @@
     android:padding="@dimen/list_item_padding"
     tools:ignore="RtlHardcoded">
 
-    <com.idea.view.LinearLayout
+    <com.pairapp.view.LinearLayout
         android:id="@+id/ll_tv_cb"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -31,7 +31,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="false"/>
-    </com.idea.view.LinearLayout>
+    </com.pairapp.view.LinearLayout>
 
     <TextView
         android:id="@+id/tv_user_phone_group_admin"
@@ -54,4 +54,4 @@
         android:layout_marginRight="@dimen/divider_right_offset"
         android:layout_alignParentBottom="true"
         />
-</com.idea.view.RelativeLayout>
+</com.pairapp.view.RelativeLayout>

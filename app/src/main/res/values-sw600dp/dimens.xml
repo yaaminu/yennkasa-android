@@ -7,7 +7,7 @@
     <dimen name="five_dp">5dp</dimen>
     <dimen name="out_going_message_max_width">300dp</dimen>
     <dimen name="out_going_message_min_width">150dp</dimen>
-    <dimen name="message_body_margin">15dp</dimen>
+    <dimen name="message_body_margin">24dp</dimen>
     <dimen name="message_padding">16dp</dimen>
     <dimen name="message_status_date_width">150dp</dimen>
     <dimen name="live_typing_text_max_height">150dp</dimen>
@@ -64,4 +64,7 @@
     <dimen name="title_text_size_large">70sp</dimen>
     <dimen name="login_signup_verificaton_panel_width">500dp</dimen>
     <dimen name="menu_text_size">32sp</dimen>
+    <dimen name="chat_activity_list_divider_hieght">18dp</dimen>
+    <dimen name="chat_activity_list_divider_hieght_normal">9dp</dimen>
+    <dimen name="new_message_background_height_width">48dp</dimen>
 </resources>

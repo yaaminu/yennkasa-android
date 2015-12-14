@@ -4,4 +4,5 @@
     <bool name="isLandscape">false</bool>
     <bool name="is_very_large">false</bool>
     <bool name="is_big_screen">true</bool>
+    <bool name="scrolling_cache_chat_activity">false</bool>
 </resources>

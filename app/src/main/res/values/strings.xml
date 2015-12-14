@@ -17,7 +17,8 @@
     <string name="action_delete_conversation">Delete conversation</string>
     <string name="title_pick_recipient">Pick recipient</string>
     <string name="action_attach">Attach</string>
-    <string name="error_sorry_no_application_to_open_file">No App on your phone can open this file type</string>
+    <string name="error_sorry_no_application_to_open_file">No App on your phone can open this file type
+    </string>
     <string name="action_refresh">Refresh</string>
     <string name="title_activity_profile">Profile</string>
     <string name="error_occurred">Sorry an error occurred</string>
@@ -29,7 +30,6 @@
     <string name="edit_username">Edit name</string>
     <string name="display_picture">Display picture</string>
     <string name="username_placeholder">Username</string>
-
     <string-array name="attach_options">
         <item>Take Picture</item>
         <item>Record Video</item>
@@ -46,7 +46,8 @@
     <string name="shared_groups">Shared Groups</string>
     <string name="st_group_members">Group Members</string>
     <string name="st_success">Success</string>
-    <string name="st_choose_a_different_image">This image is already your DP.Choose a different one</string>
+    <string name="st_choose_a_different_image">This image is already your DP.Choose a different one
+    </string>
     <string name="st_error">Error</string>
     <string name="st_view_profile">View Profile</string>
     <string name="st_group_info">Group Info</string>
@@ -60,14 +61,17 @@
     <string name="st_verification_notice">@string/st_hint_et_verification</string>
     <string name="st_hint_et_verification">Verification Code</string>
     <string name="st_complete_setup">Complete Setup</string>
-    <string name="st_send_verification_notice">Enter the code you received.\nYou may try again if you don\'t receive it after 5 minutes</string>
+    <string name="st_send_verification_notice">Enter the code you received.\nYou may try again if you don\'t receive it after 5 minutes
+    </string>
     <string name="st_unknown">Unknown</string>
     <string name="st_offline">offline</string>
     <string name="st_online">online</string>
     <string name="st_no_mutual_group">You do not share any group with this user</string>
-    <string name="st_could_not_create_group">Failed to create group.Add at least two members</string>
+    <string name="st_could_not_create_group">Failed to create group.Add at least two members
+    </string>
     <string name="st_send_again">Resend Code</string>
-    <string name="st_invalid_phone_number_message">The phone number,<b>%s</b>, may not be valid in your country. Are you sure you want to continue?</string>
+    <string name="st_invalid_phone_number_message">The phone number,<b>%s</b>, may not be valid in your country. Are you sure you want to continue?
+    </string>
     <string name="st_understand">I UNDERSTAND</string>
     <string name="st_invalid_phone_number_title">Potentially invalid phone number</string>
     <string name="send">Send</string>
@@ -104,20 +108,23 @@
     <string name="required_field_error">%s can\'t be empty</string>
     <string name="password_too_short">Password too short</string>
     <string name="password_too_long">Password too long</string>
-    <string name="user_name_format_message">"User names can only contain letters,underscore and digits and must be between 2 to 12 characters"</string>
-    <string name="group_name_format_message">"Group names can only contain letters and digits and must be between 5 to 30 characters"</string>
+    <string name="user_name_format_message">"User names can only contain letters,underscore and digits and must be between 2 to 12 characters"
+    </string>
+    <string name="group_name_format_message">"Group names can only contain letters and digits and must be between 5 to 30 characters"
+    </string>
     <string name="token_required">Enter a the code you received via SMS</string>
     <string name="invalid_phone_number">%s is not a valid phone number</string>
     <string name="close">CLOSE</string>
     <string name="charges_may_apply">Standard charges from your operator may apply</string>
-    <string name="new_message_from">New message(s) from  </string>
+    <string name="new_message_from">New message(s) from</string>
     <string name="and">" and "</string>
     <string name="others">" others "</string>
     <string name="group_already_exists">"There is already a group with the name %s "</string>
     <string name="now">now</string>
     <string name="no_message">No message</string>
     <string name="error_failed_to_open_image">Failed to open image</string>
-    <string name="sure_you_want_to_delete_conversation">Sure you want to delete this conversation? All messages will be lost</string>
+    <string name="sure_you_want_to_delete_conversation">Sure you want to delete this conversation? All messages will be lost
+    </string>
     <string name="no">NO</string>
     <string name="group">group</string>
     <string name="forward_to">Forward to…</string>
@@ -130,20 +137,26 @@
     <string name="groups_you_share_in_common">Groups you share in common</string>
     <string name="Members">" Members"</string>
     <string name="error_file_too_large">File is either too large or invalid</string>
-    <string name="leave_group_prompt">Sure you want to leave group? all messages received from this group will be lost.</string>
+    <string name="leave_group_prompt">Sure you want to leave group? all messages received from this group will be lost.
+    </string>
     <string name="busy">busy</string>
     <string name="country">Your country</string>
     <string name="no_name">No name</string>
-    <string name="verification_token_message">"Hello the following number is your verification code: "</string>
-    <string name="invalid_message">Message Invalid, Ensure the message does not exceed the size limit</string>
-    <string name="invite_message">"Try out PAIRAPP messenger for android. It\'s free and fast! \n download here: https://file.ac/ueq7X4Oeps8/app-debug.apk</string>
-    <string name="sinch_not_available_message">Your device is not completely supported, Call features may not be available on your device</string>
-    <string name="sinch_error_report_message">we are having trouble setting things up,ensure your are connected to the internet and that your date is correct</string>
+    <string name="verification_token_message">"Hello the following number is your verification code: "
+    </string>
+    <string name="invalid_message">Message Invalid, Ensure the message does not exceed the size limit
+    </string>
+    <string name="invite_message">"Try out PairApp, and instant messenger for android. I can share anything and not only pictures and text.It\'s free and fast! \n Download here: https://pairapp.parseapp.com
+    </string>
+    <string name="sinch_not_available_message">Your device is not completely supported, Call features may not be available on your device
+    </string>
+    <string name="sinch_error_report_message">we are having trouble setting things up,ensure your are connected to the internet and that your date is correct
+    </string>
     <string name="st_unable_to_connect_version_2">@string/st_unable_to_connect</string>
     <string name="sample_date">2/23/12</string>
     <string name="typing_message">typingMessage</string>
     <string name="ellipsis">…</string>
-    <string name="sampleDate">  12–12–12</string>
+    <string name="sampleDate">12–12–12</string>
     <string name="play_download_content_description">play_or_download</string>
     <string name="not_group">You are not yet a member of any group</string>
     <string name="invalid_verification_token">Invalid verification code</string>
@@ -151,11 +164,12 @@
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
     <string name="nothing_to_display">Nothing to display</string>
-    <string name="image_size_too_large">Image size exceeds 8MB </string>
+    <string name="image_size_too_large">Image size exceeds 8MB</string>
     <string name="invalid_image">Invalid image</string>
     <string name="not_a_bitmap">Not a bitmap</string>
     <string name="add_custom">Add custom number</string>
-    <string name="add_custom_number">You can add other users who are not in your contacts by adding their numbers directly.\n They only have to be registered members of PairApp. It\'s that simple! :-)</string>
+    <string name="add_custom_number">You can add other users who are not in your contacts by adding their numbers directly.\n They only have to be registered members of PairApp. It\'s that simple! :-)
+    </string>
     <string name="title_activity_create_message">New Message</string>
     <string name="message_box_hint">message here…</string>
     <string name="st_group_name_hit">Name, e.g Brothers From One Hood</string>
@@ -163,22 +177,26 @@
     <string name="send_to">Send to…</string>
     <string name="file_not_found">can\'t forward, file not found</string>
     <string name="unknown">Unknown</string>
-    <string name="no_contact_on_pairapp_notice">Listen,You currently don\'t have anyone in your \
-        contacts who uses PairApp.\n\n Quickly invite them to have a nice experience</string>
-    <string name="no_contact_on_pairapp_notice_cap">LISTEN, YOU CURRENTLY DON\'T HAVE ANYONE IN YOUR CONTACTS USING PAIRAPP.\n\n QUICKLY INVITE THEM FOR A NICE CHAT EXPERIENCE.</string>
-    <string name="search_or_add_custom">Search or Add custom number</string>
+    <string name="no_contact_on_pairapp_notice">Listen,You currently don\'t have anyone in your \ contacts who uses PairApp.\n\n Quickly invite them to have a nice experience
+    </string>
+    <string name="no_contact_on_pairapp_notice_cap">LISTEN, YOU CURRENTLY DON\'T HAVE ANYONE IN YOUR CONTACTS USING PAIRAPP.\n\n QUICKLY INVITE THEM FOR A NICE CHAT EXPERIENCE.
+    </string>
     <string name="title_activity_login_signup_prompt">@string/app_name</string>
     <string name="added_custom_notice_toast">Number added successfully.</string>
-    <string name="group_minimum_notice">A group can start with minimum of 3 ( including you ) members</string>
-    <string name="user_adding_him_her_self_notice">You will be a member automatically after creating this group</string>
+    <string name="group_minimum_notice">A group can start with minimum of 3 ( including you ) members
+    </string>
+    <string name="user_adding_him_her_self_notice">You will be a member automatically after creating this group
+    </string>
     <string name="duplicate_number_notice">This number has already been added</string>
     <string name="duplicate_group_member">This user is already a member</string>
     <string name="you_add_already_a_member">You are already a member</string>
     <string name="group_name_ends_with_no_letter">Group names can only end with a letter</string>
-    <string name="group_name_starts_with_non_letter">Group names can only start with a letter</string>
+    <string name="group_name_starts_with_non_letter">Group names can only start with a letter
+    </string>
     <string name="group_name_too_long">Group names can not be less than 30 characters</string>
     <string name="group_name_too_short">Group names can not be less than 5 characters</string>
-    <string name="add_number_in_text_box_create_group_invite_members">Would you like to add the number in the text box before proceeding?</string>
+    <string name="add_number_in_text_box_create_group_invite_members">Would you like to add the number in the text box before proceeding?
+    </string>
     <string name="writing">writing…</string>
     <string name="image">Image</string>
     <string name="pick_an_optional_dp">Pick an optional display picture for the group</string>
@@ -186,26 +204,32 @@
     <string name="gallery">Gallery</string>
     <string name="invalid_name_format_error">names cannot contain the \"@\" character</string>
     <string name="later">Later</string>
-    <string name="choose_dp_help_friends_recognise_you">Add an optional display picture to help your friends recognise you</string>
+    <string name="choose_dp_help_friends_recognise_you">Add an optional display picture to help your friends recognise you
+    </string>
     <string name="refreshing">Refreshing…</string>
     <string name="release_to_refresh">Release to refresh</string>
     <string name="pull_to_refresh">Pull to refresh</string>
     <string name="refresh_contacts">Refresh Contacts</string>
-    <string name="permanently_disconnected">You seem to be permanently disconnected from the internet. Please Check your internet settings and try again</string>
+    <string name="permanently_disconnected">You seem to be permanently disconnected from the internet. Please Check your internet settings and try again
+    </string>
     <string name="try_again">Try Again</string>
     <string name="dp_prompt">Are you sure you want to use this picture as the DP?</string>
-    <string name="get_started_noitce"><![CDATA[<p>Hi there! thanks for installing PairApp.<br/>Please take a few seconds to set things up.</p>]]></string>
-    <string name="complete"><![CDATA[<p>You are just an inch away from getting connected to your friends. Please take time to complete the set up process.</p>]]></string>
+    <string name="get_started_noitce">
+        <![CDATA[<p>Hi there! thanks for installing PairApp.<br/>Please take a few seconds to set things up.</p>]]>
+    </string>
+    <string name="complete">
+        <![CDATA[<p>You are just an inch away from getting connected to your friends. Please take time to complete the set up process.</p>]]>
+    </string>
     <string name="picture">Picture</string>
     <string name="video">Video</string>
     <string name="file">File</string>
     <string name="Silent">Silent</string>
     <string name="title_activity_settings">SettingsActivity</string>
-
     <string name="Feedback">Feedback &amp; Suggestions</string>
     <string name="about_app">About PairApp</string>
     <string name="preferences">Preferences</string>
-    <string name="error_use_file_manager">An error occurred while processing the attachment. Try using a file manager to pick the file if the problem persists</string>
+    <string name="error_use_file_manager">An error occurred while processing the attachment. Try using a file manager to pick the file if the problem persists
+    </string>
     <string name="restore_defaults">Restore defaults</string>
     <string name="feedback_subject">Title (optional)</string>
     <string name="helper_feedback_subject">at most 40 letters</string>
@@ -213,16 +237,19 @@
     <string name="add_device_info">Include System Information</string>
     <string name="submit">Submit</string>
     <string name="error_feedback_body_empty">Feedback body cannot be empty</string>
-    <string name="feedback_sent_successfully">Feedback sent successfully. Thanks for your support and co-operation</string>
+    <string name="feedback_sent_successfully">Feedback sent successfully. Thanks for your support and co-operation
+    </string>
     <string name="app_name_cap">PAIRAPP</string>
-    <string name="idea_inc">© IDEA Inc.</string>
+    <string name="idea_inc">© Amean.</string>
     <string name="app_version">V 0.0.1 beta</string>
     <string name="legal_notice">LEGAL NOTICE</string>
     <string name="error_feedback_subject_too_lonng">Subject may not exceed 40 characters</string>
     <string name="silent">Silent</string>
-    <string name="send_token_notice">Your phone number needs to be verified. This may incur operator charges, make sure you have a working SMS plan before you continue.</string>
+    <string name="send_token_notice">Your phone number needs to be verified. This may incur operator charges, make sure you have a working SMS plan before you continue.
+    </string>
     <string name="send_token">Continue</string>
-    <string name="dissolve_group_prompt">Sure you want to permanently dissolve this group? This action cannot be undone.</string>
+    <string name="dissolve_group_prompt">Sure you want to permanently dissolve this group? This action cannot be undone.
+    </string>
     <string name="document">Document</string>
     <string name="text_file">Text file</string>
     <string name="application">Application</string>
@@ -231,35 +258,42 @@
     <string name="audio">Audio message</string>
     <string name="download_failed">Download failed</string>
     <string name="downloading">Downloading</string>
-    <string name="downloaded">Downloaded  </string>
+    <string name="downloaded">Downloaded</string>
     <string name="upload_progress">Upload progress</string>
-    <string name="max_download_reached">You\'ve reached maximum number of parallel downloads, you may wait for other downloads to complete</string>
+    <string name="max_download_reached">You\'ve reached maximum number of parallel downloads, you may wait for other downloads to complete
+    </string>
     <string name="add_contact">Add to contacts</string>
     <string name="download_update">Click to download update</string>
     <string name="update_available">Update available</string>
-    <string name="no_gcm_error_message">Google play services is either absent or outdated.Some functionality may be limited</string>
-    <string name="gcm_update_required_prompt">Your google play services is not up to date, you may consider updating to the latest version</string>
+    <string name="no_gcm_error_message">Google play services is either absent or outdated.Some functionality may be limited
+    </string>
+    <string name="gcm_update_required_prompt">Your google play services is not up to date, you may consider updating to the latest version
+    </string>
     <string name="invite_via">Invite through</string>
     <string name="crop">Crop</string>
     <string name="cancel">Cancel</string>
     <string name="feedback_hint">Suggestions,feature requests,bug reports,…</string>
-    <string name="error_unable_to_crop">Failed to save image, there might be no/insufficient storage on your device</string>
+    <string name="error_unable_to_crop">Failed to save image, there might be no/insufficient storage on your device
+    </string>
     <string name="search">Search</string>
     <string name="add_ime">Add</string>
     <string name="number_too_short">Number too short</string>
     <string name="image_too_short">Cropped image is too short compared to its width</string>
     <string name="image_too_narrow">Cropped image is too narrow</string>
     <string name="image_too_big">Cropped Image too big</string>
-    <string name="no_contact_app_on_device">This is strange!, No contact application is installed on your device</string>
+    <string name="no_contact_app_on_device">This is strange!, No contact application is installed on your device
+    </string>
     <string name="block">Block %s</string>
     <string name="unblock">Unblock %s</string>
     <string name="this_user">this user</string>
     <string name="do_not_ask_me_again">Don\'t ask me again</string>
-    <string name="device_out_of_ram">Failed to load image, your device might have run ouf of RAM</string>
+    <string name="device_out_of_ram">Failed to load image, your device might have run ouf of RAM
+    </string>
     <string name="stop_annoying_me">stop annoying me</string>
     <string name="content_des_send_message_agin">retry sending message</string>
     <string name="retry_sending_message">Retry sending message</string>
-    <string name="blocked_user_notice">By sending a message to this blocked user, you agree that this user will be automatically unblocked</string>
+    <string name="blocked_user_notice">By sending a message to this blocked user, you agree that this user will be automatically unblocked
+    </string>
     <string name="user_unblocked">unblocked successfully</string>
     <string name="delete_success">Deleted successfully</string>
     <string name="user_blocked">blocked successfully</string>
@@ -274,16 +308,24 @@
     <string name="verification_failed">verification failed</string>
     <string name="already_downloading">already downloading</string>
     <string name="uploading">uploading</string>
-    <string name="err_message_not_found">The message you selected was not found, did you delete it?</string>
+    <string name="err_message_not_found">The message you selected was not found, did you delete it?
+    </string>
     <string name="token_invalid">Token is not valid,Check your SMS inbox for the token.</string>
     <string name="agree">I agree</string>
     <string name="disagree">Disagree</string>
-    <string name="err_problem_setting_sinch_up">We are facing problems setting things up, ensure your device\'s date is set properly</string>
-    <string name="warn_msg_clear_conversation_messages">Sure you want to clear all messages in this conversation?</string>
+    <string name="err_problem_setting_sinch_up">We are facing problems setting things up, ensure your device\'s date is set properly
+    </string>
+    <string name="warn_msg_clear_conversation_messages">Sure you want to clear all messages in this conversation?
+    </string>
     <string name="clear_messages">Clear messages</string>
     <string name="disconected">You are disconnected</string>
-    <string name="too_many_parralel_dowload">Too many silmoutaneous download, wait for some of the
-        pending downloads to complete
+    <string name="too_many_parralel_dowload">Too many silmoutaneous download, wait for some of the pending downloads to complete
     </string>
     <string name="no_app_for_sharing">You have no application for sharing content</string>
+    <string name="audio_record_failed">Audion record failed, ensure your SD card is properly mounted
+    </string>
+    <string name="preparing_to_download">Preparing download</string>
+    <string name="attachment_invalid">Attachment invalid</string>
+    <string name="path">" does not exist"</string>
+    <string name="new_line_path">"\n path "</string>
 </resources>

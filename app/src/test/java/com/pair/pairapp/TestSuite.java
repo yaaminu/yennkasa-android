@@ -1,6 +1,6 @@
-package com.idea.pairapp;
+package com.pairapp.pairapp;
 
-import com.idea.util.FileUtils;
+import com.pairapp.util.FileUtils;
 
 import org.junit.Test;
 

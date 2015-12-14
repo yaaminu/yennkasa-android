@@ -7,9 +7,12 @@ repositories {
 
 
 android {
+    signingConfigs {
+        config {
+        }
+    }
     compileSdkVersion 21
     buildToolsVersion "21.1.2"
-
     testOptions {
         unitTests.returnDefaultValues = true
     }
@@ -23,8 +26,9 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.config
         }
     }
     sourceSets {
@@ -51,7 +55,7 @@ dependencies {
     compile project(':daos')
     compile project(':utils')
     compile project(':pullToRefresh')
-//    compile project(':textRenderer')
+    //    compile project(':textRenderer')
     compile project(':cropper')
     compile project(':library')
     //    compile files('libs/sinch-android-rtc-3.6.0.jar')

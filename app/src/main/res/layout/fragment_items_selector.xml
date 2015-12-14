@@ -1,14 +1,14 @@
-<com.idea.view.LinearLayout
+<com.pairapp.view.LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
-    tools:context="com.idea.ui.ItemsSelector"
+    tools:context="com.pairapp.ui.ItemsSelector"
     tools:ignore="RtlHardcoded">
 
-    <com.idea.view.FrameLayout
+    <com.pairapp.view.FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
@@ -42,5 +42,5 @@
             android:dividerHeight="0dp"
             android:fadingEdge="none"
             android:transcriptMode="disabled"/>
-    </com.idea.view.FrameLayout>
-</com.idea.view.LinearLayout>
+    </com.pairapp.view.FrameLayout>
+</com.pairapp.view.LinearLayout>

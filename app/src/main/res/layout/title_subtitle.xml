@@ -1,4 +1,4 @@
-<com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:minHeight="?android:attr/listPreferredItemHeight">
@@ -24,4 +24,4 @@
         android:singleLine="true"
         android:layout_alignLeft="@+id/tv_title"
         android:textSize="@dimen/standard_text_size"/>
-</com.idea.view.RelativeLayout>
+</com.pairapp.view.RelativeLayout>

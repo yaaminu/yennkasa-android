@@ -1,13 +1,13 @@
-<com.idea.view.RelativeLayout
+<com.pairapp.view.RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.idea.ui.CreateMessageActivity">
+    tools:context="com.pairapp.ui.CreateMessageActivity">
 
-    <com.idea.view.LinearLayout
+    <com.pairapp.view.LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:animateLayoutChanges="true"
@@ -112,7 +112,7 @@
                     android:textSize="@dimen/standard_text_size"
                     tools:ignore="HardcodedText"/>
 
-                <com.idea.view.FrameLayout
+                <com.pairapp.view.FrameLayout
                     style="@style/FlatWaveButtonRippleStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -126,11 +126,16 @@
                         android:background="@color/transparent"
                         android:contentDescription="@string/content_description_remove_attachment"
                         android:src="@drawable/ic_clear_white_24dp"/>
-                </com.idea.view.FrameLayout>
+                </com.pairapp.view.FrameLayout>
             </LinearLayout>
         </android.support.v7.widget.CardView>
-
+       <include
+        layout="@layout/divider"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/inbox_preferred_list_item_divider_height"
+        />
         <LinearLayout
+            android:id="@+id/ll_input_panel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
@@ -186,10 +191,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
+                android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
                 android:adjustViewBounds="true"
                 android:background="@color/transparent"
                 android:onClick="attachCamera"
-                android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
                 android:scaleType="centerInside"
                 android:src="@drawable/ic_photo_camera_black_24dp"
                 />
@@ -216,9 +221,9 @@
             android:layout_height="wrap_content"
             >
         </FrameLayout>
-    </com.idea.view.LinearLayout>
+    </com.pairapp.view.LinearLayout>
 
     <include
         layout="@layout/snack_bar"/>
-</com.idea.view.RelativeLayout>
+</com.pairapp.view.RelativeLayout>
 

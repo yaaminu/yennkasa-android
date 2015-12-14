@@ -94,7 +94,8 @@
         <item name="cpd_strokeColor">@color/white</item>
     </style>
 
-    <style name="base_indeterminate_progress_stroke_preferred_color" parent="CircularProgressDrawableStyle">
+    <style name="base_indeterminate_progress_stroke_preferred_color"
+           parent="CircularProgressDrawableStyle">
         <item name="cpd_strokeColor">@color/preferred_primary_color</item>
     </style>
 
@@ -102,7 +103,8 @@
         <item name="cpd_strokeColor">@color/preferred_primary_color</item>
     </style>
 
-    <style name="InOutColorsCircularProgressDrawableStyle" parent="Material.Drawable.CircularProgress">
+    <style name="InOutColorsCircularProgressDrawableStyle"
+           parent="Material.Drawable.CircularProgress">
         <item name="cpd_inAnimDuration">800</item>
         <item name="cpd_inStepPercent">0.5</item>
         <item name="cpd_inStepColors">@array/in_colors</item>
@@ -110,13 +112,15 @@
         <item name="cpd_strokeColors">@array/progress_colors</item>
     </style>
 
-    <style name="DeterminateInOutCircularProgressDrawableStyle" parent="Material.Drawable.CircularProgress.Determinate">
+    <style name="DeterminateInOutCircularProgressDrawableStyle"
+           parent="Material.Drawable.CircularProgress.Determinate">
         <item name="cpd_inAnimDuration">400</item>
         <item name="cpd_outAnimDuration">400</item>
         <item name="cpd_initialAngle">-90</item>
     </style>
 
-    <style name="DeterminateCircularProgressDrawableStyle" parent="Material.Drawable.CircularProgress.Determinate">
+    <style name="DeterminateCircularProgressDrawableStyle"
+           parent="Material.Drawable.CircularProgress.Determinate">
         <item name="cpd_inAnimDuration">0</item>
         <item name="cpd_outAnimDuration">0</item>
         <item name="cpd_initialAngle">-90</item>
@@ -131,7 +135,8 @@
         <item name="lpd_strokeSecondaryColor">#00000000</item>
     </style>
 
-    <style name="DeterminateLinearProgressDrawableStyle" parent="Material.Drawable.LinearProgress.Determinate">
+    <style name="DeterminateLinearProgressDrawableStyle"
+           parent="Material.Drawable.LinearProgress.Determinate">
         <item name="lpd_strokeColor">#FF4389F3</item>
         <item name="lpd_strokeSecondaryColor">#FFB6CDF2</item>
     </style>
@@ -141,7 +146,8 @@
         <item name="lpd_strokeSecondaryColor">#FFB6CDF2</item>
     </style>
 
-    <style name="BufferLinearProgressDrawableStyle" parent="Material.Drawable.LinearProgress.Buffer">
+    <style name="BufferLinearProgressDrawableStyle"
+           parent="Material.Drawable.LinearProgress.Buffer">
         <item name="lpd_strokeColor">#FF4389F3</item>
         <item name="lpd_strokeSecondaryColor">#FFB6CDF2</item>
         <item name="lpd_travelDuration">400</item>
@@ -314,6 +320,15 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">@dimen/big_button_height</item>
         <item name="android:background">@drawable/button_background</item>
+    </style>
+    <style name="snackbar_white" parent="Material.Widget.SnackBar.Mobile.MultiLine">
+        <item name="sb_textColor">@color/preferred_primary_color</item>
+        <item name="sb_backgroundColor">@color/white</item>
+        <item name="sb_actionTextColor">#f00</item>
+    </style>
+
+    <style name="snackbar_black" parent="Material.Widget.SnackBar.Mobile.MultiLine">
+        <item name="sb_duration">10000</item>
     </style>
 
     <dimen name="profile_fragment_round_icons_padding">8dp</dimen>

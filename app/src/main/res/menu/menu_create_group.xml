@@ -1,4 +1,4 @@
 <menu
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.idea.ui.CreateGroupActivity">
+    tools:context="com.pairapp.ui.CreateGroupActivity">
 </menu>

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                               xmlns:app="http://schemas.android.com/apk/res-auto"
                               xmlns:tools="http://schemas.android.com/tools"
                               android:layout_width="wrap_content"
                               android:layout_height="wrap_content"
                               android:layout_margin="@dimen/message_body_margin">
 
-    <com.idea.view.LinearLayout
+    <com.pairapp.view.LinearLayout
         android:id="@+id/ll_message_body_view"
         style="@style/outgoing_message_body_root_view"
         android:layout_width="wrap_content"
@@ -14,7 +14,7 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <com.idea.view.FrameLayout
+        <com.pairapp.view.FrameLayout
             android:id="@+id/fl_message_body_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
@@ -27,7 +27,7 @@
                 android:singleLine="true"
                 android:text="hi when are you coming"
                 tools:ignore="HardcodedText"/>
-        </com.idea.view.FrameLayout>
+        </com.pairapp.view.FrameLayout>
 
         <TextView
             android:id="@+id/tv_message_date"
@@ -40,7 +40,7 @@
             android:singleLine="true"
             android:text="  12-12-12"
             tools:ignore="HardcodedText"/>
-    </com.idea.view.LinearLayout>
+    </com.pairapp.view.LinearLayout>
 
     <ImageButton
         android:id="@+id/iv_retry"
@@ -78,7 +78,7 @@
         android:src="@drawable/ic_play_circle_outline_white_36dp"
         android:visibility="gone"/>
 
-    <com.idea.view.ProgressWheel
+    <com.pairapp.view.ProgressWheel
         android:id="@+id/pb_download_progress_indeterminate"
         android:layout_width="48dp"
         android:layout_height="48dp"
@@ -101,4 +101,4 @@
         android:textSize="@dimen/standard_text_size"
         android:visibility="gone"
         tools:ignore="HardcodedText"/>
-</com.idea.view.RelativeLayout>
+</com.pairapp.view.RelativeLayout>

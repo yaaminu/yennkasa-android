@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                               android:layout_width="match_parent"
                               android:layout_height="match_parent"
                               android:gravity="center">
@@ -24,4 +24,4 @@
     <include
         android:id="@+id/fab_new_message"
         layout="@layout/fab_generic"/>
-</com.idea.view.RelativeLayout>
+</com.pairapp.view.RelativeLayout>

@@ -7,7 +7,7 @@
     android:gravity="center_horizontal"
     android:orientation="vertical"
     android:weightSum="1"
-    tools:context="com.idea.ui.FeedBackFragment">
+    tools:context="com.pairapp.ui.FeedBackFragment">
 
     <EditText
         android:id="@+id/et_feedback_subject"

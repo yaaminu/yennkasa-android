@@ -1,10 +1,10 @@
-<com.idea.view.RelativeLayout
+<com.pairapp.view.RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.idea.ui.CreateGroupActivity">
+    tools:context="com.pairapp.ui.CreateGroupActivity">
 
     <FrameLayout
         android:id="@+id/bar"
@@ -64,7 +64,7 @@
 
     </FrameLayout>
 
-    <com.idea.view.RelativeLayout
+    <com.pairapp.view.RelativeLayout
         android:id="@+id/rl_main_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -88,7 +88,7 @@
 
         <fragment
             android:id="@+id/rl_group_dp_preview"
-            android:name="com.idea.ui.ChooseDisplayPictureFragment"
+            android:name="com.pairapp.ui.ChooseDisplayPictureFragment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/et_group_name"
@@ -98,9 +98,9 @@
             tools:layout="@layout/fragment_choose_display_picture"
             >
         </fragment>
-    </com.idea.view.RelativeLayout>
+    </com.pairapp.view.RelativeLayout>
 
     <include
         layout="@layout/snack_bar"
         />
-</com.idea.view.RelativeLayout>
+</com.pairapp.view.RelativeLayout>

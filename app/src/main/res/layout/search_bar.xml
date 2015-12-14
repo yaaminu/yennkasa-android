@@ -27,7 +27,6 @@
         android:paddingLeft="@dimen/padding_ll_login_fragment_right"
         android:paddingRight="@dimen/padding_ll_login_fragment_right"
         android:textColor="@android:color/white"
-        android:textColorHint="@color/white"
         android:textSize="@dimen/edit_text_size"
         android:visibility="visible"/>
 

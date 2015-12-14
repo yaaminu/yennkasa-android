@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.idea.view.RelativeLayout
+<com.pairapp.view.RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -12,7 +12,7 @@
     android:paddingRight="@dimen/list_item_padding"
     android:paddingTop="@dimen/list_item_padding">
 
-    <com.idea.view.RoundedImageView
+    <com.pairapp.view.RoundedImageView
         android:id="@+id/iv_user_avatar"
         android:layout_width="@dimen/thumbnail_width"
         android:layout_height="@dimen/thumbnail_height"
@@ -42,7 +42,7 @@
         tools:ignore="HardcodedText"/>
 
 
-    <com.idea.view.LinearLayout
+    <com.pairapp.view.LinearLayout
         android:id="@+id/ll_conversation_desc"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -75,7 +75,7 @@
             android:textColor="@color/light_gray"
             android:textSize="@dimen/standard_text_size_small"
             tools:ignore="HardcodedText"/>
-    </com.idea.view.LinearLayout>
+    </com.pairapp.view.LinearLayout>
 
     <include
         layout="@layout/divider"
@@ -90,17 +90,19 @@
 
     <TextView
         android:id="@+id/tv_new_messages_count"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="@dimen/new_message_background_height_width"
+        android:layout_height="@dimen/new_message_background_height_width"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_margin="@dimen/padding_ll_login_fragment_left"
         android:background="@drawable/orange_rect_back_ground"
+        android:ellipsize="none"
         android:gravity="center"
         android:padding="@dimen/padding_button"
-        android:text="1"
+        android:singleLine="true"
+        android:text="110"
         android:textColor="@color/white"
         android:textSize="@dimen/standard_text_size_small"
         tools:ignore="HardcodedText"/>
-</com.idea.view.RelativeLayout>
+</com.pairapp.view.RelativeLayout>

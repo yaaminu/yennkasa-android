@@ -1,18 +1,18 @@
-<com.idea.view.LinearLayout
+<com.pairapp.view.LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    tools:context="com.idea.ui.ProfileFragment">
+    tools:context="com.pairapp.ui.ProfileFragment">
 
-    <com.idea.view.LinearLayout
+    <com.pairapp.view.LinearLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:layout_weight="1">
-        <com.idea.view.RelativeLayout
+        <com.pairapp.view.RelativeLayout
             android:id="@+id/fl_dp_panel"
             android:layout_width="match_parent"
             android:layout_weight="1"
@@ -31,7 +31,7 @@
                 layout="@layout/progressbar"
                 android:visibility="visible"/>
 
-            <com.idea.view.LinearLayout
+            <com.pairapp.view.LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
@@ -48,8 +48,8 @@
                     android:contentDescription="@string/change_dp"
                     app:fab_iconSrc="@drawable/ic_action_picture"
                     />
-            </com.idea.view.LinearLayout>
-        </com.idea.view.RelativeLayout>
+            </com.pairapp.view.LinearLayout>
+        </com.pairapp.view.RelativeLayout>
         <LinearLayout
             android:id="@+id/user_action_panel"
             android:layout_width="match_parent"
@@ -103,7 +103,7 @@
                 android:textSize="@dimen/standard_text_size"
                 android:visibility="visible"/>
         </LinearLayout>
-    </com.idea.view.LinearLayout>
+    </com.pairapp.view.LinearLayout>
 
     <LinearLayout
         android:layout_width="0dp"
@@ -122,13 +122,13 @@
             android:layout_marginStart="@dimen/padding_ll_login_fragment_left"
             android:layout_marginTop="@dimen/profile_list_item_padding_top">
 
-            <com.idea.view.LinearLayout
+            <com.pairapp.view.LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="center_horizontal"
                 android:orientation="vertical">
 
-                <com.idea.view.LinearLayout
+                <com.pairapp.view.LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_marginTop="@dimen/profile_list_item_padding_top"
@@ -148,7 +148,7 @@
                         android:text="@string/username_placeholder"
                         android:textColor="#000"
                         android:textSize="@dimen/edit_text_size"/>
-                </com.idea.view.LinearLayout>
+                </com.pairapp.view.LinearLayout>
 
                 <include layout="@layout/divider_span_full"/>
 
@@ -172,7 +172,7 @@
                     android:layout_marginTop="@dimen/profile_list_item_padding_top"
                     android:layout_weight="1"
                     android:minHeight="?android:attr/listPreferredItemHeight"/>
-            </com.idea.view.LinearLayout>
+            </com.pairapp.view.LinearLayout>
         </ScrollView>
     </LinearLayout>
-</com.idea.view.LinearLayout>
+</com.pairapp.view.LinearLayout>

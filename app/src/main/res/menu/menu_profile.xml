@@ -1,4 +1,4 @@
 <menu xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.idea.ui.ProfileActivity">
+    tools:context="com.pairapp.ui.ProfileActivity">
 
 </menu>

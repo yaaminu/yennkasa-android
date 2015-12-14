@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="mention_color">#21a5b8</color>
-    <color name="hashtag_color">#e45555</color>
-    <dimen name="selected_item_text_size">30dp</dimen>
-    <bool name="is_big_screen">false</bool>
-</resources>

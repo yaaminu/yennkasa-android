@@ -1,9 +1,9 @@
-<com.idea.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                               xmlns:app="http://schemas.android.com/apk/res-auto"
                               xmlns:tools="http://schemas.android.com/tools"
                               android:layout_width="match_parent"
                               android:layout_height="match_parent"
-                              tools:context="com.idea.ui.UsersActivity">
+                              tools:context="com.pairapp.ui.UsersActivity">
 
     <FrameLayout
         android:id="@+id/bar"
@@ -25,13 +25,13 @@
             />
     </FrameLayout>
 
-    <com.idea.view.FrameLayout
+    <com.pairapp.view.FrameLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/bar"
         android:layout_margin="8dp">
 
-    </com.idea.view.FrameLayout>
+    </com.pairapp.view.FrameLayout>
 
-</com.idea.view.RelativeLayout>
+</com.pairapp.view.RelativeLayout>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.idea.view.RelativeLayout
+<com.pairapp.view.RelativeLayout
     android:id="@+id/date_header_parent"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -21,4 +21,4 @@
         android:textColor="@color/black"
         android:textSize="@dimen/log_message_text_size"
         tools:ignore="HardcodedText"/>
-</com.idea.view.RelativeLayout>
+</com.pairapp.view.RelativeLayout>

@@ -1,10 +1,10 @@
-<com.idea.view.RelativeLayout
+<com.pairapp.view.RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/header"
-    tools:context="com.idea.ui.AboutFragment">
+    tools:context="com.pairapp.ui.AboutFragment">
 
     <com.rey.material.widget.TextView
         android:id="@+id/tv_app_name"
@@ -54,4 +54,4 @@
         android:textSize="@dimen/standard_text_size"
         android:textStyle="bold"
         />
-</com.idea.view.RelativeLayout>
+</com.pairapp.view.RelativeLayout>

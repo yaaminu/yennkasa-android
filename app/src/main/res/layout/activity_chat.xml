@@ -1,4 +1,4 @@
-<com.idea.view.RelativeLayout
+<com.pairapp.view.RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -21,7 +21,7 @@
         app:theme="@style/AppBar"
         tools:ignore="UnusedAttribute"/>
 
-    <com.idea.view.RelativeLayout
+    <com.pairapp.view.RelativeLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -31,14 +31,14 @@
         android:background="#0000"
         tools:ignore="UnusedAttribute">
 
-        <com.idea.view.RelativeLayout
+        <com.pairapp.view.RelativeLayout
             android:id="@+id/attachment_picker_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
-        </com.idea.view.RelativeLayout>
+        </com.pairapp.view.RelativeLayout>
 
-        <com.idea.view.LinearLayout
+        <com.pairapp.view.LinearLayout
             android:id="@+id/ll_list_view_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -61,6 +61,7 @@
                 android:fadingEdge="none"
                 android:scrollbars="none"
                 android:transcriptMode="normal"
+                android:scrollingCache="@bool/scrolling_cache_chat_activity"
                 tools:ignore="UnusedAttribute"/>
 
             <LinearLayout
@@ -119,10 +120,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
+                    android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
                     android:adjustViewBounds="true"
                     android:background="@color/transparent"
                     android:onClick="attachCamera"
-                    android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_photo_camera_black_24dp"
                     />
@@ -140,7 +141,7 @@
                     android:src="@drawable/ic_mic_black_24dp"
                     />
 
-                <com.idea.view.FrameLayout
+                <com.pairapp.view.FrameLayout
                     android:id="@+id/iv_send"
                     style="@style/FlatButtonRippleStyle"
                     android:layout_width="wrap_content"
@@ -159,7 +160,7 @@
                         android:scaleType="centerInside"
                         android:src="@drawable/ic_send_white_24dp"/>
 
-                </com.idea.view.FrameLayout>
+                </com.pairapp.view.FrameLayout>
 
             </LinearLayout>
 
@@ -225,10 +226,10 @@
                 >
 
             </FrameLayout>
-        </com.idea.view.LinearLayout>
+        </com.pairapp.view.LinearLayout>
 
         <include layout="@layout/message_item_log"/>
-    </com.idea.view.RelativeLayout>
+    </com.pairapp.view.RelativeLayout>
 
     <include layout="@layout/snack_bar"/>
-</com.idea.view.RelativeLayout>
+</com.pairapp.view.RelativeLayout>

@@ -1,8 +1,8 @@
-package com.idea.messenger;
+package com.pairapp.messenger;
 
 import android.support.annotation.NonNull;
 
-import com.idea.data.Message;
+import com.pairapp.data.Message;
 
 import org.junit.Test;
 

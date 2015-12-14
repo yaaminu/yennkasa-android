@@ -1,4 +1,4 @@
-<com.idea.view.RelativeLayout
+<com.pairapp.view.RelativeLayout
     android:id="@+id/fr_login"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -31,7 +31,7 @@
     <!--android:textSize="@dimen/sub_title_text_size"-->
     <!--android:textStyle="bold|italic"/>-->
 
-    <com.idea.view.RelativeLayout
+    <com.pairapp.view.RelativeLayout
         android:id="@+id/login_sign_up_pane"
         android:layout_width="@dimen/login_signup_verificaton_panel_width"
         android:layout_height="wrap_content"
@@ -44,7 +44,7 @@
         android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
         android:background="#dfff">
 
-        <com.idea.view.LinearLayout
+        <com.pairapp.view.LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:animateLayoutChanges="true"
@@ -97,9 +97,9 @@
                 android:textColor="@color/white"
                 android:textSize="@dimen/login_signup_text_size"/>
 
-        </com.idea.view.LinearLayout>
+        </com.pairapp.view.LinearLayout>
 
-    </com.idea.view.RelativeLayout>
+    </com.pairapp.view.RelativeLayout>
 
     <com.rey.material.widget.TextView
         android:id="@+id/tv_signup"
@@ -118,4 +118,4 @@
         android:textSize="@dimen/signup_have_an_account_size"/>
 
     <include layout="@layout/copyright_text_view"/>
-</com.idea.view.RelativeLayout>
+</com.pairapp.view.RelativeLayout>

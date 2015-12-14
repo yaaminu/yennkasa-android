@@ -13,4 +13,7 @@
     <string name="folder_name_files">Files</string>
     <string name="folder_name_voice_notes">Voice Notes</string>
     <string name="folder_name_profile">profile</string>
+    <string name="no_sdcard">No SD card available on this device, functionality may be limited</string>
+    <string name="no_app_audio_record">No application on your phone can record audio</string>
+    <string name="failed_to_save_file">IO error!  failed to save file</string>
 </resources>
