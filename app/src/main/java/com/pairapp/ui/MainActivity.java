@@ -1,7 +1,6 @@
 package com.pairapp.ui;
 
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -13,22 +12,14 @@ import android.support.v7.widget.Toolbar;
 
 import com.google.samples.apps.iosched.ui.widget.SlidingTabLayout;
 import com.pairapp.PairApp;
-import com.pairapp.data.Conversation;
-import com.pairapp.data.Message;
-import com.pairapp.data.RealmUtils;
-import com.pairapp.data.User;
-import com.pairapp.data.UserManager;
-import com.pairapp.messenger.MessageProcessor;
 import com.pairapp.R;
-import com.pairapp.util.Config;
+import com.pairapp.data.Conversation;
+import com.pairapp.data.User;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.UiHelpers;
 import com.parse.ParseAnalytics;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
@@ -209,7 +200,6 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     private final RealmChangeListener changeListener = new RealmChangeListener() {
         @Override
         public void onChange() {
-            checkIfUserAvailable();
             pager.getAdapter().notifyDataSetChanged();
         }
     };
@@ -226,7 +216,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                 realm.close();
                 realm = null;
             }
-        return noUserAvailable;
+        return !noUserAvailable;
     }
 
     @Override
