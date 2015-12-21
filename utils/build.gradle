@@ -29,4 +29,6 @@ dependencies {
 //    compile 'com.og.encryptedsharedpreferences:encryptedsharedpreferences:1.0.0'
     //compile 'com.scottyab:secure-preferences-lib:0.1.4'
     testCompile 'junit:junit:4.12'
+            compile 'com.scottyab:aes-crypto:0.0.4'
+
 }

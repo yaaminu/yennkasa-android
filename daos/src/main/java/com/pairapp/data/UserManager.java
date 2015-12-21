@@ -4,8 +4,6 @@ import android.app.AlarmManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.StringRes;
@@ -936,7 +934,6 @@ public final class UserManager {
                           final String phoneNumber,
                           final String countryIso,
                           final CallBack callback) {
-        if (rateLimitNotExceeded("signup", 60000)) {
             String thePhoneNumber;
             try {
                 thePhoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, countryIso);
@@ -961,9 +958,6 @@ public final class UserManager {
                 }
 
             });
-        } else {
-            doNotify(new Exception(getString(R.string.busy)), callback);
-        }
     }
 
     private String getString(@StringRes int res) {
@@ -986,7 +980,6 @@ public final class UserManager {
         if (!isUserLoggedIn()) {
             throw new IllegalStateException("no user logged for verification");
         }
-        if (rateLimitNotExceeded("verifyUser", 30000)) {
             userApi.verifyUser(getCurrentUser().getUserId(), token, new UserApiV2.Callback<UserApiV2.SessionData>() {
                 @Override
                 public void done(Exception e, UserApiV2.SessionData data) {
@@ -1000,23 +993,6 @@ public final class UserManager {
                     }
                 }
             });
-        } else {
-            Long remaining;
-            synchronized (rateLimiter) {
-                remaining = rateLimiter.get("verifyUser");
-                if (remaining != null) {
-                    Handler handler = new Handler(Looper.getMainLooper());
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            verifyUser(token, callBack);
-                        }
-                    }, remaining);
-                    return;
-                }
-            }
-            verifyUser(token, callBack); //if we are here it means the rate limit has exceeded
-        }
     }
 
     private void initialiseSettings() {
@@ -1039,30 +1015,12 @@ public final class UserManager {
             doNotify(NO_CONNECTION_ERROR, callback);
             return;
         }
-        if (rateLimitNotExceeded("sendToken", AlarmManager.INTERVAL_FIFTEEN_MINUTES / 30)) {
             userApi.sendVerificationToken(getMainUserId(), new UserApiV2.Callback<HttpResponse>() {
                 @Override
                 public void done(Exception e, HttpResponse aBoolean) {
                     doNotify(e, callback);
                 }
             });
-        } else {
-            Long remaining;
-            synchronized (rateLimiter) {
-                remaining = rateLimiter.get("sendToken");
-                if (remaining != null) {
-                    Handler handler = new Handler(Looper.getMainLooper());
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            sendVerificationToken(callback);
-                        }
-                    }, remaining);
-                    return;
-                }
-            }
-            sendVerificationToken(callback); //if we are here it means the rate limit has exceeded
-        }
     }
 
     public void resendToken(final CallBack callBack) {
@@ -1077,16 +1035,12 @@ public final class UserManager {
             doNotify(NO_CONNECTION_ERROR, callBack);
             return;
         }
-        if (rateLimitNotExceeded("resendToken", AlarmManager.INTERVAL_FIFTEEN_MINUTES / 30)) {
             userApi.resendToken(getCurrentUser().getUserId(), null, new UserApiV2.Callback<HttpResponse>() {
                 @Override
                 public void done(Exception e, HttpResponse response) {
                     doNotify(e, callBack);
                 }
             });
-        } else {
-            doNotify(new Exception(getString(R.string.busy)), callBack);
-        }
     }
 
 //    @SuppressWarnings("unused")
@@ -1170,10 +1124,7 @@ public final class UserManager {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             doNotify(NO_CONNECTION_ERROR, callBack);
         }
-        if (!rateLimitNotExceeded("leaveGroup", 60000)) {
-            doNotify(new Exception(getString(R.string.busy)), callBack);
-            return;
-        }
+    
         userApi.leaveGroup(id, getCurrentUser().getUserId(), null, new UserApiV2.Callback<HttpResponse>() {
 
             @Override

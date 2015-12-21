@@ -281,7 +281,7 @@ public class ParseClient implements UserApiV2 {
     public void doSyncContacts(List<String> userIds, Callback<List<User>> callback) {
         ParseQuery<ParseUser> query = makeUserParseQuery();
         try {
-            List<ParseUser> objects = query.whereContainedIn(FIELD_ID, userIds).find();
+            List<ParseUser> objects = query.whereContainedIn(FIELD_ID, userIds).whereEqualTo(FIELD_VERIFIED,true).find();
             List<User> users = new ArrayList<>(objects.size());
             for (ParseObject object : objects) {
                 users.add(parseObjectToUser(object));

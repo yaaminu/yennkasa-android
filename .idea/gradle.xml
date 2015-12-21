@@ -10,15 +10,6 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/app" />
-            <option value="$PROJECT_DIR$/cropper" />
-            <option value="$PROJECT_DIR$/daos" />
-            <option value="$PROJECT_DIR$/fileclient" />
-            <option value="$PROJECT_DIR$/lib" />
-            <option value="$PROJECT_DIR$/library" />
-            <option value="$PROJECT_DIR$/pullToRefresh" />
-            <option value="$PROJECT_DIR$/sockets_io_client" />
-            <option value="$PROJECT_DIR$/utils" />
           </set>
         </option>
       </GradleProjectSettings>
