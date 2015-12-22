@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
-import android.support.annotation.StringRes;
 import android.support.v4.util.Pair;
 import android.text.TextUtils;
 import android.util.Log;
@@ -58,6 +57,7 @@ public final class UserManager {
     public static final String SILENT = "silent";
     private static final String TAG = UserManager.class.getSimpleName();
     public static final String BLOCKED_USERS = FileUtils.hash(TAG + "blocked.users.messages");
+    @SuppressWarnings("unused")
     public static final String KEY = TAG + "blocked.users.messages",
     //            KEY_USER_PASSWORD = "klfiildelklaklier",
     KEY_SESSION_ID = "lfl/-90-09=klvj8ejf",
@@ -88,7 +88,7 @@ public final class UserManager {
             NEW_MESSAGE_TONE = "newMessageTone", VIBRATE = "vibrateOnNewMessage",
             LIGHTS = "litLightOnNewMessage", DELETE_ATTACHMENT_ON_DELETE = "deleteAttachmentsOnMessageDelete",
             DELETE_OLDER_MESSAGE = "deleteOldMessages",
-            AUTO_DOWNLOAD_MESSAGE_WIFI = "autoDownloadMessageWifi",AUTO_DOWNLOAD_MESSAGE_MOBILE= "autoDownloadMessageMobile",
+            AUTO_DOWNLOAD_MESSAGE_WIFI = "autoDownloadMessageWifi", AUTO_DOWNLOAD_MESSAGE_MOBILE = "autoDownloadMessageMobile",
             NOTIFICATION = "Notification", STORAGE = "Storage", NETWORK = "Network";
     public static final String DEFAULT = "default";
     /***********************************************************************/
@@ -99,7 +99,7 @@ public final class UserManager {
     static {
         Collections.addAll(protectedKeys, IN_APP_NOTIFICATIONS,
                 NEW_MESSAGE_TONE, VIBRATE, LIGHTS, DELETE_ATTACHMENT_ON_DELETE, DELETE_OLDER_MESSAGE,
-                AUTO_DOWNLOAD_MESSAGE_MOBILE,AUTO_DOWNLOAD_MESSAGE_WIFI, NOTIFICATION, STORAGE, NETWORK);
+                AUTO_DOWNLOAD_MESSAGE_MOBILE, AUTO_DOWNLOAD_MESSAGE_WIFI, NOTIFICATION, STORAGE, NETWORK);
 
         if (BuildConfig.DEBUG && protectedKeys.size() != 10) {
             throw new AssertionError();
@@ -395,11 +395,11 @@ public final class UserManager {
     public void createGroup(final String groupName, final Set<String> membersId, final CreateGroupCallBack callBack) {
 
         if (!ConnectionUtils.isConnectedOrConnecting()) {
-            doNotify(callBack,NO_CONNECTION_ERROR, null);
+            doNotify(callBack, NO_CONNECTION_ERROR, null);
             return;
         }
         if (isUser(User.generateGroupId(groupName))) {
-            doNotify(callBack,new Exception("group with name " + groupName + "already exists"),null);
+            doNotify(callBack, new Exception("group with name " + groupName + "already exists"), null);
             return;
         }
 
@@ -549,7 +549,8 @@ public final class UserManager {
                     group.getMembers().clear();
                     for (User user : newMembers) {
                         if (uniqeSet.add(user.getUserId())) {
-                            group.getMembers().add(user);
+                            List<User> members = group.getMembers();
+                            members.add(user);
                         }
                     }
                     realm.commitTransaction();
@@ -636,12 +637,13 @@ public final class UserManager {
         } else {
             group.setType(User.TYPE_GROUP);
             group.setMembers(new RealmList<User>());
-            group.getMembers().add(group.getAdmin());
+            List<User> members = group.getMembers();
+            members.add(group.getAdmin());
             if (!group.getAdmin().getUserId().equals(currentUser.getUserId())) {
-                group.getMembers().add(currentUser);
+                members.add(currentUser);
             }
             group = realm.copyToRealmOrUpdate(group);
-            PLog.d(TAG, "members of " + group.getName() + " are: " + group.getMembers().size());
+            PLog.d(TAG, "members of " + group.getName() + " are: " + members.size());
         }
         realm.commitTransaction();
         realm.close();
@@ -734,7 +736,8 @@ public final class UserManager {
                 // the backend always clears the members and type field so we have to set it up down here manually
                 group.setType(User.TYPE_GROUP);
                 group.setMembers(new RealmList<User>());
-                group.getMembers().add(group.getAdmin());
+                List<User> members = group.getMembers();
+                members.add(group.getAdmin());
 
                 //check to ensure that we add main user as a member but only if
                 //his is not the admin.this is avoid adding a duplicate user as
@@ -742,7 +745,7 @@ public final class UserManager {
                 //added the admin
                 //noinspection ConstantConditions
                 if (!group.getAdmin().getUserId().equals(mainUser.getUserId())) {
-                    group.getMembers().add(mainUser);
+                    members.add(mainUser);
                 }
                 realm.copyToRealmOrUpdate(group);
             }
@@ -934,34 +937,30 @@ public final class UserManager {
                           final String phoneNumber,
                           final String countryIso,
                           final CallBack callback) {
-            String thePhoneNumber;
-            try {
-                thePhoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, countryIso);
-            } catch (NumberParseException e) {
-                PLog.e(TAG, e.getMessage());
-                doNotify(e, callback);
-                return;
-            }
-            final User user = new User();
-            user.setUserId(thePhoneNumber);
-            user.setName(name);
-            user.setCountry(countryIso);
-            userApi.registerUser(user, new UserApiV2.Callback<User>() {
-                @Override
-                public void done(Exception e, User backEndUser) {
-                    if (e == null) {
-                        saveMainUser(backEndUser);
-                        doNotify(null, callback);
-                    } else {
-                        doNotify(e, callback);
-                    }
+        String thePhoneNumber;
+        try {
+            thePhoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, countryIso);
+        } catch (NumberParseException e) {
+            PLog.e(TAG, e.getMessage());
+            doNotify(e, callback);
+            return;
+        }
+        final User user = new User();
+        user.setUserId(thePhoneNumber);
+        user.setName(name);
+        user.setCountry(countryIso);
+        userApi.registerUser(user, new UserApiV2.Callback<User>() {
+            @Override
+            public void done(Exception e, User backEndUser) {
+                if (e == null) {
+                    saveMainUser(backEndUser);
+                    doNotify(null, callback);
+                } else {
+                    doNotify(e, callback);
                 }
+            }
 
-            });
-    }
-
-    private String getString(@StringRes int res) {
-        return Config.getApplicationContext().getString(res);
+        });
     }
 
     public void verifyUser(final String token, final CallBack callBack) {
@@ -980,19 +979,19 @@ public final class UserManager {
         if (!isUserLoggedIn()) {
             throw new IllegalStateException("no user logged for verification");
         }
-            userApi.verifyUser(getCurrentUser().getUserId(), token, new UserApiV2.Callback<UserApiV2.SessionData>() {
-                @Override
-                public void done(Exception e, UserApiV2.SessionData data) {
-                    if (e == null) {
-                        putSessionPref(KEY_ACCESS_TOKEN, data.accessToken);
-                        putSessionPref(KEY_USER_VERIFIED, true);
-                        initialiseSettings();
-                        doNotify(null, callBack);
-                    } else {
-                        doNotify(e, callBack);
-                    }
+        userApi.verifyUser(getCurrentUser().getUserId(), token, new UserApiV2.Callback<UserApiV2.SessionData>() {
+            @Override
+            public void done(Exception e, UserApiV2.SessionData data) {
+                if (e == null) {
+                    putSessionPref(KEY_ACCESS_TOKEN, data.accessToken);
+                    putSessionPref(KEY_USER_VERIFIED, true);
+                    initialiseSettings();
+                    doNotify(null, callBack);
+                } else {
+                    doNotify(e, callBack);
                 }
-            });
+            }
+        });
     }
 
     private void initialiseSettings() {
@@ -1015,12 +1014,12 @@ public final class UserManager {
             doNotify(NO_CONNECTION_ERROR, callback);
             return;
         }
-            userApi.sendVerificationToken(getMainUserId(), new UserApiV2.Callback<HttpResponse>() {
-                @Override
-                public void done(Exception e, HttpResponse aBoolean) {
-                    doNotify(e, callback);
-                }
-            });
+        userApi.sendVerificationToken(getMainUserId(), new UserApiV2.Callback<HttpResponse>() {
+            @Override
+            public void done(Exception e, HttpResponse aBoolean) {
+                doNotify(e, callback);
+            }
+        });
     }
 
     public void resendToken(final CallBack callBack) {
@@ -1035,12 +1034,12 @@ public final class UserManager {
             doNotify(NO_CONNECTION_ERROR, callBack);
             return;
         }
-            userApi.resendToken(getCurrentUser().getUserId(), null, new UserApiV2.Callback<HttpResponse>() {
-                @Override
-                public void done(Exception e, HttpResponse response) {
-                    doNotify(e, callBack);
-                }
-            });
+        userApi.resendToken(getCurrentUser().getUserId(), null, new UserApiV2.Callback<HttpResponse>() {
+            @Override
+            public void done(Exception e, HttpResponse response) {
+                doNotify(e, callBack);
+            }
+        });
     }
 
 //    @SuppressWarnings("unused")
@@ -1064,10 +1063,6 @@ public final class UserManager {
 //        realm.clear(Conversation.class);
 //        realm.close();
 //    }
-
-    private void oops() {
-        throw new UnsupportedOperationException();
-    }
 
     void syncContacts(final List<String> array) {
         if (!ConnectionUtils.isConnected()) {
@@ -1124,7 +1119,7 @@ public final class UserManager {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             doNotify(NO_CONNECTION_ERROR, callBack);
         }
-    
+
         userApi.leaveGroup(id, getCurrentUser().getUserId(), null, new UserApiV2.Callback<HttpResponse>() {
 
             @Override
@@ -1256,7 +1251,7 @@ public final class UserManager {
             errorMessage = applicationContext.getString(R.string.group_name_too_long);
         } else if (!Character.isLetter(proposedName.codePointAt(0))) {
             errorMessage = applicationContext.getString(R.string.name_starts_with_non_letter);
-        }else if (proposedName.contains("@")) {
+        } else if (proposedName.contains("@")) {
             errorMessage = applicationContext.getString(R.string.invalid_name_format_error);
         } else if (getCurrentUser() != null && UserManager.getInstance().isGroup(User.generateGroupId(proposedName))) {
             errorMessage = Config.getApplicationContext().getString(R.string.group_already_exists, proposedName).toUpperCase();
@@ -1306,10 +1301,11 @@ public final class UserManager {
                 peer.setName(parts[0]);
                 User admin = fetchUserIfRequired(realm, parts[1]);
                 peer.setAdmin(admin);
-                peer.getMembers().add(admin);
+                List<User> members = peer.getMembers();
+                members.add(admin);
                 if (!isCurrentUser(parts[1])) {
                     //noinspection ConstantConditions,ConstantConditions
-                    peer.getMembers().add(getCurrentUser(realm));
+                    members.add(getCurrentUser(realm));
                 }
                 peer.setInContacts(false);
                 peer.setDP("avatar_empty");
@@ -1729,7 +1725,7 @@ public final class UserManager {
             }
             realm.close();
         }
-        return PhoneNumberNormaliser.toLocalFormat("+"+userId,getUserCountryISO());
+        return PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO());
     }
 
     @SuppressWarnings("unused")
