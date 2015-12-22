@@ -1256,9 +1256,7 @@ public final class UserManager {
             errorMessage = applicationContext.getString(R.string.group_name_too_long);
         } else if (!Character.isLetter(proposedName.codePointAt(0))) {
             errorMessage = applicationContext.getString(R.string.name_starts_with_non_letter);
-        } else if (!Character.isLetter(proposedName.codePointAt(proposedName.length() - 1))) {
-            errorMessage = applicationContext.getString(R.string.name_ends_with_no_letter);
-        } else if (proposedName.contains("@")) {
+        }else if (proposedName.contains("@")) {
             errorMessage = applicationContext.getString(R.string.invalid_name_format_error);
         } else if (getCurrentUser() != null && UserManager.getInstance().isGroup(User.generateGroupId(proposedName))) {
             errorMessage = Config.getApplicationContext().getString(R.string.group_already_exists, proposedName).toUpperCase();
@@ -1271,18 +1269,15 @@ public final class UserManager {
         Context applicationContext = Config.getApplicationContext();
         if (proposedName.matches(".*\\p{Space}+.*")) {
             errorMessage = applicationContext.getString(R.string.error_space_in_name);
-        } else if (proposedName.length() < 5) {
+        } else if (proposedName.length() < 2) {
             errorMessage = applicationContext.getString(R.string.name_too_short);
-        } else if (proposedName.length() > 15) {
+        } else if (proposedName.length() > 20) {
             errorMessage = applicationContext.getString(R.string.name_too_long);
         } else if (!Character.isLetter(proposedName.codePointAt(0))) {
             errorMessage = applicationContext.getString(R.string.name_starts_with_non_letter);
-        } else if (!Character.isLetter(proposedName.codePointAt(proposedName.length() - 1))) {
-            errorMessage = applicationContext.getString(R.string.name_ends_with_no_letter);
         } else if (proposedName.contains("@")) {
             errorMessage = applicationContext.getString(R.string.invalid_name_format_error);
         }
-
         return new Pair<>(proposedName, errorMessage);
     }
 
