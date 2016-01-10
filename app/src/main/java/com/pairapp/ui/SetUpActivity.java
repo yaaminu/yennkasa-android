@@ -3,17 +3,29 @@ package com.pairapp.ui;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
 
+import com.pairapp.BuildConfig;
 import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.PairApp;
+import com.pairapp.R;
 import com.pairapp.data.ContactSyncService;
 import com.pairapp.data.UserManager;
 import com.pairapp.messenger.PairAppClient;
-import com.pairapp.R;
 import com.pairapp.util.Config;
+import com.pairapp.util.GcmUtils;
+import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
+import com.pairapp.util.ViewUtils;
 import com.rey.material.app.DialogFragment;
 
 
@@ -86,29 +98,17 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
 
     private void next() {
         saveState();
-        Fragment fragment;// = getSupportFragmentManager().findFragmentById(R.id.container);
-        if (stage == UNKNOWN) {
-            if (isUserLoggedIn()) {
-                if (isUserVerified()) {
-                    stage = DP_STAGE;
-                } else {
-                    stage = VERIFICATION_STAGE;
-                    return;
-                }
-            } else {
-                stage = LOGIN_STAGE;
-            }
-        }
-        fragment = findFragment();
-        addFragment(fragment);
+        addFragment(findFragment());
     }
 
     @NonNull
     private Fragment findFragment() {
+
         Fragment fragment = getSupportFragmentManager().findFragmentByTag(OUR_TAG + stage);
         if (fragment != null) {
             return fragment;
         }
+
         switch (stage) {
             case DP_STAGE:
                 fragment = new ChooseDisplayPictureFragment();
@@ -117,9 +117,10 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
                 fragment = new VerificationFragment();
                 break;
             case LOGIN_STAGE:
-                //fall through
-            default:
                 fragment = new LoginFragment();
+                break;
+            default:
+                fragment = new IntroFragment();
                 break; //redundant but safe
         }
         return fragment;
@@ -234,12 +235,6 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     }
 
     @Override
-    public void onLogin(String phoneNumber, String userIsoCountry) {
-        progressDialog.show(getSupportFragmentManager(), "");
-        userManager.logIn(phoneNumber, userIsoCountry, loginOrSignUpCallback);
-    }
-
-    @Override
     public void onSignUp(String userName, String phoneNumber, String userIsoCountry) {
         progressDialog.show(getSupportFragmentManager(), "");
         userManager.signUp(userName, phoneNumber, userIsoCountry, loginOrSignUpCallback);
@@ -249,4 +244,79 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     public SharedPreferences getActivityPreferences() {
         return SetUpActivity.getSharedPreferences();
     }
+
+    public static class IntroFragment extends Fragment {
+
+        long created = 0;
+
+        @Nullable
+        @Override
+        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+            View view = inflater.inflate(R.layout.fragment_splash, container, false);
+
+            view.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View view, MotionEvent motionEvent) {
+                    if (SystemClock.uptimeMillis() - created > 5000) {
+                        runnable.run();
+                    }
+                    return true;
+                }
+
+            });
+        TextView appname = (TextView) view.findViewById(R.id.tv_app_name),
+                appVersion = ((TextView) view.findViewById(R.id.tv_app_version));
+        appVersion.setText(BuildConfig.VERSION_NAME + " (" + BuildConfig.VERSION_CODE + ")");
+        ViewUtils.setTypeface(appname, TypeFaceUtil.two_d_font);
+        ViewUtils.setTypeface(appVersion, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+
+        TextView copyRight = ((TextView) view.findViewById(R.id.copy_right));
+        ViewUtils.setTypeface(copyRight, TypeFaceUtil.two_d_font);
+
+            return view;
+        }
+
+        @Override
+        public void onResume() {
+            super.onResume();
+            created = SystemClock.uptimeMillis();
+            new Handler().postDelayed(runnable, 15000);
+        }
+
+        private void goToNext() {
+         SetUpActivity activity = (SetUpActivity) getActivity();
+         if(activity != null && activity.stage == UNKNOWN){
+            activity.stage = LOGIN_STAGE;
+            activity.next();
+           }
+        }
+        private final Runnable runnable= new Runnable() {
+                @Override
+                public void run() {
+                    goToNext();
+                }
+            };
+    }
+
+  @Override
+  protected void showMessage(){
+    if(stage != UNKNOWN){
+ int message = 0;
+                    if (!GcmUtils.hasGcm()) {
+                        message = R.string.no_gcm_error_message;
+                    } else if (GcmUtils.gcmUpdateRequired()) {
+                        message = R.string.gcm_update_required_prompt;
+                    }
+                    if (message != 0) {
+                        final int tmp = message;
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                UiHelpers.showStopAnnoyingMeDialog(SetUpActivity.this,
+                                        "gcmUnavialble" + TAG, R.string.stop_annoying_me, tmp, R.string.i_know, android.R.string.cancel, null, null);
+                            }
+                        });
+                    }
+    }
+  }
 }

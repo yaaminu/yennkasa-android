@@ -49,15 +49,22 @@ public class Worker extends IntentService {
     private static final String MESSAGE_ID = "com.idea.messenger.msgid";
 
     static void download(Context context, Message message) {
+        download(context,message,false);
+    }
+
+    static void download(Context context,Message message,boolean fromBackground){
         Intent intent = new Intent(context, Worker.class);
         intent.setAction(DOWNLOAD);
         intent.putExtra(MESSAGE_JSON, Message.toJSON(message));
+        intent.putExtra(FROM_BACKGROUND,fromBackground);
         context.startService(intent);
     }
 
     public Worker() {
         super("Worker");
     }
+
+    private static final String FROM_BACKGROUND = Worker.class.getName()+"FROM_BACKGROUND";
 
     @Override
     protected void onHandleIntent(Intent intent) {
@@ -66,7 +73,8 @@ public class Worker extends IntentService {
             if (DOWNLOAD.equals(action)) {
                 final String messageJson = intent.getStringExtra(MESSAGE_JSON);
                 Message message = Message.fromJSON(messageJson);
-                download(message);
+                boolean fromBackground = intent.getBooleanExtra(FROM_BACKGROUND,false);
+                download(message,fromBackground);
             } else if (CANCEL.equals(action)) {
                 String messageId = intent.getStringExtra(
                         MESSAGE_ID);
@@ -75,14 +83,10 @@ public class Worker extends IntentService {
                 }
                 Future f = runningDownloads.get(messageId);
                 if (f != null) {
-                    if (f.cancel(true)) {
-                        LiveCenter.releaseProgressTag(messageId);
-                        synchronized (downloading) {
-                            downloading.remove(messageId);
-                        }
-//                        downloadLock.release();
-                    }
+                    f.cancel(true);
                 }
+                //we don't rely on whether we found the task or not we clear all notifications
+                LiveCenter.releaseProgressTag(messageId);
             }
         }
     }
@@ -97,13 +101,13 @@ public class Worker extends IntentService {
 
     private static Semaphore downloadLock = new Semaphore(5, true);
 
-    private void download(final Message message) {
+    private void download(final Message message,final boolean fromBackground) {
         synchronized (downloading) {
-            if (downloading.size() > MAX_PARRALLEL_DOWNLOAD) {
+            if (downloading.size() > MAX_PARRALLEL_DOWNLOAD && !fromBackground) {
                 ErrorCenter.reportError(PARRALLEL_DOWNLOAD, getString(R.string.too_many_parralel_dowload), 1);
                 return;
             }
-            if (!downloading.add(message.getId())) {
+            if (!downloading.add(message.getId()) && !fromBackground) {
                 PLog.w(TAG, "already  downloading message with id %s", message.getId());
                 ErrorCenter.reportError(PARRALLEL_DOWNLOAD, getString(R.string.already_downloading), 1);
                 return;
@@ -111,7 +115,7 @@ public class Worker extends IntentService {
         }
         try {
             LiveCenter.acquireProgressTag(message.getId());
-            runningDownloads.put(message.getId(), service.submit(new DownloadRunnable(message)));
+            runningDownloads.put(message.getId(), service.submit(new DownloadRunnable(message,fromBackground)));
         } catch (PairappException e) {
             throw new RuntimeException(e.getCause());
         }
@@ -133,23 +137,31 @@ public class Worker extends IntentService {
         private final String messageBody;
         private final String peer;
         private int type;
-
-        public DownloadRunnable(Message message) {
+        private boolean fromBackground;
+        public DownloadRunnable(Message message,boolean fromBackground) {
             messageId = message.getId();
             messageBody = message.getMessageBody();
             peer = Message.isGroupMessage(message) ? message.getTo() : message.getFrom();
             type = message.getType();
+            this.fromBackground = fromBackground;
         }
 
         @Override
         public void run() {
             try {
                 downloadLock.acquire();
-                doDownload();
+                try {
+                    doDownload();
+                } finally {
+                    synchronized (downloading) {
+                        downloading.remove(messageId);
+                    }
+                    LiveCenter.releaseProgressTag(messageId);
+                    runningDownloads.remove(messageId);
+                    downloadLock.release();
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            } finally {
-                downloadLock.release();
             }
         }
 
@@ -185,10 +197,6 @@ public class Worker extends IntentService {
                     if (done) {
                         return;
                     }
-                    Future future = runningDownloads.get(messageId);
-                    if (future != null && future.isCancelled()) {
-                        throw new IOException();
-                    }
                     int progress = (int) ((100 * processed) / expected);
                     LiveCenter.updateProgress(messageId, progress);
 
@@ -222,6 +230,9 @@ public class Worker extends IntentService {
                 }
                 onComplete(messageId, null);
             } catch (IOException e) {
+                //noinspection ResultOfMethodCallIgnored
+                finalFile.delete();
+
                 PLog.d(TAG, e.getMessage(), e.getCause());
                 Exception error = new Exception(Config.getApplicationContext().getString(R.string.download_failed), e.getCause());
                 onComplete(messageId, error);
@@ -229,20 +240,11 @@ public class Worker extends IntentService {
                 if (realm != null) {
                     realm.close();
                 }
-                synchronized (downloading) {
-                    downloading.remove(messageId);
-                }
-                LiveCenter.releaseProgressTag(messageId);
             }
         }
 
         private void onComplete(String messageId, final Exception error) {
-            Future future = runningDownloads.get(messageId);
-            if (future != null && future.isCancelled()) {
-                runningDownloads.remove(messageId);
-                return;
-            }
-            if (error != null) {
+            if (error != null && !Thread.currentThread().isInterrupted() && !fromBackground) {
                 ErrorCenter.reportError("downloadFailed", error.getMessage(), 1);
             }
         }

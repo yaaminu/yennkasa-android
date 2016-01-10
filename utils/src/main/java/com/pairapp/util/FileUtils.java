@@ -18,6 +18,7 @@ import org.apache.commons.io.FilenameUtils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -176,26 +177,44 @@ public class FileUtils {
 
 
     public static void save(File fileToSave, InputStream in) throws IOException {
-        if (fileToSave.exists() && !fileToSave.delete()) {
-            throw new IOException(Config.getApplicationContext().getString(R.string.error_saving));
-        }
-        final byte[] buffer = new byte[4096];
-        final File temp = new File(Config.getTempDir(), fileToSave.getName() + ".tmp");
-        final BufferedOutputStream bOut = new BufferedOutputStream(new FileOutputStream(temp));
-        final BufferedInputStream bIn = new BufferedInputStream(in);
-        int read;
+        BufferedOutputStream bOut = null;
+        BufferedInputStream bIn = null;
+        File temp = null;
         try {
+            if (fileToSave.exists() && !fileToSave.delete()) {
+                throw new IOException(Config.getApplicationContext().getString(R.string.error_saving));
+            }
+            final byte[] buffer = new byte[4096];
+            temp = new File(Config.getTempDir(), fileToSave.getName() + ".tmp");
+            bOut = new BufferedOutputStream(new FileOutputStream(temp));
+            bIn = new BufferedInputStream(in);
+            int read;
             while ((read = bIn.read(buffer)) != -1) {
+                checkIfCancelled();
                 bOut.write(buffer, 0, read);
             }
+            checkIfCancelled();
             if (!temp.renameTo(fileToSave)) {
                 //noinspection ResultOfMethodCallIgnored
                 temp.delete();
                 throw new IOException(Config.getApplicationContext().getString(R.string.failed_to_save_file));
             }
+        } catch (IOException e) { //caught for clean up reasons
+            if (temp != null && temp.exists() && !temp.delete()) {
+                //huh
+                PLog.d(TAG, "failed to delete partly saved file");
+            }
+            //replay the exception
+            throw new IOException(e.getMessage(), e.getCause());
         } finally {
-            closeQuietly(bOut);
-            closeQuietly(bIn);
+            close(bOut);
+            close(bIn);
+        }
+    }
+
+    private static void checkIfCancelled() throws IOException {
+        if (Thread.currentThread().isInterrupted()) {
+            throw new IOException("cancelled");
         }
     }
 
@@ -212,7 +231,7 @@ public class FileUtils {
                     digest.update(buffer, 0, read);
                 }
             } finally {
-                closeQuietly(bIn);
+                close(bIn);
             }
             hash = digest.digest();
             String hashString = "";
@@ -241,24 +260,34 @@ public class FileUtils {
         final int bufferLength = 1024;
         byte[] buffer = new byte[bufferLength];
         final File temp = new File(Config.getTempDir(), fileToSave.getName() + ".tmp");
-        final OutputStream bOut = new FileOutputStream(temp);
+        OutputStream bOut = null;//=new FileOutputStream(temp);
         int read;
         long processed = 0;
         try {
+            bOut = new FileOutputStream(temp);
             listener.onProgress(bytesExpected, 0);
             while ((read = in.read(buffer)) != -1) {
+                checkIfCancelled();
                 bOut.write(buffer, 0, read);
                 processed += read;
                 listener.onProgress(bytesExpected, processed);
             }
+            checkIfCancelled();
             if (!temp.renameTo(fileToSave)) {
                 //noinspection ResultOfMethodCallIgnored
                 temp.delete();
                 throw new IOException(Config.getApplicationContext().getString(R.string.failed_to_save_file));
             }
+        } catch (IOException e) { //caught for clean up reasons
+            if (temp.exists() && !temp.delete()) {
+                //not so much that we can do right now!
+                PLog.d(TAG, "unable to delete partly downloaded file");
+            }
+            //replay the exception
+            throw new IOException(e.getMessage(), e.getCause());
         } finally {
-            closeQuietly(bOut);
-            closeQuietly(in);
+            close(bOut);
+            close(in);
         }
     }
 
@@ -297,26 +326,6 @@ public class FileUtils {
         save(destination, new FileInputStream(source));
     }
 
-
-    private static void closeQuietly(OutputStream out) {
-        if (out != null) {
-            //noinspection EmptyCatchBlock
-            try {
-                out.close();
-            } catch (IOException e) {
-            }
-        }
-    }
-
-    private static void closeQuietly(InputStream in) {
-        if (in != null) {
-            //noinspection EmptyCatchBlock
-            try {
-                in.close();
-            } catch (IOException e) {
-            }
-        }
-    }
 
     public static String sizeInLowestPrecision(long fileSizeBytes) {
         final Context applicationContext = Config.getApplicationContext();
@@ -526,5 +535,14 @@ public class FileUtils {
      */
     public static boolean isMediaDocument(Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
+    }
+
+    public static void close(Closeable closeable) {
+        try {
+            if (closeable != null) {
+                closeable.close();
+            }
+        } catch (IOException ignore) {
+        }
     }
 }

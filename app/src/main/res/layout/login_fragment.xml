@@ -50,7 +50,6 @@
             android:animateLayoutChanges="true"
             android:background="@color/transparent"
             android:orientation="vertical"
-            android:paddingBottom="@dimen/padding_ll_login_fragment_bottom"
             android:paddingLeft="@dimen/padding_ll_login_fragment_left"
             android:paddingRight="@dimen/padding_ll_login_fragment_right"
             android:paddingTop="@dimen/padding_ll_login_fragment_top"
@@ -77,7 +76,7 @@
                 style="@style/username_editText_style"
                 android:layout_height="wrap_content"
                 android:paddingTop="@dimen/padding_ll_login_fragment_top"
-                android:visibility="gone"/>
+                />
 
             <EditText
                 android:id="@+id/et_phone_number_field"
@@ -93,29 +92,28 @@
                 android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
                 android:background="@color/colorPrimaryDark"
                 android:gravity="center"
-                android:text="@string/log_in_button_label"
+                android:text="@string/get_started"
                 android:textColor="@color/white"
                 android:textSize="@dimen/login_signup_text_size"/>
 
+            <com.rey.material.widget.TextView
+                android:id="@+id/problems_logging_in"
+                style="@style/FlatButtonRippleStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/login_sign_up_pane"
+                android:layout_centerHorizontal="true"
+                android:layout_gravity="center_horizontal"
+                android:clickable="true"
+                android:gravity="center"
+                android:padding="@dimen/padding_ll_login_fragment_top"
+                android:text="@string/problems_logging_in"
+                android:textColor="#00f"
+                android:textSize="@dimen/signup_have_an_account_size"/>
         </com.pairapp.view.LinearLayout>
 
     </com.pairapp.view.RelativeLayout>
 
-    <com.rey.material.widget.TextView
-        android:id="@+id/tv_signup"
-        style="@style/FlatButtonRippleStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/login_sign_up_pane"
-        android:layout_centerHorizontal="true"
-        android:clickable="true"
-        android:gravity="center"
-        android:padding="@dimen/padding_ll_login_fragment_top"
-        android:layout_marginTop="@dimen/padding_ll_login_fragment_bottom"
-        android:text="@string/dont_have_an_account_sign_up"
-        android:textColor="@android:color/white"
-        android:background="#4000"
-        android:textSize="@dimen/signup_have_an_account_size"/>
 
     <include layout="@layout/copyright_text_view"/>
 </com.pairapp.view.RelativeLayout>

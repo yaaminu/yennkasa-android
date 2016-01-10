@@ -28,6 +28,7 @@ public class MessageUtils {
     public static final String ERROR_MESSAGE_ALREADY_SENT = "message sent";
     public static final String ERROR_IS_DATE_MESSAGE = "is date message";
     public static final String ERROR_IS_TYPING_MESSAGE = "is typing message";
+    public static final String ERROR_CANCELLED = "canclled";
     private static final String TAG = MessageUtils.class.getSimpleName();
 
     public static boolean validate(Message message) throws PairappException {
@@ -90,10 +91,8 @@ public class MessageUtils {
     }
 
     public static boolean isSendableMessage(Message message) {
-        return !(Message.isDateMessage(message) || Message.isTypingMessage(message));
+        return Message.isPictureMessage(message) || Message.isTextMessage(message) || Message.isBinMessage(message)
+                || Message.isVideoMessage(message);
     }
 
-    public interface Callback {
-        void onDownloaded(Exception e, String messageId);
-    }
 }

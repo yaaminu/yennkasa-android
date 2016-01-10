@@ -94,4 +94,6 @@
     <dimen name="menu_text_size">24sp</dimen>
     <dimen name="chat_activity_list_divider_hieght_normal">6dp</dimen>
     <dimen name="new_message_background_height_width">28dp</dimen>
+    <dimen name="message_item_extra_margin_top">4dp</dimen>
+    <dimen name="message_item_margin_bottom">0dp</dimen>
 </resources>

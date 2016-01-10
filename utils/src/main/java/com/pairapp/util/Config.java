@@ -43,8 +43,8 @@ public class Config {
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
     private static String APP_NAME = "PairApp";
     private static Application application;
-    private static AtomicBoolean isChatRoomOpen = new AtomicBoolean(false);
-    private static volatile String currentPeer = null;
+    private static AtomicBoolean isAppOpen = new AtomicBoolean(false);
+    private static volatile String currentPeer = "";
 
     private static boolean isExternalStorageAvailable() {
         String state = Environment.getExternalStorageState();
@@ -77,11 +77,11 @@ public class Config {
     }
 
     public static boolean isAppOpen() {
-        return isChatRoomOpen.get();
+        return isAppOpen.get();
     }
 
     public static void appOpen(boolean chatRoomOpen) {
-        isChatRoomOpen.set(chatRoomOpen);
+        isAppOpen.set(chatRoomOpen);
     }
 
     public static Context getApplicationContext() {

@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -38,6 +39,7 @@ import com.pairapp.messenger.PairAppClient;
 import com.pairapp.util.Config;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.LiveCenter;
+import com.pairapp.util.MediaUtils;
 import com.pairapp.util.PLog;
 import com.pairapp.util.PhoneNumberNormaliser;
 import com.pairapp.util.SimpleDateUtil;
@@ -45,15 +47,13 @@ import com.pairapp.util.TaskManager;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
-import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import io.realm.Realm;
@@ -81,12 +81,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public static final String SELECTED_MESSAGE = "selectedMessage";
     public static final String WAS_TYPING = "wasTyping";
     public static final String SCROLL_POSITION = "scrollPosition";
-    public static final String WAS_BLOCKED = "wasBlocked";
-    public static final String UN_BLOCK = "block";
     public static final String EXTRA_SCROLL_TO_MESSAGE = "SCROLLTO";
+    private static final String SAVED_MESSAGES_MESSAGE_BOX = "saved.Messages.message.box";
     private int cursor = -1;
-    private boolean wasTyping = false,
-            outOfSync = false;
+    private boolean wasTyping = false;
     private final MessagesAdapter.Delegate delegate = new MessagesAdapter.Delegate() {
         @Override
         public boolean onDateSetChanged() {
@@ -126,6 +124,18 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         public void cancelDownload(Message message) {
             PairAppClient.cancelDownload(message);
         }
+
+        @Override
+        public void onCancelSendMessage(Message message) {
+            if (getPairAppClientInterface() != null) {
+                getPairAppClientInterface().cancelDisPatch(message);
+            } else {
+                Intent intent = new Intent(ChatActivity.this, PairAppClient.class);
+                intent.putExtra(PairAppClient.ACTION, PairAppClient.ACTION_CANCEL_DISPATCH);
+                intent.putExtra(PairAppClient.EXTRA_MESSAGE, Message.toJSON(message));
+                startService(intent);
+            }
+        }
     };
     //    boolean inContextualMode;
     private Handler handler;
@@ -149,7 +159,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private Toolbar toolBar;
     private ToolbarManager toolbarManager;
     private TextView logTv;
-    private final DialogFragment fragment = UiHelpers.newProgressDialog();
     private ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
 
         private boolean can4ward;
@@ -182,7 +191,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             if (itemId == R.id.action_copy) {
                 @SuppressWarnings("deprecation")
                 ClipboardManager manager = ((ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE));
-                List<String> bodies = new ArrayList<>();
                 manager.setText(TextUtils.join("\n\n", selectedMessages));
                 return true;
             } else if (itemId == R.id.action_delete) {
@@ -230,7 +238,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
         messageConversationRealm = Message.REALM(this);
         usersRealm = User.Realm(this);
-
+        player = new MediaPlayer();
         handleIntent();
     }
 
@@ -276,35 +284,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 //                .placeholder(userManager.isGroup(peer.getUserId()) ? R.drawable.group_avatar : R.drawable.user_avartar)
 //                .into(imageView);
         // TODO: 8/22/2015 in future we will move to the last  un seen message if any
-//        inContextualMode = false;
-        if (userManager.isBlocked(peerId)) {
-            userWasBlocked = true;
-            UiHelpers.showErrorDialog(ChatActivity.this, R.string.blocked_user_notice, R.string.agree, R.string.disagree, okListener, noListener);
-        }
     }
-
-
-    private boolean acceptedToUblock = false, userWasBlocked = false;
-    private final UiHelpers.Listener noListener = new UiHelpers.Listener() {
-        @Override
-        public void onClick() {
-            finish();
-        }
-    }, okListener = new UiHelpers.Listener() {
-        @Override
-        public void onClick() {
-            acceptedToUblock = true;
-
-            final String userId = peer.getUserId();
-            TaskManager.executeNow(new Runnable() {
-                @Override
-                public void run() {
-                    userManager.unBlockUser(userId);
-                    UiHelpers.showToast(getString(R.string.user_unblocked));
-                }
-            }, false);
-        }
-    };
 
     private void setUpListView() {
         adapter = new MessagesAdapter(delegate, messages, userManager.isGroup(usersRealm, peer.getUserId()));
@@ -373,10 +353,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             startActivityForResult(intent, ADD_USERS_REQUEST);
             return true;
         } else if (id == R.id.action_attach) {
-            if (!acceptedToUblock && userWasBlocked) {
-                userManager.unBlockUser(peer.getUserId());
-                UiHelpers.showToast(R.string.user_unblocked);
-            }
             UiHelpers.attach(this);
             return true;
         } else if (id == R.id.action_add_contact) {
@@ -405,6 +381,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             LiveCenter.registerTypingListener(this);
         } else {
             getSupportActionBar().setSubtitle(GroupsAdapter.join(",", peer.getMembers()));
+        }
+        String savedPreviousMessage = Config.getPreferences(TAG + SAVED_MESSAGES_MESSAGE_BOX).getString(peer.getUserId(), null);
+        if (savedPreviousMessage != null) {
+            messageEt.setText(savedPreviousMessage);
         }
         adapter.notifyDataSetChanged();
     }
@@ -436,6 +416,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             LiveCenter.doNotTrackUser(peer.getUserId());
             LiveCenter.unRegisterTypingListener(this);
         }
+        if (player.isPlaying()) {
+            player.stop();
+        }
         super.onPause();
     }
 
@@ -448,16 +431,16 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     protected void onDestroy() {
         messageConversationRealm.close();
         usersRealm.close();
+        String s1 = messageEt.getText().toString();
+            Config.getPreferences(TAG + "saved.Messages.message.box").edit().putString(peer.getUserId(), s1).apply();
+        player.release();
+        player = null;
         super.onDestroy();
     }
 
     @Override
     public void onClick(View v) {
-        int id = v.getId();
-        if (!acceptedToUblock && userWasBlocked) {
-            userManager.unBlockUser(peer.getUserId());
-            UiHelpers.showToast(R.string.user_unblocked);
-        }
+        int id = v.getId();;
         switch (id) {
             case R.id.iv_send:
                 if (!messageEt.getText().toString().trim().isEmpty())
@@ -537,6 +520,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         AdapterView.AdapterContextMenuInfo info = ((AdapterView.AdapterContextMenuInfo) menuInfo);
         Message message = messages.get(info.position);
         cursor = info.position;
+        messageId = message.getId();
         if (message.getType() != Message.TYPE_DATE_MESSAGE && message.getType() != Message.TYPE_TYPING_MESSAGE) {
             getMenuInflater().inflate(R.menu.message_context_menu, menu);
             menu.findItem(R.id.action_copy).setVisible(message.getType() == TYPE_TEXT_MESSAGE);
@@ -548,22 +532,42 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         }
     }
 
+    private String messageId;
+
     @Override
     public boolean onContextItemSelected(MenuItem item) {
-
         int itemId = item.getItemId();
-
-        Message message = messageConversationRealm.where(Message.class).equalTo(Message.FIELD_ID, messages.get(cursor).getId()).findFirst();
-        if (message == null) {
+        if (TextUtils.isEmpty(messageId)) {
             UiHelpers.showPlainOlDialog(this, getString(R.string.err_message_not_found));
             return false;
         }
+
+        if (messages.size() < cursor/*guard against out of bounds access*/ || !messages.get(cursor).getId().equals(messageId)) { //something bad happened
+            //this won't happen most of the time
+            //no hacks, lets walk the list, it wont take a lot of time even if it had 10000 items!
+            cursor = -1;
+            for (int i = 0; i < messages.size(); i++) {
+                if (messages.get(i).getId().equals(messageId)) {
+                    cursor = i;
+                    break;
+                }
+            }
+        }
+        if (cursor == -1) {
+            UiHelpers.showPlainOlDialog(this, getString(R.string.err_message_not_found));
+            return false;
+        }
+
+        Message message = messages.get(cursor);
+        assert message != null;
         if (itemId == R.id.action_copy) {
             @SuppressWarnings("deprecation")
             ClipboardManager manager = ((ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE));
             manager.setText(message.getMessageBody());
             return true;
         } else if (itemId == R.id.action_delete) {
+            //since realm is single threaded,we can count on it that messages.get(cusor) will give the
+            //same message until this method completes that's why w are passing cursor without message
             deleteMessage(cursor);
             return true;
         } else if (itemId == R.id.action_forward) {
@@ -587,11 +591,12 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             }
             return true;
         }
+        messageId = "";
+        cursor = -1;
         return super.onContextItemSelected(item);
     }
 
     private void deleteMessage(int position) {
-        outOfSync = true;
         messageConversationRealm.beginTransaction(); //beginning transaction earlier to force realm to prevent other realms from changing the data set
         //hook up message to remove.
         //if it is the only message for the day remove the date message
@@ -601,7 +606,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                 nextToCurrMessage = (messages.size() - 1 > position ? messages.get(position + 1) : null);
 
         final boolean wasLastForTheDay = nextToCurrMessage == null || Message.isDateMessage(nextToCurrMessage);
-        final String messageBody = currMessage.getMessageBody();
+        final Message deletedMessage = Message.copy(currMessage);
         currMessage.removeFromRealm();
         if (Message.isDateMessage(previousToCurrMessage) &&
                 wasLastForTheDay) {
@@ -618,13 +623,25 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             }
         }
         messageConversationRealm.commitTransaction();
-        outOfSync = false;
         adapter.notifyDataSetChanged();
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
+                if (!Message.isTextMessage(deletedMessage)) {
+                    if (Message.isOutGoing(deletedMessage)) {
+                        if (deletedMessage.getState() == Message.STATE_PENDING) {
+                            delegate.onCancelSendMessage(deletedMessage);
+                        }
+                    } else {
+                        if (deletedMessage.getMessageBody().startsWith("http")) { //it's probably being downloaded
+                            if (LiveCenter.getProgress(deletedMessage.getId()) != -1) {
+                                delegate.cancelDownload(deletedMessage);
+                            }
+                        }
+                    }
+                }
                 if (UserManager.getInstance().getBoolPref(UserManager.DELETE_ATTACHMENT_ON_DELETE, false)) {
-                    File file = new File(messageBody);
+                    File file = new File(deletedMessage.getMessageBody());
                     if (file.exists()) {
                         if (file.delete()) {
                             PLog.d(TAG, "deleted file successfully");
@@ -657,12 +674,29 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         }
     }
 
+    private MediaPlayer player;
+
     @Override
     public void notifyUser(Context context, final Message message, String sender) {
         //noinspection StatementWithEmptyBody
         if (message.getTo().equals(peer.getUserId()) || message.getFrom().equals(peer.getUserId())
                 || peer.getName().equals(sender)) {
-            // TODO: 8/17/2015 give user a tiny hint of new messages and allow fast scroll
+            //just to ensure we dont spawn a thread only to end up doing nothing because player.isPlaying return true, thats i check first
+            if (!player.isPlaying()) {
+                TaskManager.executeNow(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            if (!player.isPlaying()) {
+                                player.reset();
+                                MediaUtils.playSound(ChatActivity.this, player, R.raw.sound_a);
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, false);
+            }
         } else {
             super.notifyUser(this, message, sender);
         }
@@ -709,19 +743,14 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         super.onRestoreInstanceState(savedInstanceState);
         Bundle b = savedInstanceState.getBundle(peer.getUserId());
         cursor = b.getInt(CURSOR, -1);
+        messageId = b.getString(SELECTED_MESSAGE);
         int scrollPosition = b.getInt(SCROLL_POSITION, messages.size());
         messagesListView.setSelection(scrollPosition);
-        String selectedMessage = b.getString(SELECTED_MESSAGE);
-        if (selectedMessage == null) {
-            selectedMessage = "";
-        }
         wasTyping = b.getBoolean(WAS_TYPING, false);
         String typingMessage = b.getString(TYPING_MESSAGE);
         if (typingMessage != null) {
             messageEt.setText(typingMessage);
         }
-        acceptedToUblock = b.getBoolean(UN_BLOCK, acceptedToUblock);
-        userWasBlocked = b.getBoolean(WAS_BLOCKED, userWasBlocked);
     }
 
     @Override
@@ -731,10 +760,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         b.putInt(SCROLL_POSITION, messagesListView.getLastVisiblePosition());
         if (cursor > -1) {
             b.putInt(CURSOR, cursor);
-            b.putString(SELECTED_MESSAGE, messageEt.getText().toString());
+            b.putString(SELECTED_MESSAGE, messageId);
         }
-        b.putBoolean(UN_BLOCK, acceptedToUblock);
-        b.putBoolean(WAS_BLOCKED, userWasBlocked);
+
         b.putBoolean(WAS_TYPING, wasTyping);
         outState.putParcelable(peer.getUserId(), b);
         super.onSaveInstanceState(outState);
@@ -758,4 +786,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         }
         return true;
     }
+
+
 }

@@ -1,11 +1,13 @@
-<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                              android:layout_width="match_parent"
-                              android:layout_height="@dimen/list_item_height"
-                              android:layout_marginBottom="@dimen/list_item_margin_bottom"
-                              android:gravity="center_vertical"
+<com.pairapp.view.RelativeLayout
+ xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+android:layout_height="@dimen/list_item_height"
+android:layout_marginBottom="@dimen/list_item_margin_bottom"
                               android:descendantFocusability="afterDescendants"
                               android:minHeight="?android:attr/listPreferredItemHeight"
-                              android:padding="@dimen/list_item_padding">
+                            android:paddingLeft="@dimen/list_item_padding"
+    android:paddingRight="@dimen/list_item_padding"
+    android:paddingTop="@dimen/list_item_padding">
 
     <com.pairapp.view.RoundedImageView
         android:id="@+id/iv_group_dp"

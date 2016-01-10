@@ -7,8 +7,6 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.AssetFileDescriptor;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
@@ -26,12 +24,13 @@ import com.pairapp.Errors.PairappException;
 import com.pairapp.R;
 import com.pairapp.data.Message;
 import com.pairapp.data.UserManager;
+import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.ParseClient;
-import com.pairapp.net.sockets.SocketIoClient;
 import com.pairapp.ui.ChatActivity;
 import com.pairapp.util.Config;
 import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.LiveCenter;
+import com.pairapp.util.MediaUtils;
 import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
 import com.pairapp.util.ThreadUtils;
@@ -50,7 +49,6 @@ import com.sinch.android.rtc.messaging.WritableMessage;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.FileDescriptor;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
@@ -59,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -77,9 +76,8 @@ public class PairAppClient extends Service {
     static final int notId = 10983;
     private static final String ACTION_START_SINCH_CLIENT = "sinchClientStartProblem";
     private static final AtomicBoolean sinchClientStarted = new AtomicBoolean(false);
-    public static final String ACTION_SEND_MESSAGE = "sendMessage";
+    public static final String ACTION_SEND_MESSAGE = "sendMessage", ACTION_CANCEL_DISPATCH = "cancelMessage";
     public static final String EXTRA_MESSAGE = "message";
-    public static final String POP = "pop.m4a";
     private static Dispatcher<Message> SOCKETSIO_DISPATCHER;
     private static AtomicBoolean isClientStarted = new AtomicBoolean(false);
     private static MessagesProvider messageProvider = new ParseMessageProvider();
@@ -90,25 +88,39 @@ public class PairAppClient extends Service {
     private static Map<String, String> credentials;
     private SinchClient client;
 
+    private final Map<String, Future<?>> disPatchingThreads = new ConcurrentHashMap<>();
 
     private final ConnectionUtils.ConnectivityListener listener = new ConnectionUtils.ConnectivityListener() {
         @Override
         public void onConnectivityChanged(boolean connected) {
             PLog.d(TAG, connected ? "connected" : "disconnected");
-            if (isClientStarted.get() && connected && !sinchClientStarted.get()) {
-                android.os.Message msg = android.os.Message.obtain();
-                msg.what = MessageHandler.START_SINCH;
-                WORKER_THREAD.handler.sendMessage(msg);
+            if (isClientStarted.get() && connected) {
+                if (!sinchClientStarted.get()) {
+                    android.os.Message msg = android.os.Message.obtain();
+                    msg.what = MessageHandler.START_SINCH;
+                    WORKER_THREAD.handler.sendMessage(msg);
+                }
+                // TaskManager.executeNow(new Runnable(){
+                //     public void run(){
+                //        attemptToSendAllUnsentGroupMessages();
+                //     }
+                // });
             }
         }
     };
-    private static final MediaPlayer.OnCompletionListener onCompletionListener = new MediaPlayer.OnCompletionListener() {
-        @Override
-        public void onCompletion(MediaPlayer mp) {
-            mp.release();
-        }
-    };
-    ;
+
+
+    // private void attemptToSendAllUnsentGroupMessages(){
+    //     Realm realm = Message.REALM(this);
+    //     RealmResults<Message> messages = realm.where(Message.class)
+    //                                           //group messages
+    //                                           .contains(Message.FIELD_TO,"@")
+    //                                           .equalTo(Message.FIELD_STATE,Message.STATE_PENDING).findAll();
+    //     for (int i=0;i < messages.size(); i++) {
+    //         doSendMessage(Message.copy(messages.get(i)));
+    //     }
+    //     realm.close();
+    // }
 
     public static void startIfRequired(Context context) {
         if (!UserManager.getInstance().isUserVerified()) {
@@ -196,6 +208,7 @@ public class PairAppClient extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        PLog.i(TAG, "starting pairapp client");
         if (WORKER_THREAD != null && WORKER_THREAD.isAlive()) {
             WORKER_THREAD.quit();
         }
@@ -284,9 +297,11 @@ public class PairAppClient extends Service {
             return START_NOT_STICKY;
         }
 
-        PLog.i(TAG, "starting pairapp client");
         if (intent != null) {
             String action = intent.getStringExtra(ACTION);
+            if (action == null) {
+                action = intent.getAction();
+            }
             if (action != null
                     && action.equals(ACTION_START_SINCH_CLIENT)
                     && isClientStarted.get()) {
@@ -295,13 +310,14 @@ public class PairAppClient extends Service {
                 WORKER_THREAD.handler.sendMessage(message);
             }
             if (action != null && isClientStarted.get()) {
-                if (action.equals(ACTION_SEND_MESSAGE)) {
+                if (ACTION_SEND_MESSAGE.equals(action)) {
                     String messageJson = intent.getStringExtra(EXTRA_MESSAGE);
-                    Message message = Message.fromJSON(messageJson);
-                    android.os.Message msg = android.os.Message.obtain();
-                    msg.obj = message;
-                    msg.what = MessageHandler.SEND_MESSAGE;
-                    WORKER_THREAD.handler.sendMessage(msg);
+                    final Message message = Message.fromJSON(messageJson);
+                    doSendMessage(message);
+                } else if (ACTION_CANCEL_DISPATCH.equals(action)) {
+                    String messageJson = intent.getStringExtra(EXTRA_MESSAGE);
+                    final Message message = Message.fromJSON(messageJson);
+                    INTERFACE.cancelDisPatch(message);
                 }
             }
         }
@@ -423,7 +439,7 @@ public class PairAppClient extends Service {
         final Map<String, Pair<String, Integer>> progressMap = new ConcurrentHashMap<>();
 
         @Override
-        public void onDispatchFailed(String reason, String messageId) {
+        public void onDispatchFailed(String messageId, String reason) {
             PLog.d(TAG, "message with id : %s dispatch failed with reason: " + reason, messageId);
             LiveCenter.releaseProgressTag(messageId);
             progressMap.remove(messageId);
@@ -431,15 +447,19 @@ public class PairAppClient extends Service {
         }
 
         @Override
-        public void onDispatchSucceed(String messageId) {
+        public void onDispatchSucceeded(String messageId) {
             PLog.d(TAG, "message with id : %s dispatched successfully", messageId);
             LiveCenter.releaseProgressTag(messageId);
             progressMap.remove(messageId);
             cancelNotification(messageId);
-            android.os.Message msg = android.os.Message.obtain();
-            msg.what = MessageHandler.PLAY_TONE;
-            msg.obj = messageId;
-            WORKER_THREAD.handler.sendMessage(msg);
+            Realm realm = Message.REALM(PairAppClient.this);
+            Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
+            if (message != null
+                    && Config.getCurrentActivePeer().equals(message.getTo())
+                    && UserManager.getInstance().getBoolPref(UserManager.IN_APP_NOTIFICATIONS, true)) {
+                playSound();
+            }
+            realm.close();
         }
 
         private void cancelNotification(String messageId) {
@@ -486,8 +506,40 @@ public class PairAppClient extends Service {
         }
     };
 
+    AtomicBoolean shouldPlaySound = new AtomicBoolean(true);
+
+    private void playSound() {
+        if (shouldPlaySound.getAndSet(false)) {
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    shouldPlaySound.set(true);
+                }
+            }, 3000);
+            try {
+                MediaUtils.playSound(this, R.raw.beep);
+            } catch (IOException e) {
+                PLog.d(TAG, "failed to play sound");
+            }
+        } else {
+            PLog.d(TAG, "not playing sound, played one not too lon ago");
+        }
+    }
+
     private void sendMessageInternal(Message message) {
         if (!Message.isTextMessage(message)) {
+            Realm realm = Message.REALM(this);
+            try {
+                String messageId = message.getId();
+                Message tmp = realm.where(Message.class).equalTo(Message.FIELD_ID, message.getId()).findFirst();
+                if (tmp == null || tmp.getState() != Message.STATE_PENDING) {
+                    PLog.d(TAG, "failed to send message, message either canceled or deleted by user");
+                    monitor.onDispatchFailed(messageId, MessageUtils.ERROR_CANCELLED);
+                    return;
+                }
+            } finally {
+                realm.close();
+            }
             try {
                 LiveCenter.acquireProgressTag(message.getId());
             } catch (PairappException e) {
@@ -521,12 +573,23 @@ public class PairAppClient extends Service {
 
     public class PairAppClientInterface extends Binder {
         public void sendMessage(Message message) {
-            WORKER_THREAD.sendMessage(message.isValid() ? Message.copy(message) : message); //detach the message from realm
+            WORKER_THREAD.sendMessage(Message.copy(message)); //detach the message from realm
         }
 
         @SuppressWarnings("unused")
         public void sendMessages(Collection<Message> tobeSent) {
             WORKER_THREAD.sendMessages(Message.copy(tobeSent)); //detach from realm
+        }
+
+        public void cancelDisPatch(Message message) {
+            if (!Message.isTextMessage(message)) {
+                if (!Message.isOutGoing(message)) {
+                    throw new IllegalArgumentException("only outgoing messages may be cancelled!");
+                }
+                doCancelDispatch(Message.copy(message));
+            } else {
+                oops();
+            }
         }
 
         @SuppressWarnings("unused")
@@ -619,7 +682,8 @@ public class PairAppClient extends Service {
 
     private class MessageHandler extends Handler {
         private static final int SEND_MESSAGE = 0x0, SEND_BATCH = 0x01, SHUT_DOWN = 0x2,
-                START_SINCH = 0x3, NOTIFY_MESSAGE_SEEN = 0x4, PLAY_TONE = 0x5;
+                START_SINCH = 0x3, NOTIFY_MESSAGE_SEEN = 0x4, /*PLAY_TONE = 0x5,*/
+                CANCEL_DISPATCH = 0x6;
 
         public MessageHandler(Looper looper) {
             super(looper);
@@ -658,22 +722,6 @@ public class PairAppClient extends Service {
                         }
                     }
                     break;
-                case PLAY_TONE:
-                    if (((String) msg.obj).contains("" + Config.getCurrentActivePeer())) {
-                        MediaPlayer player = new MediaPlayer();
-                        try {
-                            AssetFileDescriptor assetFileDescriptor = getAssets().openFd("ringtone_pop.m4a");
-                            FileDescriptor fileDescriptor = assetFileDescriptor.getFileDescriptor();
-                            player.setDataSource(fileDescriptor);
-                            player.prepare();
-                            player.setOnCompletionListener(new MediaplayerListener(assetFileDescriptor));
-                            player.setLooping(false);
-                            player.start();
-                        } catch (IOException e) {
-                            PLog.d(TAG, "failed to play  tone");
-                        }
-                    }
-                    break;
                 case NOTIFY_MESSAGE_SEEN:
                     if (!isClientStarted.get()) {
                         PLog.d(TAG, "sinch client not stared cann't send seen status");
@@ -690,18 +738,10 @@ public class PairAppClient extends Service {
                         }
                         return;
                     }
-//                    SharedPreferences preferences = Config.getPreferences(REPORTING_MESSAGES);
-//                    if (preferences.contains(message.getId())) {
-//                        PLog.d(TAG, "message state already reported");
-//                        return;
-//                    }
                     JSONObject obj = new JSONObject();
                     try {
-//                        obj.put(SocketIoClient.PROPERTY_TO, message.getFrom());
-                        obj.put(SocketIoClient.MSG_STS_MESSAGE_ID, message.getId());
-//                        obj.put(SocketIoClient.PROPERTY_FROM, message.getTo());
+                        obj.put(Message.MSG_STS_MESSAGE_ID, message.getId());
                         client.getMessageClient().send(new WritableMessage(message.getFrom(), obj.toString()));
-//                        preferences.edit().putString(message.getId(), "dumm").apply();
                         Realm realm = Message.REALM(PairAppClient.this);
                         Message realmMessage = realm.where(Message.class).equalTo(Message.FIELD_ID, message.getId()).findFirst();
                         if (realmMessage != null) {
@@ -714,26 +754,57 @@ public class PairAppClient extends Service {
                         throw new RuntimeException(e.getCause());
                     }
                     break;
+                case CANCEL_DISPATCH:
+                    message = (Message) msg.obj;
+                    doCancelDispatch(message);
+                    break;
                 default:
                     throw new AssertionError("unknown signal");
             }
         }
+    }
 
-        private void doSendMessage(final Message message) {
-            final Runnable sendTask = new Runnable() {
-                @Override
-                public void run() {
-                    sendMessageInternal(message);
-                }
-            };
-            TaskManager.executeNow(sendTask, true);
-        }
-
-        private void doSendMessages(Collection<Message> messages) {
-            for (Message message : messages) {
-                doSendMessage(message);
+    private void doSendMessage(final Message message) {
+        final Runnable sendTask = new Runnable() {
+            @Override
+            public void run() {
+//                playSound();
+                sendMessageInternal(message);
             }
+        };
+        disPatchingThreads.put(message.getId(), TaskManager.executeNow(sendTask, true));
+    }
+
+    private void doSendMessages(Collection<Message> messages) {
+        for (Message message : messages) {
+            doSendMessage(message);
         }
+    }
+
+    private void doCancelDispatch(final Message message) {
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                Future<?> future = disPatchingThreads.get(message.getId());
+                if (future != null && !future.isDone()) {
+                    future.cancel(true);
+                }
+                //we have to stop all notifications and progress report since the dispatcher will end up
+                //cancelling the dispatch. we count on it!
+                //notice that we dont rely on the future to be null before we cancel notifications
+                //this is because we want to give user impression that the message has been cancelled.
+                monitor.onDispatchFailed(message.getId(), MessageUtils.ERROR_CANCELLED);
+                Realm realm = Message.REALM(PairAppClient.this);
+                message.setState(Message.STATE_SEND_FAILED);
+                Message liveMessage = realm.where(Message.class).equalTo(Message.FIELD_ID, message.getId()).findFirst();
+                if (liveMessage != null && liveMessage.getState() == Message.STATE_PENDING) {
+                    realm.beginTransaction();
+                    liveMessage.setState(Message.STATE_SEND_FAILED);
+                    realm.commitTransaction();
+                }
+                realm.close();
+            }
+        }, false);
     }
 
     static {
@@ -763,7 +834,7 @@ public class PairAppClient extends Service {
 
         @Override
         public void onMessageFailed(MessageClient messageClient, com.sinch.android.rtc.messaging.Message message, MessageFailureInfo messageFailureInfo) {
-            if (messageFailureInfo.getSinchError().getErrorType() == ErrorType.CAPABILITY) {
+            if (messageFailureInfo.getSinchError().getErrorType() == ErrorType.CAPABILITY && BuildConfig.DEBUG) {
                 throw new IllegalStateException("sinch client used for service it does not support");
             }
             Realm realm = Message.REALM(PairAppClient.this);
@@ -871,22 +942,22 @@ public class PairAppClient extends Service {
         }
     };
 
-    private class MediaplayerListener implements MediaPlayer.OnCompletionListener {
-
-        private final AssetFileDescriptor fd;
-
-        MediaplayerListener(AssetFileDescriptor fd) {
-            this.fd = fd;
-        }
-
-        @Override
-        public void onCompletion(MediaPlayer mp) {
-            mp.release();
-            try {
-                fd.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+//    private class MediaplayerListener implements MediaPlayer.OnCompletionListener {
+//
+//        private final AssetFileDescriptor fd;
+//
+//        MediaplayerListener(AssetFileDescriptor fd) {
+//            this.fd = fd;
+//        }
+//
+//        @Override
+//        public void onCompletion(MediaPlayer mp) {
+//            mp.release();
+//            try {
+//                fd.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 }

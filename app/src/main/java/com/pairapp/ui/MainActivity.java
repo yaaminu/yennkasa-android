@@ -2,6 +2,7 @@ package com.pairapp.ui;
 
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.Context;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -15,11 +16,20 @@ import com.pairapp.PairApp;
 import com.pairapp.R;
 import com.pairapp.data.Conversation;
 import com.pairapp.data.User;
+import com.pairapp.data.UserManager;
+import com.pairapp.data.Message;
+import com.pairapp.messenger.MessageProcessor;
+import com.pairapp.data.RealmUtils;
 import com.pairapp.util.LiveCenter;
+import com.pairapp.util.TaskManager;
+import com.pairapp.util.Config;
 import com.pairapp.util.UiHelpers;
 import com.parse.ParseAnalytics;
+import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
@@ -80,7 +90,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                 if (default_fragment >= MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT
                         && default_fragment <= MyFragmentStatePagerAdapter.POSITION_SETTINGS_FRAGMENT)
                     savedPosition = default_fragment;
-                //testChatActivity();
+                testChatActivity();
             } else {
                 UiHelpers.gotoSetUpActivity(this);
             }
@@ -196,7 +206,6 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     }
 
 
-
     private final RealmChangeListener changeListener = new RealmChangeListener() {
         @Override
         public void onChange() {
@@ -206,16 +215,16 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     private Realm realm;
 
     private boolean checkIfUserAvailable() {
-            if (realm == null)
-                realm = User.Realm(MainActivity.this);
-            
-            realm.addChangeListener(changeListener);
-            boolean noUserAvailable = realm.where(User.class).notEqualTo(User.FIELD_ID, getMainUserId()).findFirst() == null;
-            if (!noUserAvailable) {
-                realm.removeChangeListener(changeListener);
-                realm.close();
-                realm = null;
-            }
+        if (realm == null)
+            realm = User.Realm(MainActivity.this);
+
+        realm.addChangeListener(changeListener);
+        boolean noUserAvailable = realm.where(User.class).notEqualTo(User.FIELD_ID, getMainUserId()).findFirst() == null;
+        if (!noUserAvailable) {
+            realm.removeChangeListener(changeListener);
+            realm.close();
+            realm = null;
+        }
         return !noUserAvailable;
     }
 
@@ -229,9 +238,24 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     }
 
     @Override
-    public void onConversionClicked(Conversation conversation) {
+    public void onConversionClicked(final Conversation conversation) {
         final String peerId = conversation.getPeerId();
-        UiHelpers.enterChatRoom(this, peerId);
+        if (userManager.isBlocked(peerId)) {
+            UiHelpers.showErrorDialog(this, R.string.blocked_user_notice, R.string.agree, R.string.disagree, new UiHelpers.Listener() {
+                @Override
+                public void onClick() {
+                 userManager.unBlockUser(peerId);
+                 UiHelpers.showToast(getString(R.string.user_unblocked));
+                 UiHelpers.enterChatRoom(MainActivity.this, peerId);                    
+                }
+            }, new UiHelpers.Listener() {
+                @Override
+                public void onClick() {
+                }
+            });
+        } else {
+            UiHelpers.enterChatRoom(this, peerId);
+        }
     }
 
     @Override
@@ -239,33 +263,33 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         return LiveCenter.getUnreadMessageFor(conversation.getPeerId());
     }
 
-    // /**
-    //  * code purposely for testing we will take this off in production
-    //  */
-    // @SuppressWarnings("unused")
-    // private static void testChatActivity() {
-    //     final String senderId = "233541730101";
-    //     timer = new Timer(true);
-    //     TimerTask task = new TimerTask() {
-    //         @Override
-    //         public void run() {
-    //             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_LOWEST);
-    //             testMessageProcessor(RealmUtils.seedIncomingMessages("Another Group Name@" + senderId, UserManager.getMainUserId()));
-    //             testMessageProcessor(RealmUtils.seedIncomingMessages("233542385287", UserManager.getMainUserId(), Message.TYPE_TEXT_MESSAGE, "Hello where have you been"));
-    //         }
-    //     };
-    //     //timer.scheduleAtFixedRate(task, 5000, 45000);
-    // }
+    /**
+     * code purposely for testing we will take this off in production
+     */
+    @SuppressWarnings("unused")
+    private static void testChatActivity() {
+        final String senderId = "233541730101";
+        timer = new Timer(true);
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_LOWEST);
+                testMessageProcessor(RealmUtils.seedIncomingMessages("Another Group Name@" + senderId, UserManager.getMainUserId()));
+                testMessageProcessor(RealmUtils.seedIncomingMessages("233542385287", UserManager.getMainUserId(), Message.TYPE_TEXT_MESSAGE, "Hello where have you been"));
+            }
+        };
+        timer.scheduleAtFixedRate(task, 5000, 45000);
+    }
 
-    // static Timer timer;
+    static Timer timer;
 
-    // private static void testMessageProcessor(Message messages) {
-    //     Context context = Config.getApplicationContext();
-    //     Bundle bundle = new Bundle();
-    //     bundle.putString("message", Message.toJSON(messages));
-    //     Intent intent = new Intent(context, MessageProcessor.class);
-    //     intent.putExtras(bundle);
-    //     context.startService(intent);
-    // }
+    private static void testMessageProcessor(Message messages) {
+        Context context = Config.getApplicationContext();
+        Bundle bundle = new Bundle();
+        bundle.putString("message", Message.toJSON(messages));
+        Intent intent = new Intent(context, MessageProcessor.class);
+        intent.putExtras(bundle);
+        context.startService(intent);
+    }
 
 }

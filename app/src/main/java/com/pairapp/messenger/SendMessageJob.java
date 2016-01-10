@@ -33,7 +33,7 @@ abstract class SendMessageJob extends Task {
 //        }
 //
 //        @Override
-//        public void onDispatchSucceed(String messageId) {
+//        public void onDispatchSucceeded(String messageId) {
 //            PLog.d(PairAppClient.TAG, "message with id : %s dispatched successfully", messageId);
 //            LiveCenter.releaseProgressTag(messageId);
 //            progressMap.remove(messageId);

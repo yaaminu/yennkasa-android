@@ -5,7 +5,9 @@
     android:layout_height="wrap_content"
     android:descendantFocusability="beforeDescendants"
     android:minHeight="?android:attr/listPreferredItemHeight"
-    android:padding="@dimen/list_item_padding"
+    android:paddingLeft="@dimen/list_item_padding"
+    android:paddingRight="@dimen/list_item_padding"
+    android:paddingTop="@dimen/list_item_padding"
     tools:ignore="RtlHardcoded">
 
     <com.pairapp.view.LinearLayout

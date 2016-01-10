@@ -36,22 +36,8 @@ import static com.github.nkzawa.socketio.client.Socket.Listener;
 
 public class SocketIoClient implements Closeable, ConnectionUtils.ConnectivityListener {
 
-    public static final String
-            TYPING = "typing",
-            TRACK_USER = "trackUser",
-            IS_ONLINE = "isOnline",
-            UN_TRACK_USER = "unTrackUser",
-            PROPERTY_TO = "to",
-            PROPERTY_FROM = "from",
-            PROPERTY_IS_TYPING = "isTyping",
-            EVENT_CHAT_ROOM = "chatRoom",
-            PROPERTY_IN_CHAT_ROOM = "inChatRoom",
-            EVENT_MESSAGE = "message",
-            EVENT_MSG_STATUS = "msgStatus",
-            MSG_STS_STATUS = "status",
-            MSG_STS_MESSAGE_ID = "messageId",
-            DISCONNECT = EVENT_DISCONNECT,
-            CONNECT = EVENT_CONNECT;
+    public static final String DISCONNECT = EVENT_DISCONNECT;
+    public static final String CONNECT = EVENT_CONNECT;
     private static final int PING_DELAY = 10 * 60000;
     private static final String PING = "ping",
             PONG = "pong", RECONNECT_AND_PING_TIMER_TIMER = "reconnectAndPingTimer timer";
@@ -284,10 +270,6 @@ public class SocketIoClient implements Closeable, ConnectionUtils.ConnectivityLi
             }
             attemptReconnect();
         }
-    }
-
-    public void send(Object jsonData) {
-        send(EVENT_MESSAGE, jsonData);
     }
 
     @Override

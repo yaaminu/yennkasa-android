@@ -1,8 +1,12 @@
 package com.pairapp.ui;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -13,11 +17,11 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.pairapp.BuildConfig;
+import com.pairapp.R;
 import com.pairapp.adapter.CountriesListAdapter;
 import com.pairapp.data.Country;
 import com.pairapp.data.UserManager;
-import com.pairapp.BuildConfig;
-import com.pairapp.R;
 import com.pairapp.util.Config;
 import com.pairapp.util.FormValidator;
 import com.pairapp.util.PLog;
@@ -56,7 +60,6 @@ public class LoginFragment extends Fragment {
     private Button loginButton;
     private EditText usernameEt, phoneNumberEt;
     private Realm realm;
-    private boolean isLoggingIn = true;
     private Spinner spinner;
     private String userName, phoneNumber, userCountry;
     private FormValidator validator;
@@ -95,11 +98,9 @@ public class LoginFragment extends Fragment {
     }, usernameStrategy = new FormValidator.ValidationStrategy() {
         @Override
         public boolean validate() {
-            if (isLoggingIn) return true;
             if (TextUtils.isEmpty(userName)) {
-                showRequiredFieldDialog(getString(R.string.username_hint));
-                usernameEt.requestFocus();
-                return false;
+                userName = "";
+                return true;
             } else {
                 android.support.v4.util.Pair<String, String> errorNamePair = UserManager.getInstance().isValidUserName(userName);
                 if (errorNamePair.second != null) {
@@ -189,8 +190,16 @@ public class LoginFragment extends Fragment {
         public void onClick(View v) {
             if (v.getId() == R.id.bt_loginButton) {
                 validateAndContinue();
-            } else if (v.getId() == R.id.tv_signup) {
-                toggleSignUpLogin();
+            } else if (v.getId() == R.id.problems_logging_in) {
+                // TODO: 12/23/2015 redirect user to my website
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse("http://pairapp.parseapp.com/support?kind=loginproblem&platform=android_" + Build.VERSION.SDK_INT + "&clientVersion=" + BuildConfig.VERSION_NAME + "&locale=" + Locale.getDefault().getCountry()));
+                try {
+                    startActivity(intent);
+                } catch (ActivityNotFoundException e) {
+                    PLog.d(TAG, "this is strange no browser");
+                    UiHelpers.showErrorDialog(getActivity(), "You have no browser on you phone, you may install one from the play store");
+                }
             } else {
                 throw new AssertionError();
             }
@@ -292,7 +301,7 @@ public class LoginFragment extends Fragment {
         validator.addStrategy(phoneNumberStrategy)
                 .addStrategy(usernameStrategy);
         setUpSpinner();
-        signUpLoginNotice = (TextView) view.findViewById(R.id.tv_signup);
+        signUpLoginNotice = (TextView) view.findViewById(R.id.problems_logging_in);
         ViewUtils.setTypeface(signUpLoginNotice, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         signUpLoginNotice.setOnClickListener(listener);
 
@@ -324,18 +333,6 @@ public class LoginFragment extends Fragment {
                         }
                     }
                 }
-            }
-            isLoggingIn = savedInstanceState.getBoolean(LOGGIN_IN, true);
-            if (isLoggingIn) {
-                signUpLoginNotice.setText(R.string.dont_have_an_account_sign_up);
-                usernameEt.setVisibility(View.GONE);
-                phoneNumberEt.requestFocus();
-                loginButton.setText(R.string.log_in_button_label);
-            } else {
-                signUpLoginNotice.setText(R.string.st_already_have_an_account);
-                usernameEt.setVisibility(View.VISIBLE);
-                usernameEt.requestFocus();
-                loginButton.setText(R.string.sign_up_button_label);
             }
             String userName = savedInstanceState.getString(USER_NAME);
             if (userName != null) {
@@ -388,36 +385,16 @@ public class LoginFragment extends Fragment {
         userName = usernameEt.getText().toString().trim();
 
         if (userCountryStrategy.validate() && usernameStrategy.validate() && phoneNumberStrategy.validate()) {
-            attemptCLoginOrSignUp();
+            attemptLoginOrSignUp();
         }
     }
 
-    private void toggleSignUpLogin() {
-        if (isLoggingIn) {
-            isLoggingIn = false;
-            signUpLoginNotice.setText(R.string.st_already_have_an_account);
-            usernameEt.setVisibility(View.VISIBLE);
-            usernameEt.requestFocus();
-            loginButton.setText(R.string.sign_up_button_label);
-        } else {
-            isLoggingIn = true;
-            signUpLoginNotice.setText(R.string.dont_have_an_account_sign_up);
-            usernameEt.setVisibility(View.GONE);
-            phoneNumberEt.requestFocus();
-            loginButton.setText(R.string.log_in_button_label);
-        }
-    }
-
-    private void attemptCLoginOrSignUp() {
+    private void attemptLoginOrSignUp() {
         doAttemptCLogin();
     }
 
     private void doAttemptCLogin() {
-        if (isLoggingIn) {
-            callback.onLogin(phoneNumber, userCountry);
-        } else {
-            callback.onSignUp(userName, phoneNumber, userCountry);
-        }
+        callback.onSignUp(userName, phoneNumber, userCountry);
     }
 
     private void showRequiredFieldDialog(String field) {
@@ -438,7 +415,6 @@ public class LoginFragment extends Fragment {
         outState.putInt(SPINER_POSITION, selectedItemPosition);
         outState.putString(USER_NAME, usernameEt.getText().toString());
         outState.putString(USER_ID, phoneNumberEt.getText().toString());
-        outState.putBoolean(LOGGIN_IN, isLoggingIn);
         if (selectedItemPosition >= 1) {
             outState.putString(COUNTRY, ((Country) spinner.getAdapter().getItem(selectedItemPosition)).getIso2letterCode());
         }
@@ -446,7 +422,6 @@ public class LoginFragment extends Fragment {
     }
 
     interface Callbacks {
-        void onLogin(String phoneNumber, String userIsoCountry);
 
         void onSignUp(String userName, String phoneNumber, String userIsoCountry);
 

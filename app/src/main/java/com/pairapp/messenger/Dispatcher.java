@@ -19,7 +19,7 @@ interface Dispatcher<T> extends Closeable {
 
     void dispatch(Collection<T> t);
 
-    boolean cancelDispatchMayPossiblyFail(T t);
+    boolean cancelDispatchMayFail(T t);
 
     void registerMonitor(DispatcherMonitor monitor);
 
@@ -41,7 +41,7 @@ interface Dispatcher<T> extends Closeable {
     interface DispatcherMonitor {
         void onDispatchFailed(String id, String reason);
 
-        void onDispatchSucceed(String id);
+        void onDispatchSucceeded(String id);
 
         void onProgress(String id, int progress,int max);
 

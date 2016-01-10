@@ -8,7 +8,7 @@ import android.os.PowerManager;
 import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
 import com.pairapp.data.UserManager;
-import com.pairapp.net.sockets.SocketIoClient;
+import com.pairapp.data.util.MessageUtils;
 import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
@@ -79,8 +79,8 @@ public class MessageProcessor extends IntentService {
                 doProcessMessage(message);
             } else if (type.equals(MESSAGE_STATUS)) {
                 Realm realm = Message.REALM(MessageProcessor.this);
-                int state = data1.optInt(SocketIoClient.MSG_STS_STATUS, Message.STATE_SEEN);
-                String messageId = data1.getString(SocketIoClient.MSG_STS_MESSAGE_ID);
+                int state = data1.optInt(Message.MSG_STS_STATUS, Message.STATE_SEEN);
+                String messageId = data1.getString(Message.MSG_STS_MESSAGE_ID);
                 Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
                 if (message != null && message.isValid()) {
                     realm.beginTransaction();
@@ -128,6 +128,11 @@ public class MessageProcessor extends IntentService {
                 //how did this happen?
                 return;
             }
+            if (!MessageUtils.isSendableMessage(message)) {
+                PLog.d(TAG, "unsupported message type %s", Message.toJSON(message));
+                return;
+            }
+
             Realm realm = Message.REALM(this);
             try {
                 String peerId;
@@ -188,7 +193,7 @@ public class MessageProcessor extends IntentService {
                             && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_WIFI, false))
                             || (ConnectionUtils.isMobileConnected()
                             && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_MOBILE, false))) {
-                        Worker.download(this, message);
+                        Worker.download(this, message,true);
                     }
                 }
 

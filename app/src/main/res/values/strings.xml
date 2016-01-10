@@ -70,7 +70,7 @@
     <string name="st_could_not_create_group">Failed to create group.Add at least two members
     </string>
     <string name="st_send_again">Resend Code</string>
-    <string name="st_invalid_phone_number_message">The phone number,<b>%s</b>, may not be valid in your country. Are you sure you want to continue?
+    <string name="st_invalid_phone_number_message">The phone number, <b>%s</b>, may not be valid in your country. Are you sure you want to continue?
     </string>
     <string name="st_understand">I UNDERSTAND</string>
     <string name="st_invalid_phone_number_title">Potentially invalid phone number</string>
@@ -326,4 +326,7 @@
     <string name="attachment_invalid">Attachment invalid</string>
     <string name="path">" does not exist"</string>
     <string name="new_line_path">"\n path "</string>
+    <string name="app_icon">icon</string>
+    <string name="problems_logging_in">Problems Logging In?</string>
+    <string name="get_started">Get started!</string>
 </resources>

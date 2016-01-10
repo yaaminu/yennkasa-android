@@ -28,7 +28,7 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
     private static final String TAG = PairAppBaseActivity.class.getSimpleName();
     protected final UserManager userManager = UserManager.getInstance();
     private boolean isUserVerified = false;
-    private static boolean promptShown = false;
+    private static volatile boolean promptShown = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,11 +53,18 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
         NavigationManager.onResume(this);
         ErrorCenter.showPendingError();
         if (!promptShown) {
-            promptShown = true;
             TaskManager.executeNow(new Runnable() {
                 @Override
                 public void run() {
-                    int message = 0;
+                    showMessage();
+                }
+            }, false);
+        }
+    }
+
+    protected void showMessage(){
+        promptShown = true;
+        int message = 0;
                     if (!GcmUtils.hasGcm()) {
                         message = R.string.no_gcm_error_message;
                     } else if (GcmUtils.gcmUpdateRequired()) {
@@ -73,11 +80,7 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
                             }
                         });
                     }
-                }
-            }, false);
-        }
     }
-
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         //quick fix for menu items appearing twice on the toolbar. this is a bug in the library am using

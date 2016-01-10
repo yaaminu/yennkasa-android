@@ -34,8 +34,8 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
         public void call(Object... args) {
             try {
                 JSONObject object = new JSONObject(args[0].toString());
-                int status = object.getInt(SocketIoClient.MSG_STS_STATUS);
-                String messageId = object.getString(SocketIoClient.MSG_STS_MESSAGE_ID);
+                int status = object.getInt(Message.MSG_STS_STATUS);
+                String messageId = object.getString(Message.MSG_STS_MESSAGE_ID);
                 if (status == Message.STATE_SENT) {
                     PLog.i(TAG, "message sent");
                     onSent(messageId);
@@ -58,7 +58,7 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
     private SocketsIODispatcher(Map<String, String> credentials, DispatcherMonitor monitor) {
         super(credentials, monitor);
         socketIoClient = SocketIoClient.getInstance(Config.getMessageEndpoint(), UserManager.getMainUserId());
-        socketIoClient.registerForEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
+        socketIoClient.registerForEvent(Message.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
     }
 
     /**
@@ -86,7 +86,7 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
         if (!socketIoClient.isConnected()) {
             onFailed(message.getId(), ERR_SOCKET_DICONNECTED);
         }
-        socketIoClient.send(Message.toJSON(message));
+        socketIoClient.send(Message.EVENT_MESSAGE, Message.toJSON(message));
     }
 
     private static final AtomicInteger refCount = new AtomicInteger(0);
@@ -94,7 +94,7 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
     @Override
     protected boolean doClose() {
         if (refCount.decrementAndGet() <= 0) {
-            socketIoClient.unRegisterEvent(SocketIoClient.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
+            socketIoClient.unRegisterEvent(Message.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
             socketIoClient.close();
             return true;
         }

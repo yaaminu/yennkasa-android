@@ -58,9 +58,6 @@ class ParseDispatcher extends AbstractMessageDispatcher {
     }
 
     private void finallyDispatch(Message message, List<String> target) {
-        PLog.d(TAG, "dispatching message: " + message.getMessageBody()
-                + " from " + message.getFrom()
-                + " to " + message.getTo());
         // StringBuilder dirtyJson = new StringBuilder("\"[");
         // int counter = 1;
         // target.remove(message.getFrom());

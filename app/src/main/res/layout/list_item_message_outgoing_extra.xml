@@ -8,7 +8,7 @@
     android:layout_marginBottom="@dimen/message_item_margin_bottom"
     android:layout_marginLeft="@dimen/message_body_margin"
     android:layout_marginRight="@dimen/message_body_margin"
-    android:layout_marginTop="@dimen/message_body_margin">
+    android:layout_marginTop="@dimen/message_item_extra_margin_top">
 
     <com.pairapp.view.RelativeLayout
         android:id="@+id/ll_message_body_view"

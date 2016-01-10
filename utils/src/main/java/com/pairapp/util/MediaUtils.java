@@ -4,14 +4,18 @@ import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
+import android.media.MediaPlayer;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.support.annotation.RawRes;
 import android.support.v4.BuildConfig;
 import android.support.v4.app.FragmentActivity;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -97,5 +101,55 @@ public class MediaUtils {
         } catch (ActivityNotFoundException e) {
             Toast.makeText(currentActivity, R.string.no_app_audio_record, Toast.LENGTH_SHORT).show();
         }
+    }
+
+
+    /**
+     * plays the specified raw resource
+     *
+     * @param context context to for accessing {@link android.content.res.Resources}
+     * @param res     the resource to be played
+     * @throws IOException
+     * @throws IllegalStateException if called on the android main thread
+     * @see #playSound(Context, MediaPlayer, int)
+     */
+    public static void playSound(Context context, @RawRes int res) throws IOException {
+        ThreadUtils.ensureNotMain();
+        final MediaPlayer player = new MediaPlayer();
+        player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                player.release();
+            }
+        });
+        playSound(context, player, res);
+    }
+
+    /**
+     * plays the specified raw resource using this player
+     *
+     * @param context context for accessing {@link android.content.res.Resources}
+     * @param player  player to be used for playing the raw resource, it is you duty to release it when you are done
+     * @param res     the resource to be played
+     * @throws IOException
+     * @throws IllegalStateException    if called on the android main thread
+     * @throws IllegalArgumentException if  the {@link MediaPlayer} is null or in an invalid state
+     * @see #playSound(Context, int)
+     */
+    public static void playSound(Context context, final MediaPlayer player, @RawRes int res) throws IOException {
+        ThreadUtils.ensureNotMain();
+        if (player == null) {
+            throw new IllegalArgumentException("player == null");
+        }
+        if (player.isPlaying()) {
+            throw new IllegalArgumentException("player is invalid");
+        }
+        AssetFileDescriptor fd = context.getResources().openRawResourceFd(res);
+        player.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
+        player.prepare();
+        fd.close();
+        player.setLooping(false);
+        player.setVolume(1f,1f);
+        player.start();
     }
 }

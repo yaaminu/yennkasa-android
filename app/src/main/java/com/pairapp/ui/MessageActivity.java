@@ -135,11 +135,11 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
     }
 
     private void doSendMessage(final Message message) {
-        if (bound) {
-            pairAppClientInterface.sendMessage(message);
+        if (isBound()) {
+            getPairAppClientInterface().sendMessage(message);
         } else {
             Intent intent = new Intent(this, PairAppClient.class);
-            intent.setAction(PairAppClient.ACTION_SEND_MESSAGE);
+            intent.putExtra(PairAppClient.ACTION, PairAppClient.ACTION_SEND_MESSAGE);
             intent.putExtra(PairAppClient.EXTRA_MESSAGE, Message.toJSON(message));
             startService(intent);
             //worst case if message sending delays this message will be sent twice
@@ -252,14 +252,14 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         Runnable r = new Runnable() {
             @Override
             public void run() {
-                if (pairAppClientInterface != null) {
-                    pairAppClientInterface.notifyMessageSeen(message);
+                if (getPairAppClientInterface() != null) {
+                    getPairAppClientInterface().notifyMessageSeen(message);
                 }
             }
         };
         if (message.getState() != Message.STATE_SEEN) {
-            if (pairAppClientInterface != null) {
-                pairAppClientInterface.notifyMessageSeen(message);
+            if (getPairAppClientInterface() != null) {
+                getPairAppClientInterface().notifyMessageSeen(message);
             }
             new Handler().postDelayed(r, 1000);
         }
@@ -291,15 +291,10 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                     try {
                         Message message = createMessage(msg.getData());
                         final String messageId = message.getId();
-                        final boolean notTextMessage = message.getType() != Message.TYPE_TEXT_MESSAGE;
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 onMessageQueued(messageId);
-                                if (notTextMessage) {
-                                    progresses.put(messageId, 0);
-                                    reportProgress(messageId, 0);
-                                }
                             }
                         });
                         doSendMessage(message);
@@ -318,15 +313,10 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                             realm.beginTransaction();
                             message.setState(Message.STATE_PENDING);
                             realm.commitTransaction();
-                            final boolean notTextMessage = message.getType() != Message.TYPE_TEXT_MESSAGE;
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
                                     onMessageQueued(msgId);
-                                    if (notTextMessage) {
-                                        progresses.put(msgId, 0);
-                                        reportProgress(msgId, 0);
-                                    }
                                 }
                             });
                             doSendMessage(message);

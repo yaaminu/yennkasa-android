@@ -68,6 +68,10 @@ public class Message extends RealmObject {
             FIELD_STATE = "state",
             FIELD_DATE_COMPOSED = "dateComposed",
             FIELD_MESSAGE_BODY = "messageBody";
+    public static final String EVENT_MSG_STATUS = "msgStatus";
+    public static final String MSG_STS_STATUS = "status";
+    public static final String MSG_STS_MESSAGE_ID = "messageId";
+    public static final String EVENT_MESSAGE = "message";
     private static final String TAG = Message.class.getSimpleName();
     private final static Object idLock = new Object();
     public static final String SENDABLE_MESSAGE = "sendableMessage";

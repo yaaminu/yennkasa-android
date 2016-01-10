@@ -1,5 +1,6 @@
 package com.pairapp.adapter;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.media.ThumbnailUtils;
@@ -48,16 +49,13 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     private static final int OUTGOING_MESSAGE = 0x1, INCOMING_MESSAGE = 0x2,
             DATE_MESSAGE = 0x0, TYPING_MESSAGE = 0x3,
             INCOMING_MESSAGE_ONE_LINE = 0x4,
-            OUTGOING_MESSAGE_ONE_LINE = 0x5;
+            OUTGOING_MESSAGE_ONE_LINE = 0x5,
+            INCOMING_MESSAGE_ONE_LINE_EXTRA = 0x6,
+            OUTGOING_MESSAGE_ONE_LINE_EXTRA = 0x7,
+            INCOMING_MESSAGE_EXTRA = 0x8,
+            OUTGOING_MESSAGE_EXTRA = 0x9;
 
-    private static final int[] messagesLayout = {
-            R.layout.list_item_date_log,
-            R.layout.list_item_message_outgoing,
-            R.layout.list_item_message_incoming,
-            R.layout.typing_dots,
-            R.layout.one_line_message_list_item_incoming,
-            R.layout.one_line_message_list_item_outgoing
-    };
+
     //    private final Drawable bgOut, bgOutXtra, bgIn, bgInXtra;
     private final SparseIntArray messageStates;
     private final Picasso PICASSO;
@@ -65,6 +63,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
 
     private final Delegate delegate;
     private final boolean isGroupMessages;
+    private boolean isSameSender;
 
     public MessagesAdapter(Delegate delegate, RealmResults<Message> realmResults, boolean isGroupMessages) {
         super(delegate.getContext(), realmResults, true);
@@ -94,8 +93,21 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
 
     @Override
     public int getViewTypeCount() {
-        return 6;
+        return messagesLayout.length;
     }
+
+    private static final int[] messagesLayout = {
+            R.layout.list_item_date_log,
+            R.layout.list_item_message_outgoing,
+            R.layout.list_item_message_incoming,
+            R.layout.typing_dots,
+            R.layout.one_line_message_list_item_incoming,
+            R.layout.one_line_message_list_item_outgoing,
+            R.layout.one_line_message_list_item_incoming_extra,
+            R.layout.one_line_message_list_item_outgoing_extra,
+            R.layout.list_item_message_incoming_extra,
+            R.layout.list_item_message_outgoing_extra
+    };
 
     @Override
     public int getItemViewType(int position) {
@@ -119,13 +131,35 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             useOneLine = length < dateLength * 4 && messageBody.indexOf('\n') == -1;
         }
 
+        isSameSender = isSameSender(position);
+
         if (isOutgoingMessage) {
-            return useOneLine ? OUTGOING_MESSAGE_ONE_LINE : OUTGOING_MESSAGE;
+            if (isSameSender) {
+                return useOneLine ? OUTGOING_MESSAGE_ONE_LINE_EXTRA : OUTGOING_MESSAGE_EXTRA;
+            } else {
+                return useOneLine ? OUTGOING_MESSAGE_ONE_LINE : OUTGOING_MESSAGE;
+            }
         }
-        return useOneLine ? INCOMING_MESSAGE_ONE_LINE : INCOMING_MESSAGE;
+        if (isSameSender) {
+            return useOneLine ? INCOMING_MESSAGE_ONE_LINE_EXTRA : INCOMING_MESSAGE_EXTRA;
+        } else {
+            return useOneLine ? INCOMING_MESSAGE_ONE_LINE : INCOMING_MESSAGE;
+        }
 
     }
 
+    private boolean isSameSender(int currPosition) {
+        //if the previous message was from the same user,we wont show it again but first ensure it's a sendable message
+        if (currPosition > 0 /*avoid ouf of bound ex*/) { //this condition is almost always true
+            Message previous = getItem(currPosition - 1), message = getItem(currPosition);
+            if (MessageUtils.isSendableMessage(previous) && previous.getFrom().equals(message.getFrom())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @SuppressLint("SetTextI18n")
     @Override
     public View getView(final int position, View convertView, final ViewGroup parent) {
         final ViewHolder holder;
@@ -167,9 +201,9 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             public void onClick(View v) {
                 try {
                     if (v.getId() == R.id.v_download_play) {
-                        ViewFileOrdownloadOrCancel(message);
+                        cancelDownloadOrSending(message);
                     } else if (v.getId() == R.id.iv_message_preview) {
-                        ViewFileOrdownloadOrCancel(message);
+                        openMessage(message);
                     } else if (v.getId() == R.id.tv_sender_name) {
                         UiHelpers.gotoProfileActivity(context, message.getFrom());
                     } else if (v.getId() == R.id.iv_retry) {
@@ -181,38 +215,11 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             }
         };
 
-        /////////////////////////////////////// if you think this can be re-written well try./////////////////////////////////////////
-//        holder.rootView.setBackgroundDrawable(null);
-        //if the previous message was from the same user,we wont show it again but first ensure it's a sendable message
-        if (position > 0 /*avoid ouf of bound ex*/) { //this condition is almost always true
-            Message previous = getItem(position - 1);
-            if (MessageUtils.isSendableMessage(previous) && previous.getFrom().equals(message.getFrom())) {
-                holder.sendersName.setOnClickListener(null);
-                PLog.d(TAG, "same sender not showing name");
-                //set background to extra
-//                holder.rootView.setBackgroundDrawable(isOutgoingMessage ? bgOutXtra : bgInXtra);
-            } else {
-                //set background to normal
-//                holder.rootView.setBackgroundDrawable(isOutgoingMessage ? bgOutXtra : bgInXtra);
-                if (!isOutgoingMessage && isGroupMessages) {
-                    ViewUtils.showViews(holder.sendersName);
-                    holder.sendersName.setText(getSenderName(message));
-                    holder.sendersName.setOnClickListener(listener);
-                }
-            }
-        } else {
-//            holder.rootView.setBackgroundDrawable(isOutgoingMessage ? bgOut: bgIn);
-            // almost always the first message for a conversation is date message which are screened off before we get here.
-            // this means currently this block will never get executed in practice. but do be aware that when the data set grows and we
-            // introduce paging the first message may not be a date message
-            if (!isOutgoingMessage && isGroupMessages) {
-                ViewUtils.showViews(holder.sendersName);
-                holder.sendersName.setText(getSenderName(message));
-                holder.sendersName.setOnClickListener(listener);
-            }
+        if (!isSameSender && isGroupMessages && !isOutgoingMessage) {
+            ViewUtils.showViews(holder.sendersName);
+            holder.sendersName.setText(getSenderName(message));
+            holder.sendersName.setOnClickListener(listener);
         }
-        //////////////////////////////////*******************************************//////////////////////////////////
-
         holder.preview.setOnClickListener(null);
         holder.playOrDownload.setOnClickListener(null);
         //common to all
@@ -273,8 +280,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                             .into(new Target() {
                                 @Override
                                 public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom loadedFrom) {
-                                    holder.preview.setImageBitmap(bitmap);
                                     thumbnailCache.put(message.getMessageBody(), bitmap);
+                                    notifyDataSetChanged();
                                 }
 
                                 @Override
@@ -311,7 +318,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             } else {
                 holder.progressBar.setProgress(progress);
             }
-            if (progress < 100 && !isOutgoingMessage) {
+            if (progress < 100) {
                 ViewUtils.showViews(holder.playOrDownload);
                 holder.playOrDownload.setImageResource(R.drawable.ic_clear_white_24dp);
                 holder.playOrDownload.setOnClickListener(listener);
@@ -324,19 +331,26 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         return UserManager.getInstance().getName(message.getFrom());
     }
 
-    private void ViewFileOrdownloadOrCancel(Message message) throws PairappException {
+    private void openMessage(Message message) throws PairappException {
         File messageFile = new File(message.getMessageBody());
         if (messageFile.exists()) {
             UiHelpers.attemptToViewFile((PairAppBaseActivity) context, messageFile);
-        } else {
-            if (Message.isIncoming(message) && message.getMessageBody().startsWith("http")) {
+        }
+    }
+
+    private void cancelDownloadOrSending(Message message) {
+        if (Message.isIncoming(message)) {
+            if (message.getMessageBody().startsWith("http")) {
                 if (delegate.getProgress(message) >= 0) {
                     delegate.cancelDownload(message);
                 } else {
                     delegate.download(message);
                 }
             }
+        } else if (message.getState() == Message.STATE_PENDING && !Message.isTextMessage(message)) {
+            delegate.onCancelSendMessage(message);
         }
+
     }
 
     private void makeThumbnail(final String uri) {
@@ -417,6 +431,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         void onMessageSeen(Message message);
 
         void onReSendMessage(Message message);
+
+        void onCancelSendMessage(Message message);
 
         int getProgress(Message message);
 

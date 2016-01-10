@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 
 import io.realm.Realm;
 
@@ -54,7 +55,6 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
 
         @Override
         public void onProgress(long expected, long processed) {
-            //do nothing
             final int progress = (int) ((100 * processed) / expected);
             PLog.d(TAG, "progress : %s", progress + "%");
             synchronized (monitors) {
@@ -82,7 +82,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         }
     }
 
-    private void uploadFileAndProceed(final Message message) {
+    private void uploadFileAndProceed(final Message message) throws DispatchCancelledException {
         String messageBody = message.getMessageBody();
 
         if (messageBody.startsWith("http") || messageBody.startsWith("ftp")) { //we assume the file is uploaded
@@ -103,16 +103,30 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                 proceedToSend(message);
             } else {
                 final ProgressListenerImpl listener = new ProgressListenerImpl(message);
+                if (checkIfCancelled()) {
+                    PLog.d(TAG, "message with id: %s cancelled", message.getId());
+                    throw new DispatchCancelledException();
+                }
                 file_service.saveFileToBackend(actualFile, new FileApi.FileSaveCallback() {
                     @Override
                     public void done(FileClientException e, String locationUrl) {
                         if (e == null) {
                             //cache the uri... all these bullshit will be a thing of the past once we add job manager
                             preferences.edit().putString(isAlreadyUploaded, locationUrl).apply();
+                            if (checkIfCancelled()) {
+                                PLog.d(TAG, "message with id: %s cancelled", message.getId());
+                                onFailed(message.getId(), MessageUtils.ERROR_CANCELLED);
+                                return;
+                            }
                             message.setMessageBody(locationUrl); //do not persist this change.
                             proceedToSend(message);
                         } else {
-                            onFailed(message.getId(), MessageUtils.ERROR_FILE_UPLOAD_FAILED);
+                            if (checkIfCancelled()) {
+                                PLog.d(TAG, "message with id: %s cancelled", message.getId());
+                                onFailed(message.getId(), MessageUtils.ERROR_CANCELLED);
+                            } else {
+                                onFailed(message.getId(), MessageUtils.ERROR_FILE_UPLOAD_FAILED);
+                            }
                         }
                     }
                 }, listener);
@@ -121,8 +135,11 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     }
 
     private void proceedToSend(final Message message) {
+        PLog.d(TAG, "dispatching message: " + message.getMessageBody()
+                + " from " + message.getFrom()
+                + " to " + message.getTo());
         //is this message to a group?
-        if (UserManager.getInstance().isGroup(message.getTo())) {
+        if (Message.isGroupMessage(message)) {
             final Realm realm = User.Realm(Config.getApplicationContext());
             try {
                 User user = realm.where(User.class).equalTo(User.FIELD_ID, message.getTo()).findFirst();
@@ -180,7 +197,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         }
         synchronized (monitors) {
             for (DispatcherMonitor monitor : monitors) {
-                monitor.onDispatchFailed(reason, messageId);
+                monitor.onDispatchFailed(messageId,reason);
             }
         }
     }
@@ -202,7 +219,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         }
         synchronized (monitors) {
             for (DispatcherMonitor monitor : monitors) {
-                monitor.onDispatchSucceed(messageId);
+                monitor.onDispatchSucceeded(messageId);
             }
         }
     }
@@ -250,11 +267,30 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             onFailed(message.getId(), MessageUtils.ERROR_NOT_CONNECTED);
             return;
         }
+        disPatchingThreads.put(message.getId(), Thread.currentThread());
+        try {
+            doDispatch(message);
+        } catch (DispatchCancelledException e) {
+            onFailed(message.getId(), MessageUtils.ERROR_CANCELLED);
+        } finally {
+            disPatchingThreads.remove(message.getId());
+        }
+    }
+
+    private void doDispatch(Message message) throws DispatchCancelledException {
+        if (checkIfCancelled()) {
+            PLog.d(TAG, "message with id: %s cancelled", message.getId());
+            throw new DispatchCancelledException();
+        }
         try {
             MessageUtils.validate(message); //might throw
             //is the message a binary message?
             if (!Message.isTextMessage(message)) {
                 //upload the file first before continuing
+                if (checkIfCancelled()) {
+                    PLog.d(TAG, "message with id: %s cancelled", message.getId());
+                    throw new DispatchCancelledException();
+                }
                 uploadFileAndProceed(message);
             } else {
                 proceedToSend(message);
@@ -264,10 +300,33 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         }
     }
 
+    private static class DispatchCancelledException extends Exception {
+        public DispatchCancelledException(String message) {
+            super(message);
+        }
+
+        public DispatchCancelledException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public DispatchCancelledException() {
+            super();
+        }
+    }
+
+    private final Map<String, Thread> disPatchingThreads = new ConcurrentHashMap<>();
+
+    private static boolean checkIfCancelled() {
+        return Thread.currentThread().isInterrupted();
+    }
+
     @Override
-    public boolean cancelDispatchMayPossiblyFail(Message message) {
-        //not implemented
-        oops();
+    public final boolean cancelDispatchMayFail(Message message) {
+        Thread t = disPatchingThreads.get(message.getId());
+        if (t != null && t.isAlive() && !Message.isTextMessage(message)) {
+            t.interrupt();
+            return true;
+        }
         return false;
     }
 
@@ -301,6 +360,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             synchronized (monitors) {
                 monitors.clear();
             }
+            disPatchingThreads.clear();
         }
     }
 

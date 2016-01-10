@@ -53,23 +53,21 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     public static final int DELAY_MILLIS = 2000;
     public static final String TAG = PairAppActivity.class.getSimpleName();
     static private volatile Message latestMessage;
-    protected PairAppClient.PairAppClientInterface pairAppClientInterface;
-    protected boolean bound = false;
+    private volatile boolean bound = false;
     private volatile int totalUnreadMessages = 0;
-
+    private PairAppClient.PairAppClientInterface pairAppClientInterface;
     private ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             pairAppClientInterface = ((PairAppClient.PairAppClientInterface) service);
             bound = true;
-            pairAppClientInterface.registerUINotifier(PairAppActivity.this);
-            onBind();
+            getPairAppClientInterface().registerUINotifier(PairAppActivity.this);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             bound = false;
-            pairAppClientInterface.unRegisterUINotifier(PairAppActivity.this);
+            getPairAppClientInterface().unRegisterUINotifier(PairAppActivity.this);
             pairAppClientInterface = null; //free memory
             onUnbind();
         }
@@ -110,16 +108,25 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         }
     }
 
+    protected final void bind() {
+        if (isUserVerified() && !isBound()) {
+
+        }
+    }
 
     protected int getSnackBarStyle() {
-        return R.style.snackbar_black;
+        if (isUserVerified()) {
+            return R.style.snackbar_black;
+        }
+        throw new IllegalStateException("no user");
     }
+
 
     @Override
     protected void onStart() {
         super.onStart();
-        if (isUserVerified()) {
-            bind2();
+        if (isUserVerified() && !isBound()) {
+            doBind();
         }
     }
 
@@ -128,8 +135,8 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         super.onResume();
         if (isUserVerified()) {
             Config.appOpen(true);
-            if (bound) {
-                pairAppClientInterface.registerUINotifier(this);
+            if (isBound()) {
+                getPairAppClientInterface().registerUINotifier(this);
             }
             if (snackBar == null) {
                 snackBar = getSnackBar();
@@ -149,8 +156,8 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         super.onPause();
         if (isUserVerified()) {
             Config.appOpen(false);
-            if (bound) {
-                pairAppClientInterface.unRegisterUINotifier(this);
+            if (isBound()) {
+                getPairAppClientInterface().unRegisterUINotifier(this);
             }
         }
     }
@@ -158,16 +165,10 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     @Override
     protected void onStop() {
         if (isUserVerified()) {
-            if (bound) {
-                try {
-                    unbindService(connection); //quick fix for connection not registered exception
-                } catch (IllegalArgumentException ignored) {
-
-                }
-                bound = false;
-                pairAppClientInterface = null;
-                onUnbind();
-            }
+            unbindService(connection);
+            pairAppClientInterface = null;
+            bound = false;
+            onUnbind();
         }
         super.onStop();
     }
@@ -180,17 +181,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         super.onDestroy();
     }
 
-//    private static final ServiceConn connection = new ServiceConn();
-
-    private void bind2() {
-        if (!bound) {
-            Intent intent = new Intent(this, PairAppClient.class);
-            bindService(intent, connection, BIND_AUTO_CREATE);
-        }
-    }
-
-    protected final void bind() {
-    }
 
     private Pair<String, String> formatNotificationMessage(Message message, String sender) {
         String text;
@@ -338,6 +328,14 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     }
 
     protected abstract SnackBar getSnackBar();
+
+    protected final boolean isBound() {
+        return bound;
+    }
+
+    protected final PairAppClient.PairAppClientInterface getPairAppClientInterface() {
+        return pairAppClientInterface;
+    }
 
 
     private class notifyTask extends AsyncTask<Object, Void, Pair<String, String>> {
@@ -526,4 +524,81 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 //            currActivity.onUnbind();
 //        }
 //    }
+
+
+//    private static class Connection implements ServiceConnection {
+//
+//        PairAppClient.PairAppClientInterface pairAppClientInterface;
+//        PairAppActivity activity;
+//
+//        @Override
+//        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+//            if (activity == null) {
+//                throw new IllegalStateException("activity == null");
+//            }
+//            pairAppClientInterface = ((PairAppClient.PairAppClientInterface) iBinder);
+//            activity.onBind();
+//        }
+//
+//        @Override
+//        public void onServiceDisconnected(ComponentName componentName) {
+//            if (activity == null) {
+//                throw new IllegalStateException("activity == null");
+//            }
+//            pairAppClientInterface = null;
+//            activity.onUnbind();
+//        }
+//
+//        boolean isBound() {
+//            return pairAppClientInterface != null;
+//        }
+//
+//        PairAppClient.PairAppClientInterface getPairAppClientInterface() {
+//            return pairAppClientInterface;
+//        }
+//
+//        void onCreate(PairAppActivity activity) {
+//            this.activity = activity;
+//            doBind(activity);
+//        }
+//
+//        private void doBind(PairAppActivity activity) {
+//            if (activity != this.activity) {
+//                throw new IllegalStateException("unknown activity");
+//            }
+//            Intent intent = new Intent(activity, PairAppClient.class);
+//            activity.bindService(intent, this, BIND_AUTO_CREATE);
+//        }
+//
+//        void onDestroy(PairAppActivity activity) {
+//            if (activity != this.activity) {
+//                throw new IllegalStateException("unknown activity");
+//            }
+//            if (isBound()) {
+//                activity.unbindService(this);
+//                pairAppClientInterface = null;
+//                this.activity = null;
+//            }
+//        }
+//
+//        void bind(PairAppActivity activity) {
+//            if (activity != this.activity) {
+//                throw new IllegalStateException("unknown activity");
+//            }
+//            if (isBound()) {
+//                if (BuildConfig.DEBUG) {
+//                    throw new IllegalStateException();
+//                }
+//                return;
+//            }
+//            doBind(activity);
+//        }
+//    }
+
+
+    private void doBind() {
+        Intent intent = new Intent(this, PairAppClient.class);
+        bindService(intent, connection, BIND_AUTO_CREATE);
+    }
+
 }

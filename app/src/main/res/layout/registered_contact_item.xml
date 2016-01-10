@@ -5,9 +5,11 @@
     android:layout_height="@dimen/list_item_height"
     android:layout_marginBottom="@dimen/list_item_margin_bottom"
     android:descendantFocusability="afterDescendants"
-    android:gravity="center_vertical"
     android:minHeight="?android:attr/listPreferredItemHeight"
-    android:padding="@dimen/list_item_padding">
+    android:paddingLeft="@dimen/list_item_padding"
+    android:paddingRight="@dimen/list_item_padding"
+    android:paddingTop="@dimen/list_item_padding"
+    >
 
     <com.pairapp.view.RoundedImageView
         android:id="@+id/iv_display_picture"

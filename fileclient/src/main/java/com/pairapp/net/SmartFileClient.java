@@ -13,6 +13,7 @@ import com.pairapp.util.ThreadUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 
 import retrofit.RequestInterceptor;
@@ -87,11 +88,21 @@ abstract class SmartFileClient implements FileApi {
 
         try {
             final TypedFile countingTypedFile = new CountingTypedFile(mimeType, file, listener);
+            if (Thread.currentThread().isInterrupted()) {
+                PLog.d(TAG, "cancelled");
+                callback.done(new FileClientException(new Exception("upload cancelled"), -1), null);
+                return;
+            }
             api.saveFile(countingTypedFile);
             try {
 //                body.addProperty("read", true);
 //                body.addProperty("list", false);
 //                body.addProperty("cache", 31536000);
+                if (Thread.currentThread().isInterrupted()) {
+                    PLog.d(TAG, "cancelled");
+                    callback.done(new FileClientException(new Exception("upload cancelled"), -1), null);
+                    return;
+                }
                 JsonObject object = linkApi.getLink(this.dir);
                 String link = object.get("href").getAsString();
                 link = link.trim() + (link.endsWith("/") ? "" : "/") + countingTypedFile.fileName();
@@ -113,6 +124,11 @@ abstract class SmartFileClient implements FileApi {
                 int code = err.getResponse().getStatus();
                 if (code == 409) { //dir does not exist
                     try {
+                        if (Thread.currentThread().isInterrupted()) {
+                            PLog.d(TAG, "cancelled");
+                            callback.done(new FileClientException(new Exception("upload cancelled"), -1), null);
+                            return;
+                        }
                         api.createDir(dir, "dummyField");
                         saveFileToBackend(file, callback, listener);
                     } catch (RetrofitError err2) {
@@ -155,15 +171,23 @@ abstract class SmartFileClient implements FileApi {
             int read;
             long processed = 0L;
             try {
-                while ((read = in.read(buffer,0,bufferSize)) != -1) {
+                while ((read = in.read(buffer, 0, bufferSize)) != -1) {
+                    ensureNotCancelled();
                     out.write(buffer, 0, read);
                     if (listener != null) {
                         processed += read;
                         listener.onProgress(expected, processed);
                     }
+                    ensureNotCancelled();
                 }
             } finally {
                 in.close();
+            }
+        }
+
+        private void ensureNotCancelled() throws IOException {
+            if (Thread.currentThread().isInterrupted()) {
+                throw new InterruptedIOException("cancelled");
             }
         }
     }

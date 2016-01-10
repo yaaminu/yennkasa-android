@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                              xmlns:app="http://schemas.android.com/apk/res-auto"
-                              xmlns:tools="http://schemas.android.com/tools"
-                              android:layout_width="wrap_content"
-                              android:layout_height="wrap_content"
-                              android:layout_margin="@dimen/message_body_margin">
+<com.pairapp.view.RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/message_item_margin_bottom"
+    android:layout_marginLeft="@dimen/message_body_margin"
+    android:layout_marginRight="@dimen/message_body_margin"
+    android:layout_marginTop="@dimen/message_body_margin">
 
     <com.pairapp.view.LinearLayout
         android:id="@+id/ll_message_body_view"

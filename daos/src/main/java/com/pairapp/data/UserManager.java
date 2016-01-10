@@ -916,20 +916,21 @@ public final class UserManager {
     }
 
     private void completeSignUp(final String name, final String phoneNumber, final String countryIso, final CallBack callback) {
-        if (TextUtils.isEmpty(name)) {
-            doNotify(new Exception("name is invalid"), callback);
-        } else if (TextUtils.isEmpty(phoneNumber)) {
+        if (TextUtils.isEmpty(phoneNumber)) {
             doNotify(new Exception("phone number is invalid"), callback);
         } else if (TextUtils.isEmpty(countryIso)) {
             doNotify(new Exception("ccc is invalid"), callback);
 
         } else {
-            Pair<String, String> errorNamePair = isValidUserName(name);
-            if (errorNamePair.second != null) {
-                doNotify(new Exception(errorNamePair.second), callback);
-            } else {
-                doSignup(name, phoneNumber, countryIso, callback);
+            if (!TextUtils.isEmpty(name)) {
+                Pair<String, String> errorNamePair = isValidUserName(name);
+                if (errorNamePair.second != null) {
+                    doNotify(new Exception(errorNamePair.second), callback);
+                    return;
+                }
             }
+            doSignup(name, phoneNumber, countryIso, callback);
+
         }
     }
 

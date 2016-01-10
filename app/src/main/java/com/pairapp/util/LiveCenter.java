@@ -35,15 +35,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class LiveCenter {
 
+    public static final String UN_TRACK_USER = "unTrackUser";
+    public static final String PROPERTY_IS_TYPING = "isTyping";
+    public static final String EVENT_CHAT_ROOM = "chatRoom";
+    public static final String IS_ONLINE = "isOnline";
+    public static final String
+            TYPING = "typing";
+    public static final String TRACK_USER = "trackUser";
     private static final String TAG = "livecenter";
+    public static final String PROPERTY_IN_CHAT_ROOM = "inChatRoom";
     public static final Emitter.Listener CHAT_ROOM_RECEIVER = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
             PLog.i(TAG, "chatroom event: " + args[0]);
             try {
                 JSONObject object = new JSONObject(args[0].toString());
-                String userId = object.getString(SocketIoClient.PROPERTY_FROM);
-                boolean inChatRoom = object.getBoolean(SocketIoClient.PROPERTY_IN_CHAT_ROOM);
+                String userId = object.getString(com.pairapp.data.Message.FIELD_FROM);
+                boolean inChatRoom = object.getBoolean(PROPERTY_IN_CHAT_ROOM);
                 synchronized (PEERS_IN_CHATROOM) {
                     if (inChatRoom) {
                         PEERS_IN_CHATROOM.add(userId);
@@ -192,8 +200,8 @@ public class LiveCenter {
     private static void updateTyping(Object obj) {
         try {
             JSONObject object = new JSONObject(obj.toString());
-            String typingUser = object.getString(SocketIoClient.PROPERTY_FROM);
-            boolean isTyping = object.optBoolean(SocketIoClient.PROPERTY_IS_TYPING);
+            String typingUser = object.getString(com.pairapp.data.Message.FIELD_FROM);
+            boolean isTyping = object.optBoolean(PROPERTY_IS_TYPING);
             synchronized (TYPING_AND_ACTIVE_USERS_LOCK) {
                 PLog.d(TAG, "typing event");
                 if (isTyping) {
@@ -297,9 +305,9 @@ public class LiveCenter {
 
     private static void doStart() {
         liveClient = SocketIoClient.getInstance(Config.getLiveEndpoint(), UserManager.getMainUserId());
-        liveClient.registerForEvent(SocketIoClient.TYPING, TYPING_RECEIVER);
-        liveClient.registerForEvent(SocketIoClient.IS_ONLINE, ONLINE_RECEIVER);
-        liveClient.registerForEvent(SocketIoClient.EVENT_CHAT_ROOM, CHAT_ROOM_RECEIVER);
+        liveClient.registerForEvent(TYPING, TYPING_RECEIVER);
+        liveClient.registerForEvent(IS_ONLINE, ONLINE_RECEIVER);
+        liveClient.registerForEvent(EVENT_CHAT_ROOM, CHAT_ROOM_RECEIVER);
         liveClient.registerForEvent(SocketIoClient.CONNECT, connectReceiver);
         liveClient.registerForEvent(SocketIoClient.DISCONNECT, disConnectReceiver);
         synchronized (TYPING_AND_ACTIVE_USERS_LOCK) {
@@ -312,9 +320,9 @@ public class LiveCenter {
     }
 
     private static void doStop() {
-        liveClient.unRegisterEvent(SocketIoClient.IS_ONLINE, ONLINE_RECEIVER);
-        liveClient.unRegisterEvent(SocketIoClient.TYPING, TYPING_RECEIVER);
-        liveClient.unRegisterEvent(SocketIoClient.EVENT_CHAT_ROOM, CHAT_ROOM_RECEIVER);
+        liveClient.unRegisterEvent(IS_ONLINE, ONLINE_RECEIVER);
+        liveClient.unRegisterEvent(TYPING, TYPING_RECEIVER);
+        liveClient.unRegisterEvent(EVENT_CHAT_ROOM, CHAT_ROOM_RECEIVER);
         liveClient.unRegisterEvent(SocketIoClient.CONNECT, connectReceiver);
         liveClient.unRegisterEvent(SocketIoClient.DISCONNECT, disConnectReceiver);
         synchronized (TYPING_AND_ACTIVE_USERS_LOCK) {
@@ -913,10 +921,10 @@ public class LiveCenter {
             }
             try {
                 JSONObject object = new JSONObject();
-                object.put(SocketIoClient.PROPERTY_FROM, UserManager.getMainUserId());
-                object.put(SocketIoClient.PROPERTY_TO, userId);
-                object.put(SocketIoClient.PROPERTY_IN_CHAT_ROOM, inChatRoom);
-                liveClient.send(SocketIoClient.EVENT_CHAT_ROOM, object);
+                object.put(com.pairapp.data.Message.FIELD_FROM, UserManager.getMainUserId());
+                object.put(com.pairapp.data.Message.FIELD_TO, userId);
+                object.put(PROPERTY_IN_CHAT_ROOM, inChatRoom);
+                liveClient.send(EVENT_CHAT_ROOM, object);
             } catch (JSONException e) {
                 throw new RuntimeException(e.getCause());
             }
@@ -929,10 +937,10 @@ public class LiveCenter {
             }
             try {
                 JSONObject object = new JSONObject();
-                object.put(SocketIoClient.PROPERTY_TO, to);
-                object.put(SocketIoClient.PROPERTY_FROM, UserManager.getMainUserId());
-                object.put(SocketIoClient.PROPERTY_IS_TYPING, isTyping);
-                liveClient.send(SocketIoClient.TYPING, object);
+                object.put(com.pairapp.data.Message.FIELD_TO, to);
+                object.put(com.pairapp.data.Message.FIELD_FROM, UserManager.getMainUserId());
+                object.put(PROPERTY_IS_TYPING, isTyping);
+                liveClient.send(TYPING, object);
             } catch (JSONException e) {
                 throw new RuntimeException(e.getCause());
             }
@@ -941,8 +949,8 @@ public class LiveCenter {
         private void doTrackUser(String userId) {
             try {
                 JSONObject object = new JSONObject();
-                object.put(SocketIoClient.PROPERTY_TO, userId);
-                liveClient.send(SocketIoClient.TRACK_USER, object);
+                object.put(com.pairapp.data.Message.FIELD_TO, userId);
+                liveClient.send(LiveCenter.TRACK_USER, object);
             } catch (JSONException e) {
                 throw new RuntimeException(e.getCause());
             }
@@ -951,8 +959,8 @@ public class LiveCenter {
         private void stopTrackingUser(String userId) {
             try {
                 JSONObject object = new JSONObject();
-                object.put(SocketIoClient.PROPERTY_TO, userId);
-                liveClient.send(SocketIoClient.UN_TRACK_USER, object);
+                object.put(com.pairapp.data.Message.FIELD_TO, userId);
+                liveClient.send(UN_TRACK_USER, object);
             } catch (JSONException e) {
                 throw new RuntimeException(e.getCause());
             }

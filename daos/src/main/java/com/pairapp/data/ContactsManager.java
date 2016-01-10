@@ -70,7 +70,7 @@ public class ContactsManager {
                             return new Contact(name, phoneNumber, false, "avatar_empty", standardisedNumber);
                         }
                     } catch (IllegalArgumentException | NumberParseException e) {
-                        PLog.e(TAG, "failed to format the number: " + phoneNumber + "to IEE number: " + e.getMessage());
+                        PLog.w(TAG, "failed to format the number: " + phoneNumber + "to IEE number: " + e.getMessage());
                     }
                 } while (cursor.moveToNext());
             }

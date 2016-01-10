@@ -5,7 +5,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="15dp">
+    android:layout_marginBottom="@dimen/message_item_margin_bottom"
+    android:layout_marginLeft="@dimen/message_body_margin"
+    android:layout_marginRight="@dimen/message_body_margin"
+    android:layout_marginTop="@dimen/message_body_margin"
+    >
 
     <TextView
         android:id="@+id/tv_sender_name"

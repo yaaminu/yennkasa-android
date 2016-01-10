@@ -47,8 +47,8 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
             PLog.i(TAG, "message status report: " + args[0].toString());
             try {
                 JSONObject object = new JSONObject(args[0].toString());
-                int status = object.getInt(SocketIoClient.MSG_STS_STATUS);
-                String messageId = object.getString(SocketIoClient.MSG_STS_MESSAGE_ID);
+                int status = object.getInt(Message.MSG_STS_STATUS);
+                String messageId = object.getString(Message.MSG_STS_MESSAGE_ID);
                 updateMessageStatus(messageId, status);
             } catch (JSONException e) {
                 throw new RuntimeException(e.getCause());
@@ -98,8 +98,8 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
         synchronized (MessageCenter.class) {
             if (messagingClient == null) {
                 messagingClient = SocketIoClient.getInstance(Config.getMessageEndpoint(), UserManager.getMainUserId());
-                messagingClient.registerForEvent(SocketIoClient.EVENT_MESSAGE, MESSAGE_RECEIVER);
-                messagingClient.registerForEvent(SocketIoClient.EVENT_MSG_STATUS, MESSAGE_STATUS_RECEIVER);
+                messagingClient.registerForEvent(Message.EVENT_MESSAGE, MESSAGE_RECEIVER);
+                messagingClient.registerForEvent(Message.EVENT_MSG_STATUS, MESSAGE_STATUS_RECEIVER);
             }
         }
     }
@@ -107,8 +107,8 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
     static void stopListeningForSocketMessages() {
         synchronized (MessageCenter.class) {
             if (messagingClient != null) {
-                messagingClient.unRegisterEvent(SocketIoClient.EVENT_MESSAGE, MESSAGE_RECEIVER);
-                messagingClient.registerForEvent(SocketIoClient.EVENT_MSG_STATUS, MESSAGE_STATUS_RECEIVER);
+                messagingClient.unRegisterEvent(Message.EVENT_MESSAGE, MESSAGE_RECEIVER);
+                messagingClient.registerForEvent(Message.EVENT_MSG_STATUS, MESSAGE_STATUS_RECEIVER);
                 messagingClient.close();
                 messagingClient = null;
             }
@@ -152,10 +152,10 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
 
         JSONObject obj = new JSONObject();
         try {
-            obj.put(SocketIoClient.PROPERTY_TO, message.getFrom());
-            obj.put(SocketIoClient.MSG_STS_MESSAGE_ID, message.getId());
-            obj.put(SocketIoClient.MSG_STS_STATUS, state);
-            obj.put(SocketIoClient.PROPERTY_FROM, message.getTo());
+            obj.put(Message.FIELD_TO, message.getFrom());
+            obj.put(Message.MSG_STS_MESSAGE_ID, message.getId());
+            obj.put(Message.MSG_STS_STATUS, state);
+            obj.put(Message.FIELD_FROM, message.getTo());
             obj.put(MessageProcessor.MESSAGE_STATUS, "messageStatus");
         } catch (JSONException e) {
             throw new RuntimeException(e.getCause());
@@ -165,7 +165,7 @@ public class MessageCenter extends ParsePushBroadcastReceiver {
                 && messagingClient.isConnected()
                 && LiveCenter.isOnline(message.getFrom())) {
             //use socketsIO
-            messagingClient.send(SocketIoClient.EVENT_MSG_STATUS, obj);
+            messagingClient.send(Message.EVENT_MSG_STATUS, obj);
         } else {
             //maybe push
             Map<String, Object> params = new HashMap<>(3);

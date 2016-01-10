@@ -19,7 +19,8 @@ import io.realm.Realm;
 /**
  * @author Null-Pointer on 6/14/2015.
  */
-final class NotificationManager {
+//should this class be public?
+public final class NotificationManager {
     static final NotificationManager INSTANCE = new NotificationManager();
     private static final String TAG = NotificationManager.class.getSimpleName();
     private final Notifier BACKGROUND_NOTIFIER = new StatusBarNotifier();

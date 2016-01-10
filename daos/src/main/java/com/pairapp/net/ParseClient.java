@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.telephony.SmsManager;
+import android.text.TextUtils;
 
 import com.google.gson.JsonObject;
 import com.pairapp.Errors.PairappException;
@@ -111,7 +112,7 @@ public class ParseClient implements UserApiV2 {
 
     @Override
     public void registerUser(@Body final User user, final Callback<User> callback) {
-        PLog.d(TAG, "register user: user info " + user.getName() + ":" + user.getUserId());
+        PLog.i(TAG, "register user: user info " + user.getName() + ":" + user.getUserId());
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
@@ -125,18 +126,18 @@ public class ParseClient implements UserApiV2 {
         String _id = user.getUserId(),
                 name = user.getName(),
                 country = user.getCountry();
-//         if (true) {
-//             user.setDP("avartarempty");
-//             notifyCallback(callback, null, user);
-//             return;
-//         }
+        // if (true) {
+        //     user.setDP("avartarempty");
+        //     notifyCallback(callback, null, user);
+        //     return;
+        // }
         try {
             cleanExistingInstallation(_id);
             ParseUser parseUser = new ParseUser(); //(USER_CLASS_NAME).whereEqualTo(FIELD_ID, _id).getFirst();
             parseUser.setPassword(makePass(user));
             parseUser.setUsername(_id);
             parseUser.put(FIELD_ID, _id);
-            parseUser.put(FIELD_NAME, "@" + name);
+            parseUser.put(FIELD_NAME, "@" + (TextUtils.isEmpty(name) ? _id : name));
             parseUser.put(FIELD_COUNTRY, country);
             parseUser.put(FIELD_ACCOUNT_CREATED, new Date());
             parseUser.put(FIELD_LAST_ACTIVITY, new Date());
@@ -148,16 +149,16 @@ public class ParseClient implements UserApiV2 {
             user = parseObjectToUser(parseUser);
             notifyCallback(callback, null, user);
         } catch (ParseException e) {
-            if (e.getCode() == ParseException.USERNAME_TAKEN) {
+            int code = e.getCode();
+            if (code == ParseException.USERNAME_TAKEN || code == ParseException.OBJECT_NOT_FOUND) {
                 PLog.d(TAG, "user already signed, logging in user instead");
                 doLogIn(user, callback);
-            } else if (e.getCode() == ParseException.CONNECTION_FAILED) {
+            } else if (code == ParseException.CONNECTION_FAILED) {
                 notifyCallback(callback, new Exception(Config.getApplicationContext().getString(R.string.st_unable_to_connect)), null);
-            } else if (e.getCode() == ParseException.EXCEEDED_QUOTA) {
+            } else if (code == ParseException.EXCEEDED_QUOTA) {
                 notifyCallback(callback, new Exception(Config.getApplicationContext().getString(R.string.server_down)), null);
-            } else if (e.getCode() == ParseException.REQUEST_LIMIT_EXCEEDED) {
-                sleep();
-                doRegisterUser(user, callback);
+            } else if (code == ParseException.REQUEST_LIMIT_EXCEEDED) {
+                notifyCallback(callback, new Exception(Config.getApplicationContext().getString(R.string.server_down)), null);
             } else {
                 notifyCallback(callback, new Exception(Config.getApplicationContext().getString(R.string.an_error_occurred)), null);
             }
@@ -175,7 +176,7 @@ public class ParseClient implements UserApiV2 {
     }
 
     private void cleanExistingInstallation(String _id) throws ParseException {
-        //call a cloud code or something of that sort
+//        call a cloud code or something of that sort
 //        ParseInstallation installation = ParseInstallation.getQuery().whereEqualTo(FIELD_ID, _id).getFirst();
 //        installation.delete();
     }
@@ -281,7 +282,7 @@ public class ParseClient implements UserApiV2 {
     public void doSyncContacts(List<String> userIds, Callback<List<User>> callback) {
         ParseQuery<ParseUser> query = makeUserParseQuery();
         try {
-            List<ParseUser> objects = query.whereContainedIn(FIELD_ID, userIds).whereEqualTo(FIELD_VERIFIED,true).find();
+            List<ParseUser> objects = query.whereContainedIn(FIELD_ID, userIds).whereEqualTo(FIELD_VERIFIED, true).find();
             List<User> users = new ArrayList<>(objects.size());
             for (ParseObject object : objects) {
                 users.add(parseObjectToUser(object));
@@ -893,12 +894,12 @@ public class ParseClient implements UserApiV2 {
 
         TaskManager.execute(new Runnable() {
             public void run() {
-                 ParseObject object = ParseUser.getCurrentUser();
-                 if (object == null) {
-                     throw new IllegalStateException("user cannot be null");
-                 }
-                 int token = Integer.parseInt(object.getString(PARSE_CONSTANTS.FIELD_TOKEN));
-                 sendToken(userId, token);
+                ParseObject object = ParseUser.getCurrentUser();
+                if (object == null) {
+                    throw new IllegalStateException("user cannot be null");
+                }
+                int token = Integer.parseInt(object.getString(PARSE_CONSTANTS.FIELD_TOKEN));
+                sendToken(userId, token);
                 notifyCallback(callback, null, new HttpResponse(200, "sent token"));
             }
         }, true);
@@ -944,7 +945,7 @@ public class ParseClient implements UserApiV2 {
 
     @Override
     public boolean isUserAuthenticated() {
-       return ParseUser.getCurrentUser() != null;
+        return ParseUser.getCurrentUser() != null;
     }
 
 }

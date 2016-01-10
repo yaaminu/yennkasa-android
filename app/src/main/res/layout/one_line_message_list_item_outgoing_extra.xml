@@ -8,68 +8,54 @@
     android:layout_marginBottom="@dimen/message_item_margin_bottom"
     android:layout_marginLeft="@dimen/message_body_margin"
     android:layout_marginRight="@dimen/message_body_margin"
-    android:layout_marginTop="@dimen/message_body_margin">
-
-    <TextView
-        android:id="@+id/tv_sender_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/ll_message_body_view"
-        android:layout_alignStart="@+id/ll_message_body_view"
-        android:layout_marginBottom="@dimen/message_input_margin_4dp"
-        android:clickable="true"
-        android:ellipsize="end"
-        android:singleLine="true"
-        android:text="sender"
-        android:textSize="@dimen/standard_text_size"
-        tools:ignore="HardcodedText"/>
+    android:layout_marginTop="@dimen/message_item_extra_margin_top"    >
 
     <com.pairapp.view.LinearLayout
         android:id="@+id/ll_message_body_view"
-        style="@style/incoming_message_body_root_view"
+        style="@style/outgoing_message_body_root_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/tv_sender_name"
         android:gravity="center_vertical"
         android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/tv_message_date"
-            style="@style/message_incoming_date"
-            android:layout_gravity="center_vertical"
-            android:gravity="center_vertical"
-            android:padding="@dimen/padding_ll_login_fragment_left"
-            android:singleLine="true"
-            android:text="12-12-12"
-            tools:ignore="HardcodedText"/>
 
         <com.pairapp.view.FrameLayout
             android:id="@+id/fl_message_body_view"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:foregroundGravity="center_vertical">
+            android:layout_height="wrap_content">
             <!-- the max with on the textView is due to the width of the @+id/iv_message_preview
              take it off and see the outcome
              -->
             <com.rockerhieu.emojicon.EmojiconTextView
                 android:id="@+id/tv_log_message"
-                style="@style/message_incoming"
-                android:layout_gravity="center_vertical"
+                style="@style/message_outgoing"
                 android:singleLine="true"
-                android:text="hi when are you coming was testing"
+                android:text="hi when are you coming"
                 tools:ignore="HardcodedText"/>
         </com.pairapp.view.FrameLayout>
 
+        <TextView
+            android:id="@+id/tv_message_date"
+            style="@style/message_outgoing_date"
+            android:layout_alignTop="@+id/fl_message_body_view"
+            android:layout_gravity="bottom"
+            android:drawableLeft="@drawable/ic_msg_status_pending"
+            android:gravity="center_vertical|end"
+            android:padding="@dimen/padding_ll_login_fragment_left"
+            android:singleLine="true"
+            android:text="  12-12-12"
+            tools:ignore="HardcodedText"/>
     </com.pairapp.view.LinearLayout>
 
-    <com.pairapp.view.RoundedImageView
+    <ImageButton
         android:id="@+id/iv_retry"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
+        android:layout_marginRight="@dimen/padding_ll_login_fragment_right"
         android:layout_toLeftOf="@+id/ll_message_body_view"
         android:layout_toStartOf="@+id/ll_message_body_view"
+        android:background="@color/transparent"
+        android:contentDescription="@string/retry_sending_message"
         android:src="@drawable/ic_action_replay"/>
 
     <ImageView
@@ -106,4 +92,17 @@
         app:pv_circular="true"
         app:pv_progressMode="indeterminate"
         app:pv_progressStyle="@style/base_indeterminate_progress_style"/>
+
+    <TextView
+        android:id="@+id/tv_sender_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/ll_message_body_view"
+        android:layout_alignStart="@+id/ll_message_body_view"
+        android:layout_marginBottom="@dimen/message_input_margin_4dp"
+        android:clickable="true"
+        android:text="sender"
+        android:textSize="@dimen/standard_text_size"
+        android:visibility="gone"
+        tools:ignore="HardcodedText"/>
 </com.pairapp.view.RelativeLayout>
