@@ -21,7 +21,6 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile files('libs/libphonenumber-7.0.8.jar')
-    compile project(':lib')
     compile files('libs/commons-io-2.4.jar')
     compile 'com.google.android.gms:play-services-gcm:7.3.0'
     compile 'com.parse.bolts:bolts-android:1.2.0'

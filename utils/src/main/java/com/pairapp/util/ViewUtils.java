@@ -42,11 +42,11 @@ public class ViewUtils {
         }
     }
 
-    public static void setTypeface(com.rey.material.widget.EditText editText, String fontName) {
-        if (editText != null) {
-            editText.setTypeface(TypeFaceUtil.loadFromAssets(fontName));
-        }
-    }
+//    public static void setTypeface(com.rey.material.widget.EditText editText, String fontName) {
+//        if (editText != null) {
+//            editText.setTypeface(TypeFaceUtil.loadFromAssets(fontName));
+//        }
+//    }
 
     public static void toggleVisibility(View view, boolean flag) {
         if (view != null) {
