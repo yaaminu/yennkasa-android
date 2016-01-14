@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.List;
 
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import io.realm.RealmObject;
 import io.realm.annotations.Index;
 import io.realm.annotations.PrimaryKey;
@@ -139,11 +140,22 @@ public class Message extends RealmObject {
     public static Realm REALM(Context context) {
         File dataFile = context.getDir("messages_crypt", Context.MODE_PRIVATE);
         try {
-            return Realm.getInstance(dataFile/*, UserManager.getKey()*/);
+            return Realm.getInstance(config/*, UserManager.getKey()*/);
         } catch (RealmException e) {
             ErrorCenter.reportError("realmSecureError", Config.getApplicationContext().getString(R.string.encryptionNotAvailable), null);
-            return Realm.getInstance(dataFile);
+            return Realm.getInstance(config);
         }
+    }
+
+    // FIXME: 1/14/2016 add key
+    private static final RealmConfiguration config;
+
+    static {
+        File file = Config.getApplicationContext().getDir("data", Context.MODE_PRIVATE);
+        config = new RealmConfiguration.Builder(file)
+                .name("messagestore.realm")
+                .schemaVersion(0)
+                .deleteRealmIfMigrationNeeded().build();
     }
 
     public static boolean isTextMessage(Message message) {
@@ -187,9 +199,9 @@ public class Message extends RealmObject {
      *                 automatically to {@link #TYPE_TEXT_MESSAGE}
      * @param to       the recipient of the {@link Message}
      * @return the newly createdMessage
-     * @throws com.pairapp.Errors.PairappException   if the message is invalid. this could be because
-     *                                            a binary message is too huge, etc
-     * @throws io.realm.exceptions.RealmException if you are not in a transaction
+     * @throws com.pairapp.Errors.PairappException if the message is invalid. this could be because
+     *                                             a binary message is too huge, etc
+     * @throws io.realm.exceptions.RealmException  if you are not in a transaction
      * @see {@link Message#makeNew(Realm, String, String, int)}
      */
     public static Message makeNew(Realm theRealm, String body, String to) throws PairappException {
@@ -207,9 +219,9 @@ public class Message extends RealmObject {
      * @param to       the recipient of the {@code message}
      * @param type     the type of the message
      * @return the newly createdMessage
-     * @throws com.pairapp.Errors.PairappException   if the message is invalid. this could be because
-     *                                            a binary message is too huge, etc
-     * @throws io.realm.exceptions.RealmException if you are not in a transaction
+     * @throws com.pairapp.Errors.PairappException if the message is invalid. this could be because
+     *                                             a binary message is too huge, etc
+     * @throws io.realm.exceptions.RealmException  if you are not in a transaction
      * @see {@link Message#makeNew(Realm, String, String)}
      * @see {@link MessageUtils#validate(Message)}
      */

@@ -14,6 +14,7 @@ import java.lang.ref.WeakReference;
 import java.util.List;
 
 import io.realm.Realm;
+import io.realm.Sort;
 
 
 /**
@@ -52,7 +53,7 @@ public final class NotificationManager {
                 }
             }
         }
-      
+
         if (Config.getCurrentActivePeer().equals(Message.isGroupMessage(message) ? message.getTo() : message.getFrom())) {
             return;
         }
@@ -108,7 +109,7 @@ public final class NotificationManager {
         Realm realm = Message.REALM(con);
         List<Message> messages = realm.where(Message.class)
                 .notEqualTo(Message.FIELD_FROM, UserManager.getMainUserId())
-                .equalTo(Message.FIELD_STATE, Message.STATE_RECEIVED).findAllSorted(Message.FIELD_DATE_COMPOSED, true);
+                .equalTo(Message.FIELD_STATE, Message.STATE_RECEIVED).findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.DESCENDING);
         if (!messages.isEmpty()) {
             Message message = messages.get(messages.size() - 1);
             onNewMessage(con, message);

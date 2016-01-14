@@ -27,14 +27,14 @@ import android.widget.EditText;
 import android.widget.Filterable;
 import android.widget.TextView;
 
+import com.pairapp.BuildConfig;
 import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.Errors.PairappException;
+import com.pairapp.R;
 import com.pairapp.adapter.MultiChoiceUsersAdapter;
 import com.pairapp.adapter.UsersAdapter;
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
-import com.pairapp.BuildConfig;
-import com.pairapp.R;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.MediaUtils;
 import com.pairapp.util.PLog;
@@ -53,9 +53,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import io.realm.Case;
 import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
+import io.realm.Sort;
 
 public class CreateMessageActivity extends MessageActivity
         implements ItemsSelector.OnFragmentInteractionListener, TextWatcher, View.OnClickListener {
@@ -565,7 +567,7 @@ public class CreateMessageActivity extends MessageActivity
 
     private class CustomAdapter extends MultiChoiceUsersAdapter {
         private CustomAdapter() {
-            super(delegagte, realm, prepareQuery().findAllSorted(User.FIELD_NAME, true, User.FIELD_TYPE, false), selectedItems, R.id.cb_checked);
+            super(delegagte, realm, prepareQuery().findAllSorted(User.FIELD_NAME, Sort.ASCENDING, User.FIELD_TYPE, Sort.DESCENDING), selectedItems, R.id.cb_checked);
         }
 
         @Override
@@ -576,14 +578,14 @@ public class CreateMessageActivity extends MessageActivity
         @Override
         protected RealmResults<User> doFilter(String constraint) {
             if (TextUtils.isEmpty(constraint)) {
-                return prepareQuery().findAllSorted(User.FIELD_NAME, true, User.FIELD_TYPE, false);
+                return prepareQuery().findAllSorted(User.FIELD_NAME, Sort.ASCENDING, User.FIELD_TYPE, Sort.DESCENDING);
             }
             RealmQuery<User> query = realm.where(User.class);//.equalTo(User.FIELD_TYPE, User.TYPE_GROUP);
 
             if (TextUtils.isDigitsOnly(constraint)) {
                 query.notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP).contains(User.FIELD_ID, constraint);
             } else {
-                query.contains(User.FIELD_NAME, constraint, false);
+                query.contains(User.FIELD_NAME, constraint, Case.INSENSITIVE);
             }
             final String forwardedFrom = getIntent().getStringExtra(EXTRA_FORWARDED_FROM);
             if (forwardedFrom != null) {
@@ -591,7 +593,7 @@ public class CreateMessageActivity extends MessageActivity
             }
             query.notEqualTo(User.FIELD_ID, getMainUserId());
 
-            return query.findAllSorted(User.FIELD_NAME, true, User.FIELD_TYPE, false);
+            return query.findAllSorted(User.FIELD_NAME, Sort.ASCENDING, User.FIELD_TYPE, Sort.DESCENDING);
         }
     }
 

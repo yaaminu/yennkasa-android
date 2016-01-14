@@ -2,7 +2,12 @@ package com.pairapp.data;
 
 import android.content.Context;
 
+import com.pairapp.util.Config;
+
+import java.io.File;
+
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import io.realm.RealmObject;
 import io.realm.annotations.RealmClass;
 
@@ -11,8 +16,6 @@ import io.realm.annotations.RealmClass;
  */
 @RealmClass
 public class Country extends RealmObject {
-    private static final String COUNTRIES_REALM = "countries.realm";
-
     public static final String FIELD_NAME = "name", FIELD_CCC = "ccc", FIELD_ISO_2_LETTER_CODE = "iso2letterCode";
     private String name;
     private String ccc;
@@ -43,6 +46,17 @@ public class Country extends RealmObject {
     }
 
     public static Realm REALM(Context context) {
-        return Realm.getInstance(context, COUNTRIES_REALM);
+        return Realm.getInstance(config);
+    }
+
+    // FIXME: 1/14/2016 add key
+    private static final RealmConfiguration config;
+
+    static {
+        File file = Config.getApplicationContext().getDir("data", Context.MODE_PRIVATE);
+        config = new RealmConfiguration.Builder(file)
+                .name("countries.realm")
+                .schemaVersion(0)
+                .deleteRealmIfMigrationNeeded().build();
     }
 }

@@ -14,10 +14,10 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
 
-import com.pairapp.adapter.UsersAdapter;
-import com.pairapp.data.User;
 import com.pairapp.BuildConfig;
 import com.pairapp.R;
+import com.pairapp.adapter.UsersAdapter;
+import com.pairapp.data.User;
 import com.pairapp.util.UiHelpers;
 import com.rey.material.app.ToolbarManager;
 
@@ -28,6 +28,7 @@ import java.util.Set;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
+import io.realm.Sort;
 
 public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.OnFragmentInteractionListener {
 
@@ -56,7 +57,8 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
         if (userId == null) {
             RealmResults<User> results = realm.where(User.class)
                     .notEqualTo(User.FIELD_ID, getMainUserId())
-                    .findAllSorted(User.FIELD_NAME, true, User.FIELD_TYPE, true);
+                    //// FIXME: 1/14/2016 should we sort on type ascending?
+                    .findAllSorted(User.FIELD_NAME, Sort.ASCENDING, User.FIELD_TYPE, Sort.ASCENDING);
             usersAdapter = new UsersAdapter(this, realm, results);
         } else {
             User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
@@ -78,7 +80,7 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
                     RealmResults<User> results = realm.where(User.class)
                             .equalTo(User.FIELD_TYPE, User.TYPE_GROUP)
                             .equalTo(User.FIELD_MEMBERS + "." + User.FIELD_ID, user.getUserId())
-                            .findAllSorted(User.FIELD_NAME, true);
+                            .findAllSorted(User.FIELD_NAME, Sort.ASCENDING);
                     usersAdapter = new UsersAdapter(this, realm, results);
                 }
             }

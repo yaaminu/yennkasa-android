@@ -59,6 +59,7 @@ import java.util.Set;
 import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
+import io.realm.Sort;
 
 import static com.pairapp.data.Message.TYPE_TEXT_MESSAGE;
 
@@ -274,7 +275,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                     .equalTo(Message.FIELD_TO, peerId)
                     .endGroup();
         }
-        messages = messageQuery.findAllSorted(Message.FIELD_DATE_COMPOSED, true, Message.FIELD_TYPE, false);
+        messages = messageQuery.findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.ASCENDING, Message.FIELD_TYPE, Sort.DESCENDING);
         setUpCurrentConversation();
         sendButton.setOnClickListener(this);
         messageEt.addTextChangedListener(this);
@@ -432,7 +433,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         messageConversationRealm.close();
         usersRealm.close();
         String s1 = messageEt.getText().toString();
-            Config.getPreferences(TAG + "saved.Messages.message.box").edit().putString(peer.getUserId(), s1).apply();
+        Config.getPreferences(TAG + "saved.Messages.message.box").edit().putString(peer.getUserId(), s1).apply();
         player.release();
         player = null;
         super.onDestroy();
@@ -440,7 +441,8 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     @Override
     public void onClick(View v) {
-        int id = v.getId();;
+        int id = v.getId();
+        ;
         switch (id) {
             case R.id.iv_send:
                 if (!messageEt.getText().toString().trim().isEmpty())

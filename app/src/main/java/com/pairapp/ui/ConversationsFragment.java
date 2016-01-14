@@ -36,6 +36,7 @@ import java.util.Date;
 import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
+import io.realm.Sort;
 
 /**
  * @author by Null-Pointer on 5/29/2015.
@@ -105,7 +106,7 @@ public class ConversationsFragment extends ListFragment {
         View view = inflater.inflate(R.layout.fragment_inbox, container, false);
         realm = Conversation.Realm(getActivity());
         userRealm = User.Realm(getActivity());//.Realm(Config.getApplicationContext());
-        conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, false);
+        conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, Sort.DESCENDING);
         ConversationAdapter adapter = new ConversationAdapter(delegate);
         FloatingActionButton actionButton = ((FloatingActionButton) view.findViewById(R.id.fab_new_message));
         actionButton.setIcon(getResources().getDrawable(R.drawable.ic_mode_edit_white_24dp), false);

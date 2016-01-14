@@ -21,10 +21,12 @@ import com.rey.material.widget.CheckBox;
 
 import java.util.regex.Pattern;
 
+import io.realm.Case;
 import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
+import io.realm.Sort;
 
 /**
  * @author Null-Pointer on 6/6/2015.
@@ -170,21 +172,21 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
         if (originalQuery == null) {
             return realm.where(User.class)
                     .beginGroup()
-                    .contains(User.FIELD_NAME, results, false).or()
+                    .contains(User.FIELD_NAME, results, Case.INSENSITIVE).or()
                     .contains(User.FIELD_ID, results)
                     .notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
                     .endGroup()
                     .notEqualTo(User.FIELD_ID, UserManager.getInstance()
                             .getCurrentUser()
                             .getUserId())
-                    .findAllSorted(User.FIELD_NAME, true, User.FIELD_TYPE, false);
+                    .findAllSorted(User.FIELD_NAME, Sort.ASCENDING, User.FIELD_TYPE, Sort.DESCENDING);
         } else {
             return originalQuery
                     .beginGroup()
-                    .contains(User.FIELD_NAME, results, false).or()
+                    .contains(User.FIELD_NAME, results, Case.INSENSITIVE).or()
                     .contains(User.FIELD_ID, results)
                     .endGroup()
-                    .findAllSorted(User.FIELD_NAME, true, User.FIELD_TYPE, false);
+                    .findAllSorted(User.FIELD_NAME, Sort.ASCENDING, User.FIELD_TYPE, Sort.DESCENDING);
         }
     }
 

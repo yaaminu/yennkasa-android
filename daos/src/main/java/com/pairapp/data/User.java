@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.Nullable;
 
 import com.pairapp.Errors.ErrorCenter;
+import com.pairapp.util.Config;
 import com.pairapp.util.PLog;
 
 import java.io.File;
@@ -12,6 +13,7 @@ import java.util.Collection;
 import java.util.List;
 
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.Index;
@@ -216,7 +218,7 @@ public class User extends RealmObject {
                     members.add(user);
                 }
             } catch (ContactsManager.Filter.AbortOperation e) {
-                PLog.d(TAG, "aggregate user operation aborted");
+                PLog.d(TAG, "aggregate operation aborted");
                 break;
             }
         }
@@ -242,11 +244,24 @@ public class User extends RealmObject {
 
     public static Realm Realm(Context context) {
         File dataFile = context.getDir("users", Context.MODE_PRIVATE);
+
         try {
-            return Realm.getInstance(dataFile/*, UserManager.getKey()*/);
+            return Realm.getInstance(config/*, UserManager.getKey()*/);
         } catch (RealmException e) {
             ErrorCenter.reportError("realmSecureError", context.getString(R.string.encryptionNotAvailable), null);
-            return Realm.getInstance(dataFile);
+            return Realm.getInstance(config);
         }
+    }
+
+    // FIXME: 1/14/2016 add key
+    private static final RealmConfiguration
+            config;
+
+    static {
+        File file = Config.getApplicationContext().getDir("data", Context.MODE_PRIVATE);
+        config = new RealmConfiguration.Builder(file)
+                .name("userstore.realm")
+                .schemaVersion(0)
+                .deleteRealmIfMigrationNeeded().build();
     }
 }

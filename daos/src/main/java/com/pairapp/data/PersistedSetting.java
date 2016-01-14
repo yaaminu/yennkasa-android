@@ -1,5 +1,7 @@
 package com.pairapp.data;
 
+import android.content.Context;
+
 import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.util.Config;
 import com.pairapp.util.PLog;
@@ -11,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 
 import io.realm.Realm;
+import io.realm.RealmConfiguration;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 import io.realm.annotations.RealmClass;
@@ -127,16 +130,26 @@ public class PersistedSetting extends RealmObject {
             throw new IllegalArgumentException("writable folder is not a directory");
         }
         try {
-            return Realm.getInstance(writableFolder/*, UserManager.getKey()*/);
+            return Realm.getInstance(config/*, UserManager.getKey()*/);
         } catch (RealmException e) {
             ErrorCenter.reportError("realmSecureError", Config.getApplicationContext().getString(R.string.encryptionNotAvailable), null);
-            return Realm.getInstance(writableFolder);
-        }catch(Exception e){
-            PLog.d("error",e.getMessage());
+            return Realm.getInstance(config);
+        } catch (Exception e) {
+            PLog.d("error", e.getMessage());
             throw new RuntimeException(e.getCause());
         }
     }
 
+    // FIXME: 1/14/2016 add key
+    private static final RealmConfiguration config;
+
+    static {
+        File file = Config.getApplicationContext().getDir("data", Context.MODE_PRIVATE);
+        config = new RealmConfiguration.Builder(file)
+                .name("settings.realm")
+                .schemaVersion(0)
+                .deleteRealmIfMigrationNeeded().build();
+    }
 
     public static void put(Realm realm, PersistedSetting persistedSetting, Object newValue) {
         if (newValue == null) {
