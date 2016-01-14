@@ -254,14 +254,6 @@ public class Config {
 
     private static final Map<String, String> properties = new HashMap<>();
 
-    public static String getFilesMetaDataApiUrl() {
-        if (isEmulator() && false) {
-            return "http://10.0.3.2:6000/meta";
-        } else {
-            return "https://pairapp-file-meta.herokuapp.com/meta";
-        }
-    }
-
 
     public static void setCurrentActivePeer(String peer) {
         ThreadUtils.ensureMain();

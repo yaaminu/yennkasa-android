@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
@@ -765,11 +766,11 @@ public class PairAppClient extends Service {
     }
 
     private void doSendMessage(final Message message) {
-        final Runnable sendTask = new Runnable() {
+        final Callable sendTask = new Callable<Void>() {
             @Override
-            public void run() {
-//                playSound();
+            public Void call() {
                 sendMessageInternal(message);
+                return null;
             }
         };
         disPatchingThreads.put(message.getId(), TaskManager.executeNow(sendTask, true));
@@ -805,10 +806,6 @@ public class PairAppClient extends Service {
                 realm.close();
             }
         }, false);
-    }
-
-    static {
-
     }
 
     private class IncomingMessageListener implements MessageClientListener {
@@ -942,22 +939,4 @@ public class PairAppClient extends Service {
         }
     };
 
-//    private class MediaplayerListener implements MediaPlayer.OnCompletionListener {
-//
-//        private final AssetFileDescriptor fd;
-//
-//        MediaplayerListener(AssetFileDescriptor fd) {
-//            this.fd = fd;
-//        }
-//
-//        @Override
-//        public void onCompletion(MediaPlayer mp) {
-//            mp.release();
-//            try {
-//                fd.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
 }

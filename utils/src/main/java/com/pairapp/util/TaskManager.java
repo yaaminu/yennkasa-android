@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -99,7 +100,7 @@ public class TaskManager {
         new Handler(Looper.getMainLooper()).post(r);
     }
 
-    public static Future<?> execute(Runnable task, boolean requiresNetwork) {
+    public static Future<?> execute(Callable<?> task, boolean requiresNetwork) {
         ensureInitialised();
         if (requiresNetwork) {
             return NETWORK_EXECUTOR.submit(task);
@@ -108,19 +109,39 @@ public class TaskManager {
         }
     }
 
+    public static void execute(Runnable runnable, boolean requiresNetwork) {
+        ensureInitialised();
+        if (requiresNetwork) {
+            NETWORK_EXECUTOR.execute(runnable);
+        } else {
+            NON_NETWORK_EXECUTOR.execute(runnable);
+        }
+    }
+
     private static int expressQueueLength = 0;
     private static final int maxLength = Runtime.getRuntime().availableProcessors() * 15;
 
 
-    public static Future<?> executeNow(Runnable runnable, boolean requiresNetwork) {
+    public static void executeNow(Runnable runnable, boolean requiresNetwork) {
         ensureInitialised();
         synchronized (expressQueueLock) {
             if (expressExecutionQueueTooLong()) {
-                return execute(runnable, requiresNetwork);
+                execute(runnable, requiresNetwork);
             }
             expressQueueLength++;
         }
-        return cachedThreadPool.submit(runnable);
+        cachedThreadPool.execute(runnable);
+    }
+
+    public static Future<?> executeNow(Callable<?> callable, boolean requiresNetwork) {
+        ensureInitialised();
+        synchronized (expressQueueLock) {
+            if (expressExecutionQueueTooLong()) {
+                return execute(callable, requiresNetwork);
+            }
+            expressQueueLength++;
+        }
+        return cachedThreadPool.submit(callable);
     }
 
     private static boolean expressExecutionQueueTooLong() {
@@ -152,5 +173,4 @@ public class TaskManager {
     }
 
     private static final Object expressQueueLock = new Object();
-
 }

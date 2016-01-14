@@ -99,15 +99,15 @@ public class Worker extends IntentService {
         }
     }
 
-    private static Semaphore downloadLock = new Semaphore(5, true);
+    private static final Semaphore downloadLock = new Semaphore(5, true);
 
-    private void download(final Message message,final boolean fromBackground) {
+    private void download(final Message message, final boolean isAutoDownload) {
         synchronized (downloading) {
-            if (downloading.size() > MAX_PARRALLEL_DOWNLOAD && !fromBackground) {
+            if (downloading.size() > MAX_PARRALLEL_DOWNLOAD && !isAutoDownload) {
                 ErrorCenter.reportError(PARRALLEL_DOWNLOAD, getString(R.string.too_many_parralel_dowload), 1);
                 return;
             }
-            if (!downloading.add(message.getId()) && !fromBackground) {
+            if (!downloading.add(message.getId()) && !isAutoDownload) {
                 PLog.w(TAG, "already  downloading message with id %s", message.getId());
                 ErrorCenter.reportError(PARRALLEL_DOWNLOAD, getString(R.string.already_downloading), 1);
                 return;
@@ -115,7 +115,7 @@ public class Worker extends IntentService {
         }
         try {
             LiveCenter.acquireProgressTag(message.getId());
-            runningDownloads.put(message.getId(), service.submit(new DownloadRunnable(message,fromBackground)));
+            runningDownloads.put(message.getId(), service.submit(new DownloadRunnable(message, isAutoDownload)));
         } catch (PairappException e) {
             throw new RuntimeException(e.getCause());
         }

@@ -1,9 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
           package="com.pairapp.util">
 
-    <application
-        android:allowBackup="true"
-        android:label="utils">
+    <application>
     </application>
-
+    <uses-sdk
+        tools:overrideLibrary="com.securepreferences,com.tozny.crypto.android"/>
 </manifest>

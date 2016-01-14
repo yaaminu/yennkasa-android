@@ -25,9 +25,6 @@ dependencies {
     compile 'com.google.android.gms:play-services-gcm:7.3.0'
     compile 'com.parse.bolts:bolts-android:1.2.0'
     compile files('libs/android-priority-jobqueue-1.3.4.jar')
-//    compile 'com.og.encryptedsharedpreferences:encryptedsharedpreferences:1.0.0'
-    //compile 'com.scottyab:secure-preferences-lib:0.1.4'
+    compile 'com.scottyab:secure-preferences-lib:0.1.4'
     testCompile 'junit:junit:4.12'
-//            compile 'com.scottyab:aes-crypto:0.0.4'
-
 }
