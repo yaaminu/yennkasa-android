@@ -60,7 +60,7 @@
         android:layout_marginTop="4dp"
         android:gravity="bottom"/>
 
-    <com.pairapp.view.CheckBox
+    <com.rey.material.widget.CheckBox
         android:id="@+id/cb_checked"
         style="@style/CheckBoxDrawable"
         android:layout_width="wrap_content"
