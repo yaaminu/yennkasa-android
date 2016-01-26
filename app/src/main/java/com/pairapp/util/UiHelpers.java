@@ -21,9 +21,10 @@ import android.text.TextUtils;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.Toast;
-import com.pairapp.R;
+
 import com.pairapp.BuildConfig;
 import com.pairapp.Errors.PairappException;
+import com.pairapp.R;
 import com.pairapp.adapter.SimpleAdapter;
 import com.pairapp.data.ContactsManager;
 import com.pairapp.data.Message;
@@ -43,7 +44,6 @@ import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.TextView;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -333,18 +333,20 @@ public class UiHelpers {
                 }
                 return;
             }
-            mMediaUri = FileUtils.getOutputUri(FileUtils.MEDIA_TYPE_VIDEO);
+            File file = new File(Config.getAppVidMediaBaseDir(), "vid_"+SimpleDateUtil.timeStampNow()+".mp4");
+            mMediaUri = Uri.fromFile(file);
             MediaUtils.recordVideo(NavigationManager.getCurrentActivity(), mMediaUri, ChatActivity.TAKE_VIDEO_REQUEST);
-        } catch (NavigationManager.NoActiveActivityException | IOException e) {
+        } catch (NavigationManager.NoActiveActivityException e) {
             crashAndBurn(e);
         }
     }
 
     public static void takePhoto() {
         try {
-            mMediaUri = FileUtils.getOutputUri(FileUtils.MEDIA_TYPE_IMAGE);
+            File file = new File(Config.getAppImgMediaBaseDir(), "img_"+SimpleDateUtil.timeStampNow()+".jpg");
+            mMediaUri = Uri.fromFile(file);
             MediaUtils.takePhoto(NavigationManager.getCurrentActivity(), mMediaUri, ChatActivity.TAKE_PHOTO_REQUEST);
-        } catch (NavigationManager.NoActiveActivityException | IOException e) {
+        } catch (NavigationManager.NoActiveActivityException  e) {
             crashAndBurn(e);
         }
     }

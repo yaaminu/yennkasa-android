@@ -236,7 +236,7 @@ public class Config {
     public static String getLiveEndpoint() {
         //STOPSHIP
         //noinspection PointlessBooleanExpression,ConstantConditions
-        if (isEmulator() && false) {
+        if (isEmulator()) { // FIXME: 1/26/2016 change this
             return LIVE_SOCKET_API_LOCAL;
         } else {
             return LIVE_SOCKET_API_REMOTE;
@@ -245,7 +245,7 @@ public class Config {
 
     public static String getMessageEndpoint() {
         //noinspection PointlessBooleanExpression,ConstantConditions
-        if (isEmulator() && false) {
+        if (isEmulator()) { // FIXME: 1/26/2016 change this in production
             return MESSAGE_SOCKET_API_LOCAL;
         } else {
             return MESSAGE_SOCKET_API_REMOTE;
@@ -266,7 +266,7 @@ public class Config {
 
     public static String linksEndPoint() {
         //noinspection PointlessBooleanExpression,ConstantConditions
-        if (isEmulator() && false) {
+        if (isEmulator()) { // FIXME: 1/26/2016 change this
             return getMessageApiEndpoint();
         } else {
             return "https://pairapp-link-maker.herokuapp.com";

@@ -98,8 +98,9 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             final SharedPreferences preferences = Config.getPreferences(UPLOAD_CACHE);
             String uri = preferences.getString(isAlreadyUploaded, null);
             if (uri != null) {
-                PLog.d(TAG, "not uploading file at path: %s, because it's already uploaded");
+                PLog.d(TAG, "not uploading file at path: %s, because it's already uploaded",uri);
                 message.setMessageBody(uri);
+
                 proceedToSend(message);
             } else {
                 final ProgressListenerImpl listener = new ProgressListenerImpl(message);

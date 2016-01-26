@@ -1,9 +1,11 @@
 package com.pairapp.util;
 
 import android.annotation.TargetApi;
+import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -31,9 +33,6 @@ import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 import static org.apache.commons.io.FileUtils.ONE_GB;
 import static org.apache.commons.io.FileUtils.ONE_KB;
@@ -48,52 +47,6 @@ public class FileUtils {
     public static final int MEDIA_TYPE_VIDEO = 0x1, MEDIA_TYPE_AUDIO = 0x2;
     public static final long ONE_MB = org.apache.commons.io.FileUtils.ONE_MB;
 
-    public static Uri getOutputUri(int mediaType) throws IOException {
-
-        File file;//(mediaType == MEDIA_TYPE_IMAGE) ?  : Config.getAppVidMediaBaseDir();
-        StringBuilder pathBuilder;
-        if (mediaType == MEDIA_TYPE_IMAGE) {
-            pathBuilder = new StringBuilder("IMG_");
-            file = Config.getAppImgMediaBaseDir();
-        } else if (mediaType == MEDIA_TYPE_VIDEO) {
-            pathBuilder = new StringBuilder("VID_");
-            file = Config.getAppVidMediaBaseDir();
-        } else if (mediaType == MEDIA_TYPE_AUDIO) {
-            pathBuilder = new StringBuilder("AUD_");
-            file = Config.appAudioBaseDir();
-        } else {
-            throw new IllegalStateException("unknown media type");
-        }
-
-        Date now = new Date();
-        pathBuilder.append(new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(now));
-        switch (mediaType) {
-            case MEDIA_TYPE_IMAGE:
-                pathBuilder.append(".jpeg");
-                return doCreateOutputFile(pathBuilder.toString(), file);
-            case MEDIA_TYPE_VIDEO:
-                pathBuilder.append(".mp4");
-                return doCreateOutputFile(pathBuilder.toString(), file);
-            case MEDIA_TYPE_AUDIO:
-                pathBuilder.append(".amr");
-                return doCreateOutputFile(pathBuilder.toString(), file);
-            default:
-                return null;
-        }
-    }
-
-
-    private static Uri doCreateOutputFile(String path, File parentDir) throws IOException {
-        if (parentDir != null) {
-            if (!parentDir.isDirectory()) {
-                if (!parentDir.mkdirs()) {
-                    throw new IOException("Could not create directory");
-                }
-            }
-            return Uri.fromFile(new File(parentDir, path));
-        }
-        return null;
-    }
 
     public static String resolveContentUriToFilePath(String uri) {
         return resolveContentUriToFilePath(uri, false);
@@ -177,35 +130,24 @@ public class FileUtils {
 
 
     public static void save(File fileToSave, InputStream in) throws IOException {
+        GenericUtils.ensureNotNull(in, fileToSave);
         BufferedOutputStream bOut = null;
         BufferedInputStream bIn = null;
-        File temp = null;
         try {
             if (fileToSave.exists() && !fileToSave.delete()) {
                 throw new IOException(Config.getApplicationContext().getString(R.string.error_saving));
             }
             final byte[] buffer = new byte[4096];
-            temp = new File(Config.getTempDir(), fileToSave.getName() + ".tmp");
-            bOut = new BufferedOutputStream(new FileOutputStream(temp));
+//            temp = new File(Config.getTempDir(), fileToSave.getName() + ".tmp");
+            bOut = new BufferedOutputStream(new FileOutputStream(fileToSave));
             bIn = new BufferedInputStream(in);
             int read;
             while ((read = bIn.read(buffer)) != -1) {
                 checkIfCancelled();
                 bOut.write(buffer, 0, read);
             }
+            bOut.flush();
             checkIfCancelled();
-            if (!temp.renameTo(fileToSave)) {
-                //noinspection ResultOfMethodCallIgnored
-                temp.delete();
-                throw new IOException(Config.getApplicationContext().getString(R.string.failed_to_save_file));
-            }
-        } catch (IOException e) { //caught for clean up reasons
-            if (temp != null && temp.exists() && !temp.delete()) {
-                //huh
-                PLog.d(TAG, "failed to delete partly saved file");
-            }
-            //replay the exception
-            throw new IOException(e.getMessage(), e.getCause());
         } finally {
             close(bOut);
             close(bIn);
@@ -247,24 +189,19 @@ public class FileUtils {
     }
 
     public static void save(File fileToSave, InputStream in, long bytesExpected, ProgressListener listener) throws IOException {
-        if (fileToSave.exists()) {
-            return;
-        }
-        if (bytesExpected < 0) {
-            throw new IllegalArgumentException("negative stream length");
-        }
+        ThreadUtils.ensureNotMain();
+        GenericUtils.ensureNotNull(fileToSave, in, listener);
+        GenericUtils.ensureConditionTrue(!fileToSave.isDirectory(), "file is directory");
+        GenericUtils.ensureConditionTrue(!(fileToSave.exists() && !fileToSave.delete()), GenericUtils.getString(R.string.failed_to_save_file));
+        GenericUtils.ensureConditionTrue(bytesExpected > 0, "negative stream length");
 
-        if (listener == null) {
-            throw new IllegalArgumentException("listener == null");
-        }
         final int bufferLength = 1024;
         byte[] buffer = new byte[bufferLength];
-        final File temp = new File(Config.getTempDir(), fileToSave.getName() + ".tmp");
         OutputStream bOut = null;//=new FileOutputStream(temp);
         int read;
         long processed = 0;
         try {
-            bOut = new FileOutputStream(temp);
+            bOut = new FileOutputStream(fileToSave);
             listener.onProgress(bytesExpected, 0);
             while ((read = in.read(buffer)) != -1) {
                 checkIfCancelled();
@@ -273,18 +210,6 @@ public class FileUtils {
                 listener.onProgress(bytesExpected, processed);
             }
             checkIfCancelled();
-            if (!temp.renameTo(fileToSave)) {
-                //noinspection ResultOfMethodCallIgnored
-                temp.delete();
-                throw new IOException(Config.getApplicationContext().getString(R.string.failed_to_save_file));
-            }
-        } catch (IOException e) { //caught for clean up reasons
-            if (temp.exists() && !temp.delete()) {
-                //not so much that we can do right now!
-                PLog.d(TAG, "unable to delete partly downloaded file");
-            }
-            //replay the exception
-            throw new IOException(e.getMessage(), e.getCause());
         } finally {
             close(bOut);
             close(in);
@@ -293,7 +218,7 @@ public class FileUtils {
 
     public static void save(File file, String url, ProgressListener listener) throws IOException {
         ThreadUtils.ensureNotMain();
-
+        GenericUtils.ensureNotNull(file, url);
         URL location = new URL(url);
         HttpURLConnection connection = ((HttpURLConnection) location.openConnection());
         connection.setReadTimeout(10000);
@@ -309,14 +234,14 @@ public class FileUtils {
 
     public static void copyTo(String oldPath, String newPath) throws IOException {
         ThreadUtils.ensureNotMain();
+        GenericUtils.ensureNotNull(oldPath, newPath);
         copyTo(new File(oldPath), new File(newPath));
     }
 
     public static void copyTo(File source, File destination) throws IOException {
         ThreadUtils.ensureNotMain();
-        if (source == null || destination == null) {
-            throw new NullPointerException("null!");
-        }
+        GenericUtils.ensureNotNull(source, destination);
+        GenericUtils.ensureConditionTrue(!source.isDirectory(), "source is directory");
         if (destination.isDirectory()) {
             throw new IllegalArgumentException("destination file is a directory");
         }
@@ -346,6 +271,7 @@ public class FileUtils {
     }
 
     public static String sizeInLowestPrecision(String filePath) throws IOException {
+        GenericUtils.ensureNotEmpty(filePath);
         File file = new File(filePath);
         final Context applicationContext = Config.getApplicationContext();
         if (!file.exists()) {
@@ -487,14 +413,8 @@ public class FileUtils {
                     byte[] bytes = new byte[15];
                     new SecureRandom().nextBytes(bytes);
                     String fileName = Base64.encodeToString(bytes, Base64.URL_SAFE) + "." + ext;
-                    File dir;
-                    if (MediaUtils.isImage(fileName)) {
-                        dir = Config.getAppImgMediaBaseDir();
-                    } else if (MediaUtils.isVideo(fileName)) {
-                        dir = Config.getAppVidMediaBaseDir();
-                    } else {
-                        dir = Config.getAppBinFilesBaseDir();
-                    }
+                    File dir
+                            = Config.getAppBinFilesBaseDir();
                     File file = new File(dir, fileName);
                     try {
                         save(file, contentResolver.openInputStream(uri));
@@ -543,6 +463,19 @@ public class FileUtils {
                 closeable.close();
             }
         } catch (IOException ignore) {
+        }
+    }
+
+    public static boolean open(Context context, String filePath) {
+        GenericUtils.ensureNotNull(context, (Object) filePath);
+        Uri uri = Uri.parse(filePath);
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(uri, getMimeType(filePath));
+        try {
+            context.startActivity(intent);
+            return true;
+        } catch (ActivityNotFoundException e) {
+            return false;
         }
     }
 }

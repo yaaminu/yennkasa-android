@@ -126,11 +126,11 @@ public class ParseClient implements UserApiV2 {
         String _id = user.getUserId(),
                 name = user.getName(),
                 country = user.getCountry();
-        // if (true) {
-        //     user.setDP("avartarempty");
-        //     notifyCallback(callback, null, user);
-        //     return;
-        // }
+         if (true) {
+             user.setDP("avartarempty");
+             notifyCallback(callback, null, user);
+             return;
+         }
         try {
             cleanExistingInstallation(_id);
             ParseUser parseUser = new ParseUser(); //(USER_CLASS_NAME).whereEqualTo(FIELD_ID, _id).getFirst();
@@ -192,14 +192,14 @@ public class ParseClient implements UserApiV2 {
     @Override
     public void logIn(final User user, final Callback<User> callback) {
         PLog.d(TAG, "logging in user: " + user.getUserId());
-//        if (true) {
-//            User copy = User.copy(user);
-//            copy.setName("@unnamed");
-//            copy.setType(User.TYPE_NORMAL_USER);
-//            copy.setDP("avarta_empty");
-//            notifyCallback(callback, null, copy);
-//            return;
-//        }
+        if (true) {
+            User copy = User.copy(user);
+            copy.setName("@unnamed");
+            copy.setType(User.TYPE_NORMAL_USER);
+            copy.setDP("avarta_empty");
+            notifyCallback(callback, null, copy);
+            return;
+        }
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
@@ -614,10 +614,10 @@ public class ParseClient implements UserApiV2 {
 
     @Override
     public void verifyUser(@Path("id") final String userId, @Field("token") final String token, final Callback<SessionData> callback) {
-//        if (true) {
-//            notifyCallback(callback, null, new SessionData("accessToken", userId));
-//            return;
-//        }
+        if (true) { // FIXME: 1/26/2016 comment  out this block
+            notifyCallback(callback, null, new SessionData("accessToken", userId));
+            return;
+        }
         TaskManager.execute(new Runnable() {
             public void run() {
                 doVerifyUser(userId, token, callback);
@@ -894,12 +894,17 @@ public class ParseClient implements UserApiV2 {
 
         TaskManager.execute(new Runnable() {
             public void run() {
+                if(true) { //FIXME: 1/26/2016 REMOVE THIS!
+                    notifyCallback(callback, null, new HttpResponse(200, "sent token"));
+                    return;
+                }
                 ParseObject object = ParseUser.getCurrentUser();
                 if (object == null) {
                     throw new IllegalStateException("user cannot be null");
                 }
+                // FIXME: 1/26/2016  uncomment the sendtoken() line
                 int token = Integer.parseInt(object.getString(PARSE_CONSTANTS.FIELD_TOKEN));
-                sendToken(userId, token);
+                //sendToken(userId, token);
                 notifyCallback(callback, null, new HttpResponse(200, "sent token"));
             }
         }, true);
@@ -945,7 +950,9 @@ public class ParseClient implements UserApiV2 {
 
     @Override
     public boolean isUserAuthenticated() {
-        return ParseUser.getCurrentUser() != null;
+        // FIXME: 1/26/2016 uncomment the original code
+        return true;
+//        return ParseUser.getCurrentUser() != null;
     }
 
 }

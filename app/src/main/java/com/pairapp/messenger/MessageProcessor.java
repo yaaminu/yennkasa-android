@@ -23,7 +23,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import io.realm.Realm;
-import io.realm.exceptions.RealmException;
+import io.realm.exceptions.RealmPrimaryKeyConstraintException;
 
 public class MessageProcessor extends IntentService {
     public static final String SYNC_MESSAGES = "syncMessages";
@@ -173,7 +173,7 @@ public class MessageProcessor extends IntentService {
                 try {
                     message = realm.copyToRealm(message);
                     conversation.setLastMessage(message);
-                } catch (RealmException primaryKey) {
+                } catch (RealmPrimaryKeyConstraintException primaryKey) {
                     //lets eat up this exception
                     realm.cancelTransaction();
                     PLog.d(TAG, primaryKey.getMessage());
@@ -187,13 +187,13 @@ public class MessageProcessor extends IntentService {
                 }
                 realm.commitTransaction();
                 NotificationManager.INSTANCE.onNewMessage(this, message);
-//            MessageCenter.notifyReceived(message);
+                MessageCenter.notifyReceived(message);
                 if (!Message.isTextMessage(message) && Worker.getCurrentActiveDownloads() < Worker.MAX_PARRALLEL_DOWNLOAD) {
                     if ((ConnectionUtils.isWifiConnected()
                             && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_WIFI, false))
                             || (ConnectionUtils.isMobileConnected()
                             && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_MOBILE, false))) {
-                        Worker.download(this, message,true);
+                        Worker.download(this, message, true);
                     }
                 }
 

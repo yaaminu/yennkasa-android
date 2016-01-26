@@ -13,7 +13,8 @@ import java.util.Locale;
  */
 public class SimpleDateUtil {
 
-    private static SimpleDateFormat dayPrecisionFormatter = new SimpleDateFormat("yyyy/MM/dd", Locale.US), secondsPrecissionFormatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
+    private static SimpleDateFormat dayPrecisionFormatter = new SimpleDateFormat("yyyy/MM/dd", Locale.US),
+            secondsPrecissionFormatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
 
     public static String formatDateRage(Context context, Date fromWhen) {
         return formatInternal(context, fromWhen);

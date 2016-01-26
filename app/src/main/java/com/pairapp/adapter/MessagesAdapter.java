@@ -318,11 +318,10 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             } else {
                 holder.progressBar.setProgress(progress);
             }
-            if (progress < 100) {
-                ViewUtils.showViews(holder.playOrDownload);
-                holder.playOrDownload.setImageResource(R.drawable.ic_clear_white_24dp);
-                holder.playOrDownload.setOnClickListener(listener);
-            }
+            ViewUtils.showViews(holder.playOrDownload);
+            holder.playOrDownload.setImageResource(0);
+            holder.playOrDownload.setImageResource(R.drawable.ic_clear_white_24dp);
+            holder.playOrDownload.setOnClickListener(listener);
         }
         return convertView;
     }

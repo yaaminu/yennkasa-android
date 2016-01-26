@@ -670,10 +670,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         } else {
             ViewUtils.hideViews(sendButton);
         }
-        if (wasTyping) {
-            wasTyping = false;
-            LiveCenter.notifyNotTyping(peer.getUserId());
-        }
+//        if (wasTyping) {
+//            wasTyping = false;
+//            LiveCenter.notifyNotTyping(peer.getUserId());
+//        }
     }
 
     private MediaPlayer player;

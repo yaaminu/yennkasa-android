@@ -1,8 +1,8 @@
 package com.pairapp.ui;
 
 import android.content.ComponentName;
-import android.content.Intent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -15,19 +15,18 @@ import com.google.samples.apps.iosched.ui.widget.SlidingTabLayout;
 import com.pairapp.PairApp;
 import com.pairapp.R;
 import com.pairapp.data.Conversation;
+import com.pairapp.data.Message;
+import com.pairapp.data.RealmUtils;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
-import com.pairapp.data.Message;
 import com.pairapp.messenger.MessageProcessor;
-import com.pairapp.data.RealmUtils;
-import com.pairapp.util.LiveCenter;
-import com.pairapp.util.TaskManager;
 import com.pairapp.util.Config;
+import com.pairapp.util.LiveCenter;
 import com.pairapp.util.UiHelpers;
 import com.parse.ParseAnalytics;
-import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -90,7 +89,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                 if (default_fragment >= MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT
                         && default_fragment <= MyFragmentStatePagerAdapter.POSITION_SETTINGS_FRAGMENT)
                     savedPosition = default_fragment;
-                testChatActivity();
+//                testChatActivity();
             } else {
                 UiHelpers.gotoSetUpActivity(this);
             }

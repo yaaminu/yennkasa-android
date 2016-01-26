@@ -93,14 +93,6 @@ final class NotifyMessageStatusJob extends Task {
                     PLog.d(TAG, "late status report, messageState is seen, not reporting as received no more");
                     return;
                 }
-                if (message.getState() == Message.STATE_RECEIVED && messageStatus == Message.STATE_RECEIVED) {
-                    PLog.d(TAG, "late status report, messageState is already reported, not reporting as received no more");
-                    return;
-                }
-                if (message.getState() == Message.STATE_SEEN && messageStatus == Message.STATE_SEEN) {
-                    PLog.d(TAG, "late status report, messageState is already reported, not reporting as seen no more");
-                    return;
-                }
             }
             MessageCenter.doNotify(this.message, this.messageStatus);
             message = realm.where(Message.class).equalTo(Message.FIELD_ID, this.message.getId()).findFirst();
