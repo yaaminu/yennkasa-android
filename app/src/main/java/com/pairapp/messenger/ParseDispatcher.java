@@ -53,8 +53,8 @@ class ParseDispatcher extends AbstractMessageDispatcher {
 
     @Override
     public void dispatchToUser(final Message message) {
-//        finallyDispatch(message, message.getTo(), false);
-        throw new UnsupportedOperationException();
+        finallyDispatch(message, message.getTo(), false);
+//        throw new UnsupportedOperationException();
     }
 
     private void finallyDispatch(Message message, List<String> target) {
