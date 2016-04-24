@@ -99,9 +99,9 @@ public class FileUtils {
         }
         // FIXME: 11/10/2015 use salt
         //noinspection unused
-        byte[] salt = {
-                1, 127, 0, 98, 83, 2, 89, 12, 12, 45, 90
-        };
+//        byte[] salt = {
+//                1, 127, 0, 98, 83, 2, 89, 12, 12, 45, 90
+//        };
         try {
             MessageDigest digest = MessageDigest.getInstance("sha1");
             digest.reset();
@@ -223,6 +223,10 @@ public class FileUtils {
         HttpURLConnection connection = ((HttpURLConnection) location.openConnection());
         connection.setReadTimeout(10000);
         connection.connect();
+        int responseCode = connection.getResponseCode();
+        if (responseCode < 200 || responseCode >= 400) {
+            throw new IOException(GenericUtils.getString(R.string.failed_to_save_file));
+        }
         long contentLength = connection.getHeaderFieldInt("Content-Length", -1);
         final InputStream in = connection.getInputStream();//the stream will be closed later see save(file,InputStream)
         if (contentLength == -1 || listener == null) {
@@ -230,12 +234,6 @@ public class FileUtils {
         } else {
             save(file, in, contentLength, listener);
         }
-    }
-
-    public static void copyTo(String oldPath, String newPath) throws IOException {
-        ThreadUtils.ensureNotMain();
-        GenericUtils.ensureNotNull(oldPath, newPath);
-        copyTo(new File(oldPath), new File(newPath));
     }
 
     public static void copyTo(File source, File destination) throws IOException {
@@ -297,7 +295,7 @@ public class FileUtils {
      *
      * @param context The context.
      * @param uri     The Uri to query.
-     * @author paulburke
+     * author paulburke
      */
     @TargetApi(Build.VERSION_CODES.KITKAT)
     private static String getPathInternal(final Context context, final Uri uri, boolean loadIfNotFoundLocally) {

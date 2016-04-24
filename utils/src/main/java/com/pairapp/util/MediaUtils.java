@@ -129,7 +129,8 @@ public class MediaUtils {
      * plays the specified raw resource using this player
      *
      * @param context context for accessing {@link android.content.res.Resources}
-     * @param player  player to be used for playing the raw resource, it is you duty to release it when you are done
+     * @param player  player to be used for playing the raw resource,its your responsibility to make sure the player is in a valid state.
+     *                it is also your duty to release it when you are done
      * @param res     the resource to be played
      * @throws IOException
      * @throws IllegalStateException    if called on the android main thread
