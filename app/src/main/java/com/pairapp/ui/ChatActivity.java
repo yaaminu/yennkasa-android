@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -39,7 +40,6 @@ import com.pairapp.messenger.PairAppClient;
 import com.pairapp.util.Config;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.LiveCenter;
-import com.pairapp.util.MediaUtils;
 import com.pairapp.util.PLog;
 import com.pairapp.util.PhoneNumberNormaliser;
 import com.pairapp.util.SimpleDateUtil;
@@ -442,7 +442,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     public void onClick(View v) {
         int id = v.getId();
-        ;
+
         switch (id) {
             case R.id.iv_send:
                 if (!messageEt.getText().toString().trim().isEmpty())
@@ -683,7 +683,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         //noinspection StatementWithEmptyBody
         if (message.getTo().equals(peer.getUserId()) || message.getFrom().equals(peer.getUserId())
                 || peer.getName().equals(sender)) {
-            //just to ensure we dont spawn a thread only to end up doing nothing because player.isPlaying return true, thats i check first
+            //just to ensure we dont spawn a thread only to end up doing nothing because player.isPlaying returns true, lets check first
             if (!player.isPlaying()) {
                 TaskManager.executeNow(new Runnable() {
                     @Override
@@ -691,7 +691,13 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                         try {
                             if (!player.isPlaying()) {
                                 player.reset();
-                                MediaUtils.playSound(ChatActivity.this, player, R.raw.sound_a);
+                                AssetFileDescriptor fd = getResources().openRawResourceFd(R.raw.sound_a);
+                                player.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
+                                player.prepare();
+                                fd.close();
+                                player.setLooping(false);
+                                player.setVolume(1f, 1f);
+                                player.start();
                             }
                         } catch (IOException e) {
                             e.printStackTrace();
