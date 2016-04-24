@@ -28,8 +28,8 @@ abstract class SmartFileClient implements FileApi {
 
     private static final String TAG = SmartFileClient.class.getSimpleName();
     private final String authorization;
-    private static final String ENDPOINT = Config.getMessageApiEndpoint();// FIXME: 1/26/2016 change this
-//            "https://app.smartfile.com";
+    private static final String ENDPOINT = //Config.getMessageApiEndpoint();
+            "https://app.smartfile.com";
     private final SmartFileService api, linkApi;
     private final String dir;
 
