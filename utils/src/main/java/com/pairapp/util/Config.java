@@ -266,11 +266,11 @@ public class Config {
 
     public static String linksEndPoint() {
         //noinspection PointlessBooleanExpression,ConstantConditions
-        if (isEmulator()) { // FIXME: 1/26/2016 change this
-            return getMessageApiEndpoint();
-        } else {
+//        if (isEmulator() && BuildConfi) { // FIXME: 1/26/2016 change this
+//            return getMessageApiEndpoint();
+//        } else {
             return "https://pairapp-link-maker.herokuapp.com";
-        }
+//        }
     }
 
     public static SharedPreferences getPreferences(String s) {
