@@ -4,6 +4,7 @@ package com.pairapp.messenger;
 import com.github.nkzawa.emitter.Emitter;
 import com.pairapp.data.Message;
 import com.pairapp.data.UserManager;
+import com.pairapp.net.FileApi;
 import com.pairapp.net.sockets.SocketIoClient;
 import com.pairapp.util.Config;
 import com.pairapp.util.PLog;
@@ -55,8 +56,8 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
 
     private static SocketsIODispatcher INSTANCE;
 
-    private SocketsIODispatcher(Map<String, String> credentials, DispatcherMonitor monitor) {
-        super(credentials, monitor);
+    private SocketsIODispatcher(FileApi api, DispatcherMonitor monitor) {
+        super(api, monitor);
         socketIoClient = SocketIoClient.getInstance(Config.getMessageEndpoint(), UserManager.getMainUserId());
         socketIoClient.registerForEvent(Message.EVENT_MSG_STATUS, ON_MESSAGE_STATUS);
     }
@@ -65,13 +66,13 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
      * returns the singleton instance. this is reference counted so
      * remember to pair every call to this method with {@link #close()}
      *
-     * @param credentials a key value pair of credentials for file uploads and other services
+     * @param api a key value pair of credentials for file uploads and other services
      * @return the singleton instance
      */
-    static synchronized Dispatcher<Message> getInstance(Map<String, String> credentials, DispatcherMonitor monitor) {
+    static synchronized Dispatcher<Message> getInstance(FileApi api, DispatcherMonitor monitor) {
         refCount.incrementAndGet();
         if (INSTANCE == null || INSTANCE.isClosed()) {
-            INSTANCE = new SocketsIODispatcher(credentials, monitor);
+            INSTANCE = new SocketsIODispatcher(api, monitor);
         }
         return INSTANCE;
     }

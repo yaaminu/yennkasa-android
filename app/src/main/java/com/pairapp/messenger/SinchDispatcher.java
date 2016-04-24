@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 
 import com.pairapp.data.Message;
 import com.pairapp.data.util.MessageUtils;
+import com.pairapp.net.FileApi;
 import com.pairapp.util.Config;
 import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
@@ -33,8 +34,8 @@ class SinchDispatcher extends AbstractMessageDispatcher implements MessageClient
     private MessageClient messageClient;
     private static SinchDispatcher INSTANCE;
 
-    synchronized static Dispatcher<Message> createInstance(Map<String, String> credentials, DispatcherMonitor monitor, MessageClient messageClient) {
-        INSTANCE = new SinchDispatcher(credentials, monitor, messageClient);
+    synchronized static Dispatcher<Message> createInstance(FileApi fileApi, DispatcherMonitor monitor, MessageClient messageClient) {
+        INSTANCE = new SinchDispatcher(fileApi, monitor, messageClient);
         return INSTANCE;
     }
 
@@ -46,8 +47,8 @@ class SinchDispatcher extends AbstractMessageDispatcher implements MessageClient
         INSTANCE = null;
     }
 
-    private SinchDispatcher(Map<String, String> credentials, DispatcherMonitor monitor, MessageClient client) {
-        super(credentials, monitor);
+    private SinchDispatcher(FileApi fileApi, DispatcherMonitor monitor, MessageClient client) {
+        super(fileApi, monitor);
         if (client == null) {
             throw new IllegalArgumentException("listener or client may not be null");
         }

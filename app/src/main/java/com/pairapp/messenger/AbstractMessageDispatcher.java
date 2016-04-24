@@ -12,9 +12,10 @@ import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.FileApi;
 import com.pairapp.net.FileClientException;
-import com.pairapp.net.SmartFileMessageClient;
+import com.pairapp.net.ParseFileClient;
 import com.pairapp.util.Config;
 import com.pairapp.util.ConnectionUtils;
+import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
 import com.pairapp.util.ThreadUtils;
 
@@ -71,12 +72,9 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     private final FileApi file_service;
     private Timer timer = new Timer(TAG, false);
 
-    AbstractMessageDispatcher(Map<String, String> credentials, DispatcherMonitor monitor) {
-        if (credentials == null || monitor == null) {
-            throw new IllegalArgumentException("invalid args");
-        }
-        this.file_service = //MessageFileClient.createInstance(Config.getMessageApiEndpoint(), credentials);//Config.getme
-                new SmartFileMessageClient(credentials.get(KEY), credentials.get(PASSWORD), UserManager.getMainUserId());
+    AbstractMessageDispatcher(FileApi fileApi, DispatcherMonitor monitor) {
+        GenericUtils.ensureNotNull(monitor, "monitor == null");
+        this.file_service = fileApi;
         synchronized (monitors) {
             monitors.add(monitor);
         }

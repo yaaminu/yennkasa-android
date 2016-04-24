@@ -2,6 +2,7 @@ package com.pairapp.messenger;
 
 import com.pairapp.R;
 import com.pairapp.data.Message;
+import com.pairapp.net.FileApi;
 import com.pairapp.util.Config;
 import com.pairapp.util.PLog;
 import com.parse.ParseCloud;
@@ -27,21 +28,21 @@ class ParseDispatcher extends AbstractMessageDispatcher {
     private static final String TAG = ParseDispatcher.class.getSimpleName();
     private static Dispatcher<Message> INSTANCE;
 
-    private ParseDispatcher(Map<String, String> credentials, DispatcherMonitor monitor) {
-        super(credentials, monitor);
+    private ParseDispatcher(FileApi api, DispatcherMonitor monitor) {
+        super(api, monitor);
     }
 
     /**
      * returns the singleton instance. this is reference counted so
      * remember to pair every call to this method with {@link #close()}
      *
-     * @param credentials a key value pair of credentials for file uploads and other services
+     * @param api a key value pair of credentials for file uploads and other services
      * @return the singleton instace
      */
-    static synchronized Dispatcher<Message> getInstance(Map<String, String> credentials, DispatcherMonitor monitor) {
+    static synchronized Dispatcher<Message> getInstance(FileApi api, DispatcherMonitor monitor) {
         refCount.incrementAndGet();
         if (INSTANCE == null || INSTANCE.isClosed()) {
-            INSTANCE = new ParseDispatcher(credentials, monitor);
+            INSTANCE = new ParseDispatcher(api, monitor);
         }
         return INSTANCE;
     }

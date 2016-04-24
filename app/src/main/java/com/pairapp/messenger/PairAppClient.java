@@ -28,11 +28,11 @@ import com.pairapp.data.Message;
 import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.ParseClient;
+import com.pairapp.net.ParseFileClient;
 import com.pairapp.ui.ChatActivity;
 import com.pairapp.util.Config;
 import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.LiveCenter;
-import com.pairapp.util.MediaUtils;
 import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
 import com.pairapp.util.ThreadUtils;
@@ -53,7 +53,6 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -112,7 +111,6 @@ public class PairAppClient extends Service {
     };
     private MediaPlayer mediaPlayer;
     private final Object playerLock = new Object();
-
 
     // private void attemptToSendAllUnsentGroupMessages(){
     //     Realm realm = Message.REALM(this);
@@ -349,9 +347,9 @@ public class PairAppClient extends Service {
     @Override
     public void onDestroy() {
         WORKER_THREAD.attemptShutDown();
-        synchronized (playerLock){
+        synchronized (playerLock) {
             if (mediaPlayer != null) {
-                if(mediaPlayer.isPlaying()){
+                if (mediaPlayer.isPlaying()) {
                     mediaPlayer.stop();
                 }
                 mediaPlayer.release();
@@ -364,17 +362,8 @@ public class PairAppClient extends Service {
     private synchronized void bootClient() {
         ThreadUtils.ensureNotMain();
         if (!isClientStarted.get()) {
-            credentials = new HashMap<>();
-            if (UserManager.getInstance().isUserVerified()) {
-                Map<String, String> userCredentials = UserManager.getInstance().getUserCredentials();
-                credentials.putAll(userCredentials);
-                //////////////////////////////////////////////////////////////////////////////
-                credentials.put(AbstractMessageDispatcher.KEY, "doTbKQlpZyNZohX7KPYGNQXIghATCx");
-                credentials.put(AbstractMessageDispatcher.PASSWORD, "Dq8FLrF7HjeiyJBFGv9acNvOLV1Jqm");
-                /////////////////////////////////////////////////////////////////////////////////////
-            }
             INTERFACE = new PairAppClientInterface();
-            PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance(credentials, monitor);
+            PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance(ParseFileClient.getInstance(), monitor);
 //            setUpSinch();
             ConnectionUtils.registerConnectivityListener(listener);
 //            MessageCenter.startListeningForSocketMessages();
@@ -391,7 +380,7 @@ public class PairAppClient extends Service {
             client.startListeningOnActiveConnection();
             client.start();
             MessageClient messageClient = client.getMessageClient();
-            SINCHDISPATCHER = SinchDispatcher.createInstance(credentials, monitor, messageClient);
+            SINCHDISPATCHER = SinchDispatcher.createInstance(ParseFileClient.getInstance(), monitor, messageClient);
             messageClient.addMessageClientListener(new IncomingMessageListener());
         }
     }
@@ -585,7 +574,7 @@ public class PairAppClient extends Service {
 //        }
         if (LiveCenter.isOnline(message.getTo())) {
             if (SOCKETSIO_DISPATCHER == null) {
-                SOCKETSIO_DISPATCHER = SocketsIODispatcher.getInstance(credentials, monitor);
+                SOCKETSIO_DISPATCHER = SocketsIODispatcher.getInstance(ParseFileClient.getInstance(), monitor);
             }
             SOCKETSIO_DISPATCHER.dispatch(message);
         } else {

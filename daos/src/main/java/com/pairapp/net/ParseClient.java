@@ -1,15 +1,19 @@
 package com.pairapp.net;
 
 import android.app.Application;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.telephony.SmsManager;
 import android.text.TextUtils;
 
 import com.google.gson.JsonObject;
+import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.Errors.PairappException;
 import com.pairapp.data.BuildConfig;
 import com.pairapp.data.Message;
@@ -137,7 +141,7 @@ public class ParseClient implements UserApiV2 {
             parseUser.put(FIELD_LAST_ACTIVITY, new Date());
             parseUser.put(FIELD_VERIFIED, false);
             parseUser.put(FIELD_DP, "avatar_empty");
-            parseUser.put(FIELD_TOKEN, genVerificationToken()+"");
+            parseUser.put(FIELD_TOKEN, genVerificationToken() + "");
             parseUser.signUp();
             //register user for pushes
             parseUser = ParseUser.getCurrentUser();
@@ -163,11 +167,27 @@ public class ParseClient implements UserApiV2 {
     private void sendToken(String userId, int verificationToken) {
         final String destinationAddress = "+" + userId;
         String message = Config.getApplicationContext().getString(R.string.verification_code) + "  " + verificationToken;
-        SmsManager.getDefault().
-                sendTextMessage(destinationAddress,
-                        null, message,
-                        null, null);
-        deleteMessage(destinationAddress, message);
+        /////////////////////////////////////////////////////////
+        String tag = "verificationToken";
+        int id = 1000;
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(Config.getApplicationContext());
+        builder.setContentText(message);
+        builder.setAutoCancel(true);
+        builder.setContentTitle("Pairapp Verification Token");
+        builder.setTicker("Pairapp verification token");
+        builder.setSmallIcon(R.drawable.ic_stat_icon);
+        builder.setContentIntent(PendingIntent.getActivity(Config.getApplicationContext(),id,null,PendingIntent.FLAG_UPDATE_CURRENT));
+        NotificationManagerCompat managerCompat = NotificationManagerCompat.from(Config.getApplicationContext());
+        managerCompat.cancel(tag, id);
+        managerCompat.notify(tag, id, builder.build());
+        ////////////////////////////////////////////////////////////////////////
+        // FIXME: 4/24/2016 uncomment this!!!!
+        //STOPSHIP: dont build release build.
+//        SmsManager.getDefault().
+//                sendTextMessage(destinationAddress,
+//                        null, message,
+//                        null, null);
+//        deleteMessage(destinationAddress, message);
     }
 
     private void cleanExistingInstallation(String _id) throws ParseException {
@@ -205,7 +225,7 @@ public class ParseClient implements UserApiV2 {
             }
             parseUser = ParseUser.logIn(user.getUserId(), makePass(user));
             parseUser.put(FIELD_VERIFIED, false);
-            parseUser.put(FIELD_TOKEN, ""+genVerificationToken());
+            parseUser.put(FIELD_TOKEN, "" + genVerificationToken());
             user = parseObjectToUser(parseUser);
             parseUser.save();
             notifyCallback(callback, null, user);
@@ -338,7 +358,6 @@ public class ParseClient implements UserApiV2 {
         if (!userOrGroup.equals("users") && !userOrGroup.equals("groups")) {
             throw new IllegalArgumentException("unknown placeholder");
         }
-
         displayPictureFileClient.changeDp(id, file, new FileApi.FileSaveCallback() {
             @Override
             public void done(FileClientException e, String url) {
@@ -471,9 +490,7 @@ public class ParseClient implements UserApiV2 {
     //the contact manager can retrieve all the contacts standardised them to how
     private ParseClient(Preprocessor preProcessor) {
         init(Config.getApplication());
-        Map<String, String> credentials;//= UserManager.getInstance().getUserCredentials();
-        credentials = getNames();
-        displayPictureFileClient = DisplayPictureFileClient.createInstance(credentials);
+        displayPictureFileClient = DisplayPictureFileClient.createInstance(ParseFileClient.getInstance());
         this.preProcessor = preProcessor == null ? dummyProcessor : preProcessor;
     }
 
@@ -589,16 +606,16 @@ public class ParseClient implements UserApiV2 {
     }
 
 
-    @NonNull
-    private Map<String, String> getNames() {
-        Map<String, String> credentials;
-        credentials = new HashMap<>();
-        //////////////////////////////////////////////////////////////////////////////
-        credentials.put("key", "doTbKQlpZyNZohX7KPYGNQXIghATCx");
-        credentials.put("password", "Dq8FLrF7HjeiyJBFGv9acNvOLV1Jqm");
-        /////////////////////////////////////////////////////////////////////////////////////
-        return credentials;
-    }
+//    @NonNull
+//    private Map<String, String> getNames() {
+//        Map<String, String> credentials;
+//        credentials = new HashMap<>();
+//        //////////////////////////////////////////////////////////////////////////////
+//        credentials.put("key", "doTbKQlpZyNZohX7KPYGNQXIghATCx");
+//        credentials.put("password", "Dq8FLrF7HjeiyJBFGv9acNvOLV1Jqm");
+//        /////////////////////////////////////////////////////////////////////////////////////
+//        return credentials;
+//    }
 
     @Override
     public void verifyUser(@Path("id") final String userId, @Field("token") final String token, final Callback<SessionData> callback) {
@@ -753,9 +770,9 @@ public class ParseClient implements UserApiV2 {
                 try {
                     object.put(FIELD_DP, pendingDp);
                     object.save();
-                    preferences.edit().remove(userId + PENDING_DP);
+                    preferences.edit().remove(userId + PENDING_DP).commit();
                     PLog.v(TAG, "user with id: " + userId + " changed dp from " + userDp + " to " + pendingDp);
-                    preferences.edit().remove(FileUtils.hash(userDp.getBytes())).apply();
+                    preferences.edit().remove(FileUtils.hash(userDp.getBytes())).commit();
                     String mappedDp = preferences.getString(FileUtils.hash(pendingDp.getBytes()), "");
                     final File file = new File(mappedDp);
                     if (file.exists()) {
