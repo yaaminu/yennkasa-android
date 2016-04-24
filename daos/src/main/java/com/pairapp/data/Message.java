@@ -123,7 +123,7 @@ public class Message extends RealmObject {
         Realm realm = REALM(appContext);
         String id;
         synchronized (idLock) {
-            long count = realm.where(Message.class).equalTo(FIELD_ID, to).count() + 1;
+            long count = realm.where(Message.class).equalTo(FIELD_TO, to).count() + 1;
             id = count + "@" + UserManager.getMainUserId() + "@" + to + "@" + System.currentTimeMillis();
         }
         PLog.i(TAG, "generated message id: " + id);

@@ -12,7 +12,6 @@ import android.text.TextUtils;
 import com.google.gson.JsonObject;
 import com.pairapp.Errors.PairappException;
 import com.pairapp.data.BuildConfig;
-import com.pairapp.data.ContactsManager;
 import com.pairapp.data.Message;
 import com.pairapp.data.R;
 import com.pairapp.data.User;
@@ -126,11 +125,6 @@ public class ParseClient implements UserApiV2 {
         String _id = user.getUserId(),
                 name = user.getName(),
                 country = user.getCountry();
-         if (true) {
-             user.setDP("avartarempty");
-             notifyCallback(callback, null, user);
-             return;
-         }
         try {
             cleanExistingInstallation(_id);
             ParseUser parseUser = new ParseUser(); //(USER_CLASS_NAME).whereEqualTo(FIELD_ID, _id).getFirst();
@@ -143,6 +137,7 @@ public class ParseClient implements UserApiV2 {
             parseUser.put(FIELD_LAST_ACTIVITY, new Date());
             parseUser.put(FIELD_VERIFIED, false);
             parseUser.put(FIELD_DP, "avatar_empty");
+            parseUser.put(FIELD_TOKEN, genVerificationToken()+"");
             parseUser.signUp();
             //register user for pushes
             parseUser = ParseUser.getCurrentUser();
@@ -192,14 +187,6 @@ public class ParseClient implements UserApiV2 {
     @Override
     public void logIn(final User user, final Callback<User> callback) {
         PLog.d(TAG, "logging in user: " + user.getUserId());
-        if (true) {
-            User copy = User.copy(user);
-            copy.setName("@unnamed");
-            copy.setType(User.TYPE_NORMAL_USER);
-            copy.setDP("avarta_empty");
-            notifyCallback(callback, null, copy);
-            return;
-        }
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
@@ -218,6 +205,7 @@ public class ParseClient implements UserApiV2 {
             }
             parseUser = ParseUser.logIn(user.getUserId(), makePass(user));
             parseUser.put(FIELD_VERIFIED, false);
+            parseUser.put(FIELD_TOKEN, ""+genVerificationToken());
             user = parseObjectToUser(parseUser);
             parseUser.save();
             notifyCallback(callback, null, user);
@@ -489,45 +477,45 @@ public class ParseClient implements UserApiV2 {
         this.preProcessor = preProcessor == null ? dummyProcessor : preProcessor;
     }
 
-    //we store user ids and return them so that we do a quick hit test to map
-    // the names to our parse objects(we will not persist those names on the backend)
-    private void processParseObject(final ParseObject object) {
-        ContactsManager.getInstance().findAllContactsSync(new ContactsManager.Filter<ContactsManager.Contact>() {
-            @Override
-            public boolean accept(ContactsManager.Contact contact) throws AbortOperation {
-                final String userId = object.getString(PARSE_CONSTANTS.FIELD_ID);
-                if (contact.numberInIEE_Format.equals(userId)) {
-                    object.put(PARSE_CONSTANTS.FIELD_NAME, contact.name);//we will not save this change
-                    throw new AbortOperation("done"); //contact manager will stop processing contacts
-                }
-                return false; //we don't care about return values
-            }
-        }, null);
-    }
-
-    private void processParseObjects(final List<ParseObject> objects) {
-        ContactsManager.getInstance().findAllContactsSync(new ContactsManager.Filter<ContactsManager.Contact>() {
-            Set<String> processed = new HashSet<>(objects.size());
-
-            @Override
-            public boolean accept(ContactsManager.Contact contact) throws AbortOperation {
-                if (processed.size() == objects.size()) {
-                    throw new AbortOperation("done");
-                }
-                if (!processed.add(contact.numberInIEE_Format)) {
-                    return false; //we don't care about return values
-                }
-                for (ParseObject groupMember : objects) {
-                    final String userId = groupMember.getString(PARSE_CONSTANTS.FIELD_ID);
-                    if (contact.numberInIEE_Format.equals(userId)) {
-                        groupMember.put(PARSE_CONSTANTS.FIELD_NAME, contact.name);//we will not save this change
-                        break;
-                    }
-                }
-                return false; //we don't care about return values
-            }
-        }, null);
-    }
+//    //we store user ids and return them so that we do a quick hit test to map
+//    // the names to our parse objects(we will not persist those names on the backend)
+//    private void processParseObject(final ParseObject object) {
+//        ContactsManager.getInstance().findAllContactsSync(new ContactsManager.Filter<ContactsManager.Contact>() {
+//            @Override
+//            public boolean accept(ContactsManager.Contact contact) throws AbortOperation {
+//                final String userId = object.getString(PARSE_CONSTANTS.FIELD_ID);
+//                if (contact.numberInIEE_Format.equals(userId)) {
+//                    object.put(PARSE_CONSTANTS.FIELD_NAME, contact.name);//we will not save this change
+//                    throw new AbortOperation("done"); //contact manager will stop processing contacts
+//                }
+//                return false; //we don't care about return values
+//            }
+//        }, null);
+//    }
+//
+//    private void processParseObjects(final List<ParseObject> objects) {
+//        ContactsManager.getInstance().findAllContactsSync(new ContactsManager.Filter<ContactsManager.Contact>() {
+//            Set<String> processed = new HashSet<>(objects.size());
+//
+//            @Override
+//            public boolean accept(ContactsManager.Contact contact) throws AbortOperation {
+//                if (processed.size() == objects.size()) {
+//                    throw new AbortOperation("done");
+//                }
+//                if (!processed.add(contact.numberInIEE_Format)) {
+//                    return false; //we don't care about return values
+//                }
+//                for (ParseObject groupMember : objects) {
+//                    final String userId = groupMember.getString(PARSE_CONSTANTS.FIELD_ID);
+//                    if (contact.numberInIEE_Format.equals(userId)) {
+//                        groupMember.put(PARSE_CONSTANTS.FIELD_NAME, contact.name);//we will not save this change
+//                        break;
+//                    }
+//                }
+//                return false; //we don't care about return values
+//            }
+//        }, null);
+//    }
 
     @Override
     public void addMembersToGroup(@Path(Message.FIELD_ID) final String id, @Field("by") final String by, @Field(User.FIELD_MEMBERS) final Collection<String> members, final Callback<HttpResponse> response) {
@@ -614,10 +602,6 @@ public class ParseClient implements UserApiV2 {
 
     @Override
     public void verifyUser(@Path("id") final String userId, @Field("token") final String token, final Callback<SessionData> callback) {
-        if (true) { // FIXME: 1/26/2016 comment  out this block
-            notifyCallback(callback, null, new SessionData("accessToken", userId));
-            return;
-        }
         TaskManager.execute(new Runnable() {
             public void run() {
                 doVerifyUser(userId, token, callback);
@@ -677,7 +661,7 @@ public class ParseClient implements UserApiV2 {
         }, true);
     }
 
-    private synchronized void doResendToken(@Path("id") String userId, @Field("password") String password, Callback<HttpResponse> response) {
+    private synchronized void doResendToken(@Path("id") String userId, @SuppressWarnings("UnusedParameters") @Field("password") String password, Callback<HttpResponse> response) {
         try {
             int token = genVerificationToken();
             ParseObject object = ParseUser.getCurrentUser();
@@ -894,17 +878,12 @@ public class ParseClient implements UserApiV2 {
 
         TaskManager.execute(new Runnable() {
             public void run() {
-                if(true) { //FIXME: 1/26/2016 REMOVE THIS!
-                    notifyCallback(callback, null, new HttpResponse(200, "sent token"));
-                    return;
-                }
                 ParseObject object = ParseUser.getCurrentUser();
                 if (object == null) {
                     throw new IllegalStateException("user cannot be null");
                 }
-                // FIXME: 1/26/2016  uncomment the sendtoken() line
                 int token = Integer.parseInt(object.getString(PARSE_CONSTANTS.FIELD_TOKEN));
-                //sendToken(userId, token);
+                sendToken(userId, token);
                 notifyCallback(callback, null, new HttpResponse(200, "sent token"));
             }
         }, true);
@@ -944,15 +923,13 @@ public class ParseClient implements UserApiV2 {
             } else {
                 message = applicationContext.getString(R.string.an_error_occurred);
             }
-            notifyCallback(callback, new Exception(message), new HttpResponse(-1, "error occured"));
+            notifyCallback(callback, new Exception(message), new HttpResponse(-1, "error occurred"));
         }
     }
 
     @Override
     public boolean isUserAuthenticated() {
-        // FIXME: 1/26/2016 uncomment the original code
-        return true;
-//        return ParseUser.getCurrentUser() != null;
+        return ParseUser.getCurrentUser() != null;
     }
 
 }
