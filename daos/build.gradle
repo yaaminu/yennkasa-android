@@ -27,7 +27,6 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'io.realm:realm-android:0.87.2'
-    compile 'com.parse.bolts:bolts-android:1.2.0'
     compile project(':fileclient')
     compile project(':utils')
 }
