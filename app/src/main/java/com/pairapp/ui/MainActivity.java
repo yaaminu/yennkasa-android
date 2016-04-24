@@ -220,6 +220,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         realm.addChangeListener(changeListener);
         boolean noUserAvailable = realm.where(User.class).notEqualTo(User.FIELD_ID, getMainUserId()).findFirst() == null;
         if (!noUserAvailable) {
+            pager.getAdapter().notifyDataSetChanged();
             realm.removeChangeListener(changeListener);
             realm.close();
             realm = null;

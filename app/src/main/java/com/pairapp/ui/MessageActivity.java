@@ -252,15 +252,10 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         Runnable r = new Runnable() {
             @Override
             public void run() {
-                if (getPairAppClientInterface() != null) {
-                    getPairAppClientInterface().notifyMessageSeen(message);
-                }
+                PairAppClient.notifyMessageSeen(message);
             }
         };
         if (message.getState() != Message.STATE_SEEN) {
-            if (getPairAppClientInterface() != null) {
-                getPairAppClientInterface().notifyMessageSeen(message);
-            }
             new Handler().postDelayed(r, 1000);
         }
 

@@ -11,7 +11,7 @@ android {
         config {
             keyAlias 'app-keys'
             keyPassword 'afolaya@2000'
-            storeFile file('D:/stuffs/app_keys/app-keys.jks')
+            storeFile file('E:/stuffs/app_keys/app-keys.jks')
             storePassword 'afolanya@2000'
         }
     }
@@ -72,7 +72,7 @@ dependencies {
 }
 
 crashlytics {
-//    enableNdk true
-//    androidNdkOut 'src/main/obj'
-//    androidNdkLibsOut 'src/main/libs'
+    enableNdk true
+    androidNdkOut 'src/main/obj'
+    androidNdkLibsOut 'src/main/libs'
 }

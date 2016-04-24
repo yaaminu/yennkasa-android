@@ -42,6 +42,7 @@
         android:layout_marginRight="@dimen/login_fragment_cardview_margin_right"
         android:layout_marginStart="@dimen/login_fragment_cardview_margin_left"
         android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
+        android:paddingBottom="@dimen/padding_ll_login_fragment_bottom"
         android:background="#dfff">
 
         <com.pairapp.view.LinearLayout
@@ -96,23 +97,23 @@
                 android:textColor="@color/white"
                 android:textSize="@dimen/login_signup_text_size"/>
 
-            <com.rey.material.widget.TextView
-                android:id="@+id/problems_logging_in"
-                style="@style/FlatButtonRippleStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/login_sign_up_pane"
-                android:layout_centerHorizontal="true"
-                android:layout_gravity="center_horizontal"
-                android:clickable="true"
-                android:gravity="center"
-                android:padding="@dimen/padding_ll_login_fragment_top"
-                android:text="@string/problems_logging_in"
-                android:textColor="#00f"
-                android:textSize="@dimen/signup_have_an_account_size"/>
         </com.pairapp.view.LinearLayout>
 
     </com.pairapp.view.RelativeLayout>
+    <com.rey.material.widget.TextView
+        android:id="@+id/problems_logging_in"
+        style="@style/FlatButtonRippleStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/login_sign_up_pane"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center_horizontal"
+        android:clickable="true"
+        android:gravity="center"
+        android:paddingTop="@dimen/padding_ll_login_fragment_top"
+        android:text="@string/problems_logging_in"
+        android:textColor="#fff"
+        android:textSize="@dimen/signup_have_an_account_size" />
 
 
     <include layout="@layout/copyright_text_view"/>
