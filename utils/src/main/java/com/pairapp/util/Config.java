@@ -236,7 +236,7 @@ public class Config {
     public static String getLiveEndpoint() {
         //STOPSHIP
         //noinspection PointlessBooleanExpression,ConstantConditions
-//        if (isEmulator()) { // FIXME: 1/26/2016 change this
+//        if (isEmulator()) {
 //            return LIVE_SOCKET_API_LOCAL;
 //        } else {
             return LIVE_SOCKET_API_REMOTE;
@@ -245,7 +245,7 @@ public class Config {
 
     public static String getMessageEndpoint() {
         //noinspection PointlessBooleanExpression,ConstantConditions
-//        if (isEmulator()) { // FIXME: 1/26/2016 change this in production
+//        if (isEmulator()) {
 //            return MESSAGE_SOCKET_API_LOCAL;
 //        } else {
             return MESSAGE_SOCKET_API_REMOTE;
