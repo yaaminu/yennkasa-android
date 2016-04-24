@@ -236,20 +236,20 @@ public class Config {
     public static String getLiveEndpoint() {
         //STOPSHIP
         //noinspection PointlessBooleanExpression,ConstantConditions
-        if (isEmulator()) { // FIXME: 1/26/2016 change this
-            return LIVE_SOCKET_API_LOCAL;
-        } else {
+//        if (isEmulator()) { // FIXME: 1/26/2016 change this
+//            return LIVE_SOCKET_API_LOCAL;
+//        } else {
             return LIVE_SOCKET_API_REMOTE;
-        }
+      //  }
     }
 
     public static String getMessageEndpoint() {
         //noinspection PointlessBooleanExpression,ConstantConditions
-        if (isEmulator()) { // FIXME: 1/26/2016 change this in production
-            return MESSAGE_SOCKET_API_LOCAL;
-        } else {
+//        if (isEmulator()) { // FIXME: 1/26/2016 change this in production
+//            return MESSAGE_SOCKET_API_LOCAL;
+//        } else {
             return MESSAGE_SOCKET_API_REMOTE;
-        }
+        //}
     }
 
     private static final Map<String, String> properties = new HashMap<>();
