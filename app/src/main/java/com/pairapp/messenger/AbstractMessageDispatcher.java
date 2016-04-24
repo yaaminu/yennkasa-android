@@ -97,13 +97,13 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             final String isAlreadyUploaded = actualFile.lastModified() + actualFile.getAbsolutePath();
             final SharedPreferences preferences = Config.getPreferences(UPLOAD_CACHE);
             String uri = preferences.getString(isAlreadyUploaded, null);
+            final ProgressListenerImpl listener = new ProgressListenerImpl(message);
             if (uri != null) {
-                PLog.d(TAG, "not uploading file at path: %s, because it's already uploaded",uri);
+                PLog.d(TAG, "not uploading file at path: %s, because it's already uploaded", uri);
                 message.setMessageBody(uri);
-
+                listener.onProgress(actualFile.length(), actualFile.length()); //tell listeners that we are done
                 proceedToSend(message);
             } else {
-                final ProgressListenerImpl listener = new ProgressListenerImpl(message);
                 if (checkIfCancelled()) {
                     PLog.d(TAG, "message with id: %s cancelled", message.getId());
                     throw new DispatchCancelledException();
@@ -198,7 +198,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         }
         synchronized (monitors) {
             for (DispatcherMonitor monitor : monitors) {
-                monitor.onDispatchFailed(messageId,reason);
+                monitor.onDispatchFailed(messageId, reason);
             }
         }
     }
@@ -208,7 +208,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         try {
             Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
             realm.beginTransaction();
-            if (message != null && message.isValid() && !Message.isGroupMessage(message)) {
+            if (message != null && message.isValid()) {
                 int state = message.getState();
                 if (state == Message.STATE_PENDING || state == Message.STATE_SEND_FAILED) {
                     message.setState(Message.STATE_SENT);
