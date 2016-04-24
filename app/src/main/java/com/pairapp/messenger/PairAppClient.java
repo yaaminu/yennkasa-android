@@ -7,6 +7,8 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.AssetFileDescriptor;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
@@ -108,6 +110,8 @@ public class PairAppClient extends Service {
             }
         }
     };
+    private MediaPlayer mediaPlayer;
+    private final Object playerLock = new Object();
 
 
     // private void attemptToSendAllUnsentGroupMessages(){
@@ -345,6 +349,15 @@ public class PairAppClient extends Service {
     @Override
     public void onDestroy() {
         WORKER_THREAD.attemptShutDown();
+        synchronized (playerLock){
+            if (mediaPlayer != null) {
+                if(mediaPlayer.isPlaying()){
+                    mediaPlayer.stop();
+                }
+                mediaPlayer.release();
+                mediaPlayer = null;
+            }
+        }
         super.onDestroy();
     }
 
@@ -517,11 +530,25 @@ public class PairAppClient extends Service {
                 public void run() {
                     shouldPlaySound.set(true);
                 }
-            }, 3000);
-            try {
-                MediaUtils.playSound(this, R.raw.beep);
-            } catch (IOException e) {
-                PLog.d(TAG, "failed to play sound");
+            }, 1500);
+            synchronized (playerLock) {
+                try {
+                    if (mediaPlayer == null) {
+                        mediaPlayer = new MediaPlayer();
+                    } else if (mediaPlayer.isPlaying()) {
+                        mediaPlayer.stop();
+                    }
+                    mediaPlayer.reset();
+                    AssetFileDescriptor fd = getResources().openRawResourceFd(R.raw.beep);
+                    mediaPlayer.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
+                    mediaPlayer.prepare();
+                    fd.close();
+                    mediaPlayer.setLooping(false);
+                    mediaPlayer.setVolume(1f, 1f);
+                    mediaPlayer.start();
+                } catch (IOException e) {
+                    PLog.d(TAG, "failed to play sound");
+                }
             }
         } else {
             PLog.d(TAG, "not playing sound, played one not too lon ago");
@@ -581,6 +608,41 @@ public class PairAppClient extends Service {
         }, true);
     }
 
+    public static void notifyMessageSeen(final Message message) {
+        final Message tmp = Message.copy(message);
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                if (tmp.getState() != Message.STATE_SEEN && !Message.isGroupMessage(tmp)) {
+                    if (!isClientStarted.get()) {
+                        PLog.d(TAG, "client not stared cann't send seen status");
+                    }
+                    if (Message.isGroupMessage(tmp)) {
+                        PLog.d(TAG, "message status of group message are not sent");
+                        return;
+                    }
+                    if (tmp.getState() == Message.STATE_SEEN) {
+                        PLog.d(TAG, "message is seen");
+                        if (BuildConfig.DEBUG) {
+                            throw new RuntimeException();
+                        }
+                        return;
+                    }
+                    MessageCenter.notifyMessageSeen(tmp);
+                    Realm realm = Message.REALM(Config.getApplicationContext());
+                    Message realmMessage = realm.where(Message.class).equalTo(Message.FIELD_ID, tmp.getId()).findFirst();
+                    if (realmMessage != null) {
+                        realm.beginTransaction();
+                        realmMessage.setState(Message.STATE_SEEN);
+                        realm.commitTransaction();
+                    }
+                    realm.close();
+                }
+            }
+        }, false);
+
+    }
+
     public class PairAppClientInterface extends Binder {
         public void sendMessage(Message message) {
             WORKER_THREAD.sendMessage(Message.copy(message)); //detach the message from realm
@@ -618,14 +680,15 @@ public class PairAppClient extends Service {
         }
 
         public void notifyMessageSeen(Message message) {
-//            MessageCenter.notifyMessageSeen(Message.copy(message));
-            if (message.getState() != Message.STATE_SEEN && !Message.isGroupMessage(message)) {
-                message = Message.copy(message);
-                android.os.Message message1 = android.os.Message.obtain();
-                message1.what = MessageHandler.NOTIFY_MESSAGE_SEEN;
-                message1.obj = message;
-                WORKER_THREAD.handler.sendMessage(message1);
-            }
+////            MessageCenter.notifyMessageSeen(Message.copy(message));
+//            if (message.getState() != Message.STATE_SEEN && !Message.isGroupMessage(message)) {
+//                message = Message.copy(message);
+//                android.os.Message message1 = android.os.Message.obtain();
+//                message1.what = MessageHandler.NOTIFY_MESSAGE_SEEN;
+//                message1.obj = message;
+//                WORKER_THREAD.handler.sendMessage(message1);
+//            }
+            PairAppClient.notifyMessageSeen(message);
         }
 
         public void registerUINotifier(final Notifier notifier) {
@@ -652,6 +715,7 @@ public class PairAppClient extends Service {
         protected void onLooperPrepared() {
             handler = new MessageHandler(getLooper());
             bootClient();
+            attemptToSendAllUnsentMessages();
         }
 
         public void sendMessage(Message message) {
@@ -733,34 +797,8 @@ public class PairAppClient extends Service {
 //                        }
                     }
                     break;
-                case NOTIFY_MESSAGE_SEEN:
-                    if (!isClientStarted.get()) {
-                        PLog.d(TAG, "sinch client not stared cann't send seen status");
-                    }
-                    Message message = (Message) msg.obj;
-                    if (Message.isGroupMessage(message)) {
-                        PLog.d(TAG, "message status of group message are not sent");
-                        return;
-                    }
-                    if (message.getState() == Message.STATE_SEEN) {
-                        PLog.d(TAG, "message is seen");
-                        if (BuildConfig.DEBUG) {
-                            throw new RuntimeException();
-                        }
-                        return;
-                    }
-                    MessageCenter.notifyMessageSeen(message);
-                    Realm realm = Message.REALM(PairAppClient.this);
-                    Message realmMessage = realm.where(Message.class).equalTo(Message.FIELD_ID, message.getId()).findFirst();
-                    if (realmMessage != null) {
-                        realm.beginTransaction();
-                        realmMessage.setState(Message.STATE_SEEN);
-                        realm.commitTransaction();
-                    }
-                    realm.close();
-                    break;
                 case CANCEL_DISPATCH:
-                    message = (Message) msg.obj;
+                    Message message = (Message) msg.obj;
                     doCancelDispatch(message);
                     break;
                 default:
