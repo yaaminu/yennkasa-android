@@ -14,6 +14,7 @@ import android.widget.ListView;
 import com.pairapp.adapter.GroupsAdapter;
 import com.pairapp.data.User;
 import com.pairapp.R;
+import com.pairapp.data.UserManager;
 import com.pairapp.util.UiHelpers;
 import com.rey.material.widget.FloatingActionButton;
 
@@ -60,6 +61,7 @@ public class GroupsFragment extends ListFragment {
         super.onActivityCreated(savedInstanceState);
         final RealmResults<User> groups = realm.where(User.class).equalTo(User.FIELD_TYPE, User.TYPE_GROUP).findAllSorted(User.FIELD_NAME);
         BaseAdapter adapter = new GroupsAdapter(getActivity(), groups);
+        UserManager.getInstance().fetchGroups();
         setListAdapter(adapter);
     }
 

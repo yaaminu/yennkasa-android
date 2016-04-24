@@ -710,6 +710,10 @@ public final class UserManager {
         return realm.where(User.class).equalTo(User.FIELD_ID, userId).equalTo(User.FIELD_TYPE, User.TYPE_GROUP).findFirst() != null;
     }
 
+    public void fetchGroups() {
+        doRefreshGroups();
+    }
+
     void doRefreshGroups() {
         User mainUser = getCurrentUser();
         userApi.getGroups(mainUser.getUserId(), new UserApiV2.Callback<List<User>>() {
