@@ -38,7 +38,7 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
                 String messageId = object.getString(Message.MSG_STS_MESSAGE_ID);
                 if (status == Message.STATE_SENT) {
                     PLog.i(TAG, "message sent");
-                    onSent(messageId);
+//                    onSent(messageId);
                 } else if (status == Message.STATE_RECEIVED) {
                     PLog.i(TAG, "message delivered");
                     onDelivered(messageId);
@@ -87,6 +87,8 @@ class SocketsIODispatcher extends AbstractMessageDispatcher {
             onFailed(message.getId(), ERR_SOCKET_DICONNECTED);
         }
         socketIoClient.send(Message.EVENT_MESSAGE, Message.toJSON(message));
+        // optimistic notification even though we are not sure user has received the message or not
+        onSent(message.getId());
     }
 
     private static final AtomicInteger refCount = new AtomicInteger(0);
