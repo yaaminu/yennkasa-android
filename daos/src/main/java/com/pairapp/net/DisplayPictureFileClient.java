@@ -31,7 +31,9 @@ class DisplayPictureFileClient {
             fileClient.saveFileToBackend(dp, new FileApi.FileSaveCallback() {
                 @Override
                 public void done(FileClientException e, String url) {
-                    PLog.d(TAG, e.getMessage(), e.getCause());
+                    if (e != null) {
+                        PLog.d(TAG, e.getMessage(), e.getCause());
+                    }
                     callback.done(e, url);
                     //noinspection ResultOfMethodCallIgnored
                     dp.delete();

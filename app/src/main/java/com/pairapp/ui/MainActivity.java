@@ -218,7 +218,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
             realm = User.Realm(MainActivity.this);
 
         realm.addChangeListener(changeListener);
-        boolean noUserAvailable = realm.where(User.class).notEqualTo(User.FIELD_ID, getMainUserId()).findFirst() == null;
+        boolean noUserAvailable = realm.where(User.class).count() < 2;
         if (!noUserAvailable) {
             pager.getAdapter().notifyDataSetChanged();
             realm.removeChangeListener(changeListener);
@@ -244,9 +244,9 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
             UiHelpers.showErrorDialog(this, R.string.blocked_user_notice, R.string.agree, R.string.disagree, new UiHelpers.Listener() {
                 @Override
                 public void onClick() {
-                 userManager.unBlockUser(peerId);
-                 UiHelpers.showToast(getString(R.string.user_unblocked));
-                 UiHelpers.enterChatRoom(MainActivity.this, peerId);                    
+                    userManager.unBlockUser(peerId);
+                    UiHelpers.showToast(getString(R.string.user_unblocked));
+                    UiHelpers.enterChatRoom(MainActivity.this, peerId);
                 }
             }, new UiHelpers.Listener() {
                 @Override

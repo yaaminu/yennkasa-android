@@ -49,7 +49,7 @@ public class ParseFileClient implements FileApi {
                 }, new ProgressCallback() {
                     @Override
                     public void done(Integer integer) {
-                        listener.onProgress(file.length(), integer);
+                        listener.onProgress(file.length(), (file.length() * integer) / 100);
                     }
                 });
             } catch (IOException e) {

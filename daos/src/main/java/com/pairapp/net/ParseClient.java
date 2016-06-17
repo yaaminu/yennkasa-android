@@ -9,11 +9,9 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.telephony.SmsManager;
 import android.text.TextUtils;
 
 import com.google.gson.JsonObject;
-import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.Errors.PairappException;
 import com.pairapp.data.BuildConfig;
 import com.pairapp.data.Message;
@@ -43,10 +41,8 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 
@@ -176,7 +172,7 @@ public class ParseClient implements UserApiV2 {
         builder.setContentTitle("Pairapp Verification Token");
         builder.setTicker("Pairapp verification token");
         builder.setSmallIcon(R.drawable.ic_stat_icon);
-        builder.setContentIntent(PendingIntent.getActivity(Config.getApplicationContext(),id,null,PendingIntent.FLAG_UPDATE_CURRENT));
+        builder.setContentIntent(PendingIntent.getActivity(Config.getApplicationContext(), id, null, PendingIntent.FLAG_UPDATE_CURRENT));
         NotificationManagerCompat managerCompat = NotificationManagerCompat.from(Config.getApplicationContext());
         managerCompat.cancel(tag, id);
         managerCompat.notify(tag, id, builder.build());
@@ -367,9 +363,22 @@ public class ParseClient implements UserApiV2 {
                         PLog.d(TAG, "dp: " + url);
                         SharedPreferences preferences = getPendingDpChanges();
                         //a refresh of our data set will pick up this change
-                        preferences.edit().putString(id + PENDING_DP, url)
-                                .putString(FileUtils.hash(url.getBytes()), file.getAbsolutePath())
-                                .apply();
+                        try {
+                            ParseObject object;
+                            if (userOrGroup.equals("groups")) {
+                                object = makeParseQuery(GROUP_CLASS_NAME).whereEqualTo(PARSE_CONSTANTS.FIELD_ID, id).getFirst();
+                            } else {
+                                object = ParseUser.getCurrentUser();
+                            }
+                            object.put(FIELD_DP, url);
+                            object.save();
+
+                        } catch (ParseException e2) {
+                            PLog.e(TAG, e2.getMessage(), e2.getCause());
+                            preferences.edit().putString(id + PENDING_DP, url)
+                                    .putString(FileUtils.hash(url.getBytes()), file.getAbsolutePath())
+                                    .apply();
+                        }
                         notifyCallback(response, null, new HttpResponse(200, url));
                     } catch (InterruptedException e1) {
                         PLog.d(TAG, "thread: %s interrupted while waiting to acquire semaphore", "" + Thread.currentThread().getId());
@@ -377,13 +386,14 @@ public class ParseClient implements UserApiV2 {
                         dpLock.release();
                     }
                 } else {
+                    PLog.e(TAG, e.getMessage(), e.getCause());
                     notifyCallback(response, e, new HttpResponse(400, "error during dp change"));
                 }
             }
         }, new FileApi.ProgressListener() {
             @Override
             public void onProgress(long expected, long transferred) {
-                PLog.i(TAG, "dp change progress %s", ((transferred * 100) / expected));
+                PLog.i(TAG, "transferred: %s, expected: %s", transferred, expected);
             }
         });
     }
