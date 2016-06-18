@@ -3,6 +3,7 @@ package com.pairapp.net;
 import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.SystemClock;
@@ -172,7 +173,7 @@ public class ParseClient implements UserApiV2 {
         builder.setContentTitle("Pairapp Verification Token");
         builder.setTicker("Pairapp verification token");
         builder.setSmallIcon(R.drawable.ic_stat_icon);
-        builder.setContentIntent(PendingIntent.getActivity(Config.getApplicationContext(), id, null, PendingIntent.FLAG_UPDATE_CURRENT));
+        builder.setContentIntent(PendingIntent.getActivity(Config.getApplicationContext(), id, new Intent(), PendingIntent.FLAG_UPDATE_CURRENT));
         NotificationManagerCompat managerCompat = NotificationManagerCompat.from(Config.getApplicationContext());
         managerCompat.cancel(tag, id);
         managerCompat.notify(tag, id, builder.build());
@@ -897,7 +898,11 @@ public class ParseClient implements UserApiV2 {
         ParseACL.setDefaultACL(defaultAcl, true);
         Parse.setLogLevel(BuildConfig.DEBUG ? Parse.LOG_LEVEL_VERBOSE : Parse.LOG_LEVEL_NONE);
 
-        Parse.initialize(application, "RcCxnXwO1mpkSNrU9u4zMtxQac4uabLNIFa662ZY", "f1ad1Vfjisr7mVBDSeoFO1DobD6OaLkggHvT2Nk4");
+        Parse.initialize(new Parse.Configuration.Builder(application)
+                .server("http://10.0.3.2:4000/parse")
+                .applicationId("RcCxnXwO1mpkSNrU9u4zMtxQac4uabLNIFa662ZY")
+                .clientKey("f1ad1Vfjisr7mVBDSeoFO1DobD6OaLkggHvT2Nk4")
+                .build());
     }
 
     @Override

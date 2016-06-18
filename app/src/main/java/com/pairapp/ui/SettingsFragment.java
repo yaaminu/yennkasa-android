@@ -2,6 +2,7 @@ package com.pairapp.ui;
 
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.media.RingtoneManager;
@@ -20,11 +21,10 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 
-import com.pairapp.adapter.SettingsAdapter;
-import com.pairapp.util.UiHelpers;
-import com.pairapp.data.UserManager;
-import com.pairapp.data.PersistedSetting;
 import com.pairapp.R;
+import com.pairapp.adapter.SettingsAdapter;
+import com.pairapp.data.PersistedSetting;
+import com.pairapp.data.UserManager;
 import com.pairapp.util.PLog;
 import com.rey.material.app.DialogFragment;
 import com.rey.material.app.SimpleDialog;
@@ -40,11 +40,11 @@ public class SettingsFragment extends ListFragment {
     private UserManager.CallBack callback = new UserManager.CallBack() {
         @Override
         public void done(Exception e) {
-            UiHelpers.dismissProgressDialog(dialogFragment);
+            dialogFragment.dismiss();
             refreshDisplay();
         }
     };
-    private DialogFragment dialogFragment;
+    private ProgressDialog dialogFragment;
     private SettingsAdapter.Delegate delegate = new SettingsAdapter.Delegate() {
         @Override
         public void onItemClick(AdapterView parent, View view, int position, long itemId) {
@@ -90,7 +90,9 @@ public class SettingsFragment extends ListFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         setHasOptionsMenu(true);
-        dialogFragment = UiHelpers.newProgressDialog();
+        dialogFragment = new ProgressDialog(getActivity());
+        dialogFragment.setMessage(getString(R.string.st_please_wait));
+        dialogFragment.setCancelable(false);
         return inflater.inflate(R.layout.fragment_settings, container, false);
     }
 
@@ -109,7 +111,7 @@ public class SettingsFragment extends ListFragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_restore_default_settings) {
-            dialogFragment.show(getFragmentManager(), null);
+            dialogFragment.show();
             UserManager.getInstance().restoreUserDefaultSettings(callback);
         }
         return super.onOptionsItemSelected(item);
@@ -153,9 +155,9 @@ public class SettingsFragment extends ListFragment {
                     } else {
                         title = getString(R.string.no_name);
                     }
-                }catch (IllegalArgumentException e){
-                    PLog.e(TAG,"error while retrieving ringtone from media store");
-                }finally{
+                } catch (IllegalArgumentException e) {
+                    PLog.e(TAG, "error while retrieving ringtone from media store");
+                } finally {
                     if (cursor != null) {
                         cursor.close();
                     }

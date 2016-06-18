@@ -1,5 +1,6 @@
 package com.pairapp.ui;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -41,7 +42,6 @@ import com.pairapp.util.PLog;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
-import com.rey.material.app.DialogFragment;
 import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.SnackBar;
 
@@ -332,12 +332,12 @@ public class CreateMessageActivity extends MessageActivity
             }
             type = Message.TYPE_TEXT_MESSAGE;
         }
-        final DialogFragment progressDialog = UiHelpers.newProgressDialog();
-        progressDialog.show(getSupportFragmentManager(), null);
+        final ProgressDialog progressDialog = ProgressDialog.show(this,"",getString(R.string.st_please_wait),false,false,null);
+        progressDialog.show();
         sendMessage(messageBody, selectedItems, type, new SendCallback() {
             @Override
             public void onSendComplete(Exception e) {
-                UiHelpers.dismissProgressDialog(progressDialog);
+                progressDialog.dismiss();
                 Intent intent = new Intent(CreateMessageActivity.this, MainActivity.class);
                 NavUtils.navigateUpTo(CreateMessageActivity.this, intent);
             }

@@ -1,5 +1,6 @@
 package com.pairapp.ui;
 
+import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -14,8 +15,10 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 
 import com.pairapp.BuildConfig;
 import com.pairapp.R;
@@ -30,8 +33,6 @@ import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
 import com.pairapp.view.MyTextWatcher;
-import com.rey.material.app.DialogFragment;
-import com.rey.material.widget.Spinner;
 import com.rey.material.widget.TextView;
 
 import org.apache.commons.io.Charsets;
@@ -64,10 +65,10 @@ public class LoginFragment extends Fragment {
     private String userName, phoneNumber, userCountry;
     private FormValidator validator;
     private Callbacks callback;
-    private DialogFragment progressDialog;
+    private ProgressDialog progressDialog;
     private Spinner.OnItemSelectedListener onItemSelectedListener = new Spinner.OnItemSelectedListener() {
         @Override
-        public void onItemSelected(Spinner parent, View view, int position, long id) {
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
             phoneNumberEt.setEnabled(position > 0);
             String countryCode;
             if (position > 0) {
@@ -76,6 +77,10 @@ public class LoginFragment extends Fragment {
             } else {
                 phoneNumberEt.addTextChangedListener(new MyTextWatcher());
             }
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) {
 
         }
     };
@@ -138,53 +143,7 @@ public class LoginFragment extends Fragment {
             return true;
         }
     };
-    /* private class MyTextWatcher implements TextWatcher {
-         boolean selfChanged = false;
 
-         AsYouTypeFormatter formatter;
-
-         MyTextWatcher(String countryCode) {
-             formatter = PhoneNumberUtil.getInstance().
-                     getAsYouTypeFormatter(countryCode);
-         }
-
-         @Override
-         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-         }
-
-         @Override
-         public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-         }
-
-         @Override
-         public void afterTextChanged(Editable s) {
-             if (selfChanged) {
-                 phoneNumberEt.setSelection(s.length());
-                 selfChanged = false;
-                 return;
-             }
-             formatter.clear();
-
-             if (s.length() == 0) {
-                 return;
-             }
-             //lets keep things simple
-             String phoneNumber = "", content = phoneNumberEt.getText().toString().trim();
-             content = PhoneNumberNormaliser.cleanNonDialableChars(content);
-             for (int i = 0; i < content.length(); i++) {
-                 phoneNumber = formatter.inputDigit(content.charAt(i));
-             }
-             phoneNumber = phoneNumber.trim();
-             if (!phoneNumber.isEmpty()) {
-                 selfChanged = true;
-                 phoneNumberEt.setText(phoneNumber);
-                 //we will advance the cursor to the end in the next run look above
-             }
-         }
-     }
- */
     private View.OnClickListener listener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -209,7 +168,7 @@ public class LoginFragment extends Fragment {
     private AsyncTask<Void, Void, Void> setUpCountriesTask = new AsyncTask<Void, Void, Void>() {
         @Override
         protected void onPreExecute() {
-            progressDialog.show(getFragmentManager(), null);
+            progressDialog.show();
         }
 
         @Override
@@ -253,7 +212,6 @@ public class LoginFragment extends Fragment {
             } finally {
                 realm.close();
             }
-//            SystemClock.sleep(10000);
             return null;
         }
 
@@ -296,7 +254,9 @@ public class LoginFragment extends Fragment {
         ViewUtils.setTypeface(usernameEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
 
         spinner = ((Spinner) view.findViewById(R.id.sp_ccc));
-        progressDialog = UiHelpers.newProgressDialog();
+        progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setMessage(getString(R.string.st_please_wait));
+        progressDialog.setCancelable(false);
         validator = new FormValidator();
         validator.addStrategy(phoneNumberStrategy)
                 .addStrategy(usernameStrategy);
@@ -403,7 +363,7 @@ public class LoginFragment extends Fragment {
 
     private void setUpSpinner() {
         countriesSpinnerAdapter = new CountriesListAdapter(getActivity(), realm.where(Country.class).findAllSorted(Country.FIELD_NAME));
-        countriesSpinnerAdapter.setDropDownViewResource(R.layout.country_spinner_item);
+        countriesSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(countriesSpinnerAdapter);
         spinner.setSelection(0);
         spinner.setOnItemSelectedListener(onItemSelectedListener);

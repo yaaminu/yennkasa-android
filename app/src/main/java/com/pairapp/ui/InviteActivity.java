@@ -1,5 +1,6 @@
 package com.pairapp.ui;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -15,19 +16,18 @@ import android.widget.Filterable;
 import android.widget.Toast;
 
 import com.google.i18n.phonenumbers.NumberParseException;
+import com.pairapp.BuildConfig;
 import com.pairapp.Errors.ErrorCenter;
+import com.pairapp.R;
 import com.pairapp.adapter.MultiChoiceUsersAdapter;
 import com.pairapp.adapter.UsersAdapter;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
-import com.pairapp.BuildConfig;
-import com.pairapp.R;
 import com.pairapp.util.PLog;
 import com.pairapp.util.PhoneNumberNormaliser;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
-import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.SnackBar;
@@ -157,12 +157,11 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
 
     private void proceedToAddMembers() {
         PLog.i(TAG, "add members" + selectedUsers.toString());
-        final DialogFragment progressView = UiHelpers.newProgressDialog();
-        progressView.show(getSupportFragmentManager(), null);
+        final ProgressDialog progressView = ProgressDialog.show(this, "", getString(R.string.st_please_wait), false, false, null);
         userManager.addMembersToGroup(groupId, selectedUsers, new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
-                UiHelpers.dismissProgressDialog(progressView);
+                progressView.dismiss();
                 if (e != null) {
                     ErrorCenter.reportError(TAG, e.getMessage());
                 } else {

@@ -27,9 +27,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.pairapp.Errors.ErrorCenter;
+import com.pairapp.R;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
-import com.pairapp.R;
 import com.pairapp.util.Config;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.LiveCenter;
@@ -43,7 +43,6 @@ import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
 import com.pairapp.view.FrameLayout;
-import com.rey.material.app.DialogFragment;
 import com.rey.material.widget.FloatingActionButton;
 import com.squareup.picasso.Callback;
 
@@ -75,7 +74,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     private Realm realm;
     private View progressView, changeDpButton, changeDpButton2;
     private android.widget.Button exitGroupButton, callButton, deleteGroup, sendMessageButton;
-    private DialogFragment progressDialog;
+    private ProgressDialog progressDialog;
     private Uri image_capture_out_put_uri;
     private boolean changingDp = false;
     private final UserManager.CallBack DP_CALLBACK = new UserManager.CallBack() {
@@ -261,7 +260,9 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         exitGroupButton = (android.widget.Button) view.findViewById(R.id.bt_exit_group);
         ViewUtils.setTypeface(exitGroupButton, TypeFaceUtil.ROBOTO_REGULAR_TTF);
 
-        progressDialog = UiHelpers.newProgressDialog();
+        progressDialog = new ProgressDialog(getActivity());
+        progressDialog.setCancelable(false);
+        progressDialog.setMessage(getString(R.string.st_please_wait));
 
         ((FloatingActionButton) changeDpButton2).setIcon(getResources().getDrawable(R.drawable.ic_action_camera), true);
         ((FloatingActionButton) changeDpButton).setIcon(getResources().getDrawable(R.drawable.ic_action_picture), true);
@@ -315,6 +316,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             }
         }
         pDialog = new ProgressDialog(getActivity());
+
         pDialog.setCancelable(false);
         pDialog.setMessage(getString(R.string.st_please_wait));
         return view;
@@ -632,11 +634,11 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     }
 
     private void leaveGroup() {
-        progressDialog.show(getFragmentManager(), null);
+        progressDialog.show();
         userManager.leaveGroup(user.getUserId(), new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
-                UiHelpers.dismissProgressDialog(progressDialog);
+                progressDialog.dismiss();
                 if (e != null) {
                     ErrorCenter.reportError(TAG, e.getMessage());
                 } else {

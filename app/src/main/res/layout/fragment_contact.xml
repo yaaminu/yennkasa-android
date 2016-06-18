@@ -1,18 +1,26 @@
 <com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                              xmlns:tools="http://schemas.android.com/tools"
-                              android:layout_width="match_parent"
-                              android:layout_height="match_parent"
-                              tools:context="com.pairapp.ui.ContactFragment">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.pairapp.ui.ContactFragment">
 
-    <com.handmark.pulltorefresh.library.PullToRefreshListView
-        android:id="@+id/list"
+    <android.support.v4.widget.SwipeRefreshLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:descendantFocusability="afterDescendants"
-        android:divider="@null"
-        android:dividerHeight="0dp"
-        android:fadingEdge="none"
-        android:transcriptMode="normal"/>
+        android:id="@+id/swipe_refresh_layout"
+        android:layout_height="match_parent">
+
+        <ListView
+            android:id="@+id/list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:descendantFocusability="afterDescendants"
+            android:divider="@null"
+            android:dividerHeight="0dp"
+            android:fadingEdge="none"
+            android:transcriptMode="normal">
+
+        </ListView>
+    </android.support.v4.widget.SwipeRefreshLayout>
 
     <LinearLayout
         android:id="@+id/empty_view"
@@ -28,7 +36,7 @@
             android:gravity="center"
             android:text="@string/st_empty_contacts"
             android:textSize="24sp"
-            android:textStyle="italic"/>
+            android:textStyle="italic" />
 
         <com.rey.material.widget.Button
             android:id="@+id/refresh_button"
@@ -41,6 +49,6 @@
             android:text="@string/refresh_contacts"
             android:textColor="@color/white"
             android:textSize="@dimen/standard_text_size"
-            android:visibility="visible"/>
+            android:visibility="visible" />
     </LinearLayout>
 </com.pairapp.view.RelativeLayout>

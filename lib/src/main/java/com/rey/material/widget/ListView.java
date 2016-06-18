@@ -4,10 +4,11 @@ import android.content.Context;
 import android.support.v7.internal.widget.ListViewCompat;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.AbsListView;
 
 public class ListView extends ListViewCompat {
 
-	private RecyclerListener mRecyclerListener;
+	private AbsListView.RecyclerListener mRecyclerListener;
 	
 	public ListView(Context context) {
 		super(context);
@@ -35,7 +36,7 @@ public class ListView extends ListViewCompat {
     
     private void init(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes){
     	
-    	super.setRecyclerListener(new RecyclerListener() {
+    	super.setRecyclerListener(new AbsListView.RecyclerListener() {
 			
 			@Override
 			public void onMovedToScrapHeap(View view) {
@@ -49,7 +50,7 @@ public class ListView extends ListViewCompat {
     }
     
     @Override
-    public void setRecyclerListener(RecyclerListener listener) {
+    public void setRecyclerListener(AbsListView.RecyclerListener listener) {
     	mRecyclerListener = listener;
     }
 

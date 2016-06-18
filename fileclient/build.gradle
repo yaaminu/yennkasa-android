@@ -30,6 +30,5 @@ dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile project(':utils')
     testCompile 'junit:junit:4.12'
-    compile 'com.parse.bolts:bolts-android:1.2.0'
-    compile files('libs/Parse-1.9.4.jar')
+    compile 'com.parse:parse-android:1.13.0'
 }

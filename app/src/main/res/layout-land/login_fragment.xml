@@ -55,21 +55,14 @@
             android:paddingTop="@dimen/padding_ll_login_fragment_top"
             tools:ignore="RtlHardcoded,UnusedAttribute">
 
-            <com.rey.material.widget.Spinner
+            <Spinner
                 android:id="@+id/sp_ccc"
-                style="@style/Material.Widget.Spinner.Light"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/spinner_height"
-                app:rd_delayClick="afterRelease"
-                app:rd_enable="true"
-                app:rd_style="@style/FlatButtonRippleStyle"
-                app:spn_arrowAnimDuration="@android:integer/config_shortAnimTime"
-                app:spn_arrowInterpolator="@android:anim/decelerate_interpolator"
-                app:spn_arrowSwitchMode="true"
-                app:spn_labelTextSize="@dimen/standard_text_size">
+               >
 
                 <requestFocus />
-            </com.rey.material.widget.Spinner>
+            </Spinner>
 
             <EditText
                 android:id="@+id/et_username"

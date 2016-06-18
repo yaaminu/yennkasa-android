@@ -1,5 +1,6 @@
 package com.pairapp.ui;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -30,7 +31,6 @@ import com.pairapp.util.PhoneNumberNormaliser;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
-import com.rey.material.app.DialogFragment;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.SnackBar;
@@ -58,7 +58,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     private int stage = 0;
     private String dp;
     private View menuItemDone, menuItemNext, dpPreview;
-    private DialogFragment progressDialog;
+    private ProgressDialog progressDialog;
     private final View.OnClickListener listener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -98,7 +98,9 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         realm = User.Realm(this);
         RealmResults<User> users = getQuery().findAllSorted(User.FIELD_NAME);
         adapter = new CustomUsersAdapter(realm, users);
-        progressDialog = UiHelpers.newProgressDialog();
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage(getString(R.string.st_please_wait));
+        progressDialog.setCancelable(false);
     }
 
     @Override
@@ -127,20 +129,22 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
             return;
         }
         AsyncTask<Void, Void, Boolean> task = new AsyncTask<Void, Void, Boolean>() {
-            DialogFragment dialog;
+            ProgressDialog dialog;
             String errorMessage, finalName;
 
             @Override
             protected void onPreExecute() {
-                dialog = UiHelpers.newProgressDialog(false);
-                dialog.show(getSupportFragmentManager(), "");
+                dialog = new ProgressDialog(CreateGroupActivity.this);
+                dialog.setMessage(getString(R.string.st_please_wait));
+                dialog.setCancelable(false);
+                dialog.show();
                 finalName = groupNameEt.getText().toString().trim();
                 groupNameEt.setText("");
             }
 
             @Override
             protected void onPostExecute(Boolean aBoolean) {
-                UiHelpers.dismissProgressDialog(dialog);
+                dialog.dismiss();
                 if (aBoolean) {
                     proceedToNextStage(finalName);
                 } else {
@@ -249,7 +253,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
 
     private void continueProcess() {
         if (selectedUsers.size() >= 2) {
-            progressDialog.show(getSupportFragmentManager(), null);
+            progressDialog.show();
             userManager.createGroup(groupName, selectedUsers, new UserManager.CreateGroupCallBack() {
                 @Override
                 public void done(Exception e, String groupId) {
@@ -263,14 +267,14 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
 
     private void onGroupCreated(Exception e, final String groupId) {
         if (e != null) {
-            UiHelpers.dismissProgressDialog(progressDialog);
+            progressDialog.dismiss();
             ErrorCenter.reportError(TAG, e.getMessage());
         } else {
             if (dp != null && new File(dp).exists()) {
                 userManager.changeDp(groupId, dp, new UserManager.CallBack() {
                     @Override
                     public void done(Exception e) {
-                        UiHelpers.dismissProgressDialog(progressDialog);
+                        progressDialog.dismiss();
                         if (e == null) {
                             //hurray we changed dp successfully
                             UiHelpers.enterChatRoom(CreateGroupActivity.this, groupId);
@@ -281,7 +285,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
                     }
                 });
             } else {
-                UiHelpers.dismissProgressDialog(progressDialog);
+                progressDialog.dismiss();
                 UiHelpers.enterChatRoom(CreateGroupActivity.this, groupId);
                 finish();
             }
@@ -477,7 +481,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     }
 
     @Override
-    public final View getToolBar(){
+    public final View getToolBar() {
         return toolBar;
     }
 }

@@ -1,5 +1,6 @@
 package com.pairapp.ui;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -17,17 +18,16 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.pairapp.R;
 import com.pairapp.adapter.ConversationAdapter;
 import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
-import com.pairapp.R;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
 import com.pairapp.util.UiHelpers;
-import com.rey.material.app.DialogFragment;
 import com.rey.material.widget.FloatingActionButton;
 
 import java.io.File;
@@ -141,7 +141,7 @@ public class ConversationsFragment extends ListFragment {
 
                 contextMenuOptions[0] = getString(R.string.clear_messages);
                 contextMenuOptions[1] = getString(R.string.action_delete_conversation);
-                                deleted = conversations.get(position);
+                deleted = conversations.get(position);
                 final String peerId = deleted.getPeerId();
                 final UserManager userManager = UserManager.getInstance();
                 String name = userManager.getName(peerId);
@@ -236,58 +236,58 @@ public class ConversationsFragment extends ListFragment {
 
 
     private void cleanMessages(final String peerId, final Date toWhen) {
-        final DialogFragment dialogFragment = UiHelpers.newProgressDialog();
-        dialogFragment.show(getFragmentManager().beginTransaction(), "");
+        final ProgressDialog dialogFragment = ProgressDialog.show(getActivity(), "",
+                getString(R.string.st_please_wait), true, false, null);
         TaskManager.executeNow(new Runnable() {
-            @Override
-            public void run() {
-                PLog.d(TAG, "deleting messages for conversion between user and %s", peerId);
-                Realm realm = Message.REALM(getActivity());
-                realm.beginTransaction(); //blocks all writes before runnig query because of the copyOnWrite style of realm
-                String mainUserId = UserManager.getMainUserId();
-                RealmResults<Message> messages;
-                RealmQuery<Message> messageQuery = realm.where(Message.class);
-                if (UserManager.getInstance().isGroup(peerId)) {
-                    messageQuery.equalTo(Message.FIELD_TO, peerId)
-                            .or()
-                            .equalTo(Message.FIELD_FROM, peerId);
-                } else {
-                    messageQuery.beginGroup()
-                            .equalTo(Message.FIELD_FROM, peerId)
-                            .equalTo(Message.FIELD_TO, mainUserId)
-                            .endGroup()
-                            .or()
-                            .beginGroup()
-                            .equalTo(Message.FIELD_FROM, mainUserId)
-                            .equalTo(Message.FIELD_TO, peerId)
-                            .endGroup();
-                }
-                messages = messageQuery.lessThan(Message.FIELD_DATE_COMPOSED, toWhen).findAll(); //new messages will be ignored
-                if (UserManager.getInstance().getBoolPref(UserManager.DELETE_ATTACHMENT_ON_DELETE, false)) {
-                    for (Message message : messages) {
-                        if (Message.isVideoMessage(message) || Message.isPictureMessage(message) || Message.isBinMessage(message)) {
-                            File file = new File(message.getMessageBody());
-                            if (file.delete()) {
-                                PLog.d(TAG, "deleted file %s", file.getAbsolutePath());
-                            } else {
-                                PLog.d(TAG, "failed to delete file: %s", file.getAbsolutePath());
-                            }
-                        }
-                    }
-                }
-                messages.clear();
-                realm.commitTransaction();
-                realm.close();
-                SystemClock.sleep(1000);
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        UiHelpers.dismissProgressDialog(dialogFragment);
-                    }
-                });
+                                   @Override
+                                   public void run() {
+                                       PLog.d(TAG, "deleting messages for conversion between user and %s", peerId);
+                                       Realm realm = Message.REALM(getActivity());
+                                       realm.beginTransaction(); //blocks all writes before runnig query because of the copyOnWrite style of realm
+                                       String mainUserId = UserManager.getMainUserId();
+                                       RealmResults<Message> messages;
+                                       RealmQuery<Message> messageQuery = realm.where(Message.class);
+                                       if (UserManager.getInstance().isGroup(peerId)) {
+                                           messageQuery.equalTo(Message.FIELD_TO, peerId)
+                                                   .or()
+                                                   .equalTo(Message.FIELD_FROM, peerId);
+                                       } else {
+                                           messageQuery.beginGroup()
+                                                   .equalTo(Message.FIELD_FROM, peerId)
+                                                   .equalTo(Message.FIELD_TO, mainUserId)
+                                                   .endGroup()
+                                                   .or()
+                                                   .beginGroup()
+                                                   .equalTo(Message.FIELD_FROM, mainUserId)
+                                                   .equalTo(Message.FIELD_TO, peerId)
+                                                   .endGroup();
+                                       }
+                                       messages = messageQuery.lessThan(Message.FIELD_DATE_COMPOSED, toWhen).findAll(); //new messages will be ignored
+                                       if (UserManager.getInstance().getBoolPref(UserManager.DELETE_ATTACHMENT_ON_DELETE, false)) {
+                                           for (Message message : messages) {
+                                               if (Message.isVideoMessage(message) || Message.isPictureMessage(message) || Message.isBinMessage(message)) {
+                                                   File file = new File(message.getMessageBody());
+                                                   if (file.delete()) {
+                                                       PLog.d(TAG, "deleted file %s", file.getAbsolutePath());
+                                                   } else {
+                                                       PLog.d(TAG, "failed to delete file: %s", file.getAbsolutePath());
+                                                   }
+                                               }
+                                           }
+                                       }
+                                       messages.clear();
+                                       realm.commitTransaction();
+                                       realm.close();
+                                       SystemClock.sleep(1000);
+                                       getActivity().runOnUiThread(new Runnable() {
+                                           @Override
+                                           public void run() {
+                                               dialogFragment.dismiss();
+                                           }
+                                       });
 
-            }
-        }
+                                   }
+                               }
 
                 , false);
     }

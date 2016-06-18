@@ -1,31 +1,29 @@
 package com.pairapp.ui;
 
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.handmark.pulltorefresh.library.ILoadingLayout;
-import com.handmark.pulltorefresh.library.PullToRefreshBase;
-import com.handmark.pulltorefresh.library.PullToRefreshListView;
+import com.pairapp.R;
 import com.pairapp.adapter.ContactsAdapter;
+import com.pairapp.data.ContactSyncService;
 import com.pairapp.data.ContactsManager;
 import com.pairapp.data.ContactsManager.Contact;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
-import com.pairapp.R;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
-import com.pairapp.data.ContactSyncService;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -38,7 +36,7 @@ import io.realm.RealmChangeListener;
 /**
  * A simple {@link ListFragment} subclass.
  */
-public class ContactFragment extends Fragment implements RealmChangeListener, AdapterView.OnItemClickListener, PullToRefreshBase.OnRefreshListener {
+public class ContactFragment extends Fragment implements RealmChangeListener, SwipeRefreshLayout.OnRefreshListener, AdapterView.OnItemClickListener {
 
     private static final String TAG = ContactFragment.class.getSimpleName();
     private static List<Contact> contacts = new ArrayList<>();
@@ -72,7 +70,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Ad
     private ContactsAdapter adapter;
     private Realm realm;
     private TextView emptyTextView;
-    private PullToRefreshListView listView;
+    private ListView listView;
     private View refreshButton;
     private final View.OnClickListener listener = new View.OnClickListener() {
         @Override
@@ -98,24 +96,21 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Ad
             listView.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    listView.onRefreshComplete();
+                    swipeRefreshLayout.setRefreshing(false);
                 }
             }, 10000);
         }
     };
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     public ContactFragment() {
         // Required empty public constructor
     }
 
-    @Override
-    public void onAttach(Context activity) {
-        setRetainInstance(true);
-        super.onAttach(activity);
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        setRetainInstance(true);
         super.onCreate(savedInstanceState);
         realm = User.Realm(getActivity());
     }
@@ -129,17 +124,13 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Ad
         View view = inflater.inflate(R.layout.fragment_contact, container, false);
         adapter = new ContactsAdapter(getActivity(), contacts, false);
         //required so that we can operate on it with no fear since calling getListView before onCreateView returns is not safe
-        listView = ((PullToRefreshListView) view.findViewById(R.id.list));
-        ILoadingLayout proxy = listView.getLoadingLayoutProxy();
-        proxy.setRefreshingLabel(getString(R.string.refreshing));
-        proxy.setReleaseLabel(getString(R.string.release_to_refresh));
-        proxy.setPullLabel(getString(R.string.pull_to_refresh));
+        listView = ((ListView) view.findViewById(R.id.list));
+        swipeRefreshLayout = ((SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh_layout));
         refreshButton = view.findViewById(R.id.refresh_button);
         ViewUtils.setTypeface(((TextView) refreshButton), TypeFaceUtil.ROBOTO_REGULAR_TTF);
 
         ViewUtils.hideViews(refreshButton);
-        listView.setScrollEmptyView(false);
-        listView.setOnRefreshListener(this);
+        swipeRefreshLayout.setOnRefreshListener(this);
         emptyTextView = ((TextView) view.findViewById(R.id.tv_empty));
         emptyTextView.setText(R.string.loading);
         ViewUtils.setTypeface(emptyTextView, TypeFaceUtil.ROBOTO_REGULAR_TTF);
@@ -192,12 +183,6 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Ad
         ContactsManager.getInstance().findAllContacts(filter, comparator, contactsFindCallback);
     }
 
-
-    @Override
-    public void onRefresh(PullToRefreshBase refreshView) {
-        refresh();
-    }
-
     private void refresh() {
         ViewUtils.hideViews(refreshButton);
         emptyTextView.setText(R.string.loading);
@@ -210,5 +195,10 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Ad
         }, 10000);
     }
 
+    @Override
+    public void onRefresh() {
+        swipeRefreshLayout.setRefreshing(true);
+        refresh();
+    }
 }
 

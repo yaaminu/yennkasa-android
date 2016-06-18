@@ -1,6 +1,7 @@
 package com.pairapp.ui;
 
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -18,7 +19,6 @@ import com.pairapp.util.Config;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
-import com.rey.material.app.DialogFragment;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -27,7 +27,7 @@ public class VerificationFragment extends Fragment {
     private static final String TAG = VerificationFragment.class.getSimpleName();
     private static final String KEY_TOKEN_SENT = "tokenSent" + TAG;
     public static final String VERIFICATION_TOKEN = "verificationToken";
-    private DialogFragment progressDialog;
+    private ProgressDialog progressDialog;
     private EditText etVerification;
     private Callbacks callback;
     private final View.OnClickListener listener = new View.OnClickListener() {
@@ -50,11 +50,11 @@ public class VerificationFragment extends Fragment {
     private TextView notice;
 
     private void sendToken() {
-        progressDialog.show(getFragmentManager(), null);
+        progressDialog.show();
         UserManager.getInstance().sendVerificationToken(new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
-                UiHelpers.dismissProgressDialog(progressDialog);
+                progressDialog.dismiss();
                 if (e != null) {
                     ErrorCenter.reportError(TAG, e.getMessage());
                 } else {
@@ -98,7 +98,9 @@ public class VerificationFragment extends Fragment {
         notice = (TextView) view.findViewById(R.id.tv_verification_notice);
         ViewUtils.setTypeface(notice, TypeFaceUtil.ROBOTO_LIGHT_TTF);
         setUpViews(buttonVerify, resendToken, notice);
-        progressDialog = UiHelpers.newProgressDialog();
+        progressDialog = new ProgressDialog(getContext());
+        progressDialog.setMessage(getString(R.string.st_please_wait));
+        progressDialog.setCancelable(false);
         if (savedInstanceState != null) {
             String token = savedInstanceState.getString(VERIFICATION_TOKEN);
             if (token != null) {
@@ -124,11 +126,11 @@ public class VerificationFragment extends Fragment {
         if (TextUtils.isEmpty(code) || code.length() < 4 && !TextUtils.isDigitsOnly(code)) {
             UiHelpers.showErrorDialog(getActivity(), getString(R.string.token_invalid));
         } else {
-            progressDialog.show(getFragmentManager(), null);
+            progressDialog.show();
             UserManager.getInstance().verifyUser(code, new UserManager.CallBack() {
                 @Override
                 public void done(Exception e) {
-                    UiHelpers.dismissProgressDialog(progressDialog);
+                    progressDialog.dismiss();
                     if (e != null) {
                         ErrorCenter.reportError(TAG, e.getMessage());
                     } else {
@@ -147,11 +149,11 @@ public class VerificationFragment extends Fragment {
     }
 
     private void resendToken() {
-        progressDialog.show(getFragmentManager(), null);
+        progressDialog.show();
         UserManager.getInstance().resendToken(new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
-                UiHelpers.dismissProgressDialog(progressDialog);
+                progressDialog.dismiss();
                 if (e != null) {
                     ErrorCenter.reportError(TAG, e.getMessage());
                 }

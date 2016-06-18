@@ -12,7 +12,6 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NavUtils;
 import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
@@ -143,27 +142,6 @@ public class UiHelpers {
                 okTxt = getString(context, okText),
                 noTxt = getString(context, noText);
         showErrorDialog(context, messageText, okTxt, noTxt, ok, no);
-    }
-
-    public static DialogFragment newProgressDialog() {
-        return newProgressDialog(false);
-    }
-
-    public static DialogFragment newProgressDialog(final boolean cancelable) {
-
-        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
-            @Override
-            protected void onBuildDone(Dialog dialog) {
-                dialog.layoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                ViewUtils.setTypeface((TextView) dialog.findViewById(R.id.textView), TypeFaceUtil.ROBOTO_REGULAR_TTF);
-                dialog.setCancelable(cancelable);
-                dialog.setCanceledOnTouchOutside(cancelable);
-            }
-        };
-        builder.contentView(R.layout.progress_dialog_indeterminate);
-        DialogFragment fragment = DialogFragment.newInstance(builder);
-        fragment.setCancelable(cancelable);
-        return fragment;
     }
 
     public static void showStopAnnoyingMeDialog(FragmentActivity activity, final String key, int message, int ok, int no, Listener okListener, Listener noListener) {
@@ -426,30 +404,6 @@ public class UiHelpers {
         return new Pair<>(actualPath, type);
     }
 
-    public static void dismissProgressDialog(final DialogFragment dialogFragment) {
-        if (dialogFragment != null) {
-            try {
-                FragmentManager supportFragmentManager = dialogFragment.getActivity().getSupportFragmentManager();
-                supportFragmentManager.beginTransaction()
-                        .remove(dialogFragment)
-                        .commitAllowingStateLoss();
-            } catch (Exception ignored) {
-            }
-
-            //noinspection ConstantConditions
-            TaskManager.executeOnMainThread(new Runnable() {
-                @Override
-                public void run() {
-                    //noinspection EmptyCatchBlock
-                    try {
-                        dialogFragment.dismiss();
-                    } catch (Exception ignored) {
-                    }
-                }
-            });
-        }
-    }
-
     public static void gotoSettingsActivity(Context context, int item) {
         Intent intent = new Intent(context, SettingsActivity.class);
         intent.putExtra(SettingsActivity.EXTRA_ITEM, item);
@@ -682,7 +636,7 @@ public class UiHelpers {
         builder.positiveAction(ok);
         builder.negativeAction(no);
         DialogFragment fragment = DialogFragment.newInstance(builder);
-        fragment.show(activity.getSupportFragmentManager(), null);
+//        fragment.show(activity.getSupportFragmentManager(), null);
 
     }
 

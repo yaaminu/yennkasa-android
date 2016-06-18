@@ -1,5 +1,6 @@
 package com.pairapp.ui;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -26,7 +27,6 @@ import com.pairapp.util.GcmUtils;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
-import com.rey.material.app.DialogFragment;
 
 
 public class SetUpActivity extends PairAppBaseActivity implements VerificationFragment.Callbacks,
@@ -36,12 +36,12 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     private static final String STAGE = "staSKDFDge", SETUP_PREFS_KEY = "setuSLFKA", OUR_TAG = "ourTag";
     int attempts = 0;
     private int stage = UNKNOWN;
-    private DialogFragment progressDialog;
+    private ProgressDialog progressDialog;
     private String TAG = SetUpActivity.class.getSimpleName();
     private final UserManager.CallBack loginOrSignUpCallback = new UserManager.CallBack() {
         @Override
         public void done(Exception e) {
-            UiHelpers.dismissProgressDialog(progressDialog);
+            progressDialog.dismiss();
             if (e == null) {
                 stage = VERIFICATION_STAGE;
                 next();
@@ -71,7 +71,9 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.set_up_activity);
-        progressDialog = UiHelpers.newProgressDialog();
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage(getString(R.string.st_please_wait));
+        progressDialog.setCancelable(false);
     }
 
     @Override
@@ -131,11 +133,11 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     }
 
     private void doGoBackToLogin() {
-        progressDialog.show(getSupportFragmentManager(), null);
+        progressDialog.show();
         UserManager.getInstance().reset(new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
-                UiHelpers.dismissProgressDialog(progressDialog);
+                progressDialog.dismiss();
                 if (e == null) {
                     stage = LOGIN_STAGE;
                     next();
@@ -182,11 +184,11 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     }
 
     private void doChangeDp(final String newDp) {
-        progressDialog.show(getSupportFragmentManager(), null);
+        progressDialog.show();
         userManager.changeDp(newDp, new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
-                UiHelpers.dismissProgressDialog(progressDialog);
+                progressDialog.dismiss();
                 if (e != null) {
                     try {
                         UiHelpers.
@@ -236,7 +238,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
 
     @Override
     public void onSignUp(String userName, String phoneNumber, String userIsoCountry) {
-        progressDialog.show(getSupportFragmentManager(), "");
+        progressDialog.show();
         userManager.signUp(userName, phoneNumber, userIsoCountry, loginOrSignUpCallback);
     }
 
@@ -264,14 +266,14 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
                 }
 
             });
-        TextView appname = (TextView) view.findViewById(R.id.tv_app_name),
-                appVersion = ((TextView) view.findViewById(R.id.tv_app_version));
-        appVersion.setText(BuildConfig.VERSION_NAME + " (" + BuildConfig.VERSION_CODE + ")");
-        ViewUtils.setTypeface(appname, TypeFaceUtil.two_d_font);
-        ViewUtils.setTypeface(appVersion, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+            TextView appname = (TextView) view.findViewById(R.id.tv_app_name),
+                    appVersion = ((TextView) view.findViewById(R.id.tv_app_version));
+            appVersion.setText(BuildConfig.VERSION_NAME + " (" + BuildConfig.VERSION_CODE + ")");
+            ViewUtils.setTypeface(appname, TypeFaceUtil.two_d_font);
+            ViewUtils.setTypeface(appVersion, TypeFaceUtil.ROBOTO_REGULAR_TTF);
 
-        TextView copyRight = ((TextView) view.findViewById(R.id.copy_right));
-        ViewUtils.setTypeface(copyRight, TypeFaceUtil.two_d_font);
+            TextView copyRight = ((TextView) view.findViewById(R.id.copy_right));
+            ViewUtils.setTypeface(copyRight, TypeFaceUtil.two_d_font);
 
             return view;
         }
@@ -284,39 +286,40 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
         }
 
         private void goToNext() {
-         SetUpActivity activity = (SetUpActivity) getActivity();
-         if(activity != null && activity.stage == UNKNOWN){
-            activity.stage = LOGIN_STAGE;
-            activity.next();
-           }
+            SetUpActivity activity = (SetUpActivity) getActivity();
+            if (activity != null && activity.stage == UNKNOWN) {
+                activity.stage = LOGIN_STAGE;
+                activity.next();
+            }
         }
-        private final Runnable runnable= new Runnable() {
-                @Override
-                public void run() {
-                    goToNext();
-                }
-            };
+
+        private final Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                goToNext();
+            }
+        };
     }
 
-  @Override
-  protected void showMessage(){
-    if(stage != UNKNOWN){
- int message = 0;
-                    if (!GcmUtils.hasGcm()) {
-                        message = R.string.no_gcm_error_message;
-                    } else if (GcmUtils.gcmUpdateRequired()) {
-                        message = R.string.gcm_update_required_prompt;
+    @Override
+    protected void showMessage() {
+        if (stage != UNKNOWN) {
+            int message = 0;
+            if (!GcmUtils.hasGcm()) {
+                message = R.string.no_gcm_error_message;
+            } else if (GcmUtils.gcmUpdateRequired()) {
+                message = R.string.gcm_update_required_prompt;
+            }
+            if (message != 0) {
+                final int tmp = message;
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        UiHelpers.showStopAnnoyingMeDialog(SetUpActivity.this,
+                                "gcmUnavialble" + TAG, R.string.stop_annoying_me, tmp, R.string.i_know, android.R.string.cancel, null, null);
                     }
-                    if (message != 0) {
-                        final int tmp = message;
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                UiHelpers.showStopAnnoyingMeDialog(SetUpActivity.this,
-                                        "gcmUnavialble" + TAG, R.string.stop_annoying_me, tmp, R.string.i_know, android.R.string.cancel, null, null);
-                            }
-                        });
-                    }
+                });
+            }
+        }
     }
-  }
 }
