@@ -31,7 +31,7 @@ public class Config {
     private static final String MESSAGE_API_GENY = "http://10.0.3.2:5000/fileApi/message";
     private static final String MESSAGE_API_REAL_PHONE = "http://192.168.43.42:5000/fileApi/message";
     private static final String MESSAGE_SOCKET_API_REMOTE = "https://pairap-message.herokuapp.com/message";
-    private static final String MESSAGE_SOCKET_API_LOCAL = "http://10.0.3.2:3000/message";
+    private static final String MESSAGE_SOCKET_API_LOCAL = "http://10.0.3.2:3000";
     private static final String LIVE_SOCKET_API_REMOTE = "https://pairapp-live.herokuapp.com/live";
     private static final String LIVE_SOCKET_API_LOCAL = "http://10.0.3.2:4000/live";
     private static final String ENV_PROD = "prod";
@@ -248,7 +248,7 @@ public class Config {
 //        if (isEmulator()) {
 //            return MESSAGE_SOCKET_API_LOCAL;
 //        } else {
-            return MESSAGE_SOCKET_API_REMOTE;
+            return MESSAGE_SOCKET_API_LOCAL;
         //}
     }
 
