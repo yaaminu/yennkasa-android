@@ -447,6 +447,7 @@ public class PairAppClient extends Service {
             PLog.d(TAG, "message with id : %s dispatch failed with reason: " + reason, messageId);
             LiveCenter.releaseProgressTag(messageId);
             progressMap.remove(messageId);
+            disPatchingThreads.remove(messageId);
             cancelNotification(messageId);
         }
 
@@ -455,6 +456,7 @@ public class PairAppClient extends Service {
             PLog.d(TAG, "message with id : %s dispatched successfully", messageId);
             LiveCenter.releaseProgressTag(messageId);
             progressMap.remove(messageId);
+            disPatchingThreads.remove(messageId);
             cancelNotification(messageId);
             Realm realm = Message.REALM(PairAppClient.this);
             Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
