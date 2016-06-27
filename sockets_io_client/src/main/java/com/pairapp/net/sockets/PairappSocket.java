@@ -7,7 +7,9 @@ import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
 import com.pairapp.util.ThreadUtils;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -19,9 +21,9 @@ public class PairappSocket {
     private final MessageParser parser;
     private final WebSocketClient webSocketClient;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
-    private final SendListener sendListener;
+    private final Set<SendListener> sendListeners;
 
-    private PairappSocket(Map<String, String> headers, MessageParser parser, SendListener sendListener) {
+    private PairappSocket(Map<String, String> headers, MessageParser parser) {
         this.parser = parser;
         webSocketClient = new WebSocketClient.Builder()
                 .endpoint(Config.getMessageEndpoint())
@@ -31,7 +33,29 @@ public class PairappSocket {
                 .logger(logger)
                 .timeOut(5000)
                 .build();
-        this.sendListener = sendListener;
+        this.sendListeners = new HashSet<>(2);
+    }
+
+    public MessageParser getParser() {
+        return parser;
+    }
+
+    public void addSendListener(SendListener sendListener) {
+        if (!initialized.get()) {
+            throw new IllegalStateException("not initialised");
+        }
+        GenericUtils.ensureNotNull(sendListener);
+        synchronized (sendListeners) {
+            sendListeners.add(sendListener);
+        }
+    }
+
+    public void unRegisterSendListener(SendListener sendListener) {
+        if (!initialized.get()) {
+            throw new IllegalStateException("not initialised");
+        }
+        GenericUtils.ensureNotNull(sendListener);
+        sendListeners.remove(sendListener);
     }
 
     public void init() {
@@ -59,10 +83,13 @@ public class PairappSocket {
 
     public void disConnectBlocking() {
         ThreadUtils.ensureNotMain();
-        if (!initialized.get()) {
+        if (!initialized.getAndSet(false)) {
             throw new IllegalStateException("not initialised");
         }
         webSocketClient.closeConnectionBlocking();
+        synchronized (sendListeners) {
+            sendListeners.clear();
+        }
     }
 
     public void send(byte[] bytes) {
@@ -75,19 +102,19 @@ public class PairappSocket {
         }
     }
 
-    public static PairappSocket create(Map<String, String> headers, MessageParser parser, SendListener sendListener) {
+    public static PairappSocket create(Map<String, String> headers, MessageParser parser) {
         ThreadUtils.ensureNotMain();
-        GenericUtils.ensureNotNull(headers, parser, sendListener);
-        return new PairappSocket(headers, parser, sendListener);
+        GenericUtils.ensureNotNull(headers, parser);
+        return new PairappSocket(headers, parser);
     }
 
-    interface SendListener {
-        void onSent(byte[] data);
+    public interface SendListener {
+        void onSentSucceeded(byte[] data);
 
-        void onSendError(byte[] data);
+        void onSendFailed(byte[] data);
     }
 
-    interface MessageParser {
+    public interface MessageParser {
         void feed(byte[] bytes);
     }
 
@@ -195,12 +222,20 @@ public class PairappSocket {
 
         @Override
         public void onSendError(boolean isBinary, byte[] data) {
-            sendListener.onSendError(data);
+            synchronized (sendListeners) {
+                for (SendListener sendListener : sendListeners) {
+                    sendListener.onSendFailed(data);
+                }
+            }
         }
 
         @Override
         public void onSendSuccess(boolean isBinary, byte[] data) {
-            sendListener.onSent(data);
+            synchronized (sendListeners) {
+                for (SendListener sendListener : sendListeners) {
+                    sendListener.onSentSucceeded(data);
+                }
+            }
         }
 
         @Override

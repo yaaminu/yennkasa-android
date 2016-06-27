@@ -127,8 +127,7 @@ public class WebSocketClient {
     }
 
     public synchronized void closeConnectionBlocking() {
-        if (selfClosed.get() || !internalWebSocket.isOpen()) return;
-        selfClosed.set(true);
+        if (selfClosed.getAndSet(true)) return;
         if (internalWebSocket.isOpen()) {
             internalWebSocket.sendClose();
         } else {

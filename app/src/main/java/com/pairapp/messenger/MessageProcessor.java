@@ -18,7 +18,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -69,11 +68,7 @@ public class MessageProcessor extends IntentService {
             String type = getType(data1);
             //noinspection IfCanBeSwitch
             if (type.equals(SYNC_MESSAGES)) {
-                MessagesProvider provider = PairAppClient.getMessageProvider();
-                List<Message> messages = provider.retrieveMessages();
-                for (Message message : messages) {
-                    doProcessMessage(message);
-                }
+                // FIXME: 6/21/2016 setup a provider that will sync messages
             } else if (type.equals(MESSAGE)) {
                 Message message = Message.fromJSON(data);
                 doProcessMessage(message);
