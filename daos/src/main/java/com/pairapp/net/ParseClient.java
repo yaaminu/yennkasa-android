@@ -913,7 +913,7 @@ public class ParseClient implements UserApiV2 {
         Parse.setLogLevel(BuildConfig.DEBUG ? Parse.LOG_LEVEL_VERBOSE : Parse.LOG_LEVEL_NONE);
         Parse.initialize(new Parse.Configuration.Builder(application)
                 .enableLocalDataStore()
-                .server("http://10.0.3.2:4000/parse")
+                .server(Config.getDataServer())
                 .applicationId("RcCxnXwO1mpkSNrU9u4zMtxQac4uabLNIFa662ZY")
                 .clientKey("f1ad1Vfjisr7mVBDSeoFO1DobD6OaLkggHvT2Nk4")
                 .build());
