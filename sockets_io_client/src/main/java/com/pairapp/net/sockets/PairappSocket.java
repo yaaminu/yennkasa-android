@@ -4,7 +4,6 @@ import com.pairapp.util.Config;
 import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
-import com.pairapp.util.TaskManager;
 import com.pairapp.util.ThreadUtils;
 
 import java.util.HashSet;
@@ -34,10 +33,6 @@ public class PairappSocket {
                 .timeOut(5000)
                 .build();
         this.sendListeners = new HashSet<>(2);
-    }
-
-    public MessageParser getParser() {
-        return parser;
     }
 
     public void addSendListener(SendListener sendListener) {
@@ -70,15 +65,6 @@ public class PairappSocket {
 
     public boolean isConnected() {
         return initialized.get() && webSocketClient.isConnected();
-    }
-
-    public void initNonBlock() {
-        TaskManager.executeNow(new Runnable() {
-            @Override
-            public void run() {
-                init();
-            }
-        }, false);
     }
 
     public void disConnectBlocking() {
