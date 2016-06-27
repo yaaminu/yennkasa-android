@@ -21,8 +21,8 @@ public class Config {
     public static final String APP_PREFS = "prefs";
     private static final String TAG = Config.class.getSimpleName();
 
-    private static final String SERVER_URL_LOCAL = "http://10.0.3.2:5000";
-    private static final String SERVER_URL_LOCAL_REAL_DEVICE = "http://192.168.43.42:5000";
+    private static final String SERVER_URL_LOCAL = "http://10.0.3.2:4000";
+    private static final String SERVER_URL_LOCAL_REAL_DEVICE = "http://192.168.43.42:4000";
     private static final String MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE = "http://192.168.43.42:3000";
     private static final String MESSAGE_SOCKET_API_LOCAL = "http://10.0.3.2:3000";
 
