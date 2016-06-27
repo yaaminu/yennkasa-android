@@ -1,2 +1,2 @@
-include ':app', ':lib', ':daos', ':sockets_io_client', ':utils', ':fileclient', ':cropper'
+include ':app', ':lib', ':daos', ':websocket-client', ':utils', ':fileclient', ':cropper'
 include ':library'
