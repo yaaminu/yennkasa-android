@@ -6,7 +6,7 @@ package com.pairapp.net;
 public class PARSE_CONSTANTS {
     public static final String FEEDBACK_CLASS_NAME = "feedback";
     static final String USER_CLASS_NAME = "user", GROUP_CLASS_NAME = "group";
-        public static final String FIELD_ID = "userId",
+    public static final String FIELD_ID = "userId",
             FIELD_NAME = "name",
             FIELD_ADMIN = "admin",
             FIELD_MEMBERS = "members",
@@ -16,6 +16,7 @@ public class PARSE_CONSTANTS {
             FIELD_COUNTRY = "country",
             FIELD_TOKEN = "token",
             FIELD_DP = "DP",
-            FIELD_VERIFIED = "verified";
+            FIELD_VERIFIED = "verified",
+            FIELD_AUTH_TOKEN = "authToken";
 
 }

@@ -893,22 +893,22 @@ public class LiveCenter {
                     quit();
                     break;
                 case TRACK_USER:
-                    doTrackUser(((String) msg.obj));
+                  //  doTrackUser(((String) msg.obj));
                     break;
                 case IN_CHAT_ROOM:
-                    doNotifyLeftOrJoinChatRoom((String) msg.obj, true);
+                    //doNotifyLeftOrJoinChatRoom((String) msg.obj, true);
                     break;
                 case LEFT_CHAT_ROOM:
-                    doNotifyLeftOrJoinChatRoom((String) msg.obj, false);
+                    //doNotifyLeftOrJoinChatRoom((String) msg.obj, false);
                     break;
                 case NOTIFY_TYPING:
-                    doNotifyTyping(((String) msg.obj), true);
+                    //doNotifyTyping(((String) msg.obj), true);
                     break;
                 case NOTIFY_NOT_TYPING:
-                    doNotifyTyping(((String) msg.obj), false);
+                    //doNotifyTyping(((String) msg.obj), false);
                     break;
                 case DO_NOT_TRACK_USER:
-                    stopTrackingUser(((String) msg.obj));
+                    //stopTrackingUser(((String) msg.obj));
                 default:
                     return true;
             }

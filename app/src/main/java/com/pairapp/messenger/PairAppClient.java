@@ -19,9 +19,9 @@ import android.os.Looper;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.util.Pair;
+import android.util.Log;
 
 import com.pairapp.BuildConfig;
-import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.Errors.PairappException;
 import com.pairapp.R;
 import com.pairapp.data.Message;
@@ -29,30 +29,22 @@ import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.ParseClient;
 import com.pairapp.net.ParseFileClient;
+import com.pairapp.net.sockets.PairappSocket;
 import com.pairapp.ui.ChatActivity;
 import com.pairapp.util.Config;
-import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
 import com.pairapp.util.ThreadUtils;
-import com.sinch.android.rtc.ClientRegistration;
-import com.sinch.android.rtc.ErrorType;
-import com.sinch.android.rtc.PushPair;
-import com.sinch.android.rtc.SinchClient;
-import com.sinch.android.rtc.SinchClientListener;
-import com.sinch.android.rtc.SinchError;
-import com.sinch.android.rtc.messaging.MessageClient;
-import com.sinch.android.rtc.messaging.MessageClientListener;
-import com.sinch.android.rtc.messaging.MessageDeliveryInfo;
-import com.sinch.android.rtc.messaging.MessageFailureInfo;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.Collection;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -75,54 +67,19 @@ public class PairAppClient extends Service {
     static final String VERSION = "version";
     public static final int not_id = 10987;
     static final int notId = 10983;
-    private static final String ACTION_START_SINCH_CLIENT = "sinchClientStartProblem";
-    private static final AtomicBoolean sinchClientStarted = new AtomicBoolean(false);
     public static final String ACTION_SEND_MESSAGE = "sendMessage", ACTION_CANCEL_DISPATCH = "cancelMessage";
     public static final String EXTRA_MESSAGE = "message";
-    private static Dispatcher<Message> SOCKETSIO_DISPATCHER;
     private static AtomicBoolean isClientStarted = new AtomicBoolean(false);
-    private static MessagesProvider messageProvider = new ParseMessageProvider();
     private static Stack<Activity> backStack = new Stack<>();
-    private PairAppClientInterface INTERFACE;// = new PairAppClientInterface();
-    private Dispatcher<Message> PARSE_MESSAGE_DISPATCHER, SINCHDISPATCHER;
+    private PairAppClientInterface INTERFACE;
     private WorkerThread WORKER_THREAD;
-    private static Map<String, String> credentials;
-    private SinchClient client;
+    private WebSocketDispatcher webSocketDispatcher;
 
     private final Map<String, Future<?>> disPatchingThreads = new ConcurrentHashMap<>();
 
-    private final ConnectionUtils.ConnectivityListener listener = new ConnectionUtils.ConnectivityListener() {
-        @Override
-        public void onConnectivityChanged(boolean connected) {
-            PLog.d(TAG, connected ? "connected" : "disconnected");
-            if (isClientStarted.get() && connected) {
-                if (!sinchClientStarted.get()) {
-                    android.os.Message msg = android.os.Message.obtain();
-                    msg.what = MessageHandler.START_SINCH;
-                    WORKER_THREAD.handler.sendMessage(msg);
-                }
-                // TaskManager.executeNow(new Runnable(){
-                //     public void run(){
-                //        attemptToSendAllUnsentGroupMessages();
-                //     }
-                // });
-            }
-        }
-    };
     private MediaPlayer mediaPlayer;
     private final Object playerLock = new Object();
 
-    // private void attemptToSendAllUnsentGroupMessages(){
-    //     Realm realm = Message.REALM(this);
-    //     RealmResults<Message> messages = realm.where(Message.class)
-    //                                           //group messages
-    //                                           .contains(Message.FIELD_TO,"@")
-    //                                           .equalTo(Message.FIELD_STATE,Message.STATE_PENDING).findAll();
-    //     for (int i=0;i < messages.size(); i++) {
-    //         doSendMessage(Message.copy(messages.get(i)));
-    //     }
-    //     realm.close();
-    // }
 
     public static void startIfRequired(Context context) {
         if (!UserManager.getInstance().isUserVerified()) {
@@ -139,9 +96,6 @@ public class PairAppClient extends Service {
 
     }
 
-    public static MessagesProvider getMessageProvider() {
-        return messageProvider;
-    }
 
     public static void downloadAttachment(Message message) {
         if (message == null) {
@@ -166,20 +120,10 @@ public class PairAppClient extends Service {
         if (backStack.size() > 0) { //avoid empty stack exceptions
             backStack.pop();
         }
-
         if (backStack.isEmpty()) {
-
-            TaskManager.executeNow(new Runnable() {
-                @Override
-                public void run() {
-                    LiveCenter.stop();
-                    if (SOCKETSIO_DISPATCHER != null) {
-                        SOCKETSIO_DISPATCHER.close();
-                        SOCKETSIO_DISPATCHER = null;
-                    }
-                    MessageCenter.stopListeningForSocketMessages();
-                }
-            }, false);
+            // FIXME: 6/21/2016 implement this
+            PLog.d(TAG, "marking user as offline");
+            LiveCenter.stop();
         }
     }
 
@@ -193,8 +137,9 @@ public class PairAppClient extends Service {
             TaskManager.executeNow(new Runnable() {
                 @Override
                 public void run() {
+                    // TODO: 6/21/2016 implement this
+                    Log.d(TAG, "marking user as online");
                     LiveCenter.start();
-                    MessageCenter.startListeningForSocketMessages();
                 }
             }, true);
         }
@@ -306,13 +251,7 @@ public class PairAppClient extends Service {
             if (action == null) {
                 action = intent.getAction();
             }
-            if (action != null
-                    && action.equals(ACTION_START_SINCH_CLIENT)
-                    && isClientStarted.get()) {
-                android.os.Message message = android.os.Message.obtain();
-                message.what = MessageHandler.START_SINCH;
-                WORKER_THREAD.handler.sendMessage(message);
-            }
+
             if (action != null && isClientStarted.get()) {
                 if (ACTION_SEND_MESSAGE.equals(action)) {
                     String messageJson = intent.getStringExtra(EXTRA_MESSAGE);
@@ -331,9 +270,6 @@ public class PairAppClient extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         if (UserManager.getInstance().isUserVerified()) {
-//            if (intent != null && intent.getStringExtra(ACTION).equals(ACTION_SEND_ALL_UNSENT)) {
-//                attemptToSendAllUnsentMessages();
-//            }
             return INTERFACE;
         }
         throw new IllegalStateException("user must be logged in");
@@ -359,51 +295,67 @@ public class PairAppClient extends Service {
         super.onDestroy();
     }
 
+    private PairappSocket pairappSocket;
+
+    private WebSocketDispatcher.MessageCodec messageCodec = new WebSocketDispatcher.MessageCodec() {
+        @Override
+        public byte[] encode(Message message) {
+
+            byte[] msgBuffer = Message.toJSON(message).getBytes();
+            ByteBuffer byteBuffer = ByteBuffer.allocate(msgBuffer.length +
+                    (Message.isGroupMessage(message) ? message.getTo().getBytes().length : 10));
+            byteBuffer.order(ByteOrder.BIG_ENDIAN);
+            byteBuffer.put((byte) 4);
+            if (Message.isGroupMessage(message)) {
+                byteBuffer.put(message.getTo().getBytes());
+            } else {
+                byteBuffer.putDouble(Double.parseDouble(message.getTo()));
+            }
+            byteBuffer.put((byte) '-');
+            byteBuffer.put(msgBuffer);
+            return byteBuffer.array();
+        }
+
+        @Override
+        public Message decode(byte[] bytes) {
+            int i = 0;
+            while (bytes[i++] != '-') ;
+            byte[] sliced = new byte[bytes.length - i];
+            System.arraycopy(bytes, i, sliced, 0, sliced.length);
+            return Message.fromJSON(new String(sliced));
+        }
+    };
+    private final PairappSocket.MessageParser parser = new PairappSocket.MessageParser() {
+        @Override
+        public void feed(byte[] bytes) {
+            Message message = Message.fromJSON(new String(bytes));
+            Intent intent = new Intent(PairAppClient.this, MessageProcessor.class);
+            intent.putExtra(MessageProcessor.MESSAGE, Message.toJSON(message));
+            startService(intent);
+        }
+    };
+
     private synchronized void bootClient() {
         ThreadUtils.ensureNotMain();
         if (!isClientStarted.get()) {
             INTERFACE = new PairAppClientInterface();
-            PARSE_MESSAGE_DISPATCHER = ParseDispatcher.getInstance(ParseFileClient.getInstance(), monitor);
-//            setUpSinch();
-            ConnectionUtils.registerConnectivityListener(listener);
-//            MessageCenter.startListeningForSocketMessages();
+            String authToken = UserManager.getInstance().getCurrentUserAuthToken();
+            Map<String, String> opts = new HashMap<>(1);
+            opts.put("Authorization", authToken);
+            pairappSocket = PairappSocket.create(opts, parser);
+            pairappSocket.init();
+            webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, pairappSocket, messageCodec);
             isClientStarted.set(true);
         }
     }
 
 
-    private void setUpSinch() {
-        if (ConnectionUtils.isConnected()) {
-            client = SinchUtils.makeSinchClient(this, UserManager.getMainUserId(), clientListener);
-            client.setSupportMessaging(true);
-            client.setSupportActiveConnectionInBackground(true);
-            client.startListeningOnActiveConnection();
-            client.start();
-            MessageClient messageClient = client.getMessageClient();
-            SINCHDISPATCHER = SinchDispatcher.createInstance(ParseFileClient.getInstance(), monitor, messageClient);
-            messageClient.addMessageClientListener(new IncomingMessageListener());
-        }
-    }
-
     private synchronized void shutDown() {
         ThreadUtils.ensureNotMain();
         if (isClientStarted.get()) {
-            ConnectionUtils.unRegisterConnectivityListener(listener);
-            if (PARSE_MESSAGE_DISPATCHER != null) {
-                PARSE_MESSAGE_DISPATCHER.close();
-            }
-
-            if (SOCKETSIO_DISPATCHER != null) {
-                SOCKETSIO_DISPATCHER.close();
-            }
-//            if (SINCHDISPATCHER != null) {
-//                SINCHDISPATCHER.close();
-//            }
-//            if (client != null) {
-//                client.stopListeningOnActiveConnection();
-//                client.terminateGracefully();
-//            }
-//            MessageCenter.stopListeningForSocketMessages();
+            // FIXME: 6/21/2016 disconnect from server
+            webSocketDispatcher.close();
+            pairappSocket.disConnectBlocking();
             PLog.i(TAG, TAG + ": bye");
             INTERFACE = null;
             isClientStarted.set(false);
@@ -453,6 +405,7 @@ public class PairAppClient extends Service {
 
         @Override
         public void onDispatchSucceeded(String messageId) {
+            // FIXME: 6/21/2016 leak detected. not freeing futures stored in dispatchinthreads
             PLog.d(TAG, "message with id : %s dispatched successfully", messageId);
             LiveCenter.releaseProgressTag(messageId);
             progressMap.remove(messageId);
@@ -515,7 +468,7 @@ public class PairAppClient extends Service {
     AtomicBoolean shouldPlaySound = new AtomicBoolean(true);
 
     private void playSound() {
-        if (shouldPlaySound.getAndSet(false)) {
+        if (shouldPlaySound.getAndSet(false)) { //// FIXME: 6/21/2016 why main thread?
             new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -547,7 +500,7 @@ public class PairAppClient extends Service {
     }
 
     private void sendMessageInternal(Message message) {
-        if (!Message.isTextMessage(message)) {
+        if (!Message.isTextMessage(message)) { // FIXME: 6/21/2016 why not check for all kinds of messages?
             Realm realm = Message.REALM(this);
             try {
                 String messageId = message.getId();
@@ -566,27 +519,7 @@ public class PairAppClient extends Service {
                 throw new RuntimeException(e.getCause());
             }
         }
-//        if (LiveCenter.isOnline(message.getTo()) && !UserManager.getInstance().isGroup(message.getTo())) {
-//            if (SOCKETSIO_DISPATCHER == null) {
-//                SOCKETSIO_DISPATCHER = SocketsIODispatcher.getInstance(credentials, monitor);
-//            }
-//            SOCKETSIO_DISPATCHER.dispatch(message);
-//        } else {
-//            PARSE_MESSAGE_DISPATCHER.dispatch(message);
-//        }
-        if (LiveCenter.isOnline(message.getTo())) {
-            if (SOCKETSIO_DISPATCHER == null) {
-                SOCKETSIO_DISPATCHER = SocketsIODispatcher.getInstance(ParseFileClient.getInstance(), monitor);
-            }
-            SOCKETSIO_DISPATCHER.dispatch(message);
-        } else {
-            PARSE_MESSAGE_DISPATCHER.dispatch(message);
-        }
-//        if (Message.isGroupMessage(message) || !sinchClientStarted.get()) {
-//            PARSE_MESSAGE_DISPATCHER.dispatch(message);
-//        } else {
-//            SINCHDISPATCHER.dispatch(message);
-//        }
+        webSocketDispatcher.dispatch(message);
     }
 
 
@@ -655,33 +588,6 @@ public class PairAppClient extends Service {
             }
         }
 
-        @SuppressWarnings("unused")
-        public void disPatchEvent(String eventName) {
-            oops();
-        }
-
-        @SuppressWarnings("unused")
-        public void disPatchEvent(String eventName, String details) {
-            oops();
-        }
-
-        @SuppressWarnings("unused")
-        public void callUser(String userId) {
-            oops();
-        }
-
-        public void notifyMessageSeen(Message message) {
-////            MessageCenter.notifyMessageSeen(Message.copy(message));
-//            if (message.getState() != Message.STATE_SEEN && !Message.isGroupMessage(message)) {
-//                message = Message.copy(message);
-//                android.os.Message message1 = android.os.Message.obtain();
-//                message1.what = MessageHandler.NOTIFY_MESSAGE_SEEN;
-//                message1.obj = message;
-//                WORKER_THREAD.handler.sendMessage(message1);
-//            }
-            PairAppClient.notifyMessageSeen(message);
-        }
-
         public void registerUINotifier(final Notifier notifier) {
             NotificationManager.INSTANCE.registerUI_Notifier(notifier);
         }
@@ -746,9 +652,10 @@ public class PairAppClient extends Service {
     }
 
     private class MessageHandler extends Handler {
-        private static final int SEND_MESSAGE = 0x0, SEND_BATCH = 0x01, SHUT_DOWN = 0x2,
-                START_SINCH = 0x3, NOTIFY_MESSAGE_SEEN = 0x4, /*PLAY_TONE = 0x5,*/
-                CANCEL_DISPATCH = 0x6;
+        private static final int SEND_MESSAGE = 0x0;
+        private static final int SEND_BATCH = 0x01;
+        private static final int SHUT_DOWN = 0x2;  /*PLAY_TONE = 0x5,*/
+        private static final int CANCEL_DISPATCH = 0x6;
 
         public MessageHandler(Looper looper) {
             super(looper);
@@ -772,20 +679,6 @@ public class PairAppClient extends Service {
                     } else {
                         //noinspection ConstantConditions
                         Looper.myLooper().quit();
-                    }
-                    break;
-                case START_SINCH:
-                    if (isClientStarted.get() && ConnectionUtils.isActuallyConnected()) {
-                        PLog.d(TAG, "not starting sinch client");
-//                        if (client == null) {
-//                            setUpSinch();
-//                        } else {
-//                            try {
-//                                client.start();
-//                            } catch (RuntimeException ignored) {
-//
-//                            }
-//                        }
                     }
                     break;
                 case CANCEL_DISPATCH:
@@ -840,136 +733,5 @@ public class PairAppClient extends Service {
             }
         }, false);
     }
-
-    private class IncomingMessageListener implements MessageClientListener {
-
-        @Override
-        public void onIncomingMessage(MessageClient messageClient, com.sinch.android.rtc.messaging.Message message) {
-            PLog.d(TAG, "message received from %s", message.getTextBody());
-            Intent intent;
-            intent = new Intent(Config.getApplicationContext(), MessageProcessor.class);
-            intent.putExtra(MessageCenter.KEY_MESSAGE, message.getTextBody());
-            startService(intent);
-            // Context applicationContext = Config.getApplicationContext();
-            // Intent intent = new Intent(applicationContext, MessageCenter.class);
-            // intent.putExtra(MessageCenter.KEY_PUSH_DATA, message.getTextBody());
-            // LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent);
-        }
-
-        @Override
-        public void onMessageSent(MessageClient messageClient, com.sinch.android.rtc.messaging.Message message, String s) {
-
-
-        }
-
-        @Override
-        public void onMessageFailed(MessageClient messageClient, com.sinch.android.rtc.messaging.Message message, MessageFailureInfo messageFailureInfo) {
-            if (messageFailureInfo.getSinchError().getErrorType() == ErrorType.CAPABILITY && BuildConfig.DEBUG) {
-                throw new IllegalStateException("sinch client used for service it does not support");
-            }
-            Realm realm = Message.REALM(PairAppClient.this);
-            try {
-                JSONObject object = new JSONObject(message.getTextBody());
-                if (object.length() == 1 && object.has(Message.FIELD_ID)) {
-////                    SharedPreferences preferences = Config.getPreferences(REPORTING_MESSAGES);
-////                    preferences.edit().remove(object.optString(Message.FIELD_ID)).apply();
-                    Message realmMessage = realm.where(Message.class).equalTo(Message.FIELD_ID, object.getString(Message.FIELD_ID)).findFirst();
-                    if (realmMessage != null) {
-                        if (isClientStarted.get()) {
-                            INTERFACE.notifyMessageSeen(Message.copy(realmMessage));
-                        } else {
-                            realm.beginTransaction();
-                            realmMessage.setState(Message.STATE_RECEIVED); //so that it will be retried by our adapter later
-                            realm.commitTransaction();
-                        }
-////                    SharedPreferences preferences = Config.getPreferences(REPORTING_MESSAGES);
-////                    preferences.edit().remove(msgId).apply();
-//                    realm.close();
-                    }
-                }
-            } catch (JSONException e) {
-                throw new RuntimeException(e.getCause());
-            } finally {
-                realm.close();
-            }
-        }
-
-        @Override
-        public void onMessageDelivered(MessageClient messageClient, MessageDeliveryInfo messageDeliveryInfo) {
-
-        }
-
-        @Override
-        public void onShouldSendPushData(MessageClient messageClient, com.sinch.android.rtc.messaging.Message message, List<PushPair> list) {
-
-        }
-    }
-
-    final SinchClientListener clientListener = new SinchClientListener() {
-        private int retryCount = 0, backOf = 500;
-        private static final String SINCH_ERROR = "com.idea.messenger.pairapclient.sinchError";
-
-        @Override
-        public void onClientStarted(SinchClient sinchClient) {
-            sinchClientStarted.set(true);
-            PLog.d(TAG, "client started! %s", new Date().toString());
-            ErrorCenter.cancel(SINCH_ERROR);
-            attemptToSendAllUnsentMessages();
-        }
-
-        @Override
-        public void onClientStopped(SinchClient sinchClient) {
-            PLog.d(TAG, "client stopped %s", new Date().toString());
-            sinchClientStarted.set(false);
-        }
-
-        @Override
-        public void onClientFailed(final SinchClient sinchClient, SinchError sinchError) {
-            PLog.d(TAG, "error on sinch client %s", sinchError.getErrorType().toString());
-            switch (sinchError.getErrorType()) {
-                case NETWORK:
-                    synchronized (SinchUtils.class) {
-                        ErrorCenter.reportError(SINCH_ERROR, Config.getApplicationContext().getString(R.string.disconected), ErrorCenter.ReportStyle.STICKY, ErrorCenter.INDEFINITE);
-                        if (ConnectionUtils.isConnected()) {
-                            if (retryCount > 15) {
-                                PLog.d(TAG, "failed to start sinch client after %s  attempts", 15 + "");
-                                sinchClient.stopListeningOnActiveConnection();
-                                sinchClient.terminate();
-                                return;
-                            }
-                            retryCount++;
-                            backOf *= 2;
-                            Looper looper = Looper.myLooper();
-                            if (looper == null) {
-                                throw new IllegalStateException();
-                            }
-                            android.os.Message msg = android.os.Message.obtain();
-                            msg.what = MessageHandler.START_SINCH;
-                            WORKER_THREAD.handler.sendMessageDelayed(msg, backOf);
-                        }
-                    }
-                    break;
-                case CAPABILITY:
-                    throw new IllegalStateException("sinch client used for a service it does not support");
-                case OTHER:
-                    Context context = Config.getApplicationContext();
-                    Intent intent = new Intent(context, PairAppClient.class);
-                    intent.putExtra(ACTION, ACTION_START_SINCH_CLIENT);
-                    ErrorCenter.reportError(TAG + "sinchFailure", context.getString(R.string.err_problem_setting_sinch_up), intent);
-                    break;
-                default:
-                    throw new AssertionError("unknown error kind");
-            }
-        }
-
-        @Override
-        public void onRegistrationCredentialsRequired(SinchClient sinchClient, ClientRegistration clientRegistration) {
-        }
-
-        @Override
-        public void onLogMessage(int i, String s, String s1) {
-            SinchUtils.logMessage(i, s, s1);
-        }
-    };
 
 }

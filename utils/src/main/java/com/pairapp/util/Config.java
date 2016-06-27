@@ -19,26 +19,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Config {
 
     public static final String APP_PREFS = "prefs";
-    @SuppressWarnings("unused")
-    public static final String APP_USER_AGENT = "pairapp-android-development-version";
     private static final String TAG = Config.class.getSimpleName();
-    private static final String HOST_REAL_SERVER = "http://192.168.43.42:3000";
-    private static final String LOCAL_HOST_GENYMOTION = "http://10.0.3.2:3000";
-    @SuppressWarnings("unused")
-    private static final String DP_API_GENYMOTION = "http://10.0.3.2:5000/fileApi/dp";
-    @SuppressWarnings("unused")
-    private static final String DP_API_REAL_PHONE = "http://192.168.43.42:5000/fileApi/dp";
-    private static final String MESSAGE_API_GENY = "http://10.0.3.2:5000/fileApi/message";
-    private static final String MESSAGE_API_REAL_PHONE = "http://192.168.43.42:5000/fileApi/message";
-    private static final String MESSAGE_SOCKET_API_REMOTE = "https://pairap-message.herokuapp.com/message";
-    private static final String MESSAGE_SOCKET_API_LOCAL = "http://10.0.3.2:3000/message";
+
+    private static final String SERVER_URL_LOCAL = "http://10.0.3.2:4000";
+    private static final String SERVER_URL_LOCAL_REAL_DEVICE = "http://192.168.43.42:4000";
+    private static final String MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE = "http://192.168.43.42:3000";
+    private static final String MESSAGE_SOCKET_API_LOCAL = "http://10.0.3.2:3000";
+
     private static final String LIVE_SOCKET_API_REMOTE = "https://pairapp-live.herokuapp.com/live";
     private static final String LIVE_SOCKET_API_LOCAL = "http://10.0.3.2:4000/live";
     private static final String ENV_PROD = "prod";
     private static final String ENV_DEV = "dev";
     public static final String PAIRAPP_ENV = getEnvironment();
-    @SuppressWarnings("unused")
-    public static final String PAIRAPP_ENDPOINT = getEndPoint();
     private static final String logMessage = "calling getApplication when init has not be called";
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
     private static String APP_NAME = "PairApp";
@@ -53,7 +45,6 @@ public class Config {
 
     public static void init(Application pairApp) {
         Config.application = pairApp;
-        // SCREEN_DENSITY = pairApp.getResources().getDisplayMetrics().density;
         setUpDirs();
     }
 
@@ -119,15 +110,6 @@ public class Config {
                 || Build.FINGERPRINT.contains("generic");
     }
 
-    private static String getEndPoint() {
-        if (PAIRAPP_ENV.equals(ENV_DEV)) {
-            return LOCAL_HOST_GENYMOTION;
-        } else {
-            // TODO replace this with real url
-            return HOST_REAL_SERVER;
-        }
-    }
-
     public static SharedPreferences getApplicationWidePrefs() {
         if (application == null) {
             throw new IllegalStateException("application is null,did you forget to call init(Context) ?");
@@ -135,13 +117,11 @@ public class Config {
         return getPreferences(Config.APP_PREFS);
     }
 
-    @SuppressWarnings("unused") //used for testing
-    public static String getMessageApiEndpoint() {
-        if (PAIRAPP_ENV.equals(ENV_DEV) || true) {
-            return MESSAGE_API_GENY;
+    public static String getDataServer() {
+        if (PAIRAPP_ENV.equals(ENV_DEV)) {
+            return SERVER_URL_LOCAL;
         } else {
-            // TODO replace this with real url
-            return MESSAGE_API_REAL_PHONE;
+            return SERVER_URL_LOCAL_REAL_DEVICE;
         }
     }
 
@@ -149,7 +129,9 @@ public class Config {
         File file = new File(Environment
                 .getExternalStoragePublicDirectory(APP_NAME), getApplicationContext().getString(R.string.folder_name_files));
         if (!file.isDirectory()) {
-            file.mkdirs();
+            if (!file.mkdirs()) {
+                PLog.f(TAG, "failed to create files dir");
+            }
         }
         return file;
     }
@@ -158,7 +140,9 @@ public class Config {
         File file = new File(Environment
                 .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), APP_NAME);
         if (!file.isDirectory()) {
-            file.mkdirs();
+            if (!file.mkdirs()) {
+                PLog.f(TAG, "failed to create pictures dir");
+            }
         }
         return file;
     }
@@ -167,7 +151,9 @@ public class Config {
         File file = new File(Environment
                 .getExternalStoragePublicDirectory(APP_NAME), getApplicationContext().getString(R.string.folder_name_voice_notes));
         if (!file.isDirectory()) {
-            file.mkdirs();
+            if (!file.mkdirs()) {
+                PLog.f(TAG, "failed to create voice notes dir");
+            }
         }
         return file;
     }
@@ -176,7 +162,9 @@ public class Config {
         File file = new File(Environment
                 .getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), APP_NAME);
         if (!file.isDirectory()) {
-            file.mkdirs();
+            if (!file.mkdirs()) {
+                PLog.f(TAG, "failed to create movies dir");
+            }
         }
         return file;
     }
@@ -185,7 +173,9 @@ public class Config {
         File file = new File(Environment
                 .getExternalStoragePublicDirectory(APP_NAME), getApplicationContext().getString(R.string.folder_name_profile));
         if (!file.isDirectory()) {
-            file.mkdirs();
+            if (!file.mkdirs()) {
+                PLog.f(TAG, "failed to create profile picture dir");
+            }
         }
         return file;
     }
@@ -194,7 +184,9 @@ public class Config {
         File file = new File(Environment
                 .getExternalStoragePublicDirectory(APP_NAME), "TMP");
         if (!file.isDirectory()) {
-            file.mkdirs();
+            if (!file.mkdirs()) {
+                PLog.f(TAG, "failed to create tmp dir");
+            }
         }
         return file;
     }
@@ -234,22 +226,19 @@ public class Config {
     }
 
     public static String getLiveEndpoint() {
-        //STOPSHIP
-        //noinspection PointlessBooleanExpression,ConstantConditions
-//        if (isEmulator()) {
-//            return LIVE_SOCKET_API_LOCAL;
-//        } else {
+        if (isEmulator()) {
+            return LIVE_SOCKET_API_LOCAL;
+        } else {
             return LIVE_SOCKET_API_REMOTE;
-      //  }
+        }
     }
 
     public static String getMessageEndpoint() {
-        //noinspection PointlessBooleanExpression,ConstantConditions
-//        if (isEmulator()) {
-//            return MESSAGE_SOCKET_API_LOCAL;
-//        } else {
-            return MESSAGE_SOCKET_API_REMOTE;
-        //}
+        if (isEmulator()) {
+            return MESSAGE_SOCKET_API_LOCAL;
+        } else {
+            return MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE;
+        }
     }
 
     private static final Map<String, String> properties = new HashMap<>();
@@ -265,12 +254,7 @@ public class Config {
     }
 
     public static String linksEndPoint() {
-        //noinspection PointlessBooleanExpression,ConstantConditions
-//        if (isEmulator() && BuildConfi) { // FIXME: 1/26/2016 change this
-//            return getMessageApiEndpoint();
-//        } else {
-            return "https://pairapp-link-maker.herokuapp.com";
-//        }
+        return "https://pairapp-link-maker.herokuapp.com";
     }
 
     public static SharedPreferences getPreferences(String s) {

@@ -22,6 +22,8 @@ import retrofit.http.Path;
  */
 public interface UserApiV2 {
 
+    String getAuthToken();
+
     @SuppressWarnings("unused")
     @POST("/api/v1/users/register")
     void registerUser(@Body JsonObject user, Callback<User> callback);
@@ -97,12 +99,13 @@ public interface UserApiV2 {
     void removeGroup(String adminId, String groupId, Callback<HttpResponse> callback);
 
     boolean isUserAuthenticated();
+
     interface Callback<T> {
         void done(Exception e, T t);
     }
 
     interface Preprocessor {
-       void process(User user);
+        void process(User user);
 
         void process(Collection<User> users);
     }

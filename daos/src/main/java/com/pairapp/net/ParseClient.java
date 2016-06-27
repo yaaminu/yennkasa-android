@@ -25,6 +25,7 @@ import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
 import com.parse.Parse;
 import com.parse.ParseACL;
+import com.parse.ParseCloud;
 import com.parse.ParseException;
 import com.parse.ParseFile;
 import com.parse.ParseInstallation;
@@ -42,8 +43,10 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 
@@ -269,9 +272,20 @@ public class ParseClient implements UserApiV2 {
     }
 
     private void registerForPushes(String userId) throws ParseException {
+        byte[] randomBytes = new byte[128];
+        new SecureRandom().nextBytes(randomBytes);
+        Map<String, String> params = new HashMap<>();
         ParseInstallation installation = ParseInstallation.getCurrentInstallation();
+        String hash = FileUtils.hash(randomBytes);
         installation.put(FIELD_ID, userId);
+        installation.put("secureRandom", hash);
         installation.save();
+        params.put("secureRandom", hash);
+        params.put("userId", userId);
+        String results = ParseCloud.callFunction("genToken", params);
+        ParseObject object = new ParseObject("tokens");
+        object.put(PARSE_CONSTANTS.FIELD_AUTH_TOKEN, results);
+        object.pin();
     }
 
     @Override
@@ -897,9 +911,9 @@ public class ParseClient implements UserApiV2 {
         defaultAcl.setPublicWriteAccess(true);
         ParseACL.setDefaultACL(defaultAcl, true);
         Parse.setLogLevel(BuildConfig.DEBUG ? Parse.LOG_LEVEL_VERBOSE : Parse.LOG_LEVEL_NONE);
-
         Parse.initialize(new Parse.Configuration.Builder(application)
-                .server("http://10.0.3.2:4000/parse")
+                .enableLocalDataStore()
+                .server(Config.getDataServer())
                 .applicationId("RcCxnXwO1mpkSNrU9u4zMtxQac4uabLNIFa662ZY")
                 .clientKey("f1ad1Vfjisr7mVBDSeoFO1DobD6OaLkggHvT2Nk4")
                 .build());
@@ -964,4 +978,14 @@ public class ParseClient implements UserApiV2 {
         return ParseUser.getCurrentUser() != null;
     }
 
+    @Override
+    public String getAuthToken() {
+        if (!isUserAuthenticated()) return "";
+        try {
+            return ParseQuery.getQuery("tokens").fromPin().getFirst().getString(PARSE_CONSTANTS.FIELD_AUTH_TOKEN);
+        } catch (ParseException e) {
+            PLog.e(TAG, e.getMessage(), e);
+            return "";
+        }
+    }
 }

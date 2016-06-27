@@ -122,7 +122,7 @@ public final class UserManager {
                 processLock.lock();
                 final String userId = user.getUserId();
                 doResolveDp(user);
-                if (userId.contains("@")) {
+                if (userId.contains("@")) {//fixme why not just test for null-ness of getAdmin
                     process(user.getAdmin());
                     return;
                 }
@@ -247,6 +247,10 @@ public final class UserManager {
                 .apply();
     }
 
+    public String getCurrentUserAuthToken() {
+        ThreadUtils.ensureNotMain();
+        return userApi.getAuthToken();
+    }
 
     public User getCurrentUser() {
 
