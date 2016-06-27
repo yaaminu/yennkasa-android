@@ -304,8 +304,8 @@ public class PairAppClient extends Service {
             byte[] msgBuffer = Message.toJSON(message).getBytes();
             ByteBuffer byteBuffer = ByteBuffer.allocate(msgBuffer.length +
                     (Message.isGroupMessage(message) ? message.getTo().getBytes().length : 10));
-            byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
-            byteBuffer.put((byte) 1);
+            byteBuffer.order(ByteOrder.BIG_ENDIAN);
+            byteBuffer.put((byte) 4);
             if (Message.isGroupMessage(message)) {
                 byteBuffer.put(message.getTo().getBytes());
             } else {
