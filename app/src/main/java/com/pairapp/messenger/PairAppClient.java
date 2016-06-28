@@ -353,7 +353,6 @@ public class PairAppClient extends Service {
     private synchronized void shutDown() {
         ThreadUtils.ensureNotMain();
         if (isClientStarted.get()) {
-            // FIXME: 6/21/2016 disconnect from server
             webSocketDispatcher.close();
             pairappSocket.disConnectBlocking();
             PLog.i(TAG, TAG + ": bye");
@@ -405,7 +404,6 @@ public class PairAppClient extends Service {
 
         @Override
         public void onDispatchSucceeded(String messageId) {
-            // FIXME: 6/21/2016 leak detected. not freeing futures stored in dispatchinthreads
             PLog.d(TAG, "message with id : %s dispatched successfully", messageId);
             LiveCenter.releaseProgressTag(messageId);
             progressMap.remove(messageId);
