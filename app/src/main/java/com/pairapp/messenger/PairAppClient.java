@@ -41,8 +41,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -74,7 +72,7 @@ public class PairAppClient extends Service {
     private PairAppClientInterface INTERFACE;
     private WorkerThread WORKER_THREAD;
     private WebSocketDispatcher webSocketDispatcher;
-
+    private MessagePacker messagePacker;
     private final Map<String, Future<?>> disPatchingThreads = new ConcurrentHashMap<>();
 
     private MediaPlayer mediaPlayer;
@@ -300,38 +298,19 @@ public class PairAppClient extends Service {
     private WebSocketDispatcher.MessageCodec messageCodec = new WebSocketDispatcher.MessageCodec() {
         @Override
         public byte[] encode(Message message) {
-
-            byte[] msgBuffer = Message.toJSON(message).getBytes();
-            ByteBuffer byteBuffer = ByteBuffer.allocate(msgBuffer.length +
-                    (Message.isGroupMessage(message) ? message.getTo().getBytes().length : 10));
-            byteBuffer.order(ByteOrder.BIG_ENDIAN);
-            byteBuffer.put((byte) 4);
-            if (Message.isGroupMessage(message)) {
-                byteBuffer.put(message.getTo().getBytes());
-            } else {
-                byteBuffer.putDouble(Double.parseDouble(message.getTo()));
-            }
-            byteBuffer.put((byte) '-');
-            byteBuffer.put(msgBuffer);
-            return byteBuffer.array();
+            return messagePacker.pack(Message.toJSON(message), message.getTo(), Message.isGroupMessage(message));
         }
 
         @Override
         public Message decode(byte[] bytes) {
-            int i = 0;
-            while (bytes[i++] != '-') ;
-            byte[] sliced = new byte[bytes.length - i];
-            System.arraycopy(bytes, i, sliced, 0, sliced.length);
-            return Message.fromJSON(new String(sliced));
+            MessagePacker.DataEvent event = messagePacker.unpackSync(bytes);
+            return Message.fromJSON(event.getData());
         }
     };
     private final PairappSocket.MessageParser parser = new PairappSocket.MessageParser() {
         @Override
         public void feed(byte[] bytes) {
-            Message message = Message.fromJSON(new String(bytes));
-            Intent intent = new Intent(PairAppClient.this, MessageProcessor.class);
-            intent.putExtra(MessageProcessor.MESSAGE, Message.toJSON(message));
-            startService(intent);
+            messagePacker.unpack(bytes);
         }
     };
 
@@ -339,6 +318,8 @@ public class PairAppClient extends Service {
         ThreadUtils.ensureNotMain();
         if (!isClientStarted.get()) {
             INTERFACE = new PairAppClientInterface();
+            messagePacker = MessagePacker.create(UserManager.getMainUserId());
+            messagePacker.observe().subscribe(new IncomingMessageProcessor());
             String authToken = UserManager.getInstance().getCurrentUserAuthToken();
             Map<String, String> opts = new HashMap<>(1);
             opts.put("Authorization", authToken);
@@ -353,6 +334,7 @@ public class PairAppClient extends Service {
     private synchronized void shutDown() {
         ThreadUtils.ensureNotMain();
         if (isClientStarted.get()) {
+            messagePacker.close();
             webSocketDispatcher.close();
             pairappSocket.disConnectBlocking();
             PLog.i(TAG, TAG + ": bye");
