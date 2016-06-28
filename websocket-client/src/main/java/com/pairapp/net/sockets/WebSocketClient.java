@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -34,7 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class WebSocketClient {
     private static final String TAG = WebSocketClient.class.getSimpleName();
-    public static final int PING_INTERVAL = 1000 * 60 * 5;
+    public static final int PING_INTERVAL = 1000 * 60 * 3;
     public static final WebSocketFactory SOCKET_FACTORY = new WebSocketFactory();
     private final Map<String, String> headers;
     private final Logger logger;
@@ -81,10 +80,8 @@ public class WebSocketClient {
 
         void onDisConnectedUnexpectedly();
 
-//        void onStateChanged(int state);
     }
 
-    private static final int CONNECTING = 1, CONNECTED = 2, CLOSING = 3, CLOSED = 4;
 
     interface NetworkProvider {
         boolean connected();
@@ -135,15 +132,6 @@ public class WebSocketClient {
         }
     }
 
-    public void closeConnectionNonBlock(Executor executor) {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                closeConnectionBlocking();
-            }
-        });
-    }
-
     public synchronized void connectBlocking() {
         if (!networkProvider.connected()) {
             logger.Log(Log.VERBOSE, TAG, "not connected to the internet");
@@ -163,19 +151,6 @@ public class WebSocketClient {
         }
     }
 
-
-    public synchronized void connectNonBlock(Executor service) {
-        ensureNotNull(service);
-
-        service.execute(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (WebSocketClient.this) {
-                    connectBlocking();
-                }
-            }
-        });
-    }
 
     private void setUpWebSocket() {
         internalWebSocket.setPingInterval(PING_INTERVAL);
@@ -197,7 +172,7 @@ public class WebSocketClient {
             }
         };
 
-        static final int V = 1, D = 2, I = 3, W = 4, E = 5;
+        int V = 1, D = 2, I = 3, W = 4, E = 5;
 
         void Log(int level, String tag, String message, Throwable cause);
 
@@ -509,7 +484,7 @@ public class WebSocketClient {
         }
         if (networkProvider.connected()) {
             long reconnectTimeOut = calculateReconnectTimeout();
-            logger.Log(Logger.V, TAG, " attempt reconnection after %s millis", reconnectTimeOut);
+            logger.Log(Logger.V, TAG, " attempt reconnection after %s", reconnectTimeOut);
             timer.schedule(new ReconnectTimerTask(), reconnectTimeOut);
         } else {
             logger.Log(Logger.V, TAG, " can't reconnect since network provider says we are not connected to the internet");
@@ -535,20 +510,26 @@ public class WebSocketClient {
         }
     }
 
-    private long calculateReconnectTimeout() {
+    private synchronized long calculateReconnectTimeout() {
         if (random == null) {
             random = new SecureRandom();
         }
         int deviation = /*milliseconds*/ (int) Math.abs(random.nextDouble() * 1000);
         //LINEAR
-        reconnectDelay = (2 * reconnectDelay) + deviation;
+        if (reconnectDelay > 1000 * 60 * 30) {
+            reconnectDelay += deviation;
+        } else {
+            reconnectDelay = (2 * reconnectDelay) + deviation;
+        }
         return reconnectDelay;
     }
 
     private final NetworkChangeListener networkChangeListener = new NetworkChangeListener() {
         @Override
         public void notifyNetworkChanged(boolean connected) {
+            logger.Log(Logger.D, TAG, "network: " + (connected ? "" : "dis") + "connected");
             if (connected && !internalWebSocket.isOpen()) {
+                reconnectDelay = DEFAULT_DELAY;
                 attemptReconnect();
             }
         }

@@ -138,16 +138,16 @@ public class PairappSocket {
         public void Log(int level, String tag, String message, Object... args) {
             switch (level) {
                 case V:
-                    PLog.v(tag, message, String.format(message, args));
+                    PLog.v(tag, message, args);
                     break;
                 case D:
-                    PLog.d(tag, message, String.format(message, args));
+                    PLog.d(tag, message, args);
                     break;
                 case I:
-                    PLog.i(tag, message, String.format(message, args));
+                    PLog.i(tag, message, args);
                     break;
                 case E:
-                    PLog.e(tag, message, String.format(message, args));
+                    PLog.e(tag, message, args);
                     break;
                 default:
                     throw new AssertionError();
