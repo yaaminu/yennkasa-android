@@ -295,17 +295,12 @@ public class PairAppClient extends Service {
 
     private PairappSocket pairappSocket;
 
-    private WebSocketDispatcher.MessageCodec messageCodec = new WebSocketDispatcher.MessageCodec() {
+    private WebSocketDispatcher.MessageEncoder messageEncoder = new WebSocketDispatcher.MessageEncoder() {
         @Override
         public byte[] encode(Message message) {
             return messagePacker.pack(Message.toJSON(message), message.getTo(), Message.isGroupMessage(message));
         }
 
-        @Override
-        public Message decode(byte[] bytes) {
-            MessagePacker.DataEvent event = messagePacker.unpackSync(bytes);
-            return Message.fromJSON(event.getData());
-        }
     };
     private final PairappSocket.MessageParser parser = new PairappSocket.MessageParser() {
         @Override
@@ -325,7 +320,7 @@ public class PairAppClient extends Service {
             opts.put("Authorization", authToken);
             pairappSocket = PairappSocket.create(opts, parser);
             pairappSocket.init();
-            webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, pairappSocket, messageCodec);
+            webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, pairappSocket, messageEncoder);
             isClientStarted.set(true);
         }
     }

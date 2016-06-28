@@ -3,8 +3,11 @@ package com.pairapp.messenger;
 import com.pairapp.data.Message;
 import com.pairapp.net.FileApi;
 import com.pairapp.net.sockets.PairappSocket;
+import com.pairapp.util.FileUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -16,31 +19,37 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class WebSocketDispatcher extends AbstractMessageDispatcher {
 
     private final PairappSocket pairappSocket;
-    private final MessageCodec messageCodec;
+    private final MessageEncoder messageEncoder;
+    private final Map<String, String> idMaps;
 
     private final PairappSocket.SendListener sendListener = new PairappSocket.SendListener() {
         @Override
         public void onSentSucceeded(byte[] data) {
-            onSent(messageCodec.decode(data).getId());
+            String hash = FileUtils.hash(data);
+            onSent(idMaps.get(hash));
+            idMaps.remove(hash);
         }
 
         @Override
         public void onSendFailed(byte[] data) {
-            onFailed(messageCodec.decode(data).getId(), "error internal");
+            String hash = FileUtils.hash(data);
+            onFailed(idMaps.get(hash), "error internal");
+            idMaps.remove(hash);
         }
     };
 
     public static WebSocketDispatcher create(FileApi fileApi
             , DispatcherMonitor monitor, PairappSocket socket
-            , MessageCodec codec) {
+            , MessageEncoder codec) {
         return new WebSocketDispatcher(fileApi, monitor, socket, codec);
     }
 
     private WebSocketDispatcher(FileApi fileApi,
-                                DispatcherMonitor monitor, PairappSocket socket, MessageCodec messageCodec) {
+                                DispatcherMonitor monitor, PairappSocket socket, MessageEncoder messageEncoder) {
         super(fileApi, monitor);
         this.pairappSocket = socket;
-        this.messageCodec = messageCodec;
+        this.messageEncoder = messageEncoder;
+        idMaps = new ConcurrentHashMap<>(4);
         socket.addSendListener(sendListener);
     }
 
@@ -55,13 +64,15 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
 
     @Override
     protected void dispatchToGroup(Message message, List<String> members) {
-        onFailed(message.getId(), "error unimplemented");
+        dispatchToUser(message);
     }
 
     @Override
     protected void dispatchToUser(Message message) {
         if (pairappSocket.isConnected()) {
-            pairappSocket.send(messageCodec.encode(message));
+            byte[] encoded = messageEncoder.encode(message);
+            idMaps.put(FileUtils.hash(encoded), message.getId());
+            pairappSocket.send(encoded);
         } else {
             onFailed(message.getId(), ERR_USER_OFFLINE);
         }
@@ -72,9 +83,7 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
         return closed.get();
     }
 
-    interface MessageCodec {
+    interface MessageEncoder {
         byte[] encode(Message message);
-
-        Message decode(byte[] bytes);
     }
 }
