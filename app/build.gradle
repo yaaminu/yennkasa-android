@@ -53,7 +53,7 @@ android {
 
 dependencies {
     testCompile 'junit:junit:4.12'
-    testCompile 'org.robolectric:robolectric:3.0'
+    testCompile 'org.json:json:20090211'
     testCompile fileTree(include: ['*.jar'], dir: 'testLibs')
     compile project(':lib')
     compile project(':daos')

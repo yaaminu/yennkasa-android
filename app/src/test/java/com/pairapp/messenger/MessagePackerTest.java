@@ -1,13 +1,12 @@
 package com.pairapp.messenger;
 
-import com.pairapp.data.Message;
-
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.ByteBuffer;
-import java.util.Date;
+import java.nio.ByteOrder;
 
 import rx.Subscriber;
 import rx.Subscription;
@@ -15,13 +14,13 @@ import rx.Subscription;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
  * @author aminu on 6/28/2016.
  */
+
 public class MessagePackerTest {
 
     private boolean onCompleteCalled = false;
@@ -52,7 +51,9 @@ public class MessagePackerTest {
 
     @After
     public void tearDown() throws Exception {
-        messagePacker.close();
+        if (messagePacker != null) {
+            messagePacker.close();
+        }
     }
 
     @Test
@@ -69,15 +70,60 @@ public class MessagePackerTest {
 
     @Test
     public void testPack() throws Exception {
-        Message message = new Message();
-        message.setFrom("1234567890");
-        message.setTo("0987654321");
-        message.setDateComposed(new Date());
-        message.setState(Message.STATE_PENDING);
-        message.setType(Message.TYPE_TEXT_MESSAGE);
-        message.setMessageBody("hello world");
-//        byte[] msg = messagePacker.pack(message);
-//        assertEquals("must send a persistable messages", msg[0], 0);
+        try {
+            messagePacker.pack("hello world", "132fgroup", false);
+            fail("if a message is not a group message, it should not allow ids that cannot be coalesced into long");
+        } catch (NumberFormatException e) {
+            //expected
+        }
+        try {
+            messagePacker.pack("hello world", "aaffa", false);
+            fail("if a message is not a group message, it should not allow ids that cannot be coalesced into long");
+        } catch (NumberFormatException e) {
+            //expected
+        }
+        try {
+            messagePacker.pack("hello world", "group", true);
+            fail("if a message is a group message, it should not allow a recipient id less than 8 bytes");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        try {
+            messagePacker.pack("hello world", "group-namewhichislongenough", true);
+            fail("if a message is a group message, it should not allow a recipient id to contain the dash character");
+        } catch (IllegalArgumentException e) {
+            //expected
+        }
+        JSONObject object = new JSONObject();
+        object.put("from", "1234567890");
+        long recipient = 987654321;
+        object.put("type", 10);
+        object.put("messageBody", "hello world");
+        ByteBuffer buffer = ByteBuffer.wrap(messagePacker.pack(object.toString(), recipient + "", false));
+        buffer.order(ByteOrder.BIG_ENDIAN);
+        assertEquals("length is invalid", 11 + object.toString().getBytes().length, buffer.array().length);
+        assertEquals("message header must be persistable", 0x4, buffer.get());
+        assertEquals("recipient inconsistent", recipient, buffer.getLong());
+        assertEquals("must delimit header with a dash", '-', buffer.get());
+        assertEquals("message header for client invalid", MessagePacker.READABLE_MESSAGE, buffer.get());
+        byte[] body = new byte[object.toString().getBytes().length];
+        buffer.get(body);
+        assertEquals("message body left", object.toString(), new String(body));
+
+        //group messages
+        String recipientGroup = "brothersfromonehood";
+        buffer = ByteBuffer.wrap(messagePacker.pack(object.toString(), recipientGroup, true));
+        buffer.order(ByteOrder.BIG_ENDIAN);
+        assertEquals("length is invalid", 3 + recipientGroup.getBytes().length + object.toString().getBytes().length, buffer.array().length);
+        assertEquals("message header must be persistable", 0x4, buffer.get());
+        byte[] groupId = new byte[recipientGroup.getBytes().length];
+        buffer.get(groupId);
+        assertEquals("recipient inconsistent", recipientGroup, new String(groupId));
+        assertEquals("must delimit header with a dash", '-', buffer.get());
+        assertEquals("message header for client invalid", MessagePacker.READABLE_MESSAGE, buffer.get());
+        body = new byte[object.toString().getBytes().length];
+        buffer.get(body);
+        assertEquals("message body left", object.toString(), new String(body));
     }
 
     @Test
@@ -190,6 +236,8 @@ public class MessagePackerTest {
         testMsgStatus();
 
         testTyping();
+
+        testReadableMessage();
         try {
             subscription.unsubscribe();
             messagePacker.unpack(new byte[9]);
@@ -210,7 +258,6 @@ public class MessagePackerTest {
 
         assertEquals(dataEvent.getOpCode(), 0x1);
         assertEquals("" + recipient, dataEvent.getData());
-        assertNull(dataEvent.getMsg());
     }
 
     private void testMsgStatus() {
@@ -224,7 +271,6 @@ public class MessagePackerTest {
 
         assertEquals(dataEvent.getOpCode(), MessagePacker.MESSAGE_STATUS_DELIVERED);
         assertEquals("msgId", dataEvent.getData());
-        assertNull(dataEvent.getMsg());
         buffer = ByteBuffer.allocate(idBytes.length + 1);
         buffer.put(MessagePacker.MESSAGE_STATUS_SEEN);
         buffer.put(idBytes);
@@ -233,7 +279,6 @@ public class MessagePackerTest {
 
         assertEquals(dataEvent.getOpCode(), MessagePacker.MESSAGE_STATUS_SEEN);
         assertEquals("msgId", dataEvent.getData());
-        assertNull(dataEvent.getMsg());
     }
 
     private void testOnline() {
@@ -246,7 +291,6 @@ public class MessagePackerTest {
 
         assertEquals(dataEvent.getOpCode(), 0x2);
         assertEquals("" + recipient, dataEvent.getData());
-        assertNull(dataEvent.getMsg());
     }
 
     private void testTyping() {
@@ -259,7 +303,6 @@ public class MessagePackerTest {
 
         assertEquals(dataEvent.getOpCode(), MessagePacker.TYPING);
         assertEquals("" + recipient, dataEvent.getData());
-        assertNull(dataEvent.getMsg());
 
         buffer = ByteBuffer.allocate(9);
         buffer.put(MessagePacker.NOT_TYPING);
@@ -269,7 +312,19 @@ public class MessagePackerTest {
 
         assertEquals(dataEvent.getOpCode(), MessagePacker.NOT_TYPING);
         assertEquals("" + recipient, dataEvent.getData());
-        assertNull(dataEvent.getMsg());
+    }
+
+    private void testReadableMessage() {
+        byte[] message = "hello world".getBytes();
+        ByteBuffer buffer = ByteBuffer.allocate(5 + message.length);
+        buffer.order(ByteOrder.BIG_ENDIAN);
+        buffer.put(MessagePacker.READABLE_MESSAGE);
+        buffer.put(message);
+        buffer.putInt(123); //the order of the message
+        messagePacker.unpack(buffer.array());
+        assertEquals("opcode must be readableMessage", MessagePacker.READABLE_MESSAGE, dataEvent.getOpCode());
+        assertEquals("inconsistent message body", new String(message), dataEvent.getData());
+        assertEquals("must retrieve the position of this message", 123, dataEvent.getCursorPos());
     }
 
     @Test

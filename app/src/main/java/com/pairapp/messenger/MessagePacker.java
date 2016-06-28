@@ -1,8 +1,8 @@
 package com.pairapp.messenger;
 
-import com.pairapp.data.Message;
+import android.support.annotation.NonNull;
+
 import com.pairapp.util.GenericUtils;
-import com.pairapp.util.ThreadUtils;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -37,23 +37,22 @@ public class MessagePacker {
         return new MessagePacker(currentUserId);
     }
 
-    public byte[] pack(Message message) {
-        GenericUtils.ensureNotNull(message);
-        ThreadUtils.ensureNotMain();
-        byte[] msgBuffer = Message.toJSON(message).getBytes();
+    public byte[] pack(String messageJson, String recipient, boolean isGroupMessage) {
+        GenericUtils.ensureNotNull(messageJson, recipient);
+        byte[] msgBuffer = messageJson.getBytes();
         int msgLength = 1/*header for server*/
-                + 1/*delimiter for recipients  and body*/
+                + 1/*delimiter for header  and payload*/
                 + 1/*header for clients*/
                 + msgBuffer.length/*body*/;
-        if (Message.isGroupMessage(message)) { /*recipient*/
-            if (message.getTo().length() <= 8) {
-                throw new RuntimeException("text based recipients must be longer than 8 bytes");
+        if (isGroupMessage) { /*recipient*/
+            if (recipient.length() <= 8) {
+                throw new IllegalArgumentException("text based recipients must be longer than 8 bytes");
             }
-            if (message.getTo().contains("-")) {
+            if (recipient.indexOf('-') != -1) {
                 throw new IllegalArgumentException("text based recipients cannot contain the dash character");
             }
-            msgLength += message.getTo().getBytes().length;
-        } else { /*body*/
+            msgLength += recipient.getBytes().length;
+        } else {
             msgLength += 8;
         }
 
@@ -62,10 +61,10 @@ public class MessagePacker {
 
         /**********************start header*********************/
         byteBuffer.put(PERSIST_PUSH_IF_POSSIBLE);
-        if (Message.isGroupMessage(message)) {
-            byteBuffer.put(message.getTo().getBytes());
+        if (isGroupMessage) {
+            byteBuffer.put(recipient.getBytes());
         } else {
-            byteBuffer.putDouble(Double.parseDouble(message.getTo()));
+            byteBuffer.putLong(Long.parseLong(recipient));
         }
         byteBuffer.put(HEADER_DELIMITER);
         /**********************end header*********************/
@@ -200,23 +199,23 @@ public class MessagePacker {
                 } else {
                     targetId = String.valueOf(buffer.getLong());
                 }
-                event = new DataEvent(header, targetId, null);
+                event = new DataEvent(header, targetId);
                 onSubscribe.onMessageAvailable(event);
                 break;
             case READABLE_MESSAGE:
                 String msg;
                 byte[] msgBytes = new byte[data.length - 5]; //1 for header and 4 for the message count
-                msg = new String(buffer.get(msgBytes, 0, msgBytes.length).array());
-                Message message = Message.fromJSON(msg);
+                buffer.get(msgBytes);
+                msg = new String(msgBytes);
                 int count = buffer.getInt();//get message count
-                event = new DataEvent(header, null, message, count);
+                event = new DataEvent(header, msg, count);
                 onSubscribe.onMessageAvailable(event);
                 break;
             case MESSAGE_STATUS_DELIVERED:
             case MESSAGE_STATUS_SEEN:
                 byte[] msgId = new byte[data.length - 1];
                 buffer.get(msgId, 0, msgId.length);
-                event = new DataEvent(header, new String(msgId), null);
+                event = new DataEvent(header, new String(msgId));
                 onSubscribe.onMessageAvailable(event);
                 break;
             default:
@@ -227,19 +226,18 @@ public class MessagePacker {
 
     public static class DataEvent {
         private final int opCode;
+        @NonNull
         private final String data;
-        private final Message msg;
         private final int cursorPos;
         public static final int INVALID_COUNT = -1;
 
-        private DataEvent(int opCode, String data, Message msg) {
-            this(opCode, data, msg, INVALID_COUNT);
+        private DataEvent(int opCode, @NonNull String data) {
+            this(opCode, data, INVALID_COUNT);
         }
 
-        private DataEvent(int opCode, String data, Message msg, int count) {
+        private DataEvent(int opCode, @NonNull String data, int count) {
             this.opCode = opCode;
             this.data = data;
-            this.msg = msg;
             this.cursorPos = count;
         }
 
@@ -251,12 +249,9 @@ public class MessagePacker {
             return opCode;
         }
 
+        @NonNull
         public String getData() {
             return data;
-        }
-
-        public Message getMsg() {
-            return msg;
         }
     }
 
