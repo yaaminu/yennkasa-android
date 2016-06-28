@@ -175,12 +175,22 @@ public class MessagePacker {
         return byteBuffer.array();
     }
 
+    public DataEvent unpackSync(byte[] data) {
+        return doUnpack(data);
+    }
+
     public void unpack(byte[] data) {
-        if (data == null || data.length <= 0) {
-            throw new IllegalArgumentException("invalid data");
-        }
         if (onSubscribe.subscriber == null || onSubscribe.subscriber.isUnsubscribed()) {
             throw new IllegalStateException("can't invoke unpack without an observer.");
+        }
+        DataEvent event = doUnpack(data);
+        onSubscribe.onMessageAvailable(event);
+    }
+
+    @NonNull
+    private DataEvent doUnpack(byte[] data) {
+        if (data == null || data.length <= 0) {
+            throw new IllegalArgumentException("invalid data");
         }
         ByteBuffer buffer = ByteBuffer.wrap(data);
         buffer.order(ByteOrder.BIG_ENDIAN);
@@ -200,7 +210,6 @@ public class MessagePacker {
                     targetId = String.valueOf(buffer.getLong());
                 }
                 event = new DataEvent(header, targetId);
-                onSubscribe.onMessageAvailable(event);
                 break;
             case READABLE_MESSAGE:
                 String msg;
@@ -209,18 +218,17 @@ public class MessagePacker {
                 msg = new String(msgBytes);
                 int count = buffer.getInt();//get message count
                 event = new DataEvent(header, msg, count);
-                onSubscribe.onMessageAvailable(event);
                 break;
             case MESSAGE_STATUS_DELIVERED:
             case MESSAGE_STATUS_SEEN:
                 byte[] msgId = new byte[data.length - 1];
                 buffer.get(msgId, 0, msgId.length);
                 event = new DataEvent(header, new String(msgId));
-                onSubscribe.onMessageAvailable(event);
                 break;
             default:
                 throw new AssertionError();
         }
+        return event;
     }
 
 

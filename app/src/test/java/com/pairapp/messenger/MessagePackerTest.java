@@ -57,6 +57,11 @@ public class MessagePackerTest {
     }
 
     @Test
+    public void testUnpackSync() throws Exception {
+        testUnpack();
+    }
+
+    @Test
     public void testCreate() throws Exception {
         try {
             messagePacker = MessagePacker.create("2222a");
@@ -212,6 +217,15 @@ public class MessagePackerTest {
 
     @Test
     public void testUnpack() throws Exception {
+
+
+        try {
+            messagePacker.unpack(new byte[0]);
+            fail("must throw if there is no subscriber");
+        } catch (IllegalStateException expected) {
+            //better
+        }
+        Subscription subscription = messagePacker.observe().subscribe(subscriber);
         try {
             messagePacker.unpack(new byte[0]);
             fail("must handle invalid byte streams");
@@ -226,7 +240,6 @@ public class MessagePackerTest {
         }
 
 
-        Subscription subscription = messagePacker.observe().subscribe(subscriber);
         //test online
         testOnline();
 
