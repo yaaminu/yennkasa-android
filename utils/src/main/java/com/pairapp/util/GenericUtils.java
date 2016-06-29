@@ -24,7 +24,7 @@ public class GenericUtils {
     }
 
     public static boolean isEmpty(CharSequence cs) {
-        return cs == null || cs.length() == 0;
+        return cs == null || cs.toString().trim().length() == 0;
     }
 
     public static String getString(@StringRes int res) {
@@ -48,6 +48,30 @@ public class GenericUtils {
         message = message == null ? "" : message;
         if (!condition)
             throw new IllegalArgumentException(message);
+    }
+
+    public static boolean isCapitalised(String text) {
+        ensureNotNull(text);
+        return text.equals(capitalise(text));
+    }
+
+    public static String capitalise(String text) {
+        // TODO: 2/27/2016 commit this addition on dev branch
+        text = text != null ? text : "";
+        if (isEmpty(text.trim())) return text;
+        StringBuilder builder = new StringBuilder(text);
+        boolean previousWasSpace = true; //capitalize sentence
+        //we assume that the string is trimmed
+        for (int i = 0; i < builder.length(); i++) {
+            char c = builder.charAt(i);
+            if (previousWasSpace) {//don't check whether char is letter or not
+                builder.setCharAt(i, Character.toUpperCase(c));
+            } else {
+                builder.setCharAt(i, Character.toLowerCase(c));
+            }
+            previousWasSpace = Character.isSpaceChar(c);
+        }
+        return builder.toString();
     }
 
 }
