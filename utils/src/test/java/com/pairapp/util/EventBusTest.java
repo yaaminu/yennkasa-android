@@ -1,6 +1,7 @@
 package com.pairapp.util;
 
 import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import org.junit.After;
 import org.junit.Before;
@@ -8,6 +9,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 
 import static com.pairapp.util.Echo.echo;
 import static com.pairapp.util.EventBus.EventsListener;
@@ -69,11 +74,87 @@ public class EventBusTest {
         when(Looper.getMainLooper()).thenReturn(mockLooper);
         when(mockLooper.getThread()).thenReturn(mainThreadMock);
         bus = new EventBus();
+        usedLock = false;
     }
 
     @After
     public void tearDown() throws Exception {
         bus = null;
+    }
+
+    boolean usedLock = false;
+    Lock fakeLock = new Lock() {
+        @Override
+        public void lock() {
+            usedLock = true;
+        }
+
+        @Override
+        public void lockInterruptibly() throws InterruptedException {
+
+        }
+
+        @Override
+        public boolean tryLock() {
+            return false;
+        }
+
+        @Override
+        public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
+            return false;
+        }
+
+        @Override
+        public void unlock() {
+
+        }
+
+        @NonNull
+        @Override
+        public Condition newCondition() {
+            return null;
+        }
+    };
+
+    @Test
+    public void testIfUsesLock() throws Exception {
+        try {
+            EventBus bus = new EventBus(null);
+            fail("must not accept null locks");
+        } catch (IllegalArgumentException e) {
+            //better
+        }
+        bus = new EventBus(fakeLock);
+        bus.post(testEvent);
+        assertTrue("must used the custom lock passed", usedLock);
+        usedLock = false;
+        bus.postSticky(testEvent);
+        assertTrue("must used the custom lock passed", usedLock);
+        usedLock = false;
+        bus.removeStickyEvent(testEvent);
+        assertTrue("must used the custom lock passed", usedLock);
+        usedLock = false;
+        bus.getStickyEvent(testEvent);
+        assertTrue("must used the custom lock passed", usedLock);
+        usedLock = false;
+        bus.hasListeners(testEvent);
+        assertTrue("must used the custom lock passed", usedLock);
+        usedLock = false;
+        bus.register("tag", listener);
+        assertTrue("must used the custom lock passed", usedLock);
+        usedLock = false;
+        bus.unregister("tag", listener);
+        assertTrue("must used the custom lock passed", usedLock);
+        usedLock = false;
+        bus.register(listener, "tag2", "tag3");
+        assertTrue("must used the custom lock passed", usedLock);
+        usedLock = false;
+        bus.unregister("tag2", listener);
+        assertTrue("must used the custom lock passed", usedLock);
+        usedLock = false;
+        bus.unregister("tag3", listener);
+        assertTrue("must used the custom lock passed", usedLock);
+        usedLock = false;
     }
 
     @Test

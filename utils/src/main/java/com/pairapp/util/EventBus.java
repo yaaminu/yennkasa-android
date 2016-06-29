@@ -19,10 +19,15 @@ public class EventBus {
     private static final String TAG = EventBus.class.getSimpleName();
     private Map<Object, List<WeakReference<EventsListener>>> EVENT_LISTENERS;
     private Map<Object, Event> stickyEvents;
-    private final Lock LOCK = new ReentrantLock();
+    private final Lock LOCK;
 
     public EventBus() {
+        this(new ReentrantLock());
+    }
 
+    public EventBus(Lock lock) {
+        GenericUtils.ensureNotNull(lock);
+        this.LOCK = lock;
     }
 
     public boolean postSticky(Event event) {
