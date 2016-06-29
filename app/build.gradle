@@ -52,8 +52,6 @@ android {
 }
 
 dependencies {
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.robolectric:robolectric:3.0'
     testCompile 'org.json:json:20090211'
     testCompile fileTree(include: ['*.jar'], dir: 'testLibs')
     compile project(':lib')
@@ -71,6 +69,16 @@ dependencies {
     }
     compile 'com.commit451:PhotoView:1.2.4'
     compile files('libs/sinch-android-rtc-3.7.1.jar')
+
+    testCompile 'junit:junit:4.12'
+    testCompile "org.robolectric:robolectric:3.0"
+    testCompile "org.mockito:mockito-core:1.10.19"
+    testCompile 'org.robolectric:shadows-support-v4:3.0'
+
+    testCompile "org.powermock:powermock-module-junit4:1.6.2"
+    testCompile "org.powermock:powermock-module-junit4-rule:1.6.2"
+    testCompile "org.powermock:powermock-api-mockito:1.6.2"
+    testCompile "org.powermock:powermock-classloading-xstream:1.6.2"
 }
 
 crashlytics {
