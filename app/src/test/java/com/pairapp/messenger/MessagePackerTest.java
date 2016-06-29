@@ -57,11 +57,6 @@ public class MessagePackerTest {
     }
 
     @Test
-    public void testUnpackSync() throws Exception {
-        testUnpack();
-    }
-
-    @Test
     public void testCreate() throws Exception {
         try {
             messagePacker = MessagePacker.create("2222a");
@@ -265,7 +260,7 @@ public class MessagePackerTest {
         int recipient;
         buffer.put(0, (byte) 0x1);
         recipient = 123456789;
-        buffer.putLong(1, recipient);
+        buffer.putDouble(1, recipient);
 
         messagePacker.unpack(buffer.array());
 
@@ -298,7 +293,7 @@ public class MessagePackerTest {
         ByteBuffer buffer = ByteBuffer.allocate(9);
         buffer.put((byte) 0x2);
         int recipient = 123456789;
-        buffer.putLong(recipient);
+        buffer.putDouble(recipient);
 
         messagePacker.unpack(buffer.array());
 
@@ -310,7 +305,7 @@ public class MessagePackerTest {
         ByteBuffer buffer = ByteBuffer.allocate(9);
         buffer.put(MessagePacker.TYPING);
         int recipient = 123456789;
-        buffer.putLong(recipient);
+        buffer.putDouble(recipient);
 
         messagePacker.unpack(buffer.array());
 
@@ -319,7 +314,7 @@ public class MessagePackerTest {
 
         buffer = ByteBuffer.allocate(9);
         buffer.put(MessagePacker.NOT_TYPING);
-        buffer.putLong(recipient);
+        buffer.putDouble(recipient);
 
         messagePacker.unpack(buffer.array());
 
