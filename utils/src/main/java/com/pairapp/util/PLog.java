@@ -17,6 +17,7 @@ public class PLog implements CustomLogger {
     public static final int LEVEL_WARNING = 3;
     public static final int LEVEL_ERROR = 4;
     public static final int LEVEL_FATAL = 5;
+    public static final int LEVEL_NONE = 6;
 
     private static int sLevel = LEVEL_VERBOSE;
     private final String TAG;
