@@ -14,6 +14,7 @@ import org.powermock.modules.junit4.rule.PowerMockRule;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 
@@ -34,6 +35,7 @@ import static org.powermock.api.mockito.PowerMockito.when;
 /**
  * author Null-Pointer on 1/16/2016.
  */
+@SuppressWarnings("ConstantConditions")
 @PrepareForTest(Looper.class)
 public class EventBusTest {
 
@@ -106,7 +108,7 @@ public class EventBusTest {
         }
 
         @Override
-        public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
+        public boolean tryLock(long time, @SuppressWarnings("NullableProblems") TimeUnit unit) throws InterruptedException {
             return false;
         }
 
@@ -125,13 +127,15 @@ public class EventBusTest {
     @Test
     public void testIfUsesLock() throws Exception {
         try {
-            EventBus bus = EventBus.getBusOrCreate(getClass(), null);
+            //noinspection ConstantConditions
+            EventBus.getBusOrCreate(getClass(), null);
             fail("must not accept null locks");
         } catch (IllegalArgumentException e) {
             //better
         }
+        testEvent = Event.createSticky("tag");
         bus = EventBus.getBusOrCreate(getClass(), fakeLock);
-        bus.post(testEvent);
+        bus.post(Event.create("tag"));
         assertTrue("must used the custom lock passed", usedLock);
         usedLock = false;
         bus.postSticky(testEvent);
@@ -165,10 +169,12 @@ public class EventBusTest {
 
     @Test
     public void testGetStickEvent() throws Exception {
+        testEvent = Event.createSticky("sticky");
         bus.postSticky(testEvent);
-        assertNotNull(bus.getStickyEvent(testEvent.getTag()));
+        Object tag = testEvent.getTag();
+        assertNotNull(bus.getStickyEvent(tag));
         bus.removeStickyEvent(testEvent);
-        assertNull(bus.getStickyEvent(testEvent.getTag()));
+        assertNull(bus.getStickyEvent(tag));
         assertNull(bus.getStickyEvent(null));
     }
 
@@ -180,6 +186,7 @@ public class EventBusTest {
             fail("must accept null");
         }
         isSticky = true;
+        testEvent = Event.createSticky("tag");
         bus.postSticky(testEvent);
         bus.register(testEvent.getTag(), listener);
         assertTrue(called);
@@ -188,8 +195,14 @@ public class EventBusTest {
         bus.removeStickyEvent(Event.create("ffa", null, null));
         Event event = bus.getStickyEvent(testEvent.getTag());
         assertNotNull(event);
+
+        assertFalse(testEvent.isRecycled()); //remove sticky event must recycle
+
+        Object tag = testEvent.getTag();
         bus.removeStickyEvent(testEvent);
-        event = bus.getStickyEvent(testEvent.getTag());
+
+        assertTrue(testEvent.isRecycled());
+        event = bus.getStickyEvent(tag);
         assertNull(event);
     }
 
@@ -202,7 +215,23 @@ public class EventBusTest {
         } catch (IllegalArgumentException ignored) {
 
         }
+        try {
+            bus.postSticky(Event.create("not sticky"));
+            fail("must only accept sticky events");
+        } catch (IllegalArgumentException ignored) {
+
+        }
+        //noinspection EmptyCatchBlock
+        try {
+            Event recycled = Event.create("bar");
+            recycled.recycle();
+            bus.postSticky(recycled);
+            fail("must not allow a recycled event to be posted");
+        } catch (IllegalArgumentException e) {
+
+        }
         isSticky = true;
+        testEvent = Event.createSticky("stikcy");
         bus.postSticky(testEvent);
         bus.register(testEvent.getTag(), listener);
         assertTrue(called);
@@ -217,15 +246,16 @@ public class EventBusTest {
         bus.unregister(testEvent.getTag(), listener);
         isSticky = true;
         bus.register(testEvent.getTag(), listener);
-        Event e = Event.create("lfakf;af", null, null);
+        Event e = Event.createSticky("lfakf;af", null, null);
         assertFalse("must return false when no listner exist for a given event", bus.postSticky(e));
         bus.removeStickyEvent(e);
         bus.register(testEvent.getTag(), listener);
         isSticky = false;
         bus.register(testEvent.getTag(), listener);
         assertTrue("must return true when no listner exist for a given event", bus.postSticky(testEvent));
+        Object tag = testEvent.getTag();
         bus.removeStickyEvent(testEvent);
-        bus.unregister(testEvent.getTag(), listener);
+        bus.unregister(tag, listener);
         isSticky = false;
     }
 
@@ -237,30 +267,85 @@ public class EventBusTest {
         } catch (IllegalArgumentException ignored) {
 
         }
+        //noinspection EmptyCatchBlock
+        try {
+            bus.post(Event.createSticky("fooobar"));
+            fail("must not allow sticky events");
+        } catch (IllegalArgumentException e) {
+
+        }
+        //noinspection EmptyCatchBlock
+        try {
+            Event recycled = Event.create("bar");
+            recycled.recycle();
+            bus.post(recycled);
+            fail("must not allow a recycled event to be posted");
+        } catch (IllegalArgumentException e) {
+
+        }
         int i = 5;
         Exception error = null;
+        String tag = "tag";
         do {
-            testEvent = Event.create("tag" + i, error, "fooz" + i);
-            bus.register(testEvent.getTag(), listener);
+            testEvent = Event.create(tag + i, error, "fooz" + i);
+            bus.register(tag + i, listener);
             bus.post(testEvent);
+            assertFalse(testEvent.isRecycled());
+            testEvent.recycle();
+            assertTrue(testEvent.isRecycled());
             assertTrue(called);
             called = false;
-            bus.unregister(testEvent.getTag(), listener);
+            bus.unregister(tag + i, listener);
             if (i % 2 == 0) {
                 error = new Exception();
             }
         } while (i++ < 5);
-        bus.register(testEvent.getTag(), listener);
+        bus.register(tag, listener);
         Event e = Event.create("lfakf;af", null, null);
-        assertFalse("must return false when no listner exist for a given event", bus.post(e));
-        bus.removeStickyEvent(e);
+        assertFalse("must return false when no listener exist for a given event", bus.post(e));
+
+
+        testEvent = Event.create("barr");
         bus.register(testEvent.getTag(), listener);
-        isSticky = false;
-        bus.register(testEvent.getTag(), listener);
-        assertTrue("must return true when no listner exist for a given event", bus.post(testEvent));
-        bus.removeStickyEvent(testEvent);
-        bus.unregister(testEvent.getTag(), listener);
-        isSticky = false;
+        assertTrue("must return true when a listener exist for a given event", bus.post(testEvent));
+        bus.unregister(tag, listener);
+
+
+        AtomicBoolean called1 = new AtomicBoolean(false),
+                called2 = new AtomicBoolean(false),
+                called3 = new AtomicBoolean(false);
+
+        EventsListener2 listener = new EventsListener2(called1, bus, testEvent),
+                listener2 = new EventsListener2(called2, bus, testEvent),
+                listener3 = new EventsListener2(called3, bus, testEvent);
+        bus.register("tag", listener);
+        bus.register("tag", listener2);
+        bus.register("tag", listener3);
+
+        Event event = Event.create("tag");
+        assertFalse(event.isRecycled());
+
+        //post this onto the bus
+        bus.post(event);
+
+        //must notify all listeners
+        assertTrue(called1.get());
+        assertTrue(called2.get());
+        assertTrue(called3.get());
+
+        //after post, we must call the recycle exactly 3 times before it will be recycled
+        event.recycle();
+        assertFalse(event.isRecycled());
+
+        event.recycle();
+        assertFalse(event.isRecycled());
+
+        event.recycle();
+        assertTrue(event.isRecycled());
+
+        bus.unregister("tag", listener);
+        bus.unregister("tag", listener2);
+        bus.unregister("tag", listener3);
     }
 
     @Test
@@ -280,14 +365,14 @@ public class EventBusTest {
             fail("must throw");
         } catch (IllegalArgumentException ignored) {
         }
-
-        bus.register(testEvent.getTag(), listener);
+        String tag = testEvent.getTag().toString();
+        bus.register(tag, listener);
         bus.post(testEvent);
         assertTrue(called);
         called = false;
-        bus.unregister(testEvent.getTag(), listener);
+        bus.unregister(tag, listener);
         bus.register("bar", listener);
-        bus.post(testEvent);
+        bus.post(Event.create("fobar"));
         assertFalse(called);
         called = false;
         bus.unregister("bar", listener);
@@ -310,11 +395,12 @@ public class EventBusTest {
             fail("must throw");
         } catch (IllegalArgumentException ignored) {
         }
-        bus.register(testEvent.getTag(), listener);
+        Object tag = testEvent.getTag();
+        bus.register(tag, listener);
         bus.post(testEvent);
         assertTrue(called);
         called = false;
-        bus.unregister(testEvent.getTag(), listener);
+        bus.unregister(tag, listener);
         bus.post(testEvent);
         assertFalse(called);
     }
@@ -530,4 +616,31 @@ public class EventBusTest {
         assertSame(bus, EventBus.getBus(Lock.class));
     }
 
+    private static class EventsListener2 implements EventsListener {
+
+        private final AtomicBoolean called2;
+        private final EventBus bus;
+
+        public EventsListener2(AtomicBoolean called2, EventBus bus, @SuppressWarnings("UnusedParameters") Event testEvent) {
+            this.called2 = called2;
+            this.bus = bus;
+        }
+
+        @Override
+        public int threadMode() {
+            return EventBus.ANY;
+        }
+
+        @Override
+        public void onEvent(EventBus yourBus, Event event) {
+            assertNotNull(event);
+            assertSame(bus, yourBus);
+            called2.set(true);
+        }
+
+        @Override
+        public boolean sticky() {
+            return false;
+        }
+    }
 }

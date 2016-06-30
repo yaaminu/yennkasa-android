@@ -101,6 +101,12 @@ public class EventBus {
 
     public boolean postSticky(Event event) {
         GenericUtils.ensureNotNull(event);
+        if (event.isRecycled()) {
+            throw new IllegalArgumentException("event is recycled");
+        }
+        if (!event.isSticky()) {
+            throw new IllegalArgumentException("event is not sticky");
+        }
         PLog.d(TAG, "received new sticky event %s", event.getTag().toString());
         LOCK.lock();
         try {
@@ -120,6 +126,12 @@ public class EventBus {
 
     public boolean post(Event event) {
         GenericUtils.ensureNotNull(event);
+        if (event.isRecycled()) {
+            throw new IllegalArgumentException("event is recycled");
+        }
+        if (event.isSticky()) {
+            throw new IllegalArgumentException("event must not be sticky");
+        }
         PLog.d(TAG, "received new event %s", event.getTag().toString());
         LOCK.lock();
         try {
@@ -138,12 +150,19 @@ public class EventBus {
         if (listeners == null || listeners.isEmpty()) {
             PLog.d(TAG, "no listener available for event %s", event.getTag());
         } else {
+            List<EventsListener> tmp = new ArrayList<>(listeners.size());
             for (WeakReference<EventsListener> weakReferenceListener : listeners) {
                 EventsListener listener = weakReferenceListener.get();
                 if (listener != null) {
-                    hadListener = true;
-                    notifyListener(listener, event);
+                    tmp.add(listener);
                 }
+            }
+            if (!tmp.isEmpty()) {
+                event.setListenerCount(tmp.size());
+                for (EventsListener eventsListener : tmp) {
+                    notifyListener(eventsListener, event);
+                }
+                hadListener = true;
             }
         }
         return hadListener;
@@ -316,6 +335,9 @@ public class EventBus {
         if (event == null) {
             return;
         }
+        if (!event.isSticky()) {
+            return;
+        }
         LOCK.lock();
         try {
             if (stickyEvents == null) {
@@ -324,6 +346,7 @@ public class EventBus {
             Event toBeRemoved = stickyEvents.get(event.getTag());
             if (toBeRemoved == event) {
                 stickyEvents.remove(event.getTag());
+                event.recycleSticky();
             }
             if (stickyEvents.isEmpty()) {
                 stickyEvents = null;

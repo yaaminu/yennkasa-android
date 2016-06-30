@@ -25,6 +25,7 @@ public class EventTest {
         Event event = Event.create(tag, null, null);
         assertNotNull(event);
         assertFalse(event.isRecycled());
+        assertFalse(event.isSticky());
         assertEquals(tag, event.getTag());
         assertEquals(null, event.getError());
         assertEquals(null, event.getData());
@@ -33,6 +34,7 @@ public class EventTest {
         event = Event.create(tag, error, null);
         assertNotNull(event);
         assertFalse(event.isRecycled());
+        assertFalse(event.isSticky());
         assertEquals(tag, event.getTag());
         assertEquals(error, event.getError());
         assertEquals(null, event.getData());
@@ -40,17 +42,59 @@ public class EventTest {
         String data = "data";
         event = Event.create(tag, error, data);
         assertNotNull(event);
+        assertFalse(event.isSticky());
         assertFalse(event.isRecycled());
         assertEquals(tag, event.getTag());
         assertEquals(error, event.getError());
         assertEquals(data, event.getData());
     }
 
+    @Test
+    public void testCreateSticky() throws Exception {
+        try {
+            Event.createSticky(null, null, null);
+            fail("must not accept null tags");
+        } catch (IllegalArgumentException e) {
+        }
+
+        String tag = "tag";
+        Event event = Event.createSticky(tag, null, null);
+        assertNotNull(event);
+        assertFalse(event.isRecycled());
+        assertEquals(tag, event.getTag());
+        assertEquals(null, event.getError());
+        assertEquals(null, event.getData());
+        assertTrue(event.isSticky());
+
+        Exception error = new Exception();
+        event = Event.createSticky(tag, error, null);
+        assertNotNull(event);
+        assertFalse(event.isRecycled());
+        assertEquals(tag, event.getTag());
+        assertEquals(error, event.getError());
+        assertEquals(null, event.getData());
+        assertTrue(event.isSticky());
+
+        String data = "data";
+        event = Event.createSticky(tag, error, data);
+        assertNotNull(event);
+        assertFalse(event.isRecycled());
+        assertEquals(tag, event.getTag());
+        assertEquals(error, event.getError());
+        assertEquals(data, event.getData());
+        assertTrue(event.isSticky());
+    }
+
+
     @SuppressWarnings("EmptyCatchBlock")
     @Test
     public void testRecycle() throws Exception {
+        Event event = Event.createSticky("stycky");
+        event.recycle();
+        assertFalse("must recycle sticky events this way", event.isRecycled());
+
         Exception error = new Exception();
-        Event event = Event.create("tag", error, "data");
+        event = Event.create("tag", error, "data");
         assertEquals("tag", event.getTag());
         assertEquals(error, event.getError());
         assertEquals("data", event.getData());
@@ -70,6 +114,52 @@ public class EventTest {
         assertEquals(barDAta, event.getData());
 
         event.recycle(); //recycle again
+        try {
+            //noinspection EqualsWithItself,ResultOfMethodCallIgnored
+            event.equals(event);
+            fail("object must be inaccessible once its recycled");
+        } catch (IllegalStateException e) {
+
+        }
+        try {
+            //noinspection EqualsWithItself,ResultOfMethodCallIgnored
+            event.hashCode();
+            fail("object must be inaccessible once its recycled");
+        } catch (IllegalStateException e) {
+
+        }
+    }
+
+    @SuppressWarnings("EmptyCatchBlock")
+    @Test
+    public void testRecycleSticky() throws Exception {
+        Event event = Event.create("stcky");
+        event.recycleSticky();
+        assertFalse("must recycle non-sticky events this way", event.isRecycled());
+        event.recycle();
+        assertTrue(event.isRecycled());
+
+        Exception error = new Exception();
+        event = Event.createSticky("tag", error, "data");
+        assertEquals("tag", event.getTag());
+        assertEquals(error, event.getError());
+        assertEquals("data", event.getData());
+        assertFalse(event.isRecycled());
+        event.recycleSticky();
+        assertTrue(event.isRecycled());
+
+
+        Event oldEvent = event;
+        error = new Exception();
+        String barDAta = "barDAta";
+        event = Event.createSticky("foo", error, barDAta);
+        assertTrue(event == oldEvent); //must actually recycle it from the object pool
+        assertFalse(event.isRecycled());
+        assertEquals("foo", event.getTag());
+        assertEquals(error, event.getError());
+        assertEquals(barDAta, event.getData());
+
+        event.recycleSticky(); //recycle again
         try {
             //noinspection EqualsWithItself,ResultOfMethodCallIgnored
             event.equals(event);
@@ -140,6 +230,7 @@ public class EventTest {
     public void testCreate1() throws Exception {
         Event event = Event.create("tag");
         assertFalse(event.isRecycled());
+        assertFalse(event.isSticky());
         assertEquals("tag", event.getTag());
         assertEquals(null, event.getError());
         assertEquals(null, event.getData());
@@ -153,16 +244,36 @@ public class EventTest {
 
     @SuppressWarnings("EmptyCatchBlock")
     @Test
+    public void testCreateSticky1() throws Exception {
+        Event event = Event.createSticky("tag");
+        assertTrue(event.isSticky());
+        assertFalse(event.isRecycled());
+        assertEquals("tag", event.getTag());
+        assertEquals(null, event.getError());
+        assertEquals(null, event.getData());
+        try {
+            Event.createSticky(null);
+            fail("must accept null tags");
+        } catch (IllegalArgumentException e) {
+
+        }
+    }
+
+    @SuppressWarnings("EmptyCatchBlock")
+    @Test
     public void testCreate2() throws Exception {
         Event event = Event.create("tag", null);
         assertFalse(event.isRecycled());
         assertEquals("tag", event.getTag());
+        assertFalse(event.isSticky());
+        assertFalse(event.isSticky());
         assertEquals(null, event.getError());
         assertEquals(null, event.getData());
 
         Exception error = new Exception();
         event = Event.create("tag", error);
         assertFalse(event.isRecycled());
+        assertFalse(event.isSticky());
         assertEquals("tag", event.getTag());
         assertEquals(error, event.getError());
         assertEquals(null, event.getData());
@@ -174,6 +285,37 @@ public class EventTest {
         }
         try {
             Event.create(null, error);
+            fail("must accept null tags");
+        } catch (IllegalArgumentException e) {
+
+        }
+    }
+
+    @SuppressWarnings("EmptyCatchBlock")
+    @Test
+    public void testCreateSticky2() throws Exception {
+        Event event = Event.createSticky("tag", null);
+        assertFalse(event.isRecycled());
+        assertTrue(event.isSticky());
+        assertEquals("tag", event.getTag());
+        assertEquals(null, event.getError());
+        assertEquals(null, event.getData());
+
+        Exception error = new Exception();
+        event = Event.createSticky("tag", error);
+        assertTrue(event.isSticky());
+        assertFalse(event.isRecycled());
+        assertEquals("tag", event.getTag());
+        assertEquals(error, event.getError());
+        assertEquals(null, event.getData());
+        try {
+            Event.createSticky(null, null);
+            fail("must accept null tags");
+        } catch (IllegalArgumentException e) {
+
+        }
+        try {
+            Event.createSticky(null, error);
             fail("must accept null tags");
         } catch (IllegalArgumentException e) {
 
