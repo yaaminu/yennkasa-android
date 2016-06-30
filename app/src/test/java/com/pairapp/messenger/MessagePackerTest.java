@@ -103,7 +103,8 @@ public class MessagePackerTest {
         buffer.order(ByteOrder.BIG_ENDIAN);
         assertEquals("length is invalid", 11 + object.toString().getBytes().length, buffer.array().length);
         assertEquals("message header must be persistable", 0x4, buffer.get());
-        assertEquals("recipient inconsistent", recipient, buffer.getLong());
+        long actual = buffer.getLong();
+        assertEquals("recipient inconsistent", recipient, actual);
         assertEquals("must delimit header with a dash", '-', buffer.get());
         assertEquals("message header for client invalid", MessagePacker.READABLE_MESSAGE, buffer.get());
         byte[] body = new byte[object.toString().getBytes().length];
@@ -144,8 +145,9 @@ public class MessagePackerTest {
     public void testCreateTypingMessage() throws Exception {
         byte[] statusMsg = messagePacker.createTypingMessage(12345876, false);
         ByteBuffer buffer = ByteBuffer.wrap(statusMsg);
+        buffer.order(ByteOrder.BIG_ENDIAN);
         assertEquals(buffer.get(), 0x1);
-        assertEquals(buffer.getLong(), 12345876);
+        assertEquals(12345876, buffer.getLong());
         assertEquals(buffer.get(), '-');
         assertEquals(buffer.get(), MessagePacker.NOT_TYPING);
         assertEquals(buffer.getLong(), 233266349205L);
@@ -260,7 +262,7 @@ public class MessagePackerTest {
         int recipient;
         buffer.put(0, (byte) 0x1);
         recipient = 123456789;
-        buffer.putDouble(1, recipient);
+        buffer.putLong(1, recipient);
 
         messagePacker.unpack(buffer.array());
 
@@ -293,7 +295,7 @@ public class MessagePackerTest {
         ByteBuffer buffer = ByteBuffer.allocate(9);
         buffer.put((byte) 0x2);
         int recipient = 123456789;
-        buffer.putDouble(recipient);
+        buffer.putLong(recipient);
 
         messagePacker.unpack(buffer.array());
 
@@ -305,7 +307,7 @@ public class MessagePackerTest {
         ByteBuffer buffer = ByteBuffer.allocate(9);
         buffer.put(MessagePacker.TYPING);
         int recipient = 123456789;
-        buffer.putDouble(recipient);
+        buffer.putLong(recipient);
 
         messagePacker.unpack(buffer.array());
 
@@ -314,7 +316,7 @@ public class MessagePackerTest {
 
         buffer = ByteBuffer.allocate(9);
         buffer.put(MessagePacker.NOT_TYPING);
-        buffer.putDouble(recipient);
+        buffer.putLong(recipient);
 
         messagePacker.unpack(buffer.array());
 
