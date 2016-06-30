@@ -2,6 +2,7 @@ package com.pairapp.data;
 
 import android.support.v4.util.Pair;
 
+import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.PLog;
 import com.pairapp.util.ThreadUtils;
@@ -35,8 +36,8 @@ import static org.powermock.api.mockito.PowerMockito.when;
 @PrepareForTest(ThreadUtils.class)
 public class StatusManagerTest {
 
-    private final EventBus bus = new EventBus();
-    private EventBus.Event statusEvent;
+    private final EventBus bus = EventBus.getDefault();
+    private Event statusEvent;
     private boolean listenerCalled;
     int threadMode = EventBus.ANY;
     @Rule
@@ -55,7 +56,7 @@ public class StatusManagerTest {
 
     EventBus.EventsListener listener = new EventBus.EventsListener() {
         @Override
-        public void onEvent(EventBus bus, EventBus.Event event) {
+        public void onEvent(EventBus bus, Event event) {
             listenerCalled = true;
             statusEvent = event;
         }
@@ -125,9 +126,9 @@ public class StatusManagerTest {
         bus.register(ANNOUNCE_ONLINE, listener);
         manager.announceStatusChange(true);
         assertTrue(listenerCalled);
-        assertEquals("invalid event tag", ANNOUNCE_ONLINE, statusEvent.tag);
-        assertEquals("error must be null", null, statusEvent.error);
-        assertTrue("data must be true to signify online", (Boolean) statusEvent.data);
+        assertEquals("invalid event tag", ANNOUNCE_ONLINE, statusEvent.getTag());
+        assertEquals("error must be null", null, statusEvent.getError());
+        assertTrue("data must be true to signify online", (Boolean) statusEvent.getData());
 
 
         listenerCalled = false;
@@ -138,9 +139,9 @@ public class StatusManagerTest {
 
         manager.announceStatusChange(false);
         assertTrue(listenerCalled);
-        assertEquals("invalid event tag", ANNOUNCE_ONLINE, statusEvent.tag);
-        assertEquals("error must be null", null, statusEvent.error);
-        assertFalse("data must be false to signify offline", (Boolean) statusEvent.data);
+        assertEquals("invalid event tag", ANNOUNCE_ONLINE, statusEvent.getTag());
+        assertEquals("error must be null", null, statusEvent.getError());
+        assertFalse("data must be false to signify offline", (Boolean) statusEvent.getData());
 
 
         listenerCalled = false;
@@ -169,12 +170,12 @@ public class StatusManagerTest {
         bus.register(ANNOUNCE_TYPING, listener);
         manager.announceStartTyping(userId);
         assertTrue(listenerCalled);
-        assertEquals("invalid event tag", ANNOUNCE_TYPING, statusEvent.tag);
-        assertEquals("error must be null", null, statusEvent.error);
+        assertEquals("invalid event tag", ANNOUNCE_TYPING, statusEvent.getTag());
+        assertEquals("error must be null", null, statusEvent.getError());
         //noinspection unchecked
-        assertTrue("data must be true to signify typing", ((Pair<String, Boolean>) statusEvent.data).second);
+        assertTrue("data must be true to signify typing", ((Pair<String, Boolean>) statusEvent.getData()).second);
         //noinspection unchecked
-        assertEquals("data must be true to signify typing", userId, ((Pair<String, Boolean>) statusEvent.data).first);
+        assertEquals("data must be true to signify typing", userId, ((Pair<String, Boolean>) statusEvent.getData()).first);
         assertEquals("must set typing with to currentUser typing with", userId, manager.getCurrentUserTypingWith());
 
     }
@@ -198,12 +199,12 @@ public class StatusManagerTest {
         bus.register(ANNOUNCE_TYPING, listener);
         manager.announceStopTyping(userId);
         assertTrue(listenerCalled);
-        assertEquals("invalid event tag", ANNOUNCE_TYPING, statusEvent.tag);
-        assertEquals("error must be null", null, statusEvent.error);
+        assertEquals("invalid event tag", ANNOUNCE_TYPING, statusEvent.getTag());
+        assertEquals("error must be null", null, statusEvent.getError());
         //noinspection unchecked
-        assertFalse("data must be false to signify not typing", ((Pair<String, Boolean>) statusEvent.data).second);
+        assertFalse("data must be false to signify not typing", ((Pair<String, Boolean>) statusEvent.getData()).second);
         //noinspection unchecked
-        assertEquals("userId must be consistent", userId, ((Pair<String, Boolean>) statusEvent.data).first);
+        assertEquals("userId must be consistent", userId, ((Pair<String, Boolean>) statusEvent.getData()).first);
         assertNull("must typing with to null", manager.getCurrentUserTypingWith());
         assertFalse("must set typing with to null", userId.equals(manager.getCurrentUserTypingWith()));
 
@@ -250,9 +251,9 @@ public class StatusManagerTest {
         manager.handleStatusAnnouncement(testUserId, true);
         assertTrue("must report user to be online", manager.isOnline(testUserId));
         assertTrue("must post this to the bus", listenerCalled);
-        assertEquals(ON_USER_ONLINE, statusEvent.tag);
-        assertEquals(testUserId, statusEvent.data);
-        assertNull(statusEvent.error);
+        assertEquals(ON_USER_ONLINE, statusEvent.getTag());
+        assertEquals(testUserId, statusEvent.getData());
+        assertNull(statusEvent.getError());
 
         statusEvent = null;
         listenerCalled = false;
@@ -266,11 +267,11 @@ public class StatusManagerTest {
             }
 
             @Override
-            public void onEvent(EventBus yourBus, EventBus.Event event) {
+            public void onEvent(EventBus yourBus, Event event) {
                 secondListenerCalled.set(true);
-                assertEquals(ANNOUNCE_TYPING, event.tag);
-                assertEquals(testUserId, ((Pair<String, Boolean>) event.data).first);
-                assertTrue(((Pair<String, Boolean>) event.data).second);
+                assertEquals(ANNOUNCE_TYPING, event.getTag());
+                assertEquals(testUserId, ((Pair<String, Boolean>) event.getData()).first);
+                assertTrue(((Pair<String, Boolean>) event.getData()).second);
             }
 
             @Override
@@ -286,8 +287,8 @@ public class StatusManagerTest {
 
         //on user online event
         assertTrue(listenerCalled);
-        assertEquals(ON_USER_ONLINE, statusEvent.tag);
-        assertEquals(testUserId, statusEvent.data);
+        assertEquals(ON_USER_ONLINE, statusEvent.getTag());
+        assertEquals(testUserId, statusEvent.getData());
     }
 
     @Test
@@ -298,9 +299,9 @@ public class StatusManagerTest {
         manager.handleStatusAnnouncement(testUserId, false);
         assertFalse("must report user to be online", manager.isOnline(testUserId));
         assertTrue("must post this to the bus", listenerCalled);
-        assertEquals(ON_USER_OFFLINE, statusEvent.tag);
-        assertEquals(testUserId, statusEvent.data);
-        assertNull(statusEvent.error);
+        assertEquals(ON_USER_OFFLINE, statusEvent.getTag());
+        assertEquals(testUserId, statusEvent.getData());
+        assertNull(statusEvent.getError());
 
         statusEvent = null;
         listenerCalled = false;
@@ -315,7 +316,7 @@ public class StatusManagerTest {
             }
 
             @Override
-            public void onEvent(EventBus yourBus, EventBus.Event event) {
+            public void onEvent(EventBus yourBus, Event event) {
                 secondListenerCalled.set(true);
             }
 
@@ -331,8 +332,8 @@ public class StatusManagerTest {
         assertFalse(secondListenerCalled.get());
         //on user online event
         assertTrue(listenerCalled);
-        assertEquals(ON_USER_OFFLINE, statusEvent.tag);
-        assertEquals(testUserId, statusEvent.data);
+        assertEquals(ON_USER_OFFLINE, statusEvent.getTag());
+        assertEquals(testUserId, statusEvent.getData());
     }
 
     @Test
@@ -407,17 +408,17 @@ public class StatusManagerTest {
 
         manager.handleTypingAnnouncement(user, true);
         assertTrue(listenerCalled);
-        assertEquals(user, statusEvent.data);
-        assertEquals(ON_USER_TYPING, statusEvent.tag);
-        assertNull(statusEvent.error);
+        assertEquals(user, statusEvent.getData());
+        assertEquals(ON_USER_TYPING, statusEvent.getTag());
+        assertNull(statusEvent.getError());
 
         statusEvent = null;
         listenerCalled = false;
         manager.handleTypingAnnouncement(user, false);
         assertTrue(listenerCalled);
-        assertEquals(user, statusEvent.data);
-        assertEquals(ON_USER_STOP_TYPING, statusEvent.tag);
-        assertNull(statusEvent.error);
+        assertEquals(user, statusEvent.getData());
+        assertEquals(ON_USER_STOP_TYPING, statusEvent.getTag());
+        assertNull(statusEvent.getError());
     }
 
     @Test

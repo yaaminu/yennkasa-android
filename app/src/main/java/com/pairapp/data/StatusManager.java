@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
 
+import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.GenericUtils;
 
@@ -46,7 +47,7 @@ public class StatusManager {
     public void announceStatusChange(boolean online) {
         if (this.isCurrentUserOnline == online) return;
         isCurrentUserOnline = online;
-        if (!bus.post(new EventBus.Event(ANNOUNCE_ONLINE, null, isCurrentUserOnline))) {
+        if (!bus.post(Event.create(ANNOUNCE_ONLINE, null, isCurrentUserOnline))) {
             throw new IllegalStateException("no listener for events");
         }
     }
@@ -54,7 +55,7 @@ public class StatusManager {
     public synchronized void announceStartTyping(@NonNull String userId) {
         GenericUtils.ensureNotEmpty(userId);
         typingWith = userId;
-        if (!bus.post(new EventBus.Event(ANNOUNCE_TYPING, null, new Pair<>(userId, true)))) {
+        if (!bus.post(Event.create(ANNOUNCE_TYPING, null, new Pair<>(userId, true)))) {
             throw new IllegalStateException("no listener for events");
         }
     }
@@ -66,7 +67,7 @@ public class StatusManager {
         }
         //its hard to say this is a programmatic error. so we allow the masseage to pass through
         //even though we don't know whether this user is typing with "userId" or not.
-        if (!bus.post(new EventBus.Event(ANNOUNCE_TYPING, null, new Pair<>(userId, false)))) {
+        if (!bus.post(Event.create(ANNOUNCE_TYPING, null, new Pair<>(userId, false)))) {
             throw new IllegalStateException("no listener for events");
         }
     }
@@ -88,7 +89,7 @@ public class StatusManager {
             onlineSet.remove(userId);
             typingSet.remove(userId);
         }
-        bus.post(new EventBus.Event(isOnline ? ON_USER_ONLINE : ON_USER_OFFLINE, null, userId));
+        bus.post(Event.create(isOnline ? ON_USER_ONLINE : ON_USER_OFFLINE, null, userId));
     }
 
     public synchronized void handleTypingAnnouncement(@NonNull String userId, boolean isTyping) {
@@ -102,7 +103,7 @@ public class StatusManager {
         } else {
             typingSet.remove(userId);
         }
-        bus.post(new EventBus.Event(isTyping ? ON_USER_TYPING : ON_USER_STOP_TYPING, null, userId));
+        bus.post(Event.create(isTyping ? ON_USER_TYPING : ON_USER_STOP_TYPING, null, userId));
     }
 
     public synchronized boolean isOnline(@NonNull String userId) {
