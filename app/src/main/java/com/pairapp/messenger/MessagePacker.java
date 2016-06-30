@@ -64,7 +64,7 @@ public class MessagePacker {
         if (isGroupMessage) {
             byteBuffer.put(recipient.getBytes());
         } else {
-            byteBuffer.putDouble(Long.parseLong(recipient));
+            byteBuffer.putLong(Long.parseLong(recipient));
         }
         byteBuffer.put(HEADER_DELIMITER);
         /**********************end header*********************/
@@ -98,13 +98,13 @@ public class MessagePacker {
 
         /**********************start header*********************/
         byteBuffer.put(NO_PERSIST_ONLY_WHEN_ONLINE);//1
-        byteBuffer.putDouble(recipient);//8
+        byteBuffer.putLong(recipient);//8
         byteBuffer.put(HEADER_DELIMITER);//1
         /**********************end header*********************/
 
         /**********************start payload*********************/
         byteBuffer.put(isTyping ? TYPING : NOT_TYPING);//1
-        byteBuffer.putDouble(currentUserId);//8
+        byteBuffer.putLong(currentUserId);//8
         /**********************end payload*********************/
 
         return byteBuffer.array();
@@ -128,7 +128,7 @@ public class MessagePacker {
 
         /***************************start payload***************/
         byteBuffer.put(isTyping ? TYPING : NOT_TYPING); //1
-        byteBuffer.putDouble(currentUserId);//8
+        byteBuffer.putLong(currentUserId);//8
         /***************************end payload****************/
 
         return byteBuffer.array();
@@ -144,7 +144,7 @@ public class MessagePacker {
         byteBuffer.order(ByteOrder.BIG_ENDIAN);
         /**********************start header*********************/
         byteBuffer.put(MONITOR_OR_STATUS);
-        byteBuffer.putDouble(targetLong);
+        byteBuffer.putLong(targetLong);
         byteBuffer.put(HEADER_DELIMITER);
         /**********************end header*********************/
 
@@ -164,7 +164,7 @@ public class MessagePacker {
 
         /**********************start header*********************/
         byteBuffer.put((byte) (NO_PERSIST_PUSH_IF_POSSIBLE | NO_TRUNCATE_PUSH));
-        byteBuffer.putDouble(recipient);
+        byteBuffer.putLong(recipient);
         byteBuffer.put(HEADER_DELIMITER);
         /**********************end header*********************/
 
