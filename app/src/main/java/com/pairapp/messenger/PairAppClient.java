@@ -1,46 +1,33 @@
 package com.pairapp.messenger;
 
 import android.app.Activity;
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.res.AssetFileDescriptor;
-import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.util.Pair;
 import android.util.Log;
 
 import com.pairapp.BuildConfig;
 import com.pairapp.Errors.PairappException;
-import com.pairapp.R;
 import com.pairapp.data.Message;
 import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.ParseClient;
 import com.pairapp.net.ParseFileClient;
 import com.pairapp.net.sockets.PairappSocket;
-import com.pairapp.ui.ChatActivity;
 import com.pairapp.util.Config;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
 import com.pairapp.util.ThreadUtils;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +36,6 @@ import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.realm.Realm;
@@ -57,13 +43,10 @@ import io.realm.RealmResults;
 
 
 public class PairAppClient extends Service {
-    // FIXME: 6/16/2015 improve how we stop background task
     public static final String TAG = PairAppClient.class.getSimpleName();
     public static final String ACTION_SEND_ALL_UNSENT = "send unsent messages";
     public static final String ACTION = "action";
-    public static final String UPDATE_KEY = PairAppClient.class.getName() + "updateKey";
     static final String VERSION = "version";
-    public static final int not_id = 10987;
     static final int notId = 10983;
     public static final String ACTION_SEND_MESSAGE = "sendMessage", ACTION_CANCEL_DISPATCH = "cancelMessage";
     public static final String EXTRA_MESSAGE = "message";
@@ -74,9 +57,8 @@ public class PairAppClient extends Service {
     private WebSocketDispatcher webSocketDispatcher;
     private MessagePacker messagePacker;
     private final Map<String, Future<?>> disPatchingThreads = new ConcurrentHashMap<>();
-
-    private MediaPlayer mediaPlayer;
-    private final Object playerLock = new Object();
+    private Dispatcher.DispatcherMonitor monitor;
+    private PairappSocket pairappSocket;
 
 
     public static void startIfRequired(Context context) {
@@ -150,8 +132,6 @@ public class PairAppClient extends Service {
         }
     }
 
-    private static final Semaphore updateLock = new Semaphore(1, true);
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -159,80 +139,10 @@ public class PairAppClient extends Service {
         if (WORKER_THREAD != null && WORKER_THREAD.isAlive()) {
             WORKER_THREAD.quit();
         }
-
+        new UpdateHelper().checkUpdates();
         WORKER_THREAD = new WorkerThread();
         WORKER_THREAD.start();
-        if (!updateLock.tryAcquire()) {
-            PLog.d(TAG, "update lock held, deferring update check from prefs");
-            return;
-        }
-        try {
-            final SharedPreferences applicationWidePrefs = Config.getApplicationWidePrefs();
-            String updateJson = applicationWidePrefs.getString(UPDATE_KEY, null);
-            if (updateJson != null) {
-                try {
-                    final JSONObject object = new JSONObject(updateJson);
-                    int versionCode = object.getInt("versionCode");
-                    if (versionCode > BuildConfig.VERSION_CODE) {
-                        TaskManager.execute(new Runnable() {
-                            public void run() {
-                                try {
-                                    notifyUpdateAvailable(object);
-                                } catch (JSONException e) {
-                                    PLog.d(TAG, "error while trying to deserialize update data");
-                                    applicationWidePrefs.edit().remove(UPDATE_KEY).apply();
-                                }
-                            }
-                        }, false);
-                    } else {
-                        applicationWidePrefs.edit().remove(UPDATE_KEY).apply();
-                    }
-                } catch (JSONException e) {
-                    PLog.d(TAG, "error while trying to deserialize update data");
-                    applicationWidePrefs.edit().remove(UPDATE_KEY).apply();
-                }
-            }
-        } finally {
-            updateLock.release();
-        }
-    }
 
-    static void notifyUpdateAvailable(JSONObject data1) throws JSONException {
-        ThreadUtils.ensureNotMain();
-        try {
-            updateLock.acquire();
-            final String version = data1.getString(PairAppClient.VERSION);
-            final int versionCode = data1.getInt("versionCode");
-            if (versionCode > BuildConfig.VERSION_CODE) {
-                PLog.i(TAG, "update available, latest version: %s", version);
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(data1.getString("link")));
-                final Context applicationContext = Config.getApplicationContext();
-                Notification notification = new NotificationCompat.Builder(applicationContext)
-                        .setContentTitle(applicationContext.getString(R.string.update_available))
-                        .setContentIntent(PendingIntent.getActivity(applicationContext, 1003, intent, PendingIntent.FLAG_UPDATE_CURRENT))
-                        .setSubText(applicationContext.getString(R.string.download_update))
-                        .setSmallIcon(R.drawable.ic_stat_icon).build();
-                NotificationManagerCompat manager = NotificationManagerCompat.from(applicationContext);// getSystemService(NOTIFICATION_SERVICE));
-                manager.notify("update" + TAG, PairAppClient.notId, notification);
-                SharedPreferences preferences = Config.getApplicationWidePrefs();
-                final String savedUpdate = preferences.getString(PairAppClient.UPDATE_KEY, null);
-                if (savedUpdate != null) {
-                    JSONObject object = new JSONObject(savedUpdate);
-                    if (object.optInt("versionCode", versionCode) >= versionCode) {
-                        PLog.d(TAG, "push for update arrived late");
-                        return;
-                    }
-                }
-                preferences.edit().putString(PairAppClient.UPDATE_KEY, data1.toString()).apply();
-            } else {
-                PLog.d(TAG, "client up to date");
-            }
-        } catch (InterruptedException e) {
-            PLog.d(TAG, "itterupted while wating to acquire update lock");
-        } finally {
-            updateLock.release();
-        }
     }
 
     @Override
@@ -281,46 +191,26 @@ public class PairAppClient extends Service {
     @Override
     public void onDestroy() {
         WORKER_THREAD.attemptShutDown();
-        synchronized (playerLock) {
-            if (mediaPlayer != null) {
-                if (mediaPlayer.isPlaying()) {
-                    mediaPlayer.stop();
-                }
-                mediaPlayer.release();
-                mediaPlayer = null;
-            }
-        }
         super.onDestroy();
     }
-
-    private PairappSocket pairappSocket;
-
-    private WebSocketDispatcher.MessageEncoder messageEncoder = new WebSocketDispatcher.MessageEncoder() {
-        @Override
-        public byte[] encode(Message message) {
-            return messagePacker.pack(Message.toJSON(message), message.getTo(), Message.isGroupMessage(message));
-        }
-
-    };
-    private final PairappSocket.MessageParser parser = new PairappSocket.MessageParser() {
-        @Override
-        public void feed(byte[] bytes) {
-            messagePacker.unpack(bytes);
-        }
-    };
 
     private synchronized void bootClient() {
         ThreadUtils.ensureNotMain();
         if (!isClientStarted.get()) {
+            monitor = new DispatcherMonitorImpl(this, disPatchingThreads);
             INTERFACE = new PairAppClientInterface();
             messagePacker = MessagePacker.create(UserManager.getMainUserId());
             messagePacker.observe().subscribe(new IncomingMessageProcessor());
+
+
             String authToken = UserManager.getInstance().getCurrentUserAuthToken();
             Map<String, String> opts = new HashMap<>(1);
             opts.put("Authorization", authToken);
-            pairappSocket = PairappSocket.create(opts, parser);
+            pairappSocket = PairappSocket.create(opts, new MessageParserImpl(messagePacker));
             pairappSocket.init();
-            webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, pairappSocket, messageEncoder);
+
+            webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, pairappSocket,
+                    new MessageEncoderImpl(messagePacker));
             isClientStarted.set(true);
         }
     }
@@ -330,6 +220,7 @@ public class PairAppClient extends Service {
         ThreadUtils.ensureNotMain();
         if (isClientStarted.get()) {
             messagePacker.close();
+            webSocketDispatcher.unRegisterMonitor(monitor);
             webSocketDispatcher.close();
             pairappSocket.disConnectBlocking();
             PLog.i(TAG, TAG + ": bye");
@@ -365,113 +256,6 @@ public class PairAppClient extends Service {
             }
         };
         TaskManager.execute(task, true);
-    }
-
-    private final Dispatcher.DispatcherMonitor monitor = new Dispatcher.DispatcherMonitor() {
-        final Map<String, Pair<String, Integer>> progressMap = new ConcurrentHashMap<>();
-
-        @Override
-        public void onDispatchFailed(String messageId, String reason) {
-            PLog.d(TAG, "message with id : %s dispatch failed with reason: " + reason, messageId);
-            LiveCenter.releaseProgressTag(messageId);
-            progressMap.remove(messageId);
-            disPatchingThreads.remove(messageId);
-            cancelNotification(messageId);
-        }
-
-        @Override
-        public void onDispatchSucceeded(String messageId) {
-            PLog.d(TAG, "message with id : %s dispatched successfully", messageId);
-            LiveCenter.releaseProgressTag(messageId);
-            progressMap.remove(messageId);
-            disPatchingThreads.remove(messageId);
-            cancelNotification(messageId);
-            Realm realm = Message.REALM(PairAppClient.this);
-            Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
-            if (message != null
-                    && Config.getCurrentActivePeer().equals(message.getTo())
-                    && UserManager.getInstance().getBoolPref(UserManager.IN_APP_NOTIFICATIONS, true)) {
-                playSound();
-            }
-            realm.close();
-        }
-
-        private void cancelNotification(String messageId) {
-            NotificationManagerCompat manager = NotificationManagerCompat.from(PairAppClient.this);// get
-            manager.cancel(messageId, not_id);
-        }
-
-        @Override
-        public void onProgress(String id, int progress, int max) {
-            LiveCenter.updateProgress(id, progress);
-            Pair<String, Integer> previousProgress = progressMap.get(id);
-            if (previousProgress != null && previousProgress.first != null && previousProgress.second != null) {
-                if (previousProgress.second >= progress) {
-                    PLog.d(TAG, "late progress report");
-                    return;
-                }
-            } else {
-                Realm messageRealm = Message.REALM(PairAppClient.this);
-                Message message = messageRealm.where(Message.class).equalTo(Message.FIELD_ID, id).findFirst();
-                if (message == null) {
-                    return;
-                }
-                previousProgress = new Pair<>(message.getTo(), progress);
-                progressMap.put(id, previousProgress);
-                messageRealm.close();
-            }
-
-            PairAppClient self = PairAppClient.this;
-            Intent intent = new Intent(self, ChatActivity.class);
-            intent.putExtra(ChatActivity.EXTRA_PEER_ID, previousProgress.first);
-            Notification notification = new NotificationCompat.Builder(self)
-                    .setContentTitle(getString(R.string.upload_progress))
-                    .setProgress(100, 1, true)
-                    .setContentIntent(PendingIntent.getActivity(self, 1003, intent, PendingIntent.FLAG_UPDATE_CURRENT))
-                    .setContentText(getString(R.string.uploading))
-                    .setSmallIcon(R.drawable.ic_stat_icon).build();
-            NotificationManagerCompat manager = NotificationManagerCompat.from(self);// getSystemService(NOTIFICATION_SERVICE));
-            manager.notify(id, not_id, notification);
-        }
-
-        @Override
-        public void onAllDispatched() {
-
-        }
-    };
-
-    AtomicBoolean shouldPlaySound = new AtomicBoolean(true);
-
-    private void playSound() {
-        if (shouldPlaySound.getAndSet(false)) { //// FIXME: 6/21/2016 why main thread?
-            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    shouldPlaySound.set(true);
-                }
-            }, 1500);
-            synchronized (playerLock) {
-                try {
-                    if (mediaPlayer == null) {
-                        mediaPlayer = new MediaPlayer();
-                    } else if (mediaPlayer.isPlaying()) {
-                        mediaPlayer.stop();
-                    }
-                    mediaPlayer.reset();
-                    AssetFileDescriptor fd = getResources().openRawResourceFd(R.raw.beep);
-                    mediaPlayer.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
-                    mediaPlayer.prepare();
-                    fd.close();
-                    mediaPlayer.setLooping(false);
-                    mediaPlayer.setVolume(1f, 1f);
-                    mediaPlayer.start();
-                } catch (IOException e) {
-                    PLog.d(TAG, "failed to play sound");
-                }
-            }
-        } else {
-            PLog.d(TAG, "not playing sound, played one not too lon ago");
-        }
     }
 
     private void sendMessageInternal(Message message) {
