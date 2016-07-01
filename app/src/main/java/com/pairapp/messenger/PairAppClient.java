@@ -475,24 +475,22 @@ public class PairAppClient extends Service {
     }
 
     private void sendMessageInternal(Message message) {
-        if (!Message.isTextMessage(message)) { // FIXME: 6/21/2016 why not check for all kinds of messages?
-            Realm realm = Message.REALM(this);
-            try {
-                String messageId = message.getId();
-                Message tmp = realm.where(Message.class).equalTo(Message.FIELD_ID, message.getId()).findFirst();
-                if (tmp == null || tmp.getState() != Message.STATE_PENDING) {
-                    PLog.d(TAG, "failed to send message, message either canceled or deleted by user");
-                    monitor.onDispatchFailed(messageId, MessageUtils.ERROR_CANCELLED);
-                    return;
-                }
-            } finally {
-                realm.close();
+        Realm realm = Message.REALM(this);
+        try {
+            String messageId = message.getId();
+            Message tmp = realm.where(Message.class).equalTo(Message.FIELD_ID, message.getId()).findFirst();
+            if (tmp == null || tmp.getState() != Message.STATE_PENDING) {
+                PLog.d(TAG, "failed to send message, message either canceled or deleted by user");
+                monitor.onDispatchFailed(messageId, MessageUtils.ERROR_CANCELLED);
+                return;
             }
-            try {
-                LiveCenter.acquireProgressTag(message.getId());
-            } catch (PairappException e) {
-                throw new RuntimeException(e.getCause());
-            }
+        } finally {
+            realm.close();
+        }
+        try {
+            LiveCenter.acquireProgressTag(message.getId());
+        } catch (PairappException e) {
+            throw new RuntimeException(e.getCause());
         }
         webSocketDispatcher.dispatch(message);
     }
