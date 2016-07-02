@@ -36,9 +36,9 @@ public class MessengerBus {
         GenericUtils.ensureNotNull(bus);
         switch (bus) {
             case PAIRAPP_CLIENT_OUT_BUS:
-                return PairAppClient.getOutBuz();
+//                return PairAppClient.getOutBuz();
             case PAIRAPP_CLIENT_IN_BUS:
-                return PairAppClient.getInBuz();
+//                return PairAppClient.getInBuz();
             default:
                 throw new AssertionError();
         }

@@ -89,8 +89,6 @@ public class MessageProcessor extends IntentService {
                     PLog.d(TAG, "message not available for update");
                 }
                 realm.close();
-            } else if (type.equals(UPDATE)) {
-                PairAppClient.notifyUpdateAvailable(data1);
             } else {
                 throw new JSONException("unknown message");
             }
@@ -182,7 +180,7 @@ public class MessageProcessor extends IntentService {
                 }
                 realm.commitTransaction();
                 NotificationManager.INSTANCE.onNewMessage(this, message);
-                MessageCenter.notifyReceived(message);
+                // TODO: 7/2/2016 send a notification that a message has been received
                 if (!Message.isTextMessage(message) && Worker.getCurrentActiveDownloads() < Worker.MAX_PARRALLEL_DOWNLOAD) {
                     if ((ConnectionUtils.isWifiConnected()
                             && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_WIFI, false))

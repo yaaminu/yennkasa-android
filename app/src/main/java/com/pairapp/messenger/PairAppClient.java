@@ -309,7 +309,8 @@ public class PairAppClient extends Service {
                         }
                         return;
                     }
-                    MessageCenter.notifyMessageSeen(tmp);
+//                    MessageCenter.notifyMessageSeen(tmp);
+                    // TODO: 7/2/2016 send a notification
                     Realm realm = Message.REALM(Config.getApplicationContext());
                     Message realmMessage = realm.where(Message.class).equalTo(Message.FIELD_ID, tmp.getId()).findFirst();
                     if (realmMessage != null) {
