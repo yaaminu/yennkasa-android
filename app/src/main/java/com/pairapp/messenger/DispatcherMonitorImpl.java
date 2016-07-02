@@ -42,6 +42,7 @@ class DispatcherMonitorImpl implements Dispatcher.DispatcherMonitor {
     private MediaPlayer mediaPlayer;
     private boolean playerInUse = false;
     private final Timer timer = new Timer(true);
+    private TimerTaskIMpl currTask;
 
 
     public DispatcherMonitorImpl(Context context, Map<String, Future<?>> dispatchingThread) {
@@ -155,20 +156,25 @@ class DispatcherMonitorImpl implements Dispatcher.DispatcherMonitor {
         public void onCompletion(MediaPlayer mp) {
             synchronized (DispatcherMonitorImpl.this) {
                 playerInUse = false;
-                timer.schedule(disposeMediaPlayerTask, 30000);
+                if (currTask != null) {
+                    currTask.cancel();
+                }
+                currTask = new TimerTaskIMpl();
+                timer.schedule(currTask, 30000);
             }
         }
     };
 
-    private final TimerTask disposeMediaPlayerTask = new TimerTask() {
-        @Override
+    private class TimerTaskIMpl extends TimerTask {
         public void run() {
             synchronized (DispatcherMonitorImpl.this) {
-                if (!playerInUse) {
+                if (!playerInUse && mediaPlayer != null) {
                     mediaPlayer.release();
                     mediaPlayer = null;
                 }
             }
         }
-    };
+    }
+
+    ;
 }

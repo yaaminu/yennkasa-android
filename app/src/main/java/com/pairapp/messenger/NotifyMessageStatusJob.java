@@ -94,7 +94,7 @@ final class NotifyMessageStatusJob extends Task {
                     return;
                 }
             }
-            MessageCenter.doNotify(this.message, this.messageStatus);
+//            MessageCenter.doNotify(this.message, this.messageStatus);
             message = realm.where(Message.class).equalTo(Message.FIELD_ID, this.message.getId()).findFirst();
             if (message != null) {
                 realm.beginTransaction();
