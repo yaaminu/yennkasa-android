@@ -30,6 +30,8 @@ import com.pairapp.data.UserManager;
 import com.pairapp.messenger.Notifier;
 import com.pairapp.messenger.PairAppClient;
 import com.pairapp.util.Config;
+import com.pairapp.util.Event;
+import com.pairapp.util.EventBus;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.MediaUtils;
 import com.pairapp.util.PLog;
@@ -46,10 +48,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.realm.Realm;
 
+import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS;
+import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS;
+import static com.pairapp.messenger.MessengerBus.get;
+
 /**
  * @author Null-Pointer on 8/12/2015.
  */
-public abstract class PairAppActivity extends PairAppBaseActivity implements Notifier, NoticeFragment.NoticeFragmentCallback {
+public abstract class PairAppActivity extends PairAppBaseActivity
+        implements Notifier, NoticeFragment.NoticeFragmentCallback, EventBus.EventsListener {
     public static final int DELAY_MILLIS = 2000;
     public static final String TAG = PairAppActivity.class.getSimpleName();
     static private volatile Message latestMessage;
@@ -314,9 +321,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
     }
 
-    protected void onBind() {
-    }
-
     protected void onUnbind() {
     }
 
@@ -459,7 +463,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         } else {
             super.showError(error);
         }
-//        super.showError(error);
     }
 
     @Override
@@ -472,133 +475,56 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         }
     }
 
-//    private static class ServiceConn implements ServiceConnection {
-//        PairAppActivity currActivity;
-//        private Set<String> activities = new HashSet<>();
-//
-//        public ServiceConn() {
-//        }
-//
-//        void setCurrActivity(PairAppActivity appActivity) {
-//            ThreadUtils.ensureMain();
-//            if (appActivity != currActivity) {
-//                activities.add(appActivity.toString());
-//
-//                if (currActivity != null && bound) {
-//                    pairAppClientInterface.unRegisterUINotifier(currActivity);
-//                }
-//                if (bound) {
-//                    pairAppClientInterface.registerUINotifier(appActivity);
-//                }
-//                currActivity = appActivity;
-//            }
-//        }
-//
-//        void onDestroy(PairAppActivity appActivity) {
-//            ThreadUtils.ensureMain();
-//            activities.remove(appActivity.toString());
-//            if (activities.size() == 0) {
-//                if (bound) {
-//                    pairAppClientInterface.unRegisterUINotifier(appActivity);
-//                    appActivity.unbindService(this);
-//                    bound = false;
-//                    pairAppClientInterface = null;
-//                    currActivity = null;
-//                }
-//            }
-//        }
-//
-//        @Override
-//        public void onServiceConnected(ComponentName name, IBinder service) {
-//            pairAppClientInterface = ((PairAppClient.PairAppClientInterface) service);
-//            bound = true;
-//            pairAppClientInterface.registerUINotifier(currActivity);
-//            currActivity.onBind();
-//        }
-//
-//        @Override
-//        public void onServiceDisconnected(ComponentName name) {
-//            bound = false;
-//            pairAppClientInterface.unRegisterUINotifier(currActivity);
-//            pairAppClientInterface = null; //free memory
-//            currActivity.onUnbind();
-//        }
-//    }
-
-
-//    private static class Connection implements ServiceConnection {
-//
-//        PairAppClient.PairAppClientInterface pairAppClientInterface;
-//        PairAppActivity activity;
-//
-//        @Override
-//        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-//            if (activity == null) {
-//                throw new IllegalStateException("activity == null");
-//            }
-//            pairAppClientInterface = ((PairAppClient.PairAppClientInterface) iBinder);
-//            activity.onBind();
-//        }
-//
-//        @Override
-//        public void onServiceDisconnected(ComponentName componentName) {
-//            if (activity == null) {
-//                throw new IllegalStateException("activity == null");
-//            }
-//            pairAppClientInterface = null;
-//            activity.onUnbind();
-//        }
-//
-//        boolean isBound() {
-//            return pairAppClientInterface != null;
-//        }
-//
-//        PairAppClient.PairAppClientInterface getPairAppClientInterface() {
-//            return pairAppClientInterface;
-//        }
-//
-//        void onCreate(PairAppActivity activity) {
-//            this.activity = activity;
-//            doBind(activity);
-//        }
-//
-//        private void doBind(PairAppActivity activity) {
-//            if (activity != this.activity) {
-//                throw new IllegalStateException("unknown activity");
-//            }
-//            Intent intent = new Intent(activity, PairAppClient.class);
-//            activity.bindService(intent, this, BIND_AUTO_CREATE);
-//        }
-//
-//        void onDestroy(PairAppActivity activity) {
-//            if (activity != this.activity) {
-//                throw new IllegalStateException("unknown activity");
-//            }
-//            if (isBound()) {
-//                activity.unbindService(this);
-//                pairAppClientInterface = null;
-//                this.activity = null;
-//            }
-//        }
-//
-//        void bind(PairAppActivity activity) {
-//            if (activity != this.activity) {
-//                throw new IllegalStateException("unknown activity");
-//            }
-//            if (isBound()) {
-//                if (BuildConfig.DEBUG) {
-//                    throw new IllegalStateException();
-//                }
-//                return;
-//            }
-//            doBind(activity);
-//        }
-//    }
-
-
     private void doBind() {
         Intent intent = new Intent(this, PairAppClient.class);
         bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
+    protected void postEvent(Event event) {
+        EventBus bus = get(PAIRAPP_CLIENT_POSTABLE_BUS);
+        if (event.isSticky()) {
+            bus.postSticky(event);
+        } else {
+            bus.post(event);
+        }
+    }
+
+    protected void register(String tag, String... tags) {
+        get(PAIRAPP_CLIENT_LISTENABLE_BUS).register(this, tag, tags);
+    }
+
+    protected void unRegister(String tag, String... otherTags) {
+        get(PAIRAPP_CLIENT_LISTENABLE_BUS).unregister(tag, this);
+        for (String otherTag : otherTags) {
+            get(PAIRAPP_CLIENT_LISTENABLE_BUS).unregister(otherTag, this);
+        }
+    }
+
+    @Override
+    public final void onEvent(EventBus yourBus, Event event) {
+        try {
+            handleEvent(event);
+        } finally {
+            if (event.isSticky()) {
+                yourBus.removeStickyEvent(event);
+            } else {
+                event.recycle();
+            }
+        }
+    }
+
+    protected void handleEvent(Event event) {
+
+    }
+
+    @Override
+    public final int threadMode() {
+        return EventBus.MAIN;
+    }
+
+
+    @Override
+    public final boolean sticky() {
+        return true;
+    }
 }

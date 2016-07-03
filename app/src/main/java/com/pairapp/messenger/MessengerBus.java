@@ -8,7 +8,7 @@ import com.pairapp.util.GenericUtils;
  */
 public class MessengerBus {
 
-    public static final String PAIRAPP_CLIENT_IN_BUS = "pairappclienin", PAIRAPP_CLIENT_OUT_BUS = "pairappclientout";
+    public static final String PAIRAPP_CLIENT_POSTABLE_BUS = "pairappclienin", PAIRAPP_CLIENT_LISTENABLE_BUS = "pairappclientout";
 
     public static final String SEND_MESSAGE = "sendMessage";
     public static final String CANCEL_MESSAGE_DISPATCH = "cancelMessageDispatch";
@@ -20,8 +20,6 @@ public class MessengerBus {
     public static final String OFFLINE = "offline";
     public static final String TYPING = "typing";
     public static final String NOT_TYPING = "notTyping";
-    public static final String ANNOUNCE_ONLINE = "announceOnline";
-    public static final String ANNOUNCE_TYPING = "announceTyping";
     public static final String ON_USER_ONLINE = "onUserOnline";
     public static final String ON_USER_OFFLINE = "onUserOffline";
     public static final String ON_USER_STOP_TYPING = "onUserStopTyping";
@@ -35,10 +33,10 @@ public class MessengerBus {
     public static EventBus get(String bus) {
         GenericUtils.ensureNotNull(bus);
         switch (bus) {
-            case PAIRAPP_CLIENT_OUT_BUS:
-//                return PairAppClient.getOutBuz();
-            case PAIRAPP_CLIENT_IN_BUS:
-//                return PairAppClient.getInBuz();
+            case PAIRAPP_CLIENT_LISTENABLE_BUS:
+                return PairAppClient.listenableBus();
+            case PAIRAPP_CLIENT_POSTABLE_BUS:
+                return PairAppClient.postableBus();
             default:
                 throw new AssertionError();
         }

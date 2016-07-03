@@ -15,12 +15,14 @@ import android.util.Log;
 import com.pairapp.BuildConfig;
 import com.pairapp.Errors.PairappException;
 import com.pairapp.data.Message;
+import com.pairapp.data.StatusManager;
 import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.ParseClient;
 import com.pairapp.net.ParseFileClient;
 import com.pairapp.net.sockets.PairappSocket;
 import com.pairapp.util.Config;
+import com.pairapp.util.EventBus;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
@@ -41,6 +43,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
+import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
+import static com.pairapp.messenger.MessengerBus.OFFLINE;
+import static com.pairapp.messenger.MessengerBus.ONLINE;
+import static com.pairapp.messenger.MessengerBus.START_MONITORING_USER;
+import static com.pairapp.messenger.MessengerBus.STOP_MONITORING_USER;
+import static com.pairapp.messenger.MessengerBus.TYPING;
+
 
 public class PairAppClient extends Service {
     public static final String TAG = PairAppClient.class.getSimpleName();
@@ -59,6 +68,8 @@ public class PairAppClient extends Service {
     private final Map<String, Future<?>> disPatchingThreads = new ConcurrentHashMap<>();
     private Dispatcher.DispatcherMonitor monitor;
     private PairappSocket pairappSocket;
+    private StatusManager statusManager;
+    private PairAppClientEventsListener eventsListener = new PairAppClientEventsListener(new PairAppClientInterface());
 
 
     public static void startIfRequired(Context context) {
@@ -89,41 +100,6 @@ public class PairAppClient extends Service {
             throw new IllegalArgumentException("message is null");
         }
         Worker.cancelDownload(Config.getApplicationContext(), message);
-    }
-
-    public static void markUserAsOffline(Activity activity) {
-        ThreadUtils.ensureMain();
-        ensureUserLoggedIn();
-        if (activity == null) {
-            throw new IllegalArgumentException();
-        }
-        if (backStack.size() > 0) { //avoid empty stack exceptions
-            backStack.pop();
-        }
-        if (backStack.isEmpty()) {
-            // FIXME: 6/21/2016 implement this
-            PLog.d(TAG, "marking user as offline");
-            LiveCenter.stop();
-        }
-    }
-
-    public static void markUserAsOnline(Activity activity) {
-        ThreadUtils.ensureMain();
-        ensureUserLoggedIn();
-        if (activity == null) {
-            throw new IllegalArgumentException();
-        }
-        if (backStack.isEmpty()) {
-            TaskManager.executeNow(new Runnable() {
-                @Override
-                public void run() {
-                    // TODO: 6/21/2016 implement this
-                    Log.d(TAG, "marking user as online");
-                    LiveCenter.start();
-                }
-            }, true);
-        }
-        backStack.add(activity);
     }
 
     private static void ensureUserLoggedIn() {
@@ -197,20 +173,23 @@ public class PairAppClient extends Service {
     private synchronized void bootClient() {
         ThreadUtils.ensureNotMain();
         if (!isClientStarted.get()) {
+            EventBus.resetBus(ListneableBusClazz.class);
+            EventBus.resetBus(PostableBusClazz.class);
+
             monitor = new DispatcherMonitorImpl(this, disPatchingThreads);
             INTERFACE = new PairAppClientInterface();
             messagePacker = MessagePacker.create(UserManager.getMainUserId());
-            messagePacker.observe().subscribe(new IncomingMessageProcessor());
-
 
             String authToken = UserManager.getInstance().getCurrentUserAuthToken();
             Map<String, String> opts = new HashMap<>(1);
             opts.put("Authorization", authToken);
             pairappSocket = PairappSocket.create(opts, new MessageParserImpl(messagePacker));
             pairappSocket.init();
-
+            statusManager = StatusManager.create(new SenderImpl(pairappSocket), messagePacker, listenableBus());
             webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, pairappSocket,
                     new MessageEncoderImpl(messagePacker));
+            messagePacker.observe().subscribe(new IncomingMessageProcessor(statusManager));
+            postableBus().register(eventsListener, OFFLINE, ONLINE, TYPING, STOP_MONITORING_USER, START_MONITORING_USER, NOT_TYPING);
             isClientStarted.set(true);
         }
     }
@@ -219,6 +198,8 @@ public class PairAppClient extends Service {
     private synchronized void shutDown() {
         ThreadUtils.ensureNotMain();
         if (isClientStarted.get()) {
+            EventBus.resetBus(ListneableBusClazz.class);
+            EventBus.resetBus(PostableBusClazz.class);
             messagePacker.close();
             webSocketDispatcher.unRegisterMonitor(monitor);
             webSocketDispatcher.close();
@@ -259,7 +240,7 @@ public class PairAppClient extends Service {
     }
 
     private void sendMessageInternal(Message message) {
-        Realm realm = Message.REALM(this);
+     Realm realm = Message.REALM(this);
         try {
             String messageId = message.getId();
             Message tmp = realm.where(Message.class).equalTo(Message.FIELD_ID, message.getId()).findFirst();
@@ -330,20 +311,11 @@ public class PairAppClient extends Service {
             WORKER_THREAD.sendMessage(Message.copy(message)); //detach the message from realm
         }
 
-        @SuppressWarnings("unused")
-        public void sendMessages(Collection<Message> tobeSent) {
-            WORKER_THREAD.sendMessages(Message.copy(tobeSent)); //detach from realm
-        }
-
         public void cancelDisPatch(Message message) {
-            if (!Message.isTextMessage(message)) {
-                if (!Message.isOutGoing(message)) {
-                    throw new IllegalArgumentException("only outgoing messages may be cancelled!");
-                }
-                doCancelDispatch(Message.copy(message));
-            } else {
-                oops();
+            if (!Message.isOutGoing(message)) {
+                throw new IllegalArgumentException("only outgoing messages may be cancelled!");
             }
+            doCancelDispatch(Message.copy(message));
         }
 
         public void registerUINotifier(final Notifier notifier) {
@@ -354,8 +326,53 @@ public class PairAppClient extends Service {
             NotificationManager.INSTANCE.unRegisterUI_Notifier(notifier);
         }
 
-        private void oops() {
-            throw new UnsupportedOperationException("not yet implemented");
+        public void markUserAsOffline(Activity activity) {
+            ThreadUtils.ensureMain();
+            ensureUserLoggedIn();
+            if (activity == null) {
+                throw new IllegalArgumentException();
+            }
+            if (backStack.size() > 0) { //avoid empty stack exceptions
+                backStack.pop();
+            }
+            if (backStack.isEmpty()) {
+                PLog.d(TAG, "marking user as offline");
+                statusManager.announceStatusChange(false);
+            }
+        }
+
+        public void markUserAsOnline(Activity activity) {
+            ThreadUtils.ensureMain();
+            ensureUserLoggedIn();
+            if (activity == null) {
+                throw new IllegalArgumentException();
+            }
+            if (backStack.isEmpty()) {
+                TaskManager.executeNow(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "marking user as online");
+                        statusManager.announceStatusChange(true);
+                    }
+                }, true);
+            }
+            backStack.add(activity);
+        }
+
+        public void notifyPeerTyping(String user) {
+            statusManager.announceStartTyping(user);
+        }
+
+        public void notifyPeerNotTyping(String user) {
+            statusManager.announceStopTyping(user);
+        }
+
+        public void startMonitoringUser(String user) {
+            statusManager.startMonitoringUser(user);
+        }
+
+        public void stopMonitoringUser(String user) {
+            statusManager.stopMonitoringUser(user);
         }
     }
 
@@ -378,15 +395,6 @@ public class PairAppClient extends Service {
                 android.os.Message msg = android.os.Message.obtain();
                 msg.obj = message;
                 msg.what = MessageHandler.SEND_MESSAGE;
-                handler.sendMessage(msg);
-            }
-        }
-
-        public void sendMessages(Collection<Message> messages) {
-            if (checkStarted()) {
-                android.os.Message msg = android.os.Message.obtain();
-                msg.obj = messages;
-                msg.what = MessageHandler.SEND_BATCH;
                 handler.sendMessage(msg);
             }
         }
@@ -476,7 +484,7 @@ public class PairAppClient extends Service {
                 }
                 //we have to stop all notifications and progress report since the dispatcher will end up
                 //cancelling the dispatch. we count on it!
-                //notice that we dont rely on the future to be null before we cancel notifications
+                //notice that we don't rely on the future to be null before we cancel notifications
                 //this is because we want to give user impression that the message has been cancelled.
                 monitor.onDispatchFailed(message.getId(), MessageUtils.ERROR_CANCELLED);
                 Realm realm = Message.REALM(PairAppClient.this);
@@ -492,4 +500,31 @@ public class PairAppClient extends Service {
         }, false);
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
+    private static final EventBus postableBuz, listenableBus;
+
+
+    static {
+        postableBuz = EventBus.getBusOrCreate(PostableBusClazz.class);
+        listenableBus = EventBus.getBusOrCreate(ListneableBusClazz.class);
+    }
+
+    @SuppressWarnings("SpellCheckingInspection")
+    private static class ListneableBusClazz {
+
+    }
+
+    @SuppressWarnings("SpellCheckingInspection")
+    private static class PostableBusClazz {
+
+    }
+
+    @SuppressWarnings("SpellCheckingInspection")
+    public static EventBus postableBus() {
+        return postableBuz;
+    }
+
+    public static EventBus listenableBus() {
+        return listenableBus;
+    }
 }

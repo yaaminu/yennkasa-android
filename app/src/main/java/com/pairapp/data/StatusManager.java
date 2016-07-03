@@ -2,8 +2,8 @@ package com.pairapp.data;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.util.Pair;
 
+import com.pairapp.messenger.MessagePacker;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.GenericUtils;
@@ -21,11 +21,13 @@ public class StatusManager {
     public static final String ON_USER_OFFLINE = "onUserOffline";
     public static final String ON_USER_STOP_TYPING = "onUserStopTyping";
     public static final String ON_USER_TYPING = "onUserTyping";
-    private final EventBus bus;
     private volatile boolean isCurrentUserOnline = false;
     private volatile String typingWith;
 
-    private final String currentUser;
+    private Sender sender;
+    private MessagePacker encoder;
+    private final EventBus broadcastBus;
+
 
     private StatusManager(String currentUser, EventBus bus) {
         GenericUtils.ensureNotEmpty(currentUser);
@@ -36,8 +38,18 @@ public class StatusManager {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException(e);
         }
-        this.currentUser = currentUser;
-        this.bus = bus;
+        this.broadcastBus = bus;
+    }
+
+    private StatusManager(@NonNull Sender sender, @NonNull MessagePacker encoder, @NonNull EventBus broadcastBus) {
+        this.sender = sender;
+        this.encoder = encoder;
+        this.broadcastBus = broadcastBus;
+    }
+
+    public static StatusManager create(@NonNull Sender sender, @NonNull MessagePacker encoder, @NonNull EventBus broadcastBus) {
+        GenericUtils.ensureNotNull(sender, encoder, broadcastBus);
+        return new StatusManager(sender, encoder, broadcastBus);
     }
 
     public static StatusManager create(@NonNull String currentUser, @NonNull EventBus bus) {
@@ -47,17 +59,13 @@ public class StatusManager {
     public void announceStatusChange(boolean online) {
         if (this.isCurrentUserOnline == online) return;
         isCurrentUserOnline = online;
-        if (!bus.post(Event.create(ANNOUNCE_ONLINE, null, isCurrentUserOnline))) {
-            throw new IllegalStateException("no listener for events");
-        }
+        sender.sendMessage(encoder.createStatusMessage(isCurrentUserOnline));
     }
 
     public synchronized void announceStartTyping(@NonNull String userId) {
         GenericUtils.ensureNotEmpty(userId);
         typingWith = userId;
-        if (!bus.post(Event.create(ANNOUNCE_TYPING, null, new Pair<>(userId, true)))) {
-            throw new IllegalStateException("no listener for events");
-        }
+        sender.sendMessage(encoder.createTypingMessage(userId, false));
     }
 
     public synchronized void announceStopTyping(@NonNull String userId) {
@@ -67,9 +75,7 @@ public class StatusManager {
         }
         //its hard to say this is a programmatic error. so we allow the masseage to pass through
         //even though we don't know whether this user is typing with "userId" or not.
-        if (!bus.post(Event.create(ANNOUNCE_TYPING, null, new Pair<>(userId, false)))) {
-            throw new IllegalStateException("no listener for events");
-        }
+        sender.sendMessage(encoder.createTypingMessage(userId, false));
     }
 
     @Nullable
@@ -89,7 +95,7 @@ public class StatusManager {
             onlineSet.remove(userId);
             typingSet.remove(userId);
         }
-        bus.post(Event.create(isOnline ? ON_USER_ONLINE : ON_USER_OFFLINE, null, userId));
+        broadcastBus.post(Event.create(isOnline ? ON_USER_ONLINE : ON_USER_OFFLINE, null, userId));
     }
 
     public synchronized void handleTypingAnnouncement(@NonNull String userId, boolean isTyping) {
@@ -103,7 +109,15 @@ public class StatusManager {
         } else {
             typingSet.remove(userId);
         }
-        bus.post(Event.create(isTyping ? ON_USER_TYPING : ON_USER_STOP_TYPING, null, userId));
+        broadcastBus.post(Event.create(isTyping ? ON_USER_TYPING : ON_USER_STOP_TYPING, null, userId));
+    }
+
+    public void startMonitoringUser(@NonNull String userId) {
+        sender.sendMessage(encoder.createMonitorMessage(userId, true));
+    }
+
+    public void stopMonitoringUser(@NonNull String userId) {
+        sender.sendMessage(encoder.createMonitorMessage(userId, false));
     }
 
     public synchronized boolean isOnline(@NonNull String userId) {
@@ -116,5 +130,9 @@ public class StatusManager {
 
     public synchronized boolean isTypingToGroup(@NonNull String userId, String groupId) {
         return typingSet.contains(userId + ":" + groupId);
+    }
+
+    public interface Sender {
+        void sendMessage(byte[] payload);
     }
 }

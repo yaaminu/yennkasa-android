@@ -10,7 +10,7 @@ import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.R;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
-import com.pairapp.messenger.PairAppClient;
+import com.pairapp.util.Event;
 import com.pairapp.util.GcmUtils;
 import com.pairapp.util.NavigationManager;
 import com.pairapp.util.TaskManager;
@@ -18,6 +18,11 @@ import com.pairapp.util.UiHelpers;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import static com.pairapp.messenger.MessengerBus.OFFLINE;
+import static com.pairapp.messenger.MessengerBus.ONLINE;
+import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS;
+import static com.pairapp.messenger.MessengerBus.get;
 
 /**
  * @author by Null-Pointer on 9/6/2015.
@@ -35,7 +40,7 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
         super.onCreate(savedInstanceState);
         isUserVerified = userManager.isUserVerified();
         if (isUserVerified) {
-            PairAppClient.markUserAsOnline(this);
+            get(PAIRAPP_CLIENT_POSTABLE_BUS).postSticky(Event.createSticky(ONLINE, null, this));
         }
         NavigationManager.onCreate(this);
     }
@@ -62,25 +67,26 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
         }
     }
 
-    protected void showMessage(){
+    protected void showMessage() {
         promptShown = true;
         int message = 0;
-                    if (!GcmUtils.hasGcm()) {
-                        message = R.string.no_gcm_error_message;
-                    } else if (GcmUtils.gcmUpdateRequired()) {
-                        message = R.string.gcm_update_required_prompt;
-                    }
-                    if (message != 0) {
-                        final int tmp = message;
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                UiHelpers.showStopAnnoyingMeDialog(PairAppBaseActivity.this,
-                                        "gcmUnavialble" + TAG, R.string.stop_annoying_me, tmp, R.string.i_know, android.R.string.cancel, null, null);
-                            }
-                        });
-                    }
+        if (!GcmUtils.hasGcm()) {
+            message = R.string.no_gcm_error_message;
+        } else if (GcmUtils.gcmUpdateRequired()) {
+            message = R.string.gcm_update_required_prompt;
+        }
+        if (message != 0) {
+            final int tmp = message;
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    UiHelpers.showStopAnnoyingMeDialog(PairAppBaseActivity.this,
+                            "gcmUnavialble" + TAG, R.string.stop_annoying_me, tmp, R.string.i_know, android.R.string.cancel, null, null);
+                }
+            });
+        }
     }
+
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         //quick fix for menu items appearing twice on the toolbar. this is a bug in the library am using
@@ -120,7 +126,7 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
         super.onDestroy();
         NavigationManager.onDestroy(this);
         if (isUserVerified) {
-            PairAppClient.markUserAsOffline(this);
+            get(PAIRAPP_CLIENT_POSTABLE_BUS).postSticky(Event.createSticky(OFFLINE, null, this));
         }
     }
 

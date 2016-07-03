@@ -38,6 +38,7 @@ import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.messenger.PairAppClient;
 import com.pairapp.util.Config;
+import com.pairapp.util.Event;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
@@ -62,11 +63,19 @@ import io.realm.RealmResults;
 import io.realm.Sort;
 
 import static com.pairapp.data.Message.TYPE_TEXT_MESSAGE;
+import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
+import static com.pairapp.messenger.MessengerBus.ON_USER_OFFLINE;
+import static com.pairapp.messenger.MessengerBus.ON_USER_ONLINE;
+import static com.pairapp.messenger.MessengerBus.ON_USER_STOP_TYPING;
+import static com.pairapp.messenger.MessengerBus.ON_USER_TYPING;
+import static com.pairapp.messenger.MessengerBus.START_MONITORING_USER;
+import static com.pairapp.messenger.MessengerBus.STOP_MONITORING_USER;
+import static com.pairapp.messenger.MessengerBus.TYPING;
 
 
 @SuppressWarnings({"ConstantConditions"})
 public class ChatActivity extends MessageActivity implements View.OnClickListener,
-        AbsListView.OnScrollListener, LiveCenter.LiveCenterListener, AdapterView.OnItemLongClickListener {
+        AbsListView.OnScrollListener, AdapterView.OnItemLongClickListener {
     public static final String EXTRA_PEER_ID = "peer id";
     private static final String TAG = ChatActivity.class.getSimpleName();
     private static final int ADD_USERS_REQUEST = 0x5;
@@ -82,7 +91,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public static final String SELECTED_MESSAGE = "selectedMessage";
     public static final String WAS_TYPING = "wasTyping";
     public static final String SCROLL_POSITION = "scrollPosition";
-    public static final String EXTRA_SCROLL_TO_MESSAGE = "SCROLLTO";
     private static final String SAVED_MESSAGES_MESSAGE_BOX = "saved.Messages.message.box";
     private int cursor = -1;
     private boolean wasTyping = false;
@@ -138,7 +146,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             }
         }
     };
-    //    boolean inContextualMode;
     private Handler handler;
     private RealmResults<Message> messages;
     private User peer;
@@ -146,12 +153,11 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         @Override
         public void run() {
             wasTyping = false;
-            LiveCenter.notifyNotTyping(peer.getUserId());
+            postEvent(Event.create(NOT_TYPING, null, peer.getUserId()));
         }
     };
     private Conversation currConversation;
     private Realm messageConversationRealm, usersRealm;
-    //    private SwipeDismissListViewTouchListener swipeDismissListViewTouchListener;
     private ListView messagesListView;
     private EditText messageEt;
     private View dateHeaderViewParent;
@@ -280,29 +286,15 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         sendButton.setOnClickListener(this);
         messageEt.addTextChangedListener(this);
         setUpListView();
-//        final ImageView imageView = (ImageView) toolBar.findViewById(R.id.riv_peer_avatar);
-//        ImageLoader.load(this, peer.getUserId(), peer.getDP())
-//                .placeholder(userManager.isGroup(peer.getUserId()) ? R.drawable.group_avatar : R.drawable.user_avartar)
-//                .into(imageView);
         // TODO: 8/22/2015 in future we will move to the last  un seen message if any
     }
 
     private void setUpListView() {
         adapter = new MessagesAdapter(delegate, messages, userManager.isGroup(usersRealm, peer.getUserId()));
         messagesListView.setAdapter(adapter);
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-//        swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(messagesListView, new SwipeDismissListViewTouchListener.OnDismissCallback() {
-//            @Override
-//            public void onDismiss(ListView listView, int[] reverseSortedPositions) {
-//                deleteMessage(reverseSortedPositions[0]);
-//                outOfSync = false;
-//                adapter.notifyDataSetChanged();
-//            }
-//        });
-//        }
+
         messagesListView.setOnScrollListener(this);
         registerForContextMenu(messagesListView);
-//        messagesListView.setOnItemLongClickListener(this);
         messagesListView.setSelection(messages.size()); //move to last
     }
 
@@ -321,9 +313,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         toolbarManager.onPrepareMenu();
-//        if(inContextualMode){
-//
-//        }else {
         menu = toolBar.getMenu();
         if (menu != null && menu.size() > 0) { //required for toolbar to behave on older platforms <=10
             User mainUser = getCurrentUser();
@@ -334,7 +323,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                     && !peer.getInContacts();
             menu.findItem(R.id.action_add_contact).setVisible(visible);
         }
-//        }
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -376,10 +364,8 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         clearRecentChat(peer.getUserId());
         Config.setCurrentActivePeer(peer.getUserId());
         if (!User.isGroup(peer)) {
-            updateUserStatus(LiveCenter.isOnline(peer.getUserId()));
-            LiveCenter.trackUser(peer.getUserId());
-            LiveCenter.notifyInChatRoom(peer.getUserId());
-            LiveCenter.registerTypingListener(this);
+            postEvent(Event.create(START_MONITORING_USER, null, peer.getUserId()));
+            register(ON_USER_ONLINE, ON_USER_STOP_TYPING, ON_USER_TYPING, ON_USER_OFFLINE);
         } else {
             getSupportActionBar().setSubtitle(GroupsAdapter.join(",", peer.getMembers()));
         }
@@ -411,13 +397,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             }
             messageConversationRealm.commitTransaction();
         }
-        if (!userManager.isGroup(peer.getUserId())) {
-            LiveCenter.notifyNotTyping(peer.getUserId());
-            LiveCenter.notifyLeftChatRoom(peer.getUserId());
-            LiveCenter.doNotTrackUser(peer.getUserId());
-            LiveCenter.unRegisterTypingListener(this);
-        }
-        if (player.isPlaying()) {
+        postEvent(Event.create(STOP_MONITORING_USER, null, peer.getUserId()));
+        unRegister(ON_USER_ONLINE, ON_USER_OFFLINE, ON_USER_STOP_TYPING, ON_USER_TYPING);
+        if (player.isPlaying()) { // FIXME: 7/2/2016 check for null-ness before checking if player.isPlaying()
             player.stop();
         }
         super.onPause();
@@ -663,17 +645,13 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             ViewUtils.showViews(sendButton);
             if (!wasTyping) {
                 wasTyping = true;
-                LiveCenter.notifyTyping(peer.getUserId());
+                postEvent(Event.create(TYPING, null, peer.getUserId()));
             }
             //TODO add some deviation to the timeout
             handler.postDelayed(runnable, 10000);
         } else {
             ViewUtils.hideViews(sendButton);
         }
-//        if (wasTyping) {
-//            wasTyping = false;
-//            LiveCenter.notifyNotTyping(peer.getUserId());
-//        }
     }
 
     private MediaPlayer player;
@@ -683,7 +661,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         //noinspection StatementWithEmptyBody
         if (message.getTo().equals(peer.getUserId()) || message.getFrom().equals(peer.getUserId())
                 || peer.getName().equals(sender)) {
-            //just to ensure we dont spawn a thread only to end up doing nothing because player.isPlaying returns true, lets check first
+            //just to ensure we don't spawn a thread only to end up doing nothing because player.isPlaying returns true, lets check first
             if (!player.isPlaying()) {
                 TaskManager.executeNow(new Runnable() {
                     @Override
@@ -710,25 +688,16 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         }
     }
 
-    @Override
-    public void onTyping(String userId) {
-        if (peer.getUserId().equals(userId)) {
-            getSupportActionBar().setSubtitle(getString(R.string.writing));
-        }
+    public void onTyping() {
+        getSupportActionBar().setSubtitle(getString(R.string.writing));
     }
 
-    @Override
-    public void onStopTyping(String userId) {
-        if (peer.getUserId().equals(userId)) {
-            updateUserStatus(LiveCenter.isOnline(userId));
-        }
+    public void onStopTyping() {
+        onUserStatusChanged(isCurrentUserOnline);
     }
 
-    @Override
-    public void onUserStatusChanged(String userId, boolean isOnline) {
-        if (userId.equals(peer.getUserId())) {
-            updateUserStatus(isOnline);
-        }
+    public void onUserStatusChanged(boolean isOnline) {
+        updateUserStatus(isOnline);
     }
 
     private void updateUserStatus(boolean isOnline) {
@@ -796,4 +765,25 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     }
 
 
+    boolean isCurrentUserOnline = false, isCurrentUserTyping = false;
+
+    @Override
+    protected void handleEvent(Event event) {
+        if (event.getData().equals(peer.getUserId())) {
+            Object tag = event.getTag();
+            if (tag.equals(ON_USER_ONLINE)) {
+                isCurrentUserOnline = true;
+                updateUserStatus(true);
+            } else if (tag.equals(ON_USER_OFFLINE)) {
+                isCurrentUserOnline = false;
+                updateUserStatus(false);
+            } else if (tag.equals(ON_USER_TYPING)) {
+                isCurrentUserTyping = true;
+                onTyping();
+            } else if (tag.equals(ON_USER_STOP_TYPING)) {
+                isCurrentUserTyping = false;
+                onStopTyping();
+            }
+        }
+    }
 }

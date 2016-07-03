@@ -32,7 +32,6 @@ import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.util.Config;
 import com.pairapp.util.FileUtils;
-import com.pairapp.util.LiveCenter;
 import com.pairapp.util.MediaUtils;
 import com.pairapp.util.PLog;
 import com.pairapp.util.PhoneNumberNormaliser;
@@ -169,7 +168,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             }
         }
     };
-    private ActionBar actionBar;
 
     private void dissolveGroup() {
         final ProgressDialog dialog = new ProgressDialog(getContext());
@@ -204,34 +202,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
     }
-
-    private final LiveCenter.LiveCenterListener listener = new LiveCenter.LiveCenterListener() {
-        @Override
-        public void onTyping(String userId) {
-            if (user.getUserId().equals(userId)) {
-                actionBar.setSubtitle(getString(R.string.writing));
-            }
-        }
-
-        @Override
-        public void onStopTyping(String userId) {
-            if (user.getUserId().equals(userId))
-                if (LiveCenter.isOnline(userId))
-                    actionBar.setSubtitle(getString(R.string.st_online));
-                else
-                    actionBar.setSubtitle(getString(R.string.st_offline));
-        }
-
-        @Override
-        public void onUserStatusChanged(String userId, boolean isOnline) {
-            if (user.getUserId().equals(userId))
-                if (isOnline)
-                    actionBar.setSubtitle(getString(R.string.st_online));
-                else
-                    actionBar.setSubtitle(getString(R.string.st_offline));
-
-        }
-    };
 
     @SuppressLint("CutPasteId")
     @Override
@@ -301,7 +271,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             setUpViewSingleUserWay();
         }
         //noinspection deprecation
-        actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
+        ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
         //noinspection ConstantConditions
         if (userManager.isCurrentUser(user.getUserId())) {
             //noinspection ConstantConditions
@@ -311,8 +281,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             //noinspection ConstantConditions
             actionBar.setTitle(user.getName());
             if (!User.isGroup(user)) {
-                actionBar.setSubtitle(LiveCenter.isOnline(user.getUserId()) ? R.string.st_online : R.string.st_offline);
-                LiveCenter.registerTypingListener(listener);
+                // TODO: 7/2/2016 register for user status and set the user status to the actionbar
             }
         }
         pDialog = new ProgressDialog(getActivity());
@@ -578,7 +547,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     }
                 }
             }
-        },false);
+        }, false);
     }
 
     private final Callback dpLoadedCallback = new Callback() {
@@ -611,7 +580,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     @Override
     public void onDestroy() {
         realm.close();
-        LiveCenter.unRegisterTypingListener(listener);
+        // TODO: 7/2/2016 stop listing for user status
         super.onDestroy();
     }
 

@@ -278,14 +278,21 @@ public class EventBus {
                 Runnable runnable = new Runnable() {
                     @Override
                     public void run() {
-                        listener.onEvent(EventBus.this, event);
+                        try {
+                            listener.onEvent(EventBus.this, event);
+                        } catch (Throwable e) {
+                            e.printStackTrace();
+                            throw e;
+                        }
                     }
                 };
-                if (listener.threadMode() == BACKGROUND || listener.threadMode() == ANY) {
-                    TaskManager.executeNow(runnable, false);
-                } else {
-                    TaskManager.executeOnMainThread(runnable);
-                }
+                // FIXME: 7/3/2016 uncomment this
+//                if (listener.threadMode() == BACKGROUND || listener.threadMode() == ANY) {
+//                    TaskManager.executeNow(runnable, false);
+//                } else {
+//                    TaskManager.executeOnMainThread(runnable);
+//                }
+                runnable.run();
                 break;
             default:
                 throw new AssertionError();
