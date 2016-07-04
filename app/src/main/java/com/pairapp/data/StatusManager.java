@@ -89,7 +89,7 @@ public class StatusManager {
         GenericUtils.ensureNotEmpty(userId);
         if (isOnline) {
             if (onlineSet.add(userId) && userId.equals(typingWith)) {
-                announceStartTyping(typingWith);
+                announceStartTyping(typingWith);//notify the client that we are writing to it
             }
         } else {
             onlineSet.remove(userId);

@@ -56,7 +56,6 @@ public class GenericUtils {
     }
 
     public static String capitalise(String text) {
-        // TODO: 2/27/2016 commit this addition on dev branch
         text = text != null ? text : "";
         if (isEmpty(text.trim())) return text;
         StringBuilder builder = new StringBuilder(text);

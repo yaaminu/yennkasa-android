@@ -5,6 +5,8 @@ import android.content.Intent;
 
 import com.pairapp.data.StatusManager;
 import com.pairapp.util.Config;
+import com.pairapp.util.Event;
+import com.pairapp.util.EventBus;
 import com.pairapp.util.PLog;
 
 import rx.Observer;
@@ -15,9 +17,11 @@ import rx.Observer;
 public class IncomingMessageProcessor implements Observer<MessagePacker.DataEvent> {
     public static final String TAG = IncomingMessageProcessor.class.getSimpleName();
     private final StatusManager manager;
+    private final EventBus eventBus;
 
-    public IncomingMessageProcessor(StatusManager manager) {
+    public IncomingMessageProcessor(StatusManager manager, EventBus eventBus) {
         this.manager = manager;
+        this.eventBus = eventBus;
     }
 
     @Override
@@ -47,11 +51,11 @@ public class IncomingMessageProcessor implements Observer<MessagePacker.DataEven
         } else if (data.getOpCode() == MessagePacker.NOT_TYPING) {
             manager.handleStatusAnnouncement(data.getData(), false);
         } else if (data.getOpCode() == MessagePacker.MESSAGE_STATUS_SEEN) {
-
+            eventBus.post(Event.create(MessengerBus.ON_MESSAGE_SEEN, null, data.getData()));
         } else if (data.getOpCode() == MessagePacker.MESSAGE_STATUS_DELIVERED) {
-
-        } else { // FIXME: 7/3/2016 add more listeners for message seen,recieved etc
-            PLog.d(TAG, "cont handle this message type");
+            eventBus.post(Event.create(MessengerBus.ON_MESSAGE_DELIVERED, null, data.getData()));
+        } else {
+            PLog.d(TAG, "can't handle this message type");
         }
     }
 }

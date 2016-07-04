@@ -25,7 +25,7 @@ import com.pairapp.R;
 import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
 import com.pairapp.data.util.MessageUtils;
-import com.pairapp.messenger.PairAppClient;
+import com.pairapp.util.Event;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
@@ -42,6 +42,9 @@ import java.util.Map;
 import java.util.Set;
 
 import io.realm.Realm;
+
+import static com.pairapp.messenger.MessengerBus.MESSAGE_SEEN;
+import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
 
 /**
  * @author by Null-Pointer on 9/19/2015.
@@ -135,17 +138,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
     }
 
     private void doSendMessage(final Message message) {
-        if (isBound()) {
-            getPairAppClientInterface().sendMessage(message);
-        } else {
-            Intent intent = new Intent(this, PairAppClient.class);
-            intent.putExtra(PairAppClient.ACTION, PairAppClient.ACTION_SEND_MESSAGE);
-            intent.putExtra(PairAppClient.EXTRA_MESSAGE, Message.toJSON(message));
-            startService(intent);
-            //worst case if message sending delays this message will be sent twice
-            //but clients no how to deal with duplicate messages so no problem.
-            bind();
-        }
+        postEvent(Event.createSticky(SEND_MESSAGE, null, Message.copy(message)));
     }
 
 
@@ -249,16 +242,13 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
     }
 
     protected final void onMessageSeen(final Message message) {
-        Runnable r = new Runnable() {
+        final String messageId = message.getId();
+        TaskManager.executeNow(new Runnable() {
             @Override
             public void run() {
-                PairAppClient.notifyMessageSeen(message);
+                postEvent(Event.create(MESSAGE_SEEN, null, messageId));
             }
-        };
-        if (message.getState() != Message.STATE_SEEN) {
-            new Handler().postDelayed(r, 1000);
-        }
-
+        }, false);
     }
 
     private final class Worker extends HandlerThread implements Handler.Callback {

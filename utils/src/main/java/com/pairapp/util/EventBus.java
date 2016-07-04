@@ -282,17 +282,15 @@ public class EventBus {
                             listener.onEvent(EventBus.this, event);
                         } catch (Throwable e) {
                             e.printStackTrace();
-                            throw e;
+//                            throw e;
                         }
                     }
                 };
-                // FIXME: 7/3/2016 uncomment this
-//                if (listener.threadMode() == BACKGROUND || listener.threadMode() == ANY) {
-//                    TaskManager.executeNow(runnable, false);
-//                } else {
-//                    TaskManager.executeOnMainThread(runnable);
-//                }
-                runnable.run();
+                if (listener.threadMode() == BACKGROUND || listener.threadMode() == ANY) {
+                    TaskManager.executeNow(runnable, false);
+                } else {
+                    TaskManager.executeOnMainThread(runnable);
+                }
                 break;
             default:
                 throw new AssertionError();

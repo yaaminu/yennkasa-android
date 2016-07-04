@@ -237,7 +237,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity
     public void notifyUser(Context context, final Message message, final String sender) {
         if (userManager.getBoolPref(UserManager.IN_APP_NOTIFICATIONS, true)) {
             latestMessage = message;
-            // TODO: 8/17/2015 vibrate or play short tone
             int state = snackBar.getState();
             if (state != SnackBar.STATE_SHOWN && state != SnackBar.STATE_SHOWING) { //we only notify when there is no ongoing notification
                 snackBar.postDelayed(new Runnable() {

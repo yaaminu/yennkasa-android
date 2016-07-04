@@ -10,6 +10,7 @@ import com.pairapp.data.Message;
 import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.util.ConnectionUtils;
+import com.pairapp.util.Event;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
@@ -23,6 +24,10 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import io.realm.Realm;
 import io.realm.exceptions.RealmPrimaryKeyConstraintException;
+
+import static com.pairapp.messenger.MessengerBus.MESSAGE_RECEIVED;
+import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS;
+import static com.pairapp.messenger.MessengerBus.get;
 
 public class MessageProcessor extends IntentService {
     public static final String SYNC_MESSAGES = "syncMessages";
@@ -180,7 +185,7 @@ public class MessageProcessor extends IntentService {
                 }
                 realm.commitTransaction();
                 NotificationManager.INSTANCE.onNewMessage(this, message);
-                // TODO: 7/2/2016 send a notification that a message has been received
+                get(PAIRAPP_CLIENT_POSTABLE_BUS).post(Event.create(MESSAGE_RECEIVED, null, message.getId()));
                 if (!Message.isTextMessage(message) && Worker.getCurrentActiveDownloads() < Worker.MAX_PARRALLEL_DOWNLOAD) {
                     if ((ConnectionUtils.isWifiConnected()
                             && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_WIFI, false))

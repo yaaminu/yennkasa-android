@@ -10,6 +10,7 @@ import com.pairapp.Errors.PairappException;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.util.Config;
 import com.pairapp.util.FileUtils;
+import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
 import com.pairapp.util.ThreadUtils;
 
@@ -462,5 +463,35 @@ public class Message extends RealmObject {
             throw new IllegalArgumentException("json == null || json is empty");
         }
         return MessageJsonAdapter.INSTANCE.fromJson(json);
+    }
+
+    public static Message markMessageSeen(Realm realm, String msgId) {
+        GenericUtils.ensureNotNull(realm, msgId);
+        Message tmp = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
+        if (tmp != null) {
+            if (tmp.getState() != Message.STATE_SEEN && !Message.isGroupMessage(tmp)) {
+                realm.beginTransaction();
+                if (tmp.isValid()) {
+                    tmp.setState(Message.STATE_SEEN);
+                }
+                realm.commitTransaction();
+            }
+        }
+        return tmp;
+    }
+
+    public static Message markMessageDelivered(Realm realm, String msgId) {
+        GenericUtils.ensureNotNull(realm, msgId);
+        Message tmp = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
+        if (tmp != null) {
+            if (tmp.getState() != STATE_SEEN && tmp.getState() != STATE_RECEIVED && !Message.isGroupMessage(tmp)) {
+                realm.beginTransaction();
+                if (tmp.isValid()) {
+                    tmp.setState(STATE_RECEIVED);
+                }
+                realm.commitTransaction();
+            }
+        }
+        return tmp;
     }
 }

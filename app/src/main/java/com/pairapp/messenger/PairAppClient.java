@@ -43,9 +43,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
+import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
+import static com.pairapp.messenger.MessengerBus.MESSAGE_RECEIVED;
+import static com.pairapp.messenger.MessengerBus.MESSAGE_SEEN;
 import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
 import static com.pairapp.messenger.MessengerBus.OFFLINE;
 import static com.pairapp.messenger.MessengerBus.ONLINE;
+import static com.pairapp.messenger.MessengerBus.ON_MESSAGE_DELIVERED;
+import static com.pairapp.messenger.MessengerBus.ON_MESSAGE_SEEN;
+import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
 import static com.pairapp.messenger.MessengerBus.START_MONITORING_USER;
 import static com.pairapp.messenger.MessengerBus.STOP_MONITORING_USER;
 import static com.pairapp.messenger.MessengerBus.TYPING;
@@ -70,6 +76,7 @@ public class PairAppClient extends Service {
     private PairappSocket pairappSocket;
     private StatusManager statusManager;
     private PairAppClientEventsListener eventsListener = new PairAppClientEventsListener(new PairAppClientInterface());
+    private IncomingMessageProcessor incomingMessageProcessor;
 
 
     public static void startIfRequired(Context context) {
@@ -188,8 +195,13 @@ public class PairAppClient extends Service {
             statusManager = StatusManager.create(new SenderImpl(pairappSocket), messagePacker, listenableBus());
             webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, pairappSocket,
                     new MessageEncoderImpl(messagePacker));
-            messagePacker.observe().subscribe(new IncomingMessageProcessor(statusManager));
-            postableBus().register(eventsListener, OFFLINE, ONLINE, TYPING, STOP_MONITORING_USER, START_MONITORING_USER, NOT_TYPING);
+            incomingMessageProcessor = new IncomingMessageProcessor(statusManager, postableBus());
+            messagePacker.observe().subscribe(incomingMessageProcessor);
+            postableBus().register(eventsListener, OFFLINE, ONLINE, NOT_TYPING, TYPING,
+                    STOP_MONITORING_USER, START_MONITORING_USER,
+                    MESSAGE_RECEIVED, MESSAGE_SEEN,
+                    ON_MESSAGE_DELIVERED, ON_MESSAGE_SEEN,
+                    SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH);
             isClientStarted.set(true);
         }
     }
@@ -240,7 +252,7 @@ public class PairAppClient extends Service {
     }
 
     private void sendMessageInternal(Message message) {
-     Realm realm = Message.REALM(this);
+        Realm realm = Message.REALM(this);
         try {
             String messageId = message.getId();
             Message tmp = realm.where(Message.class).equalTo(Message.FIELD_ID, message.getId()).findFirst();
@@ -252,12 +264,14 @@ public class PairAppClient extends Service {
         } finally {
             realm.close();
         }
-        try {
-            LiveCenter.acquireProgressTag(message.getId());
-        } catch (PairappException e) {
-            throw new RuntimeException(e.getCause());
+        if (Message.isTextMessage(message)) {
+            try {
+                LiveCenter.acquireProgressTag(message.getId());
+            } catch (PairappException e) {
+                throw new RuntimeException(e.getCause());
+            }
+            webSocketDispatcher.dispatch(message);
         }
-        webSocketDispatcher.dispatch(message);
     }
 
 
@@ -268,42 +282,6 @@ public class PairAppClient extends Service {
                 ParseClient.sendFeedBack(report, attachments);
             }
         }, true);
-    }
-
-    public static void notifyMessageSeen(final Message message) {
-        final Message tmp = Message.copy(message);
-        TaskManager.executeNow(new Runnable() {
-            @Override
-            public void run() {
-                if (tmp.getState() != Message.STATE_SEEN && !Message.isGroupMessage(tmp)) {
-                    if (!isClientStarted.get()) {
-                        PLog.d(TAG, "client not stared cann't send seen status");
-                    }
-                    if (Message.isGroupMessage(tmp)) {
-                        PLog.d(TAG, "message status of group message are not sent");
-                        return;
-                    }
-                    if (tmp.getState() == Message.STATE_SEEN) {
-                        PLog.d(TAG, "message is seen");
-                        if (BuildConfig.DEBUG) {
-                            throw new RuntimeException();
-                        }
-                        return;
-                    }
-//                    MessageCenter.notifyMessageSeen(tmp);
-                    // TODO: 7/2/2016 send a notification
-                    Realm realm = Message.REALM(Config.getApplicationContext());
-                    Message realmMessage = realm.where(Message.class).equalTo(Message.FIELD_ID, tmp.getId()).findFirst();
-                    if (realmMessage != null) {
-                        realm.beginTransaction();
-                        realmMessage.setState(Message.STATE_SEEN);
-                        realm.commitTransaction();
-                    }
-                    realm.close();
-                }
-            }
-        }, false);
-
     }
 
     public class PairAppClientInterface extends Binder {
@@ -359,20 +337,62 @@ public class PairAppClient extends Service {
             backStack.add(activity);
         }
 
-        public void notifyPeerTyping(String user) {
+        public void notifyPeerTyping(final String user) {
             statusManager.announceStartTyping(user);
         }
 
-        public void notifyPeerNotTyping(String user) {
+        public void notifyPeerNotTyping(final String user) {
             statusManager.announceStopTyping(user);
         }
 
-        public void startMonitoringUser(String user) {
+        public void startMonitoringUser(final String user) {
             statusManager.startMonitoringUser(user);
         }
 
         public void stopMonitoringUser(String user) {
             statusManager.stopMonitoringUser(user);
+        }
+
+        public void markMessageSeen(final String msgId) {
+            Realm realm = Message.REALM(PairAppClient.this);
+            try {
+                Message message = Message.markMessageSeen(realm, msgId);
+                if (message != null) {
+                    pairappSocket.send(messagePacker.createMsgStatusMessage(message.getFrom(), msgId, false));
+                }
+            } finally {
+                realm.close();
+            }
+        }
+
+        public void markMessageDelivered(final String msgId) {
+            Realm realm = Message.REALM(PairAppClient.this);
+            try {
+                Message message = Message.markMessageDelivered(realm, msgId);
+                if (message != null) {
+                    pairappSocket.send(messagePacker.createMsgStatusMessage(message.getFrom(), msgId, true));
+                }
+            } finally {
+                realm.close();
+            }
+        }
+
+        public void onMessageDelivered(String msgId) {
+            Realm realm = Message.REALM(PairAppClient.this);
+            try {
+                Message.markMessageDelivered(realm, msgId);
+            } finally {
+                realm.close();
+            }
+        }
+
+        public void onMessageSeen(String msgId) {
+            Realm realm = Message.REALM(PairAppClient.this);
+            try {
+                Message.markMessageSeen(realm, msgId);
+            } finally {
+                realm.close();
+            }
         }
     }
 

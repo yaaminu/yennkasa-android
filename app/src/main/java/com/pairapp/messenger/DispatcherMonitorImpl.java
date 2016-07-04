@@ -121,7 +121,7 @@ class DispatcherMonitorImpl implements Dispatcher.DispatcherMonitor {
     AtomicBoolean shouldPlaySound = new AtomicBoolean(true);
 
     private synchronized void playSound() {
-        if (shouldPlaySound.getAndSet(false)) { //// FIXME: 6/21/2016 why main thread?
+        if (shouldPlaySound.getAndSet(false)) {
             new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                 @Override
                 public void run() {

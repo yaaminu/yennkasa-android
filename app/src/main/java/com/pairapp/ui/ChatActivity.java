@@ -36,6 +36,7 @@ import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
+import com.pairapp.messenger.MessengerBus;
 import com.pairapp.messenger.PairAppClient;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
@@ -136,14 +137,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
         @Override
         public void onCancelSendMessage(Message message) {
-            if (getPairAppClientInterface() != null) {
-                getPairAppClientInterface().cancelDisPatch(message);
-            } else {
-                Intent intent = new Intent(ChatActivity.this, PairAppClient.class);
-                intent.putExtra(PairAppClient.ACTION, PairAppClient.ACTION_CANCEL_DISPATCH);
-                intent.putExtra(PairAppClient.EXTRA_MESSAGE, Message.toJSON(message));
-                startService(intent);
-            }
+            postEvent(Event.create(MessengerBus.CANCEL_MESSAGE_DISPATCH, null, Message.copy(message)));
         }
     };
     private Handler handler;
@@ -350,7 +344,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             try {
                 startActivityForResult(intent, ADD_TO_CONTACTS_REQUEST);
             } catch (ActivityNotFoundException e) {
-                // TODO: 8/23/2015 should we tell the user or is it that our intent was wrongly targeted?
                 UiHelpers.showPlainOlDialog(this, getString(R.string.no_contact_app_on_device));
             }
             return true;
@@ -399,7 +392,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         }
         postEvent(Event.create(STOP_MONITORING_USER, null, peer.getUserId()));
         unRegister(ON_USER_ONLINE, ON_USER_OFFLINE, ON_USER_STOP_TYPING, ON_USER_TYPING);
-        if (player.isPlaying()) { // FIXME: 7/2/2016 check for null-ness before checking if player.isPlaying()
+        if (player != null && player.isPlaying()) {
             player.stop();
         }
         super.onPause();
@@ -441,7 +434,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private void sendTextMessage() {
         String content = messageEt.getText().toString().trim();
         messageEt.setText("");
-        //TODO use a regular expression to validate the message body
         if (!TextUtils.isEmpty(content)) {
             super.sendMessage(content, peer.getUserId(), Message.TYPE_TEXT_MESSAGE, true);
             messagesListView.setSelection(messages.size());

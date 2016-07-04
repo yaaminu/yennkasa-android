@@ -71,7 +71,6 @@ public interface UserApi {
             , @Field(User.FIELD_MEMBERS) List<String> members
             , Callback<Response> response);
 
-    // FIXME: 7/19/2015 change this when our backend start using sessions
     @FormUrlEncoded
     @PUT("/api/v1/groups/{id}/leave")
     void leaveGroup(@Path("id") String id, @Field("leaver") String userId, @Field("password") String password, Callback<HttpResponse> response);
