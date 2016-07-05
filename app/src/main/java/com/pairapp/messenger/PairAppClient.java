@@ -238,7 +238,7 @@ public class PairAppClient extends Service {
         } finally {
             realm.close();
         }
-        if (Message.isTextMessage(message)) {
+        if (!Message.isTextMessage(message)) {
             try {
                 LiveCenter.acquireProgressTag(message.getId());
             } catch (PairappException e) {
