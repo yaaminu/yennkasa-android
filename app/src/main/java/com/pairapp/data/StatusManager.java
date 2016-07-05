@@ -56,7 +56,7 @@ public class StatusManager {
         return new StatusManager(currentUser, bus);
     }
 
-    public void announceStatusChange(boolean online) {
+    public synchronized void announceStatusChange(boolean online) {
         if (this.isCurrentUserOnline == online) return;
         isCurrentUserOnline = online;
         sender.sendMessage(encoder.createStatusMessage(isCurrentUserOnline));
@@ -65,7 +65,8 @@ public class StatusManager {
     public synchronized void announceStartTyping(@NonNull String userId) {
         GenericUtils.ensureNotEmpty(userId);
         typingWith = userId;
-        sender.sendMessage(encoder.createTypingMessage(userId, false));
+        // TODO: 7/5/2016 if this user is not a group,check that this particular user is online before sending the typing messages
+        sender.sendMessage(encoder.createTypingMessage(userId, true));
     }
 
     public synchronized void announceStopTyping(@NonNull String userId) {
