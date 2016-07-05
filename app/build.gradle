@@ -68,7 +68,6 @@ dependencies {
         transitive = true;
     }
     compile 'com.commit451:PhotoView:1.2.4'
-    compile files('libs/sinch-android-rtc-3.7.1.jar')
 
     testCompile 'junit:junit:4.12'
     testCompile "org.robolectric:robolectric:3.0"

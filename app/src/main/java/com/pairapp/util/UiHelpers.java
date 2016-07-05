@@ -109,7 +109,11 @@ public class UiHelpers {
             }
             cancelable = false;
         }
-        builder.setMessage(message).setTitle(R.string.error).setCancelable(cancelable).setPositiveButton(android.R.string.ok, listener).create().show();
+        builder.setMessage(message).setCancelable(cancelable).setPositiveButton(android.R.string.ok, listener);
+        if (listener != null) {
+            builder.setNegativeButton(R.string.no, null);
+        }
+        builder.create().show();
     }
 
     public static void showErrorDialog(FragmentActivity context, String message) {
@@ -311,7 +315,7 @@ public class UiHelpers {
                 }
                 return;
             }
-            File file = new File(Config.getAppVidMediaBaseDir(), "vid_"+SimpleDateUtil.timeStampNow()+".mp4");
+            File file = new File(Config.getAppVidMediaBaseDir(), "vid_" + SimpleDateUtil.timeStampNow() + ".mp4");
             mMediaUri = Uri.fromFile(file);
             MediaUtils.recordVideo(NavigationManager.getCurrentActivity(), mMediaUri, ChatActivity.TAKE_VIDEO_REQUEST);
         } catch (NavigationManager.NoActiveActivityException e) {
@@ -321,10 +325,10 @@ public class UiHelpers {
 
     public static void takePhoto() {
         try {
-            File file = new File(Config.getAppImgMediaBaseDir(), "img_"+SimpleDateUtil.timeStampNow()+".jpg");
+            File file = new File(Config.getAppImgMediaBaseDir(), "img_" + SimpleDateUtil.timeStampNow() + ".jpg");
             mMediaUri = Uri.fromFile(file);
             MediaUtils.takePhoto(NavigationManager.getCurrentActivity(), mMediaUri, ChatActivity.TAKE_PHOTO_REQUEST);
-        } catch (NavigationManager.NoActiveActivityException  e) {
+        } catch (NavigationManager.NoActiveActivityException e) {
             crashAndBurn(e);
         }
     }
@@ -636,7 +640,7 @@ public class UiHelpers {
         builder.positiveAction(ok);
         builder.negativeAction(no);
         DialogFragment fragment = DialogFragment.newInstance(builder);
-//        fragment.show(activity.getSupportFragmentManager(), null);
+        fragment.show(activity.getSupportFragmentManager(), null);
 
     }
 

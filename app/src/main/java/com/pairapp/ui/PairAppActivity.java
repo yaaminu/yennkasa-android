@@ -1,10 +1,8 @@
 package com.pairapp.ui;
 
 import android.annotation.TargetApi;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
@@ -12,7 +10,6 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.os.Vibrator;
 import android.support.v4.util.Pair;
@@ -28,7 +25,6 @@ import com.pairapp.data.Message;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.messenger.Notifier;
-import com.pairapp.messenger.PairAppClient;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
@@ -48,8 +44,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.realm.Realm;
 
+import static com.pairapp.messenger.MessengerBus.DE_REGISTER_NOTIFIER;
 import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS;
 import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS;
+import static com.pairapp.messenger.MessengerBus.REGISTER_NOTIFIER;
 import static com.pairapp.messenger.MessengerBus.get;
 
 /**
@@ -60,25 +58,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity
     public static final int DELAY_MILLIS = 2000;
     public static final String TAG = PairAppActivity.class.getSimpleName();
     static private volatile Message latestMessage;
-    private volatile boolean bound = false;
     private volatile int totalUnreadMessages = 0;
-    private PairAppClient.PairAppClientInterface pairAppClientInterface;
-    private ServiceConnection connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            pairAppClientInterface = ((PairAppClient.PairAppClientInterface) service);
-            bound = true;
-            getPairAppClientInterface().registerUINotifier(PairAppActivity.this);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            bound = false;
-            getPairAppClientInterface().unRegisterUINotifier(PairAppActivity.this);
-            pairAppClientInterface = null; //free memory
-            onUnbind();
-        }
-    };
     private Realm messageRealm;
     private View.OnClickListener listener = new View.OnClickListener() {
 
@@ -115,11 +95,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity
         }
     }
 
-    protected final void bind() {
-        if (isUserVerified() && !isBound()) {
-
-        }
-    }
 
     protected int getSnackBarStyle() {
         if (isUserVerified()) {
@@ -129,22 +104,13 @@ public abstract class PairAppActivity extends PairAppBaseActivity
     }
 
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (isUserVerified() && !isBound()) {
-            doBind();
-        }
-    }
 
     @Override
     protected void onResume() {
         super.onResume();
         if (isUserVerified()) {
             Config.appOpen(true);
-            if (isBound()) {
-                getPairAppClientInterface().registerUINotifier(this);
-            }
+            postEvent(Event.createSticky(REGISTER_NOTIFIER, null, this));
             if (snackBar == null) {
                 snackBar = getSnackBar();
                 if (snackBar == null) {
@@ -152,7 +118,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity
                 }
                 snackBar.applyStyle(getSnackBarStyle());
                 if (isStickyMessageShown && !TextUtils.isEmpty(stickYmessage)) {
-                    notifySticky(this, stickYmessage);
+                    notifySticky(stickYmessage);
                 }
             }
         }
@@ -163,21 +129,8 @@ public abstract class PairAppActivity extends PairAppBaseActivity
         super.onPause();
         if (isUserVerified()) {
             Config.appOpen(false);
-            if (isBound()) {
-                getPairAppClientInterface().unRegisterUINotifier(this);
-            }
+            postEvent(Event.createSticky(DE_REGISTER_NOTIFIER, null, this));
         }
-    }
-
-    @Override
-    protected void onStop() {
-        if (isUserVerified()) {
-            unbindService(connection);
-            pairAppClientInterface = null;
-            bound = false;
-            onUnbind();
-        }
-        super.onStop();
     }
 
     @Override
@@ -320,9 +273,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity
 
     }
 
-    protected void onUnbind() {
-    }
-
     protected final void clearRecentChat(final String peerId) {
         if (peerId == null) {
             throw new IllegalArgumentException("peer id is null!");
@@ -331,15 +281,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity
     }
 
     protected abstract SnackBar getSnackBar();
-
-    protected final boolean isBound() {
-        return bound;
-    }
-
-    protected final PairAppClient.PairAppClientInterface getPairAppClientInterface() {
-        return pairAppClientInterface;
-    }
-
 
     private class notifyTask extends AsyncTask<Object, Void, Pair<String, String>> {
         @Override
@@ -423,7 +364,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity
     private static boolean isStickyMessageShown = false;
     private static String stickYmessage = "";
 
-    public void notifySticky(Context context, final String message) {
+    public void notifySticky(final String message) {
         stickYmessage = message;
         final Runnable runnable = new Runnable() {
             @Override
@@ -458,7 +399,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity
     @Override
     public void showError(ErrorCenter.Error error) {
         if (error.style == ErrorCenter.ReportStyle.STICKY) {
-            notifySticky(this, error.message);
+            notifySticky(error.message);
         } else {
             super.showError(error);
         }
@@ -472,11 +413,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity
         } else {
             super.disMissError(errorId);
         }
-    }
-
-    private void doBind() {
-        Intent intent = new Intent(this, PairAppClient.class);
-        bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
     protected void postEvent(Event event) {
