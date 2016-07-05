@@ -582,8 +582,15 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                 wasLastForTheDay) {
             previousToCurrMessage.deleteFromRealm(); //this will be a date message
         }
-        if (currConversation.getLastMessage() == null) {
-            int allMessages = messages.size() - 1;
+        if (currConversation.getLastMessage() == null) { //the last message of this conversation is what was just deleted
+            //it will be inefficient to start from zero and move up. so we start from the
+            //last element in the list (messages). we are subtracting the size from two
+            //because array indexing starts from zero so the last will be n-1 and the realm transaction
+            //has not bee committed so the deleted message still count in the value returned from
+            //messages.size() hence subtracting only one will give you the index of the just deleted last message!!!
+            //and not only will that be erroneous, it will also lead to crashes.
+            /*************************************************************************************/
+            int allMessages = messages.size() - 2; //don't change if you don't understand
             for (int i = allMessages; i > 0/*0th is the date*/; i--) {
                 final Message cursor = messages.get(i);
                 if (!Message.isDateMessage(cursor) && !Message.isTypingMessage(cursor)) {
@@ -591,6 +598,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                     break;
                 }
             }
+            /**************************************************************************************/
         }
         messageConversationRealm.commitTransaction();
         TaskManager.execute(new Runnable() {
