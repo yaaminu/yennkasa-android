@@ -4,12 +4,12 @@ import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.pairapp.BuildConfig;
@@ -44,6 +44,7 @@ import io.realm.Realm;
 import io.realm.RealmResults;
 
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
+import static com.pairapp.messenger.MessengerBus.DE_REGISTER_NOTIFIER;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_RECEIVED;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_SEEN;
 import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
@@ -51,6 +52,7 @@ import static com.pairapp.messenger.MessengerBus.OFFLINE;
 import static com.pairapp.messenger.MessengerBus.ONLINE;
 import static com.pairapp.messenger.MessengerBus.ON_MESSAGE_DELIVERED;
 import static com.pairapp.messenger.MessengerBus.ON_MESSAGE_SEEN;
+import static com.pairapp.messenger.MessengerBus.REGISTER_NOTIFIER;
 import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
 import static com.pairapp.messenger.MessengerBus.START_MONITORING_USER;
 import static com.pairapp.messenger.MessengerBus.STOP_MONITORING_USER;
@@ -63,11 +65,8 @@ public class PairAppClient extends Service {
     public static final String ACTION = "action";
     static final String VERSION = "version";
     static final int notId = 10983;
-    public static final String ACTION_SEND_MESSAGE = "sendMessage", ACTION_CANCEL_DISPATCH = "cancelMessage";
-    public static final String EXTRA_MESSAGE = "message";
     private static AtomicBoolean isClientStarted = new AtomicBoolean(false);
     private static Stack<Activity> backStack = new Stack<>();
-    private PairAppClientInterface INTERFACE;
     private WorkerThread WORKER_THREAD;
     private WebSocketDispatcher webSocketDispatcher;
     private MessagePacker messagePacker;
@@ -76,7 +75,8 @@ public class PairAppClient extends Service {
     private PairappSocket pairappSocket;
     private StatusManager statusManager;
     private PairAppClientEventsListener eventsListener = new PairAppClientEventsListener(new PairAppClientInterface());
-    private IncomingMessageProcessor incomingMessageProcessor;
+    @SuppressWarnings("FieldCanBeLocal")
+    private IncomingMessageProcessor incomingMessageProcessor; //fields is required to out stay its scope
 
 
     public static void startIfRequired(Context context) {
@@ -137,44 +137,19 @@ public class PairAppClient extends Service {
             return START_NOT_STICKY;
         }
 
-        if (intent != null) {
-            String action = intent.getStringExtra(ACTION);
-            if (action == null) {
-                action = intent.getAction();
-            }
-
-            if (action != null && isClientStarted.get()) {
-                if (ACTION_SEND_MESSAGE.equals(action)) {
-                    String messageJson = intent.getStringExtra(EXTRA_MESSAGE);
-                    final Message message = Message.fromJSON(messageJson);
-                    doSendMessage(message);
-                } else if (ACTION_CANCEL_DISPATCH.equals(action)) {
-                    String messageJson = intent.getStringExtra(EXTRA_MESSAGE);
-                    final Message message = Message.fromJSON(messageJson);
-                    INTERFACE.cancelDisPatch(message);
-                }
-            }
-        }
         return START_STICKY;
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        if (UserManager.getInstance().isUserVerified()) {
-            return INTERFACE;
-        }
-        throw new IllegalStateException("user must be logged in");
-    }
-
-    @Override
-    public boolean onUnbind(Intent intent) {
-        return true; //support re-binding default implementation returns false
     }
 
     @Override
     public void onDestroy() {
         WORKER_THREAD.attemptShutDown();
         super.onDestroy();
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     private synchronized void bootClient() {
@@ -184,7 +159,6 @@ public class PairAppClient extends Service {
             EventBus.resetBus(PostableBusClazz.class);
 
             monitor = new DispatcherMonitorImpl(this, disPatchingThreads);
-            INTERFACE = new PairAppClientInterface();
             messagePacker = MessagePacker.create(UserManager.getMainUserId());
 
             String authToken = UserManager.getInstance().getCurrentUserAuthToken();
@@ -201,7 +175,8 @@ public class PairAppClient extends Service {
                     STOP_MONITORING_USER, START_MONITORING_USER,
                     MESSAGE_RECEIVED, MESSAGE_SEEN,
                     ON_MESSAGE_DELIVERED, ON_MESSAGE_SEEN,
-                    SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH);
+                    SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH,
+                    REGISTER_NOTIFIER, DE_REGISTER_NOTIFIER);
             isClientStarted.set(true);
         }
     }
@@ -217,7 +192,6 @@ public class PairAppClient extends Service {
             webSocketDispatcher.close();
             pairappSocket.disConnectBlocking();
             PLog.i(TAG, TAG + ": bye");
-            INTERFACE = null;
             isClientStarted.set(false);
             return;
         }
@@ -284,7 +258,7 @@ public class PairAppClient extends Service {
         }, true);
     }
 
-    public class PairAppClientInterface extends Binder {
+    class PairAppClientInterface {
         public void sendMessage(Message message) {
             WORKER_THREAD.sendMessage(Message.copy(message)); //detach the message from realm
         }
@@ -540,11 +514,11 @@ public class PairAppClient extends Service {
     }
 
     @SuppressWarnings("SpellCheckingInspection")
-    public static EventBus postableBus() {
+    static EventBus postableBus() {
         return postableBuz;
     }
 
-    public static EventBus listenableBus() {
+    static EventBus listenableBus() {
         return listenableBus;
     }
 }

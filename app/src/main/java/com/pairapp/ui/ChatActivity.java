@@ -239,7 +239,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
         messageConversationRealm = Message.REALM(this);
         usersRealm = User.Realm(this);
-        player = new MediaPlayer();
         handleIntent();
     }
 
@@ -392,9 +391,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         }
         postEvent(Event.create(STOP_MONITORING_USER, null, peer.getUserId()));
         unRegister(ON_USER_ONLINE, ON_USER_OFFLINE, ON_USER_STOP_TYPING, ON_USER_TYPING);
-        if (player != null && player.isPlaying()) {
-            player.stop();
-        }
         super.onPause();
     }
 
@@ -409,8 +405,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         usersRealm.close();
         String s1 = messageEt.getText().toString();
         Config.getPreferences(TAG + "saved.Messages.message.box").edit().putString(peer.getUserId(), s1).apply();
-        player.release();
-        player = null;
         super.onDestroy();
     }
 
@@ -583,10 +577,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
         final boolean wasLastForTheDay = nextToCurrMessage == null || Message.isDateMessage(nextToCurrMessage);
         final Message deletedMessage = Message.copy(currMessage);
-        currMessage.removeFromRealm();
+        currMessage.deleteFromRealm();
         if (Message.isDateMessage(previousToCurrMessage) &&
                 wasLastForTheDay) {
-            previousToCurrMessage.removeFromRealm(); //this will be a date message
+            previousToCurrMessage.deleteFromRealm(); //this will be a date message
         }
         if (currConversation.getLastMessage() == null) {
             int allMessages = messages.size() - 1;
@@ -599,7 +593,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             }
         }
         messageConversationRealm.commitTransaction();
-        adapter.notifyDataSetChanged();
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
@@ -646,29 +639,29 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         }
     }
 
-    private MediaPlayer player;
+    private volatile boolean playerPlaying = false;
 
     @Override
     public void notifyUser(Context context, final Message message, String sender) {
         //noinspection StatementWithEmptyBody
         if (message.getTo().equals(peer.getUserId()) || message.getFrom().equals(peer.getUserId())
                 || peer.getName().equals(sender)) {
-            //just to ensure we don't spawn a thread only to end up doing nothing because player.isPlaying returns true, lets check first
-            if (!player.isPlaying()) {
+            if (!playerPlaying) {
                 TaskManager.executeNow(new Runnable() {
                     @Override
                     public void run() {
+                        playerPlaying = true;
+                        final MediaPlayer player = new MediaPlayer();
                         try {
-                            if (!player.isPlaying()) {
-                                player.reset();
-                                AssetFileDescriptor fd = getResources().openRawResourceFd(R.raw.sound_a);
-                                player.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
-                                player.prepare();
-                                fd.close();
-                                player.setLooping(false);
-                                player.setVolume(1f, 1f);
-                                player.start();
-                            }
+                            player.reset();
+                            player.setOnCompletionListener(completionListener);
+                            AssetFileDescriptor fd = getResources().openRawResourceFd(R.raw.sound_a);
+                            player.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
+                            player.prepare();
+                            fd.close();
+                            player.setLooping(false);
+                            player.setVolume(1f, 1f);
+                            player.start();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -679,6 +672,14 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             super.notifyUser(this, message, sender);
         }
     }
+
+    private final MediaPlayer.OnCompletionListener completionListener = new MediaPlayer.OnCompletionListener() {
+        @Override
+        public void onCompletion(MediaPlayer mp) {
+            mp.release();
+            playerPlaying = false;
+        }
+    };
 
     public void onTyping() {
         getSupportActionBar().setSubtitle(getString(R.string.writing));

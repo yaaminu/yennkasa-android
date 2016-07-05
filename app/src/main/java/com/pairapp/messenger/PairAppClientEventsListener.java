@@ -8,6 +8,7 @@ import com.pairapp.util.EventBus;
 import com.pairapp.util.PLog;
 
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
+import static com.pairapp.messenger.MessengerBus.DE_REGISTER_NOTIFIER;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_RECEIVED;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_SEEN;
 import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
@@ -15,6 +16,7 @@ import static com.pairapp.messenger.MessengerBus.OFFLINE;
 import static com.pairapp.messenger.MessengerBus.ONLINE;
 import static com.pairapp.messenger.MessengerBus.ON_MESSAGE_DELIVERED;
 import static com.pairapp.messenger.MessengerBus.ON_MESSAGE_SEEN;
+import static com.pairapp.messenger.MessengerBus.REGISTER_NOTIFIER;
 import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
 import static com.pairapp.messenger.MessengerBus.START_MONITORING_USER;
 import static com.pairapp.messenger.MessengerBus.STOP_MONITORING_USER;
@@ -66,6 +68,10 @@ class PairAppClientEventsListener implements EventBus.EventsListener {
                 pairAppClientInterface.sendMessage(((Message) event.getData()));
             } else if (tag.equals(CANCEL_MESSAGE_DISPATCH)) {
                 pairAppClientInterface.cancelDisPatch(((Message) event.getData()));
+            } else if (tag.equals(REGISTER_NOTIFIER)) {
+                pairAppClientInterface.registerUINotifier(((Notifier) event.getData()));
+            } else if (tag.equals(DE_REGISTER_NOTIFIER)) {
+                pairAppClientInterface.unRegisterUINotifier(((Notifier) event.getData()));
             }
         } finally {
             if (event.isSticky()) {

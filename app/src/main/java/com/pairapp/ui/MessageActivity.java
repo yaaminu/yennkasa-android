@@ -399,19 +399,6 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
             return Conversation.newSession(realm, conversation);
         }
 
-//        @Override
-//        public void uncaughtException(Thread thread, Throwable ex) {
-//            PLog.w(TAG, " uncaught exception : " + ex);
-//            throw new RuntimeException(ex);
-////            if(ex instanceof RuntimeException){
-////                throw new RuntimeException(ex);
-////            }else{
-////                if(BuildConfig.DEBUG){
-////                    throw new RuntimeException(ex.getCause());
-////                }
-////                Log.d(TAG,"caught a checked exception " + ex);
-////            }
-//        }
     }
 
     protected void reportProgress(String messageId, int progress) {

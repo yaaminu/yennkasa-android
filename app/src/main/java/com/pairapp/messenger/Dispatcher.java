@@ -12,7 +12,6 @@ import java.util.Collection;
  *
  * @author Null-Pointer on 5/26/2015.
  * @see AbstractMessageDispatcher
- * @see ParseDispatcher
  */
 interface Dispatcher<T> extends Closeable {
     void dispatch(T t);
