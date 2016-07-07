@@ -107,9 +107,10 @@ public class StatusManager {
             if (!isOnline(userIdPart)) {
                 onlineSet.add(userIdPart);
             }
-        } else {
+        } else {//TODO why not use the splitted part of the userID?
             typingSet.remove(userId);
         }
+        //TODO why not use the userID splitted from split(":") but the whole userID as the event data
         broadcastBus.post(Event.create(isTyping ? ON_USER_TYPING : ON_USER_STOP_TYPING, null, userId));
     }
 

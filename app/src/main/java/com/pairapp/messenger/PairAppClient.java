@@ -244,8 +244,8 @@ public class PairAppClient extends Service {
             } catch (PairappException e) {
                 throw new RuntimeException(e.getCause());
             }
-            webSocketDispatcher.dispatch(message);
         }
+        webSocketDispatcher.dispatch(message);
     }
 
 

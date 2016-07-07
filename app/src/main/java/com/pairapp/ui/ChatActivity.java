@@ -143,11 +143,13 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private Handler handler;
     private RealmResults<Message> messages;
     private User peer;
-    private final Runnable runnable = new Runnable() {
+    private final Runnable stopTypingRunnable = new Runnable() {
         @Override
         public void run() {
-            wasTyping = false;
-            postEvent(Event.create(NOT_TYPING, null, peer.getUserId()));
+            if (wasTyping) {
+                wasTyping = false;
+                postEvent(Event.create(NOT_TYPING, null, peer.getUserId()));
+            }
         }
     };
     private Conversation currConversation;
@@ -277,7 +279,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         messages = messageQuery.findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.ASCENDING, Message.FIELD_TYPE, Sort.DESCENDING);
         setUpCurrentConversation();
         sendButton.setOnClickListener(this);
-        messageEt.addTextChangedListener(this);
         setUpListView();
         // TODO: 8/22/2015 in future we will move to the last  un seen message if any
     }
@@ -366,6 +367,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             messageEt.setText(savedPreviousMessage);
         }
         adapter.notifyDataSetChanged();
+        messageEt.addTextChangedListener(this);
     }
 
     @Override
@@ -404,7 +406,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         messageConversationRealm.close();
         usersRealm.close();
         String s1 = messageEt.getText().toString();
-        Config.getPreferences(TAG + "saved.Messages.message.box").edit().putString(peer.getUserId(), s1).apply();
+        Config.getPreferences(TAG + SAVED_MESSAGES_MESSAGE_BOX).edit().putString(peer.getUserId(), s1).apply();
         super.onDestroy();
     }
 
@@ -427,10 +429,16 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     private void sendTextMessage() {
         String content = messageEt.getText().toString().trim();
-        messageEt.setText("");
         if (!TextUtils.isEmpty(content)) {
+            messageEt.setText("");
             super.sendMessage(content, peer.getUserId(), Message.TYPE_TEXT_MESSAGE, true);
-            messagesListView.setSelection(messages.size());
+            stopTypingRunnable.run();
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    messagesListView.setSelection(messages.size());
+                }
+            });
         }
 
     }
@@ -633,15 +641,18 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     public void afterTextChanged(Editable s) {
         super.afterTextChanged(s);
-        handler.removeCallbacks(runnable);
+        //best is remove the callback and post it again to run 10000 millis from now
+        //effectively renewing the timeout!!!
+        handler.removeCallbacks(stopTypingRunnable);
+        //TODO add some deviation to the timeout
+        handler.postDelayed(stopTypingRunnable, 10000);
+
         if (!s.toString().trim().isEmpty()) {
             ViewUtils.showViews(sendButton);
             if (!wasTyping) {
                 wasTyping = true;
                 postEvent(Event.create(TYPING, null, peer.getUserId()));
             }
-            //TODO add some deviation to the timeout
-            handler.postDelayed(runnable, 10000);
         } else {
             ViewUtils.hideViews(sendButton);
         }
