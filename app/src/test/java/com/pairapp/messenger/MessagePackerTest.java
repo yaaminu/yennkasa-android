@@ -143,7 +143,7 @@ public class MessagePackerTest {
 
     @Test
     public void testCreateTypingMessage() throws Exception {
-        byte[] statusMsg = messagePacker.createTypingMessage(12345876, false);
+        byte[] statusMsg = messagePacker.createTypingMessage("12345876", false);
         ByteBuffer buffer = ByteBuffer.wrap(statusMsg);
         buffer.order(ByteOrder.BIG_ENDIAN);
         assertEquals(buffer.get(), 0x1);

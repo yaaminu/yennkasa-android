@@ -39,9 +39,6 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         isUserVerified = userManager.isUserVerified();
-        if (isUserVerified) {
-            get(PAIRAPP_CLIENT_POSTABLE_BUS).postSticky(Event.createSticky(ONLINE, null, this));
-        }
         NavigationManager.onCreate(this);
     }
 
@@ -50,6 +47,9 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
         super.onStart();
         NavigationManager.onStart(this);
         ErrorCenter.registerErrorShower(this);
+        if (isUserVerified) {
+            get(PAIRAPP_CLIENT_POSTABLE_BUS).postSticky(Event.createSticky(ONLINE, null, this));
+        }
     }
 
     @Override
@@ -113,6 +113,9 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
         super.onStop();
         NavigationManager.onStop(this);
         ErrorCenter.unRegisterErrorShower(this);
+        if (isUserVerified) {
+            get(PAIRAPP_CLIENT_POSTABLE_BUS).postSticky(Event.createSticky(OFFLINE, null, this));
+        }
     }
 
     @Override
@@ -125,9 +128,6 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
     protected void onDestroy() {
         super.onDestroy();
         NavigationManager.onDestroy(this);
-        if (isUserVerified) {
-            get(PAIRAPP_CLIENT_POSTABLE_BUS).postSticky(Event.createSticky(OFFLINE, null, this));
-        }
     }
 
     protected final User getCurrentUser() {

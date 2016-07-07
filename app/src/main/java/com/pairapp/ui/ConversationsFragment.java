@@ -24,6 +24,9 @@ import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
+import com.pairapp.messenger.MessengerBus;
+import com.pairapp.util.Event;
+import com.pairapp.util.EventBus;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
@@ -32,11 +35,17 @@ import com.rey.material.widget.FloatingActionButton;
 
 import java.io.File;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import io.realm.Sort;
+
+import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
+import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS;
+import static com.pairapp.messenger.MessengerBus.TYPING;
 
 /**
  * @author by Null-Pointer on 5/29/2015.
@@ -47,6 +56,8 @@ public class ConversationsFragment extends ListFragment {
     private Realm realm;
     private RealmResults<Conversation> conversations;
     private Conversation deleted;
+    private final EventBus.EventsListener eventsListener = new EventListener();
+    private final Set<String> typingUsers = new HashSet<>(5);
     private ConversationAdapter.Delegate delegate = new ConversationAdapter.Delegate() {
         @Override
         public int unSeenMessagesCount(Conversation conversation) {
@@ -71,6 +82,11 @@ public class ConversationsFragment extends ListFragment {
         @Override
         public boolean autoUpdate() {
             return true;
+        }
+
+        @Override
+        public boolean isCurrentUserTyping(String userId) {
+            return typingUsers.contains(userId);
         }
     };
     private Callbacks interactionListener;
@@ -126,14 +142,6 @@ public class ConversationsFragment extends ListFragment {
         super.onActivityCreated(savedInstanceState);
         //noinspection ConstantConditions
         ((AppCompatActivity) getActivity()).getSupportActionBar().hide();
-//        SwipeDismissListViewTouchListener swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(getListView(), new SwipeDismissListViewTouchListener.OnDismissCallback() {
-//            @Override
-//            public void onDismiss(ListView listView, final int[] reverseSortedPositions) {
-//                showAlertDialog(reverseSortedPositions);
-//            }
-//        });
-//        getListView().setOnTouchListener(swipeDismissListViewTouchListener);
-//        getListView().setOnScrollListener(swipeDismissListViewTouchListener.makeScrollListener());
         getListView().setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
@@ -293,6 +301,19 @@ public class ConversationsFragment extends ListFragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).register(eventsListener, TYPING, NOT_TYPING);
+    }
+
+    @Override
+    public void onStop() {
+        MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).unregister(TYPING, eventsListener);
+        MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).unregister(NOT_TYPING, eventsListener);
+        super.onStop();
+    }
+
+    @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         interactionListener.onConversionClicked(((Conversation) l.getAdapter().getItem(position)));
     }
@@ -340,6 +361,26 @@ public class ConversationsFragment extends ListFragment {
                         }
                     }
                 });
+    }
+
+
+    private class EventListener extends MainThreadBaseEventListener {
+        @Override
+        protected void handleEvent(Event event) {
+            Object tag = event.getTag();
+            if (tag.equals(TYPING)) {
+                if (typingUsers.add((String) event.getData())) {
+                    ((ArrayAdapter) getListAdapter()).notifyDataSetChanged();
+                }
+            } else if (tag.equals(NOT_TYPING)) {
+                if (typingUsers.remove((String) event.getData())) {
+                    ((ArrayAdapter) getListAdapter()).notifyDataSetChanged();
+                }
+            } else {
+                PLog.f(TAG, tag.toString());
+                throw new AssertionError("unknown event");
+            }
+        }
     }
 
 }

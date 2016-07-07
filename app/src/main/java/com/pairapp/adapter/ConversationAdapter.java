@@ -71,7 +71,11 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
             ViewUtils.hideViews(holder.newMessagesCount);
         }
 
-        holder.chatSummary.setText(conversation.getSummary());
+        if (delegate.isCurrentUserTyping(conversation.getPeerId())) {
+            holder.chatSummary.setText(delegate.context().getResources().getString(R.string.writing));
+        } else {
+            holder.chatSummary.setText(conversation.getSummary());
+        }
         PLog.d(TAG, conversation.toString());
         User peer = UserManager.getInstance().fetchUserIfRequired(delegate.realm(), conversation.getPeerId());
         String peerName = peer.getName();
@@ -111,7 +115,9 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
             }
         }
         holder.chatSummary.setTextColor(context.getResources().getColor(R.color.light_gray));
-        if (message != null) {
+        if (delegate.isCurrentUserTyping(conversation.getPeerId())) {
+            holder.chatSummary.setTextColor(delegate.context().getResources().getColor(R.color.colorPrimaryDark));
+        } else if (message != null) {
             if (Message.isIncoming(message) && message.getState() != Message.STATE_SEEN) {
                 holder.chatSummary.setTextColor(context.getResources().getColor(R.color.black));
             } else if (message.getState() == Message.STATE_SEND_FAILED) {
@@ -142,6 +148,8 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         Realm realm();
 
         boolean autoUpdate();
+
+        boolean isCurrentUserTyping(String userId);
     }
 
 }

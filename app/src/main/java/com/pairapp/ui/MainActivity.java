@@ -1,7 +1,6 @@
 package com.pairapp.ui;
 
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
@@ -15,23 +14,17 @@ import com.google.samples.apps.iosched.ui.widget.SlidingTabLayout;
 import com.pairapp.PairApp;
 import com.pairapp.R;
 import com.pairapp.data.Conversation;
-import com.pairapp.data.Message;
-import com.pairapp.data.RealmUtils;
 import com.pairapp.data.User;
-import com.pairapp.data.UserManager;
-import com.pairapp.messenger.MessageProcessor;
-import com.pairapp.util.Config;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.UiHelpers;
-import com.parse.ParseAnalytics;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
+
+import static com.pairapp.messenger.MessengerBus.ON_USER_STOP_TYPING;
+import static com.pairapp.messenger.MessengerBus.ON_USER_TYPING;
 
 //import com.digits.sdk.android.Digits;
 
@@ -49,14 +42,8 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
         final Intent intent = getIntent();
         handleIntent(intent);
-//        // STOPSHIP: 9/27/2015 remove this
-//        if (!cleanedMessages) {
-//            cleanedMessages = true;
-//            RealmUtils.runRealmOperation(this);
-//        }
     }
 
     @Override
@@ -67,7 +54,6 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     }
 
     private void handleIntent(Intent intent) {
-        ParseAnalytics.trackAppOpenedInBackground(intent);
         if (notIsMainIntent(intent)) {
             if (isUserVerified() && SetUpActivity.isEveryThingOk()) {
                 setupViews();
@@ -89,7 +75,6 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                 if (default_fragment >= MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT
                         && default_fragment <= MyFragmentStatePagerAdapter.POSITION_SETTINGS_FRAGMENT)
                     savedPosition = default_fragment;
-//                testChatActivity();
             } else {
                 UiHelpers.gotoSetUpActivity(this);
             }
@@ -128,6 +113,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
             if (savedPosition != -1) {
                 setPagePosition(savedPosition);
             }
+            register(ON_USER_STOP_TYPING, ON_USER_TYPING);
         }
     }
 
@@ -135,6 +121,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     protected void onStop() {
         if (isUserVerified()) {
             savedPosition = pager.getCurrentItem();
+            unRegister(ON_USER_STOP_TYPING, ON_USER_TYPING);
         }
         super.onStop();
     }
@@ -262,34 +249,4 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     public int unSeenMessagesCount(Conversation conversation) {
         return LiveCenter.getUnreadMessageFor(conversation.getPeerId());
     }
-
-    /**
-     * code purposely for testing we will take this off in production
-     */
-    @SuppressWarnings("unused")
-    private static void testChatActivity() {
-        final String senderId = "233541730101";
-        timer = new Timer(true);
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_LOWEST);
-                testMessageProcessor(RealmUtils.seedIncomingMessages("Another Group Name@" + senderId, UserManager.getMainUserId()));
-                testMessageProcessor(RealmUtils.seedIncomingMessages("233542385287", UserManager.getMainUserId(), Message.TYPE_TEXT_MESSAGE, "Hello where have you been"));
-            }
-        };
-        timer.scheduleAtFixedRate(task, 5000, 45000);
-    }
-
-    static Timer timer;
-
-    private static void testMessageProcessor(Message messages) {
-        Context context = Config.getApplicationContext();
-        Bundle bundle = new Bundle();
-        bundle.putString("message", Message.toJSON(messages));
-        Intent intent = new Intent(context, MessageProcessor.class);
-        intent.putExtras(bundle);
-        context.startService(intent);
-    }
-
 }

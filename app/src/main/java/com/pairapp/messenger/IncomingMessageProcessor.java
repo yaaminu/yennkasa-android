@@ -49,7 +49,7 @@ public class IncomingMessageProcessor implements Observer<MessagePacker.DataEven
         } else if (data.getOpCode() == MessagePacker.TYPING) {
             manager.handleTypingAnnouncement(data.getData(), true);
         } else if (data.getOpCode() == MessagePacker.NOT_TYPING) {
-            manager.handleStatusAnnouncement(data.getData(), false);
+            manager.handleTypingAnnouncement(data.getData(), false);
         } else if (data.getOpCode() == MessagePacker.MESSAGE_STATUS_SEEN) {
             eventBus.post(Event.create(MessengerBus.ON_MESSAGE_SEEN, null, data.getData()));
         } else if (data.getOpCode() == MessagePacker.MESSAGE_STATUS_DELIVERED) {

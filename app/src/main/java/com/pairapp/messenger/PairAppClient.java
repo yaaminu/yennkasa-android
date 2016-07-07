@@ -32,9 +32,10 @@ import org.json.JSONObject;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -66,7 +67,7 @@ public class PairAppClient extends Service {
     static final String VERSION = "version";
     static final int notId = 10983;
     private static AtomicBoolean isClientStarted = new AtomicBoolean(false);
-    private static Stack<Activity> backStack = new Stack<>();
+    private static Set<Activity> backStack = new HashSet<>(6);
     private WorkerThread WORKER_THREAD;
     private WebSocketDispatcher webSocketDispatcher;
     private MessagePacker messagePacker;
@@ -244,8 +245,8 @@ public class PairAppClient extends Service {
             } catch (PairappException e) {
                 throw new RuntimeException(e.getCause());
             }
-            webSocketDispatcher.dispatch(message);
         }
+        webSocketDispatcher.dispatch(message);
     }
 
 
@@ -284,9 +285,7 @@ public class PairAppClient extends Service {
             if (activity == null) {
                 throw new IllegalArgumentException();
             }
-            if (backStack.size() > 0) { //avoid empty stack exceptions
-                backStack.pop();
-            }
+            backStack.remove(activity);
             if (backStack.isEmpty()) {
                 PLog.d(TAG, "marking user as offline");
                 statusManager.announceStatusChange(false);

@@ -28,19 +28,6 @@ public class StatusManager {
     private MessagePacker encoder;
     private final EventBus broadcastBus;
 
-
-    private StatusManager(String currentUser, EventBus bus) {
-        GenericUtils.ensureNotEmpty(currentUser);
-        GenericUtils.ensureNotNull(bus);
-        try {
-            //noinspection ResultOfMethodCallIgnored
-            Long.parseLong(currentUser);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(e);
-        }
-        this.broadcastBus = bus;
-    }
-
     private StatusManager(@NonNull Sender sender, @NonNull MessagePacker encoder, @NonNull EventBus broadcastBus) {
         this.sender = sender;
         this.encoder = encoder;
@@ -52,12 +39,8 @@ public class StatusManager {
         return new StatusManager(sender, encoder, broadcastBus);
     }
 
-    public static StatusManager create(@NonNull String currentUser, @NonNull EventBus bus) {
-        return new StatusManager(currentUser, bus);
-    }
-
     public synchronized void announceStatusChange(boolean online) {
-        if (this.isCurrentUserOnline == online) return;
+        if (this.isCurrentUserOnline == online) return; //bounce duplicate announcements
         isCurrentUserOnline = online;
         sender.sendMessage(encoder.createStatusMessage(isCurrentUserOnline));
     }
@@ -65,8 +48,9 @@ public class StatusManager {
     public synchronized void announceStartTyping(@NonNull String userId) {
         GenericUtils.ensureNotEmpty(userId);
         typingWith = userId;
-        // TODO: 7/5/2016 if this user is not a group,check that this particular user is online before sending the typing messages
-        sender.sendMessage(encoder.createTypingMessage(userId, true));
+        if (onlineSet.contains(userId) || userId.split(":").length > 1 /*groups*/) {
+            sender.sendMessage(encoder.createTypingMessage(userId, true));
+        }
     }
 
     public synchronized void announceStopTyping(@NonNull String userId) {
@@ -74,9 +58,11 @@ public class StatusManager {
         if (userId.equals(typingWith)) {
             typingWith = null;
         }
-        //its hard to say this is a programmatic error. so we allow the masseage to pass through
-        //even though we don't know whether this user is typing with "userId" or not.
-        sender.sendMessage(encoder.createTypingMessage(userId, false));
+        if (onlineSet.contains(userId) || userId.split(":").length > 1 /*groups*/) {
+            //its hard to say this is a programmatic error. so we allow the masseage to pass through
+            //even though we don't know whether this user is typing with "userId" or not.
+            sender.sendMessage(encoder.createTypingMessage(userId, false));
+        }
     }
 
     @Nullable
@@ -107,9 +93,10 @@ public class StatusManager {
             if (!isOnline(userIdPart)) {
                 onlineSet.add(userIdPart);
             }
-        } else {
+        } else {//TODO why not use the splitted part of the userID?
             typingSet.remove(userId);
         }
+        //TODO why not use the userID splitted from split(":") but the whole userID as the event data
         broadcastBus.post(Event.create(isTyping ? ON_USER_TYPING : ON_USER_STOP_TYPING, null, userId));
     }
 

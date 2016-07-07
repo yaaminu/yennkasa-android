@@ -91,7 +91,7 @@ public class MessagePacker {
         return byteBuffer.array();
     }
 
-    public byte[] createTypingMessage(long recipient, boolean isTyping) {
+    private byte[] createTypingMessageUser(long recipient, boolean isTyping) {
         int msgLength = 19;
         ByteBuffer byteBuffer = ByteBuffer.allocate(msgLength);
         byteBuffer.order(ByteOrder.BIG_ENDIAN);
@@ -111,6 +111,14 @@ public class MessagePacker {
     }
 
     public byte[] createTypingMessage(String recipient, boolean isTyping) {
+        try {
+            return createTypingMessageUser(Long.parseLong(recipient), isTyping);
+        } catch (NumberFormatException e) {
+            return createGroupTypingMessage(recipient, isTyping);
+        }
+    }
+
+    private byte[] createGroupTypingMessage(String recipient, boolean isTyping) {
         byte[] recipientBytes = recipient.getBytes();
         if (recipientBytes.length <= 8)
             throw new IllegalArgumentException("invalid recipient id");
