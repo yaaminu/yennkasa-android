@@ -2,6 +2,7 @@ package com.pairapp.messenger;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.PowerManager;
 
@@ -9,6 +10,7 @@ import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
 import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
+import com.pairapp.util.Config;
 import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.Event;
 import com.pairapp.util.LiveCenter;
@@ -32,10 +34,12 @@ import static com.pairapp.messenger.MessengerBus.get;
 public class MessageProcessor extends IntentService {
     public static final String SYNC_MESSAGES = "syncMessages";
     private static final String TAG = MessageProcessor.class.getSimpleName();
+    public static final String preference = TAG + "msglogs.log";
     static final String MESSAGE = "message";
     private static final String UNKNOWN = "unknown";
     static final String MESSAGE_STATUS = "messageStatus";
     static final String UPDATE = "update";
+    public static final String CURSOR = "cursor";
     private final Lock processLock = new ReentrantLock(true);
 
     public MessageProcessor() {
@@ -55,11 +59,11 @@ public class MessageProcessor extends IntentService {
                 wakeLock.acquire();
                 try {
                     Bundle bundle = intent.getExtras();
-                    String data = bundle.getString(MessageCenter.KEY_MESSAGE);
-
+                    String data = bundle.getString(MESSAGE);
+                    int cursor = bundle.getInt(CURSOR);
                     assert data != null;
                     PLog.d(TAG, data);
-                    handleMessage(data);
+                    handleMessage(data, cursor);
                 } finally {
                     wakeLock.release();
                 }
@@ -67,7 +71,7 @@ public class MessageProcessor extends IntentService {
         }, false);
     }
 
-    private void handleMessage(String data) {
+    private void handleMessage(String data, int cursor) {
         try {
             final JSONObject data1 = new JSONObject(data);
             String type = getType(data1);
@@ -76,7 +80,7 @@ public class MessageProcessor extends IntentService {
                 // FIXME: 6/21/2016 setup a provider that will sync messages
             } else if (type.equals(MESSAGE)) {
                 Message message = Message.fromJSON(data);
-                doProcessMessage(message);
+                doProcessMessage(message, cursor);
             } else if (type.equals(MESSAGE_STATUS)) {
                 Realm realm = Message.REALM(MessageProcessor.this);
                 int state = data1.optInt(Message.MSG_STS_STATUS, Message.STATE_SEEN);
@@ -119,7 +123,7 @@ public class MessageProcessor extends IntentService {
         return UNKNOWN;
     }
 
-    private void doProcessMessage(Message message) {
+    private void doProcessMessage(Message message, int cursor) {
         try {
             processLock.lock();
             if (message.getFrom().equals(UserManager.getMainUserId())) {
@@ -184,6 +188,7 @@ public class MessageProcessor extends IntentService {
                     LiveCenter.incrementUnreadMessageForPeer(conversation.getPeerId());
                 }
                 realm.commitTransaction();
+                logCursor(cursor);
                 NotificationManager.INSTANCE.onNewMessage(this, message);
                 get(PAIRAPP_CLIENT_POSTABLE_BUS).post(Event.create(MESSAGE_RECEIVED, null, message.getId()));
                 if (!Message.isTextMessage(message) && Worker.getCurrentActiveDownloads() < Worker.MAX_PARRALLEL_DOWNLOAD) {
@@ -201,6 +206,19 @@ public class MessageProcessor extends IntentService {
         } finally {
             processLock.unlock();
         }
+    }
+
+    static int getCursor() {
+        return Config.getPreferences(preference).getInt(TAG + CURSOR, -1);
+    }
+
+    private static void logCursor(int cursor) {
+        SharedPreferences preferences = Config.getPreferences(preference);
+        SharedPreferences.Editor editor = preferences.edit();
+        if (preferences.getInt(TAG + CURSOR, 0) < cursor) {
+            editor.putInt(TAG + CURSOR, cursor);
+        }
+        editor.apply();
     }
 
 }

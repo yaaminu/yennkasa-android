@@ -14,14 +14,12 @@ import org.json.JSONObject;
  * @author by Null-Pointer on 5/28/2015.
  */
 public class MessageCenter extends ParsePushBroadcastReceiver {
-    static final String KEY_MESSAGE = "message";
     private static final String TAG = MessageCenter.class.getSimpleName();
-
 
     private static void processMessage(Context context, String data) {
         Intent intent;
         intent = new Intent(context, MessageProcessor.class);
-        intent.putExtra(KEY_MESSAGE, data);
+        intent.putExtra(MessageProcessor.MESSAGE, data);
         context.startService(intent);
     }
 

@@ -41,6 +41,7 @@ public class IncomingMessageProcessor implements Observer<MessagePacker.DataEven
             Context context = Config.getApplicationContext();
             Intent intent = new Intent(context, MessageProcessor.class);
             intent.putExtra(MessageProcessor.MESSAGE, data.getData());
+            intent.putExtra(MessageProcessor.CURSOR, data.getCursorPos());
             context.startService(intent);
         } else if (data.getOpCode() == MessagePacker.ONLINE) {
             manager.handleStatusAnnouncement(data.getData(), true);

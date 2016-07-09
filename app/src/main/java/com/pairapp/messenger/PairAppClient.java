@@ -165,6 +165,7 @@ public class PairAppClient extends Service {
             String authToken = UserManager.getInstance().getCurrentUserAuthToken();
             Map<String, String> opts = new HashMap<>(1);
             opts.put("Authorization", authToken);
+            opts.put("cursor", MessageProcessor.getCursor() + "");
             pairappSocket = PairappSocket.create(opts, new MessageParserImpl(messagePacker));
             pairappSocket.init();
             statusManager = StatusManager.create(new SenderImpl(pairappSocket), messagePacker, listenableBus());
