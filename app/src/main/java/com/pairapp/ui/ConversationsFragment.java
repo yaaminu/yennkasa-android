@@ -43,9 +43,9 @@ import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import io.realm.Sort;
 
-import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
+import static com.pairapp.messenger.MessengerBus.ON_USER_STOP_TYPING;
+import static com.pairapp.messenger.MessengerBus.ON_USER_TYPING;
 import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS;
-import static com.pairapp.messenger.MessengerBus.TYPING;
 
 /**
  * @author by Null-Pointer on 5/29/2015.
@@ -91,6 +91,7 @@ public class ConversationsFragment extends ListFragment {
     };
     private Callbacks interactionListener;
     private Realm userRealm;
+    private ConversationAdapter conversationAdapter;
 
     interface Callbacks {
         void onConversionClicked(Conversation conversation);
@@ -122,7 +123,7 @@ public class ConversationsFragment extends ListFragment {
         realm = Conversation.Realm(getActivity());
         userRealm = User.Realm(getActivity());
         conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, Sort.DESCENDING);
-        ConversationAdapter adapter = new ConversationAdapter(delegate);
+        conversationAdapter = new ConversationAdapter(delegate);
         FloatingActionButton actionButton = ((FloatingActionButton) view.findViewById(R.id.fab_new_message));
         //noinspection deprecation
         actionButton.setIcon(getResources().getDrawable(R.drawable.ic_mode_edit_white_24dp), false);
@@ -133,7 +134,7 @@ public class ConversationsFragment extends ListFragment {
 
             }
         });
-        setListAdapter(adapter);
+        setListAdapter(conversationAdapter);
         return view;
     }
 
@@ -303,13 +304,13 @@ public class ConversationsFragment extends ListFragment {
     @Override
     public void onStart() {
         super.onStart();
-        MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).register(eventsListener, TYPING, NOT_TYPING);
+        MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).register(eventsListener, ON_USER_TYPING, ON_USER_STOP_TYPING);
     }
 
     @Override
     public void onStop() {
-        MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).unregister(TYPING, eventsListener);
-        MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).unregister(NOT_TYPING, eventsListener);
+        MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).unregister(ON_USER_TYPING, eventsListener);
+        MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).unregister(ON_USER_STOP_TYPING, eventsListener);
         super.onStop();
     }
 
@@ -368,13 +369,14 @@ public class ConversationsFragment extends ListFragment {
         @Override
         protected void handleEvent(Event event) {
             Object tag = event.getTag();
-            if (tag.equals(TYPING)) {
+            if (tag.equals(ON_USER_TYPING)) {
                 if (typingUsers.add((String) event.getData())) {
-                    ((ArrayAdapter) getListAdapter()).notifyDataSetChanged();
+                    conversationAdapter.notifyDataSetChanged();
                 }
-            } else if (tag.equals(NOT_TYPING)) {
+            } else if (tag.equals(ON_USER_STOP_TYPING)) {
+                //noinspection RedundantCast
                 if (typingUsers.remove((String) event.getData())) {
-                    ((ArrayAdapter) getListAdapter()).notifyDataSetChanged();
+                    conversationAdapter.notifyDataSetChanged();
                 }
             } else {
                 PLog.f(TAG, tag.toString());

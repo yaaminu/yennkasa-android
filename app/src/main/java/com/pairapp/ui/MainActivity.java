@@ -23,9 +23,6 @@ import com.rey.material.widget.SnackBar;
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
 
-import static com.pairapp.messenger.MessengerBus.ON_USER_STOP_TYPING;
-import static com.pairapp.messenger.MessengerBus.ON_USER_TYPING;
-
 //import com.digits.sdk.android.Digits;
 
 /**
@@ -113,7 +110,6 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
             if (savedPosition != -1) {
                 setPagePosition(savedPosition);
             }
-            register(ON_USER_STOP_TYPING, ON_USER_TYPING);
         }
     }
 
@@ -121,7 +117,6 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     protected void onStop() {
         if (isUserVerified()) {
             savedPosition = pager.getCurrentItem();
-            unRegister(ON_USER_STOP_TYPING, ON_USER_TYPING);
         }
         super.onStop();
     }

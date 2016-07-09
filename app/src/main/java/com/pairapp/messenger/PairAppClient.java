@@ -77,7 +77,7 @@ public class PairAppClient extends Service {
     private StatusManager statusManager;
     private PairAppClientEventsListener eventsListener = new PairAppClientEventsListener(new PairAppClientInterface());
     @SuppressWarnings("FieldCanBeLocal")
-    private IncomingMessageProcessor incomingMessageProcessor; //fields is required to out stay its scope
+    private IncomingMessageProcessor incomingMessageProcessor; //field is required to outlive its scope
 
 
     public static void startIfRequired(Context context) {

@@ -123,8 +123,8 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
             } else if (message.getState() == Message.STATE_SEND_FAILED) {
                 holder.chatSummary.setTextColor(context.getResources().getColor(R.color.red));
             }
+            holder.chatSummary.setText(summary);
         }
-        holder.chatSummary.setText(summary);
         holder.peerId = conversation.getPeerId();
 
         holder.senderAvatar.setOnClickListener(targetOnclick);
