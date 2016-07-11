@@ -6,51 +6,27 @@ import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
 import com.pairapp.util.ThreadUtils;
 
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author aminu on 6/19/2016.
  */
-public class PairappSocket {
+class PairappSocket {
     public static final String TAG = PairappSocket.class.getSimpleName();
 
-    private final MessageParser parser;
     private final WebSocketClient webSocketClient;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
-    private final Set<SendListener> sendListeners;
 
-    private PairappSocket(Map<String, String> headers, MessageParser parser) {
-        this.parser = parser;
+    private PairappSocket(Map<String, String> headers, PairappSocketListener pairappSocketListener) {
         webSocketClient = new WebSocketClient.Builder()
                 .endpoint(Config.getMessageEndpoint())
                 .headers(headers)
-                .listener(listener)
+                .listener(pairappSocketListener)
                 .networkProvider(networkProvider)
                 .logger(logger)
                 .timeOut(5000)
                 .build();
-        this.sendListeners = new HashSet<>(2);
-    }
-
-    public void addSendListener(SendListener sendListener) {
-        if (!initialized.get()) {
-            throw new IllegalStateException("not initialised");
-        }
-        GenericUtils.ensureNotNull(sendListener);
-        synchronized (sendListeners) {
-            sendListeners.add(sendListener);
-        }
-    }
-
-    public void unRegisterSendListener(SendListener sendListener) {
-        if (!initialized.get()) {
-            throw new IllegalStateException("not initialised");
-        }
-        GenericUtils.ensureNotNull(sendListener);
-        sendListeners.remove(sendListener);
     }
 
     public void init() {
@@ -73,9 +49,6 @@ public class PairappSocket {
             throw new IllegalStateException("not initialised");
         }
         webSocketClient.closeConnectionBlocking();
-        synchronized (sendListeners) {
-            sendListeners.clear();
-        }
     }
 
     public void send(byte[] bytes) {
@@ -88,20 +61,10 @@ public class PairappSocket {
         }
     }
 
-    public static PairappSocket create(Map<String, String> headers, MessageParser parser) {
+    public static PairappSocket create(Map<String, String> headers, PairappSocketListener listener) {
         ThreadUtils.ensureNotMain();
-        GenericUtils.ensureNotNull(headers, parser);
-        return new PairappSocket(headers, parser);
-    }
-
-    public interface SendListener {
-        void onSentSucceeded(byte[] data);
-
-        void onSendFailed(byte[] data);
-    }
-
-    public interface MessageParser {
-        void feed(byte[] bytes);
+        GenericUtils.ensureNotNull(headers);
+        return new PairappSocket(headers, listener);
     }
 
     private final ConnectionUtils.ConnectivityListener connectivityChangeListener = new ConnectionUtils.ConnectivityListener() {
@@ -113,7 +76,7 @@ public class PairappSocket {
         }
     };
     @SuppressWarnings("FieldCanBeLocal")
-    private final WebSocketClient.Logger logger = new WebSocketClient.Logger() {
+    private final Logger logger = new Logger() {
         @Override
         public void Log(int level, String tag, String message, Throwable cause) {
             switch (level) {
@@ -169,64 +132,7 @@ public class PairappSocket {
         }
     };
 
-    @SuppressWarnings("FieldCanBeLocal")
-    private final WebSocketClient.ClientListener listener = new WebSocketClient.ClientListener() {
-        @Override
-        public void onMessage(byte[] bytes) {
-            parser.feed(bytes);
-        }
+    interface PairappSocketListener extends ClientListener {
 
-        @Override
-        public void onMessage(String message) {
-            onMessage(message.getBytes());
-        }
-
-        @Override
-        public void onOpen() {
-            // TODO: 6/20/2016 fire an event that we are connected
-        }
-
-        @Override
-        public void onClose(int code, String reason) {
-            //should we allow ourselves to be usable again?
-        }
-
-        @Override
-        public void onClose() {
-            //should we allow ourselves to be usable again?
-        }
-
-        @Override
-        public void onError(Exception e) {
-
-        }
-
-        @Override
-        public void onConnecting() {
-            // TODO: 6/20/2016 fire an event that we are connecting
-        }
-
-        @Override
-        public void onSendError(boolean isBinary, byte[] data) {
-            synchronized (sendListeners) {
-                for (SendListener sendListener : sendListeners) {
-                    sendListener.onSendFailed(data);
-                }
-            }
-        }
-
-        @Override
-        public void onSendSuccess(boolean isBinary, byte[] data) {
-            synchronized (sendListeners) {
-                for (SendListener sendListener : sendListeners) {
-                    sendListener.onSentSucceeded(data);
-                }
-            }
-        }
-
-        @Override
-        public void onDisConnectedUnexpectedly() {
-            // TODO: 6/20/2016 fire an event that we are disconnected
-        }
-    };
+    }
 }

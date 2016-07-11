@@ -6,7 +6,6 @@ import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketCloseCode;
 import com.neovisionaries.ws.client.WebSocketError;
 import com.neovisionaries.ws.client.WebSocketException;
-import com.neovisionaries.ws.client.WebSocketFactory;
 import com.neovisionaries.ws.client.WebSocketFrame;
 import com.neovisionaries.ws.client.WebSocketListener;
 import com.neovisionaries.ws.client.WebSocketState;
@@ -34,12 +33,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class WebSocketClient {
     private static final String TAG = WebSocketClient.class.getSimpleName();
     public static final int PING_INTERVAL = 1000 * 60 * 3;
-    public static final WebSocketFactory SOCKET_FACTORY = new WebSocketFactory();
     private final Map<String, String> headers;
     private final Logger logger;
     private final ClientListener listener;
     private final NetworkProvider networkProvider;
-    private WebSocket internalWebSocket;
+    private IWebSocket internalWebSocket;
     private final AtomicBoolean selfClosed = new AtomicBoolean(false);
     private final Timer timer;
     private final List<Object> backLog;
@@ -57,29 +55,6 @@ public class WebSocketClient {
         this.headers = headers;
         timer = new Timer("webSocketClient timer", true);
         backLog = new ArrayList<>(2);
-    }
-
-    interface ClientListener {
-        void onMessage(byte[] bytes);
-
-        void onMessage(String message);
-
-        void onOpen();
-
-        void onClose(int code, String reason);
-
-        void onClose();
-
-        void onError(Exception e);
-
-        void onSendError(boolean isBinary, byte[] data);
-
-        void onSendSuccess(boolean isBinary, byte[] data);
-
-        void onConnecting();
-
-        void onDisConnectedUnexpectedly();
-
     }
 
 
@@ -109,17 +84,9 @@ public class WebSocketClient {
 
     public synchronized void send(byte[] bytes) {
         if (internalWebSocket.isOpen()) {
-            internalWebSocket.sendBinary(bytes);
+            internalWebSocket.send(bytes);
         } else {
             backLog.add(bytes);
-        }
-    }
-
-    public synchronized void send(String text) {
-        if (internalWebSocket.isOpen()) {
-            internalWebSocket.sendText(text);
-        } else {
-            backLog.add(text);
         }
     }
 
@@ -157,26 +124,6 @@ public class WebSocketClient {
         for (Map.Entry<String, String> header : headers.entrySet()) {
             internalWebSocket.addHeader(header.getKey(), header.getValue());
         }
-    }
-
-    interface Logger {
-        Logger DEFAULT_LOGGER = new Logger() {
-            @Override
-            public void Log(int level, String tag, String message, Throwable cause) {
-                Log.e(tag, message, cause);
-            }
-
-            @Override
-            public void Log(int level, String tag, String message, Object... args) {
-                Log.println(level, tag, String.format(message, args));
-            }
-        };
-
-        int V = 1, D = 2, I = 3, W = 4, E = 5;
-
-        void Log(int level, String tag, String message, Throwable cause);
-
-        void Log(int level, String tag, String message, Object... args);
     }
 
     public static class Builder {
@@ -257,7 +204,7 @@ public class WebSocketClient {
             );
             client.networkProvider.registerNetworkChangeListener(client.networkChangeListener);
             try {
-                client.internalWebSocket = SOCKET_FACTORY.createSocket(client.uri, client.timeout);
+                client.internalWebSocket = new WebSocketImpl(client.uri, client.timeout);
                 return client;
             } catch (IOException e) {
                 throw new AssertionError(e);
@@ -295,9 +242,9 @@ public class WebSocketClient {
                 for (int index = 0; index < backLog.size(); index++) {
                     Object o = backLog.get(i);
                     if (o instanceof String) {
-                        internalWebSocket.sendText((String) o);
+                        internalWebSocket.send(((String) o).getBytes());
                     } else {
-                        internalWebSocket.sendBinary((byte[]) o);
+                        internalWebSocket.send((byte[]) o);
                     }
                     i++;
                 }
@@ -503,7 +450,7 @@ public class WebSocketClient {
                 internalWebSocket.removeHeaders(entry.getKey());
             }
             internalWebSocket.sendClose(WebSocketCloseCode.ABNORMAL);
-            internalWebSocket = SOCKET_FACTORY.createSocket(uri, timeout);
+            internalWebSocket = new WebSocketImpl(uri, timeout);
             connectBlocking();
         } catch (IOException e) {
             logger.Log(Logger.E, TAG, e.getMessage(), e);

@@ -13,6 +13,7 @@ import java.util.Locale;
  */
 public class SimpleDateUtil {
 
+    public static final long ONE_HOUR = 1000 * 60 * 60;
     private static SimpleDateFormat dayPrecisionFormatter = new SimpleDateFormat("yyyy/MM/dd", Locale.US),
             secondsPrecissionFormatter = new SimpleDateFormat("yyyyMMdd_HHmmss");
 

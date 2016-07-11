@@ -2,8 +2,11 @@ package com.pairapp.messenger;
 
 import com.pairapp.data.Message;
 import com.pairapp.net.FileApi;
-import com.pairapp.net.sockets.PairappSocket;
+import com.pairapp.net.sockets.SendListener;
+import com.pairapp.net.sockets.Sendable;
+import com.pairapp.net.sockets.Sender;
 import com.pairapp.util.FileUtils;
+import com.pairapp.util.SimpleDateUtil;
 
 import java.util.List;
 import java.util.Map;
@@ -18,11 +21,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class WebSocketDispatcher extends AbstractMessageDispatcher {
 
-    private final PairappSocket pairappSocket;
+    private final Sender sender;
     private final MessageEncoder messageEncoder;
     private final Map<String, String> idMaps;
 
-    private final PairappSocket.SendListener sendListener = new PairappSocket.SendListener() {
+    private final SendListener sendListener = new SendListener() {
         @Override
         public void onSentSucceeded(byte[] data) {
             String hash = FileUtils.hash(data);
@@ -39,15 +42,15 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
     };
 
     public static WebSocketDispatcher create(FileApi fileApi
-            , DispatcherMonitor monitor, PairappSocket socket
+            , DispatcherMonitor monitor, Sender socket
             , MessageEncoder codec) {
         return new WebSocketDispatcher(fileApi, monitor, socket, codec);
     }
 
     private WebSocketDispatcher(FileApi fileApi,
-                                DispatcherMonitor monitor, PairappSocket socket, MessageEncoder messageEncoder) {
+                                DispatcherMonitor monitor, Sender socket, MessageEncoder messageEncoder) {
         super(fileApi, monitor);
-        this.pairappSocket = socket;
+        this.sender = socket;
         this.messageEncoder = messageEncoder;
         idMaps = new ConcurrentHashMap<>(4);
         socket.addSendListener(sendListener);
@@ -57,7 +60,7 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
 
     @Override
     protected boolean doClose() {
-        pairappSocket.unRegisterSendListener(sendListener);
+        sender.removeSendListener(sendListener);
         closed.set(true);
         return true;
     }
@@ -69,18 +72,25 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
 
     @Override
     protected void dispatchToUser(Message message) {
-        if (pairappSocket.isConnected()) {
-            byte[] encoded = messageEncoder.encode(message);
-            idMaps.put(FileUtils.hash(encoded), message.getId());
-            pairappSocket.send(encoded);
-        } else {
-            onFailed(message.getId(), ERR_USER_OFFLINE);
-        }
+        byte[] encoded = messageEncoder.encode(message);
+        idMaps.put(FileUtils.hash(encoded), message.getId());
+        sender.sendMessage(createSendable(message.getTo() + ":" + message.getFrom(), encoded));
     }
 
     @Override
     public boolean isClosed() {
         return closed.get();
+    }
+
+    private Sendable createSendable(String collapseKey, byte[] message) {
+        return new Sendable.Builder()
+                .data(sender.bytesToString(message))
+                .collapseKey(collapseKey + "message")
+                .validUntil(System.currentTimeMillis() + SimpleDateUtil.ONE_HOUR * 12) //12 hours
+                .maxRetries(Sendable.RETRY_FOREVER)
+                .surviveRestarts(true)
+                .startProcessingAt(System.currentTimeMillis())
+                .build();
     }
 
     interface MessageEncoder {

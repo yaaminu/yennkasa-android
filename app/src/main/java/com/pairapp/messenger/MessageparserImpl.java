@@ -1,11 +1,11 @@
 package com.pairapp.messenger;
 
-import com.pairapp.net.sockets.PairappSocket;
+import com.pairapp.net.sockets.MessageParser;
 
 /**
  * @author aminu on 7/1/2016.
  */
-class MessageParserImpl implements PairappSocket.MessageParser {
+class MessageParserImpl implements MessageParser {
 
     private final MessagePacker messagePacker;
 

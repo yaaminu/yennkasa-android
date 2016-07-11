@@ -1,6 +1,7 @@
 package com.pairapp.messenger;
 
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -20,7 +21,8 @@ import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.ParseClient;
 import com.pairapp.net.ParseFileClient;
-import com.pairapp.net.sockets.PairappSocket;
+import com.pairapp.net.sockets.Sendable;
+import com.pairapp.net.sockets.SenderImpl;
 import com.pairapp.util.Config;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.LiveCenter;
@@ -66,6 +68,8 @@ public class PairAppClient extends Service {
     public static final String ACTION = "action";
     static final String VERSION = "version";
     static final int notId = 10983;
+    public static final String READ_RECEIPT_DELIVERY_REPORT_COLLAPSE_KEY = "readReceiptDeliveryReport";
+    public static final int WAIT_MILLIS_DELIVERY_REPORT = 0;
     private static AtomicBoolean isClientStarted = new AtomicBoolean(false);
     private static Set<Activity> backStack = new HashSet<>(6);
     private WorkerThread WORKER_THREAD;
@@ -73,11 +77,11 @@ public class PairAppClient extends Service {
     private MessagePacker messagePacker;
     private final Map<String, Future<?>> disPatchingThreads = new ConcurrentHashMap<>();
     private Dispatcher.DispatcherMonitor monitor;
-    private PairappSocket pairappSocket;
     private StatusManager statusManager;
     private PairAppClientEventsListener eventsListener = new PairAppClientEventsListener(new PairAppClientInterface());
     @SuppressWarnings("FieldCanBeLocal")
     private IncomingMessageProcessor incomingMessageProcessor; //field is required to outlive its scope
+    private SenderImpl sender;
 
 
     public static void startIfRequired(Context context) {
@@ -166,10 +170,10 @@ public class PairAppClient extends Service {
             Map<String, String> opts = new HashMap<>(1);
             opts.put("Authorization", authToken);
             opts.put("cursor", MessageProcessor.getCursor() + "");
-            pairappSocket = PairappSocket.create(opts, new MessageParserImpl(messagePacker));
-            pairappSocket.init();
-            statusManager = StatusManager.create(new SenderImpl(pairappSocket), messagePacker, listenableBus());
-            webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, pairappSocket,
+            sender = new SenderImpl(opts, new MessageParserImpl(messagePacker));
+            sender.start();
+            statusManager = StatusManager.create(sender, messagePacker, listenableBus());
+            webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, sender,
                     new MessageEncoderImpl(messagePacker));
             incomingMessageProcessor = new IncomingMessageProcessor(statusManager, postableBus());
             messagePacker.observe().subscribe(incomingMessageProcessor);
@@ -187,12 +191,12 @@ public class PairAppClient extends Service {
     private synchronized void shutDown() {
         ThreadUtils.ensureNotMain();
         if (isClientStarted.get()) {
+            sender.shutdownSafely();
             EventBus.resetBus(ListneableBusClazz.class);
             EventBus.resetBus(PostableBusClazz.class);
             messagePacker.close();
             webSocketDispatcher.unRegisterMonitor(monitor);
             webSocketDispatcher.close();
-            pairappSocket.disConnectBlocking();
             PLog.i(TAG, TAG + ": bye");
             isClientStarted.set(false);
             return;
@@ -327,24 +331,39 @@ public class PairAppClient extends Service {
             statusManager.stopMonitoringUser(user);
         }
 
+
+        private Sendable createReadReceiptSendable(String recipient, byte[] data, long startProcessingAt) {
+            return new Sendable.Builder()
+                    .collapseKey(recipient + READ_RECEIPT_DELIVERY_REPORT_COLLAPSE_KEY)
+                    .data(sender.bytesToString(data))
+                    .startProcessingAt(startProcessingAt)
+                    .validUntil(System.currentTimeMillis() + AlarmManager.INTERVAL_DAY * 30) //30 days
+                    .surviveRestarts(true)
+                    .maxRetries(Sendable.RETRY_FOREVER)
+                    .build();
+        }
+
         public void markMessageSeen(final String msgId) {
             Realm realm = Message.REALM(PairAppClient.this);
             try {
                 Message message = Message.markMessageSeen(realm, msgId);
                 if (message != null) {
-                    pairappSocket.send(messagePacker.createMsgStatusMessage(message.getFrom(), msgId, false));
+                    sender.sendMessage(createReadReceiptSendable(message.getFrom(),
+                            messagePacker.createMsgStatusMessage(message.getFrom(), msgId, false), System.currentTimeMillis()));
                 }
             } finally {
                 realm.close();
             }
         }
 
+
         public void markMessageDelivered(final String msgId) {
             Realm realm = Message.REALM(PairAppClient.this);
             try {
                 Message message = Message.markMessageDelivered(realm, msgId);
                 if (message != null) {
-                    pairappSocket.send(messagePacker.createMsgStatusMessage(message.getFrom(), msgId, true));
+                    sender.sendMessage(createReadReceiptSendable(message.getFrom(),
+                            messagePacker.createMsgStatusMessage(message.getFrom(), msgId, true), System.currentTimeMillis() + WAIT_MILLIS_DELIVERY_REPORT));
                 }
             } finally {
                 realm.close();

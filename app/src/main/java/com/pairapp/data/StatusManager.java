@@ -4,9 +4,12 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.pairapp.messenger.MessagePacker;
+import com.pairapp.net.sockets.Sendable;
+import com.pairapp.net.sockets.Sender;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.GenericUtils;
+import com.pairapp.util.SimpleDateUtil;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -16,11 +19,15 @@ import java.util.Set;
  */
 public class StatusManager {
 
-    public static final String ANNOUNCE_ONLINE = "announceOnline", ANNOUNCE_TYPING = "announceTyping";
     public static final String ON_USER_ONLINE = "onUserOnline";
     public static final String ON_USER_OFFLINE = "onUserOffline";
     public static final String ON_USER_STOP_TYPING = "onUserStopTyping";
     public static final String ON_USER_TYPING = "onUserTyping";
+    public static final String MONITORTYPING_COLLAPSE_KEY = "monitortyping";
+    public static final String CURRENT_USER_STATUS_COLLAPSE_KEY = "currentUserStatus";
+    public static final int WAIT_MILLIS_TYPING_ANNOUNCEMENT = 0;
+    public static final int WAIT_MILLIS_STATUS_ANNOUNCMENT = 1000;
+    public static final int WAIT_MILLIS_MONITOR_USER = 2000;
     private volatile boolean isCurrentUserOnline = false;
     private volatile String typingWith;
 
@@ -42,15 +49,26 @@ public class StatusManager {
     public synchronized void announceStatusChange(boolean online) {
         if (this.isCurrentUserOnline == online) return; //bounce duplicate announcements
         isCurrentUserOnline = online;
-        sender.sendMessage(encoder.createStatusMessage(isCurrentUserOnline));
+        sender.sendMessage(createSendable(CURRENT_USER_STATUS_COLLAPSE_KEY, encoder.createStatusMessage(isCurrentUserOnline), WAIT_MILLIS_STATUS_ANNOUNCMENT));
     }
 
     public synchronized void announceStartTyping(@NonNull String userId) {
         GenericUtils.ensureNotEmpty(userId);
         typingWith = userId;
         if (onlineSet.contains(userId) || userId.split(":").length > 1 /*groups*/) {
-            sender.sendMessage(encoder.createTypingMessage(userId, true));
+            sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createTypingMessage(userId, true), WAIT_MILLIS_TYPING_ANNOUNCEMENT));
         }
+    }
+
+    private Sendable createSendable(String collapseKey, byte[] data, int waitMillis) {
+        return new Sendable.Builder()
+                .collapseKey(collapseKey)
+                .startProcessingAt(System.currentTimeMillis() + waitMillis)
+                .maxRetries(Sendable.RETRY_FOREVER)
+                .surviveRestarts(false)
+                .validUntil(System.currentTimeMillis() + SimpleDateUtil.ONE_HOUR)
+                .data(sender.bytesToString(data))
+                .build();
     }
 
     public synchronized void announceStopTyping(@NonNull String userId) {
@@ -61,7 +79,7 @@ public class StatusManager {
         if (onlineSet.contains(userId) || userId.split(":").length > 1 /*groups*/) {
             //its hard to say this is a programmatic error. so we allow the masseage to pass through
             //even though we don't know whether this user is typing with "userId" or not.
-            sender.sendMessage(encoder.createTypingMessage(userId, false));
+            sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createTypingMessage(userId, false), WAIT_MILLIS_TYPING_ANNOUNCEMENT));
         }
     }
 
@@ -101,11 +119,11 @@ public class StatusManager {
     }
 
     public void startMonitoringUser(@NonNull String userId) {
-        sender.sendMessage(encoder.createMonitorMessage(userId, true));
+        sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createMonitorMessage(userId, true), WAIT_MILLIS_MONITOR_USER));
     }
 
     public void stopMonitoringUser(@NonNull String userId) {
-        sender.sendMessage(encoder.createMonitorMessage(userId, false));
+        sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createMonitorMessage(userId, false), WAIT_MILLIS_MONITOR_USER));
     }
 
     public synchronized boolean isOnline(@NonNull String userId) {
@@ -120,7 +138,4 @@ public class StatusManager {
         return typingSet.contains(userId + ":" + groupId);
     }
 
-    public interface Sender {
-        void sendMessage(byte[] payload);
-    }
 }

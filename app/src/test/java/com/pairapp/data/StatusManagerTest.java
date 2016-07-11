@@ -1,6 +1,9 @@
 package com.pairapp.data;
 
 import com.pairapp.messenger.MessagePacker;
+import com.pairapp.net.sockets.SendListener;
+import com.pairapp.net.sockets.Sendable;
+import com.pairapp.net.sockets.Sender;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.PLog;
@@ -37,11 +40,36 @@ public class StatusManagerTest {
     private boolean listenerCalled;
     private boolean sendCalled;
     byte[] sendArgs;
-    private StatusManager.Sender sender = new StatusManager.Sender() {
+    private Sender sender = new Sender() {
         @Override
-        public void sendMessage(byte[] payload) {
-            sendArgs = payload;
+        public void sendMessage(Sendable payload) {
+            sendArgs = payload.getData().getBytes();
             sendCalled = true;
+        }
+
+        @Override
+        public void addSendListener(SendListener sendListener) {
+
+        }
+
+        @Override
+        public void removeSendListener(SendListener sendListener) {
+
+        }
+
+        @Override
+        public void shutdownSafely() {
+
+        }
+
+        @Override
+        public String bytesToString(byte[] data) {
+            return null;
+        }
+
+        @Override
+        public byte[] stringToBytes(String data) {
+            return new byte[0];
         }
     };
     private final MessagePacker encoder = MessagePacker.create("1234567890");
