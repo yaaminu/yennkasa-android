@@ -199,7 +199,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             } else if (itemId == R.id.action_delete) {
                 messageConversationRealm.beginTransaction();
                 for (Message message : selectedMessages) {
-                    message.removeFromRealm();
+                    message.deleteFromRealm();
                 }
                 messageConversationRealm.commitTransaction();
                 return true;
@@ -777,7 +777,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     }
 
 
-    private boolean isCurrentUserOnline = false, isCurrentUserTyping = false;
+    private boolean isCurrentUserOnline = false;
 
     @Override
     protected void handleEvent(Event event) {
@@ -788,14 +788,11 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                 updateUserStatus(true);
             } else if (tag.equals(ON_USER_OFFLINE)) {
                 isCurrentUserOnline = false;
-                isCurrentUserTyping = false;
                 updateUserStatus(false);
             } else if (tag.equals(ON_USER_TYPING)) {
                 isCurrentUserOnline = true;
-                isCurrentUserTyping = true;
                 onTyping();
             } else if (tag.equals(ON_USER_STOP_TYPING)) {
-                isCurrentUserTyping = false;
                 onStopTyping();
             }
         }
