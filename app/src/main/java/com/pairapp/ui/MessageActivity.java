@@ -42,6 +42,8 @@ import java.util.Map;
 import java.util.Set;
 
 import io.realm.Realm;
+import io.realm.RealmResults;
+import io.realm.Sort;
 
 import static com.pairapp.messenger.MessengerBus.MESSAGE_SEEN;
 import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
@@ -274,6 +276,24 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                     break;
                 case SEND_MESSAGE:
                     try {
+
+                        /***************************************************************************************/
+                        //quick fix for sending duplicate picture/video/binary messages
+                        Bundle bundle = msg.getData();
+                        int msgType = bundle.getInt(Message.FIELD_TYPE);
+                        if (msgType != Message.TYPE_TEXT_MESSAGE) {
+                            RealmResults<Message> messages = realm.where(Message.class)
+                                    .equalTo(Message.FIELD_MESSAGE_BODY, bundle.getString(Message.FIELD_MESSAGE_BODY))
+                                    .findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.DESCENDING);
+                            if (!messages.isEmpty()) {
+                                if (System.currentTimeMillis() - messages.first().getDateComposed().getTime() < 1000 * 10) {
+                                    PLog.w(TAG, "attempt to send duplicate message");
+                                    UiHelpers.showToast("Not sending duplicate message");
+                                    return true;
+                                }
+                            }
+                        }
+                        /***********************************************************************************************/
                         Message message = createMessage(msg.getData());
                         final String messageId = message.getId();
                         runOnUiThread(new Runnable() {
