@@ -308,13 +308,6 @@ public class UiHelpers {
 
     private static void recordVideo() {
         try {
-            if (mMediaUri != null) {
-                //something is wrong more than one activity firing intent for results.
-                if (BuildConfig.DEBUG) {
-                    throw new AssertionError();
-                }
-                return;
-            }
             File file = new File(Config.getAppVidMediaBaseDir(), "vid_" + SimpleDateUtil.timeStampNow() + ".mp4");
             mMediaUri = Uri.fromFile(file);
             MediaUtils.recordVideo(NavigationManager.getCurrentActivity(), mMediaUri, ChatActivity.TAKE_VIDEO_REQUEST);
@@ -404,7 +397,6 @@ public class UiHelpers {
         } else if (MediaUtils.isVideo(actualPath)) {
             type = Message.TYPE_VIDEO_MESSAGE;
         }
-        mMediaUri = null;
         return new Pair<>(actualPath, type);
     }
 

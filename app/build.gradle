@@ -27,7 +27,7 @@ android {
         minSdkVersion 9
         targetSdkVersion 23
         versionCode 4
-        versionName "0.0.4 alpha-dev"
+        versionName "0.0.4 alpha-dev-patch"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
