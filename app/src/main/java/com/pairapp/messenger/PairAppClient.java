@@ -362,12 +362,41 @@ public class PairAppClient extends Service {
             try {
                 Message message = Message.markMessageDelivered(realm, msgId);
                 if (message != null) {
-                    sender.sendMessage(createReadReceiptSendable(message.getFrom(),
-                            messagePacker.createMsgStatusMessage(message.getFrom(), msgId, true), System.currentTimeMillis() + WAIT_MILLIS_DELIVERY_REPORT));
+                    //we don't want to send the delivered when the user is in the chat room.
+                    //that's too wasteful so wait for few seconds and if user does not scroll to it
+                    //then continue
+                    if (message.getFrom().equals(Config.getCurrentActivePeer())) {
+                        delayAndNotifyIfNotMarkedAsSeen(msgId);
+                    } else {
+                        notifySenderMessageDelivered(message);
+                    }
                 }
             } finally {
                 realm.close();
             }
+        }
+
+        private void delayAndNotifyIfNotMarkedAsSeen(final String msgId) {
+            new Handler(WORKER_THREAD.getLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Realm realm = Message.REALM(PairAppClient.this);
+                    try {
+                        Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
+                        if (message != null) {
+                            if (message.getState() == Message.STATE_SEEN) return;
+                            notifySenderMessageDelivered(message);
+                        }
+                    } finally {
+                        realm.close();
+                    }
+                }
+            }, 2000);
+        }
+
+        private void notifySenderMessageDelivered(Message message) {
+            sender.sendMessage(createReadReceiptSendable(message.getFrom(),
+                    messagePacker.createMsgStatusMessage(message.getFrom(), message.getId(), true), System.currentTimeMillis() + WAIT_MILLIS_DELIVERY_REPORT));
         }
 
         public void onMessageDelivered(String msgId) {
