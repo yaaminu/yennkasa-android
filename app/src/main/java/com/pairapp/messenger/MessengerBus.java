@@ -26,9 +26,9 @@ public class MessengerBus {
     public static final String ON_USER_TYPING = "onUserTyping";
     public static final String ON_MESSAGE_DELIVERED = "onMessageDelivered";
     public static final String ON_MESSAGE_SEEN = "onMessageSeen";
-    public static final String INCOMING_MESSAGE = "incomingMessage";
     public static final String START_MONITORING_USER = "startMonitoringUser";
     public static final String STOP_MONITORING_USER = "stopMonitoringUser";
+    public static final String GET_STATUS_MANAGER = "getStatusManager";
 
     public static EventBus get(String bus) {
         GenericUtils.ensureNotNull(bus);

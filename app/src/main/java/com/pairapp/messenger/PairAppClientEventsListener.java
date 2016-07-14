@@ -9,6 +9,7 @@ import com.pairapp.util.PLog;
 
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
 import static com.pairapp.messenger.MessengerBus.DE_REGISTER_NOTIFIER;
+import static com.pairapp.messenger.MessengerBus.GET_STATUS_MANAGER;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_RECEIVED;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_SEEN;
 import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
@@ -72,6 +73,8 @@ class PairAppClientEventsListener implements EventBus.EventsListener {
                 pairAppClientInterface.registerUINotifier(((Notifier) event.getData()));
             } else if (tag.equals(DE_REGISTER_NOTIFIER)) {
                 pairAppClientInterface.unRegisterUINotifier(((Notifier) event.getData()));
+            } else if (tag.equals(GET_STATUS_MANAGER)) {
+                pairAppClientInterface.getStatusManager();
             }
         } finally {
             if (event.isSticky()) {

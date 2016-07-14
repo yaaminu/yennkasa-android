@@ -25,6 +25,7 @@ import com.pairapp.data.Message;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.messenger.MessengerBus;
+import com.pairapp.messenger.StatusManager;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.LiveCenter;
@@ -35,17 +36,17 @@ import com.rey.material.widget.FloatingActionButton;
 
 import java.io.File;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
 
 import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import io.realm.Sort;
 
+import static com.pairapp.messenger.MessengerBus.GET_STATUS_MANAGER;
 import static com.pairapp.messenger.MessengerBus.ON_USER_STOP_TYPING;
 import static com.pairapp.messenger.MessengerBus.ON_USER_TYPING;
 import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS;
+import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS;
 
 /**
  * @author by Null-Pointer on 5/29/2015.
@@ -57,7 +58,6 @@ public class ConversationsFragment extends ListFragment {
     private RealmResults<Conversation> conversations;
     private Conversation deleted;
     private final EventBus.EventsListener eventsListener = new EventListener();
-    private final Set<String> typingUsers = new HashSet<>(5);
     private ConversationAdapter.Delegate delegate = new ConversationAdapter.Delegate() {
         @Override
         public int unSeenMessagesCount(Conversation conversation) {
@@ -86,7 +86,7 @@ public class ConversationsFragment extends ListFragment {
 
         @Override
         public boolean isCurrentUserTyping(String userId) {
-            return typingUsers.contains(userId);
+            return statusManager != null && statusManager.isTypingToUs(userId);
         }
     };
     private Callbacks interactionListener;
@@ -304,13 +304,27 @@ public class ConversationsFragment extends ListFragment {
     @Override
     public void onStart() {
         super.onStart();
-        MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).register(eventsListener, ON_USER_TYPING, ON_USER_STOP_TYPING);
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).register(eventsListener, GET_STATUS_MANAGER, ON_USER_TYPING, ON_USER_STOP_TYPING);
+
+                MessengerBus.get(PAIRAPP_CLIENT_POSTABLE_BUS).postSticky(Event.createSticky(GET_STATUS_MANAGER));
+            }
+        }, false);
     }
 
     @Override
     public void onStop() {
-        MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).unregister(ON_USER_TYPING, eventsListener);
-        MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).unregister(ON_USER_STOP_TYPING, eventsListener);
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                EventBus eventBus = MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS);
+                eventBus.unregister(ON_USER_TYPING, eventsListener);
+                eventBus.unregister(ON_USER_STOP_TYPING, eventsListener);
+                eventBus.unregister(GET_STATUS_MANAGER, eventsListener);
+            }
+        }, false);
         super.onStop();
     }
 
@@ -365,19 +379,18 @@ public class ConversationsFragment extends ListFragment {
     }
 
 
+    @Nullable
+    private StatusManager statusManager;
+
     private class EventListener extends MainThreadBaseEventListener {
         @Override
         protected void handleEvent(Event event) {
             Object tag = event.getTag();
-            if (tag.equals(ON_USER_TYPING)) {
-                if (typingUsers.add((String) event.getData())) {
-                    conversationAdapter.notifyDataSetChanged();
-                }
-            } else if (tag.equals(ON_USER_STOP_TYPING)) {
-                //noinspection RedundantCast
-                if (typingUsers.remove((String) event.getData())) {
-                    conversationAdapter.notifyDataSetChanged();
-                }
+            if (tag.equals(ON_USER_TYPING) || tag.equals(ON_USER_STOP_TYPING)) {
+                conversationAdapter.notifyDataSetChanged();
+            } else if (tag.equals(GET_STATUS_MANAGER)) {
+                statusManager = ((StatusManager) event.getData());
+                conversationAdapter.notifyDataSetChanged();
             } else {
                 PLog.f(TAG, tag.toString());
                 throw new AssertionError("unknown event");

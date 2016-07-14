@@ -23,6 +23,7 @@ import com.pairapp.net.ParseFileClient;
 import com.pairapp.net.sockets.Sendable;
 import com.pairapp.net.sockets.SenderImpl;
 import com.pairapp.util.Config;
+import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
@@ -46,6 +47,7 @@ import io.realm.Realm;
 
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
 import static com.pairapp.messenger.MessengerBus.DE_REGISTER_NOTIFIER;
+import static com.pairapp.messenger.MessengerBus.GET_STATUS_MANAGER;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_RECEIVED;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_SEEN;
 import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
@@ -174,7 +176,7 @@ public class PairAppClient extends Service {
                     MESSAGE_RECEIVED, MESSAGE_SEEN,
                     ON_MESSAGE_DELIVERED, ON_MESSAGE_SEEN,
                     SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH,
-                    REGISTER_NOTIFIER, DE_REGISTER_NOTIFIER);
+                    REGISTER_NOTIFIER, DE_REGISTER_NOTIFIER, GET_STATUS_MANAGER);
             isClientStarted.set(true);
         }
     }
@@ -375,6 +377,13 @@ public class PairAppClient extends Service {
             } finally {
                 realm.close();
             }
+        }
+
+        public void getStatusManager() {
+            if (statusManager == null) {
+                throw new AssertionError();
+            }
+            listenableBus().post(Event.create(GET_STATUS_MANAGER, null, statusManager));
         }
     }
 

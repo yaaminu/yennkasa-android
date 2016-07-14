@@ -138,7 +138,15 @@ public class StatusManager {
 
     void startMonitoringUser(@NonNull String userId) {
         sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createMonitorMessage(userId, true), WAIT_MILLIS_MONITOR_USER));
-        broadcastBus.postSticky(Event.createSticky(isTypingToUs(userId) ? ON_USER_TYPING : isOnline(userId) ? ON_USER_ONLINE : ON_USER_OFFLINE, null, userId));
+        String tag;
+        if (isTypingToUs(userId)) {
+            tag = ON_USER_TYPING;
+        } else if (isOnline(userId)) {
+            tag = ON_USER_ONLINE;
+        } else {
+            tag = ON_USER_OFFLINE;
+        }
+        broadcastBus.postSticky(Event.createSticky(tag, null, userId));
     }
 
     void stopMonitoringUser(@NonNull String userId) {

@@ -790,7 +790,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     }
 
 
-    private boolean isCurrentUserOnline = false;
+    private boolean isCurrentUserOnline = false, isCurrentUserTyping = false;
 
     @Override
     protected void handleEvent(Event event) {
@@ -798,14 +798,18 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             Object tag = event.getTag();
             if (tag.equals(ON_USER_ONLINE)) {
                 isCurrentUserOnline = true;
+                if (isCurrentUserTyping) return;
                 updateUserStatus(true);
             } else if (tag.equals(ON_USER_OFFLINE)) {
                 isCurrentUserOnline = false;
+                isCurrentUserTyping = false;
                 updateUserStatus(false);
             } else if (tag.equals(ON_USER_TYPING)) {
                 isCurrentUserOnline = true;
+                isCurrentUserTyping = true;
                 onTyping();
             } else if (tag.equals(ON_USER_STOP_TYPING)) {
+                isCurrentUserTyping = false;
                 onStopTyping();
             }
         }
