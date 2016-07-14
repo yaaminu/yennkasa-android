@@ -143,15 +143,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private Handler handler;
     private RealmResults<Message> messages;
     private User peer;
-    private final Runnable stopTypingRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (wasTyping) {
-                wasTyping = false;
-                postEvent(Event.create(NOT_TYPING, null, peer.getUserId()));
-            }
-        }
-    };
     private Conversation currConversation;
     private Realm messageConversationRealm, usersRealm;
     private ListView messagesListView;
@@ -578,9 +569,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         messageConversationRealm.beginTransaction(); //beginning transaction earlier to force realm to prevent other realms from changing the data set
         //hook up message to remove.
         //if it is the only message for the day remove the date message
-        //if it is the last message
-        //if there are other messages set the newest to the just removed message as the last message of the conversation
-        final Message currMessage = messages.get(position), previousToCurrMessage = messages.get(position - 1), //at least there will be a date message
+        //if it is the last message set the latest message of this conversation to the previous message
+
+        final Message currMessage = messages.get(position), //the selected message
+                previousToCurrMessage = messages.get(position - 1), //at least there will be a date message since users cannot select date messages
                 nextToCurrMessage = (messages.size() - 1 > position ? messages.get(position + 1) : null);
 
         final boolean wasLastForTheDay = nextToCurrMessage == null || Message.isDateMessage(nextToCurrMessage);
@@ -588,7 +580,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         currMessage.deleteFromRealm();
         if (Message.isDateMessage(previousToCurrMessage) &&
                 wasLastForTheDay) {
-            previousToCurrMessage.deleteFromRealm(); //this will be a date message
+            previousToCurrMessage.deleteFromRealm(); //this will be a date message so delete it as there is no message for that day
         }
         if (currConversation.getLastMessage() == null) { //the last message of this conversation is what was just deleted
             //it will be inefficient to start from zero and move up. so we start from the
@@ -637,11 +629,31 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         }, false);
     }
 
+    @NonNull
+    private Runnable typingTimerTask = new Runnable() {
+        @Override
+        public void run() {
+            if (wasTyping) {
+                postEvent(Event.create(TYPING, null, peer.getUserId()));
+                handler.postDelayed(typingTimerTask, 30000);
+            }
+        }
+    };
+
+    private final Runnable stopTypingRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (wasTyping) {
+                wasTyping = false;
+                postEvent(Event.create(NOT_TYPING, null, peer.getUserId()));
+            }
+        }
+    };
 
     @Override
     public void afterTextChanged(Editable s) {
         super.afterTextChanged(s);
-        //best is remove the callback and post it again to run 10000 millis from now
+        //remove the callback and post it again to run 10000 millis from now
         //effectively renewing the timeout!!!
         handler.removeCallbacks(stopTypingRunnable);
         //TODO add some deviation to the timeout
@@ -651,9 +663,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             ViewUtils.showViews(sendButton);
             if (!wasTyping) {
                 wasTyping = true;
-                postEvent(Event.create(TYPING, null, peer.getUserId()));
+                typingTimerTask.run();
             }
         } else {
+            handler.removeCallbacks(typingTimerTask);
             ViewUtils.hideViews(sendButton);
         }
     }

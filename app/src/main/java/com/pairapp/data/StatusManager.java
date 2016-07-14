@@ -11,8 +11,14 @@ import com.pairapp.util.EventBus;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.SimpleDateUtil;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import rx.Observable;
+import rx.functions.Action1;
 
 /**
  * @author aminu on 6/29/2016.
@@ -88,7 +94,8 @@ public class StatusManager {
         return typingWith;
     }
 
-    private final Set<String> onlineSet = new HashSet<>(), typingSet = new HashSet<>();
+    private final Set<String> onlineSet = new HashSet<>(4);
+    private final Map<String, Long> typingSet = new HashMap<>(4);
 
     public synchronized void handleStatusAnnouncement(@NonNull String userId, boolean isOnline) {
         GenericUtils.ensureNotEmpty(userId);
@@ -103,23 +110,36 @@ public class StatusManager {
         broadcastBus.post(Event.create(isOnline ? ON_USER_ONLINE : ON_USER_OFFLINE, null, userId));
     }
 
-    public synchronized void handleTypingAnnouncement(@NonNull String userId, boolean isTyping) {
+    public synchronized void handleTypingAnnouncement(@NonNull final String userId, boolean isTyping) {
         GenericUtils.ensureNotEmpty(userId);
         if (isTyping) {
-            typingSet.add(userId);
+            typingSet.put(userId, System.currentTimeMillis());
             String userIdPart = userId.split(":")[0]; //if the typing is to a group
             if (!isOnline(userIdPart)) {
                 onlineSet.add(userIdPart);
             }
-        } else {//TODO why not use the splitted part of the userID?
+        } else {
             typingSet.remove(userId);
         }
-        //TODO why not use the userID splitted from split(":") but the whole userID as the event data
         broadcastBus.post(Event.create(isTyping ? ON_USER_TYPING : ON_USER_STOP_TYPING, null, userId));
+        if (isTyping) {
+            Observable.timer(30, TimeUnit.SECONDS).subscribe(new Action1<Long>() {
+                @Override
+                public void call(Long aLong) {
+                    synchronized (StatusManager.this) {
+                        Long then = typingSet.get(userId);
+                        if (then != null && System.currentTimeMillis() - then > 30000/*30 seconds*/) {
+                            handleTypingAnnouncement(userId, false);
+                        }
+                    }
+                }
+            });
+        }
     }
 
     public void startMonitoringUser(@NonNull String userId) {
         sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createMonitorMessage(userId, true), WAIT_MILLIS_MONITOR_USER));
+        broadcastBus.postSticky(Event.createSticky(isTypingToUs(userId) ? ON_USER_TYPING : isOnline(userId) ? ON_USER_ONLINE : ON_USER_OFFLINE, null, userId));
     }
 
     public void stopMonitoringUser(@NonNull String userId) {
@@ -131,11 +151,11 @@ public class StatusManager {
     }
 
     public synchronized boolean isTypingToUs(@NonNull String userId) {
-        return typingSet.contains(userId);
+        return typingSet.containsKey(userId);
     }
 
     public synchronized boolean isTypingToGroup(@NonNull String userId, String groupId) {
-        return typingSet.contains(userId + ":" + groupId);
+        return typingSet.containsKey(userId + ":" + groupId);
     }
 
 }

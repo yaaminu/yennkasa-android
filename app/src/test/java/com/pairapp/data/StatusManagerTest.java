@@ -9,6 +9,7 @@ import com.pairapp.util.EventBus;
 import com.pairapp.util.PLog;
 import com.pairapp.util.ThreadUtils;
 
+import org.bouncycastle.util.encoders.Base64;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -43,7 +44,7 @@ public class StatusManagerTest {
     private Sender sender = new Sender() {
         @Override
         public void sendMessage(Sendable payload) {
-            sendArgs = payload.getData().getBytes();
+            sendArgs = stringToBytes(payload.getData());
             sendCalled = true;
         }
 
@@ -64,12 +65,13 @@ public class StatusManagerTest {
 
         @Override
         public String bytesToString(byte[] data) {
-            return null;
+            return new String(Base64.encode(data));
+
         }
 
         @Override
         public byte[] stringToBytes(String data) {
-            return new byte[0];
+            return Base64.decode(data.getBytes());
         }
     };
     private final MessagePacker encoder = MessagePacker.create("1234567890");
@@ -150,7 +152,7 @@ public class StatusManagerTest {
         }
         try {
             StatusManager.create(null, null, bus);
-            fail("must not accept empty  user ids");
+            fail("must not accsept empty  user ids");
         } catch (IllegalArgumentException e) {
             //expected
         }
@@ -169,6 +171,53 @@ public class StatusManagerTest {
             //expected
         }
         StatusManager.create(sender, encoder, bus); //must be able to create the manager without exceptions
+    }
+
+    @Test
+    public void testStartMonitoringUser() throws Exception {
+        sendCalled = false;
+        sendArgs = null;
+        listenerCalled = false;
+        statusEvent = null;
+        bus.register(listener, ON_USER_ONLINE, ON_USER_OFFLINE, ON_USER_TYPING);
+        String userId = "12345678";
+        manager.startMonitoringUser(userId);
+
+        assertTrue("must send the message", sendCalled);
+        byte[] startMonitorMessage = encoder.createMonitorMessage(userId, true);
+        assertTrue("it must sends the message encoded in the correct format", isArraySame(sendArgs, startMonitorMessage));
+
+        //test that it notifies us about the current state of user we are monitoring
+
+        assertTrue("must post an event to the bus notifying all listeners about the state of the user been monitored", listenerCalled);
+        assertFalse("user must be offline", manager.isOnline(userId));
+        assertEquals("must post the right event", StatusManager.ON_USER_OFFLINE, statusEvent.getTag());
+        assertEquals("must post the right event", userId, statusEvent.getData());
+
+        //take user online
+        manager.handleStatusAnnouncement(userId, true);
+        assertTrue("user must be online", manager.isOnline(userId));
+
+        //we expect to post the event but we resetting it since we are not testing that functionality here
+        statusEvent = null;
+        listenerCalled = false;
+
+        manager.startMonitoringUser(userId);
+        assertTrue("must post an event to the bus notifying all listeners about the state of the user been monitored", listenerCalled);
+        assertTrue("user must be online", manager.isOnline(userId));
+        assertEquals("must post the right event", StatusManager.ON_USER_ONLINE, statusEvent.getTag());
+        assertEquals("must post the right event", userId, statusEvent.getData());
+
+        //if the user is typing it must tell us its typing rather than online
+        manager.handleTypingAnnouncement(userId, true);
+        statusEvent = null; //again reset
+        listenerCalled = false;
+
+        manager.startMonitoringUser(userId);
+        assertTrue("user must be online", manager.isTypingToUs(userId));
+        assertTrue("must post an event to the bus notifying all listeners about the state of the user been monitored", listenerCalled);
+        assertEquals("must post the right event", StatusManager.ON_USER_TYPING, statusEvent.getTag());
+        assertEquals("must post the right event", userId, statusEvent.getData());
     }
 
     @Test
