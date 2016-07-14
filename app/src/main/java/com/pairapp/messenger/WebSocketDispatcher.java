@@ -8,7 +8,6 @@ import com.pairapp.net.sockets.Sender;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.SimpleDateUtil;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -66,7 +65,7 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
     }
 
     @Override
-    protected void dispatchToGroup(Message message, List<String> members) {
+    protected void dispatchToGroup(Message message) {
         dispatchToUser(message);
     }
 

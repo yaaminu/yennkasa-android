@@ -104,7 +104,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity
     }
 
 
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -207,7 +206,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity
         new notifyTask().execute(message, sender);
     }
 
-    private void doNotify(String userId, String text) {
+    private void doNotify(String text) {
         if (isStickyMessageShown) {
             PLog.d(TAG, "notification %s dropped as a sticky message is shown", text);
             return;
@@ -291,7 +290,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity
         @Override
         protected void onPostExecute(Pair<String, String> s) {
             if (s != null) {
-                doNotify(s.first, s.second);
+                doNotify(s.second);
             }
         }
     }
@@ -424,13 +423,13 @@ public abstract class PairAppActivity extends PairAppBaseActivity
         }
     }
 
-    protected void register(String tag, String... tags) {
+    protected void register(Object tag, Object... tags) {
         get(PAIRAPP_CLIENT_LISTENABLE_BUS).register(this, tag, tags);
     }
 
-    protected void unRegister(String tag, String... otherTags) {
+    protected void unRegister(Object tag, Object... otherTags) {
         get(PAIRAPP_CLIENT_LISTENABLE_BUS).unregister(tag, this);
-        for (String otherTag : otherTags) {
+        for (Object otherTag : otherTags) {
             get(PAIRAPP_CLIENT_LISTENABLE_BUS).unregister(otherTag, this);
         }
     }
