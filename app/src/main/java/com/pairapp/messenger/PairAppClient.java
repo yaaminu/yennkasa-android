@@ -44,7 +44,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.realm.Realm;
-import io.realm.RealmResults;
 
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
 import static com.pairapp.messenger.MessengerBus.DE_REGISTER_NOTIFIER;
@@ -64,8 +63,6 @@ import static com.pairapp.messenger.MessengerBus.TYPING;
 
 public class PairAppClient extends Service {
     public static final String TAG = PairAppClient.class.getSimpleName();
-    public static final String ACTION_SEND_ALL_UNSENT = "send unsent messages";
-    public static final String ACTION = "action";
     static final String VERSION = "version";
     static final int notId = 10983;
     public static final String READ_RECEIPT_DELIVERY_REPORT_COLLAPSE_KEY = "readReceiptDeliveryReport";
@@ -91,12 +88,8 @@ public class PairAppClient extends Service {
         }
         if (!isClientStarted.get()) {
             Intent pairAppClient = new Intent(context, PairAppClient.class);
-            pairAppClient.putExtra(PairAppClient.ACTION, PairAppClient.ACTION_SEND_ALL_UNSENT);
             context.startService(pairAppClient);
-        } else {
-            PLog.d(TAG, "already running");
         }
-
     }
 
 
@@ -202,33 +195,6 @@ public class PairAppClient extends Service {
             return;
         }
         PLog.w(TAG, "shutting down pairapp client when it is already shut down");
-    }
-
-    private void attemptToSendAllUnsentMessages() {
-        if (!isClientStarted.get()) {
-            return;
-        }
-        Runnable task = new Runnable() {
-            @Override
-            public void run() {
-                synchronized (PairAppClient.this) {
-                    Realm realm = Message.REALM(Config.getApplicationContext());
-                    RealmResults<Message> messages = realm.where(Message.class).equalTo(Message.FIELD_STATE, Message.STATE_PENDING).findAll();
-                    final List<Message> copy = Message.copy(messages);
-                    realm.close();
-
-                    if (copy.isEmpty()) {
-                        PLog.d(TAG, "all messages sent");
-                    } else {
-                        for (Message message : copy) {
-                            if (Message.isOutGoing(message)) //new incoming messages that have not been  reported still have their state set to pending
-                                sendMessageInternal(message);
-                        }
-                    }
-                }
-            }
-        };
-        TaskManager.execute(task, true);
     }
 
     private void sendMessageInternal(Message message) {
@@ -429,7 +395,6 @@ public class PairAppClient extends Service {
         protected void onLooperPrepared() {
             handler = new MessageHandler(getLooper());
             bootClient();
-            attemptToSendAllUnsentMessages();
         }
 
         public void sendMessage(Message message) {
