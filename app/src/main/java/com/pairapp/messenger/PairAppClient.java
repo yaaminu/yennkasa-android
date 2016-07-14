@@ -16,7 +16,6 @@ import android.util.Log;
 import com.pairapp.BuildConfig;
 import com.pairapp.Errors.PairappException;
 import com.pairapp.data.Message;
-import com.pairapp.data.StatusManager;
 import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.ParseClient;

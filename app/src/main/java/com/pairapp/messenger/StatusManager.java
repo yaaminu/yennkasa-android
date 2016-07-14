@@ -1,9 +1,8 @@
-package com.pairapp.data;
+package com.pairapp.messenger;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.pairapp.messenger.MessagePacker;
 import com.pairapp.net.sockets.Sendable;
 import com.pairapp.net.sockets.Sender;
 import com.pairapp.util.Event;
@@ -47,18 +46,18 @@ public class StatusManager {
         this.broadcastBus = broadcastBus;
     }
 
-    public static StatusManager create(@NonNull Sender sender, @NonNull MessagePacker encoder, @NonNull EventBus broadcastBus) {
+    static StatusManager create(@NonNull Sender sender, @NonNull MessagePacker encoder, @NonNull EventBus broadcastBus) {
         GenericUtils.ensureNotNull(sender, encoder, broadcastBus);
         return new StatusManager(sender, encoder, broadcastBus);
     }
 
-    public synchronized void announceStatusChange(boolean online) {
+    synchronized void announceStatusChange(boolean online) {
         if (this.isCurrentUserOnline == online) return; //bounce duplicate announcements
         isCurrentUserOnline = online;
         sender.sendMessage(createSendable(CURRENT_USER_STATUS_COLLAPSE_KEY, encoder.createStatusMessage(isCurrentUserOnline), WAIT_MILLIS_STATUS_ANNOUNCMENT));
     }
 
-    public synchronized void announceStartTyping(@NonNull String userId) {
+    synchronized void announceStartTyping(@NonNull String userId) {
         GenericUtils.ensureNotEmpty(userId);
         typingWith = userId;
         if (onlineSet.contains(userId) || userId.split(":").length > 1 /*groups*/) {
@@ -77,7 +76,7 @@ public class StatusManager {
                 .build();
     }
 
-    public synchronized void announceStopTyping(@NonNull String userId) {
+    synchronized void announceStopTyping(@NonNull String userId) {
         GenericUtils.ensureNotEmpty(userId);
         if (userId.equals(typingWith)) {
             typingWith = null;
@@ -97,7 +96,7 @@ public class StatusManager {
     private final Set<String> onlineSet = new HashSet<>(4);
     private final Map<String, Long> typingSet = new HashMap<>(4);
 
-    public synchronized void handleStatusAnnouncement(@NonNull String userId, boolean isOnline) {
+    synchronized void handleStatusAnnouncement(@NonNull String userId, boolean isOnline) {
         GenericUtils.ensureNotEmpty(userId);
         if (isOnline) {
             if (onlineSet.add(userId) && userId.equals(typingWith)) {
@@ -110,7 +109,7 @@ public class StatusManager {
         broadcastBus.post(Event.create(isOnline ? ON_USER_ONLINE : ON_USER_OFFLINE, null, userId));
     }
 
-    public synchronized void handleTypingAnnouncement(@NonNull final String userId, boolean isTyping) {
+    synchronized void handleTypingAnnouncement(@NonNull final String userId, boolean isTyping) {
         GenericUtils.ensureNotEmpty(userId);
         if (isTyping) {
             typingSet.put(userId, System.currentTimeMillis());
@@ -137,12 +136,12 @@ public class StatusManager {
         }
     }
 
-    public void startMonitoringUser(@NonNull String userId) {
+    void startMonitoringUser(@NonNull String userId) {
         sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createMonitorMessage(userId, true), WAIT_MILLIS_MONITOR_USER));
         broadcastBus.postSticky(Event.createSticky(isTypingToUs(userId) ? ON_USER_TYPING : isOnline(userId) ? ON_USER_ONLINE : ON_USER_OFFLINE, null, userId));
     }
 
-    public void stopMonitoringUser(@NonNull String userId) {
+    void stopMonitoringUser(@NonNull String userId) {
         sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createMonitorMessage(userId, false), WAIT_MILLIS_MONITOR_USER));
     }
 

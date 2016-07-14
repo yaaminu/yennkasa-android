@@ -1,6 +1,5 @@
-package com.pairapp.data;
+package com.pairapp.messenger;
 
-import com.pairapp.messenger.MessagePacker;
 import com.pairapp.net.sockets.SendListener;
 import com.pairapp.net.sockets.Sendable;
 import com.pairapp.net.sockets.Sender;
@@ -16,10 +15,10 @@ import org.junit.Test;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 
-import static com.pairapp.data.StatusManager.ON_USER_OFFLINE;
-import static com.pairapp.data.StatusManager.ON_USER_ONLINE;
-import static com.pairapp.data.StatusManager.ON_USER_STOP_TYPING;
-import static com.pairapp.data.StatusManager.ON_USER_TYPING;
+import static com.pairapp.messenger.StatusManager.ON_USER_OFFLINE;
+import static com.pairapp.messenger.StatusManager.ON_USER_ONLINE;
+import static com.pairapp.messenger.StatusManager.ON_USER_STOP_TYPING;
+import static com.pairapp.messenger.StatusManager.ON_USER_TYPING;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotSame;

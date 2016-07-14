@@ -3,7 +3,6 @@ package com.pairapp.messenger;
 import android.content.Context;
 import android.content.Intent;
 
-import com.pairapp.data.StatusManager;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
