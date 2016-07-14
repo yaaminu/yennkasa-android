@@ -1,18 +1,13 @@
 package com.pairapp.messenger;
 
-import android.app.AlarmManager;
 import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.pairapp.Errors.PairappException;
-import com.pairapp.data.ContactsManager;
 import com.pairapp.data.Message;
-import com.pairapp.data.User;
-import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.FileApi;
 import com.pairapp.net.FileClientException;
-import com.pairapp.net.ParseFileClient;
 import com.pairapp.util.Config;
 import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.GenericUtils;
@@ -22,11 +17,8 @@ import com.pairapp.util.ThreadUtils;
 import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.realm.Realm;
@@ -37,14 +29,6 @@ import io.realm.Realm;
 abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     public static final String TAG = AbstractMessageDispatcher.class.getSimpleName();
     public static final String UPLOAD_CACHE = "uploadCache" + TAG;
-
-    private static final ContactsManager.Filter<User> USER_FILTER = new ContactsManager.Filter<User>() {
-        @Override
-        public boolean accept(User user) {
-            return !UserManager.getInstance().isCurrentUser(user.getUserId());
-        }
-    };
-    protected static final String ERR_USER_OFFLINE = "user offline";
 
     private class ProgressListenerImpl implements FileApi.ProgressListener {
 
@@ -66,11 +50,9 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         }
     }
 
-    public static final String KEY = "key";
-    public static final String PASSWORD = "password";
     private final Set<DispatcherMonitor> monitors = new HashSet<>();
     private final FileApi file_service;
-    private Timer timer = new Timer(TAG, false);
+
 
     AbstractMessageDispatcher(FileApi fileApi, DispatcherMonitor monitor) {
         GenericUtils.ensureNotNull(monitor, "monitor == null");
@@ -139,20 +121,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                 + " to " + message.getTo());
         //is this message to a group?
         if (Message.isGroupMessage(message)) {
-            final Realm realm = User.Realm(Config.getApplicationContext());
-            try {
-                User user = realm.where(User.class).equalTo(User.FIELD_ID, message.getTo()).findFirst();
-                if (user != null && user.getMembers().size() > 1) {
-                    dispatchToGroup(message, User.aggregateUserIds(user.getMembers(), USER_FILTER));
-                } else {
-                    //give the user manager a hint to sync the members.
-                    UserManager.getInstance().fetchUserIfRequired(realm, message.getTo(), true);
-                    //we are going to run some minutes later hoping that the members are 'sync'ed'.
-                    timer.schedule(new SendLaterTimerTask(message), AlarmManager.INTERVAL_FIFTEEN_MINUTES / 3);
-                }
-            } finally {
-                realm.close();
-            }
+            dispatchToGroup(message);
         } else { //to a single user
             dispatchToUser(message);
         }
@@ -223,32 +192,6 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         }
     }
 
-    protected final void onDelivered(String ourMessageId) {
-        Realm realm = Message.REALM(Config.getApplicationContext());
-        try {
-            Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, ourMessageId).findFirst();
-            realm.beginTransaction();
-            if (message != null && message.isValid() && !Message.isGroupMessage(message)) {
-                if (message.getState() != Message.STATE_SEEN) {
-                    message.setState(Message.STATE_RECEIVED);
-                }
-            }
-            realm.commitTransaction();
-        } finally {
-            realm.close();
-        }
-    }
-
-
-    @SuppressWarnings("unused")
-    protected final void onAllSent() {
-        synchronized (monitors) {
-            for (DispatcherMonitor monitor : monitors) {
-                monitor.onAllDispatched();
-            }
-        }
-    }
-
 
     @Override
     public final void dispatch(Collection<Message> messages) {
@@ -300,13 +243,6 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     }
 
     private static class DispatchCancelledException extends Exception {
-        public DispatchCancelledException(String message) {
-            super(message);
-        }
-
-        public DispatchCancelledException(String message, Throwable cause) {
-            super(message, cause);
-        }
 
         public DispatchCancelledException() {
             super();
@@ -327,10 +263,6 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             return true;
         }
         return false;
-    }
-
-    private boolean oops() {
-        throw new UnsupportedOperationException("unsupported");
     }
 
     @Override
@@ -366,27 +298,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     //subclasses should override this to free any resource
     protected abstract boolean doClose();
 
-    protected abstract void dispatchToGroup(Message message, List<String> members);
+    protected abstract void dispatchToGroup(Message message);
 
     protected abstract void dispatchToUser(Message message);
-
-    private class SendLaterTimerTask extends TimerTask {
-        final Message message;
-
-        public SendLaterTimerTask(Message message) {
-            this.message = message;
-        }
-
-        @Override
-        public void run() {
-            final Realm realm = User.Realm(Config.getApplicationContext());
-            User user = realm.where(User.class).equalTo(User.FIELD_ID, message.getTo()).findFirst();
-            if (user != null && user.getMembers().size() >= 2) {
-                dispatchToGroup(message, User.aggregateUserIds(user.getMembers(), USER_FILTER));
-            } else {
-                onFailed(message.getId(), MessageUtils.ERROR_RECIPIENT_NOT_FOUND);
-            }
-            realm.close();
-        }
-    }
 }
