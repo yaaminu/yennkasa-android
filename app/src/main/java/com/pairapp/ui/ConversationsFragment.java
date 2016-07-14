@@ -285,6 +285,14 @@ public class ConversationsFragment extends ListFragment {
                                            }
                                        }
                                        messages.deleteAllFromRealm();
+                                       Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
+                                       if (conversation != null) {
+                                           Message message = conversation.getLastMessage();
+                                           if (message != null && message.isValid()) {
+                                               message.deleteFromRealm();
+                                           }
+                                           conversation.setSummary(getString(R.string.no_message));
+                                       }
                                        realm.commitTransaction();
                                        realm.close();
                                        SystemClock.sleep(1000);
