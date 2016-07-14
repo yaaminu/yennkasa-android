@@ -5,6 +5,8 @@ import org.junit.Test;
 
 import java.util.List;
 
+import io.realm.Realm;
+
 /**
  * @author aminu on 7/10/2016.
  */
@@ -23,7 +25,12 @@ public class MessageQueueItemDataSourceTest {
 
             }
         };
-        MessageQueueItemDataSource dataSource = new MessageQueueItemDataSource();
+        MessageQueueItemDataSource dataSource = new MessageQueueItemDataSource(new MessageQueueItemDataSource.RealmProvider() {
+            @Override
+            public Realm getRealm() {
+                return null;
+            }
+        });
     }
 
     @Test
