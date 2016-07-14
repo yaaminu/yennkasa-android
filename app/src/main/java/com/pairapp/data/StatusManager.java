@@ -32,8 +32,8 @@ public class StatusManager {
     public static final String MONITORTYPING_COLLAPSE_KEY = "monitortyping";
     public static final String CURRENT_USER_STATUS_COLLAPSE_KEY = "currentUserStatus";
     public static final int WAIT_MILLIS_TYPING_ANNOUNCEMENT = 0;
-    public static final int WAIT_MILLIS_STATUS_ANNOUNCMENT = 1000;
-    public static final int WAIT_MILLIS_MONITOR_USER = 2000;
+    public static final int WAIT_MILLIS_STATUS_ANNOUNCMENT = 0;
+    public static final int WAIT_MILLIS_MONITOR_USER = 0;
     private volatile boolean isCurrentUserOnline = false;
     private volatile String typingWith;
 

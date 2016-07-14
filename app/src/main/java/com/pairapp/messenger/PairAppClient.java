@@ -270,13 +270,8 @@ public class PairAppClient extends Service {
                 throw new IllegalArgumentException();
             }
             if (backStack.isEmpty()) {
-                TaskManager.executeNow(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.d(TAG, "marking user as online");
-                        statusManager.announceStatusChange(true);
-                    }
-                }, true);
+                Log.d(TAG, "marking user as online");
+                statusManager.announceStatusChange(true);
             }
             backStack.add(activity);
         }
