@@ -2,14 +2,22 @@ package com.pairapp.messenger;
 
 import android.app.Activity;
 
+import com.pairapp.call.CallData;
 import com.pairapp.data.Message;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.PLog;
 
+import static com.pairapp.call.CallController.ON_CALL_ESTABLISHED;
+import static com.pairapp.call.CallController.ON_CALL_PROGRESSING;
+import static com.pairapp.call.CallController.ON_CAL_ENDED;
+import static com.pairapp.call.CallController.ON_IN_COMING_CALL;
+import static com.pairapp.messenger.MessengerBus.ANSWER_CALL;
+import static com.pairapp.messenger.MessengerBus.CALL_USER;
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
 import static com.pairapp.messenger.MessengerBus.DE_REGISTER_NOTIFIER;
 import static com.pairapp.messenger.MessengerBus.GET_STATUS_MANAGER;
+import static com.pairapp.messenger.MessengerBus.HANG_UP_CALL;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_RECEIVED;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_SEEN;
 import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
@@ -28,10 +36,10 @@ import static com.pairapp.messenger.MessengerBus.TYPING;
  */
 class PairAppClientEventsListener implements EventBus.EventsListener {
 
-    public static final String TAG = PairAppClientEventsListener.class.getSimpleName();
-    private final PairAppClient.PairAppClientInterface pairAppClientInterface;
+    static final String TAG = PairAppClientEventsListener.class.getSimpleName();
+    final PairAppClientInterface pairAppClientInterface;
 
-    public PairAppClientEventsListener(PairAppClient.PairAppClientInterface pairAppClientInterface) {
+    public PairAppClientEventsListener(PairAppClientInterface pairAppClientInterface) {
         this.pairAppClientInterface = pairAppClientInterface;
     }
 
@@ -75,6 +83,22 @@ class PairAppClientEventsListener implements EventBus.EventsListener {
                 pairAppClientInterface.unRegisterUINotifier(((Notifier) event.getData()));
             } else if (tag.equals(GET_STATUS_MANAGER)) {
                 pairAppClientInterface.getStatusManager();
+            } else if (tag.equals(ON_CALL_PROGRESSING)) {
+                pairAppClientInterface.onCallProgressing(((CallData) event.getData()));
+            } else if (tag.equals(ON_CALL_ESTABLISHED)) {
+                pairAppClientInterface.onCallEstablished(((CallData) event.getData()));
+            } else if (tag.equals(ON_CAL_ENDED)) {
+                pairAppClientInterface.onCallEnded(((CallData) event.getData()));
+            } else if (tag.equals(ON_IN_COMING_CALL)) {
+                pairAppClientInterface.onInComingCall(((CallData) event.getData()));
+            } else if (tag.equals(CALL_USER)) {
+                pairAppClientInterface.voiceCallUser((String) event.getData());
+            } else if (tag.equals(ANSWER_CALL)) {
+                pairAppClientInterface.answerCall(((CallData) event.getData()));
+            } else if (tag.equals(HANG_UP_CALL)) {
+                pairAppClientInterface.hangUpCall((CallData) event.getData());
+            } else {
+                throw new AssertionError();
             }
         } finally {
             if (event.isSticky()) {
