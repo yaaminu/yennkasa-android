@@ -37,7 +37,6 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 
 import static android.view.WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD;
-import static android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN;
 import static android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
 import static android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED;
 import static android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON;
@@ -84,7 +83,7 @@ public class CallActivity extends PairAppActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(FLAG_KEEP_SCREEN_ON | FLAG_DISMISS_KEYGUARD |
-                FLAG_SHOW_WHEN_LOCKED | FLAG_TURN_SCREEN_ON|FLAG_FULLSCREEN);
+                FLAG_SHOW_WHEN_LOCKED | FLAG_TURN_SCREEN_ON);
         setContentView(R.layout.activity_call);
         ButterKnife.bind(this);
         handleIntent();
