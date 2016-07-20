@@ -92,6 +92,7 @@ public class ImageCropper extends PairAppActivity {
         }
     };
 
+    @NonNull
     @Override
     protected SnackBar getSnackBar() {
         return (SnackBar) findViewById(R.id.notification_bar);

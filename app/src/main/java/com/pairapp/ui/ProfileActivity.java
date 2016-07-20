@@ -2,6 +2,7 @@ package com.pairapp.ui;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
@@ -52,6 +53,7 @@ public class ProfileActivity extends PairAppActivity {
                 .commit();
     }
 
+    @NonNull
     @Override
     protected SnackBar getSnackBar() {
         return ((SnackBar) findViewById(R.id.notification_bar));

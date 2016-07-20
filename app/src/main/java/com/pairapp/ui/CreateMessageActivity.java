@@ -280,6 +280,7 @@ public class CreateMessageActivity extends MessageActivity
 
     }
 
+    @NonNull
     @Override
     protected SnackBar getSnackBar() {
         return ((SnackBar) findViewById(R.id.notification_bar));

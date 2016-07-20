@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
@@ -128,6 +129,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         }
     }
 
+    @NonNull
     @Override
     protected SnackBar getSnackBar() {
         return ((SnackBar) findViewById(R.id.notification_bar));

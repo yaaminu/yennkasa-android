@@ -349,7 +349,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         Config.setCurrentActivePeer(peer.getUserId());
         if (!User.isGroup(peer)) {
             postEvent(Event.create(START_MONITORING_USER, null, peer.getUserId()));
-            register(ON_USER_ONLINE, ON_USER_STOP_TYPING, ON_USER_TYPING, ON_USER_OFFLINE);
+            registerForEvent(ON_USER_ONLINE, ON_USER_STOP_TYPING, ON_USER_TYPING, ON_USER_OFFLINE);
         } else {
             getSupportActionBar().setSubtitle(GroupsAdapter.join(",", peer.getMembers()));
         }
@@ -382,11 +382,14 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             }
             messageConversationRealm.commitTransaction();
         }
-        postEvent(Event.create(STOP_MONITORING_USER, null, peer.getUserId()));
+        if (!User.isGroup(peer)) {
+            postEvent(Event.create(STOP_MONITORING_USER, null, peer.getUserId()));
+        }
         unRegister(ON_USER_ONLINE, ON_USER_OFFLINE, ON_USER_STOP_TYPING, ON_USER_TYPING);
         super.onPause();
     }
 
+    @NonNull
     @Override
     protected SnackBar getSnackBar() {
         return (SnackBar) findViewById(R.id.notification_bar);

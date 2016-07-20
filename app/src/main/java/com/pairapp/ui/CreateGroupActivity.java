@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -23,10 +24,10 @@ import android.widget.Toast;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.pairapp.Errors.ErrorCenter;
+import com.pairapp.R;
 import com.pairapp.adapter.MultiChoiceUsersAdapter;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
-import com.pairapp.R;
 import com.pairapp.util.PhoneNumberNormaliser;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
@@ -108,6 +109,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         super.onResume();
     }
 
+    @NonNull
     @Override
     protected SnackBar getSnackBar() {
         return ((SnackBar) findViewById(R.id.notification_bar));

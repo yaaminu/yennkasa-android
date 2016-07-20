@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Vibrator;
+import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -112,9 +113,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity
             postEvent(Event.createSticky(REGISTER_NOTIFIER, null, this));
             if (snackBar == null) {
                 snackBar = getSnackBar();
-                if (snackBar == null) {
-                    throw new IllegalStateException("snack bar cannot be null");
-                }
                 snackBar.applyStyle(getSnackBarStyle());
                 if (isStickyMessageShown && !TextUtils.isEmpty(stickYmessage)) {
                     notifySticky(stickYmessage);
@@ -279,6 +277,8 @@ public abstract class PairAppActivity extends PairAppBaseActivity
         LiveCenter.invalidateNewMessageCount(peerId);
     }
 
+
+    @NonNull
     protected abstract SnackBar getSnackBar();
 
     private class notifyTask extends AsyncTask<Object, Void, Pair<String, String>> {
@@ -423,7 +423,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity
         }
     }
 
-    protected void register(Object tag, Object... tags) {
+    protected void registerForEvent(Object tag, Object... tags) {
         get(PAIRAPP_CLIENT_LISTENABLE_BUS).register(this, tag, tags);
     }
 

@@ -3,6 +3,7 @@ package com.pairapp.ui;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
@@ -104,6 +105,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
                 .commit();
     }
 
+    @NonNull
     @Override
     protected SnackBar getSnackBar() {
         return ((SnackBar) findViewById(R.id.notification_bar));
