@@ -107,7 +107,7 @@ public class EventBus {
         if (!event.isSticky()) {
             throw new IllegalArgumentException("event is not sticky");
         }
-        PLog.d(TAG, "received new sticky event %s", event.getTag().toString());
+        PLog.d(TAG, "received new sticky event %s", event);
         LOCK.lock();
         try {
             if (stickyEvents == null) {
@@ -132,7 +132,7 @@ public class EventBus {
         if (event.isSticky()) {
             throw new IllegalArgumentException("event must not be sticky");
         }
-        PLog.d(TAG, "received new event %s", event.getTag().toString());
+        PLog.d(TAG, "received new event %s", event);
         LOCK.lock();
         try {
             if (EVENT_LISTENERS == null) {
@@ -265,6 +265,7 @@ public class EventBus {
     }
 
     private void notifyListener(final EventsListener listener, final Event event) {
+        PLog.d(TAG, "notifying listener: %s for event: %s", listener, event);
         switch (listener.threadMode()) {
             case ANY:
                 //fall through
@@ -278,12 +279,7 @@ public class EventBus {
                 Runnable runnable = new Runnable() {
                     @Override
                     public void run() {
-                        try {
-                            listener.onEvent(EventBus.this, event);
-                        } catch (Throwable e) {
-                            e.printStackTrace();
-//                            throw e;
-                        }
+                        listener.onEvent(EventBus.this, event);
                     }
                 };
                 if (listener.threadMode() == BACKGROUND || listener.threadMode() == ANY) {
@@ -337,6 +333,7 @@ public class EventBus {
     }
 
     public void removeStickyEvent(Event event) {
+        PLog.d(TAG, "removing sticky event: %s", event);
         if (event == null) {
             return;
         }

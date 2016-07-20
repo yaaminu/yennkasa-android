@@ -1,7 +1,5 @@
 package com.pairapp.messenger;
 
-import android.app.Activity;
-import android.app.AlarmManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -11,19 +9,18 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.support.annotation.Nullable;
-import android.util.Log;
 
 import com.pairapp.BuildConfig;
 import com.pairapp.Errors.PairappException;
+import com.pairapp.call.CallController;
+import com.pairapp.call.CallManager;
 import com.pairapp.data.Message;
 import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.ParseClient;
 import com.pairapp.net.ParseFileClient;
-import com.pairapp.net.sockets.Sendable;
 import com.pairapp.net.sockets.SenderImpl;
 import com.pairapp.util.Config;
-import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
@@ -34,10 +31,8 @@ import org.json.JSONObject;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -45,11 +40,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.realm.Realm;
 
+import static com.pairapp.call.CallController.ON_CALL_ESTABLISHED;
+import static com.pairapp.call.CallController.ON_CALL_MUTED;
+import static com.pairapp.call.CallController.ON_CALL_PROGRESSING;
+import static com.pairapp.call.CallController.ON_CAL_ENDED;
+import static com.pairapp.call.CallController.ON_CAL_ERROR;
+import static com.pairapp.call.CallController.ON_IN_COMING_CALL;
+import static com.pairapp.call.CallController.ON_LOUD_SPEAKER;
+import static com.pairapp.messenger.MessengerBus.ANSWER_CALL;
+import static com.pairapp.messenger.MessengerBus.CALL_USER;
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
 import static com.pairapp.messenger.MessengerBus.DE_REGISTER_NOTIFIER;
+import static com.pairapp.messenger.MessengerBus.ENABLE_SPEAKER;
 import static com.pairapp.messenger.MessengerBus.GET_STATUS_MANAGER;
+import static com.pairapp.messenger.MessengerBus.HANG_UP_CALL;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_RECEIVED;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_SEEN;
+import static com.pairapp.messenger.MessengerBus.MUTE_CALL;
 import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
 import static com.pairapp.messenger.MessengerBus.OFFLINE;
 import static com.pairapp.messenger.MessengerBus.ONLINE;
@@ -66,21 +73,24 @@ public class PairAppClient extends Service {
     public static final String TAG = PairAppClient.class.getSimpleName();
     static final String VERSION = "version";
     static final int notId = 10983;
-    public static final String READ_RECEIPT_DELIVERY_REPORT_COLLAPSE_KEY = "readReceiptDeliveryReport";
-    public static final int WAIT_MILLIS_DELIVERY_REPORT = 0;
     private static AtomicBoolean isClientStarted = new AtomicBoolean(false);
-    private static Set<Activity> backStack = new HashSet<>(6);
     private WorkerThread WORKER_THREAD;
     private WebSocketDispatcher webSocketDispatcher;
     private MessagePacker messagePacker;
     private final Map<String, Future<?>> disPatchingThreads = new ConcurrentHashMap<>();
     private Dispatcher.DispatcherMonitor monitor;
+    @SuppressWarnings("FieldCanBeLocal")
     private StatusManager statusManager;
-    private PairAppClientEventsListener eventsListener = new PairAppClientEventsListener(new PairAppClientInterface());
+    @SuppressWarnings("FieldCanBeLocal")
+    private PairAppClientEventsListener eventsListener;
     @SuppressWarnings("FieldCanBeLocal")
     private IncomingMessageProcessor incomingMessageProcessor; //field is required to outlive its scope
     private SenderImpl sender;
+    private CallController callController;
+    private final EventBus callManagerBus = EventBus.getBusOrCreate(shadowClazz.class);
 
+    private static class shadowClazz {
+    }
 
     public static void startIfRequired(Context context) {
         if (!UserManager.getInstance().isUserVerified()) {
@@ -108,7 +118,7 @@ public class PairAppClient extends Service {
         Worker.cancelDownload(Config.getApplicationContext(), message);
     }
 
-    private static void ensureUserLoggedIn() {
+    static void ensureUserLoggedIn() {
         if (!UserManager.getInstance().isUserVerified()) {
             throw new IllegalStateException("no user logged in");
         }
@@ -158,7 +168,8 @@ public class PairAppClient extends Service {
             EventBus.resetBus(PostableBusClazz.class);
 
             monitor = new DispatcherMonitorImpl(this, disPatchingThreads);
-            messagePacker = MessagePacker.create(UserManager.getMainUserId());
+            String currentUserId = UserManager.getMainUserId();
+            messagePacker = MessagePacker.create(currentUserId);
 
             String authToken = UserManager.getInstance().getCurrentUserAuthToken();
             Map<String, String> opts = new HashMap<>(1);
@@ -167,16 +178,30 @@ public class PairAppClient extends Service {
             sender = new SenderImpl(opts, new MessageParserImpl(messagePacker));
             sender.start();
             statusManager = StatusManager.create(sender, messagePacker, listenableBus());
+
             webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, sender,
                     new MessageEncoderImpl(messagePacker));
             incomingMessageProcessor = new IncomingMessageProcessor(statusManager, postableBus());
             messagePacker.observe().subscribe(incomingMessageProcessor);
+
+            callController = CallManager.create(getApplication(), currentUserId, callManagerBus, BuildConfig.DEBUG);
+            callController.setup();
+
+            eventsListener = new PairAppClientEventsListener(new PairAppClientInterface(this, callController, sender, messagePacker,
+                    statusManager, new Handler(WORKER_THREAD.getLooper())));
+
+            callManagerBus.register(eventsListener,
+                    ON_CAL_ERROR, ON_IN_COMING_CALL,
+                    ON_CAL_ENDED, ON_CALL_ESTABLISHED,
+                    ON_CALL_PROGRESSING, ON_CALL_MUTED, ON_LOUD_SPEAKER);
+
             postableBus().register(eventsListener, OFFLINE, ONLINE, NOT_TYPING, TYPING,
                     STOP_MONITORING_USER, START_MONITORING_USER,
                     MESSAGE_RECEIVED, MESSAGE_SEEN,
                     ON_MESSAGE_DELIVERED, ON_MESSAGE_SEEN,
                     SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH,
-                    REGISTER_NOTIFIER, DE_REGISTER_NOTIFIER, GET_STATUS_MANAGER);
+                    REGISTER_NOTIFIER, DE_REGISTER_NOTIFIER, GET_STATUS_MANAGER,
+                    CALL_USER, HANG_UP_CALL, ANSWER_CALL, ENABLE_SPEAKER, MUTE_CALL);
             isClientStarted.set(true);
         }
     }
@@ -188,11 +213,13 @@ public class PairAppClient extends Service {
             sender.shutdownSafely();
             EventBus.resetBus(ListneableBusClazz.class);
             EventBus.resetBus(PostableBusClazz.class);
+            EventBus.resetBus(shadowClazz.class);
             messagePacker.close();
             webSocketDispatcher.unRegisterMonitor(monitor);
             webSocketDispatcher.close();
-            PLog.i(TAG, TAG + ": bye");
+            callController.shutDown();
             isClientStarted.set(false);
+            PLog.i(TAG, TAG + ": bye");
             return;
         }
         PLog.w(TAG, "shutting down pairapp client when it is already shut down");
@@ -231,162 +258,6 @@ public class PairAppClient extends Service {
         }, true);
     }
 
-    class PairAppClientInterface {
-        public void sendMessage(Message message) {
-            WORKER_THREAD.sendMessage(Message.copy(message)); //detach the message from realm
-        }
-
-        public void cancelDisPatch(Message message) {
-            if (!Message.isOutGoing(message)) {
-                throw new IllegalArgumentException("only outgoing messages may be cancelled!");
-            }
-            doCancelDispatch(Message.copy(message));
-        }
-
-        public void registerUINotifier(final Notifier notifier) {
-            NotificationManager.INSTANCE.registerUI_Notifier(notifier);
-        }
-
-        public void unRegisterUINotifier(Notifier notifier) {
-            NotificationManager.INSTANCE.unRegisterUI_Notifier(notifier);
-        }
-
-        public void markUserAsOffline(Activity activity) {
-            ThreadUtils.ensureMain();
-            ensureUserLoggedIn();
-            if (activity == null) {
-                throw new IllegalArgumentException();
-            }
-            backStack.remove(activity);
-            if (backStack.isEmpty()) {
-                PLog.d(TAG, "marking user as offline");
-                statusManager.announceStatusChange(false);
-            }
-        }
-
-        public void markUserAsOnline(Activity activity) {
-            ThreadUtils.ensureMain();
-            ensureUserLoggedIn();
-            if (activity == null) {
-                throw new IllegalArgumentException();
-            }
-            if (backStack.isEmpty()) {
-                Log.d(TAG, "marking user as online");
-                statusManager.announceStatusChange(true);
-            }
-            backStack.add(activity);
-        }
-
-        public void notifyPeerTyping(final String user) {
-            statusManager.announceStartTyping(user);
-        }
-
-        public void notifyPeerNotTyping(final String user) {
-            statusManager.announceStopTyping(user);
-        }
-
-        public void startMonitoringUser(final String user) {
-            statusManager.startMonitoringUser(user);
-        }
-
-        public void stopMonitoringUser(String user) {
-            statusManager.stopMonitoringUser(user);
-        }
-
-
-        private Sendable createReadReceiptSendable(String recipient, byte[] data, long startProcessingAt) {
-            return new Sendable.Builder()
-                    .collapseKey(recipient + READ_RECEIPT_DELIVERY_REPORT_COLLAPSE_KEY)
-                    .data(sender.bytesToString(data))
-                    .startProcessingAt(startProcessingAt)
-                    .validUntil(System.currentTimeMillis() + AlarmManager.INTERVAL_DAY * 30) //30 days
-                    .surviveRestarts(true)
-                    .maxRetries(Sendable.RETRY_FOREVER)
-                    .build();
-        }
-
-        public void markMessageSeen(final String msgId) {
-            Realm realm = Message.REALM(PairAppClient.this);
-            try {
-                Message message = Message.markMessageSeen(realm, msgId);
-                if (message != null) {
-                    sender.sendMessage(createReadReceiptSendable(message.getFrom(),
-                            messagePacker.createMsgStatusMessage(message.getFrom(), msgId, false), System.currentTimeMillis()));
-                }
-            } finally {
-                realm.close();
-            }
-        }
-
-
-        public void markMessageDelivered(final String msgId) {
-            Realm realm = Message.REALM(PairAppClient.this);
-            try {
-                Message message = Message.markMessageDelivered(realm, msgId);
-                if (message != null) {
-                    //we don't want to send the delivered when the user is in the chat room.
-                    //that's too wasteful so wait for few seconds and if user does not scroll to it
-                    //then continue
-                    if (message.getFrom().equals(Config.getCurrentActivePeer())) {
-                        delayAndNotifyIfNotMarkedAsSeen(msgId);
-                    } else {
-                        notifySenderMessageDelivered(message);
-                    }
-                }
-            } finally {
-                realm.close();
-            }
-        }
-
-        private void delayAndNotifyIfNotMarkedAsSeen(final String msgId) {
-            new Handler(WORKER_THREAD.getLooper()).postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    Realm realm = Message.REALM(PairAppClient.this);
-                    try {
-                        Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
-                        if (message != null) {
-                            if (message.getState() == Message.STATE_SEEN) return;
-                            notifySenderMessageDelivered(message);
-                        }
-                    } finally {
-                        realm.close();
-                    }
-                }
-            }, 2000);
-        }
-
-        private void notifySenderMessageDelivered(Message message) {
-            sender.sendMessage(createReadReceiptSendable(message.getFrom(),
-                    messagePacker.createMsgStatusMessage(message.getFrom(), message.getId(), true), System.currentTimeMillis() + WAIT_MILLIS_DELIVERY_REPORT));
-        }
-
-        public void onMessageDelivered(String msgId) {
-            Realm realm = Message.REALM(PairAppClient.this);
-            try {
-                Message.markMessageDelivered(realm, msgId);
-            } finally {
-                realm.close();
-            }
-        }
-
-        public void onMessageSeen(String msgId) {
-            Realm realm = Message.REALM(PairAppClient.this);
-            try {
-                Message.markMessageSeen(realm, msgId);
-            } finally {
-                realm.close();
-            }
-        }
-
-        public void getStatusManager() {
-            if (statusManager == null) {
-                throw new AssertionError();
-            }
-            listenableBus().post(Event.create(GET_STATUS_MANAGER, null, statusManager));
-        }
-    }
-
     private final class WorkerThread extends HandlerThread {
         Handler handler;
 
@@ -400,38 +271,19 @@ public class PairAppClient extends Service {
             bootClient();
         }
 
-        public void sendMessage(Message message) {
-            if (checkStarted()) {
-                android.os.Message msg = android.os.Message.obtain();
-                msg.obj = message;
-                msg.what = MessageHandler.SEND_MESSAGE;
-                handler.sendMessage(msg);
-            }
-        }
 
         private void attemptShutDown() {
             android.os.Message message = android.os.Message.obtain();
             message.what = MessageHandler.SHUT_DOWN;
             handler.sendMessage(message);
         }
-
-        private boolean checkStarted() {
-            if (handler == null) {
-                if (BuildConfig.DEBUG) {
-                    throw new IllegalStateException("thread yet to run");
-                }
-                PLog.w(TAG, "sending message when worker is yet to start");
-                return false;
-            }
-            return true;
-        }
     }
 
-    private class MessageHandler extends Handler {
-        private static final int SEND_MESSAGE = 0x0;
-        private static final int SEND_BATCH = 0x01;
-        private static final int SHUT_DOWN = 0x2;  /*PLAY_TONE = 0x5,*/
-        private static final int CANCEL_DISPATCH = 0x6;
+    class MessageHandler extends Handler {
+        static final int SEND_MESSAGE = 0x0;
+        static final int SEND_BATCH = 0x01;
+        static final int SHUT_DOWN = 0x2;  /*PLAY_TONE = 0x5,*/
+        static final int CANCEL_DISPATCH = 0x6;
 
         public MessageHandler(Looper looper) {
             super(looper);

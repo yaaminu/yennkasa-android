@@ -1,5 +1,6 @@
 package com.pairapp.messenger;
 
+import com.pairapp.call.CallController;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.GenericUtils;
 
@@ -29,6 +30,12 @@ public class MessengerBus {
     public static final String START_MONITORING_USER = "startMonitoringUser";
     public static final String STOP_MONITORING_USER = "stopMonitoringUser";
     public static final String GET_STATUS_MANAGER = "getStatusManager";
+    public static final String CALL_USER = "callUser";
+    public static final String ANSWER_CALL = "answerCall";
+    public static final String HANG_UP_CALL = "hangUpCall";
+    public static final String ON_CALL_EVENT = "onCallEvent";
+    public static final String MUTE_CALL = "muteCall", ENABLE_SPEAKER = "enableLoudSpeaker";
+    public static final int CALL_NOTIFICATION_ID = CallController.CALL_NOTIFICATION_ID;
 
     public static EventBus get(String bus) {
         GenericUtils.ensureNotNull(bus);

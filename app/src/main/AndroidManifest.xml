@@ -1,227 +1,227 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest
-    package="com.pairapp"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    >
+    package="com.pairapp">
 
     <uses-feature
         android:glEsVersion="0x00020000"
-        android:required="false"/>
+        android:required="false" />
 
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
-    <uses-permission android:name="android.permission.READ_CONTACTS"/>
-    <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
-    <uses-permission android:name="android.permission.WAKE_LOCK"/>
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
-    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
-    <uses-permission android:name="com.pairapp.permission.C2D_MESSAGE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
-    <uses-permission android:name="android.permission.SEND_SMS"/>
-    <uses-permission android:name="android.permission.WRITE_SMS"/>
-    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <uses-permission android:name="com.pairapp.permission.C2D_MESSAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.WRITE_SMS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <permission
         android:name="com.pairapp.permission.C2D_MESSAGE"
-        android:protectionLevel="signature"/>
+        android:protectionLevel="signature" />
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
-        android:name="com.pairapp.PairApp"
+        android:name=".PairApp"
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:largeHeap="true"
         android:theme="@style/Theme.AppTheme"
-        tools:ignore="UnusedAttribute"
-        >
+        tools:ignore="UnusedAttribute">
         <activity
-            android:name="com.pairapp.ui.MainActivity"
+            android:name=".ui.MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleTask">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
+                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.SEND"/>
+                <action android:name="android.intent.action.SEND" />
 
-                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.DEFAULT" />
 
-                <data android:mimeType="text/plain"/>
+                <data android:mimeType="text/plain" />
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.SEND"/>
+                <action android:name="android.intent.action.SEND" />
 
-                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.DEFAULT" />
 
-                <data android:mimeType="image/*"/>
+                <data android:mimeType="image/*" />
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.SEND"/>
+                <action android:name="android.intent.action.SEND" />
 
-                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.DEFAULT" />
 
-                <data android:mimeType="video/*"/>
+                <data android:mimeType="video/*" />
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.SEND"/>
+                <action android:name="android.intent.action.SEND" />
 
-                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.DEFAULT" />
 
-                <data android:mimeType="*/*"/>
+                <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
         <activity
-            android:name="com.pairapp.ui.SetUpActivity"
+            android:name=".ui.SetUpActivity"
             android:configChanges="orientation|keyboardHidden"
             android:excludeFromRecents="true"
             android:label="@string/title_activity_set_up"
-            android:launchMode="singleTask"/>
+            android:launchMode="singleTask" />
         <activity
-            android:name="com.pairapp.ui.ChatActivity"
+            android:name=".ui.ChatActivity"
             android:configChanges="orientation|keyboard|keyboardHidden"
             android:label="@string/title_activity_chat"
-
-            android:parentActivityName="com.pairapp.ui.MainActivity"
+            android:parentActivityName=".ui.MainActivity"
             android:windowSoftInputMode="stateHidden|adjustResize"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity"/>
+                android:value="com.pairapp.ui.MainActivity" />
         </activity>
         <activity
-            android:name="com.pairapp.ui.ImageCropper"
+            android:name=".ui.ImageCropper"
             android:configChanges="orientation|keyboardHidden|fontScale"
             android:excludeFromRecents="true"
-            android:exported="false"/>
+            android:exported="false" />
         <activity
-            android:name="com.pairapp.ui.ProfileActivity"
+            android:name=".ui.ProfileActivity"
             android:configChanges="keyboardHidden|fontScale"
             android:label="@string/title_activity_profile"
             android:launchMode="singleTop"
-            android:parentActivityName="com.pairapp.ui.MainActivity"
+            android:parentActivityName=".ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity"/>
+                android:value="com.pairapp.ui.MainActivity" />
         </activity>
         <activity
-            android:name="com.pairapp.ui.InviteActivity"
+            android:name=".ui.InviteActivity"
             android:configChanges="orientation|keyboardHidden|fontScale|locale"
             android:label="@string/title_invite_friends"
-            android:parentActivityName="com.pairapp.ui.MainActivity"
+            android:parentActivityName=".ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity"/>
+                android:value="com.pairapp.ui.MainActivity" />
         </activity>
         <activity
-            android:name="com.pairapp.ui.UsersActivity"
+            android:name=".ui.UsersActivity"
             android:configChanges="orientation|keyboardHidden|fontScale|locale"
             android:label="@string/title_activity_users"
-            android:parentActivityName="com.pairapp.ui.MainActivity"
+            android:parentActivityName=".ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity"/>
+                android:value="com.pairapp.ui.MainActivity" />
         </activity>
         <activity
-            android:name="com.pairapp.ui.ImageViewer"
+            android:name=".ui.ImageViewer"
             android:configChanges="orientation|keyboardHidden|fontScale|locale"
-            android:theme="@style/Theme.AppCompat.NoActionBar"/>
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity
-            android:name="com.pairapp.ui.CreateGroupActivity"
+            android:name=".ui.CreateGroupActivity"
             android:configChanges="orientation|keyboardHidden|fontScale|locale"
             android:label="@string/title_activity_create_group"
-            android:parentActivityName="com.pairapp.ui.MainActivity"
+            android:parentActivityName=".ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity"/>
+                android:value="com.pairapp.ui.MainActivity" />
         </activity>
         <activity
-            android:name="com.pairapp.ui.CreateMessageActivity"
+            android:name=".ui.CreateMessageActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|fontScale|locale"
             android:label="@string/title_activity_create_message"
-            android:parentActivityName="com.pairapp.ui.MainActivity"
+            android:parentActivityName=".ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity"/>
+                android:value="com.pairapp.ui.MainActivity" />
         </activity>
 
-        <service android:name="com.parse.PushService"/>
+        <service android:name="com.parse.PushService" />
         <service
-            android:name="com.pairapp.data.ContactSyncService"
+            android:name=".data.ContactSyncService"
             android:enabled="false"
-            android:exported="false"/>
+            android:exported="false" />
         <service
-            android:name="com.pairapp.messenger.MessageProcessor"
+            android:name=".messenger.MessageProcessor"
             android:enabled="false"
-            android:exported="false"/>
+            android:exported="false" />
         <service
-            android:name="com.pairapp.messenger.PairAppClient"
+            android:name=".messenger.PairAppClient"
             android:enabled="false"
-            android:exported="false"/>
+            android:exported="false" />
 
         <receiver
             android:name="com.parse.ParseBroadcastReceiver"
             android:exported="true">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-                <action android:name="android.intent.action.USER_PRESENT"/>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.USER_PRESENT" />
             </intent-filter>
         </receiver>
         <receiver
-            android:name="com.pairapp.messenger.MessageCenter"
+            android:name=".messenger.MessageCenter"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.parse.push.intent.RECEIVE"/>
-                <action android:name="com.parse.push.intent.DELETE"/>
-                <action android:name="com.parse.push.intent.OPEN"/>
+                <action android:name="com.parse.push.intent.RECEIVE" />
+                <action android:name="com.parse.push.intent.DELETE" />
+                <action android:name="com.parse.push.intent.OPEN" />
             </intent-filter>
         </receiver>
         <receiver
             android:name="com.parse.GcmBroadcastReceiver"
             android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
-                <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
-                <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
 
-                <category android:name="com.idea.pairapp"/>
+                <category android:name="com.idea.pairapp" />
             </intent-filter>
         </receiver>
 
         <activity
-            android:name="com.pairapp.ui.LoginSignupPrompt"
+            android:name=".ui.LoginSignupPrompt"
             android:excludeFromRecents="true"
             android:label="@string/title_activity_login_signup_prompt"
-            android:launchMode="singleTask"/>
+            android:launchMode="singleTask" />
         <activity
-            android:name="com.pairapp.ui.SettingsActivity"
+            android:name=".ui.SettingsActivity"
             android:exported="false"
             android:label="@string/action_settings"
-            android:parentActivityName="com.pairapp.ui.MainActivity"
+            android:parentActivityName=".ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity"/>
+                android:value="com.pairapp.ui.MainActivity" />
         </activity>
 
         <service
-            android:name="com.pairapp.messenger.Worker"
-            android:exported="false"/>
+            android:name=".messenger.Worker"
+            android:exported="false" />
 
         <meta-data
             android:name="io.fabric.ApiKey"
-            android:value="992065039d2595e2d7ecab18e9062a2fd6152747"/>
+            android:value="992065039d2595e2d7ecab18e9062a2fd6152747" />
+
+        <activity
+            android:name=".ui.CallActivity"
+            android:launchMode="singleTask" />
     </application>
 
 </manifest>

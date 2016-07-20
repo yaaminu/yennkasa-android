@@ -30,7 +30,9 @@ import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.R;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
+import com.pairapp.messenger.MessengerBus;
 import com.pairapp.util.Config;
+import com.pairapp.util.Event;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.MediaUtils;
 import com.pairapp.util.PLog;
@@ -120,14 +122,13 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     }, null);
                     break;
                 case R.id.bt_call:
-                    Intent intent = new Intent(Intent.ACTION_DIAL);
-                    intent.setData(Uri.parse("tel:" + phoneInlocalFormat));
-                    startActivity(intent);
+                    Event event = Event.create(MessengerBus.CALL_USER, null, user.getUserId());
+                    MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
                     break;
                 case R.id.iv_display_picture:
                     if (dpLoaded) {
                         File dpFile = new File(user.getDP());
-                        intent = new Intent(getActivity(), ImageViewer.class);
+                        Intent intent = new Intent(getActivity(), ImageViewer.class);
                         Uri uri;
                         if (dpFile.exists()) {
                             hideProgressView();

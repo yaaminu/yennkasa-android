@@ -91,7 +91,7 @@ public class EventTest {
     public void testRecycle() throws Exception {
         Event event = Event.createSticky("stycky");
         event.recycle();
-        assertFalse("must recycle sticky events this way", event.isRecycled());
+        assertFalse("must not recycle sticky events this way", event.isRecycled());
 
         Exception error = new Exception();
         event = Event.create("tag", error, "data");

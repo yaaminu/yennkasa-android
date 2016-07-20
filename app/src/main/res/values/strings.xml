@@ -329,4 +329,18 @@
     <string name="app_icon">icon</string>
     <string name="problems_logging_in">Problems Logging In?</string>
     <string name="get_started">Get started!</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="dialing">dialing</string>
+    <string name="connecting">connecting</string>
+    <string name="call_ended">call ended</string>
+    <string name="answer">Answer</string>
+    <string name="end_call">End Call</string>
+    <string name="decline">Decline</string>
+    <string name="ongoing_call_notice">Ongoing call with %s</string>
+    <string name="pairapp_call">PairApp Call</string>
+    <string name="incoming_call">Incoming call from %s</string>
+    <string name="mute_call">mute</string>
+    <string name="speaker">speaker</string>
 </resources>
