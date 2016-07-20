@@ -1,15 +1,17 @@
 package com.pairapp.messenger;
 
+import android.annotation.SuppressLint;
+import android.content.SharedPreferences;
+
 import com.pairapp.data.Message;
 import com.pairapp.net.FileApi;
 import com.pairapp.net.sockets.SendListener;
 import com.pairapp.net.sockets.Sendable;
 import com.pairapp.net.sockets.Sender;
+import com.pairapp.util.Config;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.SimpleDateUtil;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -20,23 +22,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class WebSocketDispatcher extends AbstractMessageDispatcher {
 
+    public static final String SEND_QUEUE_PREFS = "messagesAwaitingAcks.data";
     private final Sender sender;
     private final MessageEncoder messageEncoder;
-    private final Map<String, String> idMaps;
 
     private final SendListener sendListener = new SendListener() {
+        @SuppressLint("CommitPrefEdits")
         @Override
         public void onSentSucceeded(byte[] data) {
             String hash = FileUtils.hash(data);
-            onSent(idMaps.get(hash));
-            idMaps.remove(hash);
+            SharedPreferences preferences = Config.getPreferences(SEND_QUEUE_PREFS);
+            onSent(preferences.getString(hash, ""));
+            preferences.edit().remove(hash).commit();
         }
 
+        @SuppressLint("CommitPrefEdits")
         @Override
         public void onSendFailed(byte[] data) {
             String hash = FileUtils.hash(data);
-            onFailed(idMaps.get(hash), "error internal");
-            idMaps.remove(hash);
+            SharedPreferences preferences = Config.getPreferences(SEND_QUEUE_PREFS);
+            onFailed(preferences.getString(hash, ""), "error internal");
+            preferences.edit().remove(hash).commit();
         }
     };
 
@@ -51,7 +57,6 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
         super(fileApi, monitor);
         this.sender = socket;
         this.messageEncoder = messageEncoder;
-        idMaps = new ConcurrentHashMap<>(4);
         socket.addSendListener(sendListener);
     }
 
@@ -72,7 +77,7 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
     @Override
     protected void dispatchToUser(Message message) {
         byte[] encoded = messageEncoder.encode(message);
-        idMaps.put(FileUtils.hash(encoded), message.getId());
+        Config.getPreferences(SEND_QUEUE_PREFS).edit().putString(FileUtils.hash(encoded), message.getId()).commit();
         sender.sendMessage(createSendable(message.getTo() + ":" + message.getFrom(), encoded));
     }
 

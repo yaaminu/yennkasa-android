@@ -40,7 +40,8 @@ class MessageQueueItemDataSource implements QueueDataSource {
                     .greaterThanOrEqualTo(FIELD_VALID_UNTIL, now) //filter out all expired jobs
                     .lessThanOrEqualTo(FIELD_START_PROCESSING_AT, now) //filter out jobs that are not due
                     .findAllSorted(FIELD_INDEX);
-            if (items.isEmpty()) {
+            if (items.isEmpty()) { //when ever we have nothing, lets take advantage of that and do cleanup
+                removeExpiredItems(realm);
                 return null;
             }
             Sendable ret = items.first();

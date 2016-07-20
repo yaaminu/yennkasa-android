@@ -176,11 +176,12 @@ public class PairAppClient extends Service {
             opts.put("Authorization", authToken);
             opts.put("cursor", MessageProcessor.getCursor() + "");
             sender = new SenderImpl(opts, new MessageParserImpl(messagePacker));
-            sender.start();
             statusManager = StatusManager.create(sender, messagePacker, listenableBus());
-
             webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, sender,
                     new MessageEncoderImpl(messagePacker));
+
+            sender.start(); //this must alwasy come after initialising websocketdispatcher.
+
             incomingMessageProcessor = new IncomingMessageProcessor(statusManager, postableBus());
             messagePacker.observe().subscribe(incomingMessageProcessor);
 
@@ -188,7 +189,7 @@ public class PairAppClient extends Service {
             callController.setup();
 
             eventsListener = new PairAppClientEventsListener(new PairAppClientInterface(this, callController, sender, messagePacker,
-                    statusManager, new Handler(WORKER_THREAD.getLooper())));
+                    statusManager, WORKER_THREAD.handler));
 
             callManagerBus.register(eventsListener,
                     ON_CAL_ERROR, ON_IN_COMING_CALL,
