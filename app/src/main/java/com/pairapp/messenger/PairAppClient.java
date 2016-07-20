@@ -40,13 +40,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.realm.Realm;
 
+import static com.pairapp.call.CallController.ON_CALL_ESTABLISHED;
+import static com.pairapp.call.CallController.ON_CALL_MUTED;
+import static com.pairapp.call.CallController.ON_CALL_PROGRESSING;
+import static com.pairapp.call.CallController.ON_CAL_ENDED;
+import static com.pairapp.call.CallController.ON_CAL_ERROR;
+import static com.pairapp.call.CallController.ON_IN_COMING_CALL;
+import static com.pairapp.call.CallController.ON_LOUD_SPEAKER;
+import static com.pairapp.messenger.MessengerBus.ANSWER_CALL;
 import static com.pairapp.messenger.MessengerBus.CALL_USER;
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
 import static com.pairapp.messenger.MessengerBus.DE_REGISTER_NOTIFIER;
+import static com.pairapp.messenger.MessengerBus.ENABLE_SPEAKER;
 import static com.pairapp.messenger.MessengerBus.GET_STATUS_MANAGER;
 import static com.pairapp.messenger.MessengerBus.HANG_UP_CALL;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_RECEIVED;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_SEEN;
+import static com.pairapp.messenger.MessengerBus.MUTE_CALL;
 import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
 import static com.pairapp.messenger.MessengerBus.OFFLINE;
 import static com.pairapp.messenger.MessengerBus.ONLINE;
@@ -181,7 +191,9 @@ public class PairAppClient extends Service {
                     statusManager, new Handler(WORKER_THREAD.getLooper())));
 
             callManagerBus.register(eventsListener,
-                    CallController.ON_CAL_ENDED, CallController.ON_CALL_ESTABLISHED, CallController.ON_CALL_PROGRESSING);
+                    ON_CAL_ERROR, ON_IN_COMING_CALL,
+                    ON_CAL_ENDED, ON_CALL_ESTABLISHED,
+                    ON_CALL_PROGRESSING, ON_CALL_MUTED, ON_LOUD_SPEAKER);
 
             postableBus().register(eventsListener, OFFLINE, ONLINE, NOT_TYPING, TYPING,
                     STOP_MONITORING_USER, START_MONITORING_USER,
@@ -189,7 +201,7 @@ public class PairAppClient extends Service {
                     ON_MESSAGE_DELIVERED, ON_MESSAGE_SEEN,
                     SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH,
                     REGISTER_NOTIFIER, DE_REGISTER_NOTIFIER, GET_STATUS_MANAGER,
-                    CALL_USER, HANG_UP_CALL);
+                    CALL_USER, HANG_UP_CALL, ANSWER_CALL, ENABLE_SPEAKER, MUTE_CALL);
             isClientStarted.set(true);
         }
     }

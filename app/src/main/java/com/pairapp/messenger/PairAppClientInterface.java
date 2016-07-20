@@ -3,15 +3,18 @@ package com.pairapp.messenger;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.call.CallController;
 import com.pairapp.call.CallData;
 import com.pairapp.data.Message;
 import com.pairapp.net.sockets.Sendable;
 import com.pairapp.net.sockets.Sender;
+import com.pairapp.ui.CallActivity;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.PLog;
@@ -23,6 +26,7 @@ import java.util.Set;
 import io.realm.Realm;
 
 import static com.pairapp.messenger.MessengerBus.GET_STATUS_MANAGER;
+import static com.pairapp.messenger.MessengerBus.ON_CALL_EVENT;
 import static com.pairapp.messenger.PairAppClient.listenableBus;
 
 /**
@@ -32,6 +36,7 @@ class PairAppClientInterface {
 
     public static final String READ_RECEIPT_DELIVERY_REPORT_COLLAPSE_KEY = "readReceiptDeliveryReport";
     public static final int WAIT_MILLIS_DELIVERY_REPORT = 0;
+    public static final String TAG = PairAppClientInterface.class.getSimpleName();
 
     private Set<Activity> backStack = new HashSet<>(6);
     private final Context context;
@@ -212,11 +217,20 @@ class PairAppClientInterface {
     }
 
     void voiceCallUser(String userId) {
-        // TODO: 7/15/2016 use the returned calldata
-        callController.callUser(userId, CallController.CALL_TYPE_VOICE);
+        // TODO: 7/17/2016 check if user has internet connection,the call client is connected and the pairapp socket is also connected.
+        PLog.d(TAG, "calling between user %s", userId);
+        CallData callData = callController.callUser(userId, CallController.CALL_TYPE_VOICE);
+        if (callData != null) {
+            Intent intent = new Intent(context, CallActivity.class);
+            intent.putExtra(CallActivity.EXTRA_CALL_DATA, callData);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+        }
+        //if there's an error it will handled in handleCallControllerError(Exception e) below
     }
 
     void answerCall(CallData data) {
+        PLog.d(TAG, "answering call between user and %s", data.getPeer());
         callController.answer(data);
     }
 
@@ -225,19 +239,50 @@ class PairAppClientInterface {
     }
 
     void onCallProgressing(@NonNull CallData data) {
-        listenableBus().postSticky(Event.createSticky(MessengerBus.CALL_PROGRESSING, null, data));
+        PLog.d(TAG, "call between user and %s progressing", data.getPeer());
+        listenableBus().postSticky(Event.createSticky(ON_CALL_EVENT, null, data));
     }
 
     void onCallEstablished(@NonNull CallData data) {
-        listenableBus().postSticky(Event.createSticky(MessengerBus.CALL_ESTABLISHED, null, data));
+        PLog.d(TAG, "call between user and %s established", data.getPeer());
+        listenableBus().postSticky(Event.createSticky(ON_CALL_EVENT, null, data));
     }
 
     void onCallEnded(@NonNull CallData data) {
         // TODO: 7/15/2016 log the call
-        listenableBus().postSticky(Event.createSticky(MessengerBus.CALL_ENDED, null, data));
+        PLog.d(TAG, "call between user and %s ended", data.getPeer());
+        listenableBus().postSticky(Event.createSticky(ON_CALL_EVENT, null, data));
     }
 
     void onInComingCall(@NonNull CallData data) {
-        // TODO: 7/15/2016 start incomingCallActivity
+        PLog.d(TAG, "incoming call from %s", data.getPeer());
+        Intent intent = new Intent(context, CallActivity.class);
+        intent.putExtra(CallActivity.EXTRA_CALL_DATA, data);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+    }
+
+    public void handleCallControllerError(Exception error) {
+        // TODO: 7/16/2016 show a notification
+        PLog.d(TAG, "error from call manager, %s", error.getMessage());
+        ErrorCenter.reportError(ON_CALL_EVENT, error.getMessage());
+    }
+
+    public void enableLoudSpeaker(CallData data) {
+        PLog.d(TAG, "load speaker action");
+        callController.enableSpeaker(data);
+    }
+
+    public void muteCall(CallData data) {
+        PLog.d(TAG, "mute call");
+        callController.muteCall(data);
+    }
+
+    public void onCallMuted(CallData data) {
+        listenableBus().postSticky(Event.createSticky(ON_CALL_EVENT, null, data));
+    }
+
+    public void onLoudSpeaker(CallData data) {
+        listenableBus().postSticky(Event.createSticky(ON_CALL_EVENT, null, data));
     }
 }

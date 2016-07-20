@@ -14,26 +14,41 @@ public class CallData implements Parcelable {
     private final String peer;
     private final long callDate;
     private final boolean isOutGoing;
-    private final int callDuration;
     private final int callType;
     private final String callId;
+    private final int callState;
 
-    CallData(String peer, String callId, long whenCalled, int duration, int callType, boolean isOutGoing) {
+    public static final int INITIATING = 0,
+            PROGRESSING = 1,
+            ESTABLISHED = 2,
+            ENDED = 3,
+            TRANSFERRING = 4;
+    private final long establishedTime;
+    private final boolean loudSpeaker, muted;
+
+    CallData(String peer, String callId, long whenCalled, long establishedTime,
+             int callType, int callState, boolean isOutGoing, boolean muted, boolean loudSpeaker) {
         this.peer = peer;
         this.callId = callId;
         this.callDate = whenCalled;
-        this.callDuration = duration;
         this.isOutGoing = isOutGoing;
         this.callType = callType;
+        this.callState = callState;
+        this.establishedTime = establishedTime;
+        this.loudSpeaker = loudSpeaker;
+        this.muted = muted;
     }
 
     protected CallData(Parcel in) {
         peer = in.readString();
         callDate = in.readLong();
         isOutGoing = in.readByte() != 0;
-        callDuration = in.readInt();
         callType = in.readInt();
         callId = in.readString();
+        callState = in.readInt();
+        establishedTime = in.readLong();
+        loudSpeaker = in.readByte() != 0;
+        muted = in.readByte() != 0;
     }
 
     public static final Creator<CallData> CREATOR = new Creator<CallData>() {
@@ -48,11 +63,17 @@ public class CallData implements Parcelable {
         }
     };
 
-    static CallData from(Call call, int callType) {
+    static CallData from(Call call, int callType, long dateCallEstablished) {
+        return from(call, callType, dateCallEstablished, false, false);
+    }
+
+    static CallData from(Call call, int callType, long dateCallEstablished, boolean muted, boolean isLoudSpeaker) {
         CallDetails details = call.getDetails();
         return new CallData(call.getRemoteUserId(), call.getCallId(),
-                details.getStartedTime(), (int) (details.getEndedTime() - details.getEstablishedTime()),
-                callType, call.getDirection() == CallDirection.OUTGOING
+                details.getStartedTime(), dateCallEstablished,
+                callType, call.getState().ordinal(),
+                call.getDirection() == CallDirection.OUTGOING,
+                muted, isLoudSpeaker
         );
     }
 
@@ -72,13 +93,26 @@ public class CallData implements Parcelable {
         return callDate;
     }
 
-    public int getCallDuration() {
-        return callDuration;
+    public long getEstablishedTime() {
+        return establishedTime;
+    }
+
+    public int getCallState() {
+        return callState;
     }
 
     @CallController.CallType
     public int getCallType() {
         return callType;
+    }
+
+
+    public boolean isLoudSpeaker() {
+        return loudSpeaker;
+    }
+
+    public boolean isMuted() {
+        return muted;
     }
 
     @Override
@@ -91,8 +125,11 @@ public class CallData implements Parcelable {
         dest.writeString(peer);
         dest.writeLong(callDate);
         dest.writeByte((byte) (isOutGoing ? 1 : 0));
-        dest.writeInt(callDuration);
         dest.writeInt(callType);
         dest.writeString(callId);
+        dest.writeInt(callState);
+        dest.writeLong(establishedTime);
+        dest.writeByte((byte) (loudSpeaker ? 1 : 0));
+        dest.writeByte((byte) (muted ? 1 : 0));
     }
 }

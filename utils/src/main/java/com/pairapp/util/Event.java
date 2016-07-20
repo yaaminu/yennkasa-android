@@ -1,5 +1,8 @@
 package com.pairapp.util;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -8,15 +11,19 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
 public class Event {
+    private static final String TAG = "Event";
     private Object tag;
     private Exception error;
     private Object data;
-    private volatile boolean isRecycled;
+    private boolean isRecycled;
+
+    @NonNull
     private static final Stack<Event> objectPool = new Stack<>();
     private volatile boolean isSticky;
-    private AtomicInteger listenerCount = new AtomicInteger(0);
+    @NonNull
+    private final AtomicInteger listenerCount = new AtomicInteger(0);
 
-    private Event(Object tag, Exception error, Object data, boolean isSticky) {
+    private Event(@NonNull Object tag, @Nullable Exception error, @Nullable Object data, boolean isSticky) {
         this.tag = tag;
         this.error = error;
         this.data = data;
@@ -24,34 +31,40 @@ public class Event {
         this.isSticky = isSticky;
     }
 
-    public synchronized static Event create(Object tag) {
+    @NonNull
+    public static Event create(@NonNull Object tag) {
         return create(tag, null);
     }
 
-    public synchronized static Event createSticky(Object tag) {
+    @NonNull
+    public static Event createSticky(@NonNull Object tag) {
         return createSticky(tag, null);
     }
 
-    public synchronized static Event create(Object tag, Exception error) {
+    @NonNull
+    public static Event create(@NonNull Object tag, @Nullable Exception error) {
         return create(tag, error, null);
     }
 
-    public synchronized static Event createSticky(Object tag, Exception error) {
+    @NonNull
+    public static Event createSticky(@NonNull Object tag, @Nullable Exception error) {
         return createSticky(tag, error, null);
     }
 
-    public synchronized static Event create(Object tag, Exception error, Object data) {
+    @NonNull
+    public static Event create(@NonNull Object tag, @Nullable Exception error, @Nullable Object data) {
         return doCreate(tag, error, data, false);
     }
 
-    public synchronized static Event createSticky(Object tag, Exception error, Object data) {
+    @NonNull
+    public static Event createSticky(@NonNull Object tag, @Nullable Exception error, @Nullable Object data) {
         return doCreate(tag, error, data, true);
     }
 
-    public synchronized static Event doCreate(Object tag, Exception error, Object data, boolean isSticky) {
+    private static Event doCreate(@NonNull Object tag, @Nullable Exception error, @Nullable Object data, boolean isSticky) {
         GenericUtils.ensureNotNull(tag);
         Event event;
-        if (!objectPool.isEmpty()) {
+        if (false && !objectPool.isEmpty()) {
             event = objectPool.pop();
             event.tag = tag;
             event.isSticky = isSticky;
@@ -65,16 +78,15 @@ public class Event {
     }
 
     public void recycle() {
-        if (!isRecycled() && !isSticky() && listenerCount.decrementAndGet() <= 0) {
-            synchronized (Event.class) {
-                if (objectPool.size() < 20) {
-                    isRecycled = true;
-                    data = null;
-                    error = null;
-                    tag = null;
-                    listenerCount.set(0);
-                    objectPool.add(this);
-                }
+        PLog.d(TAG, "recycling event %s", this);
+        if (false && !isRecycled() && !isSticky() && listenerCount.decrementAndGet() <= 0) {
+            if (objectPool.size() < 20) {
+                isRecycled = true;
+                data = null;
+                error = null;
+                tag = null;
+                listenerCount.set(0);
+                objectPool.add(this);
             }
         }
     }
@@ -107,23 +119,26 @@ public class Event {
         return result;
     }
 
+    @NonNull
     public Object getTag() {
         ensureNotRecycled();
         return tag;
     }
 
+    @Nullable
     public Exception getError() {
         ensureNotRecycled();
         return error;
     }
 
+    @Nullable
     public Object getData() {
         ensureNotRecycled();
         return data;
     }
 
-    private void ensureNotRecycled() {
-        if (isRecycled) {
+    private synchronized void ensureNotRecycled() {
+        if (isRecycled()) {
             throw new IllegalStateException("can't use a recycled event");
         }
     }
@@ -133,6 +148,7 @@ public class Event {
     }
 
     /*package*/void recycleSticky() {
+        PLog.d(TAG, "recycling sticky event %s", this);
         if (isRecycled() || !isSticky()) {
             return;
         }
@@ -145,5 +161,23 @@ public class Event {
         ensureNotRecycled();
         GenericUtils.ensureConditionTrue(count > 0, "invalid number");
         listenerCount.set(count);
+    }
+
+    @Override
+    public String toString() {
+        ensureNotRecycled();
+        //noinspection StringBufferReplaceableByString
+        return new StringBuilder("tag=>")
+                .append(getTag())
+                .append(", error=>")
+                .append(getError() == null ? "no error" : getError().getClass().getSimpleName() + ":" + getError().getMessage())
+                .append(", data=>")
+                .append(getData() == null ? "no data" : getData().toString())
+                .append(", isSticky=>")
+                .append(isSticky())
+                .append(", listenersCount=>")
+                .append(listenerCount.get())
+                .toString();
+
     }
 }
