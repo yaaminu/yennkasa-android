@@ -11,3 +11,4 @@ anr.txt
 /build
 *.iml
 .idea/*
+/pairapp-call/libs
