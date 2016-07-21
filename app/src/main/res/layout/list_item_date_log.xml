@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.pairapp.view.RelativeLayout
-    android:id="@+id/date_header_parent"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/date_header_parent"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_centerHorizontal="true"
@@ -18,8 +17,7 @@
         android:layout_gravity="center_horizontal"
         android:gravity="center"
         android:padding="@dimen/date_message_paddingTop"
-        android:text="2/2/2015"
         android:textColor="@color/black"
         android:textSize="@dimen/log_message_text_size"
-        tools:ignore="HardcodedText"/>
+        tools:text="2/2/2015" />
 </com.pairapp.view.RelativeLayout>

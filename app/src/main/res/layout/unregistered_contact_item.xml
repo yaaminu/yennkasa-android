@@ -1,5 +1,4 @@
-<com.pairapp.view.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_item_height"
@@ -26,7 +25,7 @@
         android:text="AB"
         android:textColor="@color/white"
         android:textSize="@dimen/text_size_medium"
-        tools:ignore="HardcodedText"/>
+        tools:ignore="HardcodedText" />
 
     <TextView
         android:id="@+id/tv_user_name"
@@ -38,7 +37,7 @@
         android:singleLine="true"
         android:text="@string/username_hint"
         android:textSize="@dimen/standard_text_size"
-        android:textStyle="bold"/>
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/tv_user_phone_group_admin"
@@ -52,7 +51,7 @@
         android:text="0204441069"
         android:textSize="@dimen/standard_text_size"
         android:textStyle="italic"
-        tools:ignore="HardcodedText"/>
+        tools:ignore="HardcodedText" />
 
     <include
         layout="@layout/divider"
@@ -63,22 +62,15 @@
         android:layout_alignStart="@+id/tv_user_phone_group_admin"
         android:layout_marginEnd="@dimen/divider_right_offset"
         android:layout_marginRight="@dimen/divider_right_offset"
-        android:layout_marginTop="4dp"/>
+        android:layout_marginTop="4dp" />
 
-    <com.rey.material.widget.Button
-        android:id="@+id/bt_invite"
-        style="@style/round_button_style"
+    <ImageView
+        android:id="@+id/more"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/tv_user_phone_group_admin"
+        android:layout_alignBottom="@+id/tv_initials"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_centerVertical="true"
-        android:drawableEnd="@drawable/ic_action_email"
-        android:drawableRight="@drawable/ic_action_email"
-        android:padding="@dimen/padding_button"
-        android:text="@string/invite"
-        android:textColor="@color/white"
-        android:textSize="@dimen/standard_text_size"/>
+        android:src="@drawable/ic_more_vert_24dp" />
 </com.pairapp.view.RelativeLayout>
 

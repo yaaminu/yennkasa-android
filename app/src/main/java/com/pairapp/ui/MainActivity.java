@@ -34,7 +34,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     public static final String DEFAULT_FRAGMENT = "default_fragment";
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final String ARG_TITLE = "title";
-    private static int savedPosition = MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT;
+    private static int savedPosition = MyFragmentStatePagerAdapter.POSITION_CALL_LOGS;
     private ViewPager pager;
 
     @Override
@@ -137,9 +137,11 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
 
     //package private
     class MyFragmentStatePagerAdapter extends FragmentStatePagerAdapter {
-        static final int POSITION_CONVERSATION_FRAGMENT = 0x0,
-                POSITION_CONTACTS_FRAGMENT = 0x1,
-                POSITION_GROUP_FRAGMENT = 0x2, POSITION_SETTINGS_FRAGMENT = 0x3;
+        static final int
+                POSITION_CALL_LOGS = 0x0,
+                POSITION_CONVERSATION_FRAGMENT = 0x1,
+                POSITION_CONTACTS_FRAGMENT = 0x2,
+                POSITION_GROUP_FRAGMENT = 0x3, POSITION_SETTINGS_FRAGMENT = 0x4;
         String[] pageTitles;
 
         public MyFragmentStatePagerAdapter(FragmentManager fm) {
@@ -151,6 +153,9 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         public Fragment getItem(int position) {
             Fragment fragment;
             switch (position) {
+                case POSITION_CALL_LOGS:
+                    fragment = new CallLogFragment();
+                    break;
                 case POSITION_CONVERSATION_FRAGMENT:
                     if (!checkIfUserAvailable()) {
                         fragment = new NoticeFragment();
@@ -174,7 +179,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
 
         @Override
         public int getCount() {
-            return 4;
+            return pageTitles.length;
         }
 
         @Override

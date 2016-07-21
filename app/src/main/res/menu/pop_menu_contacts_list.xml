@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_call_user"
+        android:title="@string/call" />
+    <item
+        android:id="@+id/action_text"
+        android:title="@string/send_message" />
+    <item
+        android:id="@+id/action_invite"
+        android:title="@string/invite" />
+</menu>

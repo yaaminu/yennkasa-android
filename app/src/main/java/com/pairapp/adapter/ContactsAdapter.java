@@ -1,12 +1,13 @@
 package com.pairapp.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.support.annotation.DrawableRes;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.widget.PopupMenu;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -15,12 +16,13 @@ import android.widget.TextView;
 
 import com.pairapp.R;
 import com.pairapp.data.UserManager;
+import com.pairapp.messenger.MessengerBus;
 import com.pairapp.ui.ImageLoader;
+import com.pairapp.util.Event;
 import com.pairapp.util.PhoneNumberNormaliser;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
-import com.rey.material.widget.Button;
 
 import java.util.List;
 import java.util.Locale;
@@ -32,7 +34,6 @@ import static com.pairapp.data.ContactsManager.Contact;
  * @author Null-Pointer on 6/12/2015.
  */
 public class ContactsAdapter extends BaseAdapter {
-    private static final String TAG = ContactsAdapter.class.getSimpleName();
     private final String userIsoCountry;
     private final int[] layoutResource = {
             R.layout.registered_contact_item,
@@ -89,6 +90,7 @@ public class ContactsAdapter extends BaseAdapter {
         return 2;
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
         final Contact contact = getItem(position);
@@ -104,12 +106,10 @@ public class ContactsAdapter extends BaseAdapter {
             } else {
                 holder.userName = ((TextView) convertView.findViewById(R.id.tv_user_name));
             }
-            holder.inviteButton = (Button) convertView.findViewById(R.id.bt_invite);
             holder.userDp = ((ImageView) convertView.findViewById(R.id.iv_display_picture));
             holder.userPhone = (TextView) convertView.findViewById(R.id.tv_user_phone_group_admin);
             holder.initials = (TextView) convertView.findViewById(R.id.tv_initials);
-
-            ViewUtils.setTypeface(holder.inviteButton, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+            holder.more = convertView.findViewById(R.id.more);
             ViewUtils.setTypeface(holder.userPhone, TypeFaceUtil.ROBOTO_REGULAR_TTF);
             ViewUtils.setTypeface(holder.initials, TypeFaceUtil.ROBOTO_LIGHT_TTF);
             ViewUtils.setTypeface(holder.userName, TypeFaceUtil.ROBOTO_BOLD_TTF);
@@ -147,7 +147,6 @@ public class ContactsAdapter extends BaseAdapter {
             holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat(contact.numberInIEE_Format, userIsoCountry));
             holder.userPhone.setOnClickListener(listener);
             holder.userName.setOnClickListener(listener);
-            holder.inviteButton.setOnClickListener(listener);
             if (contact.name.length() > 1) {
                 String[] parts = contact.name.trim().split("[\\s[^A-Za-z]]+");
                 if (parts.length > 1) {
@@ -176,13 +175,9 @@ public class ContactsAdapter extends BaseAdapter {
             holder.initials.setBackgroundDrawable(bgColors[(i >= bgColors.length) ? i - bgColors.length : i]);
         }
 
-        return convertView;
-    }
+        holder.more.setOnClickListener(listener);
 
-    private void callContact(View v, Contact contact) {
-        Intent intent = new Intent(Intent.ACTION_DIAL);
-        intent.setData(Uri.parse("tel:" + PhoneNumberNormaliser.toLocalFormat("+" + contact.numberInIEE_Format, userIsoCountry)));
-        v.getContext().startActivity(intent);
+        return convertView;
     }
 
     public void refill(List<Contact> contacts) {
@@ -190,51 +185,51 @@ public class ContactsAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
-    private void handleClick(View view, Contact contact) {
-        int id = view.getId();
+    private void handleClick(final View v, final Contact contact) {
+        int id = v.getId();
 
-        if (contact.isRegisteredUser) {
-            if (id == R.id.iv_display_picture) {
-                UiHelpers.gotoProfileActivity(view.getContext(), contact.numberInIEE_Format);
-            } else if (id == R.id.tv_user_phone_group_admin) {
-                callContact(view, contact);
+        if (id == R.id.more) {
+            PopupMenu menu = new PopupMenu(context, v);
+            menu.inflate(R.menu.pop_menu_contacts_list);
+            if (contact.isRegisteredUser) {
+                menu.getMenu().findItem(R.id.action_call_user).setVisible(true);
+                menu.getMenu().findItem(R.id.action_text).setVisible(true);
+                menu.getMenu().findItem(R.id.action_invite).setVisible(false);
+            } else {
+                menu.getMenu().findItem(R.id.action_call_user).setVisible(false);
+                menu.getMenu().findItem(R.id.action_text).setVisible(false);
+                menu.getMenu().findItem(R.id.action_invite).setVisible(true);
             }
-        } else {
-            if (id == R.id.bt_invite) {
-                invite(view.getContext(), contact);
-            } else if (id == R.id.tv_user_phone_group_admin) {
-                callContact(view, contact);
-            }
+            menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    switch (item.getItemId()) {
+                        case R.id.action_call_user:
+                            Event event = Event.create(MessengerBus.CALL_USER, null, contact.numberInIEE_Format);
+                            MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
+                            break;
+                        case R.id.action_text:
+                            UiHelpers.enterChatRoom(v.getContext(), contact.numberInIEE_Format);
+                            break;
+                        case R.id.action_invite:
+                            UiHelpers.doInvite(v.getContext(), contact);
+                            break;
+                    }
+                    return false;
+                }
+            });
+            menu.show();
+        } else if (id == R.id.iv_display_picture && contact.isRegisteredUser) {
+            UiHelpers.gotoProfileActivity(v.getContext(), contact.numberInIEE_Format);
         }
     }
 
-    private static void invite(final Context context, final Contact contact) {
-        UiHelpers.doInvite(context, contact);
-    }
-
-    //    private class InviteContact implements View.OnClickListener {
-//        Contact contact;
-//
-//        public InviteContact(Contact contact) {
-//            this.contact = contact;
-//        }
-//
-//        @Override
-//        public void onClick(View v) {
-//            Uri uri = Uri.parse("sms:"+contact.phoneNumber);
-//            Intent intent = new Intent(Intent.ACTION_SENDTO);
-//            intent.setData(uri);
-//            intent.putExtra(Intent.EXTRA_TEXT, message);
-//            v.getContext().startActivity(intent);
-//        }
-//
-//    }
 
     private class ViewHolder {
         private TextView userName, initials;
-        private Button inviteButton;
         private ImageView userDp;
         private TextView userPhone;
+        public View more;
     }
 
 }

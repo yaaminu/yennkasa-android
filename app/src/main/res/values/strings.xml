@@ -343,4 +343,12 @@
     <string name="incoming_call">Incoming call from %s</string>
     <string name="mute_call">mute</string>
     <string name="speaker">speaker</string>
+    <string name="dialed_call">Dialed Call</string>
+    <string name="recieved_call">Received Call</string>
+    <string name="missed_call">Missed Call</string>
+    <string name="send_message">Send Message</string>
+    <string name="call_again">Call Again</string>
+    <string name="call_back">Call Back</string>
+    <string name="delete_log_entry">Delete Log Entry</string>
+    <string name="log_entry_deleted_message">Log entry deleted successfully</string>
 </resources>

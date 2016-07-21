@@ -267,7 +267,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                     .equalTo(Message.FIELD_TO, peerId)
                     .endGroup();
         }
-        messages = messageQuery.findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.ASCENDING, Message.FIELD_TYPE, Sort.DESCENDING);
+        messages = messageQuery.notEqualTo(Message.FIELD_TYPE, Message.TYPE_CALL).findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.ASCENDING, Message.FIELD_TYPE, Sort.DESCENDING);
         setUpCurrentConversation();
         sendButton.setOnClickListener(this);
         setUpListView();
@@ -307,6 +307,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             boolean visible = peer.getType() != User.TYPE_GROUP
                     && !peer.getInContacts();
             menu.findItem(R.id.action_add_contact).setVisible(visible);
+            menu.findItem(R.id.action_call_user).setVisible(peer.getAdmin() == null);
         }
         return super.onPrepareOptionsMenu(menu);
     }
@@ -338,6 +339,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                 UiHelpers.showPlainOlDialog(this, getString(R.string.no_contact_app_on_device));
             }
             return true;
+        } else if (id == R.id.action_call_user) {
+            Event event = Event.create(MessengerBus.CALL_USER, null, peer.getUserId());
+            MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
         }
         return super.onOptionsItemSelected(item);
     }

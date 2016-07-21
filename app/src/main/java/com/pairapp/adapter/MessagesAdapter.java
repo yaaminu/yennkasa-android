@@ -118,7 +118,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             return TYPING_MESSAGE;
         }
 
-        if (currentMessageType == Message.TYPE_DATE_MESSAGE) {
+        if (currentMessageType == Message.TYPE_DATE_MESSAGE || currentMessageType == Message.TYPE_CALL) {
             return DATE_MESSAGE;
         }
 
@@ -180,6 +180,18 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         if (currentMessageType == Message.TYPE_DATE_MESSAGE) {
             String formattedDate = SimpleDateUtil.formatDateRage(context, messageDateComposed);
             holder.textMessage.setText(formattedDate);
+            convertView.setOnTouchListener(touchListener);
+            return convertView;
+        } else if (currentMessageType == Message.TYPE_CALL) {
+            int summary;
+            int callDuration = message.getCallBody().getCallDuration();
+            if (Message.isOutGoing(message)) {
+                summary = R.string.dialed_call;
+            } else {
+                summary = callDuration <= 0 ? R.string.missed_call : R.string.recieved_call;
+            }
+            holder.textMessage.setText(summary);
+            holder.textMessage.append(callDuration > 0 ? " " + CallLogAdapter.formatTimespan(callDuration) + "  " : "");
             convertView.setOnTouchListener(touchListener);
             return convertView;
         } else if (currentMessageType == Message.TYPE_TYPING_MESSAGE) {

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">FileClient</string>
+    <string name="call_log_empty_notice">No Calls. Touch the floating button to place your first call</string>
 </resources>

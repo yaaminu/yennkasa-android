@@ -63,6 +63,10 @@ public class CallData implements Parcelable {
         }
     };
 
+    static CallData from(Call call, int callType) {
+        return from(call, callType, System.currentTimeMillis());
+    }
+
     static CallData from(Call call, int callType, long dateCallEstablished) {
         return from(call, callType, dateCallEstablished, false, false);
     }
