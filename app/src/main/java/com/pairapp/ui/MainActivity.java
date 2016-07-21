@@ -15,14 +15,10 @@ import com.google.samples.apps.iosched.ui.widget.SlidingTabLayout;
 import com.pairapp.PairApp;
 import com.pairapp.R;
 import com.pairapp.data.Conversation;
-import com.pairapp.data.User;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.UiHelpers;
 import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
-
-import io.realm.Realm;
-import io.realm.RealmChangeListener;
 
 //import com.digits.sdk.android.Digits;
 
@@ -68,7 +64,6 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
             //noinspection ConstantConditions
             if (SetUpActivity.isEveryThingOk()) {
                 setupViews();
-                checkIfUserAvailable();
                 final int default_fragment = intent.getIntExtra(DEFAULT_FRAGMENT, savedPosition);
                 if (default_fragment >= MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT
                         && default_fragment <= MyFragmentStatePagerAdapter.POSITION_SETTINGS_FRAGMENT)
@@ -157,10 +152,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                     fragment = new CallLogFragment();
                     break;
                 case POSITION_CONVERSATION_FRAGMENT:
-                    if (!checkIfUserAvailable()) {
-                        fragment = new NoticeFragment();
-                    } else
-                        fragment = new ConversationsFragment();
+                    fragment = new ConversationsFragment();
                     break;
                 case POSITION_CONTACTS_FRAGMENT:
                     fragment = new ContactFragment();
@@ -194,35 +186,8 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     }
 
 
-    private final RealmChangeListener changeListener = new RealmChangeListener() {
-        @Override
-        public void onChange() {
-            pager.getAdapter().notifyDataSetChanged();
-        }
-    };
-    private Realm realm;
-
-    private boolean checkIfUserAvailable() {
-        if (realm == null)
-            realm = User.Realm(MainActivity.this);
-
-        realm.addChangeListener(changeListener);
-        boolean noUserAvailable = realm.where(User.class).count() < 2;
-        if (!noUserAvailable) {
-            pager.getAdapter().notifyDataSetChanged();
-            realm.removeChangeListener(changeListener);
-            realm.close();
-            realm = null;
-        }
-        return !noUserAvailable;
-    }
-
     @Override
     protected void onDestroy() {
-        if (realm != null) {
-            realm.removeChangeListener(changeListener);
-            realm.close();
-        }
         super.onDestroy();
     }
 
