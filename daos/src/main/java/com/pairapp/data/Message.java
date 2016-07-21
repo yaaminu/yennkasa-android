@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -315,6 +316,27 @@ public class Message extends RealmObject {
         return UserManager.getInstance().isGroup(message.getTo());
     }
 
+    public static String formatTimespan(long timespan) {
+        long totalSeconds = timespan / 1000;
+        long minutes = totalSeconds / 60;
+        long seconds = totalSeconds % 60;
+        return String.format(Locale.US, "%02d:%02d", minutes, seconds);
+    }
+
+    @NonNull
+    public static String getCallSummary(Message lastMessage) {
+        //noinspection ConstantConditions
+        int callDuration = lastMessage.getCallBody().getCallDuration();
+        String summary;
+        if (isOutGoing(lastMessage)) {
+            summary = GenericUtils.getString(R.string.dialed_call);
+        } else {
+            summary = GenericUtils.getString(callDuration <= 0 ? R.string.missed_call : R.string.recieved_call);
+        }
+        summary += callDuration > 0 ? " " + formatTimespan(callDuration) + "  " : "";
+        return summary;
+    }
+
     public int getType() {
         return type;
     }
@@ -422,5 +444,9 @@ public class Message extends RealmObject {
 
     private void setCallBody(@NonNull CallBody callBody) {
         this.callBody = callBody;
+    }
+
+    public static boolean isCallMessage(Message message) {
+        return message.getType() == TYPE_CALL;
     }
 }

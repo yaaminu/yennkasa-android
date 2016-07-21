@@ -16,7 +16,6 @@ import com.pairapp.ui.ImageLoader;
 import com.pairapp.util.ViewUtils;
 
 import java.util.Date;
-import java.util.Locale;
 
 import butterknife.Bind;
 
@@ -55,16 +54,7 @@ public class CallLogAdapter extends PairappBaseAdapter<Message> {
 
         holder1.callDate.setText(formattedDate);
 
-        int summary;
-        //noinspection ConstantConditions
-        int callDuration = message.getCallBody().getCallDuration();
-        if (Message.isOutGoing(message)) {
-            summary = R.string.dialed_call;
-        } else {
-            summary = callDuration <= 0 ? R.string.missed_call : R.string.recieved_call;
-        }
-        holder1.callSummary.setText(summary);
-        holder1.callSummary.append(callDuration > 0 ? " " + formatTimespan(callDuration) + "  " : "");
+        holder1.callSummary.setText(Message.getCallSummary(message));
 
         ImageLoader.load(context, user.getDP())
                 .error(R.drawable.user_avartar)
@@ -78,13 +68,6 @@ public class CallLogAdapter extends PairappBaseAdapter<Message> {
         } else {
             ViewUtils.showViews(((VHolder) holder).divider);
         }
-    }
-
-    static String formatTimespan(long timespan) {
-        long totalSeconds = timespan / 1000;
-        long minutes = totalSeconds / 60;
-        long seconds = totalSeconds % 60;
-        return String.format(Locale.US, "%02d:%02d", minutes, seconds);
     }
 
     @Override

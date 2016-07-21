@@ -110,6 +110,8 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
             if (Message.isTextMessage(message)) {
                 summary.append(message.getMessageBody());
                 // holder.mediaMessageIcon.setVisibility(View.GONE);
+            } else if (Message.isCallMessage(message)) {
+                summary.append(Message.getCallSummary(message));
             } else {
                 summary.append(PairApp.typeToString(context, message));
             }

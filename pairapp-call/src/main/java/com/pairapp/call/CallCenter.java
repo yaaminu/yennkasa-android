@@ -1,6 +1,7 @@
 package com.pairapp.call;
 
 import com.pairapp.data.CallBody;
+import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
@@ -70,12 +71,17 @@ class CallCenter implements CallClientListener, CallListener {
         player.stopProgressTone();
         call.removeCallListener(this);
         broadCastBus.postSticky(Event.createSticky(ON_CAL_ENDED, null, CallData.from(call, CALL_TYPE_VOICE, System.currentTimeMillis())));
-
         Realm realm = Message.REALM();
+        Conversation conversation = Conversation.newConversation(realm, call.getRemoteUserId());
         try {
             CallBody callBody = new CallBody(call.getCallId(), currentCallStart == 0 ? 0 : (int) (System.currentTimeMillis() - currentCallStart), CallBody.CALL_TYPE_VOICE);
             boolean isOutGoing = call.getDirection() == CallDirection.OUTGOING;
-            Message.makeNewCallMessageAndPersist(realm, call.getRemoteUserId(), System.currentTimeMillis(), callBody, isOutGoing);
+            Message lastMessage = Message.makeNewCallMessageAndPersist(realm, call.getRemoteUserId(), System.currentTimeMillis(), callBody, isOutGoing);
+            realm.beginTransaction();
+            conversation.setLastMessage(lastMessage);
+            String summary = Message.getCallSummary(lastMessage);
+            conversation.setSummary(summary);
+            realm.commitTransaction();
         } finally {
             currentCallStart = 0;
             realm.close();

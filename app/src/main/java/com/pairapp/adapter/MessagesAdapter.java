@@ -183,15 +183,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             convertView.setOnTouchListener(touchListener);
             return convertView;
         } else if (currentMessageType == Message.TYPE_CALL) {
-            int summary;
-            int callDuration = message.getCallBody().getCallDuration();
-            if (Message.isOutGoing(message)) {
-                summary = R.string.dialed_call;
-            } else {
-                summary = callDuration <= 0 ? R.string.missed_call : R.string.recieved_call;
-            }
-            holder.textMessage.setText(summary);
-            holder.textMessage.append(callDuration > 0 ? " " + CallLogAdapter.formatTimespan(callDuration) + "  " : "");
+            holder.textMessage.append(Message.getCallSummary(message));
             convertView.setOnTouchListener(touchListener);
             return convertView;
         } else if (currentMessageType == Message.TYPE_TYPING_MESSAGE) {
