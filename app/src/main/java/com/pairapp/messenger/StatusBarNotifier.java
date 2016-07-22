@@ -38,7 +38,7 @@ import io.realm.Realm;
 /**
  * @author Null-Pointer on 8/12/2015.
  */
-class StatusBarNotifier implements Notifier {
+class StatusBarNotifier {
     private final static int MESSAGE_NOTIFICATION_ID = 19928;
     private final static int MESSAGE_PENDING_INTENT_REQUEST_CODE = 1002;
     private static final String TAG = StatusBarNotifier.class.getSimpleName();
@@ -46,8 +46,7 @@ class StatusBarNotifier implements Notifier {
     private AtomicBoolean shouldPlayTone = new AtomicBoolean(true);
     Timer timer = new Timer();
 
-    @Override
-    public void notifyUser(Context context, Message message, String sender) {
+    void notifyUser(Context context, Message message, String sender) {
         final String notificationMessage = formatNotificationMessage(message, sender);
         if (notificationMessage == null) {
             return;
@@ -156,11 +155,6 @@ class StatusBarNotifier implements Notifier {
         }
     }
 
-    @Override
-    public location where() {
-        return location.BACKGROUND;
-    }
-
     private String formatNotificationMessage(Message message, String sender) {
         String text;
         final Context applicationContext = Config.getApplicationContext();
@@ -208,7 +202,6 @@ class StatusBarNotifier implements Notifier {
         return Config.getApplicationContext().getString(resId);
     }
 
-    @Override
     public void clearNotifications() {
         NotificationManagerCompat.from(Config.getApplicationContext()).cancel(MESSAGE_NOTIFICATION_ID);
     }

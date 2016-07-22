@@ -1,16 +1,16 @@
 package com.pairapp.messenger;
 
 import android.content.Context;
+import android.support.v4.util.Pair;
 
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.util.Config;
+import com.pairapp.util.Event;
 import com.pairapp.util.PLog;
-import com.pairapp.util.TaskManager;
 import com.pairapp.util.ThreadUtils;
 
-import java.lang.ref.WeakReference;
 import java.util.List;
 
 import io.realm.Realm;
@@ -24,8 +24,7 @@ import io.realm.Sort;
 public final class NotificationManager {
     static final NotificationManager INSTANCE = new NotificationManager();
     private static final String TAG = NotificationManager.class.getSimpleName();
-    private final Notifier BACKGROUND_NOTIFIER = new StatusBarNotifier();
-    private volatile WeakReference<Notifier> UI_NOTIFIER;
+    private final StatusBarNotifier statusBarNotifier = new StatusBarNotifier();
 
     void onNewMessage(final Context context, final Message message) {
         ThreadUtils.ensureNotMain();
@@ -39,25 +38,17 @@ public final class NotificationManager {
             return;
         }
         if (Config.isAppOpen() && UserManager.getInstance().getBoolPref(UserManager.IN_APP_NOTIFICATIONS, false)) {
-            //Toast.makeText(Config.getApplicationContext(), message.getFrom() + " : " + message.getMessageBody(), Toast.LENGTH_LONG).show();
-            if (UI_NOTIFIER != null) {
-                final Notifier notifier = UI_NOTIFIER.get();
-                if (notifier != null) {
-                    TaskManager.executeOnMainThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            notifier.notifyUser(context, message, sendersName);
-                        }
-                    });
-                    return;
-                }
+            if (MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS)
+                    .post(Event.create(MessengerBus.UI_ON_NEW_MESSAGE_RECEIVED, null, Pair.create(message, sendersName)))) {
+                return;
             }
         }
 
+        // TODO: 7/22/2016 why is this necessary?
         if (Config.getCurrentActivePeer().equals(Message.isGroupMessage(message) ? message.getTo() : message.getFrom())) {
             return;
         }
-        BACKGROUND_NOTIFIER.notifyUser(context, message, sendersName);
+        statusBarNotifier.notifyUser(context, message, sendersName);
     }
 
 
@@ -85,23 +76,8 @@ public final class NotificationManager {
         return sendersName;
     }
 
-    synchronized void registerUI_Notifier(Notifier notifier) {
-        if (notifier == null) throw new IllegalArgumentException("notifier is null");
-        if (UI_NOTIFIER != null && UI_NOTIFIER.get() == notifier) {
-            return;
-        }
-        UI_NOTIFIER = new WeakReference<>(notifier);
-    }
-
-    synchronized void unRegisterUI_Notifier(Notifier notifier) {
-        if (UI_NOTIFIER != null && UI_NOTIFIER.get() == notifier) {
-            UI_NOTIFIER.clear();
-            UI_NOTIFIER = null;
-        }
-    }
-
     void clearAllMessageNotifications() {
-        BACKGROUND_NOTIFIER.clearNotifications();
+        statusBarNotifier.clearNotifications();
     }
 
     void reNotifyForReceivedMessages() {

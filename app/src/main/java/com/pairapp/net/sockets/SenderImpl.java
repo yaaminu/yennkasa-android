@@ -3,7 +3,9 @@ package com.pairapp.net.sockets;
 import android.content.Context;
 import android.util.Base64;
 
+import com.pairapp.messenger.MessengerBus;
 import com.pairapp.util.Config;
+import com.pairapp.util.Event;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
 
@@ -173,7 +175,7 @@ public class SenderImpl implements Sender {
 
         @Override
         public void onOpen() {
-            // TODO: 6/20/2016 fire an event that we are connected
+            MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(MessengerBus.SOCKET_CONNECTION, null, 2));
             if (!started) {
                 throw new IllegalStateException("not started");
             }
@@ -199,6 +201,7 @@ public class SenderImpl implements Sender {
 
         @Override
         public void onConnecting() {
+            MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(MessengerBus.SOCKET_CONNECTION, null, 1));
             // TODO: 6/20/2016 fire an event that we are connecting
         }
 
@@ -234,7 +237,7 @@ public class SenderImpl implements Sender {
 
         @Override
         public void onDisConnectedUnexpectedly() {
-            // TODO: 6/20/2016 fire an event that we are disconnected
+            MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(MessengerBus.SOCKET_CONNECTION, null, 0));
             if (messageQueue.isStarted()) {
                 messageQueue.pauseProcessing();
             }

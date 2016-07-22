@@ -13,8 +13,6 @@ public class MessengerBus {
 
     public static final String SEND_MESSAGE = "sendMessage";
     public static final String CANCEL_MESSAGE_DISPATCH = "cancelMessageDispatch";
-    public static final String REGISTER_NOTIFIER = "registerNotifier";
-    public static final String DE_REGISTER_NOTIFIER = "deRegisterNotifier";
     public static final String MESSAGE_SEEN = "messageSeen";
     public static final String MESSAGE_RECEIVED = "messageReceived";
     public static final String ONLINE = "online";
@@ -36,6 +34,10 @@ public class MessengerBus {
     public static final String ON_CALL_EVENT = "onCallEvent";
     public static final String MUTE_CALL = "muteCall", ENABLE_SPEAKER = "enableLoudSpeaker";
     public static final int CALL_NOTIFICATION_ID = CallController.CALL_NOTIFICATION_ID;
+    public static final String SOCKET_CONNECTION = "socket-connection";
+    public static final String UI_ON_NEW_MESSAGE_RECEIVED = "ui-on-new-message-received";
+
+    public static final int DISCONNECTED = 0, CONNECTING = 1, CONNECTED = 2;
 
     public static EventBus get(String bus) {
         GenericUtils.ensureNotNull(bus);

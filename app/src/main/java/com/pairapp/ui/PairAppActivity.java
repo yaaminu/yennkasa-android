@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Vibrator;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.util.Pair;
 import android.text.Spanned;
 import android.text.TextUtils;
@@ -25,7 +26,7 @@ import com.pairapp.R;
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
-import com.pairapp.messenger.Notifier;
+import com.pairapp.messenger.MessengerBus;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
@@ -43,19 +44,17 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import butterknife.ButterKnife;
 import io.realm.Realm;
 
-import static com.pairapp.messenger.MessengerBus.DE_REGISTER_NOTIFIER;
 import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS;
 import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS;
-import static com.pairapp.messenger.MessengerBus.REGISTER_NOTIFIER;
 import static com.pairapp.messenger.MessengerBus.get;
 
 /**
  * @author Null-Pointer on 8/12/2015.
  */
-public abstract class PairAppActivity extends PairAppBaseActivity
-        implements Notifier, NoticeFragment.NoticeFragmentCallback, EventBus.EventsListener {
+public abstract class PairAppActivity extends PairAppBaseActivity implements NoticeFragment.NoticeFragmentCallback, EventBus.EventsListener {
     public static final int DELAY_MILLIS = 2000;
     public static final String TAG = PairAppActivity.class.getSimpleName();
     static private volatile Message latestMessage;
@@ -110,7 +109,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity
         super.onResume();
         if (isUserVerified()) {
             Config.appOpen(true);
-            postEvent(Event.createSticky(REGISTER_NOTIFIER, null, this));
+            registerForEvent(MessengerBus.SOCKET_CONNECTION, MessengerBus.UI_ON_NEW_MESSAGE_RECEIVED);
             if (snackBar == null) {
                 snackBar = getSnackBar();
                 snackBar.applyStyle(getSnackBarStyle());
@@ -126,7 +125,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity
         super.onPause();
         if (isUserVerified()) {
             Config.appOpen(false);
-            postEvent(Event.createSticky(DE_REGISTER_NOTIFIER, null, this));
+            unRegister(MessengerBus.SOCKET_CONNECTION, MessengerBus.UI_ON_NEW_MESSAGE_RECEIVED);
         }
     }
 
@@ -183,8 +182,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity
         return new Pair<>(peerId, text);
     }
 
-    @Override
-    public void notifyUser(Context context, final Message message, final String sender) {
+    protected void notifyUser(Context context, final Message message, final String sender) {
         if (userManager.getBoolPref(UserManager.IN_APP_NOTIFICATIONS, true)) {
             latestMessage = message;
             int state = snackBar.getState();
@@ -249,11 +247,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity
     }
 
     private final AtomicBoolean shouldPlayTone = new AtomicBoolean(true);
-
-    @Override
-    public final location where() {
-        return location.FORE_GROUND;
-    }
 
     @Override
     public CharSequence getActionText() {
@@ -355,11 +348,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity
         }
     }
 
-    @Override
-    public void clearNotifications() {
-        throw new UnsupportedOperationException();
-    }
-
     private static boolean isStickyMessageShown = false;
     private static String stickYmessage = "";
 
@@ -436,14 +424,48 @@ public abstract class PairAppActivity extends PairAppBaseActivity
 
     @Override
     public final void onEvent(EventBus yourBus, Event event) {
-        try {
-            handleEvent(event);
-        } finally {
-            if (event.isSticky()) {
-                yourBus.removeStickyEvent(event);
-            } else {
+        if (event.getTag().equals(MessengerBus.UI_ON_NEW_MESSAGE_RECEIVED)) {
+            try {
+                //noinspection unchecked
+                Pair<Message, String> data = ((Pair) event.getData());
+                assert data != null;
+                notifyUser(this, data.first, data.second);
+            } finally {
                 event.recycle();
             }
+        } else if (event.getTag().equals(MessengerBus.SOCKET_CONNECTION)) {
+            //noinspection ConstantConditions
+            handleConnectionEvent(((Integer) event.getData()));
+        } else {
+            try {
+                handleEvent(event);
+            } finally {
+                if (event.isSticky()) {
+                    yourBus.removeStickyEvent(event);
+                } else {
+                    event.recycle();
+                }
+            }
+        }
+    }
+
+    private static int currentStatus = MessengerBus.CONNECTED;
+
+    private void handleConnectionEvent(int status) {
+        if (currentStatus == status) return;
+        currentStatus = status;
+        switch (status) {
+            case MessengerBus.DISCONNECTED:
+                Snackbar.make(ButterKnife.findById(this, android.R.id.content), getString(R.string.diconnected), Snackbar.LENGTH_INDEFINITE).show();
+                break;
+            case MessengerBus.CONNECTING:
+                Snackbar.make(ButterKnife.findById(this, android.R.id.content), getString(R.string.connecting), Snackbar.LENGTH_INDEFINITE).show();
+                break;
+            case MessengerBus.CONNECTED:
+                Snackbar.make(ButterKnife.findById(this, android.R.id.content), getString(R.string.connected), Snackbar.LENGTH_LONG).show();
+                break;
+            default:
+                throw new AssertionError();
         }
     }
 

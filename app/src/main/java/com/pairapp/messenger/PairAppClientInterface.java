@@ -73,13 +73,6 @@ class PairAppClientInterface {
         handler.sendMessage(msg);
     }
 
-    void registerUINotifier(final Notifier notifier) {
-        NotificationManager.INSTANCE.registerUI_Notifier(notifier);
-    }
-
-    void unRegisterUINotifier(Notifier notifier) {
-        NotificationManager.INSTANCE.unRegisterUI_Notifier(notifier);
-    }
 
     void markUserAsOffline(Activity activity) {
         ThreadUtils.ensureMain();

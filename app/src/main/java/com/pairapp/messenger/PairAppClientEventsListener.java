@@ -16,7 +16,6 @@ import static com.pairapp.call.CallController.ON_IN_COMING_CALL;
 import static com.pairapp.messenger.MessengerBus.ANSWER_CALL;
 import static com.pairapp.messenger.MessengerBus.CALL_USER;
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
-import static com.pairapp.messenger.MessengerBus.DE_REGISTER_NOTIFIER;
 import static com.pairapp.messenger.MessengerBus.ENABLE_SPEAKER;
 import static com.pairapp.messenger.MessengerBus.GET_STATUS_MANAGER;
 import static com.pairapp.messenger.MessengerBus.HANG_UP_CALL;
@@ -28,7 +27,6 @@ import static com.pairapp.messenger.MessengerBus.OFFLINE;
 import static com.pairapp.messenger.MessengerBus.ONLINE;
 import static com.pairapp.messenger.MessengerBus.ON_MESSAGE_DELIVERED;
 import static com.pairapp.messenger.MessengerBus.ON_MESSAGE_SEEN;
-import static com.pairapp.messenger.MessengerBus.REGISTER_NOTIFIER;
 import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
 import static com.pairapp.messenger.MessengerBus.START_MONITORING_USER;
 import static com.pairapp.messenger.MessengerBus.STOP_MONITORING_USER;
@@ -80,10 +78,6 @@ class PairAppClientEventsListener implements EventBus.EventsListener {
                 pairAppClientInterface.sendMessage(((Message) event.getData()));
             } else if (tag.equals(CANCEL_MESSAGE_DISPATCH)) {
                 pairAppClientInterface.cancelDisPatch(((Message) event.getData()));
-            } else if (tag.equals(REGISTER_NOTIFIER)) {
-                pairAppClientInterface.registerUINotifier(((Notifier) event.getData()));
-            } else if (tag.equals(DE_REGISTER_NOTIFIER)) {
-                pairAppClientInterface.unRegisterUINotifier(((Notifier) event.getData()));
             } else if (tag.equals(GET_STATUS_MANAGER)) {
                 pairAppClientInterface.getStatusManager();
             } else if (tag.equals(ON_CALL_PROGRESSING)) {

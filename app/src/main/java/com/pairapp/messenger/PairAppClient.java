@@ -50,7 +50,6 @@ import static com.pairapp.call.CallController.ON_LOUD_SPEAKER;
 import static com.pairapp.messenger.MessengerBus.ANSWER_CALL;
 import static com.pairapp.messenger.MessengerBus.CALL_USER;
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
-import static com.pairapp.messenger.MessengerBus.DE_REGISTER_NOTIFIER;
 import static com.pairapp.messenger.MessengerBus.ENABLE_SPEAKER;
 import static com.pairapp.messenger.MessengerBus.GET_STATUS_MANAGER;
 import static com.pairapp.messenger.MessengerBus.HANG_UP_CALL;
@@ -62,7 +61,6 @@ import static com.pairapp.messenger.MessengerBus.OFFLINE;
 import static com.pairapp.messenger.MessengerBus.ONLINE;
 import static com.pairapp.messenger.MessengerBus.ON_MESSAGE_DELIVERED;
 import static com.pairapp.messenger.MessengerBus.ON_MESSAGE_SEEN;
-import static com.pairapp.messenger.MessengerBus.REGISTER_NOTIFIER;
 import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
 import static com.pairapp.messenger.MessengerBus.START_MONITORING_USER;
 import static com.pairapp.messenger.MessengerBus.STOP_MONITORING_USER;
@@ -164,8 +162,6 @@ public class PairAppClient extends Service {
     private synchronized void bootClient() {
         ThreadUtils.ensureNotMain();
         if (!isClientStarted.get()) {
-            EventBus.resetBus(ListneableBusClazz.class);
-            EventBus.resetBus(PostableBusClazz.class);
 
             monitor = new DispatcherMonitorImpl(this, disPatchingThreads);
             String currentUserId = UserManager.getMainUserId();
@@ -200,8 +196,7 @@ public class PairAppClient extends Service {
                     STOP_MONITORING_USER, START_MONITORING_USER,
                     MESSAGE_RECEIVED, MESSAGE_SEEN,
                     ON_MESSAGE_DELIVERED, ON_MESSAGE_SEEN,
-                    SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH,
-                    REGISTER_NOTIFIER, DE_REGISTER_NOTIFIER, GET_STATUS_MANAGER,
+                    SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH, GET_STATUS_MANAGER,
                     CALL_USER, HANG_UP_CALL, ANSWER_CALL, ENABLE_SPEAKER, MUTE_CALL);
             isClientStarted.set(true);
         }

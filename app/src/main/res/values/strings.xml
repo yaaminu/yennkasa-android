@@ -349,4 +349,6 @@
     <string name="call_back">Call Back</string>
     <string name="delete_log_entry">Delete Log Entry</string>
     <string name="log_entry_deleted_message">Log entry deleted successfully</string>
+    <string name="diconnected">You are disconnected</string>
+    <string name="connected">Connected</string>
 </resources>

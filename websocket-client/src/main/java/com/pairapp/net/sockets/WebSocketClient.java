@@ -479,6 +479,9 @@ public class WebSocketClient {
                 reconnectDelay = DEFAULT_DELAY;
                 attemptReconnect();
             }
+            if (!connected) {
+                listener.onDisConnectedUnexpectedly();
+            }
         }
     };
 
