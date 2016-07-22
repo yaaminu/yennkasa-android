@@ -183,7 +183,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             convertView.setOnTouchListener(touchListener);
             return convertView;
         } else if (currentMessageType == Message.TYPE_CALL) {
-            holder.textMessage.append(Message.getCallSummary(message));
+            holder.textMessage.setText(Message.getCallSummary(message));
             convertView.setOnTouchListener(touchListener);
             return convertView;
         } else if (currentMessageType == Message.TYPE_TYPING_MESSAGE) {

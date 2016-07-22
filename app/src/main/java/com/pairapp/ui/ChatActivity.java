@@ -267,7 +267,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                     .equalTo(Message.FIELD_TO, peerId)
                     .endGroup();
         }
-        messages = messageQuery.notEqualTo(Message.FIELD_TYPE, Message.TYPE_CALL).findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.ASCENDING, Message.FIELD_TYPE, Sort.DESCENDING);
+        messages = messageQuery.findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.ASCENDING, Message.FIELD_TYPE, Sort.DESCENDING);
         setUpCurrentConversation();
         sendButton.setOnClickListener(this);
         setUpListView();
