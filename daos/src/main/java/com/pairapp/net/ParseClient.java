@@ -279,6 +279,7 @@ public class ParseClient implements UserApiV2 {
         String hash = FileUtils.hash(randomBytes);
         installation.put(FIELD_ID, userId);
         installation.put("secureRandom", hash);
+        installation.put("pushId", "pushId"); // FIXME: 7/22/2016 use a real pushId
         installation.save();
         params.put("secureRandom", hash);
         params.put("userId", userId);
