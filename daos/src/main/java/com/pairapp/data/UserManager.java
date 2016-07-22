@@ -1260,10 +1260,10 @@ public final class UserManager {
             errorMessage = applicationContext.getString(R.string.group_name_too_long);
         } else if (!Character.isLetter(proposedName.codePointAt(0))) {
             errorMessage = applicationContext.getString(R.string.name_starts_with_non_letter);
-        } else if (proposedName.contains("@")) {
+        } else if (proposedName.indexOf('@') != -1 || proposedName.indexOf('-') != -1) {
             errorMessage = applicationContext.getString(R.string.invalid_name_format_error);
         } else if (getCurrentUser() != null && UserManager.getInstance().isGroup(User.generateGroupId(proposedName))) {
-            errorMessage = Config.getApplicationContext().getString(R.string.group_already_exists, proposedName).toUpperCase();
+            errorMessage = Config.getApplicationContext().getString(R.string.group_already_exists).toUpperCase();
         }
         return new Pair<>(proposedName, errorMessage);
     }
