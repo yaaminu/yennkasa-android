@@ -1,5 +1,4 @@
-<com.pairapp.view.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -44,7 +43,7 @@
                     android:textAppearance="@style/TabTextAppearance"
                     android:textColor="@color/white"
                     android:visibility="visible"
-                    tools:ignore="RtlHardcoded,RtlSymmetry"/>
+                    tools:ignore="RtlHardcoded,RtlSymmetry" />
 
                 <com.rey.material.widget.TextView
                     android:id="@+id/tv_menu_item_send"
@@ -61,20 +60,21 @@
                     android:textAppearance="@style/TabTextAppearance"
                     android:textColor="@color/white"
                     android:visibility="visible"
-                    tools:ignore="RtlHardcoded,RtlSymmetry"/>
+                    tools:ignore="RtlHardcoded,RtlSymmetry" />
             </android.support.v7.widget.Toolbar>
 
             <include
                 layout="@layout/search_bar"
-                android:visibility="gone"
-                />
+                android:visibility="gone" />
         </FrameLayout>
+
+        <include layout="@layout/inline_notification_bar_layout" />
 
         <FrameLayout
             android:id="@+id/container"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"/>
+            android:layout_weight="1" />
 
         <android.support.v7.widget.CardView
             android:id="@+id/attachment_preview"
@@ -110,7 +110,7 @@
                     android:text="binary message"
                     android:textColor="@color/preferred_primary_color"
                     android:textSize="@dimen/standard_text_size"
-                    tools:ignore="HardcodedText"/>
+                    tools:ignore="HardcodedText" />
 
                 <com.pairapp.view.FrameLayout
                     style="@style/FlatWaveButtonRippleStyle"
@@ -125,15 +125,16 @@
                         android:layout_height="wrap_content"
                         android:background="@color/transparent"
                         android:contentDescription="@string/content_description_remove_attachment"
-                        android:src="@drawable/ic_clear_white_24dp"/>
+                        android:src="@drawable/ic_clear_white_24dp" />
                 </com.pairapp.view.FrameLayout>
             </LinearLayout>
         </android.support.v7.widget.CardView>
-       <include
-        layout="@layout/divider"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/inbox_preferred_list_item_divider_height"
-        />
+
+        <include
+            layout="@layout/divider"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/inbox_preferred_list_item_divider_height" />
+
         <LinearLayout
             android:id="@+id/ll_input_panel"
             android:layout_width="match_parent"
@@ -160,15 +161,13 @@
                 android:background="@color/transparent"
                 android:onClick="toggleEmoji"
                 android:scaleType="centerInside"
-                android:src="@drawable/ic_msg_panel_smiles"
-                />
+                android:src="@drawable/ic_msg_panel_smiles" />
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:gravity="center_vertical"
-                >
+                android:gravity="center_vertical">
 
                 <com.rockerhieu.emojicon.EmojiconEditText
                     android:id="@+id/et_message"
@@ -181,8 +180,7 @@
                     android:maxHeight="@dimen/multiline_text_box_max_height"
                     android:padding="@dimen/padding_ll_login_fragment_right"
                     android:textSize="@dimen/edit_text_size"
-                    app:emojiconSize="@dimen/edit_text_size"
-                    />
+                    app:emojiconSize="@dimen/edit_text_size" />
                 <!--android:text="llaaal\nlkklkk\nkklkjkjlkk\nkljklkkjlklk\nkljkljklkklk"-->
             </LinearLayout>
 
@@ -196,8 +194,7 @@
                 android:background="@color/transparent"
                 android:onClick="attachCamera"
                 android:scaleType="centerInside"
-                android:src="@drawable/ic_photo_camera_black_24dp"
-                />
+                android:src="@drawable/ic_photo_camera_black_24dp" />
 
             <ImageButton
                 android:id="@+id/ib_attach_record_audio"
@@ -209,8 +206,7 @@
                 android:background="@color/transparent"
                 android:onClick="attachVoiceNote"
                 android:scaleType="centerInside"
-                android:src="@drawable/ic_mic_black_24dp"
-                />
+                android:src="@drawable/ic_mic_black_24dp" />
 
 
         </LinearLayout>
@@ -218,12 +214,9 @@
         <FrameLayout
             android:id="@+id/emoji_pannel_slot"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            >
-        </FrameLayout>
+            android:layout_height="wrap_content"></FrameLayout>
     </com.pairapp.view.LinearLayout>
 
-    <include
-        layout="@layout/snack_bar"/>
+    <include layout="@layout/snack_bar" />
 </com.pairapp.view.RelativeLayout>
 

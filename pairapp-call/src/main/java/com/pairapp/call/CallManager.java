@@ -7,6 +7,7 @@ import android.support.annotation.StringRes;
 import android.support.v4.app.NotificationManagerCompat;
 import android.widget.Toast;
 
+import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.PLog;
@@ -76,7 +77,7 @@ public class CallManager implements CallController {
 
     @Override
     public synchronized CallData callUser(String callRecipient, @CallType int callType) {
-        if (!client.isStarted()) {
+        if (!ConnectionUtils.isConnected() || !client.isStarted()) {
             notifyClientNotStarted(callRecipient);
             return null;
         } else {

@@ -1,7 +1,7 @@
 <com.pairapp.view.FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                           xmlns:app="http://schemas.android.com/apk/res-auto"
-                           android:layout_width="match_parent"
-                           android:layout_height="match_parent">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <com.pairapp.view.LinearLayout
         android:layout_width="match_parent"
@@ -25,12 +25,14 @@
                     android:layout_height="?attr/actionBarSize"
                     android:background="?attr/colorPrimary"
                     android:clipToPadding="false"
-                    android:minHeight="?attr/actionBarSize"/>
+                    android:minHeight="?attr/actionBarSize" />
+
+                <include layout="@layout/inline_notification_bar_layout" />
 
                 <com.pairapp.view.CustomViewPager
                     android:id="@+id/vp_pager"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"/>
+                    android:layout_height="match_parent" />
 
             </com.pairapp.view.LinearLayout>
         </com.pairapp.view.FrameLayout>
@@ -44,7 +46,7 @@
             android:minHeight="?attr/actionBarSize"
             android:title=""
             android:visibility="gone"
-            app:theme="@style/AppBar"/>
+            app:theme="@style/AppBar" />
     </com.pairapp.view.LinearLayout>
 
     <com.rey.material.widget.SnackBar
@@ -56,5 +58,5 @@
         app:sb_actionText="@string/close"
         app:sb_actionTextColor="@color/white"
         app:sb_ellipsize="end"
-        app:sb_textColor="@color/white"/>
+        app:sb_textColor="@color/white" />
 </com.pairapp.view.FrameLayout>

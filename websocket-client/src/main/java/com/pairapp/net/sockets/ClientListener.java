@@ -24,4 +24,5 @@ interface ClientListener {
 
     void onDisConnectedUnexpectedly();
 
+    void onReconnectionTakingTooLong();
 }

@@ -3,7 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ViewImageActivity">
+    tools:context=".ui.ImageViewer">
+
 
     <ImageView
         android:id="@+id/imageView"
@@ -11,11 +12,11 @@
         android:layout_height="match_parent"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
         android:adjustViewBounds="true"
         android:contentDescription="@string/image"
-        android:src="@drawable/group_avatar"
-        android:layout_centerVertical="true"
-        android:scaleType="fitCenter" />
+        android:scaleType="fitCenter"
+        android:src="@drawable/group_avatar" />
 
     <com.rey.material.widget.ProgressView
         android:id="@+id/pb_progress"
@@ -27,16 +28,20 @@
         app:pv_progressMode="indeterminate"
         app:pv_progressStyle="@style/base_indeterminate_progress_stroke_white" />
 
+    <include layout="@layout/inline_notification_bar_layout" />
+
     <com.rey.material.widget.SnackBar
         android:id="@+id/notification_bar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/action_bar_height"
-        android:minHeight="@dimen/action_bar_height"
-        app:sb_actionText="@string/close"
-        android:visibility="gone"
         android:foregroundGravity="center_vertical"
-        app:sb_text="You have a new message"
-        app:sb_textColor="@color/preferred_primary_color"
+        android:minHeight="@dimen/action_bar_height"
+        android:visibility="gone"
+        app:sb_actionText="@string/close"
+        app:sb_actionTextColor="#f00"
         app:sb_backgroundColor="@color/white"
-        app:sb_actionTextColor="#f00"/>
+        app:sb_text="You have a new message"
+        app:sb_textColor="@color/preferred_primary_color" />
+
+
 </com.pairapp.view.RelativeLayout>

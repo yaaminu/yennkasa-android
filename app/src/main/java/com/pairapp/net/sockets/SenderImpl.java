@@ -16,6 +16,12 @@ import java.util.Set;
 
 import io.realm.Realm;
 
+import static com.pairapp.messenger.MessengerBus.CONNECTED;
+import static com.pairapp.messenger.MessengerBus.CONNECTING;
+import static com.pairapp.messenger.MessengerBus.DISCONNECTED;
+import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS;
+import static com.pairapp.messenger.MessengerBus.SOCKET_CONNECTION;
+
 /**
  * @author aminu on 7/2/2016.
  */
@@ -175,7 +181,7 @@ public class SenderImpl implements Sender {
 
         @Override
         public void onOpen() {
-            MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(MessengerBus.SOCKET_CONNECTION, null, 2));
+            MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(SOCKET_CONNECTION, null, CONNECTED));
             if (!started) {
                 throw new IllegalStateException("not started");
             }
@@ -200,9 +206,15 @@ public class SenderImpl implements Sender {
         }
 
         @Override
+        public void onReconnectionTakingTooLong() {
+            MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS)
+                    .postSticky(Event.createSticky(SOCKET_CONNECTION, null, DISCONNECTED));
+        }
+
+        @Override
         public void onConnecting() {
-            MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(MessengerBus.SOCKET_CONNECTION, null, 1));
-            // TODO: 6/20/2016 fire an event that we are connecting
+            MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS)
+                    .postSticky(Event.createSticky(SOCKET_CONNECTION, null, CONNECTING));
         }
 
         @Override
@@ -237,7 +249,7 @@ public class SenderImpl implements Sender {
 
         @Override
         public void onDisConnectedUnexpectedly() {
-            MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(MessengerBus.SOCKET_CONNECTION, null, 0));
+            MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(SOCKET_CONNECTION, null, DISCONNECTED));
             if (messageQueue.isStarted()) {
                 messageQueue.pauseProcessing();
             }

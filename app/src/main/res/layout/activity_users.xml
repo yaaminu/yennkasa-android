@@ -1,9 +1,9 @@
 <com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                              xmlns:app="http://schemas.android.com/apk/res-auto"
-                              xmlns:tools="http://schemas.android.com/tools"
-                              android:layout_width="match_parent"
-                              android:layout_height="match_parent"
-                              tools:context="com.pairapp.ui.UsersActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.pairapp.ui.UsersActivity">
 
     <FrameLayout
         android:id="@+id/bar"
@@ -17,19 +17,24 @@
             android:background="?attr/colorPrimary"
             android:minHeight="?attr/actionBarSize"
             android:title="@string/app_name"
-            app:theme="@style/AppBar"/>
+            app:theme="@style/AppBar" />
 
         <include
             layout="@layout/search_bar"
-            android:visibility="gone"
-            />
+            android:visibility="gone" />
     </FrameLayout>
+
+    <include
+        layout="@layout/inline_notification_bar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/bar" />
 
     <com.pairapp.view.FrameLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/bar"
+        android:layout_below="@+id/inline_notification_text_parent"
         android:layout_margin="8dp">
 
     </com.pairapp.view.FrameLayout>

@@ -229,8 +229,16 @@ public class WebSocketClient {
         @Override
         public void onStateChanged(WebSocket websocket, WebSocketState newState) throws Exception {
             logger.Log(Logger.V, TAG, "state changed: new state is %s", newState.toString());
-            if (newState == WebSocketState.CONNECTING)
-                listener.onConnecting();
+            long oneMinute = 60 * 1000;
+            if (newState == WebSocketState.CONNECTING) {
+                if (reconnectDelay < oneMinute) {
+                    listener.onConnecting();
+                } else {
+                    listener.onReconnectionTakingTooLong();
+                }
+            } else if (newState == WebSocketState.CLOSED && !selfClosed.get() && reconnectDelay > oneMinute) {
+                listener.onDisConnectedUnexpectedly();
+            }
             //report all other sate in their respective callbacks
         }
 
@@ -281,7 +289,6 @@ public class WebSocketClient {
             } else {
                 if (!selfClosed.get()) { //this is not a normal close (caused by something like lost network disconnection)
                     logger.Log(Logger.V, TAG, "disconnected unexpectedly");
-                    listener.onDisConnectedUnexpectedly();
                     attemptReconnect();
                 } else {
                     selfClosed.set(false);
@@ -427,12 +434,15 @@ public class WebSocketClient {
                 || state == WebSocketState.CLOSING
                 ) {
             logger.Log(Logger.V, TAG, "not reconnecting since we are already closed,connecting or even connected");
+            if (internalWebSocket.getState() == WebSocketState.OPEN) {
+                listener.onOpen();
+            }
             return;
         }
         if (networkProvider.connected()) {
-            long reconnectTimeOut = calculateReconnectTimeout();
-            logger.Log(Logger.V, TAG, " attempt reconnection after %s", reconnectTimeOut);
-            timer.schedule(new ReconnectTimerTask(), reconnectTimeOut);
+            calculateReconnectTimeout();
+            logger.Log(Logger.V, TAG, " attempt reconnection after %s", reconnectDelay);
+            timer.schedule(new ReconnectTimerTask(), reconnectDelay);
         } else {
             logger.Log(Logger.V, TAG, " can't reconnect since network provider says we are not connected to the internet");
         }
@@ -457,7 +467,7 @@ public class WebSocketClient {
         }
     }
 
-    private synchronized long calculateReconnectTimeout() {
+    private synchronized void calculateReconnectTimeout() {
         if (random == null) {
             random = new SecureRandom();
         }
@@ -468,7 +478,6 @@ public class WebSocketClient {
         } else {
             reconnectDelay = (2 * reconnectDelay) + deviation;
         }
-        return reconnectDelay;
     }
 
     private final NetworkChangeListener networkChangeListener = new NetworkChangeListener() {

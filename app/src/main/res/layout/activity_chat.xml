@@ -1,31 +1,38 @@
-<com.pairapp.view.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/background_hd">
 
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/main_toolbar"
-        style="@style/TabRippleStyle"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
+    <LinearLayout
+        android:id="@+id/parent_chat_activity_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/action_bar_height"
-        android:animateLayoutChanges="true"
-        android:background="?attr/colorPrimary"
-        android:gravity="start"
-        android:minHeight="?attr/actionBarSize"
-        android:title="@string/app_name"
-        app:popupTheme="@style/popup_theme"
-        app:theme="@style/AppBar"
-        tools:ignore="UnusedAttribute"/>
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <android.support.v7.widget.Toolbar xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/main_toolbar"
+            style="@style/TabRippleStyle"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/action_bar_height"
+            android:animateLayoutChanges="true"
+            android:background="?attr/colorPrimary"
+            android:gravity="start"
+            android:minHeight="?attr/actionBarSize"
+            android:title="@string/app_name"
+            app:popupTheme="@style/popup_theme"
+            app:theme="@style/AppBar"
+            tools:ignore="UnusedAttribute" />
+
+        <include layout="@layout/inline_notification_bar_layout" />
+    </LinearLayout>
 
     <com.pairapp.view.RelativeLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/main_toolbar"
+        android:layout_below="@+id/parent_chat_activity_toolbar"
         android:layout_marginTop="2dp"
         android:animateLayoutChanges="true"
         android:background="#0000"
@@ -60,9 +67,9 @@
                 android:dividerHeight="@dimen/chat_activity_list_divider_hieght"
                 android:fadingEdge="none"
                 android:scrollbars="none"
-                android:transcriptMode="normal"
                 android:scrollingCache="@bool/scrolling_cache_chat_activity"
-                tools:ignore="UnusedAttribute"/>
+                android:transcriptMode="normal"
+                tools:ignore="UnusedAttribute" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -89,15 +96,13 @@
                     android:background="@color/transparent"
                     android:onClick="toggleEmoji"
                     android:scaleType="centerInside"
-                    android:src="@drawable/ic_msg_panel_smiles"
-                    />
+                    android:src="@drawable/ic_msg_panel_smiles" />
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:gravity="center_vertical"
-                    >
+                    android:gravity="center_vertical">
 
                     <com.rockerhieu.emojicon.EmojiconEditText
                         android:id="@+id/et_message"
@@ -110,8 +115,7 @@
                         android:maxHeight="@dimen/multiline_text_box_max_height"
                         android:padding="@dimen/padding_ll_login_fragment_right"
                         android:textSize="@dimen/edit_text_size"
-                        app:emojiconSize="@dimen/edit_text_size"
-                        />
+                        app:emojiconSize="@dimen/edit_text_size" />
                     <!--android:text="llaaal\nlkklkk\nkklkjkjlkk\nkljklkkjlklk\nkljkljklkklk"-->
                 </LinearLayout>
 
@@ -125,8 +129,7 @@
                     android:background="@color/transparent"
                     android:onClick="attachCamera"
                     android:scaleType="centerInside"
-                    android:src="@drawable/ic_photo_camera_black_24dp"
-                    />
+                    android:src="@drawable/ic_photo_camera_black_24dp" />
 
                 <ImageButton
                     android:id="@+id/ib_attach_record_audio"
@@ -138,8 +141,7 @@
                     android:background="@color/transparent"
                     android:onClick="attachVoiceNote"
                     android:scaleType="centerInside"
-                    android:src="@drawable/ic_mic_black_24dp"
-                    />
+                    android:src="@drawable/ic_mic_black_24dp" />
 
                 <com.pairapp.view.FrameLayout
                     android:id="@+id/iv_send"
@@ -158,7 +160,7 @@
                         android:layout_gravity="center"
                         android:adjustViewBounds="true"
                         android:scaleType="centerInside"
-                        android:src="@drawable/ic_send_white_24dp"/>
+                        android:src="@drawable/ic_send_white_24dp" />
 
                 </com.pairapp.view.FrameLayout>
 
@@ -222,14 +224,13 @@
             <FrameLayout
                 android:id="@+id/emoji_pannel_slot"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                >
+                android:layout_height="wrap_content">
 
             </FrameLayout>
         </com.pairapp.view.LinearLayout>
 
-        <include layout="@layout/message_item_log"/>
+        <include layout="@layout/message_item_log" />
     </com.pairapp.view.RelativeLayout>
 
-    <include layout="@layout/snack_bar"/>
+    <include layout="@layout/snack_bar" />
 </com.pairapp.view.RelativeLayout>

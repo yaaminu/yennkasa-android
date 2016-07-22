@@ -13,11 +13,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Vibrator;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
+import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
 import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.TextView;
 
 import com.pairapp.BuildConfig;
 import com.pairapp.Errors.ErrorCenter;
@@ -36,6 +37,7 @@ import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
 import com.pairapp.util.ThreadUtils;
 import com.pairapp.util.UiHelpers;
+import com.pairapp.util.ViewUtils;
 import com.rey.material.widget.SnackBar;
 
 import java.util.ArrayList;
@@ -44,7 +46,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import butterknife.ButterKnife;
 import io.realm.Realm;
 
 import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS;
@@ -86,6 +87,8 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         }
     };
     private SnackBar snackBar;
+    @NonNull
+    private View notificationView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +106,12 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         throw new IllegalStateException("no user");
     }
 
+    @Override
+    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        notificationView = findViewById(R.id.inline_notification_text_parent);
+
+    }
 
     @Override
     protected void onResume() {
@@ -452,22 +461,39 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     private static int currentStatus = MessengerBus.CONNECTED;
 
     private void handleConnectionEvent(int status) {
-        if (currentStatus == status) return;
+        ThreadUtils.ensureMain();
+        if (currentStatus == status && ViewUtils.isViewVisible(notificationView)) return;
         currentStatus = status;
         switch (status) {
             case MessengerBus.DISCONNECTED:
-                Snackbar.make(ButterKnife.findById(this, android.R.id.content), getString(R.string.diconnected), Snackbar.LENGTH_INDEFINITE).show();
+                ((TextView) notificationView.findViewById(R.id.inline_notification_text)).setText(getString(R.string.disconected));
+                ViewUtils.showViews(notificationView);
                 break;
             case MessengerBus.CONNECTING:
-                Snackbar.make(ButterKnife.findById(this, android.R.id.content), getString(R.string.connecting), Snackbar.LENGTH_INDEFINITE).show();
+                ((TextView) notificationView.findViewById(R.id.inline_notification_text)).setText(getString(R.string.connecting));
+                ViewUtils.showViews(notificationView);
                 break;
             case MessengerBus.CONNECTED:
-                Snackbar.make(ButterKnife.findById(this, android.R.id.content), getString(R.string.connected), Snackbar.LENGTH_LONG).show();
+                ((TextView) notificationView.findViewById(R.id.inline_notification_text)).setText(getString(R.string.connected));
+                handler.removeCallbacks(hideNotificationViewRunnable);
+                handler.postDelayed(hideNotificationViewRunnable, 1500);
+                ViewUtils.showViews(notificationView);
                 break;
             default:
                 throw new AssertionError();
         }
     }
+
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Runnable hideNotificationViewRunnable = new
+            Runnable() {
+                @Override
+                public void run() {
+                    if (currentStatus == MessengerBus.CONNECTED) {
+                        ViewUtils.hideViews(notificationView);
+                    }
+                }
+            };
 
     protected void handleEvent(Event event) {
 

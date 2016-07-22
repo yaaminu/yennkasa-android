@@ -1,17 +1,24 @@
 <com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="com.pairapp.ui.ProfileActivity">
 
+    <include layout="@layout/toolbar" />
+
+    <include
+        layout="@layout/inline_notification_bar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/main_toolbar" />
+
     <com.pairapp.view.FrameLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
-        android:layout_below="@+id/main_toolbar"
-        android:layout_height="wrap_content">
-    </com.pairapp.view.FrameLayout>
-    <include layout="@layout/toolbar"/>
-    <include layout="@layout/snack_bar"/>
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/inline_notification_text_parent" />
+
+
+    <include layout="@layout/snack_bar" />
 </com.pairapp.view.RelativeLayout>

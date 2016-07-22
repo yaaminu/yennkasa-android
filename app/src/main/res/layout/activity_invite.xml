@@ -1,5 +1,4 @@
-<com.pairapp.view.LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -35,22 +34,21 @@
                 android:textAppearance="@style/TabTextAppearance"
                 android:textColor="@color/white"
                 android:visibility="visible"
-                tools:ignore="RtlSymmetry"/>
+                tools:ignore="RtlSymmetry" />
         </android.support.v7.widget.Toolbar>
 
         <include
             layout="@layout/search_bar"
-            android:visibility="gone"
-            />
+            android:visibility="gone" />
 
-        <include
-            layout="@layout/snack_bar"/>
+        <include layout="@layout/snack_bar" />
     </RelativeLayout>
+
+    <include layout="@layout/inline_notification_bar_layout" />
 
     <com.pairapp.view.FrameLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
-    </com.pairapp.view.FrameLayout>
+        android:layout_weight="1"></com.pairapp.view.FrameLayout>
 </com.pairapp.view.LinearLayout>

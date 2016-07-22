@@ -1,5 +1,4 @@
-<com.pairapp.view.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -36,7 +35,7 @@
                 android:textAppearance="@style/TabTextAppearance"
                 android:textColor="@color/white"
                 android:visibility="visible"
-                tools:ignore="RtlHardcoded,RtlSymmetry"/>
+                tools:ignore="RtlHardcoded,RtlSymmetry" />
 
             <com.rey.material.widget.TextView
                 android:id="@+id/tv_menu_item_next"
@@ -53,22 +52,26 @@
                 android:textAppearance="@style/TabTextAppearance"
                 android:textColor="@color/white"
                 android:visibility="visible"
-                tools:ignore="RtlHardcoded,RtlSymmetry"
-                />
+                tools:ignore="RtlHardcoded,RtlSymmetry" />
         </android.support.v7.widget.Toolbar>
 
         <include
             layout="@layout/search_bar"
-            android:visibility="gone"
-            />
+            android:visibility="gone" />
 
     </FrameLayout>
+
+    <include
+        layout="@layout/inline_notification_bar_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/bar" />
 
     <com.pairapp.view.RelativeLayout
         android:id="@+id/rl_main_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/bar"
+        android:layout_below="@+id/inline_notification_text_parent"
         android:layout_margin="8dp"
         android:gravity="center">
 
@@ -84,7 +87,7 @@
             android:inputType="text"
             android:maxLength="30"
             android:singleLine="true"
-            android:textSize="@dimen/edit_text_size"/>
+            android:textSize="@dimen/edit_text_size" />
 
         <fragment
             android:id="@+id/rl_group_dp_preview"
@@ -95,12 +98,8 @@
             android:layout_centerHorizontal="true"
             android:layout_centerInParent="true"
             android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
-            tools:layout="@layout/fragment_choose_display_picture"
-            >
-        </fragment>
+            tools:layout="@layout/fragment_choose_display_picture"></fragment>
     </com.pairapp.view.RelativeLayout>
 
-    <include
-        layout="@layout/snack_bar"
-        />
+    <include layout="@layout/snack_bar" />
 </com.pairapp.view.RelativeLayout>
