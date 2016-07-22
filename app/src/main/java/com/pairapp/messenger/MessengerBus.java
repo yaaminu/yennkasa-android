@@ -38,6 +38,7 @@ public class MessengerBus {
     public static final String UI_ON_NEW_MESSAGE_RECEIVED = "ui-on-new-message-received";
 
     public static final int DISCONNECTED = 0, CONNECTING = 1, CONNECTED = 2;
+    public static final String CLEAR_NEW_MESSAGE_NOTIFICATION = "clear new Message notification";
 
     public static EventBus get(String bus) {
         GenericUtils.ensureNotNull(bus);

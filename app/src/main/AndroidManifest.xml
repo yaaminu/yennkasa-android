@@ -85,6 +85,7 @@
             android:name=".ui.ChatActivity"
             android:configChanges="orientation|keyboard|keyboardHidden"
             android:label="@string/title_activity_chat"
+            android:launchMode="singleTask"
             android:parentActivityName=".ui.MainActivity"
             android:windowSoftInputMode="stateHidden|adjustResize"
             tools:ignore="UnusedAttribute">

@@ -132,7 +132,10 @@ class PairAppClientInterface {
         Realm realm = Message.REALM(context);
         try {
             Message message = Message.markMessageSeen(realm, msgId);
-            if (message != null) {
+            if (message != null &&
+                    message.getType() != Message.TYPE_CALL &&
+                    message.getType() != Message.TYPE_DATE_MESSAGE &&
+                    message.getType() != Message.TYPE_TYPING_MESSAGE) {
                 sender.sendMessage(createReadReceiptSendable(message.getFrom(),
                         messagePacker.createMsgStatusMessage(message.getFrom(), msgId, false), System.currentTimeMillis()));
             }
@@ -146,7 +149,10 @@ class PairAppClientInterface {
         Realm realm = Message.REALM(context);
         try {
             Message message = Message.markMessageDelivered(realm, msgId);
-            if (message != null) {
+            if (message != null &&
+                    message.getType() != Message.TYPE_CALL &&
+                    message.getType() != Message.TYPE_DATE_MESSAGE &&
+                    message.getType() != Message.TYPE_TYPING_MESSAGE) {
                 //we don't want to send the delivered when the user is in the chat room.
                 //that's too wasteful so wait for few seconds and if user does not scroll to it
                 //then continue
@@ -277,5 +283,9 @@ class PairAppClientInterface {
 
     public void onLoudSpeaker(CallData data) {
         listenableBus().postSticky(Event.createSticky(ON_CALL_EVENT, null, data));
+    }
+
+    public void clearNotifications(long date) {
+        NotificationManager.INSTANCE.clearAllMessageNotifications();
     }
 }

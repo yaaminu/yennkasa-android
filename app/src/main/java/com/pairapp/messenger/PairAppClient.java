@@ -50,6 +50,7 @@ import static com.pairapp.call.CallController.ON_LOUD_SPEAKER;
 import static com.pairapp.messenger.MessengerBus.ANSWER_CALL;
 import static com.pairapp.messenger.MessengerBus.CALL_USER;
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
+import static com.pairapp.messenger.MessengerBus.CLEAR_NEW_MESSAGE_NOTIFICATION;
 import static com.pairapp.messenger.MessengerBus.ENABLE_SPEAKER;
 import static com.pairapp.messenger.MessengerBus.GET_STATUS_MANAGER;
 import static com.pairapp.messenger.MessengerBus.HANG_UP_CALL;
@@ -196,9 +197,10 @@ public class PairAppClient extends Service {
                     STOP_MONITORING_USER, START_MONITORING_USER,
                     MESSAGE_RECEIVED, MESSAGE_SEEN,
                     ON_MESSAGE_DELIVERED, ON_MESSAGE_SEEN,
-                    SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH, GET_STATUS_MANAGER,
+                    SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH, GET_STATUS_MANAGER, CLEAR_NEW_MESSAGE_NOTIFICATION,
                     CALL_USER, HANG_UP_CALL, ANSWER_CALL, ENABLE_SPEAKER, MUTE_CALL);
             isClientStarted.set(true);
+            NotificationManager.INSTANCE.reNotifyForReceivedMessages(this);
         }
     }
 

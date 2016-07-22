@@ -115,6 +115,17 @@ public class ConversationsFragment extends ListFragment {
         setRetainInstance(true);
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                MessengerBus.get(PAIRAPP_CLIENT_POSTABLE_BUS).postSticky(Event.createSticky(MessengerBus.CLEAR_NEW_MESSAGE_NOTIFICATION, null, System.currentTimeMillis()));
+            }
+        }, false);
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, final ViewGroup container, Bundle savedInstanceState) {

@@ -48,6 +48,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.realm.Realm;
 
+import static com.pairapp.messenger.MessengerBus.CONNECTED;
 import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS;
 import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS;
 import static com.pairapp.messenger.MessengerBus.get;
@@ -462,7 +463,10 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
     private void handleConnectionEvent(int status) {
         ThreadUtils.ensureMain();
-        if (currentStatus == status && ViewUtils.isViewVisible(notificationView)) return;
+        if (currentStatus == status && ViewUtils.isViewVisible(notificationView))
+            return; //was difficult to combine the two if statements
+        if (currentStatus == status && status == CONNECTED)
+            return; //hide showing connected notification in more than one activity
         currentStatus = status;
         switch (status) {
             case MessengerBus.DISCONNECTED:

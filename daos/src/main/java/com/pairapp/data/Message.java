@@ -32,7 +32,7 @@ import io.realm.annotations.RealmClass;
  * this class represents a particular message sent by a given {@link User}.
  * it is normally used in conjunction with {@link Conversation}
  * the message may be attached to {@link Realm} or not.
- * <p/>
+ * <p>
  * one can detach the message from realm by using its {@link #copy} method
  * and using the returned message.
  *
@@ -262,7 +262,6 @@ public class Message extends RealmObject {
     @NonNull
     private static Message internalCopy(Message message) {
         Message clone = new Message();
-
         clone.setId(message.getId());
         clone.setFrom(message.getFrom());
         clone.setTo(message.getTo());
@@ -270,6 +269,12 @@ public class Message extends RealmObject {
         clone.setType(message.getType());
         clone.setMessageBody(message.getMessageBody());
         clone.setState(message.getState());
+        if (clone.getCallBody() != null) {
+            CallBody callBody = new CallBody(clone.getCallBody().getCallId(),
+                    clone.getCallBody().getCallDuration(),
+                    clone.getCallBody().getCallType());
+            clone.setCallBody(callBody);
+        }
         return clone;
     }
 

@@ -434,9 +434,6 @@ public class WebSocketClient {
                 || state == WebSocketState.CLOSING
                 ) {
             logger.Log(Logger.V, TAG, "not reconnecting since we are already closed,connecting or even connected");
-            if (internalWebSocket.getState() == WebSocketState.OPEN) {
-                listener.onOpen();
-            }
             return;
         }
         if (networkProvider.connected()) {
@@ -490,6 +487,8 @@ public class WebSocketClient {
             }
             if (!connected) {
                 listener.onDisConnectedUnexpectedly();
+            } else {
+                if (internalWebSocket.isOpen()) listener.onOpen();
             }
         }
     };

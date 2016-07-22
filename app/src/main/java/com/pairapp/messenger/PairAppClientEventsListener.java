@@ -16,6 +16,7 @@ import static com.pairapp.call.CallController.ON_IN_COMING_CALL;
 import static com.pairapp.messenger.MessengerBus.ANSWER_CALL;
 import static com.pairapp.messenger.MessengerBus.CALL_USER;
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
+import static com.pairapp.messenger.MessengerBus.CLEAR_NEW_MESSAGE_NOTIFICATION;
 import static com.pairapp.messenger.MessengerBus.ENABLE_SPEAKER;
 import static com.pairapp.messenger.MessengerBus.GET_STATUS_MANAGER;
 import static com.pairapp.messenger.MessengerBus.HANG_UP_CALL;
@@ -108,6 +109,8 @@ class PairAppClientEventsListener implements EventBus.EventsListener {
                 pairAppClientInterface.onCallMuted(((CallData) event.getData()));
             } else if (tag.equals(CallController.ON_LOUD_SPEAKER)) {
                 pairAppClientInterface.onLoudSpeaker(((CallData) event.getData()));
+            } else if (tag.equals(CLEAR_NEW_MESSAGE_NOTIFICATION)) {
+                pairAppClientInterface.clearNotifications(((long) event.getData()));
             } else {
                 throw new AssertionError();
             }

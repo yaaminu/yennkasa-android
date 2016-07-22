@@ -384,7 +384,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         if (message.getState() != Message.STATE_SEEN &&
                 !isOutgoingMessage &&
                 currentMessageType != Message.TYPE_DATE_MESSAGE &&
-                currentMessageType != Message.TYPE_TYPING_MESSAGE
+                currentMessageType != Message.TYPE_TYPING_MESSAGE &&
+                currentMessageType != Message.TYPE_CALL
                 ) {
             delegate.onMessageSeen(message);
         }
