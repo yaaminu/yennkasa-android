@@ -308,6 +308,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                     && !peer.getInContacts();
             menu.findItem(R.id.action_add_contact).setVisible(visible);
             menu.findItem(R.id.action_call_user).setVisible(peer.getAdmin() == null);
+            menu.findItem(R.id.action_video_call_user).setVisible(peer.getAdmin() == null);
         }
         return super.onPrepareOptionsMenu(menu);
     }
@@ -340,7 +341,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             }
             return true;
         } else if (id == R.id.action_call_user) {
-            Event event = Event.create(MessengerBus.CALL_USER, null, peer.getUserId());
+            Event event = Event.create(MessengerBus.VOICE_CALL_USER, null, peer.getUserId());
+            MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
+        } else if (id == R.id.action_video_call_user) {
+            Event event = Event.create(MessengerBus.VIDEO_CALL_USER, null, peer.getUserId());
             MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
         }
         return super.onOptionsItemSelected(item);

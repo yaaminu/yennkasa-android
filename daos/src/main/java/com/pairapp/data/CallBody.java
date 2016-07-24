@@ -7,7 +7,8 @@ import io.realm.RealmObject;
  */
 public class CallBody extends RealmObject {
 
-    public static final int CALL_TYPE_VOICE = 1, CALLT_TYPE_VIDEO = 2, CALL_TYPE_CONFERENCE = 3;
+    public static final String FIELD_CALL_ID = "callId", FIELD_CALL_DURATION = "callDuration", FIELD_CALL_TYPE = "callType";
+    public static final int CALL_TYPE_VOICE = 1, CALL_TYPE_VIDEO = 2, CALL_TYPE_CONFERENCE = 3;
     private String callId;
     private int callDuration;
     private int callType;

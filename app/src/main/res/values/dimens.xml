@@ -96,4 +96,6 @@
     <dimen name="new_message_background_height_width">28dp</dimen>
     <dimen name="message_item_extra_margin_top">4dp</dimen>
     <dimen name="message_item_margin_bottom">0dp</dimen>
+    <dimen name="video_call_local_view_width">100dp</dimen>
+    <dimen name="video_call_local_view_height">100dp</dimen>
 </resources>

@@ -14,7 +14,7 @@ import static com.pairapp.call.CallController.ON_CALL_PROGRESSING;
 import static com.pairapp.call.CallController.ON_CAL_ENDED;
 import static com.pairapp.call.CallController.ON_IN_COMING_CALL;
 import static com.pairapp.messenger.MessengerBus.ANSWER_CALL;
-import static com.pairapp.messenger.MessengerBus.CALL_USER;
+import static com.pairapp.messenger.MessengerBus.VOICE_CALL_USER;
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
 import static com.pairapp.messenger.MessengerBus.CLEAR_NEW_MESSAGE_NOTIFICATION;
 import static com.pairapp.messenger.MessengerBus.ENABLE_SPEAKER;
@@ -28,10 +28,12 @@ import static com.pairapp.messenger.MessengerBus.OFFLINE;
 import static com.pairapp.messenger.MessengerBus.ONLINE;
 import static com.pairapp.messenger.MessengerBus.ON_MESSAGE_DELIVERED;
 import static com.pairapp.messenger.MessengerBus.ON_MESSAGE_SEEN;
+import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS;
 import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
 import static com.pairapp.messenger.MessengerBus.START_MONITORING_USER;
 import static com.pairapp.messenger.MessengerBus.STOP_MONITORING_USER;
 import static com.pairapp.messenger.MessengerBus.TYPING;
+import static com.pairapp.messenger.MessengerBus.get;
 
 /**
  * @author aminu on 7/2/2016.
@@ -93,8 +95,10 @@ class PairAppClientEventsListener implements EventBus.EventsListener {
             } else if (tag.equals(ON_IN_COMING_CALL)) {
                 assert event.getData() != null;
                 pairAppClientInterface.onInComingCall(((CallData) event.getData()));
-            } else if (tag.equals(CALL_USER)) {
-                pairAppClientInterface.voiceCallUser((String) event.getData());
+            } else if (tag.equals(VOICE_CALL_USER)) {
+                pairAppClientInterface.callUser((String) event.getData(), CallController.CALL_TYPE_VOICE);
+            } else if (tag.equals(MessengerBus.VIDEO_CALL_USER)) {
+                pairAppClientInterface.callUser((String) event.getData(), CallController.CALL_TYPE_VIDEO);
             } else if (tag.equals(ANSWER_CALL)) {
                 pairAppClientInterface.answerCall(((CallData) event.getData()));
             } else if (tag.equals(HANG_UP_CALL)) {
@@ -109,6 +113,10 @@ class PairAppClientEventsListener implements EventBus.EventsListener {
                 pairAppClientInterface.onCallMuted(((CallData) event.getData()));
             } else if (tag.equals(CallController.ON_LOUD_SPEAKER)) {
                 pairAppClientInterface.onLoudSpeaker(((CallData) event.getData()));
+            } else if (tag.equals(CallController.VIDEO_CALL_LOCAL_VIEW)) {
+                get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(MessengerBus.ON_ADD_VIDEO_CALL_LOCAL_VIEW, null, event.getData()));
+            } else if (tag.equals(CallController.VIDEO_CALL_REMOTE_VIEW)) {
+                get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(MessengerBus.ON_ADD_VIDEO_CALL_REMOTE_VIEW, null, event.getData()));
             } else if (tag.equals(CLEAR_NEW_MESSAGE_NOTIFICATION)) {
                 pairAppClientInterface.clearNotifications(((long) event.getData()));
             } else {

@@ -28,7 +28,8 @@ public class MessengerBus {
     public static final String START_MONITORING_USER = "startMonitoringUser";
     public static final String STOP_MONITORING_USER = "stopMonitoringUser";
     public static final String GET_STATUS_MANAGER = "getStatusManager";
-    public static final String CALL_USER = "callUser";
+    public static final String VOICE_CALL_USER = "voiceCallUser";
+    public static final String VIDEO_CALL_USER = "videoCallUser";
     public static final String ANSWER_CALL = "answerCall";
     public static final String HANG_UP_CALL = "hangUpCall";
     public static final String ON_CALL_EVENT = "onCallEvent";
@@ -39,6 +40,8 @@ public class MessengerBus {
 
     public static final int DISCONNECTED = 0, CONNECTING = 1, CONNECTED = 2;
     public static final String CLEAR_NEW_MESSAGE_NOTIFICATION = "clear new Message notification";
+    public static final String ON_ADD_VIDEO_CALL_LOCAL_VIEW = "local view vid call";
+    public static final String ON_ADD_VIDEO_CALL_REMOTE_VIEW = "remote view vid call";
 
     public static EventBus get(String bus) {
         GenericUtils.ensureNotNull(bus);

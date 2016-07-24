@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -17,6 +18,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -122,8 +124,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     }, null);
                     break;
                 case R.id.bt_call:
-                    Event event = Event.create(MessengerBus.CALL_USER, null, user.getUserId());
-                    MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
+                    attemptCall();
                     break;
                 case R.id.iv_display_picture:
                     if (dpLoaded) {
@@ -169,6 +170,24 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             }
         }
     };
+
+    private void attemptCall() {
+        new AlertDialog.Builder(getActivity())
+                .setItems(getResources().getStringArray(R.array.call_options), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String tag;
+                        if (which == 0) {
+                            tag = MessengerBus.VOICE_CALL_USER;
+                        } else {
+                            tag = MessengerBus.VIDEO_CALL_USER;
+                        }
+                        Event event = Event.create(tag, null, user.getUserId());
+                        MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
+                    }
+                })
+                .create().show();
+    }
 
     private void dissolveGroup() {
         final ProgressDialog dialog = new ProgressDialog(getContext());

@@ -336,7 +336,8 @@
     <string name="answer">Answer</string>
     <string name="end_call">End Call</string>
     <string name="decline">Decline</string>
-    <string name="ongoing_call_notice">Ongoing call with %s</string>
+    <string name="ongoing_voice_call_notice">Ongoing voice call with %s</string>
+    <string name="ongoing_video_call_notice">Ongoing video call with %s</string>
     <string name="pairapp_call">PairApp Call</string>
     <string name="incoming_call">Incoming call from %s</string>
     <string name="mute_call">mute</string>
@@ -351,4 +352,6 @@
     <string name="log_entry_deleted_message">Log entry deleted successfully</string>
     <string name="diconnected">You are disconnected</string>
     <string name="connected">Connected</string>
+    <string name="video_call">Start Video Call</string>
+    <string name="missed_call_notification">You missed %s calls</string>
 </resources>

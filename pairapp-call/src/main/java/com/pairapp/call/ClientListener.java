@@ -18,50 +18,24 @@ import static android.util.Log.VERBOSE;
 class ClientListener implements SinchClientListener {
 
     public static final String TAG = CallManager.class.getSimpleName();
-    public static final int DEFAULT_DELAY = 3000;
-    private final CallManager callManager;
-    private long retryTime = DEFAULT_DELAY;
-    private volatile int clientState = 0;
 
-    ClientListener(CallManager callManager) {
-        this.callManager = callManager;
+    ClientListener() {
     }
 
     @Override
     public void onClientStarted(SinchClient sinchClient) {
         PLog.d(TAG, "client started");
-        clientState = 1;
-        retryTime = DEFAULT_DELAY;
+
     }
 
     @Override
     public void onClientStopped(SinchClient sinchClient) {
         PLog.d(TAG, "client stopped");
-        clientState = 2;
     }
 
     @Override
     public void onClientFailed(SinchClient sinchClient, SinchError sinchError) {
         PLog.e(TAG, sinchError.getMessage());
-//        PLog.d(TAG, "restarting client at %s millis later", retryTime);
-//        if (sinchError.getErrorType() == ErrorType.NETWORK || sinchError.getErrorType() == ErrorType.SIP) {
-//            if (clientState != 2 && clientState != 1) {
-//                new Handler(Looper.myLooper()).postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        if (clientState != 2 && clientState != 1) {
-//                            retryTime *= 2;
-//                            if (retryTime > SimpleDateUtil.ONE_HOUR / 4) {
-//                                retryTime = SimpleDateUtil.ONE_HOUR / 4;
-//                            }
-//                            callManager.restart();
-//                        }
-//                    }
-//                }, retryTime);
-//            }
-//        } else {
-//            PLog.f(TAG, "unknown error %s", sinchError.getErrorType());
-//        }
     }
 
     @Override

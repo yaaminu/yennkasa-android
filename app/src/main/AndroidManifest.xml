@@ -221,7 +221,10 @@
             android:value="992065039d2595e2d7ecab18e9062a2fd6152747" />
 
         <activity
-            android:name=".ui.CallActivity"
+            android:name=".ui.VoiceCallActivity"
+            android:launchMode="singleTask" />
+        <activity
+            android:name=".ui.VideoCallActivity"
             android:launchMode="singleTask" />
     </application>
 

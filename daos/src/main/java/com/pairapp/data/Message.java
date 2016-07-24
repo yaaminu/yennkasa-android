@@ -32,7 +32,7 @@ import io.realm.annotations.RealmClass;
  * this class represents a particular message sent by a given {@link User}.
  * it is normally used in conjunction with {@link Conversation}
  * the message may be attached to {@link Realm} or not.
- * <p>
+ * <p/>
  * one can detach the message from realm by using its {@link #copy} method
  * and using the returned message.
  *
@@ -66,7 +66,8 @@ public class Message extends RealmObject {
             FIELD_TYPE = "type",
             FIELD_STATE = "state",
             FIELD_DATE_COMPOSED = "dateComposed",
-            FIELD_MESSAGE_BODY = "messageBody";
+            FIELD_MESSAGE_BODY = "messageBody",
+            FIELD_CALL_BODY = "callBody";
     public static final String MSG_STS_STATUS = "status";
     public static final String MSG_STS_MESSAGE_ID = "messageId";
     private static final String TAG = Message.class.getSimpleName();
@@ -182,8 +183,8 @@ public class Message extends RealmObject {
      * @throws io.realm.exceptions.RealmException if you are not in a transaction
      * @see {@link Message#makeNew(Realm, String, String, int)}
      */
+    @NonNull
     public static Message makeNewCallMessageAndPersist(Realm theRealm, String peer, long callDate, CallBody callBody, boolean isOutGoing) {
-        theRealm.beginTransaction();
         Message message = theRealm.createObject(Message.class);
         message.setDateComposed(new Date(callDate));
         message.setCallBody(theRealm.copyToRealm(callBody));
@@ -195,9 +196,8 @@ public class Message extends RealmObject {
             message.setFrom(peer);
             message.setTo(UserManager.getMainUserId());
         }
-        message.setState(Message.STATE_PENDING);
+        message.setState(Message.STATE_SEEN);
         message.setType(TYPE_CALL);
-        theRealm.commitTransaction();
         return message;
     }
 
@@ -325,7 +325,11 @@ public class Message extends RealmObject {
         long totalSeconds = timespan / 1000;
         long minutes = totalSeconds / 60;
         long seconds = totalSeconds % 60;
-        return String.format(Locale.US, "%02d:%02d", minutes, seconds);
+        if (minutes >= 60) {
+            return String.format(Locale.US, "%02d:%02d:%02d", (int) (minutes / 60), minutes % 60, seconds);
+        } else {
+            return String.format(Locale.US, "%02d:%02d", minutes, seconds);
+        }
     }
 
     @NonNull

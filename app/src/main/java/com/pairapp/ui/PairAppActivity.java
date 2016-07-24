@@ -463,22 +463,23 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
     private void handleConnectionEvent(int status) {
         ThreadUtils.ensureMain();
-        if (currentStatus == status && ViewUtils.isViewVisible(notificationView))
-            return; //was difficult to combine the two if statements
         if (currentStatus == status && status == CONNECTED)
             return; //hide showing connected notification in more than one activity
         currentStatus = status;
         switch (status) {
             case MessengerBus.DISCONNECTED:
                 ((TextView) notificationView.findViewById(R.id.inline_notification_text)).setText(getString(R.string.disconected));
+                notificationView.setBackgroundColor(getResources().getColor(R.color.red));
                 ViewUtils.showViews(notificationView);
                 break;
             case MessengerBus.CONNECTING:
                 ((TextView) notificationView.findViewById(R.id.inline_notification_text)).setText(getString(R.string.connecting));
+                notificationView.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
                 ViewUtils.showViews(notificationView);
                 break;
             case MessengerBus.CONNECTED:
                 ((TextView) notificationView.findViewById(R.id.inline_notification_text)).setText(getString(R.string.connected));
+                notificationView.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
                 handler.removeCallbacks(hideNotificationViewRunnable);
                 handler.postDelayed(hideNotificationViewRunnable, 1500);
                 ViewUtils.showViews(notificationView);

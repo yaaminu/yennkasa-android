@@ -193,11 +193,13 @@ public class ContactsAdapter extends BaseAdapter {
             menu.inflate(R.menu.pop_menu_contacts_list);
             if (contact.isRegisteredUser) {
                 menu.getMenu().findItem(R.id.action_call_user).setVisible(true);
+                menu.getMenu().findItem(R.id.action_video_call_user).setVisible(true);
                 menu.getMenu().findItem(R.id.action_text).setVisible(true);
                 menu.getMenu().findItem(R.id.action_invite).setVisible(false);
             } else {
                 menu.getMenu().findItem(R.id.action_call_user).setVisible(false);
                 menu.getMenu().findItem(R.id.action_text).setVisible(false);
+                menu.getMenu().findItem(R.id.action_video_call_user).setVisible(false);
                 menu.getMenu().findItem(R.id.action_invite).setVisible(true);
             }
             menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -205,7 +207,11 @@ public class ContactsAdapter extends BaseAdapter {
                 public boolean onMenuItemClick(MenuItem item) {
                     switch (item.getItemId()) {
                         case R.id.action_call_user:
-                            Event event = Event.create(MessengerBus.CALL_USER, null, contact.numberInIEE_Format);
+                            Event event = Event.create(MessengerBus.VOICE_CALL_USER, null, contact.numberInIEE_Format);
+                            MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
+                            break;
+                        case R.id.action_video_call_user:
+                            event = Event.create(MessengerBus.VIDEO_CALL_USER, null, contact.numberInIEE_Format);
                             MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
                             break;
                         case R.id.action_text:
@@ -214,6 +220,8 @@ public class ContactsAdapter extends BaseAdapter {
                         case R.id.action_invite:
                             UiHelpers.doInvite(v.getContext(), contact);
                             break;
+                        default:
+                            throw new AssertionError();
                     }
                     return false;
                 }

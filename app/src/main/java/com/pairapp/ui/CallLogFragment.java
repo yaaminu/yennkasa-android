@@ -36,6 +36,9 @@ import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.Sort;
 
+import static com.pairapp.data.CallBody.CALL_TYPE_VIDEO;
+import static com.pairapp.data.CallBody.CALL_TYPE_VOICE;
+
 /**
  * A simple {@link Fragment} subclass.
  */
@@ -117,7 +120,17 @@ public class CallLogFragment extends Fragment {
                             String peer = outGoing ? message.getTo() : message.getFrom();
                             switch (which) {
                                 case 0:
-                                    Event event = Event.create(MessengerBus.CALL_USER, null, peer);
+                                    //noinspection ConstantConditions
+                                    int callType = message.getCallBody().getCallType();
+                                    String tag;
+                                    if (callType == CALL_TYPE_VOICE) {
+                                        tag = MessengerBus.VOICE_CALL_USER;
+                                    } else if (callType == CALL_TYPE_VIDEO) {
+                                        tag = MessengerBus.VIDEO_CALL_USER;
+                                    } else {
+                                        throw new AssertionError();
+                                    }
+                                    Event event = Event.create(tag, null, peer);
                                     MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
                                     break;
                                 case 1:

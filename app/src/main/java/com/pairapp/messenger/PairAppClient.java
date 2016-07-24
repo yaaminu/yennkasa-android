@@ -47,8 +47,9 @@ import static com.pairapp.call.CallController.ON_CAL_ENDED;
 import static com.pairapp.call.CallController.ON_CAL_ERROR;
 import static com.pairapp.call.CallController.ON_IN_COMING_CALL;
 import static com.pairapp.call.CallController.ON_LOUD_SPEAKER;
+import static com.pairapp.call.CallController.VIDEO_CALL_LOCAL_VIEW;
+import static com.pairapp.call.CallController.VIDEO_CALL_REMOTE_VIEW;
 import static com.pairapp.messenger.MessengerBus.ANSWER_CALL;
-import static com.pairapp.messenger.MessengerBus.CALL_USER;
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
 import static com.pairapp.messenger.MessengerBus.CLEAR_NEW_MESSAGE_NOTIFICATION;
 import static com.pairapp.messenger.MessengerBus.ENABLE_SPEAKER;
@@ -66,6 +67,8 @@ import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
 import static com.pairapp.messenger.MessengerBus.START_MONITORING_USER;
 import static com.pairapp.messenger.MessengerBus.STOP_MONITORING_USER;
 import static com.pairapp.messenger.MessengerBus.TYPING;
+import static com.pairapp.messenger.MessengerBus.VIDEO_CALL_USER;
+import static com.pairapp.messenger.MessengerBus.VOICE_CALL_USER;
 
 
 public class PairAppClient extends Service {
@@ -190,7 +193,7 @@ public class PairAppClient extends Service {
 
             callManagerBus.register(eventsListener,
                     ON_CAL_ERROR, ON_IN_COMING_CALL,
-                    ON_CAL_ENDED, ON_CALL_ESTABLISHED,
+                    ON_CAL_ENDED, ON_CALL_ESTABLISHED, VIDEO_CALL_LOCAL_VIEW, VIDEO_CALL_REMOTE_VIEW,
                     ON_CALL_PROGRESSING, ON_CALL_MUTED, ON_LOUD_SPEAKER);
 
             postableBus().register(eventsListener, OFFLINE, ONLINE, NOT_TYPING, TYPING,
@@ -198,7 +201,7 @@ public class PairAppClient extends Service {
                     MESSAGE_RECEIVED, MESSAGE_SEEN,
                     ON_MESSAGE_DELIVERED, ON_MESSAGE_SEEN,
                     SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH, GET_STATUS_MANAGER, CLEAR_NEW_MESSAGE_NOTIFICATION,
-                    CALL_USER, HANG_UP_CALL, ANSWER_CALL, ENABLE_SPEAKER, MUTE_CALL);
+                    VOICE_CALL_USER, VIDEO_CALL_USER, HANG_UP_CALL, ANSWER_CALL, ENABLE_SPEAKER, MUTE_CALL);
             isClientStarted.set(true);
             NotificationManager.INSTANCE.reNotifyForReceivedMessages(this);
         }

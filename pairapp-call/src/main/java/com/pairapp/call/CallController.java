@@ -17,6 +17,10 @@ public interface CallController {
     String ON_CALL_MUTED = "onCallMuted";
     String ON_LOUD_SPEAKER = "onLoudSpeaker";
     int CALL_NOTIFICATION_ID = 1001;
+    int MISSED_CALL_NOTIFICATION_ID = 1002;
+    String VIDEO_CALL_LOCAL_VIEW = "video call local view";
+    String VIDEO_CALL_REMOTE_VIEW = "video call remote view";
+    String ERR_VIDEO_LOAD_FAILED = "err_video_load_failed";
 
     void hangUp(CallData data);
 

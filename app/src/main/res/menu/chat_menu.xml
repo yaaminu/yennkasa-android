@@ -13,15 +13,24 @@
         android:orderInCategory="100"
         android:title="@string/call"
         app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_video_call_user"
+        android:icon="@drawable/ic_videocam_white_24"
+        android:orderInCategory="101"
+        android:title="@string/video_call"
+        app:showAsAction="always" />
     <item
         android:id="@+id/action_attach"
         android:icon="@drawable/ic_action_new_attachment_white"
-        android:orderInCategory="100"
+        android:orderInCategory="102"
         android:title="@string/action_attach"
         app:showAsAction="always" />
 
     <item
         android:id="@+id/action_add_contact"
+        android:icon="@drawable/ic_person_add_white_24dp"
+        android:orderInCategory="103"
         android:title="@string/add_contact"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom" />
 </menu>

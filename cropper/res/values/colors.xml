@@ -2,5 +2,5 @@
 <resources>
 
     <color name="black_translucent">#50000000</color>
-
+    <color name="color_video_call_background">#0d0d0d</color>
 </resources>

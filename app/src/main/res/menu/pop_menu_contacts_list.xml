@@ -3,6 +3,11 @@
     <item
         android:id="@+id/action_call_user"
         android:title="@string/call" />
+
+    <item
+        android:id="@+id/action_video_call_user"
+        android:orderInCategory="101"
+        android:title="@string/video_call" />
     <item
         android:id="@+id/action_text"
         android:title="@string/send_message" />

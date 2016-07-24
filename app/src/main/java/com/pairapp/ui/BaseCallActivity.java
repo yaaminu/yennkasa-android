@@ -6,11 +6,13 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -42,17 +44,20 @@ import static android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED;
 import static android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON;
 import static com.pairapp.messenger.MessengerBus.ANSWER_CALL;
 
-public class CallActivity extends PairAppActivity {
+/**
+ * @author aminu on 7/23/2016.
+ */
+public abstract class BaseCallActivity extends PairAppActivity {
+    private static final int REQUEST_CODE = 1001;
 
     public static final String EXTRA_CALL_DATA = "callData";
-    public static final int REQUEST_CODE = 1001;
 
     @SuppressWarnings("NullableProblems") //will always be initialised in onCreate.
     @NonNull
     private CallData callData;
 
     @Bind(R.id.iv_user_avatar)
-    ImageView imageView;
+    ImageView userAvatar;
 
     @Bind(R.id.tv_user_name)
     TextView tvUserName;
@@ -79,15 +84,6 @@ public class CallActivity extends PairAppActivity {
     @NonNull
     private User peer;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        getWindow().addFlags(FLAG_KEEP_SCREEN_ON | FLAG_DISMISS_KEYGUARD |
-                FLAG_SHOW_WHEN_LOCKED | FLAG_TURN_SCREEN_ON);
-        setContentView(R.layout.activity_call);
-        ButterKnife.bind(this);
-        handleIntent();
-    }
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -101,16 +97,6 @@ public class CallActivity extends PairAppActivity {
         assert callData != null;
         String peerId = callData.getPeer();
         peer = UserManager.getInstance().fetchUserIfRequired(peerId);
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        NotificationManagerCompat.from(this)
-                .cancel(peer.getUserId(), MessengerBus.CALL_NOTIFICATION_ID);
-        registerForEvent(MessengerBus.ON_CALL_EVENT);
-        populateUserData();
-        refreshDisplay();
     }
 
     private void refreshDisplay() {
@@ -161,7 +147,6 @@ public class CallActivity extends PairAppActivity {
         enableSpeaker.setSelected(callData.isLoudSpeaker());
     }
 
-
     @NonNull
     private final Subscriber<Long> subscriber = new Subscriber<Long>() {
         @Override
@@ -196,6 +181,31 @@ public class CallActivity extends PairAppActivity {
         return String.format(Locale.US, "%02d:%02d", minutes, seconds);
     }
 
+    @LayoutRes
+    protected abstract int getLayout();
+
+    protected abstract Intent getNotificationIntent();
+
+    protected abstract String getNotificationTitle();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        getWindow().addFlags(FLAG_KEEP_SCREEN_ON | FLAG_DISMISS_KEYGUARD |
+                FLAG_SHOW_WHEN_LOCKED | FLAG_TURN_SCREEN_ON);
+        super.setContentView(getLayout());
+        ButterKnife.bind(this);
+        handleIntent();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerForEvent(MessengerBus.ON_CALL_EVENT);
+        populateUserData();
+        refreshDisplay();
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -203,20 +213,29 @@ public class CallActivity extends PairAppActivity {
         if (!subscriber.isUnsubscribed()) {
             subscriber.unsubscribe();
         }
-        if (callData.getCallState() != CallData.ENDED) {
-            Intent intent = new Intent(this, CallActivity.class);
-            intent.putExtra(EXTRA_CALL_DATA, callData);
-            String contentText = getString(R.string.ongoing_call_notice, peer.getName());
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        NotificationManagerCompat.from(this)
+                .cancel(getPeer().getUserId(), MessengerBus.CALL_NOTIFICATION_ID);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (getCallData().getCallState() != CallData.ENDED) {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                     .setSmallIcon(R.drawable.ic_stat_icon)
-                    .setTicker(contentText)
+                    .setTicker(getNotificationTitle())
                     .setContentTitle(getString(R.string.pairapp_call))
-                    .setContentText(contentText)
+                    .setContentText(getNotificationTitle())
                     .setOngoing(true)
                     .setContentIntent(PendingIntent.getActivity(this,
-                            REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT));
+                            REQUEST_CODE, getNotificationIntent(), PendingIntent.FLAG_UPDATE_CURRENT));
             NotificationManagerCompat.from(this)
-                    .notify(peer.getUserId(), MessengerBus.CALL_NOTIFICATION_ID, builder.build());
+                    .notify(getPeer().getUserId(), MessengerBus.CALL_NOTIFICATION_ID, builder.build());
         }
     }
 
@@ -227,7 +246,7 @@ public class CallActivity extends PairAppActivity {
                 .error(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .placeholder(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .resize((int) resources.getDimension(R.dimen.thumbnail_width), (int) resources.getDimension(R.dimen.thumbnail_height))
-                .onlyScaleDown().into(imageView);
+                .onlyScaleDown().into(userAvatar);
     }
 
     @NonNull
@@ -276,10 +295,9 @@ public class CallActivity extends PairAppActivity {
         }
     }
 
-
     @OnClick(R.id.bt_answer_call)
     public void answerCall(View v) {
-        // TODO: 7/16/2016 implement method
+
         postEvent(Event.create(ANSWER_CALL, null, callData));
     }
 
@@ -302,5 +320,29 @@ public class CallActivity extends PairAppActivity {
     public void speaker(View view) {
         postEvent(Event.create(MessengerBus.ENABLE_SPEAKER, null, callData));
     }
-}
 
+    @NonNull
+    protected CallData getCallData() {
+        return callData;
+    }
+
+    @NonNull
+    protected User getPeer() {
+        return peer;
+    }
+
+    @Override
+    public void setContentView(@LayoutRes int layoutResID) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setContentView(View view) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setContentView(View view, ViewGroup.LayoutParams params) {
+        throw new UnsupportedOperationException();
+    }
+}

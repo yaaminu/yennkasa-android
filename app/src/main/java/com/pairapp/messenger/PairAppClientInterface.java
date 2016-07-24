@@ -2,19 +2,26 @@ package com.pairapp.messenger;
 
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import com.pairapp.Errors.ErrorCenter;
+import com.pairapp.R;
 import com.pairapp.call.CallController;
 import com.pairapp.call.CallData;
+import com.pairapp.data.CallBody;
 import com.pairapp.data.Message;
 import com.pairapp.net.sockets.Sendable;
 import com.pairapp.net.sockets.Sender;
-import com.pairapp.ui.CallActivity;
+import com.pairapp.ui.MainActivity;
+import com.pairapp.ui.VideoCallActivity;
+import com.pairapp.ui.VoiceCallActivity;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.PLog;
@@ -215,17 +222,30 @@ class PairAppClientInterface {
         listenableBus().postSticky(Event.createSticky(GET_STATUS_MANAGER, null, statusManager));
     }
 
-    void voiceCallUser(String userId) {
+    void callUser(String userId, int type) {
         // TODO: 7/17/2016 check if user has internet connection,the call client is connected and the pairapp socket is also connected.
         PLog.d(TAG, "calling between user %s", userId);
-        CallData callData = callController.callUser(userId, CallController.CALL_TYPE_VOICE);
+        CallData callData = callController.callUser(userId, type);
         if (callData != null) {
-            Intent intent = new Intent(context, CallActivity.class);
-            intent.putExtra(CallActivity.EXTRA_CALL_DATA, callData);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(intent);
+            context.startActivity(getCallIntent(callData));
         }
-        //if there's an error it will handled in handleCallControllerError(Exception e) below
+        //if there's an error it will be handled in handleCallControllerError(Exception e) below
+    }
+
+    @NonNull
+    private Intent getCallIntent(CallData callData) {
+        Intent intent;
+        if (callData.getCallType() == CallController.CALL_TYPE_VOICE) {
+            intent = new Intent(context, VoiceCallActivity.class);
+            intent.putExtra(VoiceCallActivity.EXTRA_CALL_DATA, callData);
+        } else if (callData.getCallType() == CallController.CALL_TYPE_VIDEO) {
+            intent = new Intent(context, VideoCallActivity.class);
+            intent.putExtra(VideoCallActivity.EXTRA_CALL_DATA, callData);
+        } else {
+            throw new AssertionError();
+        }
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        return intent;
     }
 
     void answerCall(CallData data) {
@@ -248,17 +268,37 @@ class PairAppClientInterface {
     }
 
     void onCallEnded(@NonNull CallData data) {
-        // TODO: 7/15/2016 log the call
-        PLog.d(TAG, "call between user and %s ended", data.getPeer());
         listenableBus().postSticky(Event.createSticky(ON_CALL_EVENT, null, data));
+
+        NotificationManagerCompat.from(Config.getApplication())
+                .cancel(data.getPeer(), CallController.CALL_NOTIFICATION_ID);
+        Realm realm = Message.REALM();
+        long count;
+        try {
+            count = realm.where(Message.class).equalTo(Message.FIELD_TYPE, Message.TYPE_CALL)
+                    .equalTo(Message.FIELD_STATE, Message.STATE_RECEIVED)
+                    .lessThanOrEqualTo(Message.FIELD_CALL_BODY + "." + CallBody.FIELD_CALL_DURATION, 0)
+                    .count();
+        } finally {
+            realm.close();
+        }
+        if (count > 0) {
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+            builder.setContentTitle(context.getString(R.string.pairapp_call));
+            builder.setContentText(context.getString(R.string.missed_call_notification, count));
+            builder.setSmallIcon(R.drawable.ic_stat_icon);
+            builder.setAutoCancel(true);
+            builder.setTicker(context.getString(R.string.missed_call_notification, count));
+            Intent intent = new Intent(context, MainActivity.class);
+            builder.setContentIntent(PendingIntent.getActivity(context, 1001, intent, PendingIntent.FLAG_UPDATE_CURRENT));
+            NotificationManagerCompat.from(context).notify(CallController.MISSED_CALL_NOTIFICATION_ID, builder.build());
+        }
+        PLog.d(TAG, "call between user and %s ended", data.getPeer());
     }
 
     void onInComingCall(@NonNull CallData data) {
         PLog.d(TAG, "incoming call from %s", data.getPeer());
-        Intent intent = new Intent(context, CallActivity.class);
-        intent.putExtra(CallActivity.EXTRA_CALL_DATA, data);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
+        context.startActivity(getCallIntent(data));
     }
 
     public void handleCallControllerError(Exception error) {
@@ -287,5 +327,6 @@ class PairAppClientInterface {
 
     public void clearNotifications(long date) {
         NotificationManager.INSTANCE.clearAllMessageNotifications();
+        NotificationManagerCompat.from(context).cancel(CallController.MISSED_CALL_NOTIFICATION_ID);
     }
 }
