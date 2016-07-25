@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.pairapp.view.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
@@ -8,7 +7,7 @@
     android:layout_marginBottom="@dimen/message_item_margin_bottom"
     android:layout_marginLeft="@dimen/message_body_margin"
     android:layout_marginRight="@dimen/message_body_margin"
-    android:layout_marginTop="@dimen/message_item_extra_margin_top"    >
+    android:layout_marginTop="@dimen/message_item_extra_margin_top">
 
     <com.pairapp.view.LinearLayout
         android:id="@+id/ll_message_body_view"
@@ -30,7 +29,7 @@
                 style="@style/message_outgoing"
                 android:singleLine="true"
                 android:text="hi when are you coming"
-                tools:ignore="HardcodedText"/>
+                tools:ignore="HardcodedText" />
         </com.pairapp.view.FrameLayout>
 
         <TextView
@@ -38,12 +37,12 @@
             style="@style/message_outgoing_date"
             android:layout_alignTop="@+id/fl_message_body_view"
             android:layout_gravity="bottom"
-            android:drawableLeft="@drawable/ic_msg_status_pending"
+            android:drawableLeft="@drawable/ic_message_pending_12dp"
             android:gravity="center_vertical|end"
             android:padding="@dimen/padding_ll_login_fragment_left"
             android:singleLine="true"
             android:text="  12-12-12"
-            tools:ignore="HardcodedText"/>
+            tools:ignore="HardcodedText" />
     </com.pairapp.view.LinearLayout>
 
     <ImageButton
@@ -56,18 +55,17 @@
         android:layout_toStartOf="@+id/ll_message_body_view"
         android:background="@color/transparent"
         android:contentDescription="@string/retry_sending_message"
-        android:src="@drawable/ic_action_replay"/>
+        android:src="@drawable/ic_action_replay" />
 
     <ImageView
         android:id="@+id/iv_message_preview"
         style="@style/outgoing_message_body_root_view"
         android:layout_width="@dimen/message_preview_item_width"
         android:layout_height="@dimen/message_preview_item_height"
-        android:background="@android:color/white"
+        android:background="@color/white"
         android:contentDescription="@string/st_content_description_image_preview"
         android:scaleType="centerCrop"
-        android:src="@drawable/user_avartar"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
 
     <ImageView
@@ -79,8 +77,7 @@
         android:contentDescription="@string/play_download_content_description"
         android:minHeight="@dimen/thumbnail_height"
         android:minWidth="@dimen/thumbnail_width"
-        android:src="@drawable/ic_play_circle_outline_white_36dp"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
     <com.pairapp.view.ProgressWheel
         android:id="@+id/pb_download_progress_indeterminate"
@@ -91,7 +88,7 @@
         app:pv_autostart="true"
         app:pv_circular="true"
         app:pv_progressMode="indeterminate"
-        app:pv_progressStyle="@style/base_indeterminate_progress_style"/>
+        app:pv_progressStyle="@style/base_indeterminate_progress_style" />
 
     <TextView
         android:id="@+id/tv_sender_name"
@@ -104,5 +101,5 @@
         android:text="sender"
         android:textSize="@dimen/standard_text_size"
         android:visibility="gone"
-        tools:ignore="HardcodedText"/>
+        tools:ignore="HardcodedText" />
 </com.pairapp.view.RelativeLayout>

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.pairapp.view.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
@@ -29,23 +28,19 @@
                 style="@style/message_outgoing"
                 android:text="a sample message that spans across multiple lines dones it look nice or bad. i am just testing"
                 android:visibility="gone"
-                tools:ignore="HardcodedText"/>
+                tools:ignore="HardcodedText" />
 
             <ImageView
                 android:id="@+id/iv_message_preview"
                 style="@style/outgoing_message_body_root_view"
                 android:layout_width="@dimen/message_preview_item_width"
                 android:layout_height="@dimen/message_preview_item_height"
-                android:background="@android:color/white"
+                android:background="@color/white"
                 android:contentDescription="@string/st_content_description_image_preview"
                 android:scaleType="centerCrop"
                 android:src="@drawable/login_fragment_back_ground"
-                android:visibility="visible"/>
+                android:visibility="visible" />
 
-            <!--<include-->
-            <!--android:id="@+id/pb_download_progress_indeterminate"-->
-            <!--layout="@layout/progress_message_list_item"-->
-            <!--android:visibility="gone"/>-->
 
             <FrameLayout
                 android:id="@+id/fl_progress_root_view"
@@ -78,8 +73,7 @@
                     android:layout_gravity="center"
                     android:visibility="visible"
                     app:matProg_barColor="@color/white"
-                    app:matProg_progressIndeterminate="true"
-                    />
+                    app:matProg_progressIndeterminate="true" />
 
                 <ImageView
                     android:id="@+id/v_download_play"
@@ -89,7 +83,7 @@
                     android:background="#0000"
                     android:contentDescription="@string/play_download_content_description"
                     android:src="@drawable/ic_play_circle_outline_white_36dp"
-                    android:visibility="gone"/>
+                    android:visibility="gone" />
 
             </FrameLayout>
 
@@ -100,11 +94,10 @@
             style="@style/message_outgoing_date"
             android:layout_alignEnd="@+id/fl_message_body_view"
             android:layout_alignRight="@+id/fl_message_body_view"
-            android:drawableLeft="@drawable/ic_error_white_18dp"
             android:gravity="center_vertical|end"
             android:singleLine="true"
             android:text="  12-12-12"
-            tools:ignore="HardcodedText"/>
+            tools:ignore="HardcodedText" />
     </com.pairapp.view.RelativeLayout>
 
     <ImageButton
@@ -116,7 +109,7 @@
         android:layout_toStartOf="@+id/ll_message_body_view"
         android:background="@color/transparent"
         android:contentDescription="@string/content_des_send_message_agin"
-        android:src="@drawable/ic_action_replay"/>
+        android:src="@drawable/ic_action_replay" />
 
     <TextView
         android:id="@+id/tv_sender_name"
@@ -129,6 +122,6 @@
         android:text="sender"
         android:textSize="@dimen/standard_text_size"
         android:visibility="gone"
-        tools:ignore="HardcodedText"/>
+        tools:ignore="HardcodedText" />
 
 </com.pairapp.view.RelativeLayout>

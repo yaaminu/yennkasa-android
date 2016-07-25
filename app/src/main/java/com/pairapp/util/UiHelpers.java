@@ -1,5 +1,6 @@
 package com.pairapp.util;
 
+import android.annotation.SuppressLint;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -17,8 +18,8 @@ import android.support.v4.util.Pair;
 import android.support.v7.app.AlertDialog;
 import android.telephony.SmsManager;
 import android.text.TextUtils;
-import android.view.ViewGroup;
-import android.widget.CompoundButton;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.Toast;
 
 import com.pairapp.BuildConfig;
@@ -36,9 +37,6 @@ import com.pairapp.ui.MainActivity;
 import com.pairapp.ui.ProfileActivity;
 import com.pairapp.ui.SetUpActivity;
 import com.pairapp.ui.SettingsActivity;
-import com.rey.material.app.Dialog;
-import com.rey.material.app.DialogFragment;
-import com.rey.material.app.SimpleDialog;
 import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.TextView;
 
@@ -528,52 +526,9 @@ public class UiHelpers {
         }
     }
 
-    //    public static void showStopAnnoyingMeDialog(FragmentActivity activity, final String key, final String message, String ok, final String no, final Listener okListener, final Listener noListener) {
-//        boolean stopAnnoyingMe = UserManager.getInstance().getBoolPref(key, false);
-//        if (stopAnnoyingMe) {
-//            if (okListener != null) {
-//                okListener.onClick();
-//            }
-//            return;
-//        }
-//        final AtomicBoolean touchedCheckBox = new AtomicBoolean();
-//        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-//        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
-//
-//            @Override
-//            public void onClick(DialogInterface dialog, int which) {
-//                if (touchedCheckBox.get()) {
-//                    UserManager.getInstance().putPref(key, true);
-//                }
-//                switch (which) {
-//                    case DialogInterface.BUTTON_NEGATIVE:
-//                        if (noListener != null) {
-//                            noListener.onClick();
-//                        }
-//                        break;
-//                    case DialogInterface.BUTTON_POSITIVE:
-//                        break;
-//                    default:
-//                        break;
-//                }
-//            }
-//        };
-//        View v = LayoutInflater.from(activity).inflate(R.layout.stop_annoying_me_dialog, null);
-//        AlertDialog dialog = builder.setNegativeButton(ok, listener).setNegativeButton(no, listener).setView(v).setCancelable(false).create();
-//        CheckBox checkBox = ((CheckBox) v.findViewById(R.id.cb_stop_annoying_me));
-//        checkBox.setChecked(false);
-//        TextView textView = (TextView) v.findViewById(R.id.tv_dialog_message);
-//        textView.setText(message);
-//        ViewUtils.setTypeface(textView, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-//        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//            @Override
-//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//                touchedCheckBox.set(isChecked);
-//            }
-//        });
-//        dialog.show();
-//    }
-    public static void showStopAnnoyingMeDialog(FragmentActivity activity, final String key, final String stopAnnoyingMeText, final String message, String ok, String no, final Listener okListener, final Listener noListener) {
+    public static void showStopAnnoyingMeDialog(FragmentActivity activity,
+                                                final String key, final String stopAnnoyingMeText,
+                                                final String message, String ok, String no, final Listener okListener, final Listener noListener) {
         boolean stopAnnoyingMe = UserManager.getInstance().getBoolPref(key, false);
         if (stopAnnoyingMe) {
             if (okListener != null) {
@@ -581,59 +536,41 @@ public class UiHelpers {
             }
             return;
         }
-        SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
-            boolean touchedCheckBox = false, checkBoxValue;
-            public CompoundButton.OnCheckedChangeListener listener = new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    touchedCheckBox = true;
-                    checkBoxValue = isChecked;
-                }
-            };
 
+        @SuppressLint("InflateParams")
+        View view = LayoutInflater.from(activity).inflate(R.layout.stop_annoying_me_dialog, null);
+        TextView textView = (TextView) view.findViewById(R.id.tv_dialog_message);
+        ViewUtils.setTypeface(textView, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+        textView.setText(message);
+
+        textView = (TextView) view.findViewById(R.id.tv_stop_annoying_me);
+        textView.setText(stopAnnoyingMeText);
+
+        ViewUtils.setTypeface(textView, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+        final CheckBox checkBox = ((CheckBox) view.findViewById(R.id.cb_stop_annoying_me));
+
+        final DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
             @Override
-            protected void onBuildDone(Dialog dialog) {
-                dialog.layoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                CheckBox checkBox = ((CheckBox) dialog.findViewById(R.id.cb_stop_annoying_me));
-                TextView textView = (TextView) dialog.findViewById(R.id.tv_dialog_message);
-                ViewUtils.setTypeface(textView, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-                textView.setText(message);
-                textView = (TextView) dialog.findViewById(R.id.tv_stop_annoying_me);
-                textView.setText(stopAnnoyingMeText);
-                ViewUtils.setTypeface(textView, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-                checkBox.setOnCheckedChangeListener(listener);
-            }
-
-            @Override
-            public void onPositiveActionClicked(DialogFragment fragment) {
-                if (okListener != null) {
-                    okListener.onClick();
+            public void onClick(DialogInterface dialog, int which) {
+                if (which == AlertDialog.BUTTON_POSITIVE) {
+                    if (okListener != null) {
+                        okListener.onClick();
+                    }
+                } else {
+                    if (noListener != null) {
+                        noListener.onClick();
+                    }
                 }
-                super.onPositiveActionClicked(fragment);
-                updateStopAnnoyingMe(checkBoxValue);
-            }
-
-            @Override
-            public void onNegativeActionClicked(DialogFragment fragment) {
-                if (noListener != null) {
-                    noListener.onClick();
-                }
-                super.onNegativeActionClicked(fragment);
-                updateStopAnnoyingMe(checkBoxValue);
-            }
-
-            private void updateStopAnnoyingMe(boolean newValue) {
-                if (touchedCheckBox) {
-                    UserManager.getInstance().putPref(key, newValue);
+                if (checkBox.isChecked()) {
+                    UserManager.getInstance().putStandAlonePref(key, true);
                 }
             }
         };
-        builder.contentView(R.layout.stop_annoying_me_dialog);
-        builder.positiveAction(ok);
-        builder.negativeAction(no);
-        DialogFragment fragment = DialogFragment.newInstance(builder);
-        fragment.show(activity.getSupportFragmentManager(), null);
-
+        new AlertDialog.Builder(activity)
+                .setView(view)
+                .setPositiveButton(ok, listener)
+                .setNegativeButton(no, listener)
+                .create().show();
     }
 
     public static void showStopAnnoyingMeDialog(FragmentActivity activity, final String key, final String message, String ok, String no, final Listener okListener, final Listener noListener) {

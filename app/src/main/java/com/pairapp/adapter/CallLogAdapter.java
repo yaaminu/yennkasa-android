@@ -53,8 +53,9 @@ public class CallLogAdapter extends PairappBaseAdapter<Message> {
                 context.getString(R.string.now) : getRelativeTimeSpanString(then, now, MINUTE_IN_MILLIS);
 
         holder1.callDate.setText(formattedDate);
-
-        holder1.callSummary.setText(Message.getCallSummary(message));
+        holder1.callSummary.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
+        holder1.callSummary.setCompoundDrawablesWithIntrinsicBounds(getDrawable(message), 0, 0, 0);
+        holder1.callSummary.setText("  " + Message.getCallSummary(message));
 
         ImageLoader.load(context, user.getDP())
                 .error(R.drawable.user_avartar)
@@ -67,6 +68,19 @@ public class CallLogAdapter extends PairappBaseAdapter<Message> {
             ViewUtils.hideViews(((VHolder) holder).divider);
         } else {
             ViewUtils.showViews(((VHolder) holder).divider);
+        }
+    }
+
+    static int getDrawable(Message message) {
+        if (Message.isOutGoing(message)) {
+            return R.drawable.ic_call_made_black_24dp;
+        } else {
+            //noinspection ConstantConditions
+            if (message.getCallBody().getCallDuration() <= 0) {
+                return R.drawable.ic_call_missed_black_24dp;
+            } else {
+                return R.drawable.ic_call_received_black_24dp;
+            }
         }
     }
 

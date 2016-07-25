@@ -1,39 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:orientation="vertical">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <com.rey.material.widget.TextView
-        android:id="@+id/tv_dialog_message"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:text="@string/sure_you_want_to_delete_conversation"
-        android:textSize="@dimen/standard_text_size"/>
-
-    <LinearLayout
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:gravity="center_vertical">
-
-        <com.rey.material.widget.CheckBox
-            android:id="@+id/cb_stop_annoying_me"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:checked="false"
-            android:gravity="bottom"/>
+        android:layout_marginBottom="@dimen/activity_vertical_margin"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:orientation="vertical">
 
         <com.rey.material.widget.TextView
-            android:id="@+id/tv_stop_annoying_me"
-            android:layout_width="0dp"
+            android:id="@+id/tv_dialog_message"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1"
-            android:gravity="bottom"
-            android:text="@string/do_not_ask_me_again"
-            android:textSize="@dimen/standard_text_size"/>
+            android:paddingBottom="8dp"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:text="@string/sure_you_want_to_delete_conversation"
+            android:textSize="@dimen/standard_text_size" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:gravity="center_vertical">
+
+            <com.rey.material.widget.CheckBox
+                android:id="@+id/cb_stop_annoying_me"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:checked="false"
+                android:gravity="bottom" />
+
+            <com.rey.material.widget.TextView
+                android:id="@+id/tv_stop_annoying_me"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:gravity="bottom"
+                android:text="@string/do_not_ask_me_again"
+                android:textSize="@dimen/standard_text_size" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>

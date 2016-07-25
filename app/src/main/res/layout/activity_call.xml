@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     android:keepScreenOn="true"
     tools:context=".ui.VoiceCallActivity">
 
@@ -31,8 +33,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="@dimen/default_gap"
-            android:text="@string/app_name"
-            android:textColor="@color/colorPrimaryDark" />
+            android:text="@string/pairapp_call" />
 
         <android.support.v4.widget.Space
             android:layout_width="match_parent"
@@ -61,53 +62,5 @@
 
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal">
-
-
-        <Button
-            android:id="@+id/bt_mute"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/default_gap"
-            android:layout_weight="1"
-            android:text="@string/mute_call" />
-
-        <Button
-            android:id="@+id/bt_answer_call"
-
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/default_gap"
-            android:layout_weight="1"
-            android:text="@string/answer" />
-
-
-        <Button
-            android:id="@+id/bt_end_call"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/default_gap"
-            android:layout_weight="1"
-            android:text="@string/end_call" />
-
-        <Button
-            android:id="@+id/bt_decline_call"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/default_gap"
-            android:layout_weight="1"
-            android:text="@string/decline" />
-
-
-        <Button
-            android:id="@+id/bt_speaker"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="@dimen/default_gap"
-            android:layout_weight="1"
-            android:text="@string/speaker" />
-    </LinearLayout>
+    <include layout="@layout/call_actions" />
 </FrameLayout>

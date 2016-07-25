@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
-        android:bottom="0dp"
-        android:gravity="center"
-        android:left="0dp"
-        android:right="0dp"
-        android:src="@drawable/balloon_incoming_normal"
-        android:top="0dp">
-</bitmap>

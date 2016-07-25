@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.pairapp.view.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
@@ -22,7 +21,7 @@
         android:singleLine="true"
         android:text="sender"
         android:textSize="@dimen/standard_text_size"
-        tools:ignore="HardcodedText"/>
+        tools:ignore="HardcodedText" />
 
     <com.pairapp.view.LinearLayout
         android:id="@+id/ll_message_body_view"
@@ -41,7 +40,7 @@
             android:padding="@dimen/padding_ll_login_fragment_left"
             android:singleLine="true"
             android:text="12-12-12"
-            tools:ignore="HardcodedText"/>
+            tools:ignore="HardcodedText" />
 
         <com.pairapp.view.FrameLayout
             android:id="@+id/fl_message_body_view"
@@ -58,7 +57,7 @@
                 android:layout_gravity="center_vertical"
                 android:singleLine="true"
                 android:text="hi when are you coming was testing"
-                tools:ignore="HardcodedText"/>
+                tools:ignore="HardcodedText" />
         </com.pairapp.view.FrameLayout>
 
     </com.pairapp.view.LinearLayout>
@@ -70,18 +69,17 @@
         android:layout_centerVertical="true"
         android:layout_toLeftOf="@+id/ll_message_body_view"
         android:layout_toStartOf="@+id/ll_message_body_view"
-        android:src="@drawable/ic_action_replay"/>
+        android:src="@drawable/ic_action_replay" />
 
     <ImageView
         android:id="@+id/iv_message_preview"
         style="@style/outgoing_message_body_root_view"
         android:layout_width="@dimen/message_preview_item_width"
         android:layout_height="@dimen/message_preview_item_height"
-        android:background="@android:color/white"
+        android:background="@color/white"
         android:contentDescription="@string/st_content_description_image_preview"
         android:scaleType="centerCrop"
-        android:src="@drawable/user_avartar"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
 
     <ImageView
@@ -93,8 +91,7 @@
         android:contentDescription="@string/play_download_content_description"
         android:minHeight="@dimen/thumbnail_height"
         android:minWidth="@dimen/thumbnail_width"
-        android:src="@drawable/ic_play_circle_outline_white_36dp"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
     <com.pairapp.view.ProgressWheel
         android:id="@+id/pb_download_progress_indeterminate"
@@ -105,5 +102,5 @@
         app:pv_autostart="true"
         app:pv_circular="true"
         app:pv_progressMode="indeterminate"
-        app:pv_progressStyle="@style/base_indeterminate_progress_style"/>
+        app:pv_progressStyle="@style/base_indeterminate_progress_style" />
 </com.pairapp.view.RelativeLayout>

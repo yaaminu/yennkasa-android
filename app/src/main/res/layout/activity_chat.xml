@@ -1,4 +1,4 @@
-<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -13,7 +13,6 @@
 
         <android.support.v7.widget.Toolbar xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/main_toolbar"
-            style="@style/TabRippleStyle"
             android:layout_width="match_parent"
             android:layout_height="@dimen/action_bar_height"
             android:animateLayoutChanges="true"
@@ -28,7 +27,7 @@
         <include layout="@layout/inline_notification_bar_layout" />
     </LinearLayout>
 
-    <com.pairapp.view.RelativeLayout
+    <RelativeLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -38,14 +37,14 @@
         android:background="#0000"
         tools:ignore="UnusedAttribute">
 
-        <com.pairapp.view.RelativeLayout
+        <RelativeLayout
             android:id="@+id/attachment_picker_container"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
 
-        </com.pairapp.view.RelativeLayout>
+        </RelativeLayout>
 
-        <com.pairapp.view.LinearLayout
+        <LinearLayout
             android:id="@+id/ll_list_view_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -96,7 +95,7 @@
                     android:background="@color/transparent"
                     android:onClick="toggleEmoji"
                     android:scaleType="centerInside"
-                    android:src="@drawable/ic_msg_panel_smiles" />
+                    android:src="@drawable/ic_smiley_24dp" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -116,7 +115,6 @@
                         android:padding="@dimen/padding_ll_login_fragment_right"
                         android:textSize="@dimen/edit_text_size"
                         app:emojiconSize="@dimen/edit_text_size" />
-                    <!--android:text="llaaal\nlkklkk\nkklkjkjlkk\nkljklkkjlklk\nkljkljklkklk"-->
                 </LinearLayout>
 
                 <ImageButton
@@ -129,7 +127,7 @@
                     android:background="@color/transparent"
                     android:onClick="attachCamera"
                     android:scaleType="centerInside"
-                    android:src="@drawable/ic_photo_camera_black_24dp" />
+                    android:src="@drawable/ic_camera_black_24dp" />
 
                 <ImageButton
                     android:id="@+id/ib_attach_record_audio"
@@ -141,96 +139,39 @@
                     android:background="@color/transparent"
                     android:onClick="attachVoiceNote"
                     android:scaleType="centerInside"
-                    android:src="@drawable/ic_mic_black_24dp" />
+                    android:src="@drawable/ic_record_voice_24dp" />
 
                 <com.pairapp.view.FrameLayout
                     android:id="@+id/iv_send"
-                    style="@style/FlatButtonRippleStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom"
-                    android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
-                    android:background="@drawable/green_round_back_ground"
-                    android:padding="@dimen/padding_ll_login_fragment_bottom"
                     android:visibility="gone">
 
                     <ImageView
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_gravity="center"
+                        android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
                         android:adjustViewBounds="true"
+                        android:padding="@dimen/padding_ll_login_fragment_bottom"
                         android:scaleType="centerInside"
-                        android:src="@drawable/ic_send_white_24dp" />
+                        android:src="@drawable/ic_send_24dp" />
 
                 </com.pairapp.view.FrameLayout>
 
             </LinearLayout>
 
-            <!--<android.support.v7.widget.Toolbar-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_marginTop="@dimen/padding_ll_login_fragment_top"-->
-            <!--android:background="#ccc"-->
-            <!--android:minHeight="34dp">-->
-
-            <!--<com.idea.view.LinearLayout-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:background="@color/transparent"-->
-            <!--android:gravity="center">-->
-
-            <!--<ImageButton-->
-            <!--android:layout_width="0dp"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_weight="1"-->
-            <!--android:background="@color/transparent"-->
-            <!--android:paddingRight="@dimen/padding_ll_login_fragment_right"-->
-            <!--android:src="@drawable/ic_photo_camera_black_24dp"-->
-            <!--tools:ignore="RtlSymmetry"/>-->
-
-            <!--<ImageButton-->
-            <!--android:layout_width="0dp"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_weight="1"-->
-            <!--android:background="@color/transparent"-->
-            <!--android:paddingRight="@dimen/padding_ll_login_fragment_right"-->
-            <!--android:src="@drawable/ic_image_black_24dp"/>-->
-
-            <!--<ImageButton-->
-            <!--android:layout_width="0dp"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_weight="1"-->
-            <!--android:background="@color/transparent"-->
-            <!--android:paddingRight="@dimen/padding_ll_login_fragment_right"-->
-            <!--android:src="@drawable/ic_videocam_black_24dp"/>-->
-
-            <!--<ImageButton-->
-            <!--android:layout_width="0dp"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_weight="1"-->
-            <!--android:background="@color/transparent"-->
-            <!--android:paddingRight="@dimen/padding_ll_login_fragment_right"-->
-            <!--android:src="@drawable/ic_movie_black_24dp"/>-->
-
-            <!--<ImageButton-->
-            <!--android:layout_width="0dp"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_weight="1"-->
-            <!--android:background="@color/transparent"-->
-            <!--android:paddingRight="@dimen/padding_ll_login_fragment_right"-->
-            <!--android:src="@drawable/ic_folder_black_24dp"/>-->
-            <!--</com.idea.view.LinearLayout>-->
-            <!--</android.support.v7.widget.Toolbar>-->
             <FrameLayout
                 android:id="@+id/emoji_pannel_slot"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
             </FrameLayout>
-        </com.pairapp.view.LinearLayout>
+        </LinearLayout>
 
         <include layout="@layout/message_item_log" />
-    </com.pairapp.view.RelativeLayout>
+    </RelativeLayout>
 
     <include layout="@layout/snack_bar" />
-</com.pairapp.view.RelativeLayout>
+</RelativeLayout>

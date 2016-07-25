@@ -20,7 +20,9 @@ import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.ParseClient;
 import com.pairapp.net.ParseFileClient;
 import com.pairapp.net.sockets.SenderImpl;
+import com.pairapp.ui.BaseCallActivity;
 import com.pairapp.util.Config;
+import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
@@ -147,7 +149,9 @@ public class PairAppClient extends Service {
             stopSelf();
             return START_NOT_STICKY;
         }
-
+        if (intent != null && MessengerBus.HANG_UP_CALL.equals(intent.getAction())) { // TODO: 7/25/2016 find a better way to do this
+            postableBus().post(Event.create(MessengerBus.HANG_UP_CALL, null, intent.getParcelableExtra(BaseCallActivity.EXTRA_CALL_DATA)));
+        }
         return START_STICKY;
     }
 

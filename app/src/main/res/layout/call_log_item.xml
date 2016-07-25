@@ -5,7 +5,6 @@
     android:layout_height="@dimen/list_item_height"
     android:layout_marginBottom="@dimen/list_item_margin_bottom"
     android:descendantFocusability="afterDescendants"
-    android:minHeight="?android:attr/listPreferredItemHeight"
     android:paddingLeft="@dimen/list_item_padding"
     android:paddingRight="@dimen/list_item_padding"
     android:paddingTop="@dimen/list_item_padding">
@@ -56,8 +55,7 @@
             android:singleLine="@bool/single_line"
             android:textColor="@color/light_gray"
             android:textSize="@dimen/standard_text_size"
-            tools:ignore="HardcodedText"
-            tools:text="missed call" />
+            tools:text="   missed call" />
 
 
         <TextView

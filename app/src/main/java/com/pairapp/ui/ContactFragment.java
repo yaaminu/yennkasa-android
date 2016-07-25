@@ -126,6 +126,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Sw
         //required so that we can operate on it with no fear since calling getListView before onCreateView returns is not safe
         listView = ((ListView) view.findViewById(R.id.list));
         swipeRefreshLayout = ((SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh_layout));
+        swipeRefreshLayout.setColorSchemeColors(R.color.colorPrimaryDark);
         refreshButton = view.findViewById(R.id.refresh_button);
         ViewUtils.setTypeface(((TextView) refreshButton), TypeFaceUtil.ROBOTO_REGULAR_TTF);
 

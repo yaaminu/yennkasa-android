@@ -15,7 +15,6 @@ import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.ui.ImageLoader;
 import com.pairapp.ui.PairAppBaseActivity;
-import com.pairapp.util.PLog;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.ViewUtils;
 
@@ -63,7 +62,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         }
         final Conversation conversation = getItem(position);
         final int unseenMessages = delegate.unSeenMessagesCount(conversation);
-
+        holder.chatSummary.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         if (unseenMessages > 0) {
             ViewUtils.showViews(holder.newMessagesCount);
             holder.newMessagesCount.setText(String.valueOf(unseenMessages));
@@ -76,7 +75,6 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         } else {
             holder.chatSummary.setText(conversation.getSummary());
         }
-        PLog.d(TAG, conversation.toString());
         User peer = UserManager.getInstance().fetchUserIfRequired(delegate.realm(), conversation.getPeerId());
         String peerName = peer.getName();
         holder.peerName.setText(peerName);
@@ -111,7 +109,8 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
                 summary.append(message.getMessageBody());
                 // holder.mediaMessageIcon.setVisibility(View.GONE);
             } else if (Message.isCallMessage(message)) {
-                summary.append(Message.getCallSummary(message));
+                holder.chatSummary.setCompoundDrawablesWithIntrinsicBounds(CallLogAdapter.getDrawable(message), 0, 0, 0);
+                summary.append("  ").append(Message.getCallSummary(message));
             } else {
                 summary.append(PairApp.typeToString(context, message));
             }

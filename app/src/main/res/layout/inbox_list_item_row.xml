@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.pairapp.view.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_item_height"
     android:layout_marginBottom="@dimen/list_item_margin_bottom"
     android:descendantFocusability="afterDescendants"
-    android:minHeight="?android:attr/listPreferredItemHeight"
     android:paddingLeft="@dimen/list_item_padding"
     android:paddingRight="@dimen/list_item_padding"
     android:paddingTop="@dimen/list_item_padding">
@@ -21,7 +19,7 @@
         android:adjustViewBounds="true"
         android:clickable="true"
         android:scaleType="centerCrop"
-        android:src="@drawable/user_avartar"/>
+        android:src="@drawable/user_avartar" />
 
     <com.rockerhieu.emojicon.EmojiconTextView
         android:id="@+id/tv_chat_summary"
@@ -34,12 +32,10 @@
         android:maxLines="@integer/summary_lines"
         android:paddingBottom="2dp"
         android:singleLine="@bool/single_line"
-        android:text="Summary of conversation with a very long message "
         android:textColor="@color/light_gray"
         android:textSize="@dimen/standard_text_size"
         app:emojiconAlignment="baseline"
-        app:emojiconSize="@dimen/standard_text_size"
-        tools:ignore="HardcodedText"/>
+        tools:text="  Summary of conversation with a very long message " />
 
 
     <com.pairapp.view.LinearLayout
@@ -61,7 +57,7 @@
             android:text="Sender name"
             android:textSize="@dimen/standard_text_size"
             android:textStyle="bold"
-            tools:ignore="HardcodedText"/>
+            tools:ignore="HardcodedText" />
 
         <TextView
             android:id="@+id/tv_date_last_active"
@@ -74,7 +70,7 @@
             android:text="2 minutes ago"
             android:textColor="@color/light_gray"
             android:textSize="@dimen/standard_text_size_small"
-            tools:ignore="HardcodedText"/>
+            tools:ignore="HardcodedText" />
     </com.pairapp.view.LinearLayout>
 
     <include
@@ -85,8 +81,7 @@
         android:layout_alignParentBottom="true"
         android:layout_alignStart="@+id/ll_conversation_desc"
         android:layout_marginEnd="@dimen/divider_right_offset"
-        android:layout_marginRight="@dimen/divider_right_offset"
-        />
+        android:layout_marginRight="@dimen/divider_right_offset" />
 
     <TextView
         android:id="@+id/tv_new_messages_count"
@@ -96,13 +91,11 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_margin="@dimen/padding_ll_login_fragment_left"
-        android:background="@drawable/orange_rect_back_ground"
+        android:background="@drawable/red_round_back_ground"
         android:ellipsize="none"
         android:gravity="center"
-        android:padding="@dimen/padding_button"
         android:singleLine="true"
-        android:text="110"
         android:textColor="@color/white"
         android:textSize="@dimen/standard_text_size_small"
-        tools:ignore="HardcodedText"/>
+        tools:text="901" />
 </com.pairapp.view.RelativeLayout>

@@ -1,17 +1,36 @@
 <com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                              xmlns:app="http://schemas.android.com/apk/res-auto"
-                              android:layout_width="match_parent"
-                              android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <com.pairapp.view.RelativeLayout
-        android:id="@+id/ll_edittext_pane"
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/tv_app_name"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:text="@string/app_name"
+        android:textSize="@dimen/title_text_size_large"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_app_name"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="@dimen/default_gap"
+        android:paddingBottom="@dimen/default_gap"
+        android:text="@string/slogan" />
+
+    <com.pairapp.view.LinearLayout
+        android:layout_width="@dimen/login_signup_verificaton_panel_width"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/tv_verification_notice"
+        android:layout_centerHorizontal="true"
         android:layout_centerInParent="true"
-        android:layout_marginLeft="@dimen/activity_horizontal_margin"
-        android:layout_marginRight="@dimen/activity_horizontal_margin"
-        app:cardCornerRadius="0dp"
-        app:cardElevation="0dp">
+        android:background="@color/transparent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="@dimen/padding_ll_login_fragment_bottom">
 
         <TextView
             android:id="@+id/tv_verification_notice"
@@ -22,51 +41,40 @@
             android:padding="@dimen/padding_ll_login_fragment_bottom"
             android:text="@string/st_send_verification_notice"
             android:textColor="@color/title_gray"
-            android:textSize="@dimen/standard_text_size"/>
+            android:textSize="@dimen/standard_text_size" />
 
-        <com.pairapp.view.LinearLayout
-            android:layout_width="@dimen/login_signup_verificaton_panel_width"
+        <EditText
+            android:id="@+id/et_verification"
+            style="@style/phone_number_editText_style"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/tv_verification_notice"
-            android:layout_centerHorizontal="true"
-            android:background="@color/transparent"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            android:padding="@dimen/padding_ll_login_fragment_bottom">
+            android:hint="@string/st_hint_et_verification"
+            android:inputType="number"
+            android:paddingTop="@dimen/padding_ll_login_fragment_top" />
 
-            <EditText
-                android:id="@+id/et_verification"
-                style="@style/phone_number_editText_style"
-                android:layout_height="wrap_content"
-                android:hint="@string/st_hint_et_verification"
-                android:inputType="number"
-                android:paddingTop="@dimen/padding_ll_login_fragment_top"/>
+        <com.rey.material.widget.Button
+            android:id="@+id/bt_verify"
+            style="@style/FlatWaveColorButtonRippleStyle"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/big_button_height"
+            android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
+            android:background="@drawable/round_corners"
+            android:gravity="center"
+            android:text="@string/verify"
+            android:textColor="@color/white"
+            android:textSize="@dimen/standard_text_size" />
 
-            <com.rey.material.widget.Button
-                android:id="@+id/bt_verify"
-                style="@style/FlatWaveColorButtonRippleStyle"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/big_button_height"
-                android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
-                android:background="@drawable/button_background"
-                android:gravity="center"
-                android:text="@string/verify"
-                android:textColor="@color/white"
-                android:textSize="@dimen/standard_text_size"/>
-
-            <com.rey.material.widget.Button
-                android:id="@+id/bt_resend_token"
-                style="@style/FlatWaveColorButtonRippleStyle"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/big_button_height"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/button_background"
-                android:gravity="center"
-                android:text="@string/st_send_again"
-                android:textColor="@color/white"
-                android:textSize="@dimen/standard_text_size"/>
-        </com.pairapp.view.LinearLayout>
-    </com.pairapp.view.RelativeLayout>
+        <com.rey.material.widget.Button
+            android:id="@+id/bt_resend_token"
+            style="@style/FlatWaveColorButtonRippleStyle"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/big_button_height"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/round_corners"
+            android:gravity="center"
+            android:text="@string/st_send_again"
+            android:textColor="@color/white"
+            android:textSize="@dimen/standard_text_size" />
+    </com.pairapp.view.LinearLayout>
 
     <com.rey.material.widget.TextView
         android:id="@+id/copy_right"
@@ -77,5 +85,5 @@
         android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
         android:text="@string/idea_inc"
         android:textColor="@color/black"
-        android:textStyle="bold"/>
+        android:textStyle="bold" />
 </com.pairapp.view.RelativeLayout>

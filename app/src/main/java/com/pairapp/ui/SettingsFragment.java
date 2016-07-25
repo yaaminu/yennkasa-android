@@ -3,6 +3,7 @@ package com.pairapp.ui;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.media.RingtoneManager;
@@ -11,6 +12,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -26,8 +28,6 @@ import com.pairapp.adapter.SettingsAdapter;
 import com.pairapp.data.PersistedSetting;
 import com.pairapp.data.UserManager;
 import com.pairapp.util.PLog;
-import com.rey.material.app.DialogFragment;
-import com.rey.material.app.SimpleDialog;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -61,22 +61,19 @@ public class SettingsFragment extends ListFragment {
                 startActivityForResult(intent, PICK_RINGTONE_REQUEST_CODE);
             } else if (key.equals(UserManager.DELETE_OLDER_MESSAGE)) {
                 final String[] options = getResources().getStringArray(R.array.deleteOldMessages_options);
-                SimpleDialog.Builder builder = new SimpleDialog.Builder(R.style.SimpleDialogLight) {
-                    @Override
-                    public void onPositiveActionClicked(DialogFragment fragment) {
-                        super.onPositiveActionClicked(fragment);
-                        int selected = getSelectedIndex();
-                        item.setIntValue(selected);
-                        item.setSummary(options[selected]);
-                        UserManager.getInstance().putPref(key, selected);
-                        refreshDisplay();
-                    }
-                };
-                builder.title(getString(R.string.deleteOldMessages_title) + " ?");
-                builder.positiveAction(getString(android.R.string.ok));
-                builder.negativeAction(getString(android.R.string.no));
-                builder.items(options, item.getIntValue());
-                DialogFragment.newInstance(builder).show(getFragmentManager(), null);
+                new AlertDialog.Builder(getContext())
+                        .setItems(options, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int selected) {
+                                item.setIntValue(selected);
+                                item.setSummary(options[selected]);
+                                UserManager.getInstance().putPref(key, selected);
+                                refreshDisplay();
+                            }
+                        })
+                        .setTitle(getString(R.string.deleteOldMessages_title) + " ?")
+                        .create()
+                        .show();
             }
         }
     };

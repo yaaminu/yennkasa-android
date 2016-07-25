@@ -17,6 +17,7 @@
     <color name="lblFromName">#777777</color>
     <color name="light_gray">#999999</color>
     <color name="colorPrimary">#5eb964</color>
+    <color name="colorPrimaryTranslucent">#aa5eb964</color>
     <color name="normalControlStates">#789962</color>
     <color name="colorPrimaryDark">#37863c</color>
     <color name="colorAccent">#669955</color>
@@ -54,4 +55,6 @@
     <color name="message_text_box_background">#115eb964</color>
     <color name="transparent">#0000</color>
     <color name="red">#aaff0000</color>
+    <color name="red_deep">#AA830202</color>
+    <color name="colorPrimaryDarker">#1e6258</color>
 </resources>

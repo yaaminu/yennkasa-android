@@ -2,23 +2,23 @@ package com.pairapp.ui;
 
 import android.content.ComponentName;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.widget.Toolbar;
 
-import com.google.samples.apps.iosched.ui.widget.SlidingTabLayout;
 import com.pairapp.PairApp;
 import com.pairapp.R;
 import com.pairapp.data.Conversation;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.UiHelpers;
-import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
 
 //import com.digits.sdk.android.Digits;
 
@@ -31,7 +31,12 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final String ARG_TITLE = "title";
     private static int savedPosition = MyFragmentStatePagerAdapter.POSITION_CALL_LOGS;
-    private ViewPager pager;
+
+    @Bind(R.id.vp_pager)
+    ViewPager pager;
+
+    @Bind(R.id.pts_title_strip)
+    TabLayout tabLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,20 +84,9 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
 
     private void setupViews() {
         setContentView(R.layout.activity_main);
-        pager = ((ViewPager) findViewById(R.id.vp_pager));
-        SlidingTabLayout tabStrip = (SlidingTabLayout) findViewById(R.id.pts_title_strip);
-        Toolbar toolBar = (Toolbar) findViewById(R.id.main_toolbar);
-        toolBar.setTitle("");
-        //noinspection unused
-        ToolbarManager toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
+        ButterKnife.bind(this);
         pager.setAdapter(new MyFragmentStatePagerAdapter(getSupportFragmentManager()));
-        Resources resources = getResources();
-        boolean distributeEvenly = resources.getBoolean(R.bool.is_very_large) ||
-                (resources.getBoolean(R.bool.is_big_screen) && resources.getBoolean(R.bool.isLandscape));
-        tabStrip.setDistributeEvenly(distributeEvenly);
-        tabStrip.setCustomTabView(R.layout.tab_view, android.R.id.text1);
-        tabStrip.setSelectedIndicatorColors(resources.getColor(R.color.white));
-        tabStrip.setViewPager(pager);
+        tabLayout.setupWithViewPager(pager);
     }
 
     private boolean notIsMainIntent(Intent intent) {

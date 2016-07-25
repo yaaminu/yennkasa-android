@@ -32,7 +32,7 @@ import io.realm.annotations.RealmClass;
  * this class represents a particular message sent by a given {@link User}.
  * it is normally used in conjunction with {@link Conversation}
  * the message may be attached to {@link Realm} or not.
- * <p/>
+ * <p>
  * one can detach the message from realm by using its {@link #copy} method
  * and using the returned message.
  *
@@ -340,7 +340,7 @@ public class Message extends RealmObject {
         if (isOutGoing(lastMessage)) {
             summary = GenericUtils.getString(R.string.dialed_call);
         } else {
-            summary = GenericUtils.getString(callDuration <= 0 ? R.string.missed_call : R.string.recieved_call);
+            summary = GenericUtils.getString(callDuration <= 0 ? R.string.missed_call : R.string.recieved_call, UserManager.getInstance().getName(lastMessage.getFrom()));
         }
         summary += callDuration > 0 ? " " + formatTimespan(callDuration) + "  " : "";
         return summary;

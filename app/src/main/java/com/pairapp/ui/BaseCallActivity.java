@@ -13,22 +13,23 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AlertDialog;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.pairapp.BuildConfig;
 import com.pairapp.R;
 import com.pairapp.call.CallData;
+import com.pairapp.data.Message;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.messenger.MessengerBus;
+import com.pairapp.messenger.PairAppClient;
 import com.pairapp.util.Event;
 import com.pairapp.util.PLog;
 import com.pairapp.util.ViewUtils;
 import com.rey.material.widget.SnackBar;
 
-import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import butterknife.Bind;
@@ -66,19 +67,19 @@ public abstract class BaseCallActivity extends PairAppActivity {
     TextView tvCallState;
 
     @Bind(R.id.bt_decline_call)
-    Button declineCall;
+    View declineCall;
 
     @Bind(R.id.bt_end_call)
-    Button endCall;
+    View endCall;
 
     @Bind(R.id.bt_answer_call)
-    Button answerCall;
+    View answerCall;
 
     @Bind(R.id.bt_speaker)
-    Button enableSpeaker;
+    ImageButton enableSpeaker;
 
     @Bind(R.id.bt_mute)
-    Button mute;
+    ImageButton mute;
 
     @SuppressWarnings("NullableProblems") //will always be initialised in onCreate.
     @NonNull
@@ -143,8 +144,9 @@ public abstract class BaseCallActivity extends PairAppActivity {
                 throw new AssertionError();
         }
 
-        mute.setSelected(callData.isMuted());
-        enableSpeaker.setSelected(callData.isLoudSpeaker());
+        Resources resources = getResources();
+        mute.setImageDrawable(resources.getDrawable(callData.isMuted() ? R.drawable.ic_unmute_24dp1 : R.drawable.ic_mute_off_black_24dp));
+        enableSpeaker.setImageDrawable(resources.getDrawable(callData.isLoudSpeaker() ? R.drawable.ic_speaker_out_black_24dp : R.drawable.ic_speaker_off_black_24dp));
     }
 
     @NonNull
@@ -163,7 +165,7 @@ public abstract class BaseCallActivity extends PairAppActivity {
         public void onNext(Long o) {
             if (callData.getCallState() == CallData.ESTABLISHED) {
                 long duration = System.currentTimeMillis() - callData.getEstablishedTime();
-                tvCallState.setText(formatTimespan(duration));
+                tvCallState.setText(Message.formatTimespan(duration));
             }
         }
     };
@@ -174,12 +176,6 @@ public abstract class BaseCallActivity extends PairAppActivity {
                 .subscribe(subscriber);
     }
 
-    private String formatTimespan(long timespan) {
-        long totalSeconds = timespan / 1000;
-        long minutes = totalSeconds / 60;
-        long seconds = totalSeconds % 60;
-        return String.format(Locale.US, "%02d:%02d", minutes, seconds);
-    }
 
     @LayoutRes
     protected abstract int getLayout();
@@ -226,6 +222,9 @@ public abstract class BaseCallActivity extends PairAppActivity {
     protected void onStop() {
         super.onStop();
         if (getCallData().getCallState() != CallData.ENDED) {
+            Intent intent = new Intent(this, PairAppClient.class);
+            intent.setAction(MessengerBus.HANG_UP_CALL);
+            intent.putExtra(EXTRA_CALL_DATA, callData);
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                     .setSmallIcon(R.drawable.ic_stat_icon)
                     .setTicker(getNotificationTitle())
@@ -233,7 +232,8 @@ public abstract class BaseCallActivity extends PairAppActivity {
                     .setContentText(getNotificationTitle())
                     .setOngoing(true)
                     .setContentIntent(PendingIntent.getActivity(this,
-                            REQUEST_CODE, getNotificationIntent(), PendingIntent.FLAG_UPDATE_CURRENT));
+                            REQUEST_CODE, getNotificationIntent(), PendingIntent.FLAG_UPDATE_CURRENT))
+                    .addAction(R.drawable.ic_call_end_black_24dp, getString(R.string.end_call), PendingIntent.getActivity(this, 1001, intent, PendingIntent.FLAG_UPDATE_CURRENT));
             NotificationManagerCompat.from(this)
                     .notify(getPeer().getUserId(), MessengerBus.CALL_NOTIFICATION_ID, builder.build());
         }

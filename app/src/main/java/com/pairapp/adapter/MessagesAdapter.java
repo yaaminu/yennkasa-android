@@ -56,7 +56,6 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             OUTGOING_MESSAGE_EXTRA = 0x9;
 
 
-    //    private final Drawable bgOut, bgOutXtra, bgIn, bgInXtra;
     private final SparseIntArray messageStates;
     private final Picasso PICASSO;
     private static final LruCache<String, Bitmap> thumbnailCache = new LruCache<>(5);
@@ -69,24 +68,19 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         super(delegate.getContext(), realmResults, true);
         this.delegate = delegate;
         messageStates = new SparseIntArray(4);
-        messageStates.put(Message.STATE_PENDING, R.drawable.ic_vertical_align_top_white_18dp);
-        messageStates.put(Message.STATE_SENT, R.drawable.ic_done_white_18dp);
-        messageStates.put(Message.STATE_SEND_FAILED, R.drawable.ic_error_white_18dp);
-        messageStates.put(Message.STATE_SEEN, R.drawable.ic_visibility_white_18dp);
-        messageStates.put(Message.STATE_RECEIVED, R.drawable.ic_done_all_white_18dp);
+        messageStates.put(Message.STATE_PENDING, R.drawable.ic_message_pending_12dp);
+        messageStates.put(Message.STATE_SENT, R.drawable.ic_message_sent_12dp);
+        messageStates.put(Message.STATE_SEND_FAILED, R.drawable.ic_message_failed_12dp);
+        messageStates.put(Message.STATE_SEEN, R.drawable.ic_message_seen_12dp);
+        messageStates.put(Message.STATE_RECEIVED, R.drawable.ic_message_delivered_12dp);
         this.isGroupMessages = isGroupMessages;
         PICASSO = Picasso.with(context);
-//        Resources resources = context.getResources();
-//        bgOut = resources.getDrawable(R.drawable.bg_msg_outgoing_normal);
-//        bgOutXtra = resources.getDrawable(R.drawable.bg_msg_outgoing_normal_ext);
-//        bgIn = resources.getDrawable(R.drawable.bg_msg_incoming_normal);
-//        bgInXtra = resources.getDrawable(R.drawable.bg_msg_incoming_normal_ext);
     }
 
     //optimisations as we are facing performance issues
     //these two fields hold the current state of the message we showing in getView;
     // they will be set in getItemViewType. Due to the fact that all ui stuffs happen on one thread
-    // we will have no problem with race condition
+    // we will have no problem with race conditions
 
     private int currentMessageType; //this holds the current message we showing.
     private boolean isOutgoingMessage; //from who is the currently showing message.
@@ -170,6 +164,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         }
         holder = (ViewHolder) convertView.getTag();
 
+        holder.textMessage.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         Date messageDateComposed = message.getDateComposed();
         View.OnTouchListener touchListener = new View.OnTouchListener() {
             @Override
@@ -183,7 +178,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             convertView.setOnTouchListener(touchListener);
             return convertView;
         } else if (currentMessageType == Message.TYPE_CALL) {
-            holder.textMessage.setText(Message.getCallSummary(message));
+            holder.textMessage.setCompoundDrawablesWithIntrinsicBounds(CallLogAdapter.getDrawable(message), 0, 0, 0);
+            holder.textMessage.setText("  " + Message.getCallSummary(message));
             convertView.setOnTouchListener(touchListener);
             return convertView;
         } else if (currentMessageType == Message.TYPE_TYPING_MESSAGE) {

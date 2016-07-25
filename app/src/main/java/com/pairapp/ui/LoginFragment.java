@@ -267,10 +267,6 @@ public class LoginFragment extends Fragment {
 
         loginButton.setOnClickListener(listener);
 
-        android.widget.TextView appName = ((android.widget.TextView) view.findViewById(R.id.tv_app_name));
-        ViewUtils.setTypeface(appName, TypeFaceUtil.two_d_font);
-
-
         android.widget.TextView copyRight = ((android.widget.TextView) view.findViewById(R.id.copy_right));
         ViewUtils.setTypeface(copyRight, TypeFaceUtil.two_d_font);
         if (savedInstanceState != null) {

@@ -30,7 +30,7 @@
     </style>
 
     <style name="popup_theme" parent="ThemeOverlay.AppCompat.Light">
-        <item name="android:background">@android:color/white</item>
+        <item name="android:background">@color/white</item>
         <item name="android:textColor">@color/black</item>
     </style>
     <!-- Navigator Drawable -->
@@ -45,7 +45,7 @@
     </style>
 
     <style name="ToolbarRippleStyle" parent="Material.Drawable.Ripple.Touch.MatchView.Light">
-        <item name="rd_backgroundColor">@android:color/transparent</item>
+        <item name="rd_backgroundColor">@color/transparent</item>
         <item name="rd_rippleColor">@color/colorPrimaryDark</item>
     </style>
 
@@ -67,7 +67,6 @@
 
     <style name="TabRippleStyle" parent="Material.Drawable.Ripple.Touch.Light">
         <item name="android:background">@null</item>
-        <item name="rd_rippleColor">@color/colorPrimaryDark</item>
         <item name="rd_rippleAnimDuration">300</item>
         <item name="rd_maskType">oval</item>
         <item name="rd_cornerRadius">4dp</item>
@@ -76,7 +75,7 @@
 
     <!-- Progress Style -->
 
-    <style name="CircularProgressDrawableStyle" parent="Material.Drawable.CircularProgress"/>
+    <style name="CircularProgressDrawableStyle" parent="Material.Drawable.CircularProgress" />
 
     <style name="ColorsCircularProgressDrawableStyle" parent="Material.Drawable.CircularProgress">
         <item name="cpd_strokeColors">@array/progress_colors</item>
@@ -94,8 +93,7 @@
         <item name="cpd_strokeColor">@color/white</item>
     </style>
 
-    <style name="base_indeterminate_progress_stroke_preferred_color"
-           parent="CircularProgressDrawableStyle">
+    <style name="base_indeterminate_progress_stroke_preferred_color" parent="CircularProgressDrawableStyle">
         <item name="cpd_strokeColor">@color/preferred_primary_color</item>
     </style>
 
@@ -103,8 +101,7 @@
         <item name="cpd_strokeColor">@color/preferred_primary_color</item>
     </style>
 
-    <style name="InOutColorsCircularProgressDrawableStyle"
-           parent="Material.Drawable.CircularProgress">
+    <style name="InOutColorsCircularProgressDrawableStyle" parent="Material.Drawable.CircularProgress">
         <item name="cpd_inAnimDuration">800</item>
         <item name="cpd_inStepPercent">0.5</item>
         <item name="cpd_inStepColors">@array/in_colors</item>
@@ -112,15 +109,13 @@
         <item name="cpd_strokeColors">@array/progress_colors</item>
     </style>
 
-    <style name="DeterminateInOutCircularProgressDrawableStyle"
-           parent="Material.Drawable.CircularProgress.Determinate">
+    <style name="DeterminateInOutCircularProgressDrawableStyle" parent="Material.Drawable.CircularProgress.Determinate">
         <item name="cpd_inAnimDuration">400</item>
         <item name="cpd_outAnimDuration">400</item>
         <item name="cpd_initialAngle">-90</item>
     </style>
 
-    <style name="DeterminateCircularProgressDrawableStyle"
-           parent="Material.Drawable.CircularProgress.Determinate">
+    <style name="DeterminateCircularProgressDrawableStyle" parent="Material.Drawable.CircularProgress.Determinate">
         <item name="cpd_inAnimDuration">0</item>
         <item name="cpd_outAnimDuration">0</item>
         <item name="cpd_initialAngle">-90</item>
@@ -135,8 +130,7 @@
         <item name="lpd_strokeSecondaryColor">#00000000</item>
     </style>
 
-    <style name="DeterminateLinearProgressDrawableStyle"
-           parent="Material.Drawable.LinearProgress.Determinate">
+    <style name="DeterminateLinearProgressDrawableStyle" parent="Material.Drawable.LinearProgress.Determinate">
         <item name="lpd_strokeColor">#FF4389F3</item>
         <item name="lpd_strokeSecondaryColor">#FFB6CDF2</item>
     </style>
@@ -146,8 +140,7 @@
         <item name="lpd_strokeSecondaryColor">#FFB6CDF2</item>
     </style>
 
-    <style name="BufferLinearProgressDrawableStyle"
-           parent="Material.Drawable.LinearProgress.Buffer">
+    <style name="BufferLinearProgressDrawableStyle" parent="Material.Drawable.LinearProgress.Buffer">
         <item name="lpd_strokeColor">#FF4389F3</item>
         <item name="lpd_strokeSecondaryColor">#FFB6CDF2</item>
         <item name="lpd_travelDuration">400</item>
@@ -161,7 +154,6 @@
 
     <style name="FlatButtonRippleStyle" parent="Material.Drawable.Ripple.Touch.Light">
         <item name="android:background">@null</item>
-        <item name="rd_cornerRadius">4dp</item>
     </style>
 
     <style name="FlatWaveButtonRippleStyle" parent="Material.Drawable.Ripple.Wave.Light">
@@ -182,43 +174,9 @@
         <item name="rd_cornerRadius">4dp</item>
     </style>
 
-    <!--<style name="RaiseButtonRippleStyle" parent="Material.Drawable.Ripple.Touch.Light">-->
-    <!--<item name="android:background">@drawable/bg_bt_raise</item>-->
-    <!--<item name="rd_leftPadding">1dp</item>-->
-    <!--<item name="rd_topPadding">1dp</item>-->
-    <!--<item name="rd_rightPadding">1dp</item>-->
-    <!--<item name="rd_bottomPadding">2dp</item>-->
-    <!--</style>-->
+    <style name="RadioButtonDrawable" parent="Material.Drawable.RadioButton" />
 
-    <!--<style name="RaiseWaveButtonRippleStyle" parent="Material.Drawable.Ripple.Wave.Light">-->
-    <!--<item name="android:background">@drawable/bg_bt_raise</item>-->
-    <!--<item name="rd_leftPadding">1dp</item>-->
-    <!--<item name="rd_topPadding">1dp</item>-->
-    <!--<item name="rd_rightPadding">1dp</item>-->
-    <!--<item name="rd_bottomPadding">2dp</item>-->
-    <!--</style>-->
-
-    <!--<style name="RaiseColorButtonRippleStyle" parent="Material.Drawable.Ripple.Touch.Light">-->
-    <!--<item name="rd_rippleColor">@color/colorPrimaryDark</item>-->
-    <!--<item name="rd_leftPadding">1dp</item>-->
-    <!--<item name="rd_topPadding">1dp</item>-->
-    <!--<item name="rd_rightPadding">1dp</item>-->
-    <!--<item name="rd_bottomPadding">2dp</item>-->
-    <!--</style>-->
-
-    <!--<style name="RaiseWaveColorButtonRippleStyle" parent="Material.Drawable.Ripple.Wave.Light">-->
-    <!--<item name="rd_rippleColor">@color/colorPrimaryDark</item>-->
-    <!--<item name="rd_leftPadding">1dp</item>-->
-    <!--<item name="rd_topPadding">1dp</item>-->
-    <!--<item name="rd_rightPadding">1dp</item>-->
-    <!--<item name="rd_bottomPadding">2dp</item>-->
-    <!--</style>-->
-
-    <!-- Switch Style -->
-
-    <style name="RadioButtonDrawable" parent="Material.Drawable.RadioButton"/>
-
-    <style name="CheckBoxDrawable" parent="Material.Drawable.CheckBox"/>
+    <style name="CheckBoxDrawable" parent="Material.Drawable.CheckBox" />
 
     <!-- SnackBar Style -->
 
@@ -312,8 +270,12 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">@dimen/big_button_height</item>
         <item name="android:layout_marginLeft">5dp</item>
-        <item name="android:background">@drawable/button_background</item>
+        <item name="android:background">@drawable/round_corners</item>
         <item name="android:layout_weight">1</item>
+    </style>
+
+    <style name="round_button_style.concealed">
+        <item name="android:background">@drawable/round_corners_concealed</item>
     </style>
 
     <style name="round_button_style_no_weight" parent="FlatWaveColorButtonRippleStyle">
@@ -321,6 +283,7 @@
         <item name="android:layout_height">@dimen/big_button_height</item>
         <item name="android:background">@drawable/button_background</item>
     </style>
+
     <style name="snackbar_white" parent="Material.Widget.SnackBar.Mobile.MultiLine">
         <item name="sb_textColor">@color/preferred_primary_color</item>
         <item name="sb_backgroundColor">@color/white</item>
@@ -329,6 +292,18 @@
 
     <style name="snackbar_black" parent="Material.Widget.SnackBar.Mobile.MultiLine">
         <item name="sb_duration">10000</item>
+    </style>
+
+    <style name="circular_call_button">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:background">@drawable/round_button</item>
+    </style>
+
+    <style name="circular_call_button.red">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:background">@drawable/round_red_button</item>
     </style>
 
     <dimen name="profile_fragment_round_icons_padding">8dp</dimen>

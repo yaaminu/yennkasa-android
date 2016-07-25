@@ -1,15 +1,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:gravity="center_horizontal"
-              android:orientation="vertical"
-              tools:context="com.pairapp.ui.ChooseDisplayPictureFragment">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    tools:context="com.pairapp.ui.ChooseDisplayPictureFragment">
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        >
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -25,7 +24,7 @@
                 android:clickable="true"
                 android:contentDescription="@string/display_picture"
                 android:scaleType="centerCrop"
-                android:src="@drawable/group_avatar"/>
+                android:src="@drawable/group_avatar" />
 
             <TextView
                 android:id="@+id/tv_dp_preview_label"
@@ -33,54 +32,53 @@
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:maxLines="3"
+                android:padding="@dimen/default_gap"
                 android:text="@string/pick_an_optional_dp"
-                android:textSize="@dimen/standard_text_size"/>
+                android:textSize="@dimen/standard_text_size" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                >
+                android:layout_margin="@dimen/activity_vertical_margin">
 
                 <com.rey.material.widget.Button
                     android:id="@+id/bt_take_photo_change_dp"
                     style="@style/round_button_style"
                     android:layout_width="0dp"
                     android:layout_height="@dimen/big_button_height"
-                    android:layout_margin="@dimen/abc_action_bar_subtitle_bottom_margin_material"
                     android:layout_weight="1"
                     android:drawableEnd="@drawable/ic_photo_camera_white_24dp"
                     android:drawableRight="@drawable/ic_photo_camera_white_24dp"
-                    android:paddingLeft="@dimen/abc_button_padding_horizontal_material"
-                    android:paddingRight="@dimen/abc_button_padding_horizontal_material"
+                    android:paddingLeft="@dimen/default_gap"
+                    android:paddingRight="@dimen/default_gap"
                     android:text="@string/camera"
                     android:textColor="@color/white"
-                    android:textSize="@dimen/standard_text_size"/>
+                    android:textSize="@dimen/standard_text_size" />
 
                 <com.rey.material.widget.Button
                     android:id="@+id/bt_pick_photo_change_dp"
                     style="@style/round_button_style"
                     android:layout_width="0dp"
                     android:layout_height="@dimen/big_button_height"
-                    android:layout_margin="@dimen/abc_action_bar_subtitle_bottom_margin_material"
                     android:layout_weight="1"
                     android:drawableEnd="@drawable/ic_photo_white_24dp"
                     android:drawableRight="@drawable/ic_photo_white_24dp"
-                    android:paddingLeft="@dimen/abc_button_padding_horizontal_material"
-                    android:paddingRight="@dimen/abc_button_padding_horizontal_material"
+                    android:paddingLeft="@dimen/default_gap"
+                    android:paddingRight="@dimen/default_gap"
                     android:text="@string/gallery"
                     android:textColor="@color/white"
-                    android:textSize="@dimen/standard_text_size"/>
+                    android:textSize="@dimen/standard_text_size" />
             </LinearLayout>
 
-            <com.rey.material.widget.Button
+            <Button
                 android:id="@+id/choose_dp_later"
-                style="@style/round_button_style"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/big_button_height"
-                android:layout_margin="@dimen/abc_action_bar_subtitle_bottom_margin_material"
+                android:layout_margin="@dimen/activity_vertical_margin"
+                android:background="@color/transparent"
                 android:text="@string/later"
-                android:textColor="@color/white"
-                android:textSize="@dimen/standard_text_size"/>
+                android:textColor="#1000"
+                android:textSize="@dimen/standard_text_size" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

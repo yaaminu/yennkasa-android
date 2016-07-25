@@ -35,7 +35,7 @@ import io.realm.Realm;
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
- * <p/>
+ * <p>
  */
 public class Worker extends IntentService {
     private static final String DOWNLOAD = "com.idea.messenger.action.download";
@@ -49,14 +49,14 @@ public class Worker extends IntentService {
     private static final String MESSAGE_ID = "com.idea.messenger.msgid";
 
     static void download(Context context, Message message) {
-        download(context,message,false);
+        download(context, message, false);
     }
 
-    static void download(Context context,Message message,boolean fromBackground){
+    static void download(Context context, Message message, boolean fromBackground) {
         Intent intent = new Intent(context, Worker.class);
         intent.setAction(DOWNLOAD);
         intent.putExtra(MESSAGE_JSON, Message.toJSON(message));
-        intent.putExtra(FROM_BACKGROUND,fromBackground);
+        intent.putExtra(FROM_BACKGROUND, fromBackground);
         context.startService(intent);
     }
 
@@ -64,7 +64,7 @@ public class Worker extends IntentService {
         super("Worker");
     }
 
-    private static final String FROM_BACKGROUND = Worker.class.getName()+"FROM_BACKGROUND";
+    private static final String FROM_BACKGROUND = Worker.class.getName() + "FROM_BACKGROUND";
 
     @Override
     protected void onHandleIntent(Intent intent) {
@@ -73,8 +73,8 @@ public class Worker extends IntentService {
             if (DOWNLOAD.equals(action)) {
                 final String messageJson = intent.getStringExtra(MESSAGE_JSON);
                 Message message = Message.fromJSON(messageJson);
-                boolean fromBackground = intent.getBooleanExtra(FROM_BACKGROUND,false);
-                download(message,fromBackground);
+                boolean fromBackground = intent.getBooleanExtra(FROM_BACKGROUND, false);
+                download(message, fromBackground);
             } else if (CANCEL.equals(action)) {
                 String messageId = intent.getStringExtra(
                         MESSAGE_ID);
@@ -138,7 +138,8 @@ public class Worker extends IntentService {
         private final String peer;
         private int type;
         private boolean fromBackground;
-        public DownloadRunnable(Message message,boolean fromBackground) {
+
+        public DownloadRunnable(Message message, boolean fromBackground) {
             messageId = message.getId();
             messageBody = message.getMessageBody();
             peer = Message.isGroupMessage(message) ? message.getTo() : message.getFrom();
