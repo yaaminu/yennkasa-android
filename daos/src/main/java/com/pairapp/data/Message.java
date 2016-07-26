@@ -5,6 +5,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
+import android.text.format.DateUtils;
 
 import com.pairapp.Errors.PairappException;
 import com.pairapp.data.util.MessageUtils;
@@ -32,7 +33,7 @@ import io.realm.annotations.RealmClass;
  * this class represents a particular message sent by a given {@link User}.
  * it is normally used in conjunction with {@link Conversation}
  * the message may be attached to {@link Realm} or not.
- * <p>
+ * <p/>
  * one can detach the message from realm by using its {@link #copy} method
  * and using the returned message.
  *
@@ -333,17 +334,12 @@ public class Message extends RealmObject {
     }
 
     @NonNull
-    public static String getCallSummary(Message lastMessage) {
+    public static String getCallSummary(Context context, Message message) {
         //noinspection ConstantConditions
-        int callDuration = lastMessage.getCallBody().getCallDuration();
-        String summary;
-        if (isOutGoing(lastMessage)) {
-            summary = GenericUtils.getString(R.string.dialed_call);
-        } else {
-            summary = GenericUtils.getString(callDuration <= 0 ? R.string.missed_call : R.string.recieved_call, UserManager.getInstance().getName(lastMessage.getFrom()));
-        }
-        summary += callDuration > 0 ? " " + formatTimespan(callDuration) + "  " : "";
-        return summary;
+        int callDuration = message.getCallBody().getCallDuration();
+        return DateUtils.formatDateTime(context, message.getDateComposed().getTime(),
+                DateUtils.FORMAT_SHOW_TIME) + "   " +
+                (Message.isOutGoing(message) || callDuration > 0 ? "" + formatTimespan(callDuration) : GenericUtils.getString(R.string.missed_call));
     }
 
     public int getType() {

@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import com.pairapp.data.CallBody;
 import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
+import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.PLog;
@@ -122,7 +123,7 @@ class CallCenter implements CallClientListener, VideoCallListener {
                 lastMessage.setState(Message.STATE_RECEIVED);
             }
             conversation.setLastMessage(lastMessage);
-            String summary = Message.getCallSummary(lastMessage);
+            String summary = Message.getCallSummary(Config.getApplicationContext(), lastMessage);
             conversation.setSummary(summary);
             realm.commitTransaction();
         } finally {

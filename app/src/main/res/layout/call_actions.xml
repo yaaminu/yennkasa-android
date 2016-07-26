@@ -11,7 +11,7 @@
         style="@style/circular_call_button"
         android:layout_margin="@dimen/default_gap"
         android:contentDescription="@string/speaker"
-        android:src="@drawable/ic_mute_off_black_24dp" />
+        android:src="@drawable/ic_unmute_24dp1" />
 
     <ImageButton
         android:id="@+id/bt_answer_call"

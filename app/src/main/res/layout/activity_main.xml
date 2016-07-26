@@ -29,7 +29,7 @@
                     app:tabIndicatorColor="@color/white"
                     app:tabMode="scrollable"
                     app:tabSelectedTextColor="@color/white"
-                    app:tabTextColor="@color/white"
+                    app:tabTextColor="@color/faded_white"
                     app:theme="@style/ThemeOverlay.AppCompat.Dark" />
 
                 <include layout="@layout/inline_notification_bar_layout" />

@@ -9,7 +9,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.util.LruCache;
 import android.text.format.DateUtils;
 import android.util.SparseIntArray;
-import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -179,7 +178,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             return convertView;
         } else if (currentMessageType == Message.TYPE_CALL) {
             holder.textMessage.setCompoundDrawablesWithIntrinsicBounds(CallLogAdapter.getDrawable(message), 0, 0, 0);
-            holder.textMessage.setText("  " + Message.getCallSummary(message));
+            holder.textMessage.setText("  " + Message.getCallSummary(context, message));
             convertView.setOnTouchListener(touchListener);
             return convertView;
         } else if (currentMessageType == Message.TYPE_TYPING_MESSAGE) {
@@ -391,7 +390,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     private View hookupViews(int layoutResource, ViewGroup parent) {
         View convertView;
         ViewHolder holder;
-        convertView = LayoutInflater.from(parent.getContext()).inflate(layoutResource, parent, false);
+        convertView = inflater.inflate(layoutResource, parent, false);
         holder = new ViewHolder();
         holder.textMessage = ((TextView) convertView.findViewById(R.id.tv_log_message));
         holder.preview = (ImageView) convertView.findViewById(R.id.iv_message_preview);
@@ -400,7 +399,6 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         holder.progressBar = (ProgressWheel) convertView.findViewById(R.id.pb_download_progress_indeterminate);
         holder.retry = convertView.findViewById(R.id.iv_retry);
         holder.progressRootView = convertView.findViewById(R.id.fl_progress_root_view);
-//        holder.progressBarDeterminate = (ProgressBar) convertView.findViewById(R.id.pb_download_progress_determinate);
         holder.sendersName = ((TextView) convertView.findViewById(R.id.tv_sender_name));
         ViewUtils.setTypeface(holder.dateComposed, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         convertView.setTag(holder);

@@ -145,8 +145,8 @@ public abstract class BaseCallActivity extends PairAppActivity {
         }
 
         Resources resources = getResources();
-        mute.setImageDrawable(resources.getDrawable(callData.isMuted() ? R.drawable.ic_unmute_24dp1 : R.drawable.ic_mute_off_black_24dp));
-        enableSpeaker.setImageDrawable(resources.getDrawable(callData.isLoudSpeaker() ? R.drawable.ic_speaker_out_black_24dp : R.drawable.ic_speaker_off_black_24dp));
+        mute.setImageDrawable(resources.getDrawable(callData.isMuted() ? R.drawable.ic_mute_off_black_24dp : R.drawable.ic_unmute_24dp1));
+        enableSpeaker.setImageDrawable(resources.getDrawable(callData.isLoudSpeaker() ? R.drawable.ic_speaker_off_black_24dp : R.drawable.ic_speaker_out_black_24dp));
     }
 
     @NonNull
@@ -233,7 +233,7 @@ public abstract class BaseCallActivity extends PairAppActivity {
                     .setOngoing(true)
                     .setContentIntent(PendingIntent.getActivity(this,
                             REQUEST_CODE, getNotificationIntent(), PendingIntent.FLAG_UPDATE_CURRENT))
-                    .addAction(R.drawable.ic_call_end_black_24dp, getString(R.string.end_call), PendingIntent.getActivity(this, 1001, intent, PendingIntent.FLAG_UPDATE_CURRENT));
+                    .addAction(R.drawable.ic_call_end_black_24dp, getString(R.string.end_call), PendingIntent.getService(this, 1001, intent, PendingIntent.FLAG_UPDATE_CURRENT));
             NotificationManagerCompat.from(this)
                     .notify(getPeer().getUserId(), MessengerBus.CALL_NOTIFICATION_ID, builder.build());
         }
@@ -297,7 +297,6 @@ public abstract class BaseCallActivity extends PairAppActivity {
 
     @OnClick(R.id.bt_answer_call)
     public void answerCall(View v) {
-
         postEvent(Event.create(ANSWER_CALL, null, callData));
     }
 

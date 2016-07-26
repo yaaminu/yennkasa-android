@@ -57,4 +57,6 @@
     <color name="red">#aaff0000</color>
     <color name="red_deep">#AA830202</color>
     <color name="colorPrimaryDarker">#1e6258</color>
+    <color name="orange">#FFF2AF3A</color>
+    <color name="faded_white">#cfff</color>
 </resources>

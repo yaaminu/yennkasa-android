@@ -468,13 +468,13 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         currentStatus = status;
         switch (status) {
             case MessengerBus.DISCONNECTED:
-                ((TextView) notificationView.findViewById(R.id.inline_notification_text)).setText(getString(R.string.disconected));
+                ((TextView) notificationView.findViewById(R.id.inline_notification_text)).setText(getString(R.string.disconnected));
                 notificationView.setBackgroundColor(getResources().getColor(R.color.red));
                 ViewUtils.showViews(notificationView);
                 break;
             case MessengerBus.CONNECTING:
                 ((TextView) notificationView.findViewById(R.id.inline_notification_text)).setText(getString(R.string.connecting));
-                notificationView.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+                notificationView.setBackgroundColor(getResources().getColor(R.color.orange));
                 ViewUtils.showViews(notificationView);
                 break;
             case MessengerBus.CONNECTED:

@@ -1,7 +1,5 @@
 package com.pairapp.adapter;
 
-import android.content.Context;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -44,7 +42,6 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
     public View getView(int position, View convertView, ViewGroup parent) {
         final ViewHolder holder;
         if (convertView == null) {
-            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(R.layout.inbox_list_item_row, parent, false);
             holder = new ViewHolder();
             holder.chatSummary = (TextView) convertView.findViewById(R.id.tv_chat_summary);
@@ -110,7 +107,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
                 // holder.mediaMessageIcon.setVisibility(View.GONE);
             } else if (Message.isCallMessage(message)) {
                 holder.chatSummary.setCompoundDrawablesWithIntrinsicBounds(CallLogAdapter.getDrawable(message), 0, 0, 0);
-                summary.append("  ").append(Message.getCallSummary(message));
+                summary.append("  ").append(Message.getCallSummary(context, message));
             } else {
                 summary.append(PairApp.typeToString(context, message));
             }

@@ -55,7 +55,7 @@ public class CallLogAdapter extends PairappBaseAdapter<Message> {
         holder1.callDate.setText(formattedDate);
         holder1.callSummary.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         holder1.callSummary.setCompoundDrawablesWithIntrinsicBounds(getDrawable(message), 0, 0, 0);
-        holder1.callSummary.setText("  " + Message.getCallSummary(message));
+        holder1.callSummary.setText("  " + Message.getCallSummary(context, message));
 
         ImageLoader.load(context, user.getDP())
                 .error(R.drawable.user_avartar)

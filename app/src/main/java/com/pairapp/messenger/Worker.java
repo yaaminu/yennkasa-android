@@ -104,7 +104,7 @@ public class Worker extends IntentService {
     private void download(final Message message, final boolean isAutoDownload) {
         synchronized (downloading) {
             if (downloading.size() > MAX_PARRALLEL_DOWNLOAD && !isAutoDownload) {
-                ErrorCenter.reportError(PARRALLEL_DOWNLOAD, getString(R.string.too_many_parralel_dowload), 1);
+                ErrorCenter.reportError(PARRALLEL_DOWNLOAD, getString(R.string.too_many_parallel_download), 1);
                 return;
             }
             if (!downloading.add(message.getId()) && !isAutoDownload) {
