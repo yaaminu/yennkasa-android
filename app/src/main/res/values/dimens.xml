@@ -98,4 +98,7 @@
     <dimen name="message_item_margin_bottom">0dp</dimen>
     <dimen name="video_call_local_view_width">100dp</dimen>
     <dimen name="video_call_local_view_height">100dp</dimen>
+    <dimen name="unseen_message_size">10sp</dimen>
+    <dimen name="unseen_message_width">24dp</dimen>
+    <dimen name="unseen_message_height">24dp</dimen>
 </resources>

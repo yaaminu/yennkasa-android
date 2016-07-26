@@ -17,6 +17,8 @@ import com.pairapp.call.CallController;
 import com.pairapp.call.CallData;
 import com.pairapp.data.CallBody;
 import com.pairapp.data.Message;
+import com.pairapp.data.User;
+import com.pairapp.data.UserManager;
 import com.pairapp.net.sockets.Sendable;
 import com.pairapp.net.sockets.Sender;
 import com.pairapp.ui.MainActivity;
@@ -28,9 +30,12 @@ import com.pairapp.util.PLog;
 import com.pairapp.util.ThreadUtils;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import io.realm.Realm;
+import io.realm.RealmResults;
+import io.realm.Sort;
 
 import static com.pairapp.messenger.MessengerBus.GET_STATUS_MANAGER;
 import static com.pairapp.messenger.MessengerBus.ON_CALL_EVENT;
@@ -275,23 +280,27 @@ class PairAppClientInterface {
         Realm realm = Message.REALM();
         long count;
         try {
-            count = realm.where(Message.class).equalTo(Message.FIELD_TYPE, Message.TYPE_CALL)
+            RealmResults<Message> messages = realm.where(Message.class).equalTo(Message.FIELD_TYPE, Message.TYPE_CALL)
                     .equalTo(Message.FIELD_STATE, Message.STATE_RECEIVED)
                     .lessThanOrEqualTo(Message.FIELD_CALL_BODY + "." + CallBody.FIELD_CALL_DURATION, 0)
-                    .count();
+                    .findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.DESCENDING);
+
+            if (messages.size() > 0) {
+                String recipientsSummary = generateString(messages.distinct(Message.FIELD_FROM));
+                String contentText = context.getString(R.string.missed_call_notification, messages.size(), recipientsSummary);
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
+                builder.setContentTitle(context.getString(R.string.pairapp_call));
+                builder.setContentText(contentText);
+                builder.setStyle(new NotificationCompat.BigTextStyle().bigText(contentText));
+                builder.setSmallIcon(R.drawable.ic_stat_icon);
+                builder.setAutoCancel(true);
+                builder.setTicker(contentText);
+                Intent intent = new Intent(context, MainActivity.class);
+                builder.setContentIntent(PendingIntent.getActivity(context, 1001, intent, PendingIntent.FLAG_UPDATE_CURRENT));
+                NotificationManagerCompat.from(context).notify(CallController.MISSED_CALL_NOTIFICATION_ID, builder.build());
+            }
         } finally {
             realm.close();
-        }
-        if (count > 0) {
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
-            builder.setContentTitle(context.getString(R.string.pairapp_call));
-            builder.setContentText(context.getString(R.string.missed_call_notification, count));
-            builder.setSmallIcon(R.drawable.ic_stat_icon);
-            builder.setAutoCancel(true);
-            builder.setTicker(context.getString(R.string.missed_call_notification, count));
-            Intent intent = new Intent(context, MainActivity.class);
-            builder.setContentIntent(PendingIntent.getActivity(context, 1001, intent, PendingIntent.FLAG_UPDATE_CURRENT));
-            NotificationManagerCompat.from(context).notify(CallController.MISSED_CALL_NOTIFICATION_ID, builder.build());
         }
         PLog.d(TAG, "call between user and %s ended", data.getPeer());
     }
@@ -328,5 +337,32 @@ class PairAppClientInterface {
     public void clearNotifications(long date) {
         NotificationManager.INSTANCE.clearAllMessageNotifications();
         NotificationManagerCompat.from(context).cancel(CallController.MISSED_CALL_NOTIFICATION_ID);
+    }
+
+    @NonNull
+    String generateString(List<Message> messages) {
+        UserManager manager = UserManager.getInstance();
+        StringBuilder builder = new StringBuilder(messages.size() * 7);
+        Realm realm = User.Realm(context);
+        try {
+            if (messages.size() > 2) {
+                int extra = messages.size() - 1;
+                builder.append(manager.fetchUserIfRequired(realm, messages.get(0).getFrom()).getName())
+                        .append(context.getString(R.string.and))
+                        .append(extra) // TODO: 7/26/2016 prepare this for other locales
+                        .append(context.getString(R.string.other));
+            } else if (messages.size() > 1) {
+                builder.append(manager.fetchUserIfRequired(realm, messages.get(0).getFrom()).getName())
+                        .append(context.getString(R.string.and))
+                        .append(manager.fetchUserIfRequired(realm, messages.get(1).getFrom()).getName());
+            } else if (messages.size() > 0) {
+                builder.append(manager.fetchUserIfRequired(realm, messages.get(0).getFrom()).getName());
+            }
+        } finally {
+            realm.close();
+        }
+        final String generated = builder.toString();
+        PLog.d(TAG, "generated string is %s", generated);
+        return generated;
     }
 }

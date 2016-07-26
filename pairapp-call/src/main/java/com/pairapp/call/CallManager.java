@@ -15,6 +15,7 @@ import com.pairapp.util.PLog;
 import com.sinch.android.rtc.Sinch;
 import com.sinch.android.rtc.SinchClient;
 import com.sinch.android.rtc.calling.Call;
+import com.sinch.android.rtc.calling.CallState;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +26,6 @@ import java.util.Map;
 public class CallManager implements CallController {
 
     static final String TAG = CallManager.class.getSimpleName();
-    public static final String ERR_CALL_ALREADY_ONGOING = "err_call_alread_ongoing";
     private static final String APP_KEY = "8a46c54f-0f44-481a-8727-63aa0561e6a7";
     private static final String APP_SECRET = "uORBRxz9m06k993JP85kIw==";
 
@@ -72,6 +72,7 @@ public class CallManager implements CallController {
         client.startListeningOnActiveConnection();// FIXME: 7/23/2016 remove this line
         client.getCallClient().addCallClientListener(callCenter);
         client.getCallClient().setRespectNativeCalls(false); // TODO: 7/15/2016 let users change this in settings
+        //noinspection ConstantConditions
         client.start();
     }
 
@@ -88,9 +89,7 @@ public class CallManager implements CallController {
                 }
                 return null;
             }
-            callCenter.setCurrentPeer(callRecipient);
-            callCenter.setCallOngoing();
-            Call call;
+            final Call call;
             Map<String, String> headers = new HashMap<>(1);
             switch (callType) {
                 case CALL_TYPE_VOICE:
@@ -106,6 +105,8 @@ public class CallManager implements CallController {
                     throw new UnsupportedOperationException();
             }
 
+            callCenter.setCurrentPeer(callRecipient);
+            callCenter.setCallOngoing(call.getCallId());
             call.addCallListener(callCenter);
             return CallData.from(call, callType, System.currentTimeMillis());
         }
@@ -117,7 +118,11 @@ public class CallManager implements CallController {
         if (client.isStarted()) {
             Call call = client.getCallClient().getCall(data.getCallId());
             if (call != null) {
-                call.answer();
+                if (CallState.ENDED.equals(call.getState())) {
+                    forceEndCallIfNotEnded(call);
+                } else {
+                    call.answer();
+                }
             } else {
                 PLog.f(TAG, "call not found to answer");
                 bus.post(Event.create(ON_CAL_ERROR, new Exception(ERR_CALL_NOT_FOUND, null), data.getPeer()));
@@ -127,6 +132,18 @@ public class CallManager implements CallController {
         }
     }
 
+    private void forceEndCallIfNotEnded(final Call call) {
+        //force hangup the call if the callCenter#onCallEnded is not invoked
+        //by the sinch client. this is just a quick fix for a problem we facing
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (callCenter.isCallOngoing()) {
+                    callCenter.onCallEnded(call);
+                }
+            }
+        }, 250);
+    }
 
     @Override
     public synchronized void hangUp(@NonNull CallData data) {
@@ -134,6 +151,7 @@ public class CallManager implements CallController {
             final Call call = client.getCallClient().getCall(data.getCallId());
             if (call != null) {
                 call.hangup();
+                forceEndCallIfNotEnded(call);
             } else {
                 PLog.f(TAG, "call not found to hang up");
                 bus.post(Event.create(ON_CAL_ERROR, new Exception(ERR_CALL_NOT_FOUND, null), data.getPeer()));

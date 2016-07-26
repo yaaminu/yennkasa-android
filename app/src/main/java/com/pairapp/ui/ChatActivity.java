@@ -381,7 +381,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                 if (currConversationLastMessage == null || !messages.last().getId().equals(currConversationLastMessage.getId())) {
                     for (int i = messages.size() - 1; i >= 0; i--) {
                         Message lastMessage = messages.get(i);
-                        if (!Message.isDateMessage(lastMessage) || !Message.isTypingMessage(lastMessage)) {
+                        if (!Message.isDateMessage(lastMessage) && !Message.isTypingMessage(lastMessage)) {
                             currConversation.setLastMessage(lastMessage);
                             break;
                         }

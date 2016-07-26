@@ -2,4 +2,7 @@
 <resources>
     <dimen name="video_call_local_view_width">150dp</dimen>
     <dimen name="video_call_local_view_height">150dp</dimen>
+    <dimen name="unseen_message_size">12sp</dimen>
+    <dimen name="unseen_message_width">32dp</dimen>
+    <dimen name="unseen_message_height">32dp</dimen>
 </resources>

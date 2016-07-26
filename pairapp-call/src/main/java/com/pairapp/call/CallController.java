@@ -12,8 +12,9 @@ public interface CallController {
     String ON_CAL_ENDED = "onCalEnded";
     String ON_IN_COMING_CALL = "onInComingCall";
     String ON_CAL_ERROR = "onCallError";
-    String ERR_CALL_NOT_FOUND = "err_call_not_found";
-    String ERR_NOT_CONNECTED = "err_not_connected";
+    String ERR_CALL_NOT_FOUND = "ENOTFOUND";
+    String ERR_NOT_CONNECTED = "ECONNREFUSED";
+    String ERR_CALL_ALREADY_ONGOING = "EBUSY";
     String ON_CALL_MUTED = "onCallMuted";
     String ON_LOUD_SPEAKER = "onLoudSpeaker";
     int CALL_NOTIFICATION_ID = 1001;

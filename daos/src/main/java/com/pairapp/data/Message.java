@@ -56,9 +56,9 @@ public class Message extends RealmObject {
             TYPE_BIN_MESSAGE = 0x3ef,  //don't touch me!
             TYPE_PICTURE_MESSAGE = 0x3f0,  //don't touch me!
             TYPE_VIDEO_MESSAGE = 0x3f1, //don't touch me!
-            TYPE_DATE_MESSAGE = 0x3f2, //don't touch me!
+            TYPE_CALL = 0x3f2, //don't touch me!
             TYPE_TYPING_MESSAGE = 0x3f3, //don't touch me!
-            TYPE_CALL = 0x3f4, //don't touch me!
+            TYPE_DATE_MESSAGE = 0x3f4, //don't touch me!
             TYPE_LOG_MESSAGE = 0x3f5;//don't touch me!
 
     public static final String FIELD_ID = "id",
@@ -80,7 +80,7 @@ public class Message extends RealmObject {
     @Index
     private String to; //recipient's id
     private String messageBody;
-    private Date dateComposed;
+    private long dateComposed;
     private int state;
     private int type;
 
@@ -383,11 +383,11 @@ public class Message extends RealmObject {
     }
 
     public Date getDateComposed() {
-        return dateComposed;
+        return new Date(dateComposed);
     }
 
     public void setDateComposed(Date dateComposed) {
-        this.dateComposed = dateComposed;
+        this.dateComposed = dateComposed.getTime();
     }
 
     public int getState() {

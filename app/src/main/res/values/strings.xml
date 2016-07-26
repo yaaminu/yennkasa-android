@@ -349,6 +349,7 @@
     <string name="log_entry_deleted_message">Log entry deleted successfully</string>
     <string name="connected">Connected</string>
     <string name="video_call">Start Video Call</string>
-    <string name="missed_call_notification">You missed %s calls</string>
+    <string name="missed_call_notification" formatted="false">You missed %s calls from %s</string>
     <string name="slogan">Bringing Conversations To Life!!!</string>
+    <string name="other">" other "</string>
 </resources>

@@ -63,8 +63,9 @@ class CallCenter implements CallClientListener, VideoCallListener {
     }
 
     @Override
-    public synchronized void onIncomingCall(CallClient callClient, Call call) {
+    public synchronized void onIncomingCall(final CallClient callClient, final Call call) {
         if (isCallOngoing()) {
+            call.hangup();
             PLog.d(TAG, "call with id %s from %s rejected because user is already on phone with %s", call.getCallId(), call.getRemoteUserId(), "" + currentPeer);
             // TODO: 7/24/2016 broadcast an event that we rejected a call because the user is busy. to emulate "number busy" semantics
             return;
@@ -213,14 +214,15 @@ class CallCenter implements CallClientListener, VideoCallListener {
         return currentPeer;
     }
 
-    public synchronized void setCurrentPeer(@Nullable String currentPeer) {
+    synchronized void setCurrentPeer(@Nullable String currentPeer) {
         this.currentPeer = currentPeer;
     }
 
-    public synchronized void setCallOngoing() {
+    synchronized void setCallOngoing(String currentCallId) {
         if (isCallOngoing) {
             throw new IllegalStateException();
         }
+        this.currentCallId = currentCallId;
         this.isCallOngoing = true;
     }
 

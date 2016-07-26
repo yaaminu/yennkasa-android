@@ -279,7 +279,7 @@ public class ConversationsFragment extends ListFragment {
                                                    .equalTo(Message.FIELD_TO, peerId)
                                                    .endGroup();
                                        }
-                                       messages = messageQuery.lessThan(Message.FIELD_DATE_COMPOSED, toWhen).findAll(); //new messages will be ignored
+                                       messages = messageQuery.lessThan(Message.FIELD_DATE_COMPOSED, toWhen.getTime()).findAll(); //new messages will be ignored
                                        if (UserManager.getInstance().getBoolPref(UserManager.DELETE_ATTACHMENT_ON_DELETE, false)) {
                                            for (Message message : messages) {
                                                if (Message.isVideoMessage(message) || Message.isPictureMessage(message) || Message.isBinMessage(message)) {

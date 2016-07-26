@@ -69,7 +69,7 @@ class StatusBarNotifier {
                 .setAutoCancel(true);
 
         builder.setContentText(notificationMessage);
-
+        builder.setStyle(new NotificationCompat.BigTextStyle().bigText(notificationMessage));
         builder.setSmallIcon(R.drawable.ic_stat_icon)
                 .setContentIntent(pendingIntent);
         if (UserManager.getInstance().getBoolPref(UserManager.LIGHTS, false)) {
