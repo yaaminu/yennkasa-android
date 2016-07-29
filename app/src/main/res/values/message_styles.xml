@@ -20,11 +20,13 @@
         <item name="android:layout_alignParentLeft">true</item>
         <item name="android:background">@drawable/bg_msg_incoming_normal</item>
         <item name="android:gravity">center_vertical</item>
+        <item name="android:layout_marginBottom">@dimen/default_gap</item>
     </style>
 
     <style name="outgoing_message_body_root_view">
         <item name="android:layout_alignParentRight">true</item>
         <item name="android:background">@drawable/bg_msg_outgoing_normal</item>
+        <item name="android:layout_marginBottom">@dimen/default_gap</item>
     </style>
 
     <style name="message_incoming" parent="base_message_style">
@@ -60,5 +62,5 @@
         <item name="android:paddingLeft">@dimen/message_padding</item>
     </style>
 
-    <item name="fl_message_body_view" type="id"/>
+    <item name="fl_message_body_view" type="id" />
 </resources>
