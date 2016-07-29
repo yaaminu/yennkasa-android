@@ -352,4 +352,7 @@
     <string name="missed_call_notification" formatted="false">You missed %s calls from %s</string>
     <string name="slogan">Bringing Conversations To Life!!!</string>
     <string name="other">" other "</string>
+    <string name="content_description_attach_more">More attachment options</string>
+    <string name="attach_audio">Send audio</string>
+    <string name="send_picture">Send Picture</string>
 </resources>

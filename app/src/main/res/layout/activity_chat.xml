@@ -74,7 +74,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
-                android:animateLayoutChanges="true"
                 android:background="@drawable/compose_panel"
                 android:baselineAligned="false"
                 android:gravity="bottom"
@@ -82,7 +81,7 @@
                 android:paddingLeft="@dimen/padding_ll_login_fragment_left"
                 android:paddingRight="@dimen/padding_ll_login_fragment_right"
                 android:paddingTop="8dp"
-                tools:ignore="UnusedAttribute">
+                tools:ignore="RtlHardcoded,UnusedAttribute">
 
                 <ImageButton
                     android:id="@+id/ib_attach_emoji"
@@ -93,7 +92,6 @@
                     android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
                     android:adjustViewBounds="true"
                     android:background="@color/transparent"
-                    android:onClick="toggleEmoji"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_smiley_24dp" />
 
@@ -125,7 +123,7 @@
                     android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
                     android:adjustViewBounds="true"
                     android:background="@color/transparent"
-                    android:onClick="attachCamera"
+                    android:contentDescription="@string/send_picture"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_camera_black_24dp" />
 
@@ -137,23 +135,36 @@
                     android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
                     android:adjustViewBounds="true"
                     android:background="@color/transparent"
-                    android:onClick="attachVoiceNote"
+                    android:contentDescription="@string/attach_audio"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_record_voice_24dp" />
+
+                <ImageButton
+                    android:id="@+id/ib_attach_more"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
+                    android:adjustViewBounds="true"
+                    android:background="@color/transparent"
+                    android:contentDescription="@string/content_description_attach_more"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_more_horiz_black_24dp" />
 
                 <com.pairapp.view.FrameLayout
                     android:id="@+id/iv_send"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="bottom"
+                    android:layout_gravity="center_vertical"
                     android:visibility="gone">
 
                     <ImageView
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:layout_gravity="center"
+                        android:layout_gravity="center_vertical"
                         android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
                         android:adjustViewBounds="true"
+                        android:contentDescription="@string/send_message"
                         android:padding="@dimen/padding_ll_login_fragment_bottom"
                         android:scaleType="centerInside"
                         android:src="@drawable/ic_send_24dp" />

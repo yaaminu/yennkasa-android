@@ -57,6 +57,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
@@ -144,12 +147,22 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private User peer;
     private Conversation currConversation;
     private Realm messageConversationRealm, usersRealm;
-    private ListView messagesListView;
-    private EditText messageEt;
-    private View dateHeaderViewParent;
-    private View sendButton;
+
+    @Bind(R.id.lv_messages)
+    ListView messagesListView;
+    @Bind(R.id.et_message)
+    EditText messageEt;
+    @Bind(R.id.date_header_parent)
+    View dateHeaderViewParent;
+    @Bind(R.id.iv_send)
+    View sendButton;
+    @Bind(R.id.tv_log_message)
+    TextView logTv;
+
+    @Bind(R.id.ib_attach_more)
+    View attachMoreView;
+
     private MessagesAdapter adapter;
-    private TextView logTv;
     private ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
 
         private boolean can4ward;
@@ -215,17 +228,13 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+        ButterKnife.bind(this);
         handler = new Handler();
         Toolbar toolBar = (Toolbar) findViewById(R.id.main_toolbar);
         toolBar.setOnClickListener(this);
         setSupportActionBar(toolBar);
-        logTv = (TextView) findViewById(R.id.tv_log_message);
-        messageEt = ((EditText) findViewById(R.id.et_message));
         ViewUtils.setTypeface(messageEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-        sendButton = findViewById(R.id.iv_send);
         ViewUtils.hideViews(sendButton);
-        messagesListView = ((ListView) findViewById(R.id.lv_messages));
-        dateHeaderViewParent = findViewById(R.id.date_header_parent);
 
         messageConversationRealm = Message.REALM(this);
         usersRealm = User.Realm(this);
@@ -320,9 +329,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             Intent intent = new Intent(this, InviteActivity.class);
             intent.putExtra(InviteActivity.EXTRA_GROUP_ID, peer.getUserId());
             startActivityForResult(intent, ADD_USERS_REQUEST);
-            return true;
-        } else if (id == R.id.action_attach) {
-            UiHelpers.attach(this);
             return true;
         } else if (id == R.id.action_add_contact) {
             Intent intent = new Intent(ContactsContract.Intents.SHOW_OR_CREATE_CONTACT);
@@ -665,6 +671,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
         if (!s.toString().trim().isEmpty()) {
             ViewUtils.showViews(sendButton);
+            ViewUtils.hideViews(attachMoreView);
             if (!wasTyping) {
                 wasTyping = true;
                 typingTimerTask.run();
@@ -672,6 +679,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         } else {
             handler.removeCallbacks(typingTimerTask);
             ViewUtils.hideViews(sendButton);
+            ViewUtils.showViews(attachMoreView);
         }
     }
 
@@ -822,5 +830,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     protected boolean hideConnectionView() {
         return false;
+    }
+
+    @OnClick(R.id.ib_attach_more)
+    public void attachMore(View view) {
+        UiHelpers.attach(this);
     }
 }

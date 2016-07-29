@@ -20,12 +20,6 @@
         android:orderInCategory="101"
         android:title="@string/video_call"
         app:showAsAction="always" />
-    <item
-        android:id="@+id/action_attach"
-        android:icon="@drawable/ic_action_new_attachment_white"
-        android:orderInCategory="102"
-        android:title="@string/action_attach"
-        app:showAsAction="always" />
 
     <item
         android:id="@+id/action_add_contact"

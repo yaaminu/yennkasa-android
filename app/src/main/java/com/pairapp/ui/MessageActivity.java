@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import butterknife.OnClick;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import io.realm.Sort;
@@ -475,14 +476,17 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         }
     }
 
+    @OnClick(R.id.ib_attach_capture_photo)
     public final void attachCamera(View view) {
         UiHelpers.takePhoto();
     }
 
+    @OnClick(R.id.ib_attach_record_audio)
     public final void attachVoiceNote(View view) {
         UiHelpers.recordAudio();
     }
 
+    @OnClick(R.id.ib_attach_emoji)
     public final void toggleEmoji(View view) {
         ImageButton button = ((ImageButton) view);
         Fragment emojiFragment = getSupportFragmentManager().findFragmentByTag(EMOJI_FRAGMENT);
