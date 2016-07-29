@@ -6,7 +6,6 @@
     android:layout_height="wrap_content"
     android:layout_centerHorizontal="true"
     android:layout_gravity="center_horizontal"
-    android:layout_marginTop="@dimen/message_body_margin"
     android:gravity="center">
 
     <TextView
@@ -15,6 +14,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_gravity="center_horizontal"
+        android:layout_margin="@dimen/message_body_margin"
         android:gravity="center"
         android:padding="@dimen/date_message_paddingTop"
         android:textColor="@color/black"

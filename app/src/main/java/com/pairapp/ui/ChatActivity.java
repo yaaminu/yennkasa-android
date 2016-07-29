@@ -32,6 +32,7 @@ import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.R;
 import com.pairapp.adapter.GroupsAdapter;
 import com.pairapp.adapter.MessagesAdapter;
+import com.pairapp.data.CallBody;
 import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
@@ -98,6 +99,21 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private int cursor = -1;
     private boolean wasTyping = false;
     private final MessagesAdapter.Delegate delegate = new MessagesAdapter.Delegate() {
+
+        @Override
+        public void onCallClicked(Message message) {
+            switch (message.getCallBody().getCallType()) {
+                case CallBody.CALL_TYPE_VIDEO:
+                    callUser(MessengerBus.VIDEO_CALL_USER, Message.isIncoming(message) ? message.getFrom() : message.getTo());
+                    break;
+                case CallBody.CALL_TYPE_VOICE:
+                    callUser(MessengerBus.VOICE_CALL_USER, Message.isIncoming(message) ? message.getFrom() : message.getTo());
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        }
+
         @Override
         public boolean onDateSetChanged() {
             return true;
@@ -340,13 +356,16 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             }
             return true;
         } else if (id == R.id.action_call_user) {
-            Event event = Event.create(MessengerBus.VOICE_CALL_USER, null, peer.getUserId());
-            MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
+            callUser(MessengerBus.VOICE_CALL_USER, peer.getUserId());
         } else if (id == R.id.action_video_call_user) {
-            Event event = Event.create(MessengerBus.VIDEO_CALL_USER, null, peer.getUserId());
-            MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
+            callUser(MessengerBus.VIDEO_CALL_USER, peer.getUserId());
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void callUser(Object callType, String userId) {
+        Event event = Event.create(callType, null, userId);
+        MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
     }
 
     @Override

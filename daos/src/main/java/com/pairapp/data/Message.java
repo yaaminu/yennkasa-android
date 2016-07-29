@@ -338,7 +338,7 @@ public class Message extends RealmObject {
         //noinspection ConstantConditions
         int callDuration = message.getCallBody().getCallDuration();
         return DateUtils.formatDateTime(context, message.getDateComposed().getTime(),
-                DateUtils.FORMAT_SHOW_TIME) + "   " +
+                DateUtils.FORMAT_SHOW_TIME).toLowerCase() + "   " +
                 (Message.isOutGoing(message) || callDuration > 0 ? "" + formatTimespan(callDuration) : GenericUtils.getString(R.string.missed_call));
     }
 

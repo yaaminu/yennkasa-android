@@ -12,12 +12,14 @@ import android.util.SparseIntArray;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.Errors.PairappException;
 import com.pairapp.R;
+import com.pairapp.data.CallBody;
 import com.pairapp.data.Message;
 import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
@@ -52,7 +54,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             INCOMING_MESSAGE_ONE_LINE_EXTRA = 0x6,
             OUTGOING_MESSAGE_ONE_LINE_EXTRA = 0x7,
             INCOMING_MESSAGE_EXTRA = 0x8,
-            OUTGOING_MESSAGE_EXTRA = 0x9;
+            OUTGOING_MESSAGE_EXTRA = 0x9,
+            CALL_MESSAGE_ITEM = 0xa;
 
 
     private final SparseIntArray messageStates;
@@ -99,7 +102,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             R.layout.one_line_message_list_item_incoming_extra,
             R.layout.one_line_message_list_item_outgoing_extra,
             R.layout.list_item_message_incoming_extra,
-            R.layout.list_item_message_outgoing_extra
+            R.layout.list_item_message_outgoing_extra,
+            R.layout.list_item_message_call
     };
 
     @Override
@@ -111,10 +115,13 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             return TYPING_MESSAGE;
         }
 
-        if (currentMessageType == Message.TYPE_DATE_MESSAGE || currentMessageType == Message.TYPE_CALL) {
+        if (currentMessageType == Message.TYPE_DATE_MESSAGE) {
             return DATE_MESSAGE;
         }
 
+        if (currentMessageType == Message.TYPE_CALL) {
+            return CALL_MESSAGE_ITEM;
+        }
         boolean useOneLine = false;
         if (currentMessageType == Message.TYPE_TEXT_MESSAGE) {
             String messageBody = message.getMessageBody();
@@ -177,9 +184,24 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             convertView.setOnTouchListener(touchListener);
             return convertView;
         } else if (currentMessageType == Message.TYPE_CALL) {
+            holder.textMessage.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
             holder.textMessage.setCompoundDrawablesWithIntrinsicBounds(CallLogAdapter.getDrawable(message), 0, 0, 0);
             holder.textMessage.setText("  " + Message.getCallSummary(context, message));
-            convertView.setOnTouchListener(touchListener);
+            CallBody callBody = message.getCallBody();
+            assert callBody != null;
+            if (callBody.getCallType() == CallBody.CALL_TYPE_VOICE) {
+                holder.call_button.setImageResource(R.drawable.ic_call_black_24dp);
+            } else if (callBody.getCallType() == CallBody.CALL_TYPE_VIDEO) {
+                holder.call_button.setImageResource(R.drawable.ic_videocam_black_18dp);
+            } else if (callBody.getCallType() == CallBody.CALL_TYPE_CONFERENCE) {
+                throw new UnsupportedOperationException();
+            }
+            convertView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    delegate.onCallClicked(message);
+                }
+            });
             return convertView;
         } else if (currentMessageType == Message.TYPE_TYPING_MESSAGE) {
             convertView.setOnTouchListener(touchListener);
@@ -400,6 +422,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         holder.retry = convertView.findViewById(R.id.iv_retry);
         holder.progressRootView = convertView.findViewById(R.id.fl_progress_root_view);
         holder.sendersName = ((TextView) convertView.findViewById(R.id.tv_sender_name));
+        holder.call_button = (ImageButton) convertView.findViewById(R.id.ib_call_button);
         ViewUtils.setTypeface(holder.dateComposed, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         convertView.setTag(holder);
         return convertView;
@@ -438,6 +461,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         PairAppBaseActivity getContext();
 
         void cancelDownload(Message message);
+
+        void onCallClicked(Message message);
     }
 
     private class ViewHolder {
@@ -446,6 +471,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         private View retry;
         private View progressRootView;
         private ProgressWheel progressBar;
+        private ImageButton call_button;
         //TODO add more fields as we support different media/file types
     }
 }
