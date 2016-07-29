@@ -32,7 +32,6 @@ import com.pairapp.util.PhoneNumberNormaliser;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
-import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.SnackBar;
 
@@ -82,14 +81,12 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_group);
         toolBar = ((Toolbar) findViewById(R.id.main_toolbar));
+        setSupportActionBar(toolBar);
         menuItemDone = toolBar.findViewById(R.id.tv_menu_item_done);
         menuItemNext = toolBar.findViewById(R.id.tv_menu_item_next);
 
         menuItemDone.setOnClickListener(listener);
         menuItemNext.setOnClickListener(listener);
-
-        //noinspection unused
-        ToolbarManager manager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         groupNameEt = ((EditText) findViewById(R.id.et_group_name));

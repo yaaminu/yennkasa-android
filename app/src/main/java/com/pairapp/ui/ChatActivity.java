@@ -49,7 +49,6 @@ import com.pairapp.util.TaskManager;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
-import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
 
 import java.io.File;
@@ -150,8 +149,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private View dateHeaderViewParent;
     private View sendButton;
     private MessagesAdapter adapter;
-    private Toolbar toolBar;
-    private ToolbarManager toolbarManager;
     private TextView logTv;
     private ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
 
@@ -219,10 +216,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
         handler = new Handler();
-        toolBar = (Toolbar) findViewById(R.id.main_toolbar);
+        Toolbar toolBar = (Toolbar) findViewById(R.id.main_toolbar);
         toolBar.setOnClickListener(this);
+        setSupportActionBar(toolBar);
         logTv = (TextView) findViewById(R.id.tv_log_message);
-        toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         messageEt = ((EditText) findViewById(R.id.et_message));
         ViewUtils.setTypeface(messageEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         sendButton = findViewById(R.id.iv_send);
@@ -297,26 +294,22 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        toolbarManager.onPrepareMenu();
-        menu = toolBar.getMenu();
-        if (menu != null && menu.size() > 0) { //required for toolbar to behave on older platforms <=10
-            User mainUser = getCurrentUser();
-            final User admin = peer.getAdmin();
-            menu.findItem(R.id.action_invite_friends)
-                    .setVisible(peer.getType() == User.TYPE_GROUP && admin != null && admin.getUserId().equals(mainUser.getUserId()));
-            boolean visible = peer.getType() != User.TYPE_GROUP
-                    && !peer.getInContacts();
-            menu.findItem(R.id.action_add_contact).setVisible(visible);
-            menu.findItem(R.id.action_call_user).setVisible(peer.getAdmin() == null);
-            menu.findItem(R.id.action_video_call_user).setVisible(peer.getAdmin() == null);
-        }
+        User mainUser = getCurrentUser();
+        final User admin = peer.getAdmin();
+        menu.findItem(R.id.action_invite_friends)
+                .setVisible(peer.getType() == User.TYPE_GROUP && admin != null && admin.getUserId().equals(mainUser.getUserId()));
+        boolean visible = peer.getType() != User.TYPE_GROUP
+                && !peer.getInContacts();
+        menu.findItem(R.id.action_add_contact).setVisible(visible);
+        menu.findItem(R.id.action_call_user).setVisible(peer.getAdmin() == null);
+        menu.findItem(R.id.action_video_call_user).setVisible(peer.getAdmin() == null);
         return super.onPrepareOptionsMenu(menu);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        toolbarManager.createMenu(R.menu.chat_menu);
+        getMenuInflater().inflate(R.menu.chat_menu, menu);
         return true;
     }
 
@@ -451,7 +444,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             return;
         }
         if (requestCode == ADD_TO_CONTACTS_REQUEST) {
-            userManager.fetchUserIfRequired(usersRealm, peer.getUserId());
+            userManager.fetchUserIfRequired(usersRealm, peer.getUserId(), true);
             supportInvalidateOptionsMenu();
         } else {
             sendMessage(requestCode, data, peer.getUserId());
@@ -824,5 +817,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                 onStopTyping();
             }
         }
+    }
+
+    @Override
+    protected boolean hideConnectionView() {
+        return false;
     }
 }

@@ -29,7 +29,6 @@ import com.pairapp.util.PhoneNumberNormaliser;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
-import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.SnackBar;
 import com.rey.material.widget.TextView;
@@ -75,11 +74,9 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
 
         setContentView(R.layout.activity_invite);
         toolBar = (Toolbar) findViewById(R.id.main_toolbar);
+        setSupportActionBar(toolBar);
         menuItemDone = toolBar.findViewById(R.id.tv_menu_item_done);
         menuItemDone.setOnClickListener(listener);
-
-        //noinspection unused
-        ToolbarManager toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 

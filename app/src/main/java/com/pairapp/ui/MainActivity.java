@@ -207,6 +207,11 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     }
 
     @Override
+    protected boolean hideConnectionView() {
+        return false;
+    }
+
+    @Override
     public int unSeenMessagesCount(Conversation conversation) {
         return LiveCenter.getUnreadMessageFor(conversation.getPeerId());
     }

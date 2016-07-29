@@ -88,6 +88,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         }
     };
     private SnackBar snackBar;
+
     @NonNull
     private View notificationView;
 
@@ -111,7 +112,9 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         notificationView = findViewById(R.id.inline_notification_text_parent);
-
+        if (hideConnectionView()) {
+            ViewUtils.hideViews(notificationView);
+        }
     }
 
     @Override
@@ -466,27 +469,28 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         if (currentStatus == status && status == CONNECTED)
             return; //hide showing connected notification in more than one activity
         currentStatus = status;
+        if (hideConnectionView()) {
+            return;
+        }
         switch (status) {
             case MessengerBus.DISCONNECTED:
                 ((TextView) notificationView.findViewById(R.id.inline_notification_text)).setText(getString(R.string.disconnected));
                 notificationView.setBackgroundColor(getResources().getColor(R.color.red));
-                ViewUtils.showViews(notificationView);
                 break;
             case MessengerBus.CONNECTING:
                 ((TextView) notificationView.findViewById(R.id.inline_notification_text)).setText(getString(R.string.connecting));
                 notificationView.setBackgroundColor(getResources().getColor(R.color.orange));
-                ViewUtils.showViews(notificationView);
                 break;
             case MessengerBus.CONNECTED:
                 ((TextView) notificationView.findViewById(R.id.inline_notification_text)).setText(getString(R.string.connected));
                 notificationView.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
                 handler.removeCallbacks(hideNotificationViewRunnable);
                 handler.postDelayed(hideNotificationViewRunnable, 1500);
-                ViewUtils.showViews(notificationView);
                 break;
             default:
                 throw new AssertionError();
         }
+        ViewUtils.showViews(notificationView);
     }
 
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -502,6 +506,10 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
     protected void handleEvent(Event event) {
 
+    }
+
+    protected boolean hideConnectionView() {
+        return true;
     }
 
     @Override

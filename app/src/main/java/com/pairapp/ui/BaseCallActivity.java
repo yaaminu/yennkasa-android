@@ -144,9 +144,8 @@ public abstract class BaseCallActivity extends PairAppActivity {
                 throw new AssertionError();
         }
 
-        Resources resources = getResources();
-        mute.setImageDrawable(resources.getDrawable(callData.isMuted() ? R.drawable.ic_mute_off_black_24dp : R.drawable.ic_unmute_24dp1));
-        enableSpeaker.setImageDrawable(resources.getDrawable(callData.isLoudSpeaker() ? R.drawable.ic_speaker_off_black_24dp : R.drawable.ic_speaker_out_black_24dp));
+        mute.setBackgroundResource(callData.isMuted() ? R.drawable.call_button_selected_background : R.drawable.round_button);
+        enableSpeaker.setBackgroundResource(callData.isLoudSpeaker() ? R.drawable.call_button_selected_background : R.drawable.round_button);
     }
 
     @NonNull

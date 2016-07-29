@@ -7,12 +7,11 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.widget.Toolbar;
 
 import com.pairapp.R;
-import com.rey.material.app.ToolbarManager;
 import com.rey.material.widget.SnackBar;
 
 public class SettingsActivity extends PairAppActivity {
 
-   public static final String EXTRA_ITEM = "ITEM";
+    public static final String EXTRA_ITEM = "ITEM";
     private int item;
 
     @Override
@@ -25,8 +24,7 @@ public class SettingsActivity extends PairAppActivity {
         }
 
         Toolbar toolBar = ((Toolbar) findViewById(R.id.main_toolbar));
-        ToolbarManager manager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
-
+        setSupportActionBar(toolBar);
         ActionBar supportActionBar = getSupportActionBar();
         //noinspection ConstantConditions
         supportActionBar.setDisplayHomeAsUpEnabled(true);
@@ -45,14 +43,15 @@ public class SettingsActivity extends PairAppActivity {
                 fragment = new AboutFragment();
                 supportActionBar.setTitle(R.string.about_app);
                 break;
-            default:throw new AssertionError();
+            default:
+                throw new AssertionError();
         }
         addFragment(fragment);
 
     }
 
     private void addFragment(Fragment fragment) {
-        getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, "tag"+item).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, "tag" + item).commit();
     }
 
     @NonNull

@@ -19,7 +19,6 @@ import com.pairapp.R;
 import com.pairapp.adapter.UsersAdapter;
 import com.pairapp.data.User;
 import com.pairapp.util.UiHelpers;
-import com.rey.material.app.ToolbarManager;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -33,7 +32,6 @@ import io.realm.Sort;
 public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.OnFragmentInteractionListener {
 
     public static final String EXTRA_USER_ID = "lnubj;l;l;k;ugvbbD";
-    private ToolbarManager toolbarManager;
     private UsersAdapter usersAdapter;
     private BaseAdapter membersAdapter;
     private String userId;
@@ -45,7 +43,7 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
         setContentView(R.layout.activity_users);
         //noinspection ConstantConditions
         toolBar = (Toolbar) findViewById(R.id.main_toolbar);
-        toolbarManager = new ToolbarManager(this, toolBar, 0, R.style.MenuItemRippleStyle, R.anim.abc_fade_in, R.anim.abc_fade_out);
+        setSupportActionBar(toolBar);
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
@@ -95,14 +93,8 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        toolbarManager.createMenu(R.menu.menu_users);
+        getMenuInflater().inflate(R.menu.menu_users, menu);
         return true;
-    }
-
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        toolbarManager.onPrepareMenu();
-        return super.onPrepareOptionsMenu(menu);
     }
 
     @Override

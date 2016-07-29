@@ -24,7 +24,6 @@
                     android:id="@+id/pts_title_strip"
                     android:layout_width="match_parent"
                     android:layout_height="?attr/actionBarSize"
-                    android:layout_below="@+id/toolbar"
                     android:background="@color/colorPrimary"
                     app:tabIndicatorColor="@color/white"
                     app:tabMode="scrollable"

@@ -84,7 +84,6 @@ public class CreateMessageActivity extends MessageActivity
     private UsersAdapter adapter;
     private Realm realm;
     private Toolbar toolBar;
-    //    private ToolbarManager toolbarManager;
     private boolean isAttaching = false;
     private boolean isNotDefaultIntent = false;
     private Set<String> selectedUserNames = new TreeSet<>();
@@ -333,7 +332,7 @@ public class CreateMessageActivity extends MessageActivity
             }
             type = Message.TYPE_TEXT_MESSAGE;
         }
-        final ProgressDialog progressDialog = ProgressDialog.show(this,"",getString(R.string.st_please_wait),false,false,null);
+        final ProgressDialog progressDialog = ProgressDialog.show(this, "", getString(R.string.st_please_wait), false, false, null);
         progressDialog.show();
         sendMessage(messageBody, selectedItems, type, new SendCallback() {
             @Override
