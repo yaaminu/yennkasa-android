@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.pairapp.view.RelativeLayout
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/incoming_message_body_root_view"
-    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:layout_gravity="start"
     android:gravity="center">
 
     <TextView
@@ -15,6 +16,7 @@
         android:gravity="center"
         android:text="@string/ellipsis"
         android:textColor="@color/white"
-        android:textSize="24sp"
-        />
-</com.pairapp.view.RelativeLayout>
+        android:textSize="24sp" />
+
+    <include layout="@layout/message_spacing_normal" />
+</LinearLayout>

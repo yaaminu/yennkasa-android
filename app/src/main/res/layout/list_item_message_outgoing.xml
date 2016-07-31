@@ -1,127 +1,136 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/message_item_margin_bottom"
-    android:layout_marginLeft="@dimen/message_body_margin"
-    android:layout_marginRight="@dimen/message_body_margin"
-    android:layout_marginTop="@dimen/message_body_margin">
+    android:orientation="vertical">
 
     <com.pairapp.view.RelativeLayout
-        android:id="@+id/ll_message_body_view"
-        style="@style/outgoing_message_body_root_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_marginBottom="@dimen/message_item_margin_bottom"
+        android:layout_marginLeft="@dimen/message_body_margin"
+        android:layout_marginRight="@dimen/message_body_margin">
 
-        <com.pairapp.view.FrameLayout
-            android:id="@+id/fl_message_body_view"
+
+        <com.pairapp.view.RelativeLayout
+            android:id="@+id/ll_message_body_view"
+            style="@style/outgoing_message_body_root_view"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-            <!-- the max with on the textView is due to the width of the @+id/iv_message_preview
-             take it off and see the outcome
-             -->
-            <com.rockerhieu.emojicon.EmojiconTextView
-                android:id="@+id/tv_log_message"
-                style="@style/message_outgoing"
-                android:text="a sample message that spans across multiple lines dones it look nice or bad. i am just testing"
-                android:visibility="gone"
-                tools:ignore="HardcodedText" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <ImageView
-                android:id="@+id/iv_message_preview"
-                style="@style/outgoing_message_body_root_view"
-                android:layout_width="@dimen/message_preview_item_width"
-                android:layout_height="@dimen/message_preview_item_height"
-                android:background="@color/white"
-                android:contentDescription="@string/st_content_description_image_preview"
-                android:scaleType="centerCrop"
-                android:src="@drawable/login_fragment_back_ground"
-                android:visibility="visible" />
-
-
-            <FrameLayout
-                android:id="@+id/fl_progress_root_view"
+            <com.pairapp.view.FrameLayout
+                android:id="@+id/fl_message_body_view"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:background="@drawable/progress_bar_shape"
-                android:minHeight="@dimen/thumbnail_height"
-                android:minWidth="@dimen/thumbnail_width"
-                android:padding="@dimen/padding_ll_login_fragment_bottom"
-                android:visibility="visible">
-
-                <!--&lt;!&ndash;android:id="@+id/pb_download_progress_determinate"&ndash;&gt;-->
-                <!--<ProgressBar-->
-                <!--style="?android:attr/progressBarStyleHorizontal"-->
-                <!--android:layout_width="80dp"-->
-                <!--android:layout_height="80dp"-->
-                <!--android:layout_gravity="center"-->
-                <!--android:indeterminate="false"-->
-                <!--android:max="100"-->
-                <!--android:padding="2dp"-->
-                <!--android:progress="0"-->
-                <!--android:progressDrawable="@drawable/progress_bar_drawable"-->
-                <!--/>-->
-
-                <com.pairapp.view.ProgressWheel
-                    android:id="@+id/pb_download_progress_indeterminate"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:layout_gravity="center"
-                    android:visibility="visible"
-                    app:matProg_barColor="@color/white"
-                    app:matProg_progressIndeterminate="true" />
+                android:layout_height="wrap_content">
+                <!-- the max with on the textView is due to the width of the @+id/iv_message_preview
+                 take it off and see the outcome
+                 -->
+                <com.rockerhieu.emojicon.EmojiconTextView
+                    android:id="@+id/tv_log_message"
+                    style="@style/message_outgoing"
+                    android:text="a sample message that spans across multiple lines dones it look nice or bad. i am just testing"
+                    android:visibility="gone"
+                    tools:ignore="HardcodedText" />
 
                 <ImageView
-                    android:id="@+id/v_download_play"
+                    android:id="@+id/iv_message_preview"
+                    style="@style/outgoing_message_body_root_view"
+                    android:layout_width="@dimen/message_preview_item_width"
+                    android:layout_height="@dimen/message_preview_item_height"
+                    android:background="@color/white"
+                    android:contentDescription="@string/st_content_description_image_preview"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/login_fragment_back_ground"
+                    android:visibility="visible" />
+
+
+                <FrameLayout
+                    android:id="@+id/fl_progress_root_view"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:background="#0000"
-                    android:contentDescription="@string/play_download_content_description"
-                    android:src="@drawable/ic_play_circle_outline_white_36dp"
-                    android:visibility="gone" />
+                    android:background="@drawable/progress_bar_shape"
+                    android:minHeight="@dimen/thumbnail_height"
+                    android:minWidth="@dimen/thumbnail_width"
+                    android:padding="@dimen/padding_ll_login_fragment_bottom"
+                    android:visibility="visible">
 
-            </FrameLayout>
+                    <!--&lt;!&ndash;android:id="@+id/pb_download_progress_determinate"&ndash;&gt;-->
+                    <!--<ProgressBar-->
+                    <!--style="?android:attr/progressBarStyleHorizontal"-->
+                    <!--android:layout_width="80dp"-->
+                    <!--android:layout_height="80dp"-->
+                    <!--android:layout_gravity="center"-->
+                    <!--android:indeterminate="false"-->
+                    <!--android:max="100"-->
+                    <!--android:padding="2dp"-->
+                    <!--android:progress="0"-->
+                    <!--android:progressDrawable="@drawable/progress_bar_drawable"-->
+                    <!--/>-->
 
-        </com.pairapp.view.FrameLayout>
+                    <com.pairapp.view.ProgressWheel
+                        android:id="@+id/pb_download_progress_indeterminate"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:visibility="visible"
+                        app:matProg_barColor="@color/white"
+                        app:matProg_progressIndeterminate="true" />
+
+                    <ImageView
+                        android:id="@+id/v_download_play"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:background="#0000"
+                        android:contentDescription="@string/play_download_content_description"
+                        android:src="@drawable/ic_play_circle_outline_white_36dp"
+                        android:visibility="gone" />
+
+                </FrameLayout>
+
+            </com.pairapp.view.FrameLayout>
+
+            <TextView
+                android:id="@+id/tv_message_date"
+                style="@style/message_outgoing_date"
+                android:layout_alignEnd="@+id/fl_message_body_view"
+                android:layout_alignRight="@+id/fl_message_body_view"
+                android:gravity="center_vertical|end"
+                android:singleLine="true"
+                android:text="  12-12-12"
+                tools:ignore="HardcodedText" />
+        </com.pairapp.view.RelativeLayout>
+
+        <ImageButton
+            android:id="@+id/iv_retry"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/ll_message_body_view"
+            android:layout_toStartOf="@+id/ll_message_body_view"
+            android:background="@color/transparent"
+            android:contentDescription="@string/content_des_send_message_agin"
+            android:src="@drawable/ic_action_replay" />
 
         <TextView
-            android:id="@+id/tv_message_date"
-            style="@style/message_outgoing_date"
-            android:layout_alignEnd="@+id/fl_message_body_view"
-            android:layout_alignRight="@+id/fl_message_body_view"
-            android:gravity="center_vertical|end"
-            android:singleLine="true"
-            android:text="  12-12-12"
+            android:id="@+id/tv_sender_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/ll_message_body_view"
+            android:layout_alignStart="@+id/ll_message_body_view"
+            android:layout_marginBottom="@dimen/message_input_margin_4dp"
+            android:clickable="true"
+            android:text="sender"
+            android:textSize="@dimen/standard_text_size"
+            android:visibility="gone"
             tools:ignore="HardcodedText" />
+
     </com.pairapp.view.RelativeLayout>
 
-    <ImageButton
-        android:id="@+id/iv_retry"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_toLeftOf="@+id/ll_message_body_view"
-        android:layout_toStartOf="@+id/ll_message_body_view"
-        android:background="@color/transparent"
-        android:contentDescription="@string/content_des_send_message_agin"
-        android:src="@drawable/ic_action_replay" />
+    <include layout="@layout/message_spacing_normal" />
 
-    <TextView
-        android:id="@+id/tv_sender_name"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/ll_message_body_view"
-        android:layout_alignStart="@+id/ll_message_body_view"
-        android:layout_marginBottom="@dimen/message_input_margin_4dp"
-        android:clickable="true"
-        android:text="sender"
-        android:textSize="@dimen/standard_text_size"
-        android:visibility="gone"
-        tools:ignore="HardcodedText" />
-
-</com.pairapp.view.RelativeLayout>
+</LinearLayout>
