@@ -77,7 +77,6 @@
 
         <ImageView
             android:id="@+id/iv_message_preview"
-            style="@style/outgoing_message_body_root_view"
             android:layout_width="@dimen/message_preview_item_width"
             android:layout_height="@dimen/message_preview_item_height"
             android:background="@color/white"

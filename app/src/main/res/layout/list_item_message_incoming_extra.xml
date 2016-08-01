@@ -32,7 +32,7 @@
 
         <com.pairapp.view.LinearLayout
             android:id="@+id/ll_message_body_view"
-            style="@style/incoming_message_body_root_view"
+            style="@style/incoming_message_body_root_view.extra"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/tv_sender_name"
@@ -48,19 +48,18 @@
                 <com.rockerhieu.emojicon.EmojiconTextView
                     android:id="@+id/tv_log_message"
                     style="@style/message_incoming"
-                    android:text="a sample message that spans across multiple lines dones it look nice or bad. i am just testing"
-                    android:visibility="visible"
-                    tools:ignore="HardcodedText" />
+                    android:visibility="gone"
+                    tools:text="testing some message for the guy" />
 
                 <ImageView
                     android:id="@+id/iv_message_preview"
-                    style="@style/incoming_message_body_root_view"
                     android:layout_width="@dimen/message_preview_item_width"
                     android:layout_height="@dimen/message_preview_item_height"
                     android:background="@color/white"
                     android:contentDescription="@string/st_content_description_image_preview"
                     android:scaleType="centerCrop"
-                    android:visibility="gone" />
+                    android:src="@drawable/background_hd"
+                    android:visibility="visible" />
 
 
                 <FrameLayout
@@ -72,7 +71,7 @@
                     android:minHeight="@dimen/thumbnail_height"
                     android:minWidth="@dimen/thumbnail_width"
                     android:padding="@dimen/padding_ll_login_fragment_bottom"
-                    android:visibility="visible">
+                    android:visibility="gone">
 
                     <com.pairapp.view.ProgressWheel
                         android:id="@+id/pb_download_progress_indeterminate"

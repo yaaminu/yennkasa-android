@@ -22,8 +22,5 @@
         android:textSize="@dimen/log_message_text_size"
         tools:text="2/2/2015" />
 
-    <include
-        layout="@layout/message_spacing_normal"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/message_body_margin" />
+    <include layout="@layout/message_spacing_normal" />
 </LinearLayout>

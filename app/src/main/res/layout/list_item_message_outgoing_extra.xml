@@ -17,7 +17,7 @@
 
         <com.pairapp.view.RelativeLayout
             android:id="@+id/ll_message_body_view"
-            style="@style/outgoing_message_body_root_view"
+            style="@style/outgoing_message_body_root_view.extra"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical">
@@ -38,13 +38,13 @@
 
                 <ImageView
                     android:id="@+id/iv_message_preview"
-                    style="@style/outgoing_message_body_root_view"
                     android:layout_width="@dimen/message_preview_item_width"
                     android:layout_height="@dimen/message_preview_item_height"
                     android:background="@color/white"
                     android:contentDescription="@string/st_content_description_image_preview"
                     android:scaleType="centerCrop"
-                    android:visibility="visible" />
+                    android:visibility="visible"
+                    tools:src="@drawable/header" />
 
                 <FrameLayout
                     android:id="@+id/fl_progress_root_view"

@@ -130,39 +130,37 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             useOneLine = length < dateLength * 4 && messageBody.indexOf('\n') == -1;
         }
 
-        boolean isSameSender = isNextSameSender(position);
+        boolean isSameSender = isNextSameSender(position, message);
 
         if (isOutgoingMessage) {
             if (isSameSender) {
                 return useOneLine ? OUTGOING_MESSAGE_ONE_LINE_EXTRA : OUTGOING_MESSAGE_EXTRA;
-            } else {
-                return useOneLine ? OUTGOING_MESSAGE_ONE_LINE : OUTGOING_MESSAGE;
             }
+            return useOneLine ? OUTGOING_MESSAGE_ONE_LINE : OUTGOING_MESSAGE;
         }
+        //if we here it means message is outgoing
         if (isSameSender) {
             return useOneLine ? INCOMING_MESSAGE_ONE_LINE_EXTRA : INCOMING_MESSAGE_EXTRA;
-        } else {
-            return useOneLine ? INCOMING_MESSAGE_ONE_LINE : INCOMING_MESSAGE;
         }
-
+        return useOneLine ? INCOMING_MESSAGE_ONE_LINE : INCOMING_MESSAGE;
     }
 
-    private boolean isNextSameSender(int currPosition) {
+    private boolean isNextSameSender(int currPosition, Message currMessage) {
         if (currPosition < getCount() - 1 /*avoid ouf of bound ex*/) { //this condition is almost always true
-            Message next = getItem(currPosition + 1), message = getItem(currPosition);
-            if (MessageUtils.isSendableMessage(next) && next.getFrom().equals(message.getFrom())) {
+            Message next = getItem(currPosition + 1);
+            if (MessageUtils.isSendableMessage(next) && next.getFrom().equals(currMessage.getFrom())) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean isPreviousFromSameSender(int currPosition) {
+    private boolean isPreviousFromSameSender(int currPosition, Message currMessage) {
         if (currPosition > 0 /*avoid ouf of bound ex*/) {
             //this condition is almost always true
-            Message previous = getItem(currPosition - 1), message = getItem(currPosition);
+            Message previous = getItem(currPosition - 1);
             if (MessageUtils.isSendableMessage(previous)
-                    && previous.getFrom().equals(message.getFrom())) {
+                    && previous.getFrom().equals(currMessage.getFrom())) {
                 return true;
             }
         }
@@ -246,7 +244,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             }
         };
 
-        if (isGroupMessages && !isOutgoingMessage && !isPreviousFromSameSender(position)) {
+        if (isGroupMessages && !isOutgoingMessage && !isPreviousFromSameSender(position, message)) {
             ViewUtils.showViews(holder.sendersName);
             holder.sendersName.setText(getSenderName(message));
             holder.sendersName.setOnClickListener(listener);

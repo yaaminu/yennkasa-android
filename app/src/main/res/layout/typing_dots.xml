@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/incoming_message_body_root_view"
+    style="@style/incoming_message_body_root_view.extra"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_gravity="start"
