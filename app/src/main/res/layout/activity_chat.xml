@@ -64,7 +64,9 @@
                 android:background="@color/transparent"
                 android:divider="@null"
                 android:dividerHeight="0dp"
+                android:drawSelectorOnTop="false"
                 android:fadingEdge="none"
+                android:listSelector="@null"
                 android:scrollbars="none"
                 android:scrollingCache="@bool/scrolling_cache_chat_activity"
                 android:transcriptMode="normal"
@@ -88,32 +90,25 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
                     android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
                     android:adjustViewBounds="true"
                     android:background="@color/transparent"
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_smiley_24dp" />
 
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center_vertical">
 
-                    <com.rockerhieu.emojicon.EmojiconEditText
-                        android:id="@+id/et_message"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:background="@color/transparent"
-                        android:gravity="bottom"
-                        android:hint="@string/message_box_hint"
-                        android:inputType="textMultiLine|textLongMessage"
-                        android:maxHeight="@dimen/multiline_text_box_max_height"
-                        android:padding="@dimen/padding_ll_login_fragment_right"
-                        android:textSize="@dimen/edit_text_size"
-                        app:emojiconSize="@dimen/edit_text_size" />
-                </LinearLayout>
+                <com.rockerhieu.emojicon.EmojiconEditText
+                    android:id="@+id/et_message"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@color/transparent"
+                    android:gravity="center_vertical"
+                    android:hint="@string/message_box_hint"
+                    android:inputType="textMultiLine|textLongMessage"
+                    android:maxHeight="@dimen/multiline_text_box_max_height"
+                    android:textSize="@dimen/edit_text_size"
+                    app:emojiconSize="@dimen/edit_text_size" />
 
                 <ImageButton
                     android:id="@+id/ib_attach_capture_photo"

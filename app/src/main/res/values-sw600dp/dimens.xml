@@ -50,7 +50,7 @@
     <dimen name="message_preview_item_height">250dp</dimen>
     <dimen name="log_message_text_size">24sp</dimen>
     <dimen name="menu_item_text_size">36sp</dimen>
-    <dimen name="multiline_text_box_max_height">150dp</dimen>
+    <dimen name="multiline_text_box_max_height">320dp</dimen>
     <dimen name="divider_right_offset">16dp</dimen>
     <dimen name="dp_thumbnail_width_large">300dp</dimen>
     <dimen name="dp_thumbnail_height_large">300dp</dimen>

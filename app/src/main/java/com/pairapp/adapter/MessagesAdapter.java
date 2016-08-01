@@ -55,7 +55,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             OUTGOING_MESSAGE_ONE_LINE_EXTRA = 0x7,
             INCOMING_MESSAGE_EXTRA = 0x8,
             OUTGOING_MESSAGE_EXTRA = 0x9,
-            CALL_MESSAGE_ITEM = 0xa;
+            CALL_MESSAGE_ITEM_NORMAL = 0xa,
+            CALL_MESSAGE_ITEM_EXTRA = 0xb;
 
 
     private final SparseIntArray messageStates;
@@ -102,7 +103,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             R.layout.one_line_message_list_item_outgoing_extra,
             R.layout.list_item_message_incoming_extra,
             R.layout.list_item_message_outgoing_extra,
-            R.layout.list_item_message_call
+            R.layout.list_item_message_call_normal,
+            R.layout.list_item_message_call_extra
     };
 
     @Override
@@ -119,7 +121,10 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         }
 
         if (currentMessageType == Message.TYPE_CALL) {
-            return CALL_MESSAGE_ITEM;
+            if (position < getCount() - 1 && getItem(position + 1).getType() == Message.TYPE_CALL) {
+                return CALL_MESSAGE_ITEM_EXTRA;
+            }
+            return CALL_MESSAGE_ITEM_NORMAL;
         }
         boolean useOneLine = false;
         if (currentMessageType == Message.TYPE_TEXT_MESSAGE) {
@@ -191,7 +196,34 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             holder.textMessage.setText(formattedDate);
             convertView.setOnTouchListener(touchListener);
             return convertView;
-        } else if (currentMessageType == Message.TYPE_CALL) {
+        }
+        if (currentMessageType == Message.TYPE_TYPING_MESSAGE) {
+            convertView.setOnTouchListener(touchListener);
+            return convertView;
+        }
+
+        final View.OnClickListener listener = new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    int id = v.getId();
+                    if (id == R.id.v_download_play) {
+                        cancelDownloadOrSending(message);
+                    } else if (id == R.id.iv_message_preview) {
+                        openMessage(message);
+                    } else if (id == R.id.tv_sender_name) {
+                        UiHelpers.gotoProfileActivity(context, message.getFrom());
+                    } else if (id == R.id.iv_retry) {
+                        delegate.onReSendMessage(message);
+                    } else if (id == R.id.call_item_view || id == R.id.ib_call_button) {
+                        delegate.onCallClicked(message);
+                    }
+                } catch (PairappException e) {
+                    ErrorCenter.reportError("viewFile", e.getMessage());
+                }
+            }
+        };
+        if (currentMessageType == Message.TYPE_CALL) {
             holder.textMessage.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
             holder.textMessage.setCompoundDrawablesWithIntrinsicBounds(CallLogAdapter.getDrawable(message), 0, 0, 0);
             holder.textMessage.setText("  " + Message.getCallSummary(context, message));
@@ -204,15 +236,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             } else if (callBody.getCallType() == CallBody.CALL_TYPE_CONFERENCE) {
                 throw new UnsupportedOperationException();
             }
-            convertView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    delegate.onCallClicked(message);
-                }
-            });
-            return convertView;
-        } else if (currentMessageType == Message.TYPE_TYPING_MESSAGE) {
-            convertView.setOnTouchListener(touchListener);
+            holder.call_button.setOnClickListener(listener);
+            convertView.setOnClickListener(listener);
             return convertView;
         }
 
@@ -224,25 +249,6 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                 holder.retry,
                 holder.progressRootView,
                 holder.sendersName);
-
-        final View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    if (v.getId() == R.id.v_download_play) {
-                        cancelDownloadOrSending(message);
-                    } else if (v.getId() == R.id.iv_message_preview) {
-                        openMessage(message);
-                    } else if (v.getId() == R.id.tv_sender_name) {
-                        UiHelpers.gotoProfileActivity(context, message.getFrom());
-                    } else if (v.getId() == R.id.iv_retry) {
-                        delegate.onReSendMessage(message);
-                    }
-                } catch (PairappException e) {
-                    ErrorCenter.reportError("viewFile", e.getMessage());
-                }
-            }
-        };
 
         if (isGroupMessages && !isOutgoingMessage && !isPreviousFromSameSender(position, message)) {
             ViewUtils.showViews(holder.sendersName);
@@ -276,7 +282,6 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             holder.textMessage.setText(messageBody);
             return convertView;
         }
-
         //if we are here then the message is binary example picture message or video message
         holder.preview.setVisibility(View.VISIBLE);
         holder.preview.setOnLongClickListener(this);

@@ -72,7 +72,7 @@
     <dimen name="what_ever_name_dp">4dp</dimen>
     <dimen name="log_message_text_size">14sp</dimen>
     <dimen name="menu_item_text_size">18sp</dimen>
-    <dimen name="multiline_text_box_max_height">80dp</dimen>
+    <dimen name="multiline_text_box_max_height">240dp</dimen>
     <dimen name="action_bar_height">@dimen/abc_action_bar_default_height_material</dimen>
     <dimen name="divider_right_offset">8dp</dimen>
     <dimen name="dp_thumbnail_width_large">150dp</dimen>

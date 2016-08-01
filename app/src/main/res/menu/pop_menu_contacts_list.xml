@@ -2,6 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/action_call_user"
+        android:orderInCategory="100"
         android:title="@string/call" />
 
     <item
@@ -10,8 +11,10 @@
         android:title="@string/video_call" />
     <item
         android:id="@+id/action_text"
+        android:orderInCategory="102"
         android:title="@string/send_message" />
     <item
         android:id="@+id/action_invite"
+        android:orderInCategory="103"
         android:title="@string/invite" />
 </menu>

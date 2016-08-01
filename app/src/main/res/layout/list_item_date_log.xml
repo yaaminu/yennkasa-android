@@ -9,8 +9,6 @@
     android:gravity="center"
     android:orientation="vertical">
 
-    <include layout="@layout/message_spacing_normal" />
-
     <TextView
         android:id="@+id/tv_log_message"
         android:layout_width="wrap_content"

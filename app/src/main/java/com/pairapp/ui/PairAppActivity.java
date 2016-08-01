@@ -1,3 +1,4 @@
+
 package com.pairapp.ui;
 
 import android.annotation.TargetApi;
@@ -21,7 +22,6 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.pairapp.BuildConfig;
-import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.PairApp;
 import com.pairapp.R;
 import com.pairapp.data.Message;
@@ -126,9 +126,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
             if (snackBar == null) {
                 snackBar = getSnackBar();
                 snackBar.applyStyle(getSnackBarStyle());
-                if (isStickyMessageShown && !TextUtils.isEmpty(stickYmessage)) {
-                    notifySticky(stickYmessage);
-                }
             }
         }
     }
@@ -216,10 +213,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     }
 
     private void doNotify(String text) {
-        if (isStickyMessageShown) {
-            PLog.d(TAG, "notification %s dropped as a sticky message is shown", text);
-            return;
-        }
         int state = snackBar.getState();
         if (state == SnackBar.STATE_SHOWING || state == SnackBar.STATE_SHOWN) {
             return;
@@ -255,7 +248,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
             }, false);
 
         }
-        isStickyMessageShown = false;
         snackBar.removeOnDismiss(true).show(this);
     }
 
@@ -361,59 +353,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         }
     }
 
-    private static boolean isStickyMessageShown = false;
-    private static String stickYmessage = "";
-
-    public void notifySticky(final String message) {
-        stickYmessage = message;
-        final Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                snackBar.dismiss();
-                snackBar.text(message)
-                        .ellipsize(TextUtils.TruncateAt.END)
-                        .maxLines(2)
-                        .actionText(R.string.close)
-                        .actionClickListener(new SnackBar.OnActionClickListener() {
-                            @Override
-                            public void onActionClick(SnackBar sb, int actionId) {
-                                if (sb.getState() == SnackBar.STATE_SHOWN) {
-                                    stickYmessage = "";
-                                    isStickyMessageShown = false;
-                                    sb.dismiss();
-                                }
-                            }
-                        })
-                        .duration(0);
-                snackBar.removeOnDismiss(true).show(PairAppActivity.this);
-                isStickyMessageShown = true;
-            }
-        };
-        if (!ThreadUtils.isMainThread()) {
-            runOnUiThread(runnable);
-        } else {
-            runnable.run();
-        }
-    }
-
-    @Override
-    public void showError(ErrorCenter.Error error) {
-        if (error.style == ErrorCenter.ReportStyle.STICKY) {
-            notifySticky(error.message);
-        } else {
-            super.showError(error);
-        }
-    }
-
-    @Override
-    public void disMissError(String errorId) {
-        if (isStickyMessageShown) {
-            snackBar.dismiss();
-            isStickyMessageShown = false;
-        } else {
-            super.disMissError(errorId);
-        }
-    }
 
     protected void postEvent(Event event) {
         EventBus bus = get(PAIRAPP_CLIENT_POSTABLE_BUS);
