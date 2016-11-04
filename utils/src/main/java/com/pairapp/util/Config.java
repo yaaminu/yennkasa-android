@@ -21,12 +21,14 @@ public class Config {
     public static final String APP_PREFS = "prefs";
     private static final String TAG = Config.class.getSimpleName();
 
+    private static final String SERVER_URL_REMOTE = "https://chat-server-data.herokuapp.com";
     private static final String SERVER_URL_LOCAL = "http://10.0.3.2:4000";
     private static final String SERVER_URL_LOCAL_REAL_DEVICE = "http://192.168.43.42:4000";
+
     private static final String MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE = "http://192.168.43.42:3000";
     private static final String MESSAGE_SOCKET_API_LOCAL = "http://10.0.3.2:3000";
 
-    private static final String LIVE_SOCKET_API_REMOTE = "https://pairapp-live.herokuapp.com/live";
+    private static final String LIVE_SOCKET_API_REMOTE = "https://chat-server-live.herokuapp.com";
     private static final String LIVE_SOCKET_API_LOCAL = "http://10.0.3.2:4000/live";
     private static final String ENV_PROD = "prod";
     private static final String ENV_DEV = "dev";
@@ -118,11 +120,12 @@ public class Config {
     }
 
     public static String getDataServer() {
-        if (PAIRAPP_ENV.equals(ENV_DEV)) {
-            return SERVER_URL_LOCAL;
-        } else {
-            return SERVER_URL_LOCAL_REAL_DEVICE;
-        }
+        return SERVER_URL_REMOTE;
+//        if (PAIRAPP_ENV.equals(ENV_DEV)) {
+//            return SERVER_URL_LOCAL;
+//        } else {
+//            return SERVER_URL_LOCAL_REAL_DEVICE;
+//        }
     }
 
     public static File getAppBinFilesBaseDir() {
@@ -226,19 +229,21 @@ public class Config {
     }
 
     public static String getLiveEndpoint() {
-        if (isEmulator()) {
-            return LIVE_SOCKET_API_LOCAL;
-        } else {
-            return LIVE_SOCKET_API_REMOTE;
-        }
+//        if (isEmulator()) {
+//            return LIVE_SOCKET_API_LOCAL;
+//        } else {
+//            return LIVE_SOCKET_API_REMOTE;
+//        }
+        return LIVE_SOCKET_API_REMOTE;
     }
 
     public static String getMessageEndpoint() {
-        if (isEmulator()) {
-            return MESSAGE_SOCKET_API_LOCAL;
-        } else {
-            return MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE;
-        }
+//        if (isEmulator()) {
+//            return MESSAGE_SOCKET_API_LOCAL;
+//        } else {
+//            return MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE;
+//        }
+        return LIVE_SOCKET_API_REMOTE;
     }
 
     private static final Map<String, String> properties = new HashMap<>();

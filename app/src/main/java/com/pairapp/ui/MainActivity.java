@@ -20,7 +20,6 @@ import com.rey.material.widget.SnackBar;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-//import com.digits.sdk.android.Digits;
 
 /**
  * @author Null-Pointer on 6/6/2015.
@@ -49,7 +48,6 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         handleIntent(intent);
-
     }
 
     private void handleIntent(Intent intent) {

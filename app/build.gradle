@@ -7,14 +7,6 @@ repositories {
 
 
 android {
-    signingConfigs {
-        config {
-            keyAlias 'app-keys'
-            keyPassword 'afolaya@2000'
-            storeFile file('E:/stuffs/app_keys/app-keys.jks')
-            storePassword 'afolanya@2000'
-        }
-    }
 
     compileSdkVersion 23
     buildToolsVersion "23.0.1"
@@ -34,7 +26,6 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.config
         }
     }
     sourceSets {
@@ -84,6 +75,7 @@ dependencies {
     compile 'io.reactivex:rxandroid:1.1.0'
     compile 'com.commit451:PhotoView:1.2.4'
     compile 'com.jakewharton:butterknife:7.0.1'
+    compile 'com.google.firebase:firebase-messaging:9.4.0'
 }
 
 crashlytics {
@@ -91,3 +83,4 @@ crashlytics {
     androidNdkOut 'src/main/obj'
     androidNdkLibsOut 'src/main/libs'
 }
+apply plugin: 'com.google.gms.google-services'

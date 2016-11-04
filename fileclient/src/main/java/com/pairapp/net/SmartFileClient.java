@@ -95,9 +95,6 @@ abstract class SmartFileClient implements FileApi {
             }
             api.saveFile(countingTypedFile);
             try {
-//                body.addProperty("read", true);
-//                body.addProperty("list", false);
-//                body.addProperty("cache", 31536000);
                 if (Thread.currentThread().isInterrupted()) {
                     PLog.d(TAG, "cancelled");
                     callback.done(new FileClientException(new Exception("upload cancelled"), -1), null);
@@ -110,12 +107,6 @@ abstract class SmartFileClient implements FileApi {
                 callback.done(null, link);
             } catch (RetrofitError err) {
                 Throwable cause = err.getCause();
-//                if (cause instanceof SocketTimeoutException
-//                        || cause instanceof UnknownHostException) {
-//                    if (ConnectionUtils.isActuallyConnected()) {
-//                        //switch to a new heroku dyno.
-//                    }
-//                }
                 // TODO: 11/5/2015 more error handling like deleting the file etc
                 callback.done(new FileClientException(cause, err.getResponse().getStatus()), null);
             }
