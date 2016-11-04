@@ -1,5 +1,6 @@
 package com.pairapp.data;
 
+import android.annotation.SuppressLint;
 import android.app.AlarmManager;
 import android.content.Context;
 import android.content.Intent;
@@ -1239,7 +1240,35 @@ public final class UserManager {
             clearClass(realm, User.class);
             realm = Country.REALM(Config.getApplicationContext());
             clearClass(realm, Country.class);
-            Config.getApplicationWidePrefs().edit().clear().apply();
+            clearAllPrefs();
+        }
+    }
+
+    @SuppressLint("CommitPrefEdits")
+    private void clearAllPrefs() {
+        try {
+            File directory = new File(Config.getApplication().getFilesDir().getParent(), "shared_prefs");
+            if (directory.isDirectory()) {
+                String[] files = directory.list();
+                if (files != null) {
+                    for (String file : files) {
+                        if (file.endsWith(".xml")) {
+                            // strip off the .xml from the name
+                            SharedPreferences preferences = Config.getPreferences(file.substring(0, file.length() - 4));
+                            preferences.edit().clear().commit();
+                        }
+                        if (!new File(directory, file).delete()) {
+                            PLog.w(TAG, "failed to delete file: %s", file);
+                        } else {
+                            PLog.w(TAG, "deleted file: %s", file);
+                        }
+                    }
+                }
+            }
+            org.apache.commons.io.FileUtils.deleteDirectory(directory);
+        } catch (IOException e) {
+            PLog.e(TAG, e.getMessage(), e);
+            //ignore
         }
     }
 

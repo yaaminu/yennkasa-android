@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class WebSocketClient {
     private static final String TAG = WebSocketClient.class.getSimpleName();
-    public static final int PING_INTERVAL = 1000 * 60 * 3;
+    public static final int PING_INTERVAL = 1000 * 40; //heroku disconnects at 55 seconds
     private final Map<String, String> headers;
     private final Logger logger;
     private final ClientListener listener;
