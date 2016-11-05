@@ -1,14 +1,17 @@
 package com.pairapp.ui;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -28,12 +31,19 @@ import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
 
+import static android.Manifest.permission.CAMERA;
+import static android.Manifest.permission.READ_CONTACTS;
+import static android.Manifest.permission.RECORD_AUDIO;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+
 
 public class SetUpActivity extends PairAppBaseActivity implements VerificationFragment.Callbacks,
         ChooseDisplayPictureFragment.Callbacks, LoginFragment.Callbacks {
 
     static final int UNKNOWN = -1, LOGIN_STAGE = 0, VERIFICATION_STAGE = 1, DP_STAGE = 2, COMPLETE = 3;
     private static final String STAGE = "staSKDFDge", SETUP_PREFS_KEY = "setuSLFKA", OUR_TAG = "ourTag";
+    public static final int PERMISSION_REQUEST_CODE = 101;
+    private static final String[] permissions = new String[]{READ_CONTACTS, WRITE_EXTERNAL_STORAGE, RECORD_AUDIO, CAMERA,};
     int attempts = 0;
     private int stage = UNKNOWN;
     private ProgressDialog progressDialog;
@@ -129,7 +139,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     }
 
     private void addFragment(Fragment fragment) {
-        getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, OUR_TAG + stage).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.container, fragment, OUR_TAG + stage).commitAllowingStateLoss();
     }
 
     private void doGoBackToLogin() {
@@ -296,10 +306,54 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
         private final Runnable runnable = new Runnable() {
             @Override
             public void run() {
-                goToNext();
+                if (getContext() == null) return;
+                requestForPermission();
             }
         };
+
+        private void requestForPermission() {
+            requestPermissions(permissions, PERMISSION_REQUEST_CODE);
+        }
+
+        @Override
+        public void onRequestPermissionsResult(int requestCode,
+                                               @NonNull String permissions[], @NonNull int[] grantResults) {
+            switch (requestCode) {
+                case PERMISSION_REQUEST_CODE: {
+                    boolean allowedAll = true;
+                    if (grantResults.length == permissions.length) {
+                        for (int i = 0; i < grantResults.length; i++) {
+                            if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                                allowedAll = false;
+                                break;
+                            }
+                        }
+                        if (allowedAll) {
+                            goToNext();
+                        } else {
+                            showDialogAndKillApp();
+                        }
+                    } else {
+                        showDialogAndKillApp();
+                    }
+                }
+            }
+        }
+
+        private void showDialogAndKillApp() {
+            new AlertDialog.Builder(getContext())
+                    .setMessage("Some required permissions were not granted. This app cannot continue to run")
+                    .setTitle("Permission Denied")
+                    .setPositiveButton(android.R.string.ok, null)
+                    .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                        @Override
+                        public void onDismiss(DialogInterface dialog) {
+                            getActivity().finish();
+                        }
+                    }).create().show();
+        }
     }
+
 
     @Override
     protected void showMessage() {

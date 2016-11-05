@@ -190,8 +190,10 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Sw
         listView.postDelayed(new Runnable() {
             @Override
             public void run() {
-                ContactSyncService.syncIfRequired(getActivity());
-                refreshLocalContacts();
+                if (getActivity() != null) {
+                    ContactSyncService.syncIfRequired(getActivity());
+                    refreshLocalContacts();
+                }
             }
         }, 10000);
     }
