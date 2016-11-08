@@ -427,6 +427,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         usersRealm.close();
         String s1 = messageEt.getText().toString();
         Config.getPreferences(TAG + SAVED_MESSAGES_MESSAGE_BOX).edit().putString(peer.getUserId(), s1).apply();
+        clearRecentChat(peer.getUserId());
         super.onDestroy();
     }
 
