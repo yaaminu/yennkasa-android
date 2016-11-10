@@ -5,4 +5,6 @@ package com.pairapp.net.sockets;
  */
 public interface MessageParser {
     void feed(byte[] bytes);
+
+    void feedBase64(String message);
 }
