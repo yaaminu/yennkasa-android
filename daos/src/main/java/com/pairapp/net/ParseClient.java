@@ -18,7 +18,10 @@ import com.pairapp.data.BuildConfig;
 import com.pairapp.data.Message;
 import com.pairapp.data.R;
 import com.pairapp.data.User;
+import com.pairapp.data.UserManager;
 import com.pairapp.util.Config;
+import com.pairapp.util.Event;
+import com.pairapp.util.EventBus;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.MediaUtils;
 import com.pairapp.util.PLog;
@@ -34,6 +37,7 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.NullInputStream;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -74,6 +78,7 @@ public class ParseClient implements UserApiV2 {
 
     private static final String TAG = ParseClient.class.getSimpleName();
     public static final String PENDING_DP = "pendingDp";
+    public static final String VERIFICATION_CODE_RECEIVED = "code.verification.recived";
     private static ParseClient INSTANCE;
     private DisplayPictureFileClient displayPictureFileClient;
     private final Preprocessor preProcessor;
@@ -271,18 +276,23 @@ public class ParseClient implements UserApiV2 {
         return FileUtils.hash(user.getUserId().getBytes());
     }
 
-    private void registerForPushes(String userId) throws ParseException {
+    private void registerForPushes(String userId, String pushID) throws ParseException {
         byte[] randomBytes = new byte[128];
         new SecureRandom().nextBytes(randomBytes);
         Map<String, String> params = new HashMap<>();
         ParseInstallation installation = ParseInstallation.getCurrentInstallation();
         String hash = FileUtils.hash(randomBytes);
         installation.put(FIELD_ID, userId);
+        //required by the server for verification in installation related queries
         installation.put("secureRandom", hash);
-        installation.put("pushId", "pushId"); // FIXME: 7/22/2016 use a real pushId
+        installation.put("pushId", pushID);
+        //the server will automatically generate an authentication token.
+        //and store it in the current installation before persisting it to the database.
+        // But we cannot query for Installation objects on clients so we have to make another cloud
+        // function call (see below) to retrieve the token.
         installation.save();
         params.put("secureRandom", hash);
-        params.put("userId", userId);
+        params.put(FIELD_ID, userId);
         String results = ParseCloud.callFunction("genToken", params);
         ParseObject object = new ParseObject("tokens");
         object.put(PARSE_CONSTANTS.FIELD_AUTH_TOKEN, results);
@@ -644,15 +654,15 @@ public class ParseClient implements UserApiV2 {
 //    }
 
     @Override
-    public void verifyUser(@Path("id") final String userId, @Field("token") final String token, final Callback<SessionData> callback) {
+    public void verifyUser(@Path("id") final String userId, @Field("token") final String token, final String pushID, final Callback<SessionData> callback) {
         TaskManager.execute(new Runnable() {
             public void run() {
-                doVerifyUser(userId, token, callback);
+                doVerifyUser(userId, token, pushID, callback);
             }
         }, true);
     }
 
-    private void doVerifyUser(@Path("id") String userId, @Field("token") String token, Callback<SessionData> callback) {
+    private void doVerifyUser(@Path("id") String userId, @Field("token") String token, String pushId, Callback<SessionData> callback) {
         try {
             ParseObject object = ParseUser.getCurrentUser();
             if (object == null) {
@@ -669,7 +679,7 @@ public class ParseClient implements UserApiV2 {
             if (token1.equals(token)) {
                 object.put(FIELD_VERIFIED, true);
                 object.save();
-                registerForPushes(userId);
+                registerForPushes(userId, pushId);
                 final String accessToken = ParseInstallation.getCurrentInstallation().getObjectId();
                 notifyCallback(callback, null, new SessionData(FileUtils.hash(accessToken.getBytes()), userId));
             } else {
@@ -715,6 +725,7 @@ public class ParseClient implements UserApiV2 {
             object.save();
             sendToken(userId, token);
             notifyCallback(response, null, new HttpResponse(200, "successfully reset token"));
+            EventBus.getDefault().postSticky(Event.createSticky(VERIFICATION_CODE_RECEIVED, null, token));
         } catch (ParseException e) {
             notifyCallback(response, prepareErrorReport(e), null);
         }
@@ -929,9 +940,10 @@ public class ParseClient implements UserApiV2 {
                 if (object == null) {
                     throw new IllegalStateException("user cannot be null");
                 }
-                int token = Integer.parseInt(object.getString(PARSE_CONSTANTS.FIELD_TOKEN));
-                sendToken(userId, token);
-                notifyCallback(callback, null, new HttpResponse(200, "sent token"));
+                String token = object.getString(PARSE_CONSTANTS.FIELD_TOKEN);
+                sendToken(userId, Integer.parseInt(token));
+                notifyCallback(callback, null, new HttpResponse(200, "token sent"));
+                EventBus.getDefault().postSticky(Event.createSticky(VERIFICATION_CODE_RECEIVED, null, token));
             }
         }, true);
     }
@@ -957,7 +969,7 @@ public class ParseClient implements UserApiV2 {
                 return;
             }
             object.delete();
-            notifyCallback(callback, null, new HttpResponse(200, "sucess"));
+            notifyCallback(callback, null, new HttpResponse(200, "success"));
         } catch (ParseException e) {
 
             String message;

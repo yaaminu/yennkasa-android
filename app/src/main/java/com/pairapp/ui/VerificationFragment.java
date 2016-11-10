@@ -4,6 +4,7 @@ package com.pairapp.ui;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -15,10 +16,18 @@ import android.widget.TextView;
 import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.data.UserManager;
 import com.pairapp.R;
+import com.pairapp.messenger.FireBaseInstantIDService;
 import com.pairapp.util.Config;
+import com.pairapp.util.Event;
+import com.pairapp.util.EventBus;
+import com.pairapp.util.PLog;
+import com.pairapp.util.TaskManager;
+import com.pairapp.util.ThreadUtils;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
+
+import java.util.EventListener;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -110,6 +119,54 @@ public class VerificationFragment extends Fragment {
         return view;
     }
 
+    private final EventBus.EventsListener eventsListener = new EventBus.EventsListener() {
+        @Override
+        public int threadMode() {
+            return EventBus.MAIN;
+        }
+
+        @Override
+        public void onEvent(EventBus yourBus, Event event) {
+            if (UserManager.VERIFICAITON_CODE_RECIEVED.equals(event.getTag())) {
+                if (event.getData() != null) {
+                    String code = event.getData().toString().trim();
+                    if (!TextUtils.isEmpty(code)) {
+                        etVerification.setText(code);
+                        etVerification.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                doVerifyUser();
+                            }
+                        }, 2000);
+                    }
+                }
+                if (event.isSticky()) {
+                    yourBus.removeStickyEvent(event);
+                }
+                event.recycle();
+            } else {
+                throw new AssertionError("unknown event");
+            }
+        }
+
+        @Override
+        public boolean sticky() {
+            return true;
+        }
+    };
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        EventBus.getDefault().register(UserManager.VERIFICAITON_CODE_RECIEVED, eventsListener);
+    }
+
+    @Override
+    public void onPause() {
+        EventBus.getDefault().unregister(UserManager.VERIFICAITON_CODE_RECIEVED, eventsListener);
+        super.onPause();
+    }
+
     private void setUpViews(TextView buttonVerify, TextView resendToken, TextView notice) {
         boolean tokenSent = Config.getApplicationWidePrefs().getBoolean(KEY_TOKEN_SENT, false);
         notice.setText(tokenSent ? R.string.st_send_verification_notice : R.string.send_token_notice);
@@ -127,20 +184,69 @@ public class VerificationFragment extends Fragment {
             UiHelpers.showErrorDialog(getActivity(), getString(R.string.token_invalid));
         } else {
             progressDialog.show();
-            UserManager.getInstance().verifyUser(code, new UserManager.CallBack() {
+            updateProgress(getString(R.string.verifying_account_stage_1));
+            TaskManager.executeNow(new Runnable() {
                 @Override
-                public void done(Exception e) {
-                    progressDialog.dismiss();
-                    if (e != null) {
-                        ErrorCenter.reportError(TAG, e.getMessage());
+                public void run() {
+                    String token = fetchFirebaseInstanceID(); //might block
+                    if (token == null) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ErrorCenter.reportError(TAG, getString(R.string.st_unable_to_connect));
+                                progressDialog.dismiss();
+                            }
+                        });
                     } else {
-                        callback.onVerified();
+                        updateProgress(getString(R.string.verifying_account_stage_2));
+                        UserManager.getInstance().verifyUser(code, token, new UserManager.CallBack() {
+                            @Override
+                            public void done(Exception e) {
+                                progressDialog.dismiss();
+                                if (e != null) {
+                                    ErrorCenter.reportError(TAG, e.getMessage());
+                                } else {
+                                    callback.onVerified();
+                                }
+                            }
+                        });
                     }
                 }
-            });
+            }, true);
+
         }
 
     }
+
+    private void updateProgress(final String message) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                progressDialog.setMessage(message);
+            }
+        });
+    }
+
+    @Nullable
+    private String fetchFirebaseInstanceID() {
+        ThreadUtils.ensureNotMain();
+        int attempts = 0;
+        while (attempts++ < 4) {
+            try {
+                String token = FireBaseInstantIDService.getInstanceID();
+                if (token == null) {
+                    long time = 3000L * attempts;
+                    Thread.sleep(time);
+                    continue;
+                }
+                return token;
+            } catch (InterruptedException e) {
+                PLog.e(TAG, e.getMessage(), e);
+            }
+        }
+        return null;
+    }
+
 
     @Override
     public void onSaveInstanceState(Bundle outState) {

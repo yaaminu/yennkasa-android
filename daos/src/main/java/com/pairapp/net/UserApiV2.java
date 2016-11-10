@@ -84,7 +84,7 @@ public interface UserApiV2 {
 
     @FormUrlEncoded
     @POST("/api/v1/users/{id}/verify")
-    void verifyUser(@Path("id") String userId, @Field("token") String token, Callback<SessionData> callback);
+    void verifyUser(@Path("id") String userId, @Field("token") String token, String pushID, Callback<SessionData> callback);
 
     @FormUrlEncoded
     @POST("/api/v1/users/{id}/resendToken")

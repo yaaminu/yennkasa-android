@@ -16,6 +16,7 @@ import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
+import com.pairapp.workers.BootReceiver;
 import com.path.android.jobqueue.Job;
 import com.path.android.jobqueue.di.DependencyInjector;
 
@@ -28,7 +29,7 @@ import io.fabric.sdk.android.Fabric;
  */
 public class PairApp extends Application {
     public static final String TAG = PairApp.class.getName();
-//    //    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
+    //    //    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
 //    private static final String TWITTER_KEY = "p1KaIqoXt9ujhMaOPcQY4Xxi9";
 //    private static final String TWITTER_SECRET = "0m16n21jk5jNpyTusC6DrGvxmLlMcEfRUCRIkINfJoFy8oM1rZ";
     private DependencyInjector injector = new DependencyInjector() {
@@ -64,15 +65,12 @@ public class PairApp extends Application {
         enableComponent(ContactSyncService.class);
         enableComponent(PairAppClient.class);
         enableComponent(MessageProcessor.class);
-        enableComponent(MessageCenter.class);
     }
 
     public static void disableComponents() {
-//        disableComponent(BootReceiver.class);
         disableComponent(ContactSyncService.class);
         disableComponent(PairAppClient.class);
         disableComponent(MessageProcessor.class);
-        disableComponent(MessageCenter.class);
     }
 
     private static final Pattern documentPattern = Pattern.compile("pdf|doc|docx|odt|epub|xls|xlsx|csv", Pattern.CASE_INSENSITIVE),

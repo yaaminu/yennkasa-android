@@ -1,4 +1,4 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">PairApp</string>
     <string name="action_logout">Log out</string>
     <string name="title_activity_set_up">Get Started</string>
@@ -355,4 +355,6 @@
     <string name="content_description_attach_more">More attachment options</string>
     <string name="attach_audio">Send audio</string>
     <string name="send_picture">Send Picture</string>
+    <string name="verifying_account_stage_1">Verifying account: stage 1 of 2</string>
+    <string name="verifying_account_stage_2">Verifying account: stage 2 of 2</string>
 </resources>

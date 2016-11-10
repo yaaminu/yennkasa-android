@@ -75,6 +75,7 @@ public final class UserManager {
     private static final String PART_2 = FileUtils.hash("kloi3jlalfak982bbc,avqaafafals");
     private static final String PART_1 = FileUtils.hash("vncewe4209ipk;lj82lkja90");
     public static final String MUTED_USERS = "MUTED)USERS";
+    public static final String VERIFICAITON_CODE_RECIEVED = ParseClient.VERIFICATION_CODE_RECEIVED;
     private final File sessionFile;
     private final Object mainUserLock = new Object();
     private final Exception NO_CONNECTION_ERROR;
@@ -973,7 +974,7 @@ public final class UserManager {
         });
     }
 
-    public void verifyUser(final String token, final CallBack callBack) {
+    public void verifyUser(final String token, String pushID, final CallBack callBack) {
         if (isUserVerified()) {
             doNotify(null, callBack);
             return;
@@ -989,7 +990,7 @@ public final class UserManager {
         if (!isUserLoggedIn()) {
             throw new IllegalStateException("no user logged for verification");
         }
-        userApi.verifyUser(getCurrentUser().getUserId(), token, new UserApiV2.Callback<UserApiV2.SessionData>() {
+        userApi.verifyUser(getCurrentUser().getUserId(), token, pushID, new UserApiV2.Callback<UserApiV2.SessionData>() {
             @Override
             public void done(Exception e, UserApiV2.SessionData data) {
                 if (e == null) {

@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.pairapp.data" >
+    package="com.pairapp.data">
 
     <application>
         <service
             android:name="com.pairapp.data.Worker"
-            android:exported="false" >
-        </service>
+            android:exported="false" />
     </application>
 
 </manifest>
