@@ -70,6 +70,7 @@ public class SenderImpl implements Sender {
         started = true;
         pairappSocket.init();
         this.messageQueue.initBlocking(true);
+        // TODO: 11/10/2016 why start the message que here but not when the socketconnection is open?
         this.messageQueue.start();
     }
 
@@ -95,6 +96,7 @@ public class SenderImpl implements Sender {
     public void shutdownSafely() {
         if (started) {
             started = false;
+            // TODO: 11/10/2016 why do we have to check if queue is start()ed before disconnecting?
             if (messageQueue.isStarted()) {
                 if (pairappSocket.isConnected()) {
                     pairappSocket.disConnectBlocking();
@@ -181,10 +183,17 @@ public class SenderImpl implements Sender {
 
         @Override
         public void onOpen() {
-            MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(SOCKET_CONNECTION, null, CONNECTED));
             if (!started) {
                 throw new IllegalStateException("not started");
             }
+            MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(SOCKET_CONNECTION, null, CONNECTED));
+            // TODO: 11/10/2016 whey not actually start the message queue here in the first place?
+            //like this :
+//            if (!messageQueue.isStarted()) {
+//                messageQueue.stopProcessing();
+//            } else {
+//                messageQueue.resumeProcessing();
+//            }
             if (messageQueue.isStarted()) {
                 messageQueue.resumeProcessing();
             }
@@ -192,12 +201,17 @@ public class SenderImpl implements Sender {
 
         @Override
         public void onClose(int code, String reason) {
-            //should we allow ourselves to be usable again?
+            // TODO: 11/10/2016  should we allow ourselves to be usable again?
+            // TODO: 11/10/2016 check for reasons why the connection was closed
+            // TODO: 11/10/2016 stop the message queue?
+            //if it's for authentication reasons, we will have to request it somehow, create a new connection
+            //and start processin again
         }
 
         @Override
         public void onClose() {
-            //should we allow ourselves to be usable again?
+            // TODO: 11/10/2016 stop the message queue?
+            // TODO: 11/10/2016  should we allow ourselves to be usable again?
         }
 
         @Override

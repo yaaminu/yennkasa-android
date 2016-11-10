@@ -26,9 +26,12 @@ public class MessagePacker {
             PERSIST_PUSH_IF_POSSIBLE = 0x4,
             NO_TRUNCATE_PUSH = 0x8,
             MONITOR_OR_STATUS = 0x10;
+
+    // TODO: 11/10/2016 why assume userID is a long?
     private final long currentUserId;
 
     private MessagePacker(String currentUserId) {
+        // TODO: 11/10/2016 make userID a string
         this.currentUserId = Long.parseLong(currentUserId, 10);
     }
 
