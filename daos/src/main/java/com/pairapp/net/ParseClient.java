@@ -280,14 +280,10 @@ public class ParseClient implements UserApiV2 {
 
     @SuppressLint("HardwareIds")
     private void registerForPushes(String userId, String pushID) throws ParseException {
-        byte[] randomBytes = new byte[128];
-        new SecureRandom().nextBytes(randomBytes);
         Map<String, String> params = new HashMap<>();
         ParseInstallation installation = ParseInstallation.getCurrentInstallation();
-        String hash = FileUtils.hash(randomBytes);
         installation.put(FIELD_ID, userId);
         //required by the server for verification in installation related queries
-        installation.put("secureRandom", hash);
         installation.put("pushId", pushID);
         String deviceID1 = FileUtils.hash(userId + ":" + Build.MODEL + Build.MANUFACTURER + Build.CPU_ABI);
         installation.put("deviceId1", deviceID1);
@@ -309,8 +305,7 @@ public class ParseClient implements UserApiV2 {
                 throw e;
             }
         }
-        params.put("secureRandom", hash);
-        params.put(FIELD_ID, userId);
+        params.put("pushId", pushID);
         String results = ParseCloud.callFunction("genToken", params);
         ParseObject object = new ParseObject("tokens");
         object.put(PARSE_CONSTANTS.FIELD_AUTH_TOKEN, results);
