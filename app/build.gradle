@@ -19,7 +19,7 @@ android {
         minSdkVersion 9
         targetSdkVersion 23
         versionCode 8
-        versionName "0.0.7 alpha"
+        versionName "0.1.0(beta)"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
