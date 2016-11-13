@@ -29,7 +29,6 @@ public class Config {
     private static final String MESSAGE_SOCKET_API_LOCAL = "http://10.0.3.2:3000";
 
     private static final String LIVE_SOCKET_API_REMOTE = "https://chat-server-live.herokuapp.com";
-    private static final String LIVE_SOCKET_API_LOCAL = "http://10.0.3.2:4000/live";
     private static final String ENV_PROD = "prod";
     private static final String ENV_DEV = "dev";
     public static final String PAIRAPP_ENV = getEnvironment();
@@ -226,15 +225,6 @@ public class Config {
             throw new IllegalArgumentException("property " + propertyName + "not set");
         }
         return property;
-    }
-
-    public static String getLiveEndpoint() {
-//        if (isEmulator()) {
-//            return LIVE_SOCKET_API_LOCAL;
-//        } else {
-//            return LIVE_SOCKET_API_REMOTE;
-//        }
-        return LIVE_SOCKET_API_REMOTE;
     }
 
     public static String getMessageEndpoint() {

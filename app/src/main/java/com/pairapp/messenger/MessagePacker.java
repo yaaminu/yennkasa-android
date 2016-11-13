@@ -220,11 +220,10 @@ public class MessagePacker {
                 break;
             case READABLE_MESSAGE:
                 String msg;
-                byte[] msgBytes = new byte[data.length - 5]; //1 for header and 4 for the message count
+                byte[] msgBytes = new byte[data.length - 1]; //1 for header and 4 for the message count
                 buffer.get(msgBytes);
                 msg = new String(msgBytes);
-                int count = buffer.getInt();//get message count
-                event = new DataEvent(header, msg, count);
+                event = new DataEvent(header, msg);
                 break;
             case MESSAGE_STATUS_DELIVERED:
             case MESSAGE_STATUS_SEEN:

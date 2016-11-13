@@ -102,7 +102,7 @@ public class MessageProcessor extends IntentService {
                 throw new JSONException("unknown message");
             }
         } catch (JSONException e) {
-            PLog.i(TAG, "unknown message");
+            PLog.d(TAG, e.getMessage(), e);
         }
     }
 
@@ -188,7 +188,6 @@ public class MessageProcessor extends IntentService {
                     LiveCenter.incrementUnreadMessageForPeer(conversation.getPeerId());
                 }
                 realm.commitTransaction();
-                logCursor(cursor);
                 NotificationManager.INSTANCE.onNewMessage(this, message);
                 get(PAIRAPP_CLIENT_POSTABLE_BUS).post(Event.create(MESSAGE_RECEIVED, null, message.getId()));
                 if (!Message.isTextMessage(message) && Worker.getCurrentActiveDownloads() < Worker.MAX_PARRALLEL_DOWNLOAD) {
@@ -206,19 +205,6 @@ public class MessageProcessor extends IntentService {
         } finally {
             processLock.unlock();
         }
-    }
-
-    static int getCursor() {
-        return Config.getPreferences(preference).getInt(TAG + CURSOR, -1);
-    }
-
-    private static void logCursor(int cursor) {
-        SharedPreferences preferences = Config.getPreferences(preference);
-        SharedPreferences.Editor editor = preferences.edit();
-        if (preferences.getInt(TAG + CURSOR, 0) < cursor) {
-            editor.putInt(TAG + CURSOR, cursor);
-        }
-        editor.apply();
     }
 
 }

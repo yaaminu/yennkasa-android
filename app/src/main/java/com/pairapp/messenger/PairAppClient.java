@@ -182,14 +182,13 @@ public class PairAppClient extends Service {
             String authToken = UserManager.getInstance().getCurrentUserAuthToken();
             Map<String, String> opts = new HashMap<>(1);
             opts.put("Authorization", authToken);
-            opts.put("cursor", MessageProcessor.getCursor() + "");
             messageParser = new MessageParserImpl(messagePacker);
             sender = new SenderImpl(opts, messageParser);
             statusManager = StatusManager.create(sender, messagePacker, listenableBus());
             webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, sender,
                     new MessageEncoderImpl(messagePacker));
 
-            sender.start(); //this must alwasy come after initialising websocketdispatcher.
+            sender.start(); //this must always come after initialising websocketdispatcher.
 
             incomingMessageProcessor = new IncomingMessageProcessor(statusManager, postableBus());
             messagePacker.observe().subscribe(incomingMessageProcessor);
