@@ -107,6 +107,8 @@ public interface UserApiV2 {
     @NonNull
     String newAuthToken() throws PairappException;
 
+    void updatePushID(String newPushID) throws PairappException;
+
     interface Callback<T> {
         void done(Exception e, T t);
     }

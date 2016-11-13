@@ -307,14 +307,17 @@ public class ParseClient implements UserApiV2 {
                 throw e;
             }
         }
-        requestForToken(pushID);
+        requestForToken(pushID, false);
     }
 
 
     @NonNull
-    private String requestForToken(String pushID) throws ParseException {
+    private String requestForToken(String pushID, boolean changingPushId) throws ParseException {
         Map<String, String> params = new HashMap<>();
         params.put(PUSH_ID, pushID);
+        if (changingPushId) {
+            params.put("newPushId", "true");
+        }
         String token = ParseCloud.callFunction("genToken", params);
         PLog.d(TAG, "request new token");
         PLog.d(TAG, token);
@@ -1034,9 +1037,25 @@ public class ParseClient implements UserApiV2 {
         String pushID = ParseInstallation.getCurrentInstallation().getString(PUSH_ID);
         GenericUtils.ensureNotEmpty(pushID);
         try {
-            return requestForToken(pushID);
+            return requestForToken(pushID, false);
         } catch (ParseException e) {
+            PLog.d(TAG, e.getMessage(), e);
             throw new PairappException(e.getMessage(), "unknown");
+        }
+    }
+
+    @Override
+    public void updatePushID(String newPushID) throws PairappException {
+        ParseUser user = ParseUser.getCurrentUser();
+        boolean userVerified = user.getBoolean(FIELD_VERIFIED);
+        if (userVerified) {
+            try {
+                requestForToken(newPushID, true);
+            } catch (ParseException e) {
+                throw new PairappException(e.getMessage(), "unknown");
+            }
+        } else {
+            PLog.d(TAG, "no user logged in, cannot update push id");
         }
     }
 }

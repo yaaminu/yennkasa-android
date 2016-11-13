@@ -1742,8 +1742,12 @@ public final class UserManager {
         return true;
     }
 
-    public String getNewAuthTokenSync() throws PairappException{
+    public String getNewAuthTokenSync() throws PairappException {
         return userApi.newAuthToken();
+    }
+
+    public void updatePushID(String newPushId) throws PairappException {
+        userApi.updatePushID(newPushId);
     }
 
 

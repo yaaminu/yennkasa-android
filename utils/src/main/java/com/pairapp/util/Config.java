@@ -119,12 +119,12 @@ public class Config {
     }
 
     public static String getDataServer() {
-        return SERVER_URL_REMOTE;
-//        if (PAIRAPP_ENV.equals(ENV_DEV)) {
-//            return SERVER_URL_LOCAL;
-//        } else {
-//            return SERVER_URL_LOCAL_REAL_DEVICE;
-//        }
+//        return SERVER_URL_REMOTE;
+        if (PAIRAPP_ENV.equals(ENV_DEV)) {
+            return SERVER_URL_LOCAL;
+        } else {
+            return SERVER_URL_LOCAL_REAL_DEVICE;
+        }
     }
 
     public static File getAppBinFilesBaseDir() {
@@ -228,12 +228,12 @@ public class Config {
     }
 
     public static String getMessageEndpoint() {
-//        if (isEmulator()) {
-//            return MESSAGE_SOCKET_API_LOCAL;
-//        } else {
-//            return MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE;
-//        }
-        return LIVE_SOCKET_API_REMOTE;
+        if (isEmulator()) {
+            return MESSAGE_SOCKET_API_LOCAL;
+        } else {
+            return MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE;
+        }
+//        return LIVE_SOCKET_API_REMOTE;
     }
 
     private static final Map<String, String> properties = new HashMap<>();

@@ -6,6 +6,7 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 
 import com.path.android.jobqueue.JobManager;
+import com.path.android.jobqueue.TagConstraint;
 import com.path.android.jobqueue.config.Configuration;
 import com.path.android.jobqueue.di.DependencyInjector;
 
@@ -155,6 +156,10 @@ public class TaskManager {
         if (!initialised.get()) {
             throw new IllegalArgumentException("did you forget to init()?");
         }
+    }
+
+    public static void cancelJobSync(String tag) {
+        jobManager.cancelJobs(TagConstraint.ALL, tag);
     }
 
     private static class SmartThread extends Thread {
