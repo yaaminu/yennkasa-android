@@ -349,6 +349,7 @@ public class WebSocketClient {
 
         @Override
         public void onSendingFrame(WebSocket websocket, WebSocketFrame frame) throws Exception {
+            logger.Log(Logger.D, TAG, "Sending frame with %d bytes", frame.getPayloadLength());
         }
 
         @Override
