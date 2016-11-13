@@ -1,12 +1,15 @@
 package com.pairapp.net;
 
+import android.annotation.SuppressLint;
 import android.app.Application;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Build;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
@@ -148,7 +151,6 @@ public class ParseClient implements UserApiV2 {
             parseUser.put(FIELD_DP, "avatar_empty");
             parseUser.put(FIELD_TOKEN, genVerificationToken() + "");
             parseUser.signUp();
-            //register user for pushes
             parseUser = ParseUser.getCurrentUser();
             user = parseObjectToUser(parseUser);
             notifyCallback(callback, null, user);
@@ -276,6 +278,7 @@ public class ParseClient implements UserApiV2 {
         return FileUtils.hash(user.getUserId().getBytes());
     }
 
+    @SuppressLint("HardwareIds")
     private void registerForPushes(String userId, String pushID) throws ParseException {
         byte[] randomBytes = new byte[128];
         new SecureRandom().nextBytes(randomBytes);
@@ -286,11 +289,26 @@ public class ParseClient implements UserApiV2 {
         //required by the server for verification in installation related queries
         installation.put("secureRandom", hash);
         installation.put("pushId", pushID);
+        String deviceID1 = FileUtils.hash(userId + ":" + Build.MODEL + Build.MANUFACTURER + Build.CPU_ABI);
+        installation.put("deviceId1", deviceID1);
+        installation.put("deviceId2", FileUtils.hash(Settings.Secure.getString(Config.getApplicationContext()
+                .getContentResolver(), Settings.Secure.ANDROID_ID)));
+
         //the server will automatically generate an authentication token.
         //and store it in the current installation before persisting it to the database.
         // But we cannot query for Installation objects on clients so we have to make another cloud
         // function call (see below) to retrieve the token.
-        installation.save();
+        try {
+            installation.save();
+        } catch (ParseException e) {
+            PLog.d(TAG, e.getMessage(), e);
+            //work around for a bug in the parse SDK
+            if (e.getCode() == 135) {
+                PLog.d(TAG, "parse bug resurfaced !!!");
+            } else {
+                throw e;
+            }
+        }
         params.put("secureRandom", hash);
         params.put(FIELD_ID, userId);
         String results = ParseCloud.callFunction("genToken", params);
@@ -680,7 +698,7 @@ public class ParseClient implements UserApiV2 {
                 object.put(FIELD_VERIFIED, true);
                 object.save();
                 registerForPushes(userId, pushId);
-                final String accessToken = ParseInstallation.getCurrentInstallation().getObjectId();
+                final String accessToken = ParseInstallation.getCurrentInstallation().getInstallationId();
                 notifyCallback(callback, null, new SessionData(FileUtils.hash(accessToken.getBytes()), userId));
             } else {
                 String errorMessage = Config.getApplicationContext().getString(R.string.invalid_verification_code);
