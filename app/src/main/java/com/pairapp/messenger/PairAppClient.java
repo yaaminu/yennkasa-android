@@ -213,7 +213,15 @@ public class PairAppClient extends Service {
                     VOICE_CALL_USER, VIDEO_CALL_USER, HANG_UP_CALL, ANSWER_CALL, ENABLE_SPEAKER, MUTE_CALL, MESSAGE_PUSH_INCOMING);
             isClientStarted.set(true);
             NotificationManager.INSTANCE.reNotifyForReceivedMessages(this);
+
+            //always ensure this is called, so on application crashes, to handle
+            //cloud push messages that were delivered while our app was down
+            processAllUnProccessedMessages();
         }
+    }
+
+    private void processAllUnProccessedMessages() {
+        MessageCenter2.replayUnProccessedMessages();
     }
 
 
