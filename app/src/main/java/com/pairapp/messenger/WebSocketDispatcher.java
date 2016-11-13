@@ -74,6 +74,7 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
         dispatchToUser(message);
     }
 
+    @SuppressLint("CommitPrefEdits")
     @Override
     protected void dispatchToUser(Message message) {
         byte[] encoded = messageEncoder.encode(message);

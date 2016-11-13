@@ -13,6 +13,7 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.util.Pair;
 import android.text.TextUtils;
 
 import com.google.gson.JsonObject;
@@ -26,6 +27,7 @@ import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.FileUtils;
+import com.pairapp.util.GenericUtils;
 import com.pairapp.util.MediaUtils;
 import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
@@ -82,6 +84,7 @@ public class ParseClient implements UserApiV2 {
     private static final String TAG = ParseClient.class.getSimpleName();
     public static final String PENDING_DP = "pendingDp";
     public static final String VERIFICATION_CODE_RECEIVED = "code.verification.recived";
+    public static final String PUSH_ID = "pushId";
     private static ParseClient INSTANCE;
     private DisplayPictureFileClient displayPictureFileClient;
     private final Preprocessor preProcessor;
@@ -280,11 +283,10 @@ public class ParseClient implements UserApiV2 {
 
     @SuppressLint("HardwareIds")
     private void registerForPushes(String userId, String pushID) throws ParseException {
-        Map<String, String> params = new HashMap<>();
         ParseInstallation installation = ParseInstallation.getCurrentInstallation();
         installation.put(FIELD_ID, userId);
         //required by the server for verification in installation related queries
-        installation.put("pushId", pushID);
+        installation.put(PUSH_ID, pushID);
         String deviceID1 = FileUtils.hash(userId + ":" + Build.MODEL + Build.MANUFACTURER + Build.CPU_ABI);
         installation.put("deviceId1", deviceID1);
         installation.put("deviceId2", FileUtils.hash(Settings.Secure.getString(Config.getApplicationContext()
@@ -305,11 +307,22 @@ public class ParseClient implements UserApiV2 {
                 throw e;
             }
         }
-        params.put("pushId", pushID);
-        String results = ParseCloud.callFunction("genToken", params);
+        requestForToken(pushID);
+    }
+
+
+    @NonNull
+    private String requestForToken(String pushID) throws ParseException {
+        Map<String, String> params = new HashMap<>();
+        params.put(PUSH_ID, pushID);
+        String token = ParseCloud.callFunction("genToken", params);
+        PLog.d(TAG, "request new token");
+        PLog.d(TAG, token);
+        GenericUtils.ensureNotEmpty(token);
         ParseObject object = new ParseObject("tokens");
-        object.put(PARSE_CONSTANTS.FIELD_AUTH_TOKEN, results);
+        object.put(PARSE_CONSTANTS.FIELD_AUTH_TOKEN, token);
         object.pin();
+        return token;
     }
 
     @Override
@@ -1012,6 +1025,18 @@ public class ParseClient implements UserApiV2 {
         } catch (ParseException e) {
             PLog.e(TAG, e.getMessage(), e);
             return "";
+        }
+    }
+
+    @NonNull
+    @Override
+    public String newAuthToken() throws PairappException {
+        String pushID = ParseInstallation.getCurrentInstallation().getString(PUSH_ID);
+        GenericUtils.ensureNotEmpty(pushID);
+        try {
+            return requestForToken(pushID);
+        } catch (ParseException e) {
+            throw new PairappException(e.getMessage(), "unknown");
         }
     }
 }

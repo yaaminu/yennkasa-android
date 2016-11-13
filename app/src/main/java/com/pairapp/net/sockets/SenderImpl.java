@@ -1,17 +1,24 @@
 package com.pairapp.net.sockets;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Base64;
 
+import com.pairapp.BuildConfig;
+import com.pairapp.Errors.PairappException;
 import com.pairapp.messenger.MessengerBus;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
+import com.pairapp.util.EventBus;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
+import com.pairapp.util.Task;
+import com.pairapp.util.TaskManager;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import io.realm.Realm;
@@ -29,6 +36,8 @@ public class SenderImpl implements Sender {
 
     public static final String TAG = "senderImpl";
     private final MessageParser parser;
+    private final Authenticator authenticator;
+    @Nullable
     private PairappSocket pairappSocket;
     private final MessageQueueImpl messageQueue;
     private volatile boolean started = false;
@@ -36,12 +45,16 @@ public class SenderImpl implements Sender {
     private final MessageQueueImpl.Consumer consumer = new MessageQueueImpl.Consumer() {
         @Override
         public void consume(Sendable item) {
-            pairappSocket.send(stringToBytes(item.getData()));
+            if (pairappSocket != null) {
+                pairappSocket.send(stringToBytes(item.getData()));
+            } else {
+                messageQueue.onProcessed(item, false);
+            }
         }
 
         @Override
         public int highWaterMark() {
-            return pairappSocket.isConnected() ? 30 : 0;
+            return pairappSocket != null && pairappSocket.isConnected() ? 30 : 0;
         }
     };
     @SuppressWarnings("FieldCanBeLocal")
@@ -56,11 +69,21 @@ public class SenderImpl implements Sender {
     private static final File MESSAGE_QUEUE_ITEM_FOLDER
             = Config.getApplicationContext().getDir("message.queue.items.realm", Context.MODE_PRIVATE);
 
-    public SenderImpl(Map<String, String> opts, MessageParser parser) {
+    @Nullable
+    private Task refreshJob;
+
+    public SenderImpl(Authenticator authenticator, MessageParser parser) {
         this.parser = parser;
-        pairappSocket = PairappSocket.create(opts, listener);
+        this.authenticator = authenticator;
+        String token = authenticator.getToken();
+        initialiseSocket(token);
         MessageQueueItemDataSource queueDataSource = new MessageQueueItemDataSource(realmProvider);
         this.messageQueue = new MessageQueueImpl(queueDataSource, hooks, consumer/*are we letting this escape?*/);
+    }
+
+    private void initialiseSocket(String token) {
+        GenericUtils.ensureNotEmpty(token);
+        pairappSocket = PairappSocket.create(Collections.singletonMap("Authorization", token), listener);
     }
 
     public synchronized void start() {
@@ -68,7 +91,9 @@ public class SenderImpl implements Sender {
             throw new IllegalStateException("can\'t use a stopped sender");
         }
         started = true;
-        pairappSocket.init();
+        if (pairappSocket != null) {
+            pairappSocket.init();
+        }
         this.messageQueue.initBlocking(true);
         // TODO: 11/10/2016 why start the message que here but not when the socketconnection is open?
         this.messageQueue.start();
@@ -98,7 +123,7 @@ public class SenderImpl implements Sender {
             started = false;
             // TODO: 11/10/2016 why do we have to check if queue is start()ed before disconnecting?
             if (messageQueue.isStarted()) {
-                if (pairappSocket.isConnected()) {
+                if (pairappSocket != null && pairappSocket.isConnected()) {
                     pairappSocket.disConnectBlocking();
                 }
                 messageQueue.stopProcessing();
@@ -118,6 +143,7 @@ public class SenderImpl implements Sender {
         return encodeToBytes(data);
     }
 
+    @SuppressWarnings("WeakerAccess")
     private class HooksImpl implements MessageQueue.Hooks {
 
         final Set<SendListener> sendListeners;
@@ -199,6 +225,7 @@ public class SenderImpl implements Sender {
             }
         }
 
+        @SuppressWarnings("StatementWithEmptyBody")
         @Override
         public void onClose(int code, String reason) {
             // TODO: 11/10/2016  should we allow ourselves to be usable again?
@@ -206,6 +233,32 @@ public class SenderImpl implements Sender {
             // TODO: 11/10/2016 stop the message queue?
             //if it's for authentication reasons, we will have to request it somehow, create a new connection
             //and start processin again
+            switch (code) {
+                case StatusCodes.BAD_REQUEST:
+                    if (BuildConfig.DEBUG) {
+                        throw new RuntimeException("client broke protocol");
+                    } else {
+                        // TODO: 11/13/2016 what shouuld we do? notify user that they should update or ?
+                    }
+                    break;
+                case StatusCodes.UNAUTHORIZED:
+                    synchronized (SenderImpl.this) {
+                        if (refreshJob != null) {
+                            PLog.d(TAG, "another job already running");
+                            return;
+                        }
+                        if (messageQueue.isStarted()) {
+                            messageQueue.pauseProcessing();
+                        }
+                        pairappSocket = null;
+                        EventBus.getDefault().register(eventsListener, TokenRefreshJob.TOKEN_NEW_REFRESH);
+                        refreshJob = TokenRefreshJob.create(authenticator);
+                        TaskManager.runJob(refreshJob);
+                    }
+                    break;
+                default:
+                    PLog.d(TAG, "socket disconnected with reason %s and code %d", reason, code);
+            }
         }
 
         @Override
@@ -270,6 +323,15 @@ public class SenderImpl implements Sender {
         }
     };
 
+    public interface Authenticator {
+
+        @NonNull
+        String getToken();
+
+        @NonNull
+        String requestNewToken() throws PairappException;
+    }
+
     private byte[] encodeToBytes(String data) {
         return Base64.decode(data, Base64.DEFAULT);
     }
@@ -277,4 +339,36 @@ public class SenderImpl implements Sender {
     private String encodeToString(byte[] data) {
         return Base64.encodeToString(data, Base64.DEFAULT);
     }
+
+    private final EventBus.EventsListener eventsListener = new EventBus.EventsListener() {
+        @Override
+        public int threadMode() {
+            return EventBus.BACKGROUND;
+        }
+
+        @Override
+        public void onEvent(EventBus yourBus, Event event) {
+            synchronized (SenderImpl.this) {
+                if (TokenRefreshJob.TOKEN_NEW_REFRESH.equals(event.getTag())) {
+                    if (SenderImpl.this.started) {
+                        String newToken = (String) event.getData();
+                        GenericUtils.ensureNotEmpty(newToken);
+                        initialiseSocket(newToken);
+                        assert pairappSocket != null;
+                        pairappSocket.init();
+                        messageQueue.resumeProcessing();
+                    }
+                } else {
+                    throw new AssertionError();
+                }
+                yourBus.unregister(TokenRefreshJob.TOKEN_NEW_REFRESH, eventsListener);
+                refreshJob = null;
+            }
+        }
+
+        @Override
+        public boolean sticky() {
+            return false;
+        }
+    };
 }

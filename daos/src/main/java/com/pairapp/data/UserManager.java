@@ -13,6 +13,7 @@ import android.util.Log;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.pairapp.Errors.ErrorCenter;
+import com.pairapp.Errors.PairappException;
 import com.pairapp.net.HttpResponse;
 import com.pairapp.net.ParseClient;
 import com.pairapp.net.UserApiV2;
@@ -1740,6 +1741,11 @@ public final class UserManager {
         }
         return true;
     }
+
+    public String getNewAuthTokenSync() throws PairappException{
+        return userApi.newAuthToken();
+    }
+
 
     public interface CallBack {
         void done(Exception e);

@@ -1,6 +1,9 @@
 package com.pairapp.net;
 
+import android.support.annotation.NonNull;
+
 import com.google.gson.JsonObject;
+import com.pairapp.Errors.PairappException;
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
 
@@ -99,6 +102,10 @@ public interface UserApiV2 {
     void removeGroup(String adminId, String groupId, Callback<HttpResponse> callback);
 
     boolean isUserAuthenticated();
+
+
+    @NonNull
+    String newAuthToken() throws PairappException;
 
     interface Callback<T> {
         void done(Exception e, T t);

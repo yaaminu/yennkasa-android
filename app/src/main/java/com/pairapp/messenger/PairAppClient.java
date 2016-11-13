@@ -9,6 +9,7 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.Messenger;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.pairapp.BuildConfig;
@@ -179,11 +180,8 @@ public class PairAppClient extends Service {
             String currentUserId = UserManager.getMainUserId();
             messagePacker = MessagePacker.create(currentUserId);
 
-            String authToken = UserManager.getInstance().getCurrentUserAuthToken();
-            Map<String, String> opts = new HashMap<>(1);
-            opts.put("Authorization", authToken);
             messageParser = new MessageParserImpl(messagePacker);
-            sender = new SenderImpl(opts, messageParser);
+            sender = new SenderImpl(authenticator, messageParser);
             statusManager = StatusManager.create(sender, messagePacker, listenableBus());
             webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, sender,
                     new MessageEncoderImpl(messagePacker));
@@ -218,6 +216,20 @@ public class PairAppClient extends Service {
             processAllUnProccessedMessages();
         }
     }
+
+    private final SenderImpl.Authenticator authenticator = new SenderImpl.Authenticator() {
+        @NonNull
+        @Override
+        public String getToken() {
+            return UserManager.getInstance().getCurrentUserAuthToken();
+        }
+
+        @NonNull
+        @Override
+        public String requestNewToken() throws PairappException {
+            return UserManager.getInstance().getNewAuthTokenSync();
+        }
+    };
 
     private void processAllUnProccessedMessages() {
         MessageCenter2.replayUnProccessedMessages();

@@ -497,4 +497,5 @@ public class WebSocketClient {
     interface NetworkChangeListener {
         void notifyNetworkChanged(boolean connected);
     }
+
 }
