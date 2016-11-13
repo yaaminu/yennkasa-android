@@ -19,6 +19,7 @@ import com.pairapp.data.CallBody;
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
+import com.pairapp.net.sockets.MessageParser;
 import com.pairapp.net.sockets.Sendable;
 import com.pairapp.net.sockets.Sender;
 import com.pairapp.ui.MainActivity;
@@ -49,6 +50,7 @@ class PairAppClientInterface {
     public static final String READ_RECEIPT_DELIVERY_REPORT_COLLAPSE_KEY = "readReceiptDeliveryReport";
     public static final int WAIT_MILLIS_DELIVERY_REPORT = 0;
     public static final String TAG = PairAppClientInterface.class.getSimpleName();
+    private final MessageParser parser;
 
     private Set<Activity> backStack = new HashSet<>(6);
     private final Context context;
@@ -59,13 +61,14 @@ class PairAppClientInterface {
     private final CallController callController;
 
     PairAppClientInterface(Context context, CallController callController, Sender sender, MessagePacker messagePacker,
-                           StatusManager statusManager, Handler handler) {
+                           StatusManager statusManager, Handler handler, MessageParser parser) {
         this.context = context;
         this.callController = callController;
         this.sender = sender;
         this.statusManager = statusManager;
         this.messagePacker = messagePacker;
         this.handler = handler;
+        this.parser = parser;
     }
 
     void sendMessage(Message message) {
@@ -364,5 +367,9 @@ class PairAppClientInterface {
         final String generated = builder.toString();
         PLog.d(TAG, "generated string is %s", generated);
         return generated;
+    }
+
+    public void onIncomingPushMessage(String dataBase64) {
+        parser.feedBase64(dataBase64);
     }
 }

@@ -14,6 +14,7 @@ import static com.pairapp.call.CallController.ON_CALL_PROGRESSING;
 import static com.pairapp.call.CallController.ON_CAL_ENDED;
 import static com.pairapp.call.CallController.ON_IN_COMING_CALL;
 import static com.pairapp.messenger.MessengerBus.ANSWER_CALL;
+import static com.pairapp.messenger.MessengerBus.MESSAGE_PUSH_INCOMING;
 import static com.pairapp.messenger.MessengerBus.VOICE_CALL_USER;
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
 import static com.pairapp.messenger.MessengerBus.CLEAR_NEW_MESSAGE_NOTIFICATION;
@@ -119,6 +120,8 @@ class PairAppClientEventsListener implements EventBus.EventsListener {
                 get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(MessengerBus.ON_ADD_VIDEO_CALL_REMOTE_VIEW, null, event.getData()));
             } else if (tag.equals(CLEAR_NEW_MESSAGE_NOTIFICATION)) {
                 pairAppClientInterface.clearNotifications(((long) event.getData()));
+            } else if (tag.equals(MESSAGE_PUSH_INCOMING)) {
+                pairAppClientInterface.onIncomingPushMessage(((String) event.getData()));
             } else {
                 throw new AssertionError();
             }

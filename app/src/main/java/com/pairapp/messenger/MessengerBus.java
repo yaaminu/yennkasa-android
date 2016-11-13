@@ -42,6 +42,7 @@ public class MessengerBus {
     public static final String CLEAR_NEW_MESSAGE_NOTIFICATION = "clear new Message notification";
     public static final String ON_ADD_VIDEO_CALL_LOCAL_VIEW = "local view vid call";
     public static final String ON_ADD_VIDEO_CALL_REMOTE_VIEW = "remote view vid call";
+    public static final String MESSAGE_PUSH_INCOMING = "message.push.incoming";
 
     public static EventBus get(String bus) {
         GenericUtils.ensureNotNull(bus);

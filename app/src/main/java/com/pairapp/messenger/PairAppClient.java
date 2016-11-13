@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.Messenger;
 import android.support.annotation.Nullable;
 
 import com.pairapp.BuildConfig;
@@ -19,6 +20,7 @@ import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.ParseClient;
 import com.pairapp.net.ParseFileClient;
+import com.pairapp.net.sockets.MessageParser;
 import com.pairapp.net.sockets.SenderImpl;
 import com.pairapp.ui.BaseCallActivity;
 import com.pairapp.util.Config;
@@ -57,6 +59,7 @@ import static com.pairapp.messenger.MessengerBus.CLEAR_NEW_MESSAGE_NOTIFICATION;
 import static com.pairapp.messenger.MessengerBus.ENABLE_SPEAKER;
 import static com.pairapp.messenger.MessengerBus.GET_STATUS_MANAGER;
 import static com.pairapp.messenger.MessengerBus.HANG_UP_CALL;
+import static com.pairapp.messenger.MessengerBus.MESSAGE_PUSH_INCOMING;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_RECEIVED;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_SEEN;
 import static com.pairapp.messenger.MessengerBus.MUTE_CALL;
@@ -92,6 +95,7 @@ public class PairAppClient extends Service {
     private SenderImpl sender;
     private CallController callController;
     private final EventBus callManagerBus = EventBus.getBusOrCreate(shadowClazz.class);
+    private MessageParser messageParser;
 
     private static class shadowClazz {
     }
@@ -179,7 +183,8 @@ public class PairAppClient extends Service {
             Map<String, String> opts = new HashMap<>(1);
             opts.put("Authorization", authToken);
             opts.put("cursor", MessageProcessor.getCursor() + "");
-            sender = new SenderImpl(opts, new MessageParserImpl(messagePacker));
+            messageParser = new MessageParserImpl(messagePacker);
+            sender = new SenderImpl(opts, messageParser);
             statusManager = StatusManager.create(sender, messagePacker, listenableBus());
             webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, sender,
                     new MessageEncoderImpl(messagePacker));
@@ -193,7 +198,7 @@ public class PairAppClient extends Service {
             callController.setup();
 
             eventsListener = new PairAppClientEventsListener(new PairAppClientInterface(this, callController, sender, messagePacker,
-                    statusManager, WORKER_THREAD.handler));
+                    statusManager, WORKER_THREAD.handler, messageParser));
 
             callManagerBus.register(eventsListener,
                     ON_CAL_ERROR, ON_IN_COMING_CALL,
@@ -205,7 +210,7 @@ public class PairAppClient extends Service {
                     MESSAGE_RECEIVED, MESSAGE_SEEN,
                     ON_MESSAGE_DELIVERED, ON_MESSAGE_SEEN,
                     SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH, GET_STATUS_MANAGER, CLEAR_NEW_MESSAGE_NOTIFICATION,
-                    VOICE_CALL_USER, VIDEO_CALL_USER, HANG_UP_CALL, ANSWER_CALL, ENABLE_SPEAKER, MUTE_CALL);
+                    VOICE_CALL_USER, VIDEO_CALL_USER, HANG_UP_CALL, ANSWER_CALL, ENABLE_SPEAKER, MUTE_CALL, MESSAGE_PUSH_INCOMING);
             isClientStarted.set(true);
             NotificationManager.INSTANCE.reNotifyForReceivedMessages(this);
         }
