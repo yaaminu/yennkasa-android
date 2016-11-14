@@ -1,20 +1,8 @@
 package com.pairapp.messenger;
 
-import android.app.Service;
-import android.content.Context;
-import android.content.Intent;
-import android.os.IBinder;
-
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.FirebaseOptions;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.FirebaseInstanceIdReceiver;
 import com.google.firebase.iid.FirebaseInstanceIdService;
 import com.pairapp.data.UserManager;
-import com.pairapp.util.Config;
-import com.pairapp.util.Event;
-import com.pairapp.util.EventBus;
-import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
 import com.pairapp.util.Task;
 import com.pairapp.util.TaskManager;
@@ -22,8 +10,6 @@ import com.path.android.jobqueue.Params;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.sql.Ref;
 
 public class FireBaseInstantIDService extends FirebaseInstanceIdService {
 
@@ -53,6 +39,7 @@ public class FireBaseInstantIDService extends FirebaseInstanceIdService {
         return FirebaseInstanceId.getInstance().getToken();
     }
 
+    @SuppressWarnings("WeakerAccess")
     private static final class RefreshFirebaseInstanceIDJob extends Task {
 
         public static final String PUSH_ID = "pushId";
