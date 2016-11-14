@@ -43,10 +43,6 @@ public class FireBaseInstantIDService extends FirebaseInstanceIdService {
         }
     }
 
-    public static void testRefreshToken() {
-        refrehsToken();
-    }
-
     private static void refrehsToken() {
         String token = FirebaseInstanceId.getInstance().getToken();
         TaskManager.cancelJobSync(RefreshFirebaseInstanceIDJob.TOKEN_REFRESH);
