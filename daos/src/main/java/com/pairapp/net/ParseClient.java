@@ -15,6 +15,7 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.util.Pair;
 import android.text.TextUtils;
+import android.view.TextureView;
 
 import com.google.gson.JsonObject;
 import com.pairapp.Errors.PairappException;
@@ -40,6 +41,7 @@ import com.parse.ParseInstallation;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
+import com.path.android.jobqueue.Params;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.NullInputStream;
@@ -50,7 +52,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -468,29 +472,13 @@ public class ParseClient implements UserApiV2 {
                 notifyCallback(response, new Exception("A group must start with at least 3 or more members"), null);
                 return;
             }
-            //ensure group does not exist
-            try {
-                ParseObject group = makeParseQuery(GROUP_CLASS_NAME).whereEqualTo(FIELD_ID, name + "@" + by).getFirst();
-                if (group != null) {
-                    notifyCallback(response, new Exception(Config.getApplicationContext().getString(R.string.group_already_exist)), null);
-                    return;
-                }
 
-            } catch (ParseException e) {
-                PLog.d(TAG, "group does not exist lets continue");
-            }
-            final ParseObject admin = makeUserParseQuery().whereEqualTo(FIELD_ID, by).getFirst();
-            admin.fetchIfNeeded();
-            ParseObject object = new ParseObject(GROUP_CLASS_NAME);
-            object.setACL(makeReadWriteACL());
-            object.put(FIELD_ID, name + "@" + by);
-            object.put(FIELD_DP, "avartar_empty");
-            object.put(FIELD_NAME, name);
-            object.put(FIELD_ACCOUNT_CREATED, new Date());
-            object.put(FIELD_ADMIN, admin);
-            object.addAllUnique(FIELD_MEMBERS, members);
-            object.save();
-            User freshGroup = parseObjectToGroup(object);
+            Map<String, String> params = new HashMap<>(5);
+            params.put(FIELD_DP, "avartar_empty");
+            params.put(FIELD_NAME, name);
+            params.put(FIELD_MEMBERS, TextUtils.join(",", members));
+            ParseObject results = ParseCloud.callFunction("createGroup", params);
+            User freshGroup = parseObjectToGroup(results);
             preProcessor.process(freshGroup);
             notifyCallback(response, null, freshGroup);
         } catch (ParseException e) {
@@ -614,9 +602,10 @@ public class ParseClient implements UserApiV2 {
             return;
         }
         try {
-            ParseObject group = makeParseQuery(GROUP_CLASS_NAME).whereEqualTo(FIELD_ID, id).getFirst();
-            group.addAllUnique(FIELD_MEMBERS, members);
-            group.save();
+            Map<String, String> params = new HashMap<>(2);
+            params.put("members", TextUtils.join(",", members));
+            params.put("userId", id);
+            ParseCloud.callFunction("addMembers", params);
             notifyCallback(response, null, new HttpResponse(200, "successfully added " + members.size() + " new members"));
         } catch (ParseException e) {
             notifyCallback(response, prepareErrorReport(e), null);

@@ -212,7 +212,7 @@ public class User extends RealmObject {
     public static RealmList<User> aggregateUsers(Realm realm, Collection<String> membersId, ContactsManager.Filter<User> filter) {
         RealmList<User> members = new RealmList<>();
         for (String id : membersId) {
-            User user = realm.where(User.class).equalTo(FIELD_ID, id).findFirst();
+            User user = UserManager.getInstance().fetchUserIfRequired(id);
             try {
                 if (filter == null || filter.accept(user)) {
                     members.add(user);

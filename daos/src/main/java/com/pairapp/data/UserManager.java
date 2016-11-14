@@ -1169,7 +1169,7 @@ public final class UserManager {
     private void cleanConvesation(String peerId) {
         Realm conversationRealm = Conversation.Realm(Config.getApplicationContext());
         conversationRealm.beginTransaction();
-        conversationRealm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findAll().clear();
+        conversationRealm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findAll().deleteAllFromRealm();
         conversationRealm.commitTransaction();
         conversationRealm.close();
     }
@@ -1177,7 +1177,7 @@ public final class UserManager {
     private void cleanMessages(String peerId) {
         Realm messageRealm = Message.REALM(Config.getApplicationContext());
         messageRealm.beginTransaction();
-        messageRealm.where(Message.class).equalTo(Message.FIELD_TO, peerId).findAll().clear();
+        messageRealm.where(Message.class).equalTo(Message.FIELD_TO, peerId).findAll().deleteAllFromRealm();
         messageRealm.commitTransaction();
         messageRealm.close();
     }
