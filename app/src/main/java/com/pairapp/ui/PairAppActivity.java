@@ -174,9 +174,9 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
             case 1:
                 if (totalUnreadMessages == 1) {
                     String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(this, message);
-                    text = (Message.isGroupMessage(message) ? sender + "@" + recentChatList.get(0) : sender) + ":  " + messageBody;
+                    text = sender + ":  " + messageBody;
                 } else {
-                    text = totalUnreadMessages + " " + getString(R.string.new_message_from) + " " + (Message.isGroupMessage(message) ? sender + "@" + recentChatList.get(0) : sender);
+                    text = totalUnreadMessages + " " + getString(R.string.new_message_from) + " " + sender;
                 }
                 break;
             case 2:

@@ -179,9 +179,9 @@ class StatusBarNotifier {
             case 1:
                 if (unReadMessages == 1) {
                     String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(applicationContext, message);
-                    text = (Message.isGroupMessage(message) ? sender + "@" + recentChatList.get(0) : sender) + ":  " + messageBody;
+                    text = sender + ":  " + messageBody;
                 } else {
-                    text = unReadMessages + " " + getString(R.string.new_message_from) + " " + (Message.isGroupMessage(message) ? sender + "@" + recentChatList.get(0) : sender);
+                    text = unReadMessages + " " + getString(R.string.new_message_from) + " " + sender;
                 }
                 break;
             case 2:

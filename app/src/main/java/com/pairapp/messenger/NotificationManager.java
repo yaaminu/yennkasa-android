@@ -57,18 +57,10 @@ public final class NotificationManager {
         final Realm realm = User.Realm(Config.getApplicationContext());
         String sendersName;
         try {
-            User user = realm.
-                    where(User.class).equalTo(User.FIELD_ID, message.getFrom())
-                    .findFirst();
-
-            if (user == null) {
-                user = UserManager.getInstance().fetchUserIfRequired(
-                        Message.isGroupMessage(message)
-                                ? message.getTo()
-                                : message.getFrom());
-                sendersName = user.getName();
-            } else {
-                sendersName = user.getName();
+            sendersName = UserManager.getInstance().fetchUserIfRequired(realm, message.getFrom()).getName();
+            if (Message.isGroupMessage(message)) {
+                sendersName = sendersName + "@" + UserManager.getInstance().fetchUserIfRequired(realm,
+                        message.getTo()).getName();
             }
         } finally {
             realm.close();
