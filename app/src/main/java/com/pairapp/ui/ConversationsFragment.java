@@ -149,6 +149,12 @@ public class ConversationsFragment extends ListFragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        conversationAdapter.notifyDataSetChanged();
+    }
+
+    @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         getListView().setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
