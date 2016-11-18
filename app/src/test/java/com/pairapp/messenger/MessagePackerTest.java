@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.zip.DataFormatException;
 
 import rx.Subscriber;
 import rx.Subscription;
@@ -23,6 +24,7 @@ import static org.junit.Assert.fail;
 
 public class MessagePackerTest {
 
+    private final ZlibCompressor compressor = new ZlibCompressor();
     private boolean onCompleteCalled = false;
     private final Subscriber<MessagePacker.DataEvent> subscriber = new Subscriber<MessagePacker.DataEvent>() {
         @Override
@@ -46,7 +48,7 @@ public class MessagePackerTest {
     @Before
     public void setUp() throws Exception {
         onCompleteCalled = false;
-        messagePacker = MessagePacker.create("233266349205");
+        messagePacker = MessagePacker.create("233266349205", new ZlibCompressor());
     }
 
     @After
@@ -59,12 +61,12 @@ public class MessagePackerTest {
     @Test
     public void testCreate() throws Exception {
         try {
-            messagePacker = MessagePacker.create("2222a");
+            messagePacker = MessagePacker.create("2222a", new ZlibCompressor());
             fail("must throw");
         } catch (NumberFormatException expected) {
             //better
         }
-        messagePacker = MessagePacker.create("233266564229");
+        messagePacker = MessagePacker.create("233266564229", new ZlibCompressor());
         assertNotNull(messagePacker);
     }
 
@@ -101,30 +103,24 @@ public class MessagePackerTest {
         object.put("messageBody", "hello world");
         ByteBuffer buffer = ByteBuffer.wrap(messagePacker.pack(object.toString(), recipient + "", false));
         buffer.order(ByteOrder.BIG_ENDIAN);
-        assertEquals("length is invalid", 11 + object.toString().getBytes().length, buffer.array().length);
+        assertEquals("length is invalid", 11 + compressor.compress(object.toString().getBytes()).length, buffer.array().length);
         assertEquals("message header must be persistable", 0x4, buffer.get());
         long actual = buffer.getLong();
         assertEquals("recipient inconsistent", recipient, actual);
         assertEquals("must delimit header with a dash", '-', buffer.get());
         assertEquals("message header for client invalid", MessagePacker.READABLE_MESSAGE, buffer.get());
-        byte[] body = new byte[object.toString().getBytes().length];
-        buffer.get(body);
-        assertEquals("message body left", object.toString(), new String(body));
 
         //group messages
         String recipientGroup = "brothersfromonehood";
         buffer = ByteBuffer.wrap(messagePacker.pack(object.toString(), recipientGroup, true));
         buffer.order(ByteOrder.BIG_ENDIAN);
-        assertEquals("length is invalid", 3 + recipientGroup.getBytes().length + object.toString().getBytes().length, buffer.array().length);
+        assertEquals("length is invalid", 3 + recipientGroup.getBytes().length + compressor.compress(object.toString().getBytes()).length, buffer.array().length);
         assertEquals("message header must be persistable", 0x4, buffer.get());
         byte[] groupId = new byte[recipientGroup.getBytes().length];
         buffer.get(groupId);
         assertEquals("recipient inconsistent", recipientGroup, new String(groupId));
         assertEquals("must delimit header with a dash", '-', buffer.get());
         assertEquals("message header for client invalid", MessagePacker.READABLE_MESSAGE, buffer.get());
-        body = new byte[object.toString().getBytes().length];
-        buffer.get(body);
-        assertEquals("message body left", object.toString(), new String(body));
     }
 
     @Test
@@ -324,17 +320,15 @@ public class MessagePackerTest {
         assertEquals("" + recipient, dataEvent.getData());
     }
 
-    private void testReadableMessage() {
-        byte[] message = "hello world".getBytes();
-        ByteBuffer buffer = ByteBuffer.allocate(5 + message.length);
+    private void testReadableMessage() throws Exception {
+        byte[] message = compressor.compress("hello world".getBytes());
+        ByteBuffer buffer = ByteBuffer.allocate(1 + message.length);
         buffer.order(ByteOrder.BIG_ENDIAN);
         buffer.put(MessagePacker.READABLE_MESSAGE);
         buffer.put(message);
-        buffer.putInt(123); //the order of the message
         messagePacker.unpack(buffer.array());
         assertEquals("opcode must be readableMessage", MessagePacker.READABLE_MESSAGE, dataEvent.getOpCode());
-        assertEquals("inconsistent message body", new String(message), dataEvent.getData());
-        assertEquals("must retrieve the position of this message", 123, dataEvent.getCursorPos());
+        assertEquals("inconsistent message body", new String(compressor.decompress(message)), dataEvent.getData());
     }
 
     @Test

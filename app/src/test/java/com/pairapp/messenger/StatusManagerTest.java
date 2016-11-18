@@ -73,7 +73,7 @@ public class StatusManagerTest {
             return Base64.decode(data.getBytes());
         }
     };
-    private final MessagePacker encoder = MessagePacker.create("1234567890");
+    private final MessagePacker encoder = MessagePacker.create("1234567890", new ZlibCompressor());
     private StatusManager manager;
     int threadMode = EventBus.ANY;
     @Rule

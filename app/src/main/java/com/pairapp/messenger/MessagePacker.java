@@ -1,11 +1,15 @@
 package com.pairapp.messenger;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
+import com.pairapp.util.BuildConfig;
 import com.pairapp.util.GenericUtils;
+import com.pairapp.util.PLog;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.zip.DataFormatException;
 
 import rx.Observable;
 import rx.Subscriber;
@@ -13,6 +17,7 @@ import rx.Subscriber;
 /**
  * @author aminu on 6/28/2016.
  */
+@SuppressWarnings("WeakerAccess")
 public class MessagePacker {
 
     public static final byte HEADER_DELIMITER = '-',
@@ -26,23 +31,26 @@ public class MessagePacker {
             PERSIST_PUSH_IF_POSSIBLE = 0x4,
             NO_TRUNCATE_PUSH = 0x8,
             MONITOR_OR_STATUS = 0x10;
+    public static final String TAG = "MessagePacker";
 
     // TODO: 11/10/2016 why assume userID is a long?
     private final long currentUserId;
+    private final Compressor compressor;
 
-    private MessagePacker(String currentUserId) {
+    private MessagePacker(String currentUserId, Compressor compressor) {
         // TODO: 11/10/2016 make userID a string
         this.currentUserId = Long.parseLong(currentUserId, 10);
+        this.compressor = compressor;
     }
 
-    public static MessagePacker create(String currentUserId) {
+    public static MessagePacker create(String currentUserId, Compressor compressor) {
         GenericUtils.ensureNotEmpty(currentUserId);
-        return new MessagePacker(currentUserId);
+        return new MessagePacker(currentUserId, compressor);
     }
 
     public byte[] pack(String messageJson, String recipient, boolean isGroupMessage) {
         GenericUtils.ensureNotNull(messageJson, recipient);
-        byte[] msgBuffer = messageJson.getBytes();
+        byte[] msgBuffer = compressor.compress(messageJson.getBytes());
         int msgLength = 1/*header for server*/
                 + 1/*delimiter for header  and payload*/
                 + 1/*header for clients*/
@@ -191,10 +199,14 @@ public class MessagePacker {
             throw new IllegalStateException("can't invoke unpack without an observer.");
         }
         DataEvent event = doUnpack(data);
-        onSubscribe.onMessageAvailable(event);
+        if (event != null) {
+            onSubscribe.onMessageAvailable(event);
+        } else {
+            PLog.f(TAG, "failed to unpack data");
+        }
     }
 
-    @NonNull
+    @Nullable
     private DataEvent doUnpack(byte[] data) {
         if (data == null || data.length <= 0) {
             throw new IllegalArgumentException("invalid data");
@@ -220,10 +232,19 @@ public class MessagePacker {
                 break;
             case READABLE_MESSAGE:
                 String msg;
-                byte[] msgBytes = new byte[data.length - 1]; //1 for header and 4 for the message count
-                buffer.get(msgBytes);
-                msg = new String(msgBytes);
-                event = new DataEvent(header, msg);
+                try {
+                    byte[] msgBytes = new byte[data.length - 1]; //1 for header and 4 for the message count
+                    buffer.get(msgBytes);
+                    msgBytes = compressor.decompress(msgBytes);
+                    msg = new String(msgBytes);
+                    event = new DataEvent(header, msg);
+                } catch (DataFormatException e) {
+                    PLog.f(TAG, e.getMessage(), e);
+                    if (com.pairapp.BuildConfig.DEBUG) {
+                        throw new AssertionError(e);
+                    }
+                    event = null;
+                }
                 break;
             case MESSAGE_STATUS_DELIVERED:
             case MESSAGE_STATUS_SEEN:
@@ -232,7 +253,11 @@ public class MessagePacker {
                 event = new DataEvent(header, new String(msgId));
                 break;
             default:
-                throw new AssertionError();
+                if (BuildConfig.DEBUG) {
+                    throw new AssertionError();
+                }
+                event = null;
+
         }
         return event;
     }
@@ -301,4 +326,11 @@ public class MessagePacker {
         }
     }
 
+    public interface Compressor {
+        @NonNull
+        byte[] compress(@NonNull byte[] input);
+
+        @NonNull
+        byte[] decompress(@NonNull byte[] input) throws DataFormatException;
+    }
 }

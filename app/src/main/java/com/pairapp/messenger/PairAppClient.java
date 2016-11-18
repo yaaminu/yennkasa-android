@@ -178,7 +178,7 @@ public class PairAppClient extends Service {
 
             monitor = new DispatcherMonitorImpl(this, disPatchingThreads);
             String currentUserId = UserManager.getMainUserId();
-            messagePacker = MessagePacker.create(currentUserId);
+            messagePacker = MessagePacker.create(currentUserId, new ZlibCompressor());
 
             messageParser = new MessageParserImpl(messagePacker);
             sender = new SenderImpl(authenticator, messageParser);
