@@ -474,7 +474,7 @@ public class ParseClient implements UserApiV2 {
             }
 
             Map<String, String> params = new HashMap<>(5);
-            params.put(FIELD_DP, "avartar_empty");
+            params.put(FIELD_DP, "avatar_empty");
             params.put(FIELD_NAME, name);
             params.put(FIELD_MEMBERS, TextUtils.join(",", members));
             ParseObject results = ParseCloud.callFunction("createGroup", params);
