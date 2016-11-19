@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.util.Pair;
 import android.util.Log;
 
 import com.pairapp.Errors.ErrorCenter;
@@ -371,5 +372,20 @@ class PairAppClientInterface {
 
     public void onIncomingPushMessage(String dataBase64) {
         parser.feedBase64(dataBase64);
+    }
+
+    public void onRouteCallViaPush(Pair<String, String> data) {
+        byte[] packed = messagePacker.packCallMessage(data.first, data.second);
+        Sendable sendable = new Sendable.Builder()
+                .collapseKey("call:" + data.first)
+                .data(sender.bytesToString(packed))
+                .maxRetries(3)
+                .surviveRestarts(false)
+                .validUntil(System.currentTimeMillis() + 15000).build();
+        sender.sendMessage(sendable);
+    }
+
+    public void onInComingCallPushPayload(String payload) {
+        callController.handleCallPushPayload(payload);
     }
 }

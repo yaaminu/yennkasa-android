@@ -1,11 +1,13 @@
 package com.pairapp.call;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.util.Pair;
 
-import com.pairapp.data.CallBody;
-import com.pairapp.data.Conversation;
-import com.pairapp.data.Message;
+import com.pairapp.data.*;
+import com.pairapp.data.BuildConfig;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
@@ -21,6 +23,7 @@ import com.sinch.android.rtc.video.VideoCallListener;
 import com.sinch.android.rtc.video.VideoController;
 
 import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -206,7 +209,20 @@ class CallCenter implements CallClientListener, VideoCallListener {
 
     @Override
     public void onShouldSendPushNotification(Call call, List<PushPair> list) {
-        throw new UnsupportedOperationException();
+        boolean allFailed = true;
+        for (PushPair pushPair : list) {
+            Event event = Event.create(CallController.CALL_PUSH_PAYLOAD, null, new Pair<>(call.getRemoteUserId(), pushPair.getPushPayload()));
+            if (broadCastBus.post(event)) {
+                allFailed = false;
+            }
+        }
+        if (allFailed) {
+            if (BuildConfig.DEBUG) {
+                throw new IllegalStateException();
+            }
+            PLog.f(TAG, "failed to route call since no handler is available");
+            call.hangup();
+        }
     }
 
     @Nullable

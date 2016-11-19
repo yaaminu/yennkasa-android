@@ -54,6 +54,8 @@ public class IncomingMessageProcessor implements Observer<MessagePacker.DataEven
             eventBus.post(Event.create(MessengerBus.ON_MESSAGE_SEEN, null, data.getData()));
         } else if (data.getOpCode() == MessagePacker.MESSAGE_STATUS_DELIVERED) {
             eventBus.post(Event.create(MessengerBus.ON_MESSAGE_DELIVERED, null, data.getData()));
+        } else if (data.getOpCode() == MessagePacker.CALL_PAYLOAD) {
+            eventBus.post(Event.create(MessengerBus.ON_CALL_PUSH_PAYLOAD_RECEIVED, null, data.getData()));
         } else {
             PLog.d(TAG, "can't handle this message type");
         }

@@ -22,6 +22,7 @@ public interface CallController {
     String VIDEO_CALL_LOCAL_VIEW = "video call local view";
     String VIDEO_CALL_REMOTE_VIEW = "video call remote view";
     String ERR_VIDEO_LOAD_FAILED = "err_video_load_failed";
+    String CALL_PUSH_PAYLOAD = "call.push.payload";
 
     void hangUp(CallData data);
 
@@ -30,6 +31,8 @@ public interface CallController {
     void enableSpeaker(CallData data);
 
     void muteCall(CallData data);
+
+    void handleCallPushPayload(String payload);
 
     @IntDef({CALL_TYPE_VOICE, CALL_TYPE_VIDEO, CALL_TYPE_CONFERENCE_VOICE})
     @interface CallType {

@@ -24,7 +24,7 @@ public class MessagePacker {
             OFFLINE = 0x1/*offline*/, ONLINE = 0x2/*online*/,
             TYPING = 0x3/*typing*/,
             NOT_TYPING = 0x4/*not typing*/, READABLE_MESSAGE = 0x5, MESSAGE_STATUS_DELIVERED = 0x6, MESSAGE_STATUS_SEEN = 0x7,
-            MONITOR_START = 0x4, MONITOR_STOP = 0x8;
+            MONITOR_START = 0x4, MONITOR_STOP = 0x8, CALL_PAYLOAD = 0x9;
 
 
     private static final byte NO_PERSIST_ONLY_WHEN_ONLINE = 0x1, NO_PERSIST_PUSH_IF_POSSIBLE = 0x2,
@@ -182,7 +182,7 @@ public class MessagePacker {
         byteBuffer.order(ByteOrder.BIG_ENDIAN);
 
         /**********************start header*********************/
-        byteBuffer.put((byte) (NO_PERSIST_PUSH_IF_POSSIBLE | NO_TRUNCATE_PUSH));
+        byteBuffer.put((byte) (PERSIST_PUSH_IF_POSSIBLE | NO_TRUNCATE_PUSH));
         byteBuffer.putLong(recipient);
         byteBuffer.put(HEADER_DELIMITER);
         /**********************end header*********************/
@@ -191,6 +191,19 @@ public class MessagePacker {
         byteBuffer.put(isDelivery ? MESSAGE_STATUS_DELIVERED : MESSAGE_STATUS_SEEN);
         byteBuffer.put(msgIdBytes);
         /**********************end payload*********************/
+        return byteBuffer.array();
+    }
+
+    @NonNull
+    public byte[] packCallMessage(@NonNull String recipient, @NonNull String payload) {
+        int capacity = 1/*server*/ + recipient.getBytes().length + 1/*delimiter*/ + 1/*clientHeader*/ + payload.getBytes().length;
+        ByteBuffer byteBuffer = ByteBuffer.allocate(capacity);
+        byteBuffer.order(ByteOrder.BIG_ENDIAN);
+        byteBuffer.put((byte) (NO_PERSIST_PUSH_IF_POSSIBLE | NO_TRUNCATE_PUSH));
+        byteBuffer.put(recipient.getBytes());
+        byteBuffer.put(HEADER_DELIMITER);
+        byteBuffer.put(CALL_PAYLOAD);
+        byteBuffer.put(payload.getBytes());
         return byteBuffer.array();
     }
 
@@ -252,6 +265,11 @@ public class MessagePacker {
                 buffer.get(msgId, 0, msgId.length);
                 event = new DataEvent(header, new String(msgId));
                 break;
+            case CALL_PAYLOAD:
+                byte[] payload = new byte[data.length - 1];
+                buffer.get(payload);
+                event = new DataEvent(header, new String(payload), -1);
+                break;
             default:
                 if (BuildConfig.DEBUG) {
                     throw new AssertionError();
@@ -261,7 +279,6 @@ public class MessagePacker {
         }
         return event;
     }
-
 
     public static class DataEvent {
         private final int opCode;

@@ -7,7 +7,6 @@ import org.junit.Test;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.zip.DataFormatException;
 
 import rx.Subscriber;
 import rx.Subscription;
@@ -182,9 +181,9 @@ public class MessagePackerTest {
         byte[] packed = messagePacker.createMsgStatusMessage("1234567890", msgId, true);
         assertEquals(packed.length, 11 + msgId.getBytes().length);
         ByteBuffer buffer = ByteBuffer.wrap(packed);
-        assertEquals(0x2, buffer.get(0) & 0x2);
+        assertEquals(0x4, buffer.get(0) & 0x4);
         assertEquals(0x8, buffer.get(0) & 0x8);
-        assertEquals(0xa, buffer.get());
+        assertEquals((0x4 | 0x8), buffer.get());
         assertEquals(Long.parseLong("1234567890"), buffer.getLong());
         assertEquals('-', buffer.get());
         assertEquals(MessagePacker.MESSAGE_STATUS_DELIVERED, buffer.get());
@@ -195,9 +194,9 @@ public class MessagePackerTest {
         packed = messagePacker.createMsgStatusMessage("1234567890", msgId, false);
         assertEquals(packed.length, 11 + msgId.getBytes().length);
         buffer = ByteBuffer.wrap(packed);
-        assertEquals(0x2, buffer.get(0) & 0x2);
+        assertEquals(0x4, buffer.get(0) & 0x4);
         assertEquals(0x8, buffer.get(0) & 0x8);
-        assertEquals(0xa, buffer.get());
+        assertEquals(0x8 | 0x4, buffer.get());
         assertEquals(Long.parseLong("1234567890"), buffer.getLong());
         assertEquals('-', buffer.get());
         assertEquals(MessagePacker.MESSAGE_STATUS_SEEN, buffer.get());
@@ -386,6 +385,29 @@ public class MessagePackerTest {
         assertEquals(buffer.getLong(), target);
         assertEquals(buffer.get(), MessagePacker.HEADER_DELIMITER);
         assertEquals(buffer.get(), MessagePacker.MONITOR_STOP);
+    }
+
+    @Test
+    public void testPackCallMessage() throws Exception {
+        String recipient = "266349205";
+        String payload = "somepayload";
+        byte[] packed = messagePacker.packCallMessage(recipient, payload);
+        assertEquals(packed.length, 1 +/*header-server*/
+                1 +/*header delimiter*/
+                1 + /*client header*/
+                recipient.getBytes().length + payload.getBytes().length);
+        ByteBuffer buffer = ByteBuffer.wrap(packed);
+        assertEquals(0x2, buffer.get(0) & 0x2);
+        assertEquals(0x8, buffer.get(0) & 0x8);
+        assertEquals((0x2 | 0x8), buffer.get());
+        byte[] recBytes = new byte[recipient.getBytes().length];
+        buffer.get(recBytes);
+        assertEquals(recipient, new String(recBytes));
+        assertEquals('-', buffer.get());
+        assertEquals(0x9, buffer.get());
+        byte[] payloadBytes = new byte[payload.getBytes().length];
+        buffer.get(payloadBytes);
+        assertEquals(payload, new String(payloadBytes));
     }
 
     @Test

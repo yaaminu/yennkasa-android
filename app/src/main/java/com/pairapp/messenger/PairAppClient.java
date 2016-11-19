@@ -8,7 +8,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
-import android.os.Messenger;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -35,7 +34,6 @@ import com.pairapp.util.ThreadUtils;
 import org.json.JSONObject;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -45,6 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.realm.Realm;
 
+import static com.pairapp.call.CallController.CALL_PUSH_PAYLOAD;
 import static com.pairapp.call.CallController.ON_CALL_ESTABLISHED;
 import static com.pairapp.call.CallController.ON_CALL_MUTED;
 import static com.pairapp.call.CallController.ON_CALL_PROGRESSING;
@@ -67,6 +66,7 @@ import static com.pairapp.messenger.MessengerBus.MUTE_CALL;
 import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
 import static com.pairapp.messenger.MessengerBus.OFFLINE;
 import static com.pairapp.messenger.MessengerBus.ONLINE;
+import static com.pairapp.messenger.MessengerBus.ON_CALL_PUSH_PAYLOAD_RECEIVED;
 import static com.pairapp.messenger.MessengerBus.ON_MESSAGE_DELIVERED;
 import static com.pairapp.messenger.MessengerBus.ON_MESSAGE_SEEN;
 import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
@@ -198,7 +198,7 @@ public class PairAppClient extends Service {
                     statusManager, WORKER_THREAD.handler, messageParser));
 
             callManagerBus.register(eventsListener,
-                    ON_CAL_ERROR, ON_IN_COMING_CALL,
+                    ON_CAL_ERROR, ON_IN_COMING_CALL, CALL_PUSH_PAYLOAD,
                     ON_CAL_ENDED, ON_CALL_ESTABLISHED, VIDEO_CALL_LOCAL_VIEW, VIDEO_CALL_REMOTE_VIEW,
                     ON_CALL_PROGRESSING, ON_CALL_MUTED, ON_LOUD_SPEAKER);
 
@@ -207,7 +207,7 @@ public class PairAppClient extends Service {
                     MESSAGE_RECEIVED, MESSAGE_SEEN,
                     ON_MESSAGE_DELIVERED, ON_MESSAGE_SEEN,
                     SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH, GET_STATUS_MANAGER, CLEAR_NEW_MESSAGE_NOTIFICATION,
-                    VOICE_CALL_USER, VIDEO_CALL_USER, HANG_UP_CALL, ANSWER_CALL, ENABLE_SPEAKER, MUTE_CALL, MESSAGE_PUSH_INCOMING);
+                    VOICE_CALL_USER, VIDEO_CALL_USER, HANG_UP_CALL, ANSWER_CALL, ENABLE_SPEAKER, MUTE_CALL, MESSAGE_PUSH_INCOMING, ON_CALL_PUSH_PAYLOAD_RECEIVED);
             isClientStarted.set(true);
             NotificationManager.INSTANCE.reNotifyForReceivedMessages(this);
 

@@ -65,11 +65,11 @@ public class CallManager implements CallController {
     @Override
     public synchronized void setup() {
         client.setSupportCalling(true);
-        client.setSupportManagedPush(false);
         client.setSupportPushNotifications(true);
-        client.setSupportActiveConnectionInBackground(true); // FIXME: 7/14/2016 change to false
+        client.registerPushNotificationData(client.getLocalUserId().getBytes());
+        client.setSupportActiveConnectionInBackground(false);
+        client.setSupportManagedPush(false);
         client.addSinchClientListener(new ClientListener());
-        client.startListeningOnActiveConnection();// FIXME: 7/23/2016 remove this line
         client.getCallClient().addCallClientListener(callCenter);
         client.getCallClient().setRespectNativeCalls(false); // TODO: 7/15/2016 let users change this in settings
         //noinspection ConstantConditions
@@ -220,6 +220,18 @@ public class CallManager implements CallController {
     public synchronized void shutDown() {
         if (client.isStarted()) {
             client.terminate();
+        }
+    }
+
+    @Override
+    public void handleCallPushPayload(String payload) {
+        if (client.isStarted()) {
+            client.relayRemotePushNotificationPayload(payload);
+        } else {
+            if (BuildConfig.DEBUG) {
+                throw new IllegalStateException();
+            }
+            PLog.f(TAG, "missed incoming call push");
         }
     }
 }
