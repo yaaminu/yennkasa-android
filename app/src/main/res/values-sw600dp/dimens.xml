@@ -11,7 +11,7 @@
     <dimen name="message_padding">16dp</dimen>
     <dimen name="message_status_date_width">150dp</dimen>
     <dimen name="live_typing_text_max_height">150dp</dimen>
-    <dimen name="message_text_size">24sp</dimen>
+    <dimen name="message_text_size">32sp</dimen>
     <dimen name="title_text">16sp</dimen>
     <dimen name="bt_height">36dp</dimen>
     <dimen name="margin_32dp">48dp</dimen>

@@ -79,17 +79,17 @@
                 android:background="@drawable/compose_panel"
                 android:baselineAligned="false"
                 android:gravity="bottom"
-                android:paddingBottom="8dp"
+                android:paddingBottom="@dimen/padding_ll_login_fragment_right"
                 android:paddingLeft="@dimen/padding_ll_login_fragment_left"
                 android:paddingRight="@dimen/padding_ll_login_fragment_right"
-                android:paddingTop="8dp"
+                android:paddingTop="@dimen/padding_ll_login_fragment_right"
                 tools:ignore="RtlHardcoded,UnusedAttribute">
 
                 <ImageButton
                     android:id="@+id/ib_attach_emoji"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
+                    android:layout_gravity="bottom"
                     android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
                     android:adjustViewBounds="true"
                     android:background="@color/transparent"
@@ -100,7 +100,8 @@
                 <com.rockerhieu.emojicon.EmojiconEditText
                     android:id="@+id/et_message"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
                     android:layout_weight="1"
                     android:background="@color/transparent"
                     android:gravity="center_vertical"
@@ -114,7 +115,7 @@
                     android:id="@+id/ib_attach_capture_photo"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
+                    android:layout_gravity="bottom"
                     android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
                     android:adjustViewBounds="true"
                     android:background="@color/transparent"
@@ -126,7 +127,7 @@
                     android:id="@+id/ib_attach_record_audio"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
+                    android:layout_gravity="bottom"
                     android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
                     android:adjustViewBounds="true"
                     android:background="@color/transparent"
@@ -138,7 +139,7 @@
                     android:id="@+id/ib_attach_more"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
+                    android:layout_gravity="bottom"
                     android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
                     android:adjustViewBounds="true"
                     android:background="@color/transparent"
@@ -150,8 +151,8 @@
                     android:id="@+id/iv_send"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:visibility="gone">
+                    android:layout_gravity="bottom"
+                    android:visibility="visible">
 
                     <ImageView
                         android:layout_width="match_parent"
@@ -160,7 +161,6 @@
                         android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
                         android:adjustViewBounds="true"
                         android:contentDescription="@string/send_message"
-                        android:padding="@dimen/padding_ll_login_fragment_bottom"
                         android:scaleType="centerInside"
                         android:src="@drawable/ic_send_24dp" />
 
