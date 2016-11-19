@@ -29,7 +29,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     public static final String DEFAULT_FRAGMENT = "default_fragment";
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final String ARG_TITLE = "title";
-    private static int savedPosition = MyFragmentStatePagerAdapter.POSITION_CALL_LOGS;
+    private static int savedPosition = MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT;
 
     @Bind(R.id.vp_pager)
     ViewPager pager;
