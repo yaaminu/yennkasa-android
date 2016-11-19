@@ -416,7 +416,7 @@ public class Message extends RealmObject {
         GenericUtils.ensureNotNull(realm, msgId);
         Message tmp = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
         if (tmp != null) {
-            if (tmp.getState() != Message.STATE_SEEN && !Message.isGroupMessage(tmp)) {
+            if (tmp.getState() != Message.STATE_SEEN) {
                 realm.beginTransaction();
                 if (tmp.isValid()) {
                     tmp.setState(Message.STATE_SEEN);
@@ -431,7 +431,7 @@ public class Message extends RealmObject {
         GenericUtils.ensureNotNull(realm, msgId);
         Message tmp = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
         if (tmp != null) {
-            if (tmp.getState() != STATE_SEEN && tmp.getState() != STATE_RECEIVED && !Message.isGroupMessage(tmp)) {
+            if (tmp.getState() != STATE_SEEN && tmp.getState() != STATE_RECEIVED) {
                 realm.beginTransaction();
                 if (tmp.isValid()) {
                     tmp.setState(STATE_RECEIVED);
