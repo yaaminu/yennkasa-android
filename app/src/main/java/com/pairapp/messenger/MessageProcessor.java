@@ -34,12 +34,11 @@ import static com.pairapp.messenger.MessengerBus.get;
 public class MessageProcessor extends IntentService {
     public static final String SYNC_MESSAGES = "syncMessages";
     private static final String TAG = MessageProcessor.class.getSimpleName();
-    public static final String preference = TAG + "msglogs.log";
     static final String MESSAGE = "message";
     private static final String UNKNOWN = "unknown";
     static final String MESSAGE_STATUS = "messageStatus";
     static final String UPDATE = "update";
-    public static final String CURSOR = "cursor";
+    public static final String TIMESTAMP = "timestamp";
     private final Lock processLock = new ReentrantLock(true);
 
     public MessageProcessor() {
@@ -60,10 +59,10 @@ public class MessageProcessor extends IntentService {
                 try {
                     Bundle bundle = intent.getExtras();
                     String data = bundle.getString(MESSAGE);
-                    int cursor = bundle.getInt(CURSOR);
                     assert data != null;
-                    PLog.d(TAG, data);
-                    handleMessage(data, cursor);
+                    long timestamp = intent.getLongExtra(TIMESTAMP, 0L);
+                    PLog.d(TAG, "payload: %s, timestamp: %s", data, new Date(timestamp));
+                    handleMessage(data, timestamp);
                 } finally {
                     wakeLock.release();
                 }
@@ -71,7 +70,7 @@ public class MessageProcessor extends IntentService {
         }, false);
     }
 
-    private void handleMessage(String data, int cursor) {
+    private void handleMessage(String data, long timestamp) {
         try {
             final JSONObject data1 = new JSONObject(data);
             String type = getType(data1);
@@ -80,7 +79,7 @@ public class MessageProcessor extends IntentService {
                 // FIXME: 6/21/2016 setup a provider that will sync messages
             } else if (type.equals(MESSAGE)) {
                 Message message = Message.fromJSON(data);
-                doProcessMessage(message, cursor);
+                doProcessMessage(message, timestamp);
             } else if (type.equals(MESSAGE_STATUS)) {
                 Realm realm = Message.REALM(MessageProcessor.this);
                 int state = data1.optInt(Message.MSG_STS_STATUS, Message.STATE_SEEN);
@@ -123,7 +122,7 @@ public class MessageProcessor extends IntentService {
         return UNKNOWN;
     }
 
-    private void doProcessMessage(Message message, int cursor) {
+    private void doProcessMessage(Message message, long timestamp) {
         try {
             processLock.lock();
             if (message.getFrom().equals(UserManager.getMainUserId())) {
@@ -169,9 +168,9 @@ public class MessageProcessor extends IntentService {
                 ///////////////////////////////////////////////////////////////////////////////////////////
 
                 //force the new message to be newer than the session start up time
-                message.setDateComposed(new Date(System.currentTimeMillis() + 10));
+                message.setDateComposed(new Date(timestamp));
                 message.setState(Message.STATE_RECEIVED);
-                conversation.setLastActiveTime(new Date());//now
+                conversation.setLastActiveTime(new Date(Math.max(timestamp, System.currentTimeMillis())));//now
                 try {
                     message = realm.copyToRealm(message);
                     conversation.setLastMessage(message);

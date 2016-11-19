@@ -8,6 +8,8 @@ import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.PLog;
 
+import java.util.Date;
+
 import rx.Observer;
 
 /**
@@ -35,12 +37,12 @@ public class IncomingMessageProcessor implements Observer<MessagePacker.DataEven
 
     @Override
     public void onNext(MessagePacker.DataEvent data) {
-        PLog.d(TAG, "opcode: %s, data: %s, cursor: %s", data.getOpCode(), data.getData(), data.getCursorPos());
+        PLog.d(TAG, "opcode: %s, data: %s sent at %s", data.getOpCode(), data.getData(), data.getServerTimeStamp() <= 0 ? "unknown date" : new Date(data.getServerTimeStamp()));
         if (data.getOpCode() == MessagePacker.READABLE_MESSAGE) {
             Context context = Config.getApplicationContext();
             Intent intent = new Intent(context, MessageProcessor.class);
             intent.putExtra(MessageProcessor.MESSAGE, data.getData());
-            intent.putExtra(MessageProcessor.CURSOR, data.getCursorPos());
+            intent.putExtra(MessageProcessor.TIMESTAMP, data.getServerTimeStamp());
             context.startService(intent);
         } else if (data.getOpCode() == MessagePacker.ONLINE) {
             manager.handleStatusAnnouncement(data.getData(), true);
