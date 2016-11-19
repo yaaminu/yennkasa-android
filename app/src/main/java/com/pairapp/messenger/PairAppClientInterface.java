@@ -148,7 +148,7 @@ class PairAppClientInterface {
         Realm realm = Message.REALM(context);
         try {
             Message message = Message.markMessageSeen(realm, msgId);
-            if (message != null &&
+            if (message != null && !Message.isGroupMessage(message) &&
                     message.getType() != Message.TYPE_CALL &&
                     message.getType() != Message.TYPE_DATE_MESSAGE &&
                     message.getType() != Message.TYPE_TYPING_MESSAGE) {
