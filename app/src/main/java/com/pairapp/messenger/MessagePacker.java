@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import com.pairapp.util.BuildConfig;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
+import com.pairapp.util.UiHelpers;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -244,13 +245,11 @@ public class MessagePacker {
                 event = new DataEvent(header, targetId);
                 break;
             case READABLE_MESSAGE:
-                String msg;
                 try {
-                    byte[] msgBytes = new byte[data.length - 1]; //1 for header and 4 for the message count
-                    buffer.get(msgBytes);
+                    byte[] msgBytes = new byte[data.length - (1 + 8)]; //1 for header and 8 for server-timestamp
+                    buffer.get(msgBytes, 0, msgBytes.length);
                     msgBytes = compressor.decompress(msgBytes);
-                    msg = new String(msgBytes);
-                    event = new DataEvent(header, msg);
+                    event = new DataEvent(header, new String(msgBytes), buffer.getLong());
                 } catch (DataFormatException e) {
                     PLog.f(TAG, e.getMessage(), e);
                     if (com.pairapp.BuildConfig.DEBUG) {
@@ -261,14 +260,14 @@ public class MessagePacker {
                 break;
             case MESSAGE_STATUS_DELIVERED:
             case MESSAGE_STATUS_SEEN:
-                byte[] msgId = new byte[data.length - 1];
+                byte[] msgId = new byte[data.length - (1 + 8)];
                 buffer.get(msgId, 0, msgId.length);
-                event = new DataEvent(header, new String(msgId));
+                event = new DataEvent(header, new String(msgId), buffer.getLong());
                 break;
             case CALL_PAYLOAD:
-                byte[] payload = new byte[data.length - 1];
-                buffer.get(payload);
-                event = new DataEvent(header, new String(payload), -1);
+                byte[] payload = new byte[data.length - (1 + 8)];
+                buffer.get(payload, 0, payload.length);
+                event = new DataEvent(header, new String(payload), buffer.getLong());
                 break;
             default:
                 if (BuildConfig.DEBUG) {
@@ -284,21 +283,20 @@ public class MessagePacker {
         private final int opCode;
         @NonNull
         private final String data;
-        private final int cursorPos;
-        public static final int INVALID_COUNT = -1;
+        private final long serverTimeStamp;
 
         private DataEvent(int opCode, @NonNull String data) {
-            this(opCode, data, INVALID_COUNT);
+            this(opCode, data, 0L);
         }
 
-        private DataEvent(int opCode, @NonNull String data, int count) {
+        private DataEvent(int opCode, @NonNull String data, long serverTimeStamp) {
             this.opCode = opCode;
             this.data = data;
-            this.cursorPos = count;
+            this.serverTimeStamp = serverTimeStamp;
         }
 
-        public int getCursorPos() {
-            return cursorPos;
+        public long getServerTimeStamp() {
+            return serverTimeStamp;
         }
 
         public int getOpCode() {
