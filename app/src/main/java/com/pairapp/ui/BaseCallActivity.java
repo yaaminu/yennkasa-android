@@ -186,7 +186,7 @@ public abstract class BaseCallActivity extends PairAppActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().addFlags(FLAG_KEEP_SCREEN_ON | FLAG_DISMISS_KEYGUARD |
+        getWindow().addFlags(FLAG_DISMISS_KEYGUARD |
                 FLAG_SHOW_WHEN_LOCKED | FLAG_TURN_SCREEN_ON);
         super.setContentView(getLayout());
         ButterKnife.bind(this);

@@ -225,6 +225,7 @@
             android:launchMode="singleTask" />
         <activity
             android:name=".ui.VideoCallActivity"
+            android:theme="@style/AppTheme.Fullscreen"
             android:launchMode="singleTask" />
 
         <service android:name=".messenger.MessageCenter2">
