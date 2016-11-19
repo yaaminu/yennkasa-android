@@ -110,9 +110,7 @@ public class ContactsAdapter extends BaseAdapter {
             holder.userPhone = (TextView) convertView.findViewById(R.id.tv_user_phone_group_admin);
             holder.initials = (TextView) convertView.findViewById(R.id.tv_initials);
             holder.more = convertView.findViewById(R.id.more);
-            ViewUtils.setTypeface(holder.userPhone, TypeFaceUtil.ROBOTO_REGULAR_TTF);
             ViewUtils.setTypeface(holder.initials, TypeFaceUtil.ROBOTO_LIGHT_TTF);
-            ViewUtils.setTypeface(holder.userName, TypeFaceUtil.ROBOTO_BOLD_TTF);
             convertView.setTag(holder);
         } else {
             holder = ((ViewHolder) convertView.getTag());

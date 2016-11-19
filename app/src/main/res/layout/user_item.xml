@@ -1,5 +1,4 @@
-<com.pairapp.view.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_item_height"
@@ -9,8 +8,7 @@
     android:paddingLeft="@dimen/list_item_padding"
     android:paddingRight="@dimen/list_item_padding"
     android:paddingTop="@dimen/list_item_padding"
-    tools:ignore="RtlHardcoded,HardcodedText"
-    >
+    tools:ignore="RtlHardcoded,HardcodedText">
 
     <com.pairapp.view.RoundedImageView
         android:id="@+id/iv_display_picture"
@@ -22,7 +20,7 @@
         android:contentDescription="@string/content_desc_user_avatar"
         android:gravity="center_vertical"
         android:scaleType="centerCrop"
-        android:src="@drawable/user_avartar"/>
+        android:src="@drawable/user_avartar" />
 
     <TextView
         android:id="@+id/tv_user_name"
@@ -32,8 +30,9 @@
         android:layout_toRightOf="@+id/iv_display_picture"
         android:singleLine="true"
         android:text="name"
+        android:textColor="@color/black"
         android:textSize="@dimen/standard_text_size"
-        android:textStyle="bold"/>
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/tv_user_phone_group_admin"
@@ -46,7 +45,7 @@
         android:singleLine="true"
         android:text="0204441069"
         android:textSize="@dimen/standard_text_size"
-        android:textStyle="italic"/>
+        android:textStyle="italic" />
 
     <include
         layout="@layout/divider"
@@ -58,7 +57,7 @@
         android:layout_marginEnd="@dimen/divider_right_offset"
         android:layout_marginRight="@dimen/divider_right_offset"
         android:layout_marginTop="4dp"
-        android:gravity="bottom"/>
+        android:gravity="bottom" />
 
     <com.rey.material.widget.CheckBox
         android:id="@+id/cb_checked"
@@ -69,5 +68,5 @@
         android:layout_alignParentRight="true"
         android:checked="false"
         android:clickable="false"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 </com.pairapp.view.RelativeLayout>

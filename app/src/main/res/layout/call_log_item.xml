@@ -53,6 +53,7 @@
             android:ellipsize="end"
             android:gravity="start"
             android:singleLine="true"
+            android:textColor="@color/black"
             android:textSize="@dimen/standard_text_size"
             android:textStyle="bold"
             tools:ignore="HardcodedText"

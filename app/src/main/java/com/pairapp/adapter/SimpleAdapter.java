@@ -64,7 +64,6 @@ public class SimpleAdapter extends BaseAdapter {
         }
         TextView textView = (TextView) convertView;
         textView.setText("    " + data[position]);
-        ViewUtils.setTypeface(textView, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         textView.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         textView.setCompoundDrawablesWithIntrinsicBounds(imgRes[position], null, null, null);
         return convertView;

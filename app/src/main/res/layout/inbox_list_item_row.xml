@@ -31,9 +31,9 @@
         android:gravity="bottom|start"
         android:maxLines="@integer/summary_lines"
         android:paddingBottom="2dp"
-        android:singleLine="@bool/single_line"
         android:textColor="@color/light_gray"
         android:textSize="@dimen/standard_text_size"
+        android:textStyle="bold"
         app:emojiconAlignment="baseline"
         tools:text="  Summary of conversation with a very long message " />
 
@@ -55,6 +55,7 @@
             android:gravity="start"
             android:singleLine="true"
             android:text="Sender name"
+            android:textColor="@color/black"
             android:textSize="@dimen/standard_text_size"
             android:textStyle="bold"
             tools:ignore="HardcodedText" />

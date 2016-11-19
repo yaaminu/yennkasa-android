@@ -76,8 +76,6 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
             holder.userName = ((TextView) convertView.findViewById(R.id.tv_user_name));
             holder.userPhone = (TextView) convertView.findViewById(R.id.tv_user_phone_group_admin);
             holder.checkBox = (CheckBox) convertView.findViewById(R.id.cb_checked);
-            ViewUtils.setTypeface(holder.userName, TypeFaceUtil.ROBOTO_BOLD_TTF);
-            ViewUtils.setTypeface(holder.userPhone, TypeFaceUtil.ROBOTO_REGULAR_TTF);
             convertView.setTag(holder);
         }
         User user = getItem(position);

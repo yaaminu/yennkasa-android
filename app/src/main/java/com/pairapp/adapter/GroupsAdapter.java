@@ -55,8 +55,6 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
             holder.groupName = ((TextView) convertView.findViewById(R.id.tv_user_name));
             holder.groupMembers = ((TextView) convertView.findViewById(R.id.tv_group_members));
             holder.groupIcon = (ImageView) convertView.findViewById(R.id.iv_group_dp);
-            ViewUtils.setTypeface(holder.groupName, TypeFaceUtil.ROBOTO_BOLD_TTF);
-            ViewUtils.setTypeface(holder.groupMembers, TypeFaceUtil.ROBOTO_REGULAR_TTF);
             convertView.setTag(holder);
         } else {
             holder = ((ViewHolder) convertView.getTag());

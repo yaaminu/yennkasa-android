@@ -49,10 +49,6 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
             holder.peerName = (TextView) convertView.findViewById(R.id.tv_sender);
             holder.senderAvatar = (ImageView) convertView.findViewById(R.id.iv_user_avatar);
             holder.newMessagesCount = (TextView) convertView.findViewById(R.id.tv_new_messages_count);
-            ViewUtils.setTypeface(holder.newMessagesCount, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-            ViewUtils.setTypeface(holder.chatSummary, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-            ViewUtils.setTypeface(holder.peerName, TypeFaceUtil.ROBOTO_BOLD_TTF);
-            ViewUtils.setTypeface(holder.dateLastActive, TypeFaceUtil.ROBOTO_REGULAR_TTF);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();

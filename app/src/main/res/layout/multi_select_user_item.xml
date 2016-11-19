@@ -1,5 +1,4 @@
-<com.pairapp.view.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -23,37 +22,37 @@
             android:layout_weight="1"
             android:singleLine="true"
             android:text="@string/username_hint"
+            android:textColor="@color/black"
             android:textSize="@dimen/standard_text_size"
             android:textStyle="bold"
-            tools:ignore="RtlHardcoded"/>
+            tools:ignore="RtlHardcoded" />
 
         <com.rey.material.widget.CheckBox
             android:id="@+id/cb_checked"
             style="@style/CheckBoxDrawable"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="false"/>
+            android:checked="false" />
     </com.pairapp.view.LinearLayout>
 
     <TextView
         android:id="@+id/tv_user_phone_group_admin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@+id/ll_tv_cb"
         android:ellipsize="end"
         android:singleLine="true"
         android:text="@string/phone"
-        android:layout_below="@+id/ll_tv_cb"
         android:textSize="@dimen/standard_text_size"
-        android:textStyle="italic"/>
+        android:textStyle="italic" />
 
     <include
         layout="@layout/divider"
         android:layout_width="match_parent"
         android:layout_height="@dimen/inbox_preferred_list_item_divider_height"
         android:layout_alignLeft="@+id/tv_user_phone_group_admin"
+        android:layout_alignParentBottom="true"
         android:layout_alignStart="@+id/tv_user_phone_group_admin"
         android:layout_marginEnd="@dimen/divider_right_offset"
-        android:layout_marginRight="@dimen/divider_right_offset"
-        android:layout_alignParentBottom="true"
-        />
+        android:layout_marginRight="@dimen/divider_right_offset" />
 </com.pairapp.view.RelativeLayout>

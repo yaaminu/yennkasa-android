@@ -36,6 +36,7 @@
         android:layout_toRightOf="@+id/tv_initials"
         android:singleLine="true"
         android:text="@string/username_hint"
+        android:textColor="@color/black"
         android:textSize="@dimen/standard_text_size"
         android:textStyle="bold" />
 
