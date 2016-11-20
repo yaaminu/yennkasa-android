@@ -166,11 +166,16 @@ public class MessageProcessor extends IntentService {
                     Conversation.newSession(realm, conversation);
                 }
                 ///////////////////////////////////////////////////////////////////////////////////////////
+                Message newestMessage = realm.where(Message.class)
+                        .equalTo(Message.FIELD_TO, peerId)
+                        .greaterThan(Message.FIELD_DATE_COMPOSED, timestamp).findFirst();
 
-                //force the new message to be newer than the session start up time
-                message.setDateComposed(new Date(timestamp));
+                //only use the server date for the message if there is no message on our side newer that it.
+                message.setDateComposed(newestMessage == null ? new Date(timestamp) : new Date());
+
                 message.setState(Message.STATE_RECEIVED);
-                conversation.setLastActiveTime(new Date(Math.max(timestamp, System.currentTimeMillis())));//now
+                //if user has invalid date settings
+                conversation.setLastActiveTime(new Date(Math.max(timestamp, System.currentTimeMillis())));
                 try {
                     message = realm.copyToRealm(message);
                     conversation.setLastMessage(message);
