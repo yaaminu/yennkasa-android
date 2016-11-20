@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.PowerManager;
 
+import com.pairapp.call.BuildConfig;
 import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
 import com.pairapp.data.UserManager;
@@ -32,13 +33,12 @@ import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS;
 import static com.pairapp.messenger.MessengerBus.get;
 
 public class MessageProcessor extends IntentService {
-    public static final String SYNC_MESSAGES = "syncMessages";
     private static final String TAG = MessageProcessor.class.getSimpleName();
     static final String MESSAGE = "message";
     private static final String UNKNOWN = "unknown";
     static final String MESSAGE_STATUS = "messageStatus";
-    static final String UPDATE = "update";
     public static final String TIMESTAMP = "timestamp";
+    public static String REVERT = "message.revert.sending";
     private final Lock processLock = new ReentrantLock(true);
 
     public MessageProcessor() {
@@ -47,7 +47,11 @@ public class MessageProcessor extends IntentService {
 
 
     @Override
-    protected void onHandleIntent(final Intent intent) {
+    protected void onHandleIntent(Intent intent) {
+        Bundle bundle = intent.getExtras();
+        final String data = bundle.getString(MESSAGE);
+        assert data != null;
+        final long timestamp = intent.getLongExtra(TIMESTAMP, 0L);
 
         PowerManager manager = ((PowerManager) getSystemService(POWER_SERVICE));
 
@@ -57,10 +61,6 @@ public class MessageProcessor extends IntentService {
             public void run() {
                 wakeLock.acquire();
                 try {
-                    Bundle bundle = intent.getExtras();
-                    String data = bundle.getString(MESSAGE);
-                    assert data != null;
-                    long timestamp = intent.getLongExtra(TIMESTAMP, 0L);
                     PLog.d(TAG, "payload: %s, timestamp: %s", data, new Date(timestamp));
                     handleMessage(data, timestamp);
                 } finally {
@@ -75,9 +75,7 @@ public class MessageProcessor extends IntentService {
             final JSONObject data1 = new JSONObject(data);
             String type = getType(data1);
             //noinspection IfCanBeSwitch
-            if (type.equals(SYNC_MESSAGES)) {
-                // FIXME: 6/21/2016 setup a provider that will sync messages
-            } else if (type.equals(MESSAGE)) {
+            if (type.equals(MESSAGE)) {
                 Message message = Message.fromJSON(data);
                 doProcessMessage(message, timestamp);
             } else if (type.equals(MESSAGE_STATUS)) {
@@ -101,6 +99,9 @@ public class MessageProcessor extends IntentService {
                 throw new JSONException("unknown message");
             }
         } catch (JSONException e) {
+            if (BuildConfig.DEBUG) {
+                throw new RuntimeException(e);
+            }
             PLog.d(TAG, e.getMessage(), e);
         }
     }
@@ -111,13 +112,6 @@ public class MessageProcessor extends IntentService {
         }
         if ((data.length() == 1 && data.has(Message.FIELD_ID)) || data.has(MESSAGE_STATUS)) {
             return MESSAGE_STATUS;
-        }
-        if (data.has(UPDATE)) {
-            return UPDATE;
-        }
-        final String message = data.optString("message");
-        if (SYNC_MESSAGES.equals(message)) {
-            return SYNC_MESSAGES;
         }
         return UNKNOWN;
     }
