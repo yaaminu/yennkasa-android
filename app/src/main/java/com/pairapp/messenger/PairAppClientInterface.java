@@ -14,6 +14,7 @@ import android.util.Log;
 
 import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.R;
+import com.pairapp.call.BuildConfig;
 import com.pairapp.call.CallController;
 import com.pairapp.call.CallData;
 import com.pairapp.data.CallBody;
@@ -23,13 +24,20 @@ import com.pairapp.data.UserManager;
 import com.pairapp.net.sockets.MessageParser;
 import com.pairapp.net.sockets.Sendable;
 import com.pairapp.net.sockets.Sender;
+import com.pairapp.net.sockets.SenderImpl;
 import com.pairapp.ui.MainActivity;
 import com.pairapp.ui.VideoCallActivity;
 import com.pairapp.ui.VoiceCallActivity;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
+import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
+import com.pairapp.util.TaskManager;
 import com.pairapp.util.ThreadUtils;
+import com.pairapp.util.UiHelpers;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.HashSet;
 import java.util.List;
@@ -289,7 +297,6 @@ class PairAppClientInterface {
         NotificationManagerCompat.from(Config.getApplication())
                 .cancel(data.getPeer(), CallController.CALL_NOTIFICATION_ID);
         Realm realm = Message.REALM();
-        long count;
         try {
             RealmResults<Message> messages = realm.where(Message.class).equalTo(Message.FIELD_TYPE, Message.TYPE_CALL)
                     .equalTo(Message.FIELD_STATE, Message.STATE_RECEIVED)
@@ -394,5 +401,103 @@ class PairAppClientInterface {
 
     public void onInComingCallPushPayload(String payload) {
         callController.handleCallPushPayload(payload);
+    }
+
+    public void revertSending(String messageId) {
+        Realm realm = Message.REALM();
+        try {
+            Message msg = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
+            if (msg != null) {
+                if (Message.canRevert(msg)) {
+                    doRevertOrEditSentMessage(realm, msg, true);
+                } else {
+                    PLog.d(TAG, "attempt to revert a message that cannot be");
+                    if (BuildConfig.DEBUG) {
+                        throw new AssertionError();
+                    }
+                }
+            } else {
+                PLog.d(TAG, "revert sending failed. reason: could't find message with id %s", messageId);
+            }
+        } finally {
+            realm.close();
+        }
+    }
+
+    private void doRevertOrEditSentMessage(Realm realm, Message msg, final boolean reverting) {
+        JSONObject object = new JSONObject();
+        try {
+            object.put(Message.FIELD_ID, msg.getId());
+            object.put(Message.FIELD_FROM, UserManager.getMainUserId());
+            if (reverting) {
+                object.put(MessageProcessor.REVERT, "1"); //just ensure that the edit key is set.
+            } else {
+                object.put(MessageProcessor.EDIT, "1"); //just ensure that the edit key is set.
+                object.put(Message.FIELD_MESSAGE_BODY, msg.getMessageBody());
+            }
+            if (sender.unsendMessage(SenderImpl.createMessageSendable(msg.getId(), messagePacker.pack(object.toString(),
+                    Message.isGroupMessage(msg) ? msg.getTo() : msg.getFrom(),
+                    Message.isGroupMessage(msg))))) {
+                realm.beginTransaction();
+                msg.setState(reverting ? Message.STATE_SEND_FAILED : Message.STATE_PENDING);
+                realm.commitTransaction();
+                notifyRevertOrEditSentMessageSuccess(reverting);
+            }
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void notifyRevertOrEditSentMessageSuccess(final boolean reverting) {
+        TaskManager.executeOnMainThread(new Runnable() {
+            @Override
+            public void run() {
+                UiHelpers.showToast(GenericUtils.getString(reverting ? R.string.message_unsent_success : R.string.sent_message_edited));
+            }
+        });
+    }
+
+    public void editSentMessage(String messageId) {
+        Realm realm = Message.REALM();
+        Message msg = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
+        if (msg != null) {
+            if (Message.canEdit(msg)) {
+                doRevertOrEditSentMessage(realm, msg, false);
+            } else {
+                PLog.d(TAG, "attempt to revert a message that cannot be");
+                if (BuildConfig.DEBUG) {
+                    throw new AssertionError();
+                }
+            }
+        } else {
+            PLog.d(TAG, "revert sending failed. reason: could't find message with id %s", messageId);
+        }
+        realm.close();
+    }
+
+    public void notifyEditSentMessageResults(String messageId, String to, boolean succeeded) {
+        doNotify(messageId, to, succeeded, false);
+    }
+
+    public void notifyRevertResults(String messageId, String to, boolean succeeded) {
+        doNotify(messageId, to, succeeded, true);
+    }
+
+    void doNotify(String messageId, String to, boolean succeeded, boolean reverting) {
+        JSONObject object = new JSONObject();
+        try {
+            object.put(Message.FIELD_ID, messageId);
+            object.put(MessageProcessor.SUCCEEDED, succeeded);
+            if (reverting) {
+                object.put(MessageProcessor.REVERT_RESULTS, "1"); //just ensure that the edit key is set.
+            } else {
+                object.put(MessageProcessor.EDIT_RESULTS, "1"); //just ensure that the edit key is set.
+            }
+            if (sender.unsendMessage(SenderImpl.createMessageSendable(messageId, messagePacker.pack(object.toString(), to, false)))) {
+                notifyRevertOrEditSentMessageSuccess(reverting);
+            }
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

@@ -7,14 +7,17 @@ import android.util.Base64;
 
 import com.pairapp.BuildConfig;
 import com.pairapp.Errors.PairappException;
+import com.pairapp.R;
 import com.pairapp.messenger.MessengerBus;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
+import com.pairapp.util.SimpleDateUtil;
 import com.pairapp.util.Task;
 import com.pairapp.util.TaskManager;
+import com.pairapp.util.UiHelpers;
 
 import java.io.File;
 import java.util.Collections;
@@ -81,6 +84,17 @@ public class SenderImpl implements Sender {
         this.messageQueue = new MessageQueueImpl(queueDataSource, hooks, consumer/*are we letting this escape?*/);
     }
 
+    public static Sendable createMessageSendable(String messageId, byte[] message) {
+        return new Sendable.Builder()
+                .data(encodeToString(message))
+                .collapseKey(messageId + "message")
+                .validUntil(System.currentTimeMillis() + SimpleDateUtil.ONE_HOUR * 12) //12 hours
+                .maxRetries(Sendable.RETRY_FOREVER)
+                .surviveRestarts(true)
+                .startProcessingAt(System.currentTimeMillis())
+                .build();
+    }
+
     private void initialiseSocket(String token) {
         GenericUtils.ensureNotEmpty(token);
         pairappSocket = PairappSocket.create(Collections.singletonMap("Authorization", token), listener);
@@ -101,10 +115,30 @@ public class SenderImpl implements Sender {
 
     @Override
     public void sendMessage(Sendable sendable) {
+        ensureStarted();
+        messageQueue.add(sendable);
+    }
+
+    private void ensureStarted() {
         if (!this.started) {
             throw new IllegalStateException("not started");
         }
-        messageQueue.add(sendable);
+    }
+
+    @Override
+    public boolean unsendMessage(Sendable sendable) {
+        ensureStarted();
+        if (messageQueue.remove(sendable)) {
+            return true;
+        } else {
+            messageQueue.add(sendable);
+        }
+        return false;
+    }
+
+    @Override
+    public void updateSentMessage(Sendable sendable) {
+        ensureStarted();
     }
 
     @Override
@@ -209,9 +243,7 @@ public class SenderImpl implements Sender {
 
         @Override
         public void onOpen() {
-            if (!started) {
-                throw new IllegalStateException("not started");
-            }
+            ensureStarted();
             MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(SOCKET_CONNECTION, null, CONNECTED));
             // TODO: 11/10/2016 whey not actually start the message queue here in the first place?
             //like this :
@@ -336,7 +368,7 @@ public class SenderImpl implements Sender {
         return Base64.decode(data, Base64.DEFAULT);
     }
 
-    private String encodeToString(byte[] data) {
+    private static String encodeToString(byte[] data) {
         return Base64.encodeToString(data, Base64.DEFAULT);
     }
 

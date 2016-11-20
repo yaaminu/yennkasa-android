@@ -42,6 +42,7 @@ import com.pairapp.messenger.PairAppClient;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.FileUtils;
+import com.pairapp.util.GenericUtils;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
 import com.pairapp.util.PhoneNumberNormaliser;
@@ -66,6 +67,7 @@ import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import io.realm.Sort;
 
+import static com.pairapp.data.Message.REALM;
 import static com.pairapp.data.Message.TYPE_TEXT_MESSAGE;
 import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
 import static com.pairapp.messenger.MessengerBus.ON_USER_OFFLINE;
@@ -116,7 +118,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
         @Override
         public boolean onDateSetChanged() {
-            return true;
+            return !editingMessage;
         }
 
         @Override
@@ -238,6 +240,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             messagesListView.setChoiceMode(AbsListView.CHOICE_MODE_SINGLE);
         }
     };
+    private boolean editingMessage = false;
 
 
     @Override
@@ -387,6 +390,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         messageEt.addTextChangedListener(this);
     }
 
+
     @Override
     protected void onPause() {
         Config.setCurrentActivePeer(null);
@@ -434,11 +438,25 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     public void onClick(View v) {
         int id = v.getId();
-
         switch (id) {
             case R.id.iv_send:
-                if (!messageEt.getText().toString().trim().isEmpty())
-                    sendTextMessage();
+                String content = messageEt.getText().toString().trim();
+                if (!GenericUtils.isEmpty(content)) {
+                    if (editingMessage) {
+                        editingMessage = false;
+                        editMessage(messageId, content);
+                    } else {
+                        super.sendMessage(content, peer.getUserId(), Message.TYPE_TEXT_MESSAGE, true);
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                messagesListView.setSelection(messages.size());
+                            }
+                        });
+                    }
+                    messageEt.setText("");
+                    stopTypingRunnable.run();
+                }
                 break;
             case R.id.main_toolbar:
                 UiHelpers.gotoProfileActivity(this, peer.getUserId());
@@ -446,22 +464,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             default:
                 throw new AssertionError();
         }
-    }
-
-    private void sendTextMessage() {
-        String content = messageEt.getText().toString().trim();
-        if (!TextUtils.isEmpty(content)) {
-            messageEt.setText("");
-            super.sendMessage(content, peer.getUserId(), Message.TYPE_TEXT_MESSAGE, true);
-            stopTypingRunnable.run();
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    messagesListView.setSelection(messages.size());
-                }
-            });
-        }
-
     }
 
     @Override
@@ -528,6 +530,8 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             } else {
                 menu.findItem(R.id.action_forward).setVisible(can4ward);
             }
+            menu.findItem(R.id.action_revert_send).setVisible(Message.canRevert(message));
+            menu.findItem(R.id.action_edit_sent).setVisible(Message.canEdit(message));
         }
     }
 
@@ -589,6 +593,15 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                 }
             }
             return true;
+        } else if (itemId == R.id.action_revert_send) {
+            postEvent(Event.create(MessengerBus.REVERT_SENDING, null, message.getId()));
+            return true;
+        } else if (itemId == R.id.action_edit_sent) {
+            messageEt.setText(message.getMessageBody());
+            messageEt.setSelection(message.getMessageBody().length());
+            messagesListView.setSelection(cursor);
+            editingMessage = true;
+            return true;
         }
         messageId = "";
         cursor = -1;
@@ -608,6 +621,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         final boolean wasLastForTheDay = nextToCurrMessage == null || Message.isDateMessage(nextToCurrMessage);
         final Message deletedMessage = Message.copy(currMessage);
         currMessage.deleteFromRealm();
+        postEvent(Event.create(MessengerBus.REVERT_SENDING, null, deletedMessage.getId()));
         if (Message.isDateMessage(previousToCurrMessage) &&
                 wasLastForTheDay) {
             previousToCurrMessage.deleteFromRealm(); //this will be a date message so delete it as there is no message for that day

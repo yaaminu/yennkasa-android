@@ -20,6 +20,8 @@ interface QueueDataSource {
 
     List<Sendable> processing();
 
+    boolean removeByCollpaseKey(String collapseKey);
+
     void init();
 
     interface QueueItemCleanedListener {

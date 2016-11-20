@@ -44,6 +44,10 @@ public class MessengerBus {
     public static final String ON_ADD_VIDEO_CALL_REMOTE_VIEW = "remote view vid call";
     public static final String MESSAGE_PUSH_INCOMING = "message.push.incoming";
     public static final String ON_CALL_PUSH_PAYLOAD_RECEIVED = "message.push.call.on.payload";
+    public static final String REVERT_SENDING = "message.send.undo";
+    public static final String EDIT_SENT_MESSAGE = "message.send.edit";
+    public static final String MESSAGE_EDIT_RESULTS = "message.edit.results";
+    public static final String MESSAGE_REVERT_RESULTS = "message.revert.results";
 
     public static EventBus get(String bus) {
         GenericUtils.ensureNotNull(bus);

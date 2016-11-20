@@ -1,5 +1,6 @@
 package com.pairapp.net.sockets;
 
+import com.pairapp.data.Message;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
 
@@ -76,13 +77,37 @@ class MessageQueueItemDataSource implements QueueDataSource {
     }
 
     @Override
+    public boolean removeByCollpaseKey(String collapseKey) {
+        ensureStateValid();
+        GenericUtils.ensureNotNull(collapseKey);
+        Realm realm = getRealm();
+        try {
+            realm.beginTransaction();
+            Sendable ret = realm.where(Sendable.class)
+                    .equalTo(Sendable.FIELD_COLLAPSE_KEY, collapseKey)
+                    .equalTo(FIELD_PROCESSING, false)
+                    .findFirst();
+            if (ret != null) {
+                ret.deleteFromRealm();
+            }
+            realm.commitTransaction();
+            return ret != null;
+        } finally {
+            realm.close();
+        }
+    }
+
+    @Override
     public boolean removeItem(Sendable item) {
         ensureStateValid();
         GenericUtils.ensureNotNull(item);
         Realm realm = getRealm();
         try {
             realm.beginTransaction();
-            Sendable ret = realm.where(Sendable.class).equalTo(FIELD_INDEX, item.getIndex()).findFirst();
+            Sendable ret = realm.where(Sendable.class)
+                    .equalTo(FIELD_INDEX, item.getIndex())
+                    .equalTo(FIELD_PROCESSING, false)
+                    .findFirst();
             if (ret != null) {
                 ret.deleteFromRealm();
             }

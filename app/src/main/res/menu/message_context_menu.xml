@@ -14,6 +14,17 @@
         android:title="@android:string/copy"
         pairapp:showAsAction="always" />
     <item
+        android:id="@+id/action_revert_send"
+        android:icon="@drawable/ic_action_replay"
+        android:title="@string/action_cancel_sending"
+        pairapp:showAsAction="always" />
+    <item
+        android:id="@+id/action_edit_sent"
+        android:icon="@drawable/ic_mode_edit_white_24dp"
+        android:title="@string/action_edit_and_send"
+        pairapp:showAsAction="always" />
+
+    <item
         android:id="@+id/action_delete"
         android:icon="@drawable/ic_delete_white_24dp"
         android:title="@string/action_delete"

@@ -6,11 +6,10 @@ import android.content.SharedPreferences;
 import com.pairapp.data.Message;
 import com.pairapp.net.FileApi;
 import com.pairapp.net.sockets.SendListener;
-import com.pairapp.net.sockets.Sendable;
 import com.pairapp.net.sockets.Sender;
+import com.pairapp.net.sockets.SenderImpl;
 import com.pairapp.util.Config;
 import com.pairapp.util.FileUtils;
-import com.pairapp.util.SimpleDateUtil;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -79,23 +78,12 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
     protected void dispatchToUser(Message message) {
         byte[] encoded = messageEncoder.encode(message);
         Config.getPreferences(SEND_QUEUE_PREFS).edit().putString(FileUtils.hash(encoded), message.getId()).commit();
-        sender.sendMessage(createSendable(message.getTo() + ":" + message.getFrom(), encoded));
+        sender.sendMessage(SenderImpl.createMessageSendable(message.getId(), encoded));
     }
 
     @Override
     public boolean isClosed() {
         return closed.get();
-    }
-
-    private Sendable createSendable(String collapseKey, byte[] message) {
-        return new Sendable.Builder()
-                .data(sender.bytesToString(message))
-                .collapseKey(collapseKey + "message")
-                .validUntil(System.currentTimeMillis() + SimpleDateUtil.ONE_HOUR * 12) //12 hours
-                .maxRetries(Sendable.RETRY_FOREVER)
-                .surviveRestarts(true)
-                .startProcessingAt(System.currentTimeMillis())
-                .build();
     }
 
     interface MessageEncoder {
