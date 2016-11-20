@@ -313,25 +313,30 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                     throw new UnsupportedOperationException();
                 case RESEND_MESSAGE:
                     final String msgId = ((String) msg.obj);
-                    Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
+                    final Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
                     if (message != null) {
                         if (message.getState() == Message.STATE_SEND_FAILED) {
-                            realm.beginTransaction();
-                            message.setState(Message.STATE_PENDING);
-                            realm.commitTransaction();
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    onMessageQueued(msgId);
-                                }
-                            });
-                            doSendMessage(message);
+                            try {
+                                realm.beginTransaction();
+                                Message newMessage = Message.makeNew(realm, message.getMessageBody(), message.getTo(), message.getType());
+                                message.deleteFromRealm();
+                                realm.commitTransaction();
+                                doSendMessage(newMessage);
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        onMessageQueued(msgId);
+                                    }
+                                });
+                            } catch (PairappException e) {
+                                ErrorCenter.reportError(message.getId(), e.getMessage());
+                            }
                             break;
                         }
                         if (BuildConfig.DEBUG) {
                             throw new IllegalArgumentException("attempted to resend a non-failed message");
                         }
-                        PLog.w(MessageActivity.TAG, "message cannot be resent because its dispatch has not failed");
+                        PLog.w(MessageActivity.TAG, "message cannot be resent because it has not failed");
                         break;
                     }
                     PLog.w(MessageActivity.TAG, "failed to resend message, reason: message deleted");
