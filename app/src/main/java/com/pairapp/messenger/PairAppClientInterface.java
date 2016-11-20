@@ -46,6 +46,7 @@ import static com.pairapp.messenger.PairAppClient.listenableBus;
 /**
  * @author aminu on 7/15/2016.
  */
+@SuppressWarnings("WeakerAccess")
 class PairAppClientInterface {
 
     public static final String READ_RECEIPT_DELIVERY_REPORT_COLLAPSE_KEY = "readReceiptDeliveryReport";
@@ -202,8 +203,14 @@ class PairAppClientInterface {
     }
 
     private void notifySenderMessageDelivered(Message message) {
-        sender.sendMessage(createReadReceiptSendable(message.getFrom(),
-                messagePacker.createMsgStatusMessage(message.getFrom(), message.getId(), true), System.currentTimeMillis() + WAIT_MILLIS_DELIVERY_REPORT));
+
+        if (message != null && !Message.isGroupMessage(message) &&
+                message.getType() != Message.TYPE_CALL &&
+                message.getType() != Message.TYPE_DATE_MESSAGE &&
+                message.getType() != Message.TYPE_TYPING_MESSAGE) {
+            sender.sendMessage(createReadReceiptSendable(message.getFrom(),
+                    messagePacker.createMsgStatusMessage(message.getFrom(), message.getId(), true), System.currentTimeMillis() + WAIT_MILLIS_DELIVERY_REPORT));
+        }
     }
 
     void onMessageDelivered(String msgId) {

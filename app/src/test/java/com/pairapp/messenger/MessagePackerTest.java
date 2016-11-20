@@ -243,6 +243,7 @@ public class MessagePackerTest {
         testTyping();
 
         testReadableMessage();
+        testCallPushMessage();
         try {
             subscription.unsubscribe();
             messagePacker.unpack(new byte[9]);
@@ -250,6 +251,20 @@ public class MessagePackerTest {
         } catch (IllegalStateException e) {
             //better
         }
+    }
+
+    private void testCallPushMessage() {
+        byte[] message = "hello world".getBytes();
+        ByteBuffer buffer = ByteBuffer.allocate(1 + message.length + 8); //8 for timestamp
+        buffer.order(ByteOrder.BIG_ENDIAN);
+        buffer.put(MessagePacker.CALL_PAYLOAD);
+        buffer.put(message);
+        long timestamp = System.currentTimeMillis();
+        buffer.putLong(timestamp);
+        messagePacker.unpack(buffer.array());
+        assertEquals("opcode must be callpayload", MessagePacker.CALL_PAYLOAD, dataEvent.getOpCode());
+        assertEquals("inconsistent message body", new String(message), dataEvent.getData());
+        assertEquals("inconsistent timestamp", timestamp, dataEvent.getServerTimeStamp());
     }
 
     private void testOffline() {
@@ -267,22 +282,28 @@ public class MessagePackerTest {
 
     private void testMsgStatus() {
         byte[] idBytes = "msgId".getBytes();
-        ByteBuffer buffer = ByteBuffer.allocate(idBytes.length + 1);
+        ByteBuffer buffer = ByteBuffer.allocate(idBytes.length + 1 + 8);//1 for header, 8 for timestamp
         buffer.put(MessagePacker.MESSAGE_STATUS_DELIVERED);
-
         buffer.put(idBytes);
+        long timestamp = System.currentTimeMillis();
+        buffer.putLong(timestamp);
 
         messagePacker.unpack(buffer.array());
 
         assertEquals(dataEvent.getOpCode(), MessagePacker.MESSAGE_STATUS_DELIVERED);
+        assertEquals("inconsistent timestamp", timestamp, dataEvent.getServerTimeStamp());
+
         assertEquals("msgId", dataEvent.getData());
-        buffer = ByteBuffer.allocate(idBytes.length + 1);
+        buffer = ByteBuffer.allocate(idBytes.length + 1 + 8);
         buffer.put(MessagePacker.MESSAGE_STATUS_SEEN);
         buffer.put(idBytes);
+        buffer.putLong(timestamp);
+
 
         messagePacker.unpack(buffer.array());
 
         assertEquals(dataEvent.getOpCode(), MessagePacker.MESSAGE_STATUS_SEEN);
+        assertEquals("inconsistent timestamp", timestamp, dataEvent.getServerTimeStamp());
         assertEquals("msgId", dataEvent.getData());
     }
 
@@ -291,6 +312,7 @@ public class MessagePackerTest {
         buffer.put((byte) 0x2);
         int recipient = 123456789;
         buffer.putLong(recipient);
+
 
         messagePacker.unpack(buffer.array());
 
@@ -321,13 +343,16 @@ public class MessagePackerTest {
 
     private void testReadableMessage() throws Exception {
         byte[] message = compressor.compress("hello world".getBytes());
-        ByteBuffer buffer = ByteBuffer.allocate(1 + message.length);
+        ByteBuffer buffer = ByteBuffer.allocate(1 + message.length + 8); //8 for timestamp
         buffer.order(ByteOrder.BIG_ENDIAN);
         buffer.put(MessagePacker.READABLE_MESSAGE);
         buffer.put(message);
+        long timestamp = System.currentTimeMillis();
+        buffer.putLong(timestamp);
         messagePacker.unpack(buffer.array());
         assertEquals("opcode must be readableMessage", MessagePacker.READABLE_MESSAGE, dataEvent.getOpCode());
         assertEquals("inconsistent message body", new String(compressor.decompress(message)), dataEvent.getData());
+        assertEquals("inconsistent timestamp", timestamp, dataEvent.getServerTimeStamp());
     }
 
     @Test

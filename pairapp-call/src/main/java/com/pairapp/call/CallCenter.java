@@ -1,13 +1,13 @@
 package com.pairapp.call;
 
-import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
 
-import com.pairapp.data.*;
 import com.pairapp.data.BuildConfig;
+import com.pairapp.data.CallBody;
+import com.pairapp.data.Conversation;
+import com.pairapp.data.Message;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
@@ -23,7 +23,6 @@ import com.sinch.android.rtc.video.VideoCallListener;
 import com.sinch.android.rtc.video.VideoController;
 
 import java.lang.ref.WeakReference;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -192,8 +191,8 @@ class CallCenter implements CallClientListener, VideoCallListener {
 
     int getCallType(Call call) {
         Map<String, String> headers = call.getHeaders();
-        if (headers == null) {
-            return CALL_TYPE_VOICE;
+        if (headers == null || headers.isEmpty()) {
+            return call.getDetails().isVideoOffered() ? CALL_TYPE_VIDEO : CALL_TYPE_VOICE;
         }
         String callType = headers.get(CALL_TYPE);
         if (HEADER_VOICE_CALL.equals(callType)) {
@@ -203,7 +202,7 @@ class CallCenter implements CallClientListener, VideoCallListener {
         } else if (HEADER_CONFERENCE_VOICE_CALL.equals(headers.get(CALL_TYPE))) {
             return CALL_TYPE_CONFERENCE_VOICE;
         } else {
-            return CALL_TYPE_VOICE;
+            return call.getDetails().isVideoOffered() ? CALL_TYPE_VIDEO : CALL_TYPE_VOICE;
         }
     }
 
