@@ -1750,6 +1750,10 @@ public final class UserManager {
         userApi.updatePushID(newPushId);
     }
 
+    public Pair<String, Long> getSinchRegistrationToken() {
+        return userApi.getSinchToken();
+    }
+
 
     public interface CallBack {
         void done(Exception e);

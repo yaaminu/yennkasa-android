@@ -1,6 +1,8 @@
 package com.pairapp.net;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.util.Pair;
 
 import com.google.gson.JsonObject;
 import com.pairapp.Errors.PairappException;
@@ -108,6 +110,9 @@ public interface UserApiV2 {
     String newAuthToken() throws PairappException;
 
     void updatePushID(String newPushID) throws PairappException;
+
+    @Nullable
+    Pair<String, Long> getSinchToken();
 
     interface Callback<T> {
         void done(Exception e, T t);

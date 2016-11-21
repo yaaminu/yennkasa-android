@@ -1,6 +1,9 @@
 package com.pairapp.call;
 
+import android.support.v4.util.Pair;
+
 import com.pairapp.util.BuildConfig;
+import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
 import com.sinch.android.rtc.ClientRegistration;
 import com.sinch.android.rtc.SinchClient;
@@ -18,8 +21,10 @@ import static android.util.Log.VERBOSE;
 class ClientListener implements SinchClientListener {
 
     public static final String TAG = CallManager.class.getSimpleName();
+    private final CallManager.RegistrationTokenSource source;
 
-    ClientListener() {
+    ClientListener(CallManager.RegistrationTokenSource source) {
+        this.source = source;
     }
 
     @Override
@@ -40,7 +45,16 @@ class ClientListener implements SinchClientListener {
 
     @Override
     public void onRegistrationCredentialsRequired(SinchClient sinchClient, ClientRegistration clientRegistration) {
-        throw new UnsupportedOperationException();
+        Pair<String, Long> tokenAndSequence = source.getSinchRegistrationToken();
+        if (tokenAndSequence != null) {
+            PLog.d(TAG, "successfully registered");
+            PLog.d(TAG, "token: %s, sequence: %d", tokenAndSequence.first, tokenAndSequence.second);
+            GenericUtils.ensureNotNull(tokenAndSequence.first, tokenAndSequence.second);
+            clientRegistration.register(tokenAndSequence.first, tokenAndSequence.second);
+        } else {
+            PLog.d(TAG, "registration failed");
+            clientRegistration.registerFailed();
+        }
     }
 
     @Override
