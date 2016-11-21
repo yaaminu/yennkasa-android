@@ -236,8 +236,8 @@ public class MessagePacker {
             case TYPING:
             case NOT_TYPING:
                 String targetId;
-                if (data.length > 9) {
-                    byte[] idbytes = new byte[data.length - 1]; //minus header
+                if (data.length > 17) {
+                    byte[] idbytes = new byte[data.length - (1 + 8)]; //minus header
                     targetId = new String(buffer.get(idbytes, 0, idbytes.length).array());
                 } else {
                     targetId = String.valueOf(buffer.getLong());
