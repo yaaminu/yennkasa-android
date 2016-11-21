@@ -227,7 +227,7 @@ public class PairAppClient extends Service {
         }
     }
 
-    private final SenderImpl.Authenticator authenticator = new SenderImpl.Authenticator() {
+    private static final SenderImpl.Authenticator authenticator = new SenderImpl.Authenticator() {
         @NonNull
         @Override
         public String getToken() {
