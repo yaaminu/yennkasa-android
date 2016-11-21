@@ -1743,6 +1743,7 @@ public final class UserManager {
     }
 
     public String getNewAuthTokenSync() throws PairappException {
+        if (!isUserVerified()) throw new PairappException("not registered");
         return userApi.newAuthToken();
     }
 
