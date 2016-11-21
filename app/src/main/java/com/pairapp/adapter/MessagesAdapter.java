@@ -411,8 +411,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
 
 
     private void attemptToMarkAsSeen(Message message) {
-        if (message.getState() != Message.STATE_SEEN &&
-                !isOutgoingMessage &&
+        if (!isOutgoingMessage && message.getState() != Message.STATE_SEEN &&
                 currentMessageType != Message.TYPE_DATE_MESSAGE &&
                 currentMessageType != Message.TYPE_TYPING_MESSAGE
                 ) {
@@ -436,7 +435,6 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         holder.progressRootView = convertView.findViewById(R.id.fl_progress_root_view);
         holder.sendersName = ((TextView) convertView.findViewById(R.id.tv_sender_name));
         holder.call_button = (ImageButton) convertView.findViewById(R.id.ib_call_button);
-        ViewUtils.setTypeface(holder.dateComposed, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         convertView.setTag(holder);
         return convertView;
     }

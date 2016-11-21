@@ -6,6 +6,10 @@ package com.pairapp.net.sockets;
 public interface Sender {
     void sendMessage(Sendable sendable);
 
+    boolean unsendMessage(Sendable sendable);
+
+    void updateSentMessage(Sendable sendable);
+
     void addSendListener(SendListener sendListener);
 
     void removeSendListener(SendListener sendListener);

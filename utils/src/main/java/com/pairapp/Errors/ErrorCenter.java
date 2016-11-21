@@ -94,37 +94,32 @@ public class ErrorCenter {
         // Intent intent = new Intent("com.idea.pairapp.report");
         // intent.putExtra("message", errorMessage);
         Context applicationContext = Config.getApplicationContext();
-        if (action == null) {
-            action = new Intent();
-            action.setComponent(new ComponentName(applicationContext, "com.idea.ui.MainActivity"));
-        }
-        // intent.putExtra("id", id);
-        // intent.putExtra("action", action);
-        // String message = intent.getStringExtra("message");
-        PendingIntent pendingIntent;
-        Class<?> clazz = action.getClass();
-        if (clazz == null) {
-            if (action.getAction() == null) {
-                throw new IllegalStateException("unresolvable component type");
+        PendingIntent pendingIntent = null;
+        if (action != null) {
+            Class<?> clazz = action.getClass();
+            if (clazz.getSuperclass().equals(Activity.class)) {
+                pendingIntent = PendingIntent.getActivity(applicationContext, id.hashCode(), action, PendingIntent.FLAG_UPDATE_CURRENT);
+            } else if (clazz.getSuperclass()/*null pointer ex impossible*/.equals(Service.class)) {
+                pendingIntent = PendingIntent.getService(applicationContext, id.hashCode(), action, PendingIntent.FLAG_UPDATE_CURRENT);
+            } else if (clazz.getSuperclass()/*null pointer ex impossible*/.equals(BroadcastReceiver.class)) {
+                pendingIntent = PendingIntent.getBroadcast(applicationContext, id.hashCode(), action, PendingIntent.FLAG_UPDATE_CURRENT);
+            } else if (clazz.getSuperclass()/*null pointer ex impossible*/.equals(WakefulBroadcastReceiver.class)) {
+                pendingIntent = PendingIntent.getBroadcast(applicationContext, id.hashCode(), action, PendingIntent.FLAG_UPDATE_CURRENT);
+            } else {
+                throw new IllegalArgumentException("unresolvable component type");
             }
-            pendingIntent = PendingIntent.getActivity(applicationContext, id.hashCode(), action, PendingIntent.FLAG_UPDATE_CURRENT);
-        } else if (clazz.getSuperclass()/*null pointer ex impossible*/.equals(Service.class)) {
-            pendingIntent = PendingIntent.getService(applicationContext, id.hashCode(), action, PendingIntent.FLAG_UPDATE_CURRENT);
-        } else if (clazz.getSuperclass()/*null pointer ex impossible*/.equals(BroadcastReceiver.class)) {
-            pendingIntent = PendingIntent.getBroadcast(applicationContext, id.hashCode(), action, PendingIntent.FLAG_UPDATE_CURRENT);
-        } else if (clazz.getSuperclass()/*null pointer ex impossible*/.equals(WakefulBroadcastReceiver.class)) {
-            pendingIntent = PendingIntent.getBroadcast(applicationContext, id.hashCode(), action, PendingIntent.FLAG_UPDATE_CURRENT);
-        } else {
-            throw new IllegalArgumentException("unresolvable component type");
         }
-        Notification notification = new NotificationCompat.Builder(applicationContext)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(applicationContext)
                 .setContentTitle(applicationContext.getString(R.string.error))
                 .setContentText(errorMessage)
                 .setAutoCancel(true)
-                .setContentIntent(pendingIntent)
-                .setSmallIcon(android.R.drawable.stat_notify_error).build();
+                .setSmallIcon(android.R.drawable.stat_notify_error);
+        if (pendingIntent != null) {
+            builder.setContentIntent(pendingIntent);
+        }
+
         NotificationManagerCompat manager = NotificationManagerCompat.from(applicationContext);// getSystemService(NOTIFICATION_SERVICE));
-        manager.notify(id, 100000111, notification);
+        manager.notify(id, 100000111, builder.build());
     }
 
     /**

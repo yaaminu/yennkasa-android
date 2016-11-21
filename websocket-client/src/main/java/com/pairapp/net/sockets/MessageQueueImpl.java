@@ -201,7 +201,7 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
     @Override
     public boolean remove(@NonNull Sendable item) {
         ensureStateValid();
-        if (itemsStore.removeItem(item)) {
+        if (itemsStore.removeByCollpaseKey(item.getCollapseKey())) {
             removeItem(item, Hooks.FORCEFULLY_REMOVED);
             return true;
         }

@@ -27,22 +27,23 @@
         <include layout="@layout/inline_notification_bar_layout" />
     </LinearLayout>
 
+    <fragment
+        android:id="@+id/fragment_unknown_contact_fragment"
+        android:name="com.pairapp.ui.UnknownContactFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/parent_chat_activity_toolbar"
+        tools:layout="@layout/unknown_user_fragment" />
+
     <RelativeLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/parent_chat_activity_toolbar"
+        android:layout_below="@+id/fragment_unknown_contact_fragment"
         android:layout_marginTop="2dp"
         android:animateLayoutChanges="true"
         android:background="#0000"
         tools:ignore="UnusedAttribute">
-
-        <RelativeLayout
-            android:id="@+id/attachment_picker_container"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-        </RelativeLayout>
 
         <LinearLayout
             android:id="@+id/ll_list_view_container"

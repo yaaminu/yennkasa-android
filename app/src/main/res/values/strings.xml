@@ -357,4 +357,11 @@
     <string name="send_picture">Send Picture</string>
     <string name="verifying_account_stage_1">Verifying account: stage 1 of 2</string>
     <string name="verifying_account_stage_2">Verifying account: stage 2 of 2</string>
+    <string name="action_cancel_sending">Unsend message</string>
+    <string name="action_edit_and_send">Edit and send</string>
+    <string name="message_unsent_success">Message unsent successfully</string>
+    <string name="sent_message_edited">Message updated successfully</string>
+    <string name="message_edited_description">Your message to %s was updated successfully</string>
+    <string name="message_reverted_description">Your message to %s was reverted</string>
+    <string name="error_cannot_edit_message">Cannot edit message</string>
 </resources>

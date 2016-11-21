@@ -79,11 +79,11 @@ public class WebSocketClient {
 
 
     public boolean isConnected() {
-        return internalWebSocket.isOpen();
+        return networkProvider.connected() && internalWebSocket.isOpen();
     }
 
     public synchronized void send(byte[] bytes) {
-        if (internalWebSocket.isOpen()) {
+        if (networkProvider.connected() && internalWebSocket.isOpen()) {
             internalWebSocket.send(bytes);
         } else {
             backLog.add(bytes);

@@ -8,7 +8,6 @@ import android.content.pm.PackageManager;
 import com.crashlytics.android.Crashlytics;
 import com.pairapp.data.ContactSyncService;
 import com.pairapp.data.Message;
-import com.pairapp.messenger.MessageCenter;
 import com.pairapp.messenger.MessageProcessor;
 import com.pairapp.messenger.PairAppClient;
 import com.pairapp.util.Config;

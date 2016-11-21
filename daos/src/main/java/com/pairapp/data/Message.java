@@ -416,7 +416,7 @@ public class Message extends RealmObject {
         GenericUtils.ensureNotNull(realm, msgId);
         Message tmp = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
         if (tmp != null) {
-            if (tmp.getState() != Message.STATE_SEEN) {
+            if (tmp.getState() != Message.STATE_SEND_FAILED && tmp.getState() != Message.STATE_SEEN) {
                 realm.beginTransaction();
                 if (tmp.isValid()) {
                     tmp.setState(Message.STATE_SEEN);
@@ -431,7 +431,7 @@ public class Message extends RealmObject {
         GenericUtils.ensureNotNull(realm, msgId);
         Message tmp = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
         if (tmp != null) {
-            if (tmp.getState() != STATE_SEEN && tmp.getState() != STATE_RECEIVED) {
+            if (tmp.getState() != STATE_SEND_FAILED && tmp.getState() != STATE_SEEN && tmp.getState() != STATE_RECEIVED) {
                 realm.beginTransaction();
                 if (tmp.isValid()) {
                     tmp.setState(STATE_RECEIVED);
@@ -453,5 +453,14 @@ public class Message extends RealmObject {
 
     public static boolean isCallMessage(Message message) {
         return message.getType() == TYPE_CALL;
+    }
+
+    public static boolean canRevert(Message msg) {
+        return isOutGoing(msg) && (msg.getState() ==
+                STATE_PENDING || msg.getState() == Message.STATE_SENT || msg.getState() == Message.STATE_RECEIVED);
+    }
+
+    public static boolean canEdit(Message msg) {
+        return Message.isTextMessage(msg) && canRevert(msg);
     }
 }

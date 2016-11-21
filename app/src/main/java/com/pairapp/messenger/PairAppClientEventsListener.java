@@ -16,8 +16,10 @@ import static com.pairapp.call.CallController.ON_CALL_PROGRESSING;
 import static com.pairapp.call.CallController.ON_CAL_ENDED;
 import static com.pairapp.call.CallController.ON_IN_COMING_CALL;
 import static com.pairapp.messenger.MessengerBus.ANSWER_CALL;
+import static com.pairapp.messenger.MessengerBus.EDIT_SENT_MESSAGE;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_PUSH_INCOMING;
 import static com.pairapp.messenger.MessengerBus.ON_CALL_PUSH_PAYLOAD_RECEIVED;
+import static com.pairapp.messenger.MessengerBus.REVERT_SENDING;
 import static com.pairapp.messenger.MessengerBus.VOICE_CALL_USER;
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
 import static com.pairapp.messenger.MessengerBus.CLEAR_NEW_MESSAGE_NOTIFICATION;
@@ -161,7 +163,27 @@ class PairAppClientEventsListener implements EventBus.EventsListener {
                     pairAppClientInterface.onRouteCallViaPush(((Pair<String, String>) event.getData()));
                     break;
                 case ON_CALL_PUSH_PAYLOAD_RECEIVED:
-                    pairAppClientInterface.onInComingCallPushPayload(event.getData().toString());
+                    pairAppClientInterface.onInComingCallPushPayload((String) event.getData());
+                    break;
+                case REVERT_SENDING:
+                    pairAppClientInterface.revertSending((String) event.getData());
+                    break;
+                case EDIT_SENT_MESSAGE:
+                    pairAppClientInterface.editSentMessage((String) event.getData());
+                    break;
+                case MessengerBus.MESSAGE_REVERT_RESULTS:
+                    //noinspection unchecked
+                    Pair<String, String> editResults = (Pair<String, String>) event.getData();
+                    assert editResults != null;
+                    //noinspection ThrowableResultOfMethodCallIgnored
+                    pairAppClientInterface.notifyRevertResults(editResults.first, editResults.second, event.getError() != null);
+                    break;
+                case MessengerBus.MESSAGE_EDIT_RESULTS:
+                    //noinspection unchecked
+                    Pair<String, String> revertResults = (Pair<String, String>) event.getData();
+                    assert revertResults != null;
+                    //noinspection ThrowableResultOfMethodCallIgnored
+                    pairAppClientInterface.notifyEditSentMessageResults(revertResults.first, revertResults.second, event.getError() != null);
                     break;
                 default:
                     throw new AssertionError();

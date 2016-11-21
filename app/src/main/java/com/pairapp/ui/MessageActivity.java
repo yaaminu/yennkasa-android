@@ -25,7 +25,9 @@ import com.pairapp.R;
 import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
 import com.pairapp.data.util.MessageUtils;
+import com.pairapp.messenger.MessengerBus;
 import com.pairapp.util.Event;
+import com.pairapp.util.GenericUtils;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
@@ -66,6 +68,16 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         android.os.Message msg = android.os.Message.obtain();
         msg.what = Worker.RESEND_MESSAGE;
         msg.obj = messageId;
+        worker.sendMessage(msg);
+    }
+
+    protected final void editMessage(String msgId, String newContent) {
+        android.os.Message msg = android.os.Message.obtain();
+        msg.what = Worker.EDIT_MESSAGE;
+        Bundle bundle = new Bundle(2);
+        bundle.putString(Message.FIELD_ID, msgId);
+        bundle.putString(Message.FIELD_MESSAGE_BODY, newContent);
+        msg.setData(bundle);
         worker.sendMessage(msg);
     }
 
@@ -258,7 +270,8 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         public static final String TAG = "dispatchThread";
         @SuppressWarnings("unused")
         final static int START = 0x1,
-                STOP = 0x2, SEND_MESSAGE = 0x3, SEND_MESSAGE_TO_MANY = 0x4, RESEND_MESSAGE = 0x5, MARK_AS_SEEN = 0x6;
+                STOP = 0x2, SEND_MESSAGE = 0x3, SEND_MESSAGE_TO_MANY = 0x4, RESEND_MESSAGE = 0x5, MARK_AS_SEEN = 0x6,
+                EDIT_MESSAGE = 0x7;
         private final Context context;
         private final Set<android.os.Message> waitingMessages = new HashSet<>();
         private Handler handler;
@@ -311,35 +324,66 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                     break;
                 case SEND_MESSAGE_TO_MANY:
                     throw new UnsupportedOperationException();
+                case EDIT_MESSAGE:
+                    editSentMessage(msg);
+                    break;
                 case RESEND_MESSAGE:
-                    final String msgId = ((String) msg.obj);
-                    Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
-                    if (message != null) {
-                        if (message.getState() == Message.STATE_SEND_FAILED) {
-                            realm.beginTransaction();
-                            message.setState(Message.STATE_PENDING);
-                            realm.commitTransaction();
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    onMessageQueued(msgId);
-                                }
-                            });
-                            doSendMessage(message);
-                            break;
-                        }
-                        if (BuildConfig.DEBUG) {
-                            throw new IllegalArgumentException("attempted to resend a non-failed message");
-                        }
-                        PLog.w(MessageActivity.TAG, "message cannot be resent because its dispatch has not failed");
-                        break;
-                    }
-                    PLog.w(MessageActivity.TAG, "failed to resend message, reason: message deleted");
+                    resendFailedMessage(msg);
                     break;
                 default:
                     throw new AssertionError();
             }
             return true;
+        }
+
+        private void editSentMessage(android.os.Message msg) {
+            final String msgId = msg.getData().getString(Message.FIELD_ID), newContent = msg.getData().getString(Message.FIELD_MESSAGE_BODY);
+            GenericUtils.ensureNotEmpty(newContent);
+            GenericUtils.ensureNotEmpty(msgId);
+            final Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
+            if (message != null && !message.getMessageBody().equals(newContent)) {
+                realm.beginTransaction();
+                message.setMessageBody(newContent);
+                realm.commitTransaction();
+                postEvent(Event.create(MessengerBus.EDIT_SENT_MESSAGE, null, msgId));
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        onMessageQueued(msgId);
+                    }
+                });
+            }
+        }
+
+        private void resendFailedMessage(android.os.Message msg) {
+            final String msgId = ((String) msg.obj);
+            final Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
+            if (message != null) {
+                if (message.getState() == Message.STATE_SEND_FAILED) {
+                    try {
+                        realm.beginTransaction();
+                        Message newMessage = Message.makeNew(realm, message.getMessageBody(), message.getTo(), message.getType());
+                        message.deleteFromRealm();
+                        realm.commitTransaction();
+                        doSendMessage(newMessage);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                onMessageQueued(msgId);
+                            }
+                        });
+                    } catch (PairappException e) {
+                        ErrorCenter.reportError(message.getId(), e.getMessage());
+                    }
+                    return;
+                }
+                if (BuildConfig.DEBUG) {
+                    throw new IllegalArgumentException("attempted to resend a non-failed message");
+                }
+                PLog.w(MessageActivity.TAG, "message cannot be resent because it has not failed");
+                return;
+            }
+            PLog.w(MessageActivity.TAG, "failed to resend message, reason: message deleted");
         }
 
         void sendMessage(android.os.Message message) {
