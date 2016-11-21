@@ -404,24 +404,25 @@ class PairAppClientInterface {
     }
 
     public void revertSending(String messageId) {
-        Realm realm = Message.REALM();
-        try {
-            Message msg = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
-            if (msg != null) {
-                if (Message.canRevert(msg)) {
-                    doRevertOrEditSentMessage(realm, msg, true);
-                } else {
-                    PLog.d(TAG, "attempt to revert a message that cannot be");
-                    if (BuildConfig.DEBUG) {
-                        throw new AssertionError();
-                    }
-                }
-            } else {
-                PLog.d(TAG, "revert sending failed. reason: could't find message with id %s", messageId);
-            }
-        } finally {
-            realm.close();
-        }
+        throw new UnsupportedOperationException();
+//        Realm realm = Message.REALM();
+//        try {
+//            Message msg = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
+//            if (msg != null) {
+//                if (Message.canRevert(msg)) {
+//                    doRevertOrEditSentMessage(realm, msg, true);
+//                } else {
+//                    PLog.d(TAG, "attempt to revert a message that cannot be");
+//                    if (BuildConfig.DEBUG) {
+//                        throw new AssertionError();
+//                    }
+//                }
+//            } else {
+//                PLog.d(TAG, "revert sending failed. reason: could't find message with id %s", messageId);
+//            }
+//        } finally {
+//            realm.close();
+//        }
     }
 
     private void doRevertOrEditSentMessage(Realm realm, Message msg, final boolean reverting) {
@@ -436,7 +437,7 @@ class PairAppClientInterface {
                 object.put(Message.FIELD_MESSAGE_BODY, msg.getMessageBody());
             }
             if (sender.unsendMessage(SenderImpl.createMessageSendable(msg.getId(), messagePacker.pack(object.toString(),
-                    Message.isGroupMessage(msg) ? msg.getTo() : msg.getFrom(),
+                    Message.isGroupMessage(msg) ? msg.getFrom() : msg.getTo(),
                     Message.isGroupMessage(msg))))) {
                 realm.beginTransaction();
                 msg.setState(reverting ? Message.STATE_SEND_FAILED : Message.STATE_PENDING);
@@ -465,9 +466,12 @@ class PairAppClientInterface {
                 doRevertOrEditSentMessage(realm, msg, false);
             } else {
                 PLog.d(TAG, "attempt to revert a message that cannot be");
-                if (BuildConfig.DEBUG) {
-                    throw new AssertionError();
-                }
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        UiHelpers.showToast(GenericUtils.getString(R.string.error_cannot_edit_message));
+                    }
+                });
             }
         } else {
             PLog.d(TAG, "revert sending failed. reason: could't find message with id %s", messageId);

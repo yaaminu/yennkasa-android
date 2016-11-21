@@ -33,6 +33,7 @@ import com.pairapp.R;
 import com.pairapp.adapter.GroupsAdapter;
 import com.pairapp.adapter.MessagesAdapter;
 import com.pairapp.data.CallBody;
+import com.pairapp.data.ContactsManager;
 import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
@@ -77,11 +78,12 @@ import static com.pairapp.messenger.MessengerBus.ON_USER_TYPING;
 import static com.pairapp.messenger.MessengerBus.START_MONITORING_USER;
 import static com.pairapp.messenger.MessengerBus.STOP_MONITORING_USER;
 import static com.pairapp.messenger.MessengerBus.TYPING;
+import static com.pairapp.ui.UnknownContactFragment.*;
 
 
 @SuppressWarnings({"ConstantConditions"})
 public class ChatActivity extends MessageActivity implements View.OnClickListener,
-        AbsListView.OnScrollListener, AdapterView.OnItemLongClickListener {
+        AbsListView.OnScrollListener, AdapterView.OnItemLongClickListener, UserProvider {
     public static final String EXTRA_PEER_ID = "peer id";
     private static final String TAG = ChatActivity.class.getSimpleName();
     private static final int ADD_USERS_REQUEST = 0x5;
@@ -98,6 +100,8 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public static final String WAS_TYPING = "wasTyping";
     public static final String SCROLL_POSITION = "scrollPosition";
     private static final String SAVED_MESSAGES_MESSAGE_BOX = "saved.Messages.message.box";
+    public static final String EXTRA_REGISTERED = "registered";
+    public static final String EXTRA_NAME = "name";
     private int cursor = -1;
     private boolean wasTyping = false;
     private final MessagesAdapter.Delegate delegate = new MessagesAdapter.Delegate() {
@@ -246,6 +250,18 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        messageConversationRealm = Message.REALM(this);
+        usersRealm = User.Realm(this);
+        Bundle bundle = getIntent().getExtras();
+        String peerId = bundle.getString(EXTRA_PEER_ID);
+        boolean isKnowToBeUnRegistered = bundle.getBoolean(EXTRA_REGISTERED, false);
+        if (!isKnowToBeUnRegistered) {
+            peer = userManager.fetchUserIfRequired(usersRealm, peerId, true);
+        } else {
+            String name = bundle.getString(EXTRA_NAME);
+            peer = createUser(peerId, name, true);
+        }
+
         setContentView(R.layout.activity_chat);
         ButterKnife.bind(this);
         handler = new Handler();
@@ -255,9 +271,19 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         ViewUtils.setTypeface(messageEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         ViewUtils.hideViews(sendButton);
 
-        messageConversationRealm = Message.REALM(this);
-        usersRealm = User.Realm(this);
         handleIntent();
+    }
+
+    private User createUser(String peerId, String name, boolean isInContacts) {
+        User user = new User();
+        user.setName(name);
+        user.setUserId(peerId);
+        user.setAccountCreated(System.currentTimeMillis());
+        user.setDP("avartar_empty");
+        user.setType(User.TYPE_NORMAL_USER);
+        user.setCountry("");
+        user.setInContacts(isInContacts);
+        return user;
     }
 
     @Override
@@ -267,9 +293,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     }
 
     private void handleIntent() {
-        Bundle bundle = getIntent().getExtras();
-        String peerId = bundle.getString(EXTRA_PEER_ID);
-        peer = userManager.fetchUserIfRequired(usersRealm, peerId, true);
         String peerName = peer.getName();
         //noinspection ConstantConditions
         final ActionBar actionBar = getSupportActionBar();
@@ -289,7 +312,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                     .or()
                     .beginGroup()
                     .equalTo(Message.FIELD_FROM, mainUserId)
-                    .equalTo(Message.FIELD_TO, peerId)
+                    .equalTo(Message.FIELD_TO, peer.getUserId())
                     .endGroup();
         }
         messages = messageQuery.findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.ASCENDING, Message.FIELD_TYPE, Sort.DESCENDING);
@@ -530,7 +553,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             } else {
                 menu.findItem(R.id.action_forward).setVisible(can4ward);
             }
-            menu.findItem(R.id.action_revert_send).setVisible(Message.canRevert(message));
             menu.findItem(R.id.action_edit_sent).setVisible(Message.canEdit(message));
         }
     }
@@ -593,9 +615,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                 }
             }
             return true;
-        } else if (itemId == R.id.action_revert_send) {
-            postEvent(Event.create(MessengerBus.REVERT_SENDING, null, message.getId()));
-            return true;
         } else if (itemId == R.id.action_edit_sent) {
             messageEt.setText(message.getMessageBody());
             messageEt.setSelection(message.getMessageBody().length());
@@ -621,7 +640,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         final boolean wasLastForTheDay = nextToCurrMessage == null || Message.isDateMessage(nextToCurrMessage);
         final Message deletedMessage = Message.copy(currMessage);
         currMessage.deleteFromRealm();
-        postEvent(Event.create(MessengerBus.REVERT_SENDING, null, deletedMessage.getId()));
+        if (deletedMessage.getState() == Message.STATE_PENDING) {
+            postEvent(Event.create(MessengerBus.REVERT_SENDING, null, deletedMessage.getId()));
+        }
         if (Message.isDateMessage(previousToCurrMessage) &&
                 wasLastForTheDay) {
             previousToCurrMessage.deleteFromRealm(); //this will be a date message so delete it as there is no message for that day
@@ -869,5 +890,21 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @OnClick(R.id.ib_attach_more)
     public void attachMore(View view) {
         UiHelpers.attach(this);
+    }
+
+    @Override
+    public User currentUser() {
+        return peer;
+    }
+
+    @Override
+    public boolean isCurrentUserRegistered() {
+        return peer.isValid();
+    }
+
+    @Override
+    public boolean hideNotice() {
+//        return currConversation.getLastMessage() != null;
+        return true;
     }
 }

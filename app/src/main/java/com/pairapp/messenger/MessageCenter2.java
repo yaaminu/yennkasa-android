@@ -46,21 +46,12 @@ public class MessageCenter2 extends FirebaseMessagingService {
                 // TODO: 11/12/2016 Aminu is this message is going to be lost? or should we persist and replay it on next startup?
                 PLog.f(TAG, "oh no!!!! no handler available to handle push message.This is very strange");
                 PLog.d(TAG, "saving unhandled message until a handler comes up");
-
-                Realm realm = UnproccessedMessage.REALM();
-                try {
-                    realm.beginTransaction();
-                    UnproccessedMessage unproccessedMessage = new UnproccessedMessage(payload, System.currentTimeMillis());
-                    realm.copyToRealm(unproccessedMessage);
-                    realm.commitTransaction();
-                } finally {
-                    realm.close();
-                }
             }
         }
     }
 
     static void replayUnProccessedMessages() {
+        if (true) return;
         synchronized (MessageCenter2.class) {
             Realm realm = UnproccessedMessage.REALM();
             try {

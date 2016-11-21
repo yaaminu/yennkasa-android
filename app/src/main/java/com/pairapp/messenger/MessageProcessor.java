@@ -1,10 +1,13 @@
 package com.pairapp.messenger;
 
 import android.app.IntentService;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.util.Pair;
 
 import com.pairapp.Errors.ErrorCenter;
@@ -26,6 +29,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -46,8 +50,9 @@ public class MessageProcessor extends IntentService {
     public static final String EDIT = "message.edit.sending";
     public static final String REVERT_RESULTS = "message.revert.sending.results";
     public static final String EDIT_RESULTS = "message.edit.sending.results";
+    public static final String REVER_OR_EDIT = "rever.or.edit";
     public static String REVERT = "message.revert.sending";
-    final Lock processLock = new ReentrantLock(true);
+    final Semaphore processLock = new Semaphore(1, true);
 
     public MessageProcessor() {
         super(TAG);
@@ -62,21 +67,18 @@ public class MessageProcessor extends IntentService {
         final long timestamp = intent.getLongExtra(TIMESTAMP, 0L);
 
 
-        TaskManager.executeNow(new Runnable() {
-            PowerManager manager = ((PowerManager) getSystemService(POWER_SERVICE));
-            final PowerManager.WakeLock wakeLock = manager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
+        PowerManager manager = ((PowerManager) getSystemService(POWER_SERVICE));
+        final PowerManager.WakeLock wakeLock = manager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
 
-            @Override
-            public void run() {
-                wakeLock.acquire();
-                try {
-                    PLog.d(TAG, "payload: %s, timestamp: %s", data, new Date(timestamp));
-                    handleMessage(data, timestamp);
-                } finally {
-                    wakeLock.release();
-                }
-            }
-        }, false);
+        try {
+            processLock.acquireUninterruptibly();
+            wakeLock.acquire();
+            PLog.d(TAG, "payload: %s, timestamp: %s", data, new Date(timestamp));
+            handleMessage(data, timestamp);
+        } finally {
+            wakeLock.release();
+            processLock.release();
+        }
     }
 
     private void handleMessage(String data, long timestamp) {
@@ -113,18 +115,32 @@ public class MessageProcessor extends IntentService {
                     realm.beginTransaction();
                     message.setState(Message.STATE_SEND_FAILED);
                     realm.commitTransaction();
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                            .setContentTitle(GenericUtils.getString(R.string.message_unsent_success))
+                            .setContentText(getString(R.string.message_reverted_description, UserManager.getInstance().getName(message.getTo())))
+                            .setAutoCancel(true)
+                            .setContentIntent(PendingIntent.getActivity(this, 1000, new Intent(), PendingIntent.FLAG_NO_CREATE))
+                            .setSmallIcon(R.drawable.ic_stat_icon);
+
+                    NotificationManagerCompat manager = NotificationManagerCompat.from(this);// getSystemService(NOTIFICATION_SERVICE));
+                    manager.notify(REVER_OR_EDIT, 100000111, builder.build());
                 }
-                ErrorCenter.reportError("revert" + jsonObject.getString(Message.FIELD_ID), GenericUtils.getString(R.string.message_unsent_success),
-                        ErrorCenter.ReportStyle.NOTIFICATION, ErrorCenter.INDEFINITE);
             } else if (EDIT_RESULTS.equals(type)) {
                 Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, jsonObject.getString(Message.FIELD_ID)).findFirst();
                 if (message != null) {
                     realm.beginTransaction();
-                    message.setState(Message.STATE_SEND_FAILED);
+                    message.setState(Message.STATE_RECEIVED);
                     realm.commitTransaction();
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                            .setContentTitle(getString(R.string.sent_message_edited))
+                            .setContentText(getString(R.string.message_edited_description, UserManager.getInstance().getName(message.getTo())))
+                            .setAutoCancel(true)
+                            .setContentIntent(PendingIntent.getActivity(this, 1000, new Intent(), PendingIntent.FLAG_NO_CREATE))
+                            .setSmallIcon(R.drawable.ic_stat_icon);
+
+                    NotificationManagerCompat manager = NotificationManagerCompat.from(this);// getSystemService(NOTIFICATION_SERVICE));
+                    manager.notify(REVER_OR_EDIT, 100000111, builder.build());
                 }
-                ErrorCenter.reportError("revert" + jsonObject.getString(Message.FIELD_ID), GenericUtils.getString(R.string.sent_message_edited),
-                        ErrorCenter.ReportStyle.NOTIFICATION, ErrorCenter.INDEFINITE);
             } else {
                 throw new JSONException("unknown message %s " + data);
             }
@@ -152,6 +168,7 @@ public class MessageProcessor extends IntentService {
             }
             realm.commitTransaction();
         }
+        NotificationManager.INSTANCE.reNotifyForReceivedMessages(this);
         postEvent(Event.create(MessengerBus.MESSAGE_EDIT_RESULTS, succeded ?
                 new Exception("failed") : null, Pair.create(messageId, jsonObject.getString(Message.FIELD_FROM))));
     }
@@ -160,7 +177,7 @@ public class MessageProcessor extends IntentService {
         boolean succeded = false;
         String messageId = jsonObject.getString(Message.FIELD_ID);
         Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
-        if (message != null) {
+        if (message != null && message.isValid()) {
             realm.beginTransaction();
             if (message.getState() != Message.STATE_SEEN) {
                 message.deleteFromRealm();
@@ -197,86 +214,80 @@ public class MessageProcessor extends IntentService {
     }
 
     private void doProcessMessage(Realm realm, Message message, long timestamp) {
+        if (message.getFrom().equals(UserManager.getMainUserId())) {
+            //how did this happen?
+            return;
+        }
+        if (!MessageUtils.isSendableMessage(message)) {
+            PLog.d(TAG, "unsupported message type %s", Message.toJSON(message));
+            return;
+        }
+
+        String peerId;
+        //for messages sent to groups, the group is always the recipient
+        //and the members the senders
+        if (Message.isGroupMessage(message)) {
+            peerId = message.getTo();
+        } else {
+            peerId = message.getFrom();
+        }
+        UserManager userManager = UserManager.getInstance();
+        if (userManager.isBlocked(peerId)) {
+            PLog.d(TAG, "message from a blocked user, dropping message");
+            PLog.d(TAG, "%s is blocked", peerId);
+            return;
+        }
+        userManager.fetchUserIfRequired(peerId);
+        //all other operations are deferred till we set up the conversation
+        Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
+
+        //WATCH OUT! don't touch this block!
+        //////////////////////////////////////////////////////////////////////////////////////////
+        //ensure the conversation and session is set up
+        // before persisting the message
+        if (conversation == null) { //create a new one
+            conversation = Conversation.newConversation(realm, peerId);
+            realm.beginTransaction();
+        } else {
+            realm.beginTransaction();
+            Conversation.newSession(realm, conversation);
+        }
+        ///////////////////////////////////////////////////////////////////////////////////////////
+        Message newestMessage = realm.where(Message.class)
+                .equalTo(Message.FIELD_TO, peerId)
+                .greaterThan(Message.FIELD_DATE_COMPOSED, timestamp).findFirst();
+
+        //only use the server date for the message if there is no message on our side newer that it.
+        message.setDateComposed(newestMessage == null ? new Date(Math.min(System.currentTimeMillis(), timestamp)) : new Date());
+
+        message.setState(Message.STATE_RECEIVED);
+        //if user has invalid date settings
+        conversation.setLastActiveTime(new Date(Math.max(timestamp, System.currentTimeMillis())));
         try {
-            processLock.lock();
-            if (message.getFrom().equals(UserManager.getMainUserId())) {
-                //how did this happen?
-                return;
+            message = realm.copyToRealm(message);
+            conversation.setLastMessage(message);
+        } catch (RealmPrimaryKeyConstraintException primaryKey) {
+            //lets eat up this exception
+            realm.cancelTransaction();
+            PLog.d(TAG, primaryKey.getMessage());
+            PLog.d(TAG, "failed to process message");
+            return;
+        }
+        conversation.setSummary(""); //ui elements must detect this
+        message = Message.copy(message);
+        if (!conversation.isActive()) { //hopefully we might be able to void race conditions
+            LiveCenter.incrementUnreadMessageForPeer(conversation.getPeerId());
+        }
+        realm.commitTransaction();
+        NotificationManager.INSTANCE.onNewMessage(this, message);
+        postEvent(Event.create(MESSAGE_RECEIVED, null, message.getId()));
+        if (!Message.isTextMessage(message) && Worker.getCurrentActiveDownloads() < Worker.MAX_PARRALLEL_DOWNLOAD) {
+            if ((ConnectionUtils.isWifiConnected()
+                    && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_WIFI, false))
+                    || (ConnectionUtils.isMobileConnected()
+                    && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_MOBILE, false))) {
+                Worker.download(this, message, true);
             }
-            if (!MessageUtils.isSendableMessage(message)) {
-                PLog.d(TAG, "unsupported message type %s", Message.toJSON(message));
-                return;
-            }
-
-            String peerId;
-            //for messages sent to groups, the group is always the recipient
-            //and the members the senders
-            if (Message.isGroupMessage(message)) {
-                peerId = message.getTo();
-            } else {
-                peerId = message.getFrom();
-            }
-            UserManager userManager = UserManager.getInstance();
-            if (userManager.isBlocked(peerId)) {
-                PLog.d(TAG, "message from a blocked user, dropping message");
-                PLog.d(TAG, "%s is blocked", peerId);
-                return;
-            }
-            userManager.fetchUserIfRequired(peerId);
-            //all other operations are deferred till we set up the conversation
-            Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
-
-            //WATCH OUT! don't touch this block!
-            //////////////////////////////////////////////////////////////////////////////////////////
-            //ensure the conversation and session is set up
-            // before persisting the message
-            if (conversation == null) { //create a new one
-                conversation = Conversation.newConversation(realm, peerId);
-                realm.beginTransaction();
-            } else {
-                realm.beginTransaction();
-                Conversation.newSession(realm, conversation);
-            }
-            ///////////////////////////////////////////////////////////////////////////////////////////
-            Message newestMessage = realm.where(Message.class)
-                    .equalTo(Message.FIELD_TO, peerId)
-                    .greaterThan(Message.FIELD_DATE_COMPOSED, timestamp).findFirst();
-
-            //only use the server date for the message if there is no message on our side newer that it.
-            message.setDateComposed(newestMessage == null ? new Date(timestamp) : new Date());
-
-            message.setState(Message.STATE_RECEIVED);
-            //if user has invalid date settings
-            conversation.setLastActiveTime(new Date(Math.max(timestamp, System.currentTimeMillis())));
-            try {
-                message = realm.copyToRealm(message);
-                conversation.setLastMessage(message);
-            } catch (RealmPrimaryKeyConstraintException primaryKey) {
-                //lets eat up this exception
-                realm.cancelTransaction();
-                PLog.d(TAG, primaryKey.getMessage());
-                PLog.d(TAG, "failed to process message");
-                return;
-            }
-            conversation.setSummary(Message.isTextMessage(message) ? message.getMessageBody() : ""); //ui elements must detect this
-            message = Message.copy(message);
-            if (!conversation.isActive()) { //hopefully we might be able to void race conditions
-                LiveCenter.incrementUnreadMessageForPeer(conversation.getPeerId());
-            }
-            realm.commitTransaction();
-            NotificationManager.INSTANCE.onNewMessage(this, message);
-            postEvent(Event.create(MESSAGE_RECEIVED, null, message.getId()));
-            if (!Message.isTextMessage(message) && Worker.getCurrentActiveDownloads() < Worker.MAX_PARRALLEL_DOWNLOAD) {
-                if ((ConnectionUtils.isWifiConnected()
-                        && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_WIFI, false))
-                        || (ConnectionUtils.isMobileConnected()
-                        && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_MOBILE, false))) {
-                    Worker.download(this, message, true);
-                }
-            }
-
-        } finally {
-            processLock.unlock();
         }
     }
 

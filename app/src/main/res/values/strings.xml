@@ -361,4 +361,7 @@
     <string name="action_edit_and_send">Edit and send</string>
     <string name="message_unsent_success">Message unsent successfully</string>
     <string name="sent_message_edited">Message updated successfully</string>
+    <string name="message_edited_description">Your message to %s was updated successfully</string>
+    <string name="message_reverted_description">Your message to %s was reverted</string>
+    <string name="error_cannot_edit_message">Cannot edit message</string>
 </resources>

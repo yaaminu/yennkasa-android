@@ -60,8 +60,10 @@ import static com.pairapp.messenger.MessengerBus.EDIT_SENT_MESSAGE;
 import static com.pairapp.messenger.MessengerBus.ENABLE_SPEAKER;
 import static com.pairapp.messenger.MessengerBus.GET_STATUS_MANAGER;
 import static com.pairapp.messenger.MessengerBus.HANG_UP_CALL;
+import static com.pairapp.messenger.MessengerBus.MESSAGE_EDIT_RESULTS;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_PUSH_INCOMING;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_RECEIVED;
+import static com.pairapp.messenger.MessengerBus.MESSAGE_REVERT_RESULTS;
 import static com.pairapp.messenger.MessengerBus.MESSAGE_SEEN;
 import static com.pairapp.messenger.MessengerBus.MUTE_CALL;
 import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
@@ -209,7 +211,7 @@ public class PairAppClient extends Service {
                     MESSAGE_RECEIVED, MESSAGE_SEEN,
                     ON_MESSAGE_DELIVERED, ON_MESSAGE_SEEN,
                     SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH, GET_STATUS_MANAGER, CLEAR_NEW_MESSAGE_NOTIFICATION,
-                    REVERT_SENDING, EDIT_SENT_MESSAGE,
+                    REVERT_SENDING, EDIT_SENT_MESSAGE, MESSAGE_REVERT_RESULTS, MESSAGE_EDIT_RESULTS,
                     VOICE_CALL_USER, VIDEO_CALL_USER, HANG_UP_CALL, ANSWER_CALL, ENABLE_SPEAKER, MUTE_CALL,
                     MESSAGE_PUSH_INCOMING, ON_CALL_PUSH_PAYLOAD_RECEIVED);
             isClientStarted.set(true);

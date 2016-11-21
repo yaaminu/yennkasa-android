@@ -1029,7 +1029,7 @@ public class ParseClient implements UserApiV2 {
             return requestForToken(pushID, false);
         } catch (ParseException e) {
             PLog.d(TAG, e.getMessage(), e);
-            throw new PairappException(e.getMessage(), "unknown");
+            throw new PairappException(e.getMessage(), e.getCode() + "");
         }
     }
 

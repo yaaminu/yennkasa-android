@@ -171,14 +171,14 @@ class PairAppClientEventsListener implements EventBus.EventsListener {
                 case EDIT_SENT_MESSAGE:
                     pairAppClientInterface.editSentMessage((String) event.getData());
                     break;
-                case MessengerBus.MESSAGE_EDIT_RESULTS:
+                case MessengerBus.MESSAGE_REVERT_RESULTS:
                     //noinspection unchecked
                     Pair<String, String> editResults = (Pair<String, String>) event.getData();
                     assert editResults != null;
                     //noinspection ThrowableResultOfMethodCallIgnored
                     pairAppClientInterface.notifyRevertResults(editResults.first, editResults.second, event.getError() != null);
                     break;
-                case MessengerBus.MESSAGE_REVERT_RESULTS:
+                case MessengerBus.MESSAGE_EDIT_RESULTS:
                     //noinspection unchecked
                     Pair<String, String> revertResults = (Pair<String, String>) event.getData();
                     assert revertResults != null;

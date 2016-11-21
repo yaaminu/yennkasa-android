@@ -106,7 +106,6 @@ class MessageQueueItemDataSource implements QueueDataSource {
             realm.beginTransaction();
             Sendable ret = realm.where(Sendable.class)
                     .equalTo(FIELD_INDEX, item.getIndex())
-                    .equalTo(FIELD_PROCESSING, false)
                     .findFirst();
             if (ret != null) {
                 ret.deleteFromRealm();
