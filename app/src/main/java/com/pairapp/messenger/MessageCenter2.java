@@ -1,6 +1,8 @@
 package com.pairapp.messenger;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Debug;
 import android.provider.Settings;
 
@@ -8,6 +10,7 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.pairapp.BuildConfig;
 import com.pairapp.data.UnproccessedMessage;
+import com.pairapp.data.UserManager;
 import com.pairapp.net.sockets.MessageParser;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
@@ -16,10 +19,13 @@ import com.pairapp.util.PLog;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
 import io.realm.Sort;
+import rx.functions.Action1;
 
 import static com.pairapp.messenger.MessengerBus.*;
 
@@ -35,37 +41,32 @@ public class MessageCenter2 extends FirebaseMessagingService {
     public void onMessageReceived(RemoteMessage remoteMessage) {
         String payload = remoteMessage.getData().get(PAYLOAD);
         PLog.d(TAG, "push message received %s", payload);
-        processPayload(payload);
+        if (UserManager.getInstance().isUserVerified()) {
+            processPayload(this, payload);
+        } else {
+            PLog.f(TAG, "user is not verified, but recieved push!!!");
+            if (BuildConfig.DEBUG) {
+                throw new RuntimeException("push enabled when user is not verified");
+            }
+        }
     }
 
-    private static void processPayload(String payload) {
+    private static void processPayload(Context context, String payload) {
         synchronized (MessageCenter2.class) {
             GenericUtils.ensureNotEmpty(payload);
             if (!get(PAIRAPP_CLIENT_POSTABLE_BUS)
                     .post(Event.create(MESSAGE_PUSH_INCOMING, null, payload))) {
                 // TODO: 11/12/2016 Aminu is this message is going to be lost? or should we persist and replay it on next startup?
                 PLog.f(TAG, "oh no!!!! no handler available to handle push message.This is very strange");
-                PLog.d(TAG, "saving unhandled message until a handler comes up");
-            }
-        }
-    }
-
-    static void replayUnProccessedMessages() {
-        if (true) return;
-        synchronized (MessageCenter2.class) {
-            Realm realm = UnproccessedMessage.REALM();
-            try {
-                realm.beginTransaction();
-                RealmResults<UnproccessedMessage> messages = realm.where(UnproccessedMessage.class)
-                        .findAllSorted(UnproccessedMessage.FIELD_DATE_CREATED, Sort.ASCENDING); //process older messages first
-                for (UnproccessedMessage message : messages) {
-                    if (get(PAIRAPP_CLIENT_POSTABLE_BUS).post(Event.create(MESSAGE_PUSH_INCOMING, null, message.getPayload()))) {
-                        message.deleteFromRealm();
-                    }
+                PLog.f(TAG, "starting handler if possible");
+                PairAppClient.startIfRequired(context);
+                //keep looping till we are able to process this message
+                try {
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    PLog.e(TAG, e.getMessage(), e);
                 }
-                realm.commitTransaction();
-            } finally {
-                realm.close();
+                processPayload(context, payload);
             }
         }
     }

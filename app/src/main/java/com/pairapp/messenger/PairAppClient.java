@@ -220,10 +220,6 @@ public class PairAppClient extends Service {
                     MESSAGE_PUSH_INCOMING, ON_CALL_PUSH_PAYLOAD_RECEIVED);
             isClientStarted.set(true);
             NotificationManager.INSTANCE.reNotifyForReceivedMessages(this);
-
-            //always ensure this is called, so on application crashes, to handle
-            //cloud push messages that were delivered while our app was down
-            processAllUnProccessedMessages();
         }
     }
 
@@ -240,11 +236,6 @@ public class PairAppClient extends Service {
             return UserManager.getInstance().getNewAuthTokenSync();
         }
     };
-
-    private void processAllUnProccessedMessages() {
-        MessageCenter2.replayUnProccessedMessages();
-    }
-
 
     private synchronized void shutDown() {
         ThreadUtils.ensureNotMain();
