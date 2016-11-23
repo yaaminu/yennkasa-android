@@ -1778,8 +1778,9 @@ public final class UserManager {
                 return name;
             }
             realm.close();
+            return PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO());
         }
-        return PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO());
+        return userName;
     }
 
     @SuppressWarnings("unused")
