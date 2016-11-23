@@ -5,6 +5,7 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioAttributes;
+import android.media.AudioManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -314,20 +315,24 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     public static final int VIBRATION_DURATION = 150;
 
     private static void vibrateIfAllowed(Context context) {
-        if (UserManager.getInstance().getBoolPref(UserManager.VIBRATE, false)) {
-            PLog.v(TAG, "vibrating....");
-            Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                if (vibrator.hasVibrator()) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        AudioAttributes audioAttributes = new AudioAttributes.Builder().setFlags(AudioAttributes.USAGE_NOTIFICATION).build();
-                        doVibrate(vibrator, audioAttributes);//.vibrate(VIBRATION_DURATION, audioAttributes);
-                    } else {
-                        doVibrate(vibrator, null);
+        AudioManager manager = ((AudioManager) context.getSystemService(AUDIO_SERVICE));
+        int ringerMode = manager.getRingerMode();
+        if (ringerMode == AudioManager.RINGER_MODE_VIBRATE || ringerMode == AudioManager.RINGER_MODE_NORMAL) {
+            if (UserManager.getInstance().getBoolPref(UserManager.VIBRATE, false)) {
+                PLog.v(TAG, "vibrating....");
+                Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+                    if (vibrator.hasVibrator()) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            AudioAttributes audioAttributes = new AudioAttributes.Builder().setFlags(AudioAttributes.USAGE_NOTIFICATION).build();
+                            doVibrate(vibrator, audioAttributes);//.vibrate(VIBRATION_DURATION, audioAttributes);
+                        } else {
+                            doVibrate(vibrator, null);
+                        }
                     }
+                } else {
+                    doVibrate(vibrator, null);
                 }
-            } else {
-                doVibrate(vibrator, null);
             }
         }
     }

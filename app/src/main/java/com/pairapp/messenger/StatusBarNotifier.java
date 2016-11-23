@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.media.AudioAttributes;
+import android.media.AudioManager;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -127,14 +128,18 @@ class StatusBarNotifier {
     }
 
     public void vibrateIfAllowed(final Context context) {
-        if (UserManager.getInstance().getBoolPref(UserManager.VIBRATE, false)) {
-            doVibrate(context);
-            timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    doVibrate(context);
-                }
-            }, 500);
+        AudioManager manager = ((AudioManager) context.getSystemService(Context.AUDIO_SERVICE));
+        int ringerMode = manager.getRingerMode();
+        if (ringerMode == AudioManager.RINGER_MODE_VIBRATE || ringerMode == AudioManager.RINGER_MODE_NORMAL) {
+            if (UserManager.getInstance().getBoolPref(UserManager.VIBRATE, false)) {
+                doVibrate(context);
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        doVibrate(context);
+                    }
+                }, 500);
+            }
         }
     }
 

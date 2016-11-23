@@ -5,7 +5,10 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -245,6 +248,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         }
     };
     private boolean editingMessage = false;
+    private MediaPlayer player;
 
 
     @Override
@@ -745,28 +749,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         //noinspection StatementWithEmptyBody
         if (message.getTo().equals(peer.getUserId()) || message.getFrom().equals(peer.getUserId())
                 || peer.getName().equals(sender)) {
-            if (!playerPlaying) {
-                TaskManager.executeNow(new Runnable() {
-                    @Override
-                    public void run() {
-                        playerPlaying = true;
-                        final MediaPlayer player = new MediaPlayer();
-                        try {
-                            player.reset();
-                            player.setOnCompletionListener(completionListener);
-                            AssetFileDescriptor fd = getResources().openRawResourceFd(R.raw.sound_a);
-                            player.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
-                            player.prepare();
-                            fd.close();
-                            player.setLooping(false);
-                            player.setVolume(1f, 1f);
-                            player.start();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }, false);
-            }
+            playTone();
         } else {
             super.notifyUser(this, message, sender);
         }
@@ -777,8 +760,32 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         public void onCompletion(MediaPlayer mp) {
             mp.release();
             playerPlaying = false;
+            player = null;
         }
     };
+
+    private void playTone() {
+        AudioManager manager = ((AudioManager) getSystemService(AUDIO_SERVICE));
+        if (userManager.getBoolPref(UserManager.IN_APP_NOTIFICATIONS, true) &&
+                manager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL) {
+            if (player == null) {
+                player = new MediaPlayer();
+            }
+            try {
+                player.reset();
+                player.setOnCompletionListener(completionListener);
+                AssetFileDescriptor fd = getResources().openRawResourceFd(R.raw.sound_a);
+                player.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength());
+                player.prepare();
+                fd.close();
+                player.setLooping(false);
+                player.setVolume(1f, 1f);
+                player.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     public void onTyping() {
         getSupportActionBar().setSubtitle(getString(R.string.writing));

@@ -50,15 +50,19 @@ class AudioPlayer {
     private final MediaPlayer.OnCompletionListener onCompletionListener = new MediaPlayer.OnCompletionListener() {
         @Override
         public void onCompletion(MediaPlayer mp) {
-            mp.release();
+            synchronized (AudioPlayer.this) {
+                mp.release();
+                player = null;
+            }
         }
     };
 
-    void playRingtone() {
-        vibrateIfAllowed();
+    synchronized void playRingtone() {
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        int ringerMode = audioManager.getRingerMode();
+        vibrateIfAllowed(ringerMode);
         // Honour silent mode
-        switch (audioManager.getRingerMode()) {
+        switch (ringerMode) {
             case AudioManager.RINGER_MODE_NORMAL:
                 if (player != null) {
                     if (player.isPlaying()) {
@@ -74,6 +78,8 @@ class AudioPlayer {
                     player.prepare();
                 } catch (IOException e) {
                     Log.e(LOG_TAG, "Coulds not setup media player for ringtone");
+                    Log.e(LOG_TAG, e.getMessage(), e);
+                    player.release();
                     player = null;
                     return;
                 }
@@ -84,18 +90,20 @@ class AudioPlayer {
 
     }
 
-    public void vibrateIfAllowed() {
-        if (UserManager.getInstance().getBoolPref(UserManager.VIBRATE, false)) {
-            if (timer != null) {
-                timer.cancel();
-            }
-            timer = new Timer();
-            timer.scheduleAtFixedRate(new TimerTask() {
-                @Override
-                public void run() {
-                    doVibrate();
+    public void vibrateIfAllowed(int ringerMode) {
+        if (ringerMode == AudioManager.RINGER_MODE_VIBRATE || ringerMode == AudioManager.RINGER_MODE_NORMAL) {
+            if (UserManager.getInstance().getBoolPref(UserManager.VIBRATE, false)) {
+                if (timer != null) {
+                    timer.cancel();
                 }
-            }, 100, 1500);
+                timer = new Timer();
+                timer.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        doVibrate();
+                    }
+                }, 100, 1500);
+            }
         }
     }
 
@@ -116,7 +124,7 @@ class AudioPlayer {
         }
     }
 
-    void stopRingtone() {
+    synchronized void stopRingtone() {
         if (player != null) {
             player.stop(); //will be released in the OnCompletionListener
             player = null;
