@@ -10,6 +10,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.util.Pair;
 
 import com.pairapp.BuildConfig;
 import com.pairapp.Errors.PairappException;
@@ -195,7 +196,10 @@ public class PairAppClient extends Service {
             incomingMessageProcessor = new IncomingMessageProcessor(statusManager, postableBus());
             messagePacker.observe().subscribe(incomingMessageProcessor);
 
-            callController = CallManager.create(getApplication(), currentUserId, callManagerBus, BuildConfig.DEBUG);
+            callController = CallManager.create(getApplication(),
+                    currentUserId, callManagerBus,
+                    registrationTokenSource,
+                    BuildConfig.DEBUG);
             callController.setup();
 
             eventsListener = new PairAppClientEventsListener(new PairAppClientInterface(this, callController, sender, messagePacker,
@@ -223,7 +227,7 @@ public class PairAppClient extends Service {
         }
     }
 
-    private final SenderImpl.Authenticator authenticator = new SenderImpl.Authenticator() {
+    private static final SenderImpl.Authenticator authenticator = new SenderImpl.Authenticator() {
         @NonNull
         @Override
         public String getToken() {
@@ -424,4 +428,11 @@ public class PairAppClient extends Service {
     static EventBus listenableBus() {
         return listenableBus;
     }
+
+    static final CallManager.RegistrationTokenSource registrationTokenSource = new CallManager.RegistrationTokenSource() {
+        @Override
+        public Pair<String, Long> getSinchRegistrationToken() {
+            return UserManager.getInstance().getSinchRegistrationToken();
+        }
+    };
 }

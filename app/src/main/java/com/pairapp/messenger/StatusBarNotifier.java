@@ -126,7 +126,7 @@ class StatusBarNotifier {
         MediaUtils.playTone(context, uri);
     }
 
-    private void vibrateIfAllowed(final Context context) {
+    public void vibrateIfAllowed(final Context context) {
         if (UserManager.getInstance().getBoolPref(UserManager.VIBRATE, false)) {
             doVibrate(context);
             timer.schedule(new TimerTask() {

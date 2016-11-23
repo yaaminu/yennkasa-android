@@ -6,6 +6,7 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
+import android.support.v4.util.Pair;
 import android.widget.Toast;
 
 import com.pairapp.util.ConnectionUtils;
@@ -26,8 +27,7 @@ import java.util.Map;
 public class CallManager implements CallController {
 
     static final String TAG = CallManager.class.getSimpleName();
-    private static final String APP_KEY = "8a46c54f-0f44-481a-8727-63aa0561e6a7";
-    private static final String APP_SECRET = "uORBRxz9m06k993JP85kIw==";
+    public static final String APPLICATION_KEY = "8a46c54f-0f44-481a-8727-63aa0561e6a7";
 
     @NonNull
     private final Application application;
@@ -37,28 +37,34 @@ public class CallManager implements CallController {
     private final SinchClient client;
     @NonNull
     private final CallCenter callCenter;
+    private final RegistrationTokenSource source;
 
-    private CallManager(@NonNull Application application, @NonNull String currUserId, @NonNull EventBus bus, boolean debug) {
+    private CallManager(@NonNull Application application, @NonNull String currUserId, @NonNull EventBus bus, @NonNull RegistrationTokenSource source, boolean debug) {
         this.application = application;
         this.bus = bus;
 
+        this.source = source;
         client = Sinch.getSinchClientBuilder()
                 .context(application)
                 .environmentHost(debug ? "sandbox.sinch.com" : "app.sinch.com")
-                .applicationKey(APP_KEY)
-                .applicationSecret(APP_SECRET)
                 .userId(currUserId)
+                .applicationKey(APPLICATION_KEY)
                 .callerIdentifier(currUserId)
                 .build();
         callCenter = new CallCenter(bus, client, new AudioPlayer(application));
+    }
+
+    public interface RegistrationTokenSource {
+        Pair<String, Long> getSinchRegistrationToken();
     }
 
     @NonNull
     public static CallController create(@NonNull Application context,
                                         @NonNull String currUserId,
                                         @NonNull EventBus bus,
+                                        @NonNull RegistrationTokenSource source,
                                         boolean debug) {
-        return new CallManager(context, currUserId, bus, debug);
+        return new CallManager(context, currUserId, bus, source, debug);
     }
 
 
@@ -69,7 +75,7 @@ public class CallManager implements CallController {
         client.registerPushNotificationData(client.getLocalUserId().getBytes());
         client.setSupportActiveConnectionInBackground(false);
         client.setSupportManagedPush(false);
-        client.addSinchClientListener(new ClientListener());
+        client.addSinchClientListener(new ClientListener(source));
         client.getCallClient().addCallClientListener(callCenter);
         client.getCallClient().setRespectNativeCalls(false); // TODO: 7/15/2016 let users change this in settings
         //noinspection ConstantConditions

@@ -2,17 +2,26 @@ package com.pairapp.call;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
+import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
+import android.os.Build;
+import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.pairapp.data.UserManager;
+import com.pairapp.util.Config;
+import com.pairapp.util.PLog;
+
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * @author aminu on 7/17/2016.
@@ -20,6 +29,10 @@ import java.io.IOException;
 class AudioPlayer {
 
     static final String LOG_TAG = AudioPlayer.class.getSimpleName();
+
+    @Nullable
+    Timer timer = null;
+    public static final int VIBRATION_DURATION = 1000;
 
     @NonNull
     private final Context context;
@@ -42,6 +55,7 @@ class AudioPlayer {
     };
 
     void playRingtone() {
+        vibrateIfAllowed();
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         // Honour silent mode
         switch (audioManager.getRingerMode()) {
@@ -59,7 +73,7 @@ class AudioPlayer {
                     player.setDataSource(context, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE));
                     player.prepare();
                 } catch (IOException e) {
-                    Log.e(LOG_TAG, "Could not setup media player for ringtone");
+                    Log.e(LOG_TAG, "Coulds not setup media player for ringtone");
                     player = null;
                     return;
                 }
@@ -67,12 +81,48 @@ class AudioPlayer {
                 player.start();
                 break;
         }
+
+    }
+
+    public void vibrateIfAllowed() {
+        if (UserManager.getInstance().getBoolPref(UserManager.VIBRATE, false)) {
+            if (timer != null) {
+                timer.cancel();
+            }
+            timer = new Timer();
+            timer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    doVibrate();
+                }
+            }, 100, 1500);
+        }
+    }
+
+    static void doVibrate() {
+        PLog.v(LOG_TAG, "vibrating....");
+        Vibrator vibrator = (Vibrator) Config.getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            if (vibrator.hasVibrator()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    AudioAttributes audioAttributes = new AudioAttributes.Builder().setFlags(AudioAttributes.USAGE_NOTIFICATION).build();
+                    vibrator.vibrate(VIBRATION_DURATION, audioAttributes);
+                } else {
+                    vibrator.vibrate(VIBRATION_DURATION);
+                }
+            }
+        } else {
+            vibrator.vibrate(VIBRATION_DURATION);
+        }
     }
 
     void stopRingtone() {
         if (player != null) {
             player.stop(); //will be released in the OnCompletionListener
             player = null;
+        }
+        if (timer != null) {
+            timer.cancel();
         }
     }
 

@@ -1743,11 +1743,16 @@ public final class UserManager {
     }
 
     public String getNewAuthTokenSync() throws PairappException {
+        if (!isUserVerified()) throw new PairappException("not registered");
         return userApi.newAuthToken();
     }
 
     public void updatePushID(String newPushId) throws PairappException {
         userApi.updatePushID(newPushId);
+    }
+
+    public Pair<String, Long> getSinchRegistrationToken() {
+        return userApi.getSinchToken();
     }
 
 

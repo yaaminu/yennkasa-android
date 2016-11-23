@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.SystemClock;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.util.Pair;
@@ -45,6 +46,7 @@ import com.path.android.jobqueue.Params;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.NullInputStream;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -1046,5 +1048,22 @@ public class ParseClient implements UserApiV2 {
         } else {
             PLog.d(TAG, "no user logged in, cannot update push id");
         }
+    }
+
+    @Nullable
+    @Override
+    public Pair<String, Long> getSinchToken() {
+        ParseUser user = ParseUser.getCurrentUser();
+        boolean userVerified = user.getBoolean(FIELD_VERIFIED);
+        if (userVerified) {
+            try {
+                Map<String, ?> params = new HashMap<>(0);
+                Map<String, Object> results = ParseCloud.callFunction("genSinchToken", params);
+                return Pair.create((String) results.get("token"), (long) ((Integer) results.get("sequence")));
+            } catch (ParseException e) {
+                return null;
+            }
+        }
+        return null;
     }
 }
