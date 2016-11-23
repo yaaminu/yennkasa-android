@@ -1771,13 +1771,17 @@ public final class UserManager {
         String userName = idsAndNames.get(userId);
         if (userName == null) {
             Realm realm = User.Realm(Config.getApplicationContext());
-            User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
-            if (user != null) {
-                String name = user.getName();
-                idsAndNames.put(userId, name);
-                return name;
+            try{
+                User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
+                if (user != null) {
+                    String name = user.getName();
+                    idsAndNames.put(userId, name);
+                    return name;
+                }
             }
-            realm.close();
+            finally{
+                realm.close();
+            }
             return PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO());
         }
         return userName;
