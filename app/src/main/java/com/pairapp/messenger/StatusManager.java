@@ -1,5 +1,7 @@
 package com.pairapp.messenger;
 
+import android.os.Handler;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -8,21 +10,19 @@ import com.pairapp.net.sockets.Sender;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
 import com.pairapp.util.GenericUtils;
+import com.pairapp.util.PLog;
 import com.pairapp.util.SimpleDateUtil;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
-import rx.Observable;
-import rx.functions.Action1;
 
 /**
  * @author aminu on 6/29/2016.
  */
 public class StatusManager {
+    private static final String TAG = "StatusManager";
 
     public static final String ON_USER_ONLINE = "onUserOnline";
     public static final String ON_USER_OFFLINE = "onUserOffline";
@@ -33,17 +33,27 @@ public class StatusManager {
     public static final int WAIT_MILLIS_TYPING_ANNOUNCEMENT = 0;
     public static final int WAIT_MILLIS_STATUS_ANNOUNCMENT = 0;
     public static final int WAIT_MILLIS_MONITOR_USER = 0;
-    private volatile boolean isCurrentUserOnline = false;
+    public static final int INACTIVITY_THRESHOLD = 35000; //35 seconds
+    private static final long ONLINE_ANNOUNCEMENT_INTERVAL = 30000;//30 seconds
+    private volatile boolean currentUserStatus = false;
+
+    @Nullable
     private volatile String typingWith;
 
-    private Sender sender;
-    private MessagePacker encoder;
+    @NonNull
+    private final Sender sender;
+    @NonNull
+    private final MessagePacker encoder;
+    @NonNull
     private final EventBus broadcastBus;
+    @NonNull
+    private final Handler handler;
 
     private StatusManager(@NonNull Sender sender, @NonNull MessagePacker encoder, @NonNull EventBus broadcastBus) {
         this.sender = sender;
         this.encoder = encoder;
         this.broadcastBus = broadcastBus;
+        this.handler = new Handler();
     }
 
     static StatusManager create(@NonNull Sender sender, @NonNull MessagePacker encoder, @NonNull EventBus broadcastBus) {
@@ -51,16 +61,16 @@ public class StatusManager {
         return new StatusManager(sender, encoder, broadcastBus);
     }
 
-    synchronized void announceStatusChange(boolean online) {
-        if (this.isCurrentUserOnline == online) return; //bounce duplicate announcements
-        isCurrentUserOnline = online;
-        sender.sendMessage(createSendable(CURRENT_USER_STATUS_COLLAPSE_KEY, encoder.createStatusMessage(isCurrentUserOnline), WAIT_MILLIS_STATUS_ANNOUNCMENT));
+    synchronized void announceStatusChange(boolean currentUserStatus) {
+        if (this.currentUserStatus == currentUserStatus) return; //bounce duplicate announcements
+        this.currentUserStatus = currentUserStatus;
+        sender.sendMessage(createSendable(CURRENT_USER_STATUS_COLLAPSE_KEY, encoder.createStatusMessage(this.currentUserStatus), WAIT_MILLIS_STATUS_ANNOUNCMENT));
     }
 
     synchronized void announceStartTyping(@NonNull String userId) {
         GenericUtils.ensureNotEmpty(userId);
         typingWith = userId;
-        if (onlineSet.contains(userId) || userId.split(":").length > 1 /*groups*/) {
+        if (onlineSet.contains(userId) || userId.split(":").length > 1 /*groups*/) { //only notify online users
             sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createTypingMessage(userId, true), WAIT_MILLIS_TYPING_ANNOUNCEMENT));
         }
     }
@@ -96,18 +106,44 @@ public class StatusManager {
     private final Set<String> onlineSet = new HashSet<>(4);
     private final Map<String, Long> typingSet = new HashMap<>(4);
 
-    synchronized void handleStatusAnnouncement(@NonNull String userId, boolean isOnline) {
+    synchronized void handleStatusAnnouncement(@NonNull final String userId, boolean isOnline) {
         GenericUtils.ensureNotEmpty(userId);
         if (isOnline) {
-            if (onlineSet.add(userId) && userId.equals(typingWith)) {
+            updateAndMarkAsOnline(userId);
+            if (userId.equals(typingWith)) {
+                //noinspection ConstantConditions //typingWith cannot be null
                 announceStartTyping(typingWith);//notify the client that we are writing to it
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        synchronized (StatusManager.this) {
+                            Long then = typingSet.get(userId);
+                            if (then != null && System.currentTimeMillis() - then >= INACTIVITY_THRESHOLD) {
+                                handleTypingAnnouncement(userId, false);
+                            }
+                        }
+                    }
+                }, INACTIVITY_THRESHOLD);
             }
         } else {
+            if (typingSet.containsKey(userId)) {
+                typingSet.remove(userId);
+                broadcastBus.post(Event.create(ON_USER_STOP_TYPING, null, userId));
+            }
             onlineSet.remove(userId);
-            typingSet.remove(userId);
+            broadcastBus.post(Event.create(ON_USER_OFFLINE, null, userId));
         }
-        broadcastBus.post(Event.create(isOnline ? ON_USER_ONLINE : ON_USER_OFFLINE, null, userId));
     }
+
+    private synchronized void updateAndMarkAsOnline(@NonNull String userId) {
+        if (onlineSet.add(userId)) {
+            PLog.d(TAG, "announcing that %s os online", userId);
+            broadcastBus.post(Event.create(ON_USER_ONLINE, null, userId));
+        } else {
+            PLog.d(TAG, "%s is already online not publishing", userId);
+        }
+    }
+
 
     synchronized void handleTypingAnnouncement(@NonNull final String userId, boolean isTyping) {
         GenericUtils.ensureNotEmpty(userId);
@@ -115,24 +151,23 @@ public class StatusManager {
             typingSet.put(userId, System.currentTimeMillis());
             String userIdPart = userId.split(":")[0]; //if the typing is to a group
             if (!isOnline(userIdPart)) {
-                onlineSet.add(userIdPart);
+                updateAndMarkAsOnline(userId);
             }
-        } else {
-            typingSet.remove(userId);
-        }
-        broadcastBus.post(Event.create(isTyping ? ON_USER_TYPING : ON_USER_STOP_TYPING, null, userId));
-        if (isTyping) {
-            Observable.timer(30, TimeUnit.SECONDS).subscribe(new Action1<Long>() {
+            handler.postDelayed(new Runnable() {
                 @Override
-                public void call(Long aLong) {
+                public void run() {
                     synchronized (StatusManager.this) {
                         Long then = typingSet.get(userId);
-                        if (then != null && System.currentTimeMillis() - then > 30000/*30 seconds*/) {
+                        if (then != null && System.currentTimeMillis() - then >= INACTIVITY_THRESHOLD) {
                             handleTypingAnnouncement(userId, false);
                         }
                     }
                 }
-            });
+            }, INACTIVITY_THRESHOLD);
+            broadcastBus.post(Event.create(ON_USER_TYPING, null, userId));
+        } else {
+            typingSet.remove(userId);
+            broadcastBus.post(Event.create(ON_USER_STOP_TYPING, null, userId));
         }
     }
 
