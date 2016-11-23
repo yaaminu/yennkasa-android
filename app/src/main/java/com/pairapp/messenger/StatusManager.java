@@ -108,7 +108,7 @@ public class StatusManager {
 
     synchronized void handleStatusAnnouncement(@NonNull final String userId, boolean isOnline) {
         GenericUtils.ensureNotEmpty(userId);
-        if (isOnline) {
+        if (isOnline && !isOnline(userId)) {
             updateAndMarkAsOnline(userId);
             if (userId.equals(typingWith)) {
                 //noinspection ConstantConditions //typingWith cannot be null
