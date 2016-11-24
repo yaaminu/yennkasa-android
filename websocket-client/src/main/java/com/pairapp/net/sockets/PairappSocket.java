@@ -112,6 +112,9 @@ class PairappSocket {
                 case E:
                     PLog.e(tag, message, args);
                     break;
+                case W:
+                    PLog.w(tag, message, args);
+                    break;
                 default:
                     throw new AssertionError();
             }
