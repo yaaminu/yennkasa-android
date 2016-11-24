@@ -1810,11 +1810,11 @@ public final class UserManager {
         if (userName == null) {
             User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
             if (user != null) {
-                String name = user.getName();
-                idsAndNames.put(userId, name);
-                return name;
+                userName = user.getName();
+                idsAndNames.put(userId, userName);
+            } else {
+                userName = PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO(realm));
             }
-            return PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO(realm));
         }
         return userName;
     }
