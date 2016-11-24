@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.Looper;
@@ -121,7 +122,9 @@ class DispatcherMonitorImpl implements Dispatcher.DispatcherMonitor {
     AtomicBoolean shouldPlaySound = new AtomicBoolean(true);
 
     private synchronized void playSound() {
-        if (shouldPlaySound.getAndSet(false)) {
+        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+
+        if (audioManager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL && shouldPlaySound.getAndSet(false)) {
             new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                 @Override
                 public void run() {
