@@ -213,4 +213,13 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     public int unSeenMessagesCount(Conversation conversation) {
         return LiveCenter.getUnreadMessageFor(conversation.getPeerId());
     }
+
+    @Override
+    public void onBackPressed() {
+        if (pager.getCurrentItem() != MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT) {
+            pager.setCurrentItem(MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT, true);
+            return;
+        }
+        super.onBackPressed();
+    }
 }
