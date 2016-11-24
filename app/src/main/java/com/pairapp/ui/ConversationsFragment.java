@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ListFragment;
 import android.support.v7.app.AlertDialog;
@@ -91,6 +92,7 @@ public class ConversationsFragment extends ListFragment {
     private Callbacks interactionListener;
     private Realm userRealm;
     private ConversationAdapter conversationAdapter;
+    private Runnable cleanMessagesRunnable;
 
     interface Callbacks {
         void onConversionClicked(Conversation conversation);
@@ -261,66 +263,74 @@ public class ConversationsFragment extends ListFragment {
     private void cleanMessages(final String peerId, final Date toWhen) {
         final ProgressDialog dialogFragment = ProgressDialog.show(getActivity(), "",
                 getString(R.string.st_please_wait), true, false, null);
-        TaskManager.executeNow(new Runnable() {
-                                   @Override
-                                   public void run() {
-                                       PLog.d(TAG, "deleting messages for conversion between user and %s", peerId);
-                                       Realm realm = Message.REALM(getActivity());
-                                       realm.beginTransaction(); //blocks all writes before runnig query because of the copyOnWrite style of realm
-                                       String mainUserId = UserManager.getMainUserId();
-                                       RealmResults<Message> messages;
-                                       RealmQuery<Message> messageQuery = realm.where(Message.class);
-                                       if (UserManager.getInstance().isGroup(peerId)) {
-                                           messageQuery.equalTo(Message.FIELD_TO, peerId)
-                                                   .or()
-                                                   .equalTo(Message.FIELD_FROM, peerId);
-                                       } else {
-                                           messageQuery.beginGroup()
-                                                   .equalTo(Message.FIELD_FROM, peerId)
-                                                   .equalTo(Message.FIELD_TO, mainUserId)
-                                                   .endGroup()
-                                                   .or()
-                                                   .beginGroup()
-                                                   .equalTo(Message.FIELD_FROM, mainUserId)
-                                                   .equalTo(Message.FIELD_TO, peerId)
-                                                   .endGroup();
-                                       }
-                                       messages = messageQuery.lessThan(Message.FIELD_DATE_COMPOSED, toWhen.getTime()).findAll(); //new messages will be ignored
-                                       if (UserManager.getInstance().getBoolPref(UserManager.DELETE_ATTACHMENT_ON_DELETE, false)) {
-                                           for (Message message : messages) {
-                                               if (Message.isVideoMessage(message) || Message.isPictureMessage(message) || Message.isBinMessage(message)) {
-                                                   File file = new File(message.getMessageBody());
-                                                   if (file.delete()) {
-                                                       PLog.d(TAG, "deleted file %s", file.getAbsolutePath());
-                                                   } else {
-                                                       PLog.d(TAG, "failed to delete file: %s", file.getAbsolutePath());
-                                                   }
-                                               }
-                                           }
-                                       }
-                                       messages.deleteAllFromRealm();
-                                       Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
-                                       if (conversation != null) {
-                                           Message message = conversation.getLastMessage();
-                                           if (message != null && message.isValid()) {
-                                               message.deleteFromRealm();
-                                           }
-                                           conversation.setSummary(getString(R.string.no_message));
-                                       }
-                                       realm.commitTransaction();
-                                       realm.close();
-                                       SystemClock.sleep(1000);
-                                       getActivity().runOnUiThread(new Runnable() {
-                                           @Override
-                                           public void run() {
-                                               dialogFragment.dismiss();
-                                           }
-                                       });
-
-                                   }
-                               }
-
+        TaskManager.executeNow(getCleanMessagesRunnable(peerId, toWhen, dialogFragment)
                 , false);
+    }
+
+    @NonNull
+    private final Runnable getCleanMessagesRunnable(final String peerId, final Date toWhen, final ProgressDialog dialogFragment) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                PLog.d(TAG, "deleting messages for conversion between user and %s", peerId);
+                Realm realm = Message.REALM(getActivity()), userRealm = User.Realm(getContext());
+                try {
+                    realm.beginTransaction(); //blocks all writes before runnig query because of the copyOnWrite style of realm
+                    String mainUserId = UserManager.getMainUserId(userRealm);
+                    RealmResults<Message> messages;
+                    RealmQuery<Message> messageQuery = realm.where(Message.class);
+                    if (UserManager.getInstance().isGroup(userRealm, peerId)) {
+                        messageQuery.equalTo(Message.FIELD_TO, peerId)
+                                .or()
+                                .equalTo(Message.FIELD_FROM, peerId);
+                    } else {
+                        messageQuery.beginGroup()
+                                .equalTo(Message.FIELD_FROM, peerId)
+                                .equalTo(Message.FIELD_TO, mainUserId)
+                                .endGroup()
+                                .or()
+                                .beginGroup()
+                                .equalTo(Message.FIELD_FROM, mainUserId)
+                                .equalTo(Message.FIELD_TO, peerId)
+                                .endGroup();
+                    }
+                    messages = messageQuery.lessThan(Message.FIELD_DATE_COMPOSED, toWhen.getTime()).findAll(); //new messages will be ignored
+                    if (UserManager.getInstance().getBoolPref(UserManager.DELETE_ATTACHMENT_ON_DELETE, false)) {
+                        for (Message message : messages) {
+                            if (Message.isVideoMessage(message) || Message.isPictureMessage(message) || Message.isBinMessage(message)) {
+                                File file = new File(message.getMessageBody());
+                                if (file.delete()) {
+                                    PLog.d(TAG, "deleted file %s", file.getAbsolutePath());
+                                } else {
+                                    PLog.d(TAG, "failed to delete file: %s", file.getAbsolutePath());
+                                }
+                            }
+                        }
+                    }
+                    messages.deleteAllFromRealm();
+                    Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
+                    if (conversation != null) {
+                        Message message = conversation.getLastMessage();
+                        if (message != null && message.isValid()) {
+                            message.deleteFromRealm();
+                        }
+                        conversation.setSummary(getString(R.string.no_message));
+                    }
+                    realm.commitTransaction();
+                    SystemClock.sleep(1000);
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            dialogFragment.dismiss();
+                        }
+                    });
+
+                } finally {
+                    realm.close();
+                    userRealm.close();
+                }
+            }
+        };
     }
 
     @Override

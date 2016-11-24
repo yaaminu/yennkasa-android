@@ -29,6 +29,8 @@ import com.pairapp.util.ViewUtils;
 
 import java.util.EventListener;
 
+import io.realm.Realm;
+
 /**
  * A simple {@link Fragment} subclass.
  */
@@ -60,7 +62,7 @@ public class VerificationFragment extends Fragment {
 
     private void sendToken() {
         progressDialog.show();
-        UserManager.getInstance().sendVerificationToken(new UserManager.CallBack() {
+        UserManager.getInstance().sendVerificationToken(callback.getRealm(), new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
                 progressDialog.dismiss();
@@ -199,7 +201,7 @@ public class VerificationFragment extends Fragment {
                         });
                     } else {
                         updateProgress(getString(R.string.verifying_account_stage_2));
-                        UserManager.getInstance().verifyUser(code, token, new UserManager.CallBack() {
+                        UserManager.getInstance().verifyUser(callback.getRealm(), code, token, new UserManager.CallBack() {
                             @Override
                             public void done(Exception e) {
                                 progressDialog.dismiss();
@@ -256,7 +258,7 @@ public class VerificationFragment extends Fragment {
 
     private void resendToken() {
         progressDialog.show();
-        UserManager.getInstance().resendToken(new UserManager.CallBack() {
+        UserManager.getInstance().resendToken(callback.getRealm(), new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
                 progressDialog.dismiss();
@@ -271,5 +273,7 @@ public class VerificationFragment extends Fragment {
         void onVerified();
 
         void onBackToCLogIn();
+
+        Realm getRealm();
     }
 }

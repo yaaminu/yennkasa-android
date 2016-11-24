@@ -8,9 +8,11 @@ import com.pairapp.data.BuildConfig;
 import com.pairapp.data.CallBody;
 import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
+import com.pairapp.data.User;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
+import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
 import com.sinch.android.rtc.PushPair;
 import com.sinch.android.rtc.SinchClient;
@@ -46,6 +48,7 @@ class CallCenter implements CallClientListener, VideoCallListener {
     private static final String HEADER_CONFERENCE_VOICE_CALL = "cvo";
     public static final String HEADER_VOICE_CALL = "vo";
     private final EventBus broadCastBus;
+    private final String currentUserId;
     private boolean isCallOngoing = false;
     private final AudioPlayer player;
     private long currentCallStart = 0;
@@ -58,10 +61,13 @@ class CallCenter implements CallClientListener, VideoCallListener {
     @Nullable
     private Event remoteVideoTrackEvent, localVideoTrackEvent;
 
-    CallCenter(@NonNull EventBus bus, @NonNull SinchClient client, @NonNull AudioPlayer player) {
+    CallCenter(@NonNull EventBus bus, @NonNull SinchClient client, @NonNull AudioPlayer player, @NonNull String currentUserId) {
+        GenericUtils.ensureNotNull(bus, client, player);
+        GenericUtils.ensureNotEmpty(currentUserId);
         this.broadCastBus = bus;
         this.player = player;
         this.clientWeakReference = new WeakReference<>(client);
+        this.currentUserId = currentUserId;
     }
 
     @Override
@@ -113,25 +119,26 @@ class CallCenter implements CallClientListener, VideoCallListener {
         player.stopRingtone();
         player.stopProgressTone();
         int callType = getCallType(call);
-        Realm realm = Message.REALM();
-        Conversation conversation = Conversation.newConversation(realm, call.getRemoteUserId());
+        Realm realm = Message.REALM(), userRealm = User.Realm(Config.getApplicationContext());
+        Conversation conversation = Conversation.newConversation(realm, currentUserId, call.getRemoteUserId());
         try {
             CallBody callBody = new CallBody(call.getCallId(),
                     currentCallStart == 0 ? 0 : (int) (System.currentTimeMillis() - currentCallStart),
                     ourCallTypeToCallBodyCallType(callType));
             boolean isOutGoing = call.getDirection() == CallDirection.OUTGOING;
             realm.beginTransaction();
-            Message lastMessage = Message.makeNewCallMessageAndPersist(realm, call.getRemoteUserId(), System.currentTimeMillis(), callBody, isOutGoing);
+            Message lastMessage = Message.makeNewCallMessageAndPersist(realm, currentUserId, call.getRemoteUserId(), System.currentTimeMillis(), callBody, isOutGoing);
             if (!isOutGoing && call.getDetails().getEndCause() != CallEndCause.DENIED) {
                 lastMessage.setState(Message.STATE_RECEIVED);
             }
             conversation.setLastMessage(lastMessage);
-            String summary = Message.getCallSummary(Config.getApplicationContext(), lastMessage);
+            String summary = Message.getCallSummary(Config.getApplicationContext(), userRealm, lastMessage);
             conversation.setSummary(summary);
             realm.commitTransaction();
         } finally {
             currentCallStart = 0;
             realm.close();
+            userRealm.close();
         }
         SinchClient client = clientWeakReference.get();
         if (client != null) {

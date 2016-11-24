@@ -51,7 +51,7 @@ public class CallManager implements CallController {
                 .applicationKey(APPLICATION_KEY)
                 .callerIdentifier(currUserId)
                 .build();
-        callCenter = new CallCenter(bus, client, new AudioPlayer(application));
+        callCenter = new CallCenter(bus, client, new AudioPlayer(application), currUserId);
     }
 
     public interface RegistrationTokenSource {

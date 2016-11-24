@@ -48,6 +48,16 @@ public class StatusManagerTest {
         }
 
         @Override
+        public boolean unsendMessage(Sendable sendable) {
+            return false;
+        }
+
+        @Override
+        public void updateSentMessage(Sendable sendable) {
+
+        }
+
+        @Override
         public void addSendListener(SendListener sendListener) {
 
         }

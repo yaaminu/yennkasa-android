@@ -194,7 +194,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         dialog.setMessage(getString(R.string.st_please_wait));
         dialog.setCancelable(false);
         dialog.show();
-        UserManager.getInstance().dissolveGroup(user, new UserManager.CallBack() {
+        UserManager.getInstance().dissolveGroup(realm, user, new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
                 dialog.dismiss();
@@ -293,7 +293,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         //noinspection deprecation
         ActionBar actionBar = ((ActionBarActivity) getActivity()).getSupportActionBar();
         //noinspection ConstantConditions
-        if (userManager.isCurrentUser(user.getUserId())) {
+        if (userManager.isCurrentUser(realm, user.getUserId())) {
             //noinspection ConstantConditions
             actionBar.setTitle(R.string.you);
             view.findViewById(R.id.user_action_panel).setVisibility(View.GONE); //we don't need this
@@ -329,7 +329,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         if (user.getType() == User.TYPE_NORMAL_USER
                 && !user.getInContacts()
-                && !userManager.isCurrentUser(user.getUserId())
+                && !userManager.isCurrentUser(realm, user.getUserId())
                 //FIXME fix this issue
                 //quick fix for inproperly prcessed groups
                 && !user.getUserId().contains("@")) {
@@ -364,7 +364,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
 
     private void setUpViewSingleUserWay() {
-        if (userManager.isCurrentUser(user.getUserId())) {
+        if (userManager.isCurrentUser(realm, user.getUserId())) {
             callButton.setVisibility(View.GONE);
             sendMessageButton.setVisibility(View.GONE);
             ((View) mutualGroupsOrMembersTvTitle.getParent()).setVisibility(View.GONE);
@@ -391,14 +391,14 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
         deleteGroup.setVisibility(View.GONE);
         //noinspection ConstantConditions
         phoneOrAdminTitle.setText(R.string.phone);
-        phoneInlocalFormat = PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId(), userManager.getUserCountryISO());
+        phoneInlocalFormat = PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId(), userManager.getUserCountryISO(realm));
         userPhoneOrAdminName.setText(phoneInlocalFormat);
     }
 
     private void setUpViewsGroupWay() {
         //noinspection ConstantConditions
         callButton.setVisibility(View.GONE);
-        if (userManager.isAdmin(user.getUserId())) {
+        if (userManager.isAdmin(realm, user.getUserId())) {
             deleteGroup.setVisibility(View.VISIBLE);
             deleteGroup.setOnClickListener(clickListener);
             exitGroupButton.setVisibility(View.GONE);
@@ -413,7 +413,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
         // TODO: 8/25/2015 add a lock drawable to the right of this text view
         phoneOrAdminTitle.setText(R.string.admin);
-        userPhoneOrAdminName.setText(userManager.isAdmin(user.getUserId())
+        userPhoneOrAdminName.setText(userManager.isAdmin(realm, user.getUserId())
                 ? getString(R.string.you) : user.getAdmin().getName());
 
         ((View) phoneOrAdminTitle.getParent()).setOnClickListener(new View.OnClickListener() {
@@ -454,7 +454,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     public void onChange() {
         try {
             userName.setText(user.getName());
-            if (!userManager.isGroup(user.getUserId())) {
+            if (!userManager.isGroup(realm, user.getUserId())) {
                 setUpMutualMembers();
             }
             if (changingDp) {
@@ -491,7 +491,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
             }
         } else {
             final UserManager instance = UserManager.getInstance();
-            if (instance.isGroup(user.getUserId()) || instance.isCurrentUser(user.getUserId()))
+            if (instance.isGroup(realm, user.getUserId()) || instance.isCurrentUser(realm, user.getUserId()))
                 ViewUtils.showViews(changeDpButton, changeDpButton2);
         }
     }
@@ -624,7 +624,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
 
     private void leaveGroup() {
         progressDialog.show();
-        userManager.leaveGroup(user.getUserId(), new UserManager.CallBack() {
+        userManager.leaveGroup(realm, user.getUserId(), new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
                 progressDialog.dismiss();

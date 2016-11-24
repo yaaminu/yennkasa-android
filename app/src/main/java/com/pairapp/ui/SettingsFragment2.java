@@ -11,7 +11,11 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.pairapp.R;
+import com.pairapp.data.User;
+import com.pairapp.data.UserManager;
 import com.pairapp.util.UiHelpers;
+
+import io.realm.Realm;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -41,21 +45,26 @@ public class SettingsFragment2 extends ListFragment {
 
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
-        switch (position) {
-            case 0:
-                UiHelpers.gotoProfileActivity(getContext());
-                break;
-            case 1:
-                UiHelpers.gotoSettingsActivity(getContext(),1);
-                break;
-            case 2:
-                UiHelpers.gotoSettingsActivity(getContext(),2);
-                break;
-            case 3:
-                UiHelpers.gotoSettingsActivity(getContext(),3);
-                break;
-            default:
-                throw new AssertionError();
+        Realm userRealm = User.Realm(v.getContext());
+        try {
+            switch (position) {
+                case 0:
+                    UiHelpers.gotoProfileActivity(getContext(), UserManager.getMainUserId(userRealm));
+                    break;
+                case 1:
+                    UiHelpers.gotoSettingsActivity(getContext(), 1);
+                    break;
+                case 2:
+                    UiHelpers.gotoSettingsActivity(getContext(), 2);
+                    break;
+                case 3:
+                    UiHelpers.gotoSettingsActivity(getContext(), 3);
+                    break;
+                default:
+                    throw new AssertionError();
+            }
+        } finally {
+            userRealm.close();
         }
     }
 }

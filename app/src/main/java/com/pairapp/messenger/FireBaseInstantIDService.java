@@ -1,7 +1,10 @@
 package com.pairapp.messenger;
 
+import android.content.Context;
+
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.FirebaseInstanceIdService;
+import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.util.PLog;
 import com.pairapp.util.Task;
@@ -10,6 +13,8 @@ import com.path.android.jobqueue.Params;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import io.realm.Realm;
 
 public class FireBaseInstantIDService extends FirebaseInstanceIdService {
 
@@ -25,15 +30,20 @@ public class FireBaseInstantIDService extends FirebaseInstanceIdService {
     @Override
     public void onTokenRefresh() {
         synchronized (FireBaseInstantIDService.class) {
-            refrehsToken();
+            refrehsToken(this);
         }
     }
 
-    private static void refrehsToken() {
+    private static void refrehsToken(Context context) {
         String token = FirebaseInstanceId.getInstance().getToken();
         TaskManager.cancelJobSync(RefreshFirebaseInstanceIDJob.TOKEN_REFRESH);
-        if (UserManager.getInstance().isUserVerified()) {
-            TaskManager.runJob(RefreshFirebaseInstanceIDJob.create(token));
+        Realm realm = User.Realm(context);
+        try {
+            if (UserManager.getInstance().isUserVerified(realm)) {
+                TaskManager.runJob(RefreshFirebaseInstanceIDJob.create(token));
+            }
+        } finally {
+            realm.close();
         }
     }
 

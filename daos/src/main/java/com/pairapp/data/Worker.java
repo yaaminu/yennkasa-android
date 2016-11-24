@@ -3,7 +3,10 @@ package com.pairapp.data;
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.Context;
+
 import com.pairapp.util.Config;
+
+import io.realm.Realm;
 
 
 /**
@@ -24,16 +27,21 @@ public class Worker extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
-            final String action = intent.getAction();
-            if (REFRESH_USER.equals(action)) {
-                final String userId = intent.getStringExtra(User.FIELD_ID);
-                UserManager.getInstance().doRefreshUserDetails(userId);
-            } else if (CHANGE_DP.equals(action)) {
-                final String userId = intent.getStringExtra(User.FIELD_ID);
-                final String dp = intent.getStringExtra(User.FIELD_DP);
-                UserManager.getInstance().completeDpChange(userId, dp);
-            } else if (REFRESH_GROUPS.equals(action)) {
-                UserManager.getInstance().doRefreshGroups();
+            Realm realm = User.Realm(this);
+            try {
+                final String action = intent.getAction();
+                if (REFRESH_USER.equals(action)) {
+                    final String userId = intent.getStringExtra(User.FIELD_ID);
+                    UserManager.getInstance().doRefreshUserDetails(userId);
+                } else if (CHANGE_DP.equals(action)) {
+                    final String userId = intent.getStringExtra(User.FIELD_ID);
+                    final String dp = intent.getStringExtra(User.FIELD_DP);
+                    UserManager.getInstance().completeDpChange(realm, userId, dp);
+                } else if (REFRESH_GROUPS.equals(action)) {
+                    UserManager.getInstance().doRefreshGroups(realm);
+                }
+            } finally {
+                realm.close();
             }
         }
     }

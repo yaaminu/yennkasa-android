@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.messenger.PairAppClient;
 import com.pairapp.BuildConfig;
@@ -39,6 +40,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+
+import io.realm.Realm;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -71,13 +74,14 @@ public class FeedBackFragment extends Fragment {
             }
             subjectEt.setText("");
             JSONObject reportObject = new JSONObject();
+            Realm userRealm = User.Realm(getContext());
             try {
                 reportObject.put("body", feedbackBody);
                 if (checkBox.isChecked()) {
                     reportObject.put("device", Build.DEVICE);
                     reportObject.put("model", Build.MODEL);
                     reportObject.put("manufacturer", Build.MANUFACTURER);
-                    reportObject.put("reportedBy", UserManager.getMainUserId());
+                    reportObject.put("reportedBy", UserManager.getMainUserId(userRealm));
                     reportObject.put("time", new Date());
                     reportObject.put("pairapVersion", BuildConfig.VERSION_NAME + " release" + BuildConfig.VERSION_CODE);
                     reportObject.put("pairapVersionCode", BuildConfig.VERSION_CODE);
@@ -110,6 +114,8 @@ public class FeedBackFragment extends Fragment {
                 }
             } catch (JSONException e) {
                 throw new RuntimeException(e.getCause());
+            } finally {
+                userRealm.close();
             }
         }
     };

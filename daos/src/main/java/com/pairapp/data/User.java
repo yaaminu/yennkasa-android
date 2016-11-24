@@ -204,15 +204,15 @@ public class User extends RealmObject {
         return copied;
     }
 
-    public static synchronized String generateGroupId(String groupName) {
-        return groupName + "@" + UserManager.getInstance().getCurrentUser().getUserId();
+    public static synchronized String generateGroupId(Realm realm, String groupName) {
+        return groupName + "@" + UserManager.getInstance().getCurrentUser(realm).getUserId();
     }
 
     @Nullable
     public static RealmList<User> aggregateUsers(Realm realm, Collection<String> membersId, ContactsManager.Filter<User> filter) {
         RealmList<User> members = new RealmList<>();
         for (String id : membersId) {
-            User user = UserManager.getInstance().fetchUserIfRequired(id);
+            User user = UserManager.getInstance().fetchUserIfRequired(realm, id);
             try {
                 if (filter == null || filter.accept(user)) {
                     members.add(user);

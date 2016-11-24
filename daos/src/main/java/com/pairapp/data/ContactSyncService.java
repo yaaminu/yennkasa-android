@@ -12,6 +12,8 @@ import com.pairapp.util.PLog;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.realm.Realm;
+
 /**
  * @author Null-Pointer on 6/9/2015.
  */
@@ -28,8 +30,8 @@ public class ContactSyncService extends IntentService {
         super(TAG);
     }
 
-    public static void syncIfRequired(Context context) {
-        if (!UserManager.getInstance().isUserVerified()) {
+    public static void syncIfRequired(Realm realm, Context context) {
+        if (!UserManager.getInstance().isUserVerified(realm)) {
             return;
         }
         Intent intent = new Intent(Config.getApplicationContext(), ContactSyncService.class);

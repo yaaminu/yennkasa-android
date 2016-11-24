@@ -89,19 +89,23 @@ class PairAppClientInterface {
     }
 
     void cancelDisPatch(Message message) {
-        if (!Message.isOutGoing(message)) {
-            throw new IllegalArgumentException("only outgoing messages may be cancelled!");
+        Realm userRealm = User.Realm(Config.getApplicationContext());
+        try {
+            if (!Message.isOutGoing(userRealm, message)) {
+                throw new IllegalArgumentException("only outgoing messages may be cancelled!");
+            }
+            android.os.Message msg = android.os.Message.obtain();
+            msg.obj = Message.copy(message);
+            msg.what = PairAppClient.MessageHandler.CANCEL_DISPATCH;
+            handler.sendMessage(msg);
+        } finally {
+            userRealm.close();
         }
-        android.os.Message msg = android.os.Message.obtain();
-        msg.obj = Message.copy(message);
-        msg.what = PairAppClient.MessageHandler.CANCEL_DISPATCH;
-        handler.sendMessage(msg);
     }
 
 
     void markUserAsOffline(Activity activity) {
         ThreadUtils.ensureMain();
-        PairAppClient.ensureUserLoggedIn();
         if (activity == null) {
             throw new IllegalArgumentException();
         }
@@ -114,7 +118,6 @@ class PairAppClientInterface {
 
     void markUserAsOnline(Activity activity) {
         ThreadUtils.ensureMain();
-        PairAppClient.ensureUserLoggedIn();
         if (activity == null) {
             throw new IllegalArgumentException();
         }
@@ -154,10 +157,10 @@ class PairAppClientInterface {
     }
 
     void markMessageSeen(final String msgId) {
-        Realm realm = Message.REALM(context);
+        Realm realm = Message.REALM(context), userRealm = User.Realm(context);
         try {
             Message message = Message.markMessageSeen(realm, msgId);
-            if (message != null && !Message.isGroupMessage(message) &&
+            if (message != null && !Message.isGroupMessage(userRealm, message) &&
                     message.getType() != Message.TYPE_CALL &&
                     message.getType() != Message.TYPE_DATE_MESSAGE &&
                     message.getType() != Message.TYPE_TYPING_MESSAGE) {
@@ -166,6 +169,7 @@ class PairAppClientInterface {
             }
         } finally {
             realm.close();
+            userRealm.close();
         }
     }
 
@@ -211,13 +215,17 @@ class PairAppClientInterface {
     }
 
     private void notifySenderMessageDelivered(Message message) {
-
-        if (message != null && !Message.isGroupMessage(message) &&
-                message.getType() != Message.TYPE_CALL &&
-                message.getType() != Message.TYPE_DATE_MESSAGE &&
-                message.getType() != Message.TYPE_TYPING_MESSAGE) {
-            sender.sendMessage(createReadReceiptSendable(message.getFrom(),
-                    messagePacker.createMsgStatusMessage(message.getFrom(), message.getId(), true), System.currentTimeMillis() + WAIT_MILLIS_DELIVERY_REPORT));
+        Realm userRealm = User.Realm(context);
+        try {
+            if (message != null && !Message.isGroupMessage(userRealm, message) &&
+                    message.getType() != Message.TYPE_CALL &&
+                    message.getType() != Message.TYPE_DATE_MESSAGE &&
+                    message.getType() != Message.TYPE_TYPING_MESSAGE) {
+                sender.sendMessage(createReadReceiptSendable(message.getFrom(),
+                        messagePacker.createMsgStatusMessage(message.getFrom(), message.getId(), true), System.currentTimeMillis() + WAIT_MILLIS_DELIVERY_REPORT));
+            }
+        } finally {
+            userRealm.close();
         }
     }
 
@@ -427,9 +435,10 @@ class PairAppClientInterface {
 
     private void doRevertOrEditSentMessage(Realm realm, Message msg, final boolean reverting) {
         JSONObject object = new JSONObject();
+        Realm userRealm = User.Realm(context);
         try {
             object.put(Message.FIELD_ID, msg.getId());
-            object.put(Message.FIELD_FROM, UserManager.getMainUserId());
+            object.put(Message.FIELD_FROM, UserManager.getMainUserId(userRealm));
             if (reverting) {
                 object.put(MessageProcessor.REVERT, "1"); //just ensure that the edit key is set.
             } else {
@@ -437,8 +446,8 @@ class PairAppClientInterface {
                 object.put(Message.FIELD_MESSAGE_BODY, msg.getMessageBody());
             }
             if (sender.unsendMessage(SenderImpl.createMessageSendable(msg.getId(), messagePacker.pack(object.toString(),
-                    Message.isGroupMessage(msg) ? msg.getFrom() : msg.getTo(),
-                    Message.isGroupMessage(msg))))) {
+                    Message.isGroupMessage(userRealm, msg) ? msg.getFrom() : msg.getTo(),
+                    Message.isGroupMessage(userRealm, msg))))) {
                 realm.beginTransaction();
                 msg.setState(reverting ? Message.STATE_SEND_FAILED : Message.STATE_PENDING);
                 realm.commitTransaction();
@@ -446,6 +455,8 @@ class PairAppClientInterface {
             }
         } catch (JSONException e) {
             throw new RuntimeException(e);
+        } finally {
+            userRealm.close();
         }
     }
 
@@ -459,24 +470,29 @@ class PairAppClientInterface {
     }
 
     public void editSentMessage(String messageId) {
-        Realm realm = Message.REALM();
-        Message msg = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
-        if (msg != null) {
-            if (Message.canEdit(msg)) {
-                doRevertOrEditSentMessage(realm, msg, false);
+        Realm realm = Message.REALM(context), userRealm = User.Realm(context);
+        try {
+            Message msg = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
+            if (msg != null) {
+                if (Message.canEdit(userRealm, msg)) {
+                    doRevertOrEditSentMessage(realm, msg, false);
+                } else {
+                    PLog.d(TAG, "attempt to revert a message that cannot be");
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            UiHelpers.showToast(GenericUtils.getString(R.string.error_cannot_edit_message));
+                        }
+                    });
+                }
             } else {
-                PLog.d(TAG, "attempt to revert a message that cannot be");
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        UiHelpers.showToast(GenericUtils.getString(R.string.error_cannot_edit_message));
-                    }
-                });
+                PLog.d(TAG, "revert sending failed. reason: could't find message with id %s", messageId);
             }
-        } else {
-            PLog.d(TAG, "revert sending failed. reason: could't find message with id %s", messageId);
+        } finally {
+            realm.close();
+            userRealm.close();
         }
-        realm.close();
+
     }
 
     public void notifyEditSentMessageResults(String messageId, String to, boolean succeeded) {

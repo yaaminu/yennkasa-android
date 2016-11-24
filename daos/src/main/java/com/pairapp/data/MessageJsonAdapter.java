@@ -61,14 +61,14 @@ class MessageJsonAdapter implements BaseJsonAdapter<Message> {
         return array;
     }
 
-    public Message fromJson(String json) {
+    public Message fromJson(String currentUserId, String json) {
         try {
             JSONObject obj = new JSONObject(json);
             Message message = new Message();
             message.setFrom(obj.getString(FIELD_FROM));
             message.setState(obj.optInt(FIELD_STATE, Message.STATE_PENDING));
             message.setId(obj.getString(FIELD_ID));
-            message.setTo(obj.optString(FIELD_TO, UserManager.getMainUserId()));
+            message.setTo(obj.optString(FIELD_TO, currentUserId));
             message.setDateComposed(new Date(obj.optLong(FIELD_DATE_COMPOSED, System.currentTimeMillis())));
             message.setType(obj.optInt(FIELD_TYPE, Message.TYPE_TEXT_MESSAGE));
             message.setMessageBody(obj.getString(FIELD_MESSAGE_BODY));

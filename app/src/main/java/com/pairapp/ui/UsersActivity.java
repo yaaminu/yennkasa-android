@@ -47,19 +47,18 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        Realm realm = User.Realm(this);
         Bundle bundle = getIntent().getExtras();
 
         //where do we go?
         userId = getIntent().getStringExtra(EXTRA_USER_ID);
         if (userId == null) {
-            RealmResults<User> results = realm.where(User.class)
+            RealmResults<User> results = userRealm.where(User.class)
                     .notEqualTo(User.FIELD_ID, getMainUserId())
                     //// FIXME: 1/14/2016 should we sort on type ascending?
                     .findAllSorted(User.FIELD_NAME, Sort.ASCENDING, User.FIELD_TYPE, Sort.ASCENDING);
-            usersAdapter = new UsersAdapter(this, realm, results);
+            usersAdapter = new UsersAdapter(this, userRealm, results);
         } else {
-            User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
+            User user = userRealm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
             if (user == null) {
                 if (BuildConfig.DEBUG) {
                     throw new RuntimeException();
@@ -70,16 +69,16 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
                 if (User.isGroup(user)) {
                     String title = user.getName() + "-" + getString(R.string.Members);
                     bundle.putString(MainActivity.ARG_TITLE, title);
-                    membersAdapter = new MembersAdapter(this, realm, user.getMembers());
+                    membersAdapter = new MembersAdapter(this, userRealm, user.getMembers());
                 } else {
                     //mutual groups
                     String title = getString(R.string.shared_groups);
                     bundle.putString(MainActivity.ARG_TITLE, title);
-                    RealmResults<User> results = realm.where(User.class)
+                    RealmResults<User> results = userRealm.where(User.class)
                             .equalTo(User.FIELD_TYPE, User.TYPE_GROUP)
                             .equalTo(User.FIELD_MEMBERS + "." + User.FIELD_ID, user.getUserId())
                             .findAllSorted(User.FIELD_NAME, Sort.ASCENDING);
-                    usersAdapter = new UsersAdapter(this, realm, results);
+                    usersAdapter = new UsersAdapter(this, userRealm, results);
                 }
             }
         }
@@ -114,7 +113,7 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
 
     @Override
     public BaseAdapter getAdapter() {
-        if (userId != null && userManager.isGroup(userId)) {
+        if (userId != null && userManager.isGroup(userRealm, userId)) {
             return membersAdapter;
         }
         return usersAdapter;
@@ -161,7 +160,7 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         User user = (User) parent.getAdapter().getItem(position);
-        if (userManager.isCurrentUser(user.getUserId())) {
+        if (userManager.isCurrentUser(userRealm, user.getUserId())) {
             UiHelpers.gotoProfileActivity(this, user.getUserId());
         } else {
             UiHelpers.enterChatRoom(this, user.getUserId());
@@ -207,7 +206,7 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
             View view = super.getView(position, convertView, parent);
-            if (userManager.isCurrentUser(getItem(position).getUserId())) {
+            if (userManager.isCurrentUser(userRealm, getItem(position).getUserId())) {
                 ((TextView) view.findViewById(R.id.tv_user_name)).setText(R.string.you);
             }
 

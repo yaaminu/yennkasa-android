@@ -3,14 +3,12 @@ package com.pairapp.messenger;
 import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.util.Pair;
 
-import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.R;
 import com.pairapp.call.BuildConfig;
 import com.pairapp.data.Conversation;
@@ -18,21 +16,17 @@ import com.pairapp.data.Message;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
-import com.pairapp.util.Config;
 import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.Event;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
-import com.pairapp.util.TaskManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Date;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import io.realm.Realm;
 import io.realm.exceptions.RealmPrimaryKeyConstraintException;
@@ -83,14 +77,14 @@ public class MessageProcessor extends IntentService {
     }
 
     private void handleMessage(String data, long timestamp) {
-        Realm realm = Message.REALM(this);
+        Realm realm = Message.REALM(this), userRealm = User.Realm(this);
         try {
             final JSONObject jsonObject = new JSONObject(data);
             String type = getType(jsonObject);
             //noinspection IfCanBeSwitch
             if (type.equals(MESSAGE)) {
                 Message message = Message.fromJSON(data);
-                doProcessMessage(realm, message, timestamp);
+                doProcessMessage(realm, userRealm, message, timestamp);
             } else if (type.equals(MESSAGE_STATUS)) {
                 int state = jsonObject.optInt(Message.MSG_STS_STATUS, Message.STATE_SEEN);
                 String messageId = jsonObject.getString(Message.MSG_STS_MESSAGE_ID);
@@ -107,50 +101,40 @@ public class MessageProcessor extends IntentService {
                     PLog.d(TAG, "message not available for update");
                 }
             } else if (EDIT.equals(type)) {
-                handleEditMessage(realm, jsonObject);
+                handleEditMessage(realm, jsonObject, UserManager.getMainUserId(userRealm));
             } else if (REVERT.equals(type)) {
                 handleRevertingMessage(realm, jsonObject);
             } else if (REVERT_RESULTS.equals(type)) {
-                Realm usersRealm = User.Realm(this);
-                try {
-                    Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, jsonObject.getString(Message.FIELD_ID)).findFirst();
-                    if (message != null) {
-                        realm.beginTransaction();
-                        message.setState(Message.STATE_SEND_FAILED);
-                        realm.commitTransaction();
-                        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-                                .setContentTitle(GenericUtils.getString(R.string.message_unsent_success))
-                                .setContentText(getString(R.string.message_reverted_description, UserManager.getInstance().getName(usersRealm, message.getTo())))
-                                .setAutoCancel(true)
-                                .setContentIntent(PendingIntent.getActivity(this, 1000, new Intent(), PendingIntent.FLAG_NO_CREATE))
-                                .setSmallIcon(R.drawable.ic_stat_icon);
+                Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, jsonObject.getString(Message.FIELD_ID)).findFirst();
+                if (message != null) {
+                    realm.beginTransaction();
+                    message.setState(Message.STATE_SEND_FAILED);
+                    realm.commitTransaction();
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                            .setContentTitle(GenericUtils.getString(R.string.message_unsent_success))
+                            .setContentText(getString(R.string.message_reverted_description, UserManager.getInstance().getName(userRealm, message.getTo())))
+                            .setAutoCancel(true)
+                            .setContentIntent(PendingIntent.getActivity(this, 1000, new Intent(), PendingIntent.FLAG_NO_CREATE))
+                            .setSmallIcon(R.drawable.ic_stat_icon);
 
-                        NotificationManagerCompat manager = NotificationManagerCompat.from(this);// getSystemService(NOTIFICATION_SERVICE));
-                        manager.notify(REVER_OR_EDIT, 100000111, builder.build());
-                    }
-                } finally {
-                    usersRealm.close();
+                    NotificationManagerCompat manager = NotificationManagerCompat.from(this);// getSystemService(NOTIFICATION_SERVICE));
+                    manager.notify(REVER_OR_EDIT, 100000111, builder.build());
                 }
             } else if (EDIT_RESULTS.equals(type)) {
-                Realm usersRealm = User.Realm(this);
-                try {
-                    Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, jsonObject.getString(Message.FIELD_ID)).findFirst();
-                    if (message != null) {
-                        realm.beginTransaction();
-                        message.setState(Message.STATE_RECEIVED);
-                        realm.commitTransaction();
-                        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-                                .setContentTitle(getString(R.string.sent_message_edited))
-                                .setContentText(getString(R.string.message_edited_description, UserManager.getInstance().getName(usersRealm, message.getTo())))
-                                .setAutoCancel(true)
-                                .setContentIntent(PendingIntent.getActivity(this, 1000, new Intent(), PendingIntent.FLAG_NO_CREATE))
-                                .setSmallIcon(R.drawable.ic_stat_icon);
+                Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, jsonObject.getString(Message.FIELD_ID)).findFirst();
+                if (message != null) {
+                    realm.beginTransaction();
+                    message.setState(Message.STATE_RECEIVED);
+                    realm.commitTransaction();
+                    NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                            .setContentTitle(getString(R.string.sent_message_edited))
+                            .setContentText(getString(R.string.message_edited_description, UserManager.getInstance().getName(userRealm, message.getTo())))
+                            .setAutoCancel(true)
+                            .setContentIntent(PendingIntent.getActivity(this, 1000, new Intent(), PendingIntent.FLAG_NO_CREATE))
+                            .setSmallIcon(R.drawable.ic_stat_icon);
 
-                        NotificationManagerCompat manager = NotificationManagerCompat.from(this);// getSystemService(NOTIFICATION_SERVICE));
-                        manager.notify(REVER_OR_EDIT, 100000111, builder.build());
-                    }
-                } finally {
-                    usersRealm.close();
+                    NotificationManagerCompat manager = NotificationManagerCompat.from(this);// getSystemService(NOTIFICATION_SERVICE));
+                    manager.notify(REVER_OR_EDIT, 100000111, builder.build());
                 }
             } else {
                 throw new JSONException("unknown message %s " + data);
@@ -162,10 +146,11 @@ public class MessageProcessor extends IntentService {
             PLog.d(TAG, e.getMessage(), e);
         } finally {
             realm.close();
+            userRealm.close();
         }
     }
 
-    private void handleEditMessage(Realm realm, JSONObject jsonObject) throws JSONException {
+    private void handleEditMessage(Realm realm, JSONObject jsonObject, String currentUserId) throws JSONException {
         boolean succeded = false;
         String messageId = jsonObject.getString(Message.FIELD_ID);
         Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
@@ -179,7 +164,7 @@ public class MessageProcessor extends IntentService {
             }
             realm.commitTransaction();
         }
-        NotificationManager.INSTANCE.reNotifyForReceivedMessages(this);
+        NotificationManager.INSTANCE.reNotifyForReceivedMessages(this, currentUserId);
         postEvent(Event.create(MessengerBus.MESSAGE_EDIT_RESULTS, succeded ?
                 new Exception("failed") : null, Pair.create(messageId, jsonObject.getString(Message.FIELD_FROM))));
     }
@@ -224,8 +209,9 @@ public class MessageProcessor extends IntentService {
         return UNKNOWN;
     }
 
-    private void doProcessMessage(Realm realm, Message message, long timestamp) {
-        if (message.getFrom().equals(UserManager.getMainUserId())) {
+    private void doProcessMessage(Realm realm, Realm userRealm, Message message, long timestamp) {
+        String currentUserId = UserManager.getMainUserId(userRealm);
+        if (message.getFrom().equals(currentUserId)) {
             //how did this happen?
             return;
         }
@@ -237,7 +223,7 @@ public class MessageProcessor extends IntentService {
         String peerId;
         //for messages sent to groups, the group is always the recipient
         //and the members the senders
-        if (Message.isGroupMessage(message)) {
+        if (Message.isGroupMessage(userRealm, message)) {
             peerId = message.getTo();
         } else {
             peerId = message.getFrom();
@@ -257,11 +243,11 @@ public class MessageProcessor extends IntentService {
         //ensure the conversation and session is set up
         // before persisting the message
         if (conversation == null) { //create a new one
-            conversation = Conversation.newConversation(realm, peerId);
+            conversation = Conversation.newConversation(realm, currentUserId, peerId);
             realm.beginTransaction();
         } else {
             realm.beginTransaction();
-            Conversation.newSession(realm, conversation);
+            Conversation.newSession(realm, currentUserId, conversation);
         }
         ///////////////////////////////////////////////////////////////////////////////////////////
         Message newestMessage = realm.where(Message.class)

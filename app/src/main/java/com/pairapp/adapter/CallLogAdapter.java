@@ -18,6 +18,7 @@ import com.pairapp.util.ViewUtils;
 import java.util.Date;
 
 import butterknife.Bind;
+import io.realm.Realm;
 
 import static android.text.format.DateUtils.MINUTE_IN_MILLIS;
 import static android.text.format.DateUtils.getRelativeTimeSpanString;
@@ -41,7 +42,7 @@ public class CallLogAdapter extends PairappBaseAdapter<Message> {
         VHolder holder1 = ((VHolder) holder);
         Message message = getItem(position);
         Context context = ((VHolder) holder).itemView.getContext();
-        User user = ((CallLogDelegate) delegate).getUser(Message.isOutGoing(message) ? message.getTo() : message.getFrom());
+        User user = ((CallLogDelegate) delegate).getUser(Message.isOutGoing(delegate.userRealm(), message) ? message.getTo() : message.getFrom());
         holder1.peerName.setText(user.getName());
 
         long now = new Date().getTime();
@@ -54,8 +55,8 @@ public class CallLogAdapter extends PairappBaseAdapter<Message> {
 
         holder1.callDate.setText(formattedDate);
         holder1.callSummary.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
-        holder1.callSummary.setCompoundDrawablesWithIntrinsicBounds(getDrawable(message), 0, 0, 0);
-        holder1.callSummary.setText("  " + Message.getCallSummary(context, message));
+        holder1.callSummary.setCompoundDrawablesWithIntrinsicBounds(getDrawable(delegate.userRealm(), message), 0, 0, 0);
+        holder1.callSummary.setText("  " + Message.getCallSummary(context, delegate.userRealm(), message));
 
         ImageLoader.load(context, user.getDP())
                 .error(R.drawable.user_avartar)
@@ -71,8 +72,8 @@ public class CallLogAdapter extends PairappBaseAdapter<Message> {
         }
     }
 
-    static int getDrawable(Message message) {
-        if (Message.isOutGoing(message)) {
+    static int getDrawable(Realm userRealm, Message message) {
+        if (Message.isOutGoing(userRealm, message)) {
             return R.drawable.ic_call_made_black_24dp;
         } else {
             //noinspection ConstantConditions

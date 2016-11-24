@@ -9,6 +9,7 @@ import com.pairapp.util.PLog;
 import java.util.List;
 
 import butterknife.ButterKnife;
+import io.realm.Realm;
 
 /**
  * the base class of all Adapters in this app.
@@ -158,6 +159,8 @@ public abstract class PairappBaseAdapter<T> extends RecyclerView.Adapter<Pairapp
          */
         @NonNull
         List<T> dataSet();
+
+        Realm userRealm();
     }
 
     /**

@@ -24,6 +24,8 @@ import com.pairapp.Errors.PairappException;
 import com.pairapp.R;
 import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
+import com.pairapp.data.User;
+import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.messenger.MessengerBus;
 import com.pairapp.util.Event;
@@ -362,7 +364,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                 if (message.getState() == Message.STATE_SEND_FAILED) {
                     try {
                         realm.beginTransaction();
-                        Message newMessage = Message.makeNew(realm, message.getMessageBody(), message.getTo(), message.getType());
+                        Message newMessage = Message.makeNew(realm, message.getFrom(), message.getMessageBody(), message.getTo(), message.getType());
                         message.deleteFromRealm();
                         realm.commitTransaction();
                         doSendMessage(newMessage);
@@ -425,14 +427,15 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         }
 
         private Message createMessage(String messageBody, String recipient, int type, boolean active) throws PairappException {
-            Conversation currConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, recipient).findFirst();
-            if (currConversation == null) {
-                currConversation = Conversation.newConversation(realm, recipient, active);
-            }
-            realm.beginTransaction();
-            boolean newDay = trySetupNewSession(currConversation);
+            Realm userRealm = User.Realm(MessageActivity.this);
             try {
-                Message message = Message.makeNew(realm, messageBody, recipient, type);
+                Conversation currConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, recipient).findFirst();
+                if (currConversation == null) {
+                    currConversation = Conversation.newConversation(realm, UserManager.getMainUserId(userRealm), recipient, active);
+                }
+                realm.beginTransaction();
+                boolean newDay = trySetupNewSession(currConversation, userRealm);
+                Message message = Message.makeNew(realm, UserManager.getMainUserId(userRealm), messageBody, recipient, type);
                 if (newDay) {
                     //realm dates are in seconds not milliseconds. this has an undesirable effect of making our date waitingMessages
                     // and the first message of the day have the same date in seconds precision which in return can cause sorting problems.
@@ -456,12 +459,14 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
             } catch (PairappException e) { //caught for the for the purpose of cleanup
                 realm.cancelTransaction();
                 throw new PairappException(e.getMessage(), "");
+            } finally {
+                userRealm.close();
             }
         }
 
-        private boolean trySetupNewSession(Conversation conversation) {
+        private boolean trySetupNewSession(Conversation conversation, Realm userRealm) {
             //set up session
-            return Conversation.newSession(realm, conversation);
+            return Conversation.newSession(realm, UserManager.getMainUserId(userRealm), conversation);
         }
 
     }

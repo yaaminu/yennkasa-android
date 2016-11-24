@@ -78,6 +78,11 @@ public class QueueDataSourceMock implements QueueDataSource {
     }
 
     @Override
+    public boolean removeByCollpaseKey(String collapseKey) {
+        throw new RuntimeException();
+    }
+
+    @Override
     public void init() {
         initialised = true;
     }

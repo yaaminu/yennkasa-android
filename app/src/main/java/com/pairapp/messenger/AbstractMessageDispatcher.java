@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.pairapp.Errors.PairappException;
 import com.pairapp.data.Message;
+import com.pairapp.data.User;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.FileApi;
 import com.pairapp.net.FileClientException;
@@ -120,10 +121,15 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                 + " from " + message.getFrom()
                 + " to " + message.getTo());
         //is this message to a group?
-        if (Message.isGroupMessage(message)) {
-            dispatchToGroup(message);
-        } else { //to a single user
-            dispatchToUser(message);
+        Realm userRealm = User.Realm(Config.getApplicationContext());
+        try {
+            if (Message.isGroupMessage(userRealm, message)) {
+                dispatchToGroup(message);
+            } else { //to a single user
+                dispatchToUser(message);
+            }
+        } finally {
+            userRealm.close();
         }
     }
 

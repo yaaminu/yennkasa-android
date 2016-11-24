@@ -51,6 +51,7 @@ public class ContactsManager {
     public final Contact findContact(String userId) {
         Cursor cursor = getCursor(Config.getApplicationContext());
         String phoneNumber, standardisedNumber;
+        Realm userRealm = User.Realm(Config.getApplicationContext());
         try {
             if (cursor != null && cursor.moveToFirst()) {
                 do {
@@ -61,7 +62,7 @@ public class ContactsManager {
                         continue;
                     }
                     try {
-                        standardisedNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO());
+                        standardisedNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO(userRealm));
                         if (userId.equals(standardisedNumber)) {
                             String name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
                             if (TextUtils.isEmpty(name)) { //some users can store numbers with no name; am a victim :-P
@@ -78,6 +79,7 @@ public class ContactsManager {
             if (cursor != null) {
                 cursor.close();
             }
+            userRealm.close();
         }
         return null;
     }
@@ -127,7 +129,7 @@ public class ContactsManager {
                     continue;
                 }
                 try {
-                    standardisedNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO());
+                    standardisedNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO(realm));
                 } catch (IllegalArgumentException e) {
                     PLog.e(TAG, "failed to format the number: " + standardisedNumber + "to IEE number: " + e.getMessage());
                     continue;

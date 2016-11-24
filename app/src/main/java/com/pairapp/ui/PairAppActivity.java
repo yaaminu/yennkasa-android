@@ -75,7 +75,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 return;
             }
             if (totalUnreadMessages == 1) {
-                UiHelpers.enterChatRoom(self, Message.isGroupMessage(latestMessage) ? latestMessage.getTo() : latestMessage.getFrom());
+                UiHelpers.enterChatRoom(self, Message.isGroupMessage(userRealm, latestMessage) ? latestMessage.getTo() : latestMessage.getFrom());
             } else {
                 if (self instanceof MainActivity) {
                     ((MainActivity) self).setPagePosition(MainActivity.MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT);
@@ -152,45 +152,48 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     private Pair<String, String> formatNotificationMessage(Message message, String sender) {
         String text;
         List<String> recentChatList = new ArrayList<>(LiveCenter.getAllPeersWithUnreadMessages());
-        Realm realm = User.Realm(this);
+        Realm backgroundUserRealm = User.Realm(this);
+        try {
 
-        for (int i = 0; i < recentChatList.size(); i++) {
-            if (i > 3) {
-                break;
-            }
-            User user = userManager.fetchUserIfRequired(realm, recentChatList.get(i));
-            recentChatList.set(i, user.getName());
-        }
-        realm.close();
-        final int recentCount = recentChatList.size();
-        totalUnreadMessages = LiveCenter.getTotalUnreadMessages();
-        if (totalUnreadMessages < 1) {
-            return null;
-        }
-        String peerId = Message.isGroupMessage(message) ? message.getTo() : message.getFrom();
-        switch (recentCount) {
-            case 0:
-                if (BuildConfig.DEBUG) throw new AssertionError();
-                return new Pair<>(peerId, getString(R.string.new_message));
-            case 1:
-                if (totalUnreadMessages == 1) {
-                    String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(this, message);
-                    text = sender + ":  " + messageBody;
-                } else {
-                    text = totalUnreadMessages + " " + getString(R.string.new_message_from) + " " + sender;
+            for (int i = 0; i < recentChatList.size(); i++) {
+                if (i > 3) {
+                    break;
                 }
-                break;
-            case 2:
-                text = totalUnreadMessages + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + recentChatList.get(1);
-                break;
-            case 3:
-                text = totalUnreadMessages + "  " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + ", " + recentChatList.get(1) + getString(R.string.and) + recentChatList.get(2);
-                break;
-            default:
-                text = "" + recentCount + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + (recentCount - 1) + getString(R.string.others);
-                break; //redundant but safe
+                User user = userManager.fetchUserIfRequired(backgroundUserRealm, recentChatList.get(i));
+                recentChatList.set(i, user.getName());
+            }
+            final int recentCount = recentChatList.size();
+            totalUnreadMessages = LiveCenter.getTotalUnreadMessages();
+            if (totalUnreadMessages < 1) {
+                return null;
+            }
+            String peerId = Message.isGroupMessage(backgroundUserRealm, message) ? message.getTo() : message.getFrom();
+            switch (recentCount) {
+                case 0:
+                    if (BuildConfig.DEBUG) throw new AssertionError();
+                    return new Pair<>(peerId, getString(R.string.new_message));
+                case 1:
+                    if (totalUnreadMessages == 1) {
+                        String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(this, message);
+                        text = sender + ":  " + messageBody;
+                    } else {
+                        text = totalUnreadMessages + " " + getString(R.string.new_message_from) + " " + sender;
+                    }
+                    break;
+                case 2:
+                    text = totalUnreadMessages + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + recentChatList.get(1);
+                    break;
+                case 3:
+                    text = totalUnreadMessages + "  " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + ", " + recentChatList.get(1) + getString(R.string.and) + recentChatList.get(2);
+                    break;
+                default:
+                    text = "" + recentCount + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + (recentCount - 1) + getString(R.string.others);
+                    break; //redundant but safe
+            }
+            return new Pair<>(peerId, text);
+        } finally {
+            backgroundUserRealm.close();
         }
-        return new Pair<>(peerId, text);
     }
 
     protected void notifyUser(Context context, final Message message, final String sender) {

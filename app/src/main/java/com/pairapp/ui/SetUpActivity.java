@@ -31,6 +31,8 @@ import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
 
+import io.realm.Realm;
+
 import static android.Manifest.permission.CAMERA;
 import static android.Manifest.permission.READ_CONTACTS;
 import static android.Manifest.permission.RECORD_AUDIO;
@@ -144,7 +146,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
 
     private void doGoBackToLogin() {
         progressDialog.show();
-        UserManager.getInstance().reset(new UserManager.CallBack() {
+        UserManager.getInstance().reset(userRealm, new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
                 progressDialog.dismiss();
@@ -176,7 +178,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
         }
         getActivityPreferences().edit().putInt(STAGE, COMPLETE).commit();
         PairApp.enableComponents();
-        ContactSyncService.syncIfRequired(this);
+        ContactSyncService.syncIfRequired(userRealm, this);
         PairAppClient.startIfRequired(this);
         UiHelpers.gotoMainActivity(this);
     }
@@ -195,7 +197,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
 
     private void doChangeDp(final String newDp) {
         progressDialog.show();
-        userManager.changeDp(newDp, new UserManager.CallBack() {
+        userManager.changeDp(userRealm, newDp, new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
                 progressDialog.dismiss();
@@ -375,5 +377,10 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
                 });
             }
         }
+    }
+
+    @Override
+    public Realm getRealm() {
+        return userRealm;
     }
 }
