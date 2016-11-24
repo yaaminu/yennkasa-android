@@ -95,7 +95,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
                 if (Message.isOutGoing(message)) {
                     summary.append(context.getString(R.string.you)).append(":  ");
                 } else {
-                    summary.append(UserManager.getInstance().getName(message.getFrom())).append(":  ");
+                    summary.append(UserManager.getInstance().getName(delegate.realm(), message.getFrom())).append(":  ");
                 }
             }
             if (Message.isTextMessage(message)) {

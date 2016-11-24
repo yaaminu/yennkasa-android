@@ -110,6 +110,11 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private final MessagesAdapter.Delegate delegate = new MessagesAdapter.Delegate() {
 
         @Override
+        public Realm userRealm() {
+            return usersRealm;
+        }
+
+        @Override
         public void onCallClicked(Message message) {
             switch (message.getCallBody().getCallType()) {
                 case CallBody.CALL_TYPE_VIDEO:

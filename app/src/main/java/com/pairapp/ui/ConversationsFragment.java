@@ -167,9 +167,9 @@ public class ConversationsFragment extends ListFragment {
                 deleted = conversations.get(position);
                 final String peerId = deleted.getPeerId();
                 final UserManager userManager = UserManager.getInstance();
-                String name = userManager.getName(peerId);
+                String name = userManager.getName(userRealm, peerId);
                 if (TextUtils.isEmpty(name)) {
-                    name = userManager.getName(peerId);
+                    name = userManager.getName(userRealm, peerId);
                 }
                 contextMenuOptions[2] = userManager.isBlocked(peerId) ? getString(R.string.unblock, name) :
                         getString(R.string.block, name);

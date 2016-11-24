@@ -1764,33 +1764,20 @@ public final class UserManager {
         void done(Exception e, String groupId);
     }
 
-    public String getName(String userId) {
+    public String getName(Realm realm, String userId) {
         if (TextUtils.isEmpty(userId)) {
             throw new IllegalArgumentException("userid == null");
         }
         String userName = idsAndNames.get(userId);
         if (userName == null) {
-            Realm realm = User.Realm(Config.getApplicationContext());
             User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
             if (user != null) {
                 String name = user.getName();
                 idsAndNames.put(userId, name);
                 return name;
             }
-            realm.close();
         }
         return PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO());
-    }
-
-    @SuppressWarnings("unused")
-    private void indexUserNames() {
-        ThreadUtils.ensureNotMain();
-        Realm realm = User.Realm(Config.getApplicationContext());
-        RealmResults<User> users = realm.where(User.class).findAll();
-        for (User user : users) {
-            idsAndNames.put(user.getUserId(), user.getName());
-        }
-        realm.close();
     }
 
     private final Map<String, String> idsAndNames = new ConcurrentHashMap<>();

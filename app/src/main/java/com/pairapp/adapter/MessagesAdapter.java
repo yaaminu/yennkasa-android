@@ -38,6 +38,7 @@ import com.squareup.picasso.Target;
 import java.io.File;
 import java.util.Date;
 
+import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
 
@@ -361,7 +362,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     }
 
     private String getSenderName(Message message) {
-        return UserManager.getInstance().getName(message.getFrom());
+        return UserManager.getInstance().getName(delegate.userRealm(), message.getFrom());
     }
 
     private void openMessage(Message message) throws PairappException {
@@ -474,6 +475,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         void cancelDownload(Message message);
 
         void onCallClicked(Message message);
+
+        Realm userRealm();
     }
 
     private class ViewHolder {

@@ -15,6 +15,7 @@ import com.pairapp.R;
 import com.pairapp.call.BuildConfig;
 import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
+import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.util.Config;
@@ -110,36 +111,46 @@ public class MessageProcessor extends IntentService {
             } else if (REVERT.equals(type)) {
                 handleRevertingMessage(realm, jsonObject);
             } else if (REVERT_RESULTS.equals(type)) {
-                Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, jsonObject.getString(Message.FIELD_ID)).findFirst();
-                if (message != null) {
-                    realm.beginTransaction();
-                    message.setState(Message.STATE_SEND_FAILED);
-                    realm.commitTransaction();
-                    NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-                            .setContentTitle(GenericUtils.getString(R.string.message_unsent_success))
-                            .setContentText(getString(R.string.message_reverted_description, UserManager.getInstance().getName(message.getTo())))
-                            .setAutoCancel(true)
-                            .setContentIntent(PendingIntent.getActivity(this, 1000, new Intent(), PendingIntent.FLAG_NO_CREATE))
-                            .setSmallIcon(R.drawable.ic_stat_icon);
+                Realm usersRealm = User.Realm(this);
+                try {
+                    Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, jsonObject.getString(Message.FIELD_ID)).findFirst();
+                    if (message != null) {
+                        realm.beginTransaction();
+                        message.setState(Message.STATE_SEND_FAILED);
+                        realm.commitTransaction();
+                        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                                .setContentTitle(GenericUtils.getString(R.string.message_unsent_success))
+                                .setContentText(getString(R.string.message_reverted_description, UserManager.getInstance().getName(usersRealm, message.getTo())))
+                                .setAutoCancel(true)
+                                .setContentIntent(PendingIntent.getActivity(this, 1000, new Intent(), PendingIntent.FLAG_NO_CREATE))
+                                .setSmallIcon(R.drawable.ic_stat_icon);
 
-                    NotificationManagerCompat manager = NotificationManagerCompat.from(this);// getSystemService(NOTIFICATION_SERVICE));
-                    manager.notify(REVER_OR_EDIT, 100000111, builder.build());
+                        NotificationManagerCompat manager = NotificationManagerCompat.from(this);// getSystemService(NOTIFICATION_SERVICE));
+                        manager.notify(REVER_OR_EDIT, 100000111, builder.build());
+                    }
+                } finally {
+                    usersRealm.close();
                 }
             } else if (EDIT_RESULTS.equals(type)) {
-                Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, jsonObject.getString(Message.FIELD_ID)).findFirst();
-                if (message != null) {
-                    realm.beginTransaction();
-                    message.setState(Message.STATE_RECEIVED);
-                    realm.commitTransaction();
-                    NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-                            .setContentTitle(getString(R.string.sent_message_edited))
-                            .setContentText(getString(R.string.message_edited_description, UserManager.getInstance().getName(message.getTo())))
-                            .setAutoCancel(true)
-                            .setContentIntent(PendingIntent.getActivity(this, 1000, new Intent(), PendingIntent.FLAG_NO_CREATE))
-                            .setSmallIcon(R.drawable.ic_stat_icon);
+                Realm usersRealm = User.Realm(this);
+                try {
+                    Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, jsonObject.getString(Message.FIELD_ID)).findFirst();
+                    if (message != null) {
+                        realm.beginTransaction();
+                        message.setState(Message.STATE_RECEIVED);
+                        realm.commitTransaction();
+                        NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+                                .setContentTitle(getString(R.string.sent_message_edited))
+                                .setContentText(getString(R.string.message_edited_description, UserManager.getInstance().getName(usersRealm, message.getTo())))
+                                .setAutoCancel(true)
+                                .setContentIntent(PendingIntent.getActivity(this, 1000, new Intent(), PendingIntent.FLAG_NO_CREATE))
+                                .setSmallIcon(R.drawable.ic_stat_icon);
 
-                    NotificationManagerCompat manager = NotificationManagerCompat.from(this);// getSystemService(NOTIFICATION_SERVICE));
-                    manager.notify(REVER_OR_EDIT, 100000111, builder.build());
+                        NotificationManagerCompat manager = NotificationManagerCompat.from(this);// getSystemService(NOTIFICATION_SERVICE));
+                        manager.notify(REVER_OR_EDIT, 100000111, builder.build());
+                    }
+                } finally {
+                    usersRealm.close();
                 }
             } else {
                 throw new JSONException("unknown message %s " + data);
