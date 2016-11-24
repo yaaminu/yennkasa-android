@@ -18,6 +18,7 @@ import com.pairapp.util.TaskManager;
 import com.pairapp.workers.BootReceiver;
 import com.path.android.jobqueue.Job;
 import com.path.android.jobqueue.di.DependencyInjector;
+import com.squareup.leakcanary.LeakCanary;
 
 import java.util.regex.Pattern;
 
@@ -119,6 +120,10 @@ public class PairApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        if (LeakCanary.isInAnalyzerProcess(this)) {
+            return;
+        }
+        LeakCanary.install(this);
         Fabric.with(this, new Crashlytics());
         PLog.setLogLevel(BuildConfig.DEBUG ? PLog.LEVEL_VERBOSE : PLog.LEVEL_FATAL);
         Config.init(this);
