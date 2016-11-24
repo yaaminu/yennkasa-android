@@ -129,12 +129,17 @@ public final class UserManager {
                     process(user.getAdmin());
                     return;
                 }
-                if (userId.equals(getMainUserId())) {
-                    user.setName(Config.getApplicationContext().getString(R.string.you));
-                    idsAndNames.put(userId, user.getName());
-                    return;
-                } else {
-                    idsAndNames.put(userId, user.getName());
+                Realm realm = newUserRealm();
+                try {
+                    if (userId.equals(getMainUserId(realm))) {
+                        user.setName(Config.getApplicationContext().getString(R.string.you));
+                        idsAndNames.put(userId, user.getName());
+                        return;
+                    } else {
+                        idsAndNames.put(userId, user.getName());
+                    }
+                } finally {
+                    realm.close();
                 }
                 ContactsManager.getInstance().findAllContactsSync(new ContactsManager.Filter<ContactsManager.Contact>() {
                     @Override
@@ -194,22 +199,25 @@ public final class UserManager {
         return INSTANCE;
     }
 
-    public static String getMainUserId() {
+    public static String getMainUserId(Realm realm) {
         // TODO: 10/25/2015 remove this in production
-        if (!INSTANCE.isUserLoggedIn()) {
+        if (!INSTANCE.isUserLoggedIn(realm)) {
             throw new IllegalStateException();
         }
-        return INSTANCE.getCurrentUser().getUserId();
+        return INSTANCE.getCurrentUser(realm).getUserId();
     }
 
     private synchronized void saveMainUser(User user) {
         final Context context = Config.getApplicationContext();
         putSessionPref(KEY_SESSION_ID, user.getUserId());
         Realm realm = User.Realm(context);
-        realm.beginTransaction();
-        realm.copyToRealmOrUpdate(user);
-        realm.commitTransaction();
-        realm.close();
+        try {
+            realm.beginTransaction();
+            realm.copyToRealmOrUpdate(user);
+            realm.commitTransaction();
+        } finally {
+            realm.close();
+        }
     }
 
     static byte[] getKey() {
@@ -228,9 +236,11 @@ public final class UserManager {
             genKey();
             return getKey();
         }
+        //noinspection ManualArrayCopy
         for (int i = 0; i < 32; i++) { //shuffle the bytes
             ret[i] = part1Byte[i];
         }
+        //noinspection ManualArrayCopy
         for (int i = 0; i < 32; i++) { //shuffle the bytes
             ret[i + 32] = part2Byte[i];
         }
@@ -255,15 +265,14 @@ public final class UserManager {
         return userApi.getAuthToken();
     }
 
-    public User getCurrentUser() {
+    public User getCurrentUser(Realm realm) {
 
         synchronized (mainUserLock) {
             if (mainUser != null) {
                 return mainUser;
             }
         }
-        Realm realm = User.Realm(Config.getApplicationContext());
-        User user = getCurrentUser(realm);
+        User user = doGetCurrentUser(realm);
         if (user != null) {
             //returning {@link RealmObject} from methods will leak resources since
             // that will prevent us from closing the realm instance. hence we do a shallow copy.
@@ -275,20 +284,19 @@ public final class UserManager {
         } else {
             cleanUp();
         }
-        realm.close();
         //noinspection ConstantConditions
         return user;
     }
 
-    public boolean isUserLoggedIn() {
-        return isEveryThingSetup();
+    public boolean isUserLoggedIn(Realm realm) {
+        return isEveryThingSetup(realm);
     }
 
-    private boolean isEveryThingSetup() {
+    private boolean isEveryThingSetup(Realm realm) {
         if (!userApi.isUserAuthenticated()) {
             return false;
         }
-        final User mainUser = getCurrentUser();
+        final User mainUser = getCurrentUser(realm);
         if (!BuildConfig.DEBUG) {
             if (mainUser == null || !getSessionStringPref(KEY_SESSION_ID, "").equals(mainUser.getUserId())) {
                 TaskManager.executeNow(new Runnable() {
@@ -377,12 +385,12 @@ public final class UserManager {
         }
     }
 
-    public boolean isUserVerified() {
-        return isUserLoggedIn() && getSessionBoolPref(KEY_USER_VERIFIED, false);
+    public boolean isUserVerified(Realm realm) {
+        return isUserLoggedIn(realm) && getSessionBoolPref(KEY_USER_VERIFIED, false);
     }
 
 
-    private User getCurrentUser(Realm realm) {
+    private User doGetCurrentUser(Realm realm) {
         String currUserId = getSessionStringPref(KEY_SESSION_ID, null);
         if (currUserId == null) {
             return null;
@@ -391,32 +399,32 @@ public final class UserManager {
     }
 
 
-    public boolean isCurrentUser(String userId) {
+    public boolean isCurrentUser(Realm realm, String userId) {
         if (TextUtils.isEmpty(userId)) {
             return false;
         }
-        User thisUser = getCurrentUser();
+        User thisUser = getCurrentUser(realm);
         return ((thisUser != null)) && thisUser.getUserId().equals(userId);
     }
 
-    public void createGroup(final String groupName, final Set<String> membersId, final CreateGroupCallBack callBack) {
+    public void createGroup(Realm realm, final String groupName, final Set<String> membersId, final CreateGroupCallBack callBack) {
 
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             doNotify(callBack, NO_CONNECTION_ERROR, null);
             return;
         }
-        if (isUser(User.generateGroupId(groupName))) {
+        if (isUser(User.generateGroupId(realm, groupName))) {
             doNotify(callBack, new Exception("group with name " + groupName + "already exists"), null);
             return;
         }
 
-        Pair<String, String> errorNamePair = isValidGroupName(groupName);
+        Pair<String, String> errorNamePair = isValidGroupName(realm, groupName);
         if (errorNamePair.second != null) {
             doNotify(callBack, new Exception(errorNamePair.second), null);
             return;
         }
-        membersId.add(getMainUserId());
-        userApi.createGroup(getCurrentUser().getUserId(), groupName, membersId, new UserApiV2.Callback<User>() {
+        membersId.add(getMainUserId(realm));
+        userApi.createGroup(getCurrentUser(realm).getUserId(), groupName, membersId, new UserApiV2.Callback<User>() {
 
             @Override
             public void done(Exception e, User group) {
@@ -432,61 +440,67 @@ public final class UserManager {
     }
 
     private void completeGroupCreation(User group, Set<String> membersId) {
-        Realm realm = User.Realm(Config.getApplicationContext());
-        realm.beginTransaction();
-        group.setMembers(new RealmList<User>());//required for realm to behave
-        User mainUser = getCurrentUser(realm);
-        if (mainUser == null) {
-            throw new IllegalStateException("no user logged in");
-        }
-        RealmList<User> members = User.aggregateUsers(realm, membersId, new ContactsManager.Filter<User>() {
-            @Override
-            public boolean accept(User user) {
-                return user != null && !isGroup(user.getUserId());
+        final Realm realm = newUserRealm();
+        try {
+            realm.beginTransaction();
+            group.setMembers(new RealmList<User>());//required for realm to behave
+            User mainUser = getCurrentUser(realm);
+            if (mainUser == null) {
+                throw new IllegalStateException("no user logged in");
             }
-        });
-        //noinspection ConstantConditions
-        group.getMembers().addAll(members);
-        group.setAdmin(mainUser);
-        group.setType(User.TYPE_GROUP);
-        realm.copyToRealmOrUpdate(group);
-        realm.commitTransaction();
-        realm.close();
+            RealmList<User> members = User.aggregateUsers(realm, membersId, new ContactsManager.Filter<User>() {
+                @Override
+                public boolean accept(User user) {
+                    return user != null && !isGroup(realm, user.getUserId());
+                }
+            });
+            //noinspection ConstantConditions
+            group.getMembers().addAll(members);
+            group.setAdmin(mainUser);
+            group.setType(User.TYPE_GROUP);
+            realm.copyToRealmOrUpdate(group);
+            realm.commitTransaction();
+        } finally {
+            realm.close();
+        }
     }
 
     @SuppressWarnings("unused")
-    public void removeMembers(final String groupId, final List<String> members, final CallBack callBack) {
-        final Exception e = checkPermission(groupId);
+    public void removeMembers(Realm realm, final String groupId, final List<String> members, final CallBack callBack) {
+        final Exception e = checkPermission(realm, groupId);
         if (e != null) { //unauthorised
             doNotify(e, callBack);
             return;
         }
-        if (members.contains(getCurrentUser().getUserId())) {
+        if (members.contains(getCurrentUser(realm).getUserId())) {
             if (BuildConfig.DEBUG) {
                 throw new IllegalArgumentException("admin cannot remove him/herself");
             }
             doNotify(new Exception("admin cannot remove him/herself"), callBack);
         }
 
-        userApi.removeMembersFromGroup(groupId, getCurrentUser().getUserId(), members, new UserApiV2.Callback<HttpResponse>() {
+        userApi.removeMembersFromGroup(groupId, getCurrentUser(realm).getUserId(), members, new UserApiV2.Callback<HttpResponse>() {
             @Override
             public void done(Exception e, HttpResponse response) {
                 if (e == null) {
-                    Realm realm = User.Realm(Config.getApplicationContext());
-                    realm.beginTransaction();
-                    final User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
-                    final ContactsManager.Filter<User> filter = new ContactsManager.Filter<User>() {
-                        @Override
-                        public boolean accept(User user) {
-                            return (user != null && group.getMembers().contains(user));
-                        }
-                    };
-                    RealmList<User> membersToDelete = User.aggregateUsers(realm, members, filter);
-                    //noinspection ConstantConditions
-                    group.getMembers().removeAll(membersToDelete);
-                    realm.commitTransaction();
-                    realm.close();
-                    doNotify(null, callBack);
+                    Realm realm = newUserRealm();
+                    try {
+                        realm.beginTransaction();
+                        final User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
+                        final ContactsManager.Filter<User> filter = new ContactsManager.Filter<User>() {
+                            @Override
+                            public boolean accept(User user) {
+                                return (user != null && group.getMembers().contains(user));
+                            }
+                        };
+                        RealmList<User> membersToDelete = User.aggregateUsers(realm, members, filter);
+                        //noinspection ConstantConditions
+                        group.getMembers().removeAll(membersToDelete);
+                        realm.commitTransaction();
+                        doNotify(null, callBack);
+                    } finally {
+                        realm.close();
+                    }
                 } else {
                     doNotify(e, callBack);
 
@@ -496,39 +510,39 @@ public final class UserManager {
     }
 
     private boolean isUser(String id) {
-        Realm realm = User.Realm(Config.getApplicationContext());
-        boolean isUser = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst() != null;
-        realm.close();
-        return isUser;
+        Realm realm = newUserRealm();
+        try {
+            return realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst() != null;
+        } finally {
+            realm.close();
+        }
     }
 
-    public boolean isAdmin(String groupId, String userId) {
-        Realm realm = User.Realm(Config.getApplicationContext());
+    public boolean isAdmin(Realm realm, String groupId, String userId) {
         User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
         if (group == null) {
             realm.close();
             throw new IllegalArgumentException("no group with such id");
         }
         String adminId = group.getAdmin().getUserId();
-        realm.close();
         return adminId.equals(userId);
     }
 
-    private Exception checkPermission(String groupId) {
+    private Exception checkPermission(Realm realm, String groupId) {
         if (!isUser(groupId)) {
             return new IllegalArgumentException("no group with such id");
         }
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             return (NO_CONNECTION_ERROR);
         }
-        if (!isAdmin(groupId, getCurrentUser().getUserId())) {
+        if (!isAdmin(realm, groupId, getCurrentUser(realm).getUserId())) {
             return new IllegalAccessException(Config.getApplicationContext().getString(R.string.not_permitted_group));
         }
         return null;
     }
 
-    public void addMembersToGroup(final String groupId, final Set<String> membersId, final CallBack callBack) {
-        Exception e = checkPermission(groupId);
+    public void addMembersToGroup(Realm realm, final String groupId, final Set<String> membersId, final CallBack callBack) {
+        Exception e = checkPermission(realm, groupId);
         if (e != null) {
             doNotify(e, callBack);
             return;
@@ -537,32 +551,35 @@ public final class UserManager {
             doNotify(new Exception("No number to add"), callBack);
             return;
         }
-        userApi.addMembersToGroup(groupId, getCurrentUser().getUserId(), membersId, new UserApiV2.Callback<HttpResponse>() {
+        userApi.addMembersToGroup(groupId, getCurrentUser(realm).getUserId(), membersId, new UserApiV2.Callback<HttpResponse>() {
             @Override
             public void done(Exception e, HttpResponse httpResponse) {
                 if (e == null) {
-                    Realm realm = User.Realm(Config.getApplicationContext());
-                    realm.beginTransaction();
-                    final User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
+                    Realm realm = newUserRealm();
+                    try {
+                        realm.beginTransaction();
+                        final User group = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
 
-                    Set<String> uniqeSet = new HashSet<>(membersId);
+                        Set<String> uniqeSet = new HashSet<>(membersId);
 
-                    RealmList<User> newMembers = User.aggregateUsers(realm, uniqeSet, null);
-                    //noinspection ConstantConditions
-                    newMembers.addAll(group.getMembers());
+                        RealmList<User> newMembers = User.aggregateUsers(realm, uniqeSet, null);
+                        //noinspection ConstantConditions
+                        newMembers.addAll(group.getMembers());
 
-                    //noinspection ConstantConditions
-                    uniqeSet.clear();
-                    group.getMembers().clear();
-                    for (User user : newMembers) {
-                        if (uniqeSet.add(user.getUserId())) {
-                            List<User> members = group.getMembers();
-                            members.add(user);
+                        //noinspection ConstantConditions
+                        uniqeSet.clear();
+                        group.getMembers().clear();
+                        for (User user : newMembers) {
+                            if (uniqeSet.add(user.getUserId())) {
+                                List<User> members = group.getMembers();
+                                members.add(user);
+                            }
                         }
+                        realm.commitTransaction();
+                        doNotify(null, callBack);
+                    } finally {
+                        realm.close();
                     }
-                    realm.commitTransaction();
-                    realm.close();
-                    doNotify(null, callBack);
                 } else {
                     doNotify(e, callBack);
                 }
@@ -575,24 +592,27 @@ public final class UserManager {
             @Override
             public void done(Exception e, final List<User> freshMembers) {
                 if (e == null) {
-                    Realm realm = User.Realm(Config.getApplicationContext());
-                    realm.beginTransaction();
-                    User group = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
-                    group.getMembers().clear();
-                    List<User> collection = new ArrayList<>(freshMembers);
-                    collection = realm.copyToRealmOrUpdate(collection);
+                    Realm realm = newUserRealm();
+                    try {
+                        realm.beginTransaction();
+                        User group = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
+                        group.getMembers().clear();
+                        List<User> collection = new ArrayList<>(freshMembers);
+                        collection = realm.copyToRealmOrUpdate(collection);
 
-                    Set<String> uniqueMembers = new HashSet<>();
-                    List<User> uniqueUsers = new ArrayList<>(uniqueMembers.size() * 2);
-                    for (User user : collection) {
-                        if (uniqueMembers.add(user.getUserId())) {
-                            uniqueUsers.add(user);
+                        Set<String> uniqueMembers = new HashSet<>();
+                        List<User> uniqueUsers = new ArrayList<>(uniqueMembers.size() * 2);
+                        for (User user : collection) {
+                            if (uniqueMembers.add(user.getUserId())) {
+                                uniqueUsers.add(user);
+                            }
                         }
+                        group.getMembers().clear();
+                        group.getMembers().addAll(uniqueUsers);
+                        realm.commitTransaction();
+                    } finally {
+                        realm.close();
                     }
-                    group.getMembers().clear();
-                    group.getMembers().addAll(uniqueUsers);
-                    realm.commitTransaction();
-                    realm.close();
                 } else {
                     PLog.w(TAG, "failed to fetch group members with reason: " + e.getMessage());
                 }
@@ -601,7 +621,7 @@ public final class UserManager {
     }
 
     private void saveFreshUsers(List<User> freshMembers) {
-        Realm realm = User.Realm(Config.getApplicationContext());
+        Realm realm = newUserRealm();
         saveFreshUsers(freshMembers, realm);
         realm.close();
     }
@@ -629,32 +649,35 @@ public final class UserManager {
     }
 
     private void completeGetGroupInfo(User group) {
-        Realm realm = User.Realm(Config.getApplicationContext());
-        User staleGroup = realm.where(User.class).equalTo(User.FIELD_ID, group.getUserId()).findFirst();
-        final User currentUser = getCurrentUser(realm);
-        if (currentUser == null) {
-            throw new IllegalStateException("main user cannot be null");
-        }
-        realm.beginTransaction();
-        if (staleGroup != null) {
-            staleGroup.setName(group.getName());
-            staleGroup.setDP(group.getDP());
-            staleGroup.setAdmin(realm.copyToRealmOrUpdate(group.getAdmin()));
-            PLog.d(TAG, "members of " + staleGroup.getName() + " are: " + staleGroup.getMembers().size());
-        } else {
-            group.setType(User.TYPE_GROUP);
-            group.setMembers(new RealmList<User>());
-            List<User> members = group.getMembers();
-            members.add(group.getAdmin());
-            if (!group.getAdmin().getUserId().equals(currentUser.getUserId())) {
-                members.add(currentUser);
+        Realm realm = newUserRealm();
+        try {
+            User staleGroup = realm.where(User.class).equalTo(User.FIELD_ID, group.getUserId()).findFirst();
+            final User currentUser = getCurrentUser(realm);
+            if (currentUser == null) {
+                throw new IllegalStateException("main user cannot be null");
             }
-            group = realm.copyToRealmOrUpdate(group);
-            PLog.d(TAG, "members of " + group.getName() + " are: " + members.size());
+            realm.beginTransaction();
+            if (staleGroup != null) {
+                staleGroup.setName(group.getName());
+                staleGroup.setDP(group.getDP());
+                staleGroup.setAdmin(realm.copyToRealmOrUpdate(group.getAdmin()));
+                PLog.d(TAG, "members of " + staleGroup.getName() + " are: " + staleGroup.getMembers().size());
+            } else {
+                group.setType(User.TYPE_GROUP);
+                group.setMembers(new RealmList<User>());
+                List<User> members = group.getMembers();
+                members.add(group.getAdmin());
+                if (!group.getAdmin().getUserId().equals(currentUser.getUserId())) {
+                    members.add(currentUser);
+                }
+                group = realm.copyToRealmOrUpdate(group);
+                PLog.d(TAG, "members of " + group.getName() + " are: " + members.size());
+            }
+            realm.commitTransaction();
+            getGroupMembers(group.getUserId()); //async
+        } finally {
+            realm.close();
         }
-        realm.commitTransaction();
-        realm.close();
-        getGroupMembers(group.getUserId()); //async
     }
 
     private void refreshUserDetails(final String userId) {
@@ -666,10 +689,15 @@ public final class UserManager {
     }
 
     void doRefreshUserDetails(final String userId) {
-        if (isGroup(userId)) {
-            doRefreshGroup(userId);
-        } else {
-            doRefreshUser(userId);
+        Realm realm = newUserRealm();
+        try {
+            if (isGroup(realm, userId)) {
+                doRefreshGroup(userId);
+            } else {
+                doRefreshUser(userId);
+            }
+        } finally {
+            realm.close();
         }
 
         String wasChangingDp = getStringPref(userId + CHANGE_DP_KEY, NO_DP_CHANGE);
@@ -690,11 +718,14 @@ public final class UserManager {
             @Override
             public void done(Exception e, User onlineUser) {
                 if (e == null) {
-                    Realm realm = User.Realm(Config.getApplicationContext());
-                    realm.beginTransaction();
-                    realm.copyToRealmOrUpdate(onlineUser);
-                    realm.commitTransaction();
-                    realm.close();
+                    Realm realm = newUserRealm();
+                    try {
+                        realm.beginTransaction();
+                        realm.copyToRealmOrUpdate(onlineUser);
+                        realm.commitTransaction();
+                    } finally {
+                        realm.close();
+                    }
                 } else {
                     mapUserToContactName(userId);
                     PLog.w(TAG, "refreshing user failed with reason: " + e.getMessage());
@@ -703,26 +734,17 @@ public final class UserManager {
         });
     }
 
-    public boolean isGroup(String userId) {
-        Realm realm = User.Realm(Config.getApplicationContext());
-        try {
-            return isGroup(realm, userId);
-        } finally {
-            realm.close();
-        }
-
-    }
 
     public boolean isGroup(Realm realm, String userId) {
         return realm.where(User.class).equalTo(User.FIELD_ID, userId).equalTo(User.FIELD_TYPE, User.TYPE_GROUP).findFirst() != null;
     }
 
-    public void fetchGroups() {
-        doRefreshGroups();
+    public void fetchGroups(Realm realm) {
+        doRefreshGroups(realm);
     }
 
-    void doRefreshGroups() {
-        User mainUser = getCurrentUser();
+    void doRefreshGroups(Realm realm) {
+        User mainUser = getCurrentUser(realm);
         userApi.getGroups(mainUser.getUserId(), new UserApiV2.Callback<List<User>>() {
             @Override
             public void done(Exception e, List<User> users) {
@@ -734,39 +756,42 @@ public final class UserManager {
     }
 
     private void completeGetGroups(List<User> groups) {
-        Realm realm = User.Realm(Config.getApplicationContext());
-        realm.beginTransaction();
-        User mainUser = getCurrentUser(realm);
-        for (User group : groups) {
-            User staleGroup = realm.where(User.class).equalTo(User.FIELD_ID, group.getUserId()).findFirst();
-            if (staleGroup != null) { //already exist just update
-                staleGroup.setName(group.getName()); //admin might have changed name
-                staleGroup.setDP(group.getDP());
-            } else { //new group
-                // because the json returned from our backend is not compatible with our schema here
-                // the backend always clears the members and type field so we have to set it up down here manually
-                group.setType(User.TYPE_GROUP);
-                group.setMembers(new RealmList<User>());
-                List<User> members = group.getMembers();
-                members.add(group.getAdmin());
+        Realm realm = newUserRealm();
+        try {
+            realm.beginTransaction();
+            User mainUser = getCurrentUser(realm);
+            for (User group : groups) {
+                User staleGroup = realm.where(User.class).equalTo(User.FIELD_ID, group.getUserId()).findFirst();
+                if (staleGroup != null) { //already exist just update
+                    staleGroup.setName(group.getName()); //admin might have changed name
+                    staleGroup.setDP(group.getDP());
+                } else { //new group
+                    // because the json returned from our backend is not compatible with our schema here
+                    // the backend always clears the members and type field so we have to set it up down here manually
+                    group.setType(User.TYPE_GROUP);
+                    group.setMembers(new RealmList<User>());
+                    List<User> members = group.getMembers();
+                    members.add(group.getAdmin());
 
-                //check to ensure that we add main user as a member but only if
-                //his is not the admin.this is avoid adding a duplicate user as
-                //without this check we can add main user twice sinch we have already
-                //added the admin
-                //noinspection ConstantConditions
-                if (!group.getAdmin().getUserId().equals(mainUser.getUserId())) {
-                    members.add(mainUser);
+                    //check to ensure that we add main user as a member but only if
+                    //his is not the admin.this is avoid adding a duplicate user as
+                    //without this check we can add main user twice sinch we have already
+                    //added the admin
+                    //noinspection ConstantConditions
+                    if (!group.getAdmin().getUserId().equals(mainUser.getUserId())) {
+                        members.add(mainUser);
+                    }
+                    realm.copyToRealmOrUpdate(group);
                 }
-                realm.copyToRealmOrUpdate(group);
             }
+            realm.commitTransaction();
+        } finally {
+            realm.close();
         }
-        realm.commitTransaction();
-        realm.close();
     }
 
-    public void changeDp(String imagePath, CallBack callBack) {
-        this.changeDp(getCurrentUser().getUserId(), imagePath, callBack);
+    public void changeDp(Realm realm, String imagePath, CallBack callBack) {
+        this.changeDp(getCurrentUser(realm).getUserId(), imagePath, callBack);
     }
 
 
@@ -834,19 +859,23 @@ public final class UserManager {
             return null;
         }
 
-        Realm realm = User.Realm(Config.getApplicationContext());
-        User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
-        if (user != null) {
-            realm.beginTransaction();
-            user.setDP(dpFile.getAbsolutePath());
-            realm.commitTransaction();
-            return dpFile;
+        Realm realm = newUserRealm();
+        try {
+            User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
+            if (user != null) {
+                realm.beginTransaction();
+                user.setDP(dpFile.getAbsolutePath());
+                realm.commitTransaction();
+                return dpFile;
+            }
+            return null;
+        } finally {
+            realm.close();
+
         }
-        realm.close();
-        return null;
     }
 
-    void completeDpChange(final String userId, String dpFile) {
+    void completeDpChange(Realm realm, final String userId, String dpFile) {
         putStandAlonePref(userId + CHANGE_DP_KEY, dpFile);
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             synchronized (dpChangeInProgress) {
@@ -854,7 +883,7 @@ public final class UserManager {
             }
             return;
         }
-        String placeHolder = isGroup(userId) ? "groups" : "users";
+        String placeHolder = isGroup(realm, userId) ? "groups" : "users";
         userApi.changeDp(placeHolder, userId, new File(dpFile), new UserApiV2.Callback<HttpResponse>() {
             @Override
             public void done(Exception e, final HttpResponse response) {
@@ -908,14 +937,23 @@ public final class UserManager {
             @Override
             public void done(Exception e, User backendUser) {
                 if (e == null) {
-                    saveMainUser(backendUser);
-                    doRefreshGroups(); //async
-                    doNotify(null, callback);
+                    Realm realm = newUserRealm();
+                    try {
+                        saveMainUser(backendUser);
+                        doRefreshGroups(realm); //async
+                        doNotify(null, callback);
+                    } finally {
+                        realm.close();
+                    }
                 } else {
                     doNotify(e, callback);
                 }
             }
         });
+    }
+
+    private Realm newUserRealm() {
+        return User.Realm(Config.getApplicationContext());
     }
 
     public void signUp(final String name, final String phoneNumber, final String countryIso, final CallBack callback) {
@@ -975,8 +1013,8 @@ public final class UserManager {
         });
     }
 
-    public void verifyUser(final String token, String pushID, final CallBack callBack) {
-        if (isUserVerified()) {
+    public void verifyUser(Realm realm, final String token, String pushID, final CallBack callBack) {
+        if (isUserVerified(realm)) {
             doNotify(null, callBack);
             return;
         }
@@ -988,10 +1026,10 @@ public final class UserManager {
             doNotify(new Exception("invalid token"), callBack);
             return;
         }
-        if (!isUserLoggedIn()) {
+        if (!isUserLoggedIn(realm)) {
             throw new IllegalStateException("no user logged for verification");
         }
-        userApi.verifyUser(getCurrentUser().getUserId(), token, pushID, new UserApiV2.Callback<UserApiV2.SessionData>() {
+        userApi.verifyUser(getCurrentUser(realm).getUserId(), token, pushID, new UserApiV2.Callback<UserApiV2.SessionData>() {
             @Override
             public void done(Exception e, UserApiV2.SessionData data) {
                 if (e == null) {
@@ -1015,18 +1053,18 @@ public final class UserManager {
         }
     }
 
-    public void sendVerificationToken(final CallBack callback) {
-        if (!isUserLoggedIn()) {
+    public void sendVerificationToken(Realm realm, final CallBack callback) {
+        if (!isUserLoggedIn(realm)) {
             throw new IllegalStateException();
         }
-        if (BuildConfig.DEBUG && isUserVerified()) {
+        if (BuildConfig.DEBUG && isUserVerified(realm)) {
             throw new IllegalStateException();
         }
         if (!ConnectionUtils.isConnected()) {
             doNotify(NO_CONNECTION_ERROR, callback);
             return;
         }
-        userApi.sendVerificationToken(getMainUserId(), new UserApiV2.Callback<HttpResponse>() {
+        userApi.sendVerificationToken(getMainUserId(realm), new UserApiV2.Callback<HttpResponse>() {
             @Override
             public void done(Exception e, HttpResponse aBoolean) {
                 doNotify(e, callback);
@@ -1034,11 +1072,11 @@ public final class UserManager {
         });
     }
 
-    public void resendToken(final CallBack callBack) {
-        if (!isUserLoggedIn()) {
+    public void resendToken(Realm realm, final CallBack callBack) {
+        if (!isUserLoggedIn(realm)) {
             throw new IllegalArgumentException(new Exception("no user logged for verification"));
         }
-        if (isUserVerified()) {
+        if (isUserVerified(realm)) {
             doNotify(null, callBack);
             return;
         }
@@ -1046,7 +1084,7 @@ public final class UserManager {
             doNotify(NO_CONNECTION_ERROR, callBack);
             return;
         }
-        userApi.resendToken(getCurrentUser().getUserId(), null, new UserApiV2.Callback<HttpResponse>() {
+        userApi.resendToken(getCurrentUser(realm).getUserId(), null, new UserApiV2.Callback<HttpResponse>() {
             @Override
             public void done(Exception e, HttpResponse response) {
                 doNotify(e, callBack);
@@ -1124,15 +1162,15 @@ public final class UserManager {
         return true;
     }
 
-    public void leaveGroup(final String id, final CallBack callBack) {
-        if (!isGroup(id) || isAdmin(id)) {
+    public void leaveGroup(Realm realm, final String id, final CallBack callBack) {
+        if (!isGroup(realm, id) || isAdmin(realm, id)) {
             throw new IllegalArgumentException("not group or you are not the admin");
         }
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             doNotify(NO_CONNECTION_ERROR, callBack);
         }
 
-        userApi.leaveGroup(id, getCurrentUser().getUserId(), null, new UserApiV2.Callback<HttpResponse>() {
+        userApi.leaveGroup(id, getCurrentUser(realm).getUserId(), null, new UserApiV2.Callback<HttpResponse>() {
 
             @Override
             public void done(Exception e, HttpResponse response) {
@@ -1147,7 +1185,7 @@ public final class UserManager {
     }
 
     private void cleanUserTraces(String id) {
-        Realm realm = User.Realm(Config.getApplicationContext());
+        Realm realm = newUserRealm();
         try {
             User group = realm.where(User.class).equalTo(User.FIELD_ID, id).findFirst();
             if (group != null) {
@@ -1162,7 +1200,7 @@ public final class UserManager {
 
     private void removeUser(Realm realm, User group) {
         realm.beginTransaction();
-        group.removeFromRealm();
+        group.deleteFromRealm();
         realm.commitTransaction();
     }
 
@@ -1182,24 +1220,24 @@ public final class UserManager {
         messageRealm.close();
     }
 
-    public boolean isAdmin(String id) {
-        return isAdmin(id, getCurrentUser().getUserId());
+    public boolean isAdmin(Realm realm, String id) {
+        return isAdmin(realm, id, getCurrentUser(realm).getUserId());
     }
 
-    public String getUserCountryISO() {
-        if (!isUserLoggedIn()) {
+    public String getUserCountryISO(Realm realm) {
+        if (!isUserLoggedIn(realm)) {
             throw new IllegalStateException("no user logged in");
         }
-        return getCurrentUser().getCountry();
+        return getCurrentUser(realm).getCountry();
     }
 
-    public void reset(final CallBack callBack) {
+    public void reset(Realm realm, final CallBack callBack) {
+        if (isUserVerified(realm)) {
+            throw new RuntimeException("use logout instead");
+        }
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
-                if (isUserVerified()) {
-                    throw new RuntimeException("use logout instead");
-                }
                 if (!ConnectionUtils.isConnected()) {
                     doNotify(NO_CONNECTION_ERROR, callBack);
                     return;
@@ -1232,16 +1270,22 @@ public final class UserManager {
         if (Config.getApplicationWidePrefs().getBoolean(CLEANED_UP, false)) {
             Realm realm = PersistedSetting.REALM(userPrefsLocation);
             clearClass(realm, PersistedSetting.class);
+            realm.close();
             realm = PersistedSetting.REALM(sessionFile);
             clearClass(realm, PersistedSetting.class);
+            realm.close();
             realm = Message.REALM(Config.getApplicationContext());
             clearClass(realm, Message.class);
+            realm.close();
             realm = Conversation.Realm(Config.getApplicationContext());
             clearClass(realm, Conversation.class);
-            realm = User.Realm(Config.getApplicationContext());
+            realm.close();
+            realm = newUserRealm();
             clearClass(realm, User.class);
+            realm.close();
             realm = Country.REALM(Config.getApplicationContext());
             clearClass(realm, Country.class);
+            realm.close();
             clearAllPrefs();
         }
     }
@@ -1276,12 +1320,11 @@ public final class UserManager {
 
     private void clearClass(Realm realm, Class<? extends RealmObject> clazz) {
         realm.beginTransaction();
-        realm.clear(clazz);
+        realm.delete(clazz);
         realm.commitTransaction();
-        realm.close();
     }
 
-    public Pair<String, String> isValidGroupName(String proposedName) {
+    public Pair<String, String> isValidGroupName(Realm realm, String proposedName) {
         Context applicationContext = Config.getApplicationContext();
         String errorMessage = null;
         proposedName = proposedName.replaceAll("\\p{Space}+", " ");
@@ -1293,7 +1336,7 @@ public final class UserManager {
             errorMessage = applicationContext.getString(R.string.name_starts_with_non_letter);
         } else if (proposedName.indexOf('@') != -1 || proposedName.indexOf('-') != -1) {
             errorMessage = applicationContext.getString(R.string.invalid_name_format_error);
-        } else if (getCurrentUser() != null && UserManager.getInstance().isGroup(User.generateGroupId(proposedName))) {
+        } else if (getCurrentUser(realm) != null && UserManager.getInstance().isGroup(realm, User.generateGroupId(realm, proposedName))) {
             errorMessage = Config.getApplicationContext().getString(R.string.group_already_exists).toUpperCase();
         }
         return new Pair<>(proposedName, errorMessage);
@@ -1317,11 +1360,15 @@ public final class UserManager {
     }
 
     public User fetchUserIfRequired(String userId) {
-        Realm realm = User.Realm(Config.getApplicationContext());
-        User user = fetchUserIfRequired(realm, userId);
-        user = User.copy(user);
-        realm.close();
-        return user;
+        Realm realm = newUserRealm();
+        try {
+            User user = fetchUserIfRequired(realm, userId);
+            user = User.copy(user);
+            return user;
+        } finally {
+            realm.close();
+
+        }
     }
 
     public User fetchUserIfRequired(Realm realm, String userId) {
@@ -1343,7 +1390,7 @@ public final class UserManager {
                 peer.setAdmin(admin);
                 List<User> members = peer.getMembers();
                 members.add(admin);
-                if (!isCurrentUser(parts[1])) {
+                if (!isCurrentUser(realm, parts[1])) {
                     //noinspection ConstantConditions,ConstantConditions
                     members.add(getCurrentUser(realm));
                 }
@@ -1354,7 +1401,7 @@ public final class UserManager {
                 peer.setInContacts(false); //we cannot tell for now
                 peer.setDP("avatar_empty");
                 peer.setType(User.TYPE_NORMAL_USER);
-                peer.setName(PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO()));
+                peer.setName(PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO(realm)));
                 refresh(userId, refresh);
             }
             realm.beginTransaction();
@@ -1386,26 +1433,28 @@ public final class UserManager {
         ThreadUtils.ensureNotMain();
         ContactsManager.Contact contact = ContactsManager.getInstance().findContact(userId);
         if (contact != null) {
-            Realm realm = User.Realm(Config.getApplicationContext());
-            User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
-            if (user != null) {
-                realm.beginTransaction();
-                user.setName(contact.name);
-                idsAndNames.put(userId, contact.name);
-                user.setInContacts(true);
-                realm.commitTransaction();
+            Realm realm = newUserRealm();
+            try {
+                User user = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
+                if (user != null) {
+                    realm.beginTransaction();
+                    user.setName(contact.name);
+                    idsAndNames.put(userId, contact.name);
+                    user.setInContacts(true);
+                    realm.commitTransaction();
+                }
+            } finally {
+                realm.close();
             }
-            realm.close();
         }
     }
 
     @SuppressWarnings("unused")
-    public List<String> allUserIds() {
-        Realm realm = User.Realm(Config.getApplicationContext());
+    public List<String> allUserIds(Realm realm) {
         try {
             RealmResults<User> users = realm.where(User.class)
                     .equalTo(User.FIELD_TYPE, User.TYPE_NORMAL_USER)
-                    .notEqualTo(User.FIELD_ID, getMainUserId()).findAll();
+                    .notEqualTo(User.FIELD_ID, getMainUserId(realm)).findAll();
             return User.aggregateUserIds(users, null);
         } finally {
             realm.close();
@@ -1627,6 +1676,7 @@ public final class UserManager {
 
     private void reInitialiseSettings(final UserManager.CallBack callback) {
         Runnable runnable = new Runnable() {
+            @SuppressWarnings("deprecation")
             @Override
             public void run() {
                 Realm realm = PersistedSetting.REALM(userPrefsLocation);
@@ -1642,24 +1692,12 @@ public final class UserManager {
         TaskManager.executeNow(runnable, false);
     }
 
-    public Map<String, String> getUserCredentials() {
-        if (!isUserVerified()) {
-            throw new IllegalStateException("no user logged in");
-        }
-        String userId = getCurrentUser().getUserId(),
-                accessToken = getSessionStringPref(KEY_ACCESS_TOKEN, "");
-        Map<String, String> credentials = new HashMap<>(3);
-        credentials.put(KEY_ACCESS_TOKEN, accessToken);
-        credentials.put("userId", userId);
-        return credentials;
-    }
-
-    public void dissolveGroup(User group, final CallBack callback) {
+    public void dissolveGroup(Realm realm, User group, final CallBack callback) {
         if (group == null) {
             throw new IllegalArgumentException("group == null");
         }
         //noinspection ThrowableResultOfMethodCallIgnored
-        Exception e = checkPermission(group.getUserId());
+        Exception e = checkPermission(realm, group.getUserId());
         if (e != null) {
             doNotify(e, callback);
         }
@@ -1742,8 +1780,8 @@ public final class UserManager {
         return true;
     }
 
-    public String getNewAuthTokenSync() throws PairappException {
-        if (!isUserVerified()) throw new PairappException("not registered");
+    public String getNewAuthTokenSync(Realm realm) throws PairappException {
+        if (!isUserVerified(realm)) throw new PairappException("not registered");
         return userApi.newAuthToken();
     }
 
@@ -1776,8 +1814,9 @@ public final class UserManager {
                 idsAndNames.put(userId, name);
                 return name;
             }
+            return PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO(realm));
         }
-        return PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO());
+        return userName;
     }
 
     private final Map<String, String> idsAndNames = new ConcurrentHashMap<>();

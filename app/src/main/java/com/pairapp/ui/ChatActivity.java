@@ -111,17 +111,17 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
         @Override
         public Realm userRealm() {
-            return usersRealm;
+            return userRealm;
         }
 
         @Override
         public void onCallClicked(Message message) {
             switch (message.getCallBody().getCallType()) {
                 case CallBody.CALL_TYPE_VIDEO:
-                    callUser(MessengerBus.VIDEO_CALL_USER, Message.isIncoming(message) ? message.getFrom() : message.getTo());
+                    callUser(MessengerBus.VIDEO_CALL_USER, Message.isIncoming(userRealm, message) ? message.getFrom() : message.getTo());
                     break;
                 case CallBody.CALL_TYPE_VOICE:
-                    callUser(MessengerBus.VOICE_CALL_USER, Message.isIncoming(message) ? message.getFrom() : message.getTo());
+                    callUser(MessengerBus.VOICE_CALL_USER, Message.isIncoming(userRealm, message) ? message.getFrom() : message.getTo());
                     break;
                 default:
                     throw new UnsupportedOperationException();
@@ -145,7 +145,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
         @Override
         public int getProgress(Message message) {
-            if (Message.isIncoming(message) || message.getState() == Message.STATE_PENDING) {
+            if (Message.isIncoming(userRealm, message) || message.getState() == Message.STATE_PENDING) {
                 return getMessageProgress(message);
             }
             return -1;
@@ -176,7 +176,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     private RealmResults<Message> messages;
     private User peer;
     private Conversation currConversation;
-    private Realm messageConversationRealm, usersRealm;
+    private Realm messageConversationRealm;
 
     @Bind(R.id.lv_messages)
     ListView messagesListView;
@@ -203,7 +203,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             inContextualMode = true;
             messagesListView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE);
             mode.getMenuInflater().inflate(R.menu.message_context_menu, menu);
-            User user = usersRealm.where(User.class).notEqualTo(User.FIELD_ID, getMainUserId()).notEqualTo(User.FIELD_ID, peer.getUserId()).findFirst();
+            User user = userRealm.where(User.class).notEqualTo(User.FIELD_ID, getMainUserId()).notEqualTo(User.FIELD_ID, peer.getUserId()).findFirst();
             can4ward = user != null;
             return true;
         }
@@ -260,12 +260,11 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         messageConversationRealm = Message.REALM(this);
-        usersRealm = User.Realm(this);
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
         boolean isKnowToBeUnRegistered = bundle.getBoolean(EXTRA_REGISTERED, false);
         if (!isKnowToBeUnRegistered) {
-            peer = userManager.fetchUserIfRequired(usersRealm, peerId, true);
+            peer = userManager.fetchUserIfRequired(userRealm, peerId, true);
         } else {
             String name = bundle.getString(EXTRA_NAME);
             peer = createUser(peerId, name, true);
@@ -332,7 +331,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     }
 
     private void setUpListView() {
-        adapter = new MessagesAdapter(delegate, messages, userManager.isGroup(usersRealm, peer.getUserId()));
+        adapter = new MessagesAdapter(delegate, messages, userManager.isGroup(userRealm, peer.getUserId()));
         messagesListView.setAdapter(adapter);
 
         messagesListView.setOnScrollListener(this);
@@ -460,7 +459,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     protected void onDestroy() {
         messageConversationRealm.close();
-        usersRealm.close();
         String s1 = messageEt.getText().toString();
         Config.getPreferences(TAG + SAVED_MESSAGES_MESSAGE_BOX).edit().putString(peer.getUserId(), s1).apply();
         clearRecentChat(peer.getUserId());
@@ -504,7 +502,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             return;
         }
         if (requestCode == ADD_TO_CONTACTS_REQUEST) {
-            userManager.fetchUserIfRequired(usersRealm, peer.getUserId(), true);
+            userManager.fetchUserIfRequired(userRealm, peer.getUserId(), true);
             supportInvalidateOptionsMenu();
         } else {
             sendMessage(requestCode, data, peer.getUserId());
@@ -547,7 +545,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        User user = usersRealm.where(User.class).notEqualTo(User.FIELD_ID, getMainUserId()).notEqualTo(User.FIELD_ID, peer.getUserId()).findFirst();
+        User user = userRealm.where(User.class).notEqualTo(User.FIELD_ID, getMainUserId()).notEqualTo(User.FIELD_ID, peer.getUserId()).findFirst();
         final boolean can4ward = user != null; //no other user apart from peer. cannot forward so lets hide it
 
         AdapterView.AdapterContextMenuInfo info = ((AdapterView.AdapterContextMenuInfo) menuInfo);
@@ -562,7 +560,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             } else {
                 menu.findItem(R.id.action_forward).setVisible(can4ward);
             }
-            menu.findItem(R.id.action_edit_sent).setVisible(Message.canEdit(message));
+            menu.findItem(R.id.action_edit_sent).setVisible(Message.canEdit(userRealm, message));
         }
     }
 
@@ -678,26 +676,41 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
-                if (!Message.isTextMessage(deletedMessage)) {
-                    if (Message.isOutGoing(deletedMessage)) {
-                        if (deletedMessage.getState() == Message.STATE_PENDING) {
-                            delegate.onCancelSendMessage(deletedMessage);
-                        }
-                    } else {
-                        if (deletedMessage.getMessageBody().startsWith("http")) { //it's probably being downloaded
-                            if (LiveCenter.getProgress(deletedMessage.getId()) != -1) {
-                                delegate.cancelDownload(deletedMessage);
+                Realm userRealm = User.Realm(ChatActivity.this);
+                try {
+                    if (!Message.isTextMessage(deletedMessage)) {
+                        if (Message.isOutGoing(userRealm, deletedMessage)) {
+                            if (deletedMessage.getState() == Message.STATE_PENDING) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        delegate.onCancelSendMessage(deletedMessage);
+                                    }
+                                });
+                            }
+                        } else {
+                            if (deletedMessage.getMessageBody().startsWith("http")) { //it's probably being downloaded
+                                if (LiveCenter.getProgress(deletedMessage.getId()) != -1) {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            delegate.cancelDownload(deletedMessage);
+                                        }
+                                    });
+                                }
                             }
                         }
                     }
-                }
-                if (UserManager.getInstance().getBoolPref(UserManager.DELETE_ATTACHMENT_ON_DELETE, false)) {
-                    File file = new File(deletedMessage.getMessageBody());
-                    if (file.exists()) {
-                        if (file.delete()) {
-                            PLog.d(TAG, "deleted file successfully");
+                    if (UserManager.getInstance().getBoolPref(UserManager.DELETE_ATTACHMENT_ON_DELETE, false)) {
+                        File file = new File(deletedMessage.getMessageBody());
+                        if (file.exists()) {
+                            if (file.delete()) {
+                                PLog.d(TAG, "deleted file successfully");
+                            }
                         }
                     }
+                } finally {
+                    userRealm.close();
                 }
             }
         }, false);

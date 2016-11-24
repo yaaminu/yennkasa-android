@@ -27,6 +27,8 @@ import com.pairapp.util.ViewUtils;
 import java.util.List;
 import java.util.Locale;
 
+import io.realm.Realm;
+
 import static com.pairapp.data.ContactsManager.Contact;
 
 
@@ -44,11 +46,11 @@ public class ContactsAdapter extends BaseAdapter {
     private FragmentActivity context;
     private final Drawable[] bgColors = new Drawable[5];
 
-    public ContactsAdapter(FragmentActivity context, List<Contact> contacts, boolean isAddOrRemoveFromGroup) {
+    public ContactsAdapter(FragmentActivity context, String userIsoCountry, List<Contact> contacts, boolean isAddOrRemoveFromGroup) {
         this.contacts = contacts;
         this.isAddOrRemoveFromGroup = isAddOrRemoveFromGroup;
         this.context = context;
-        userIsoCountry = UserManager.getInstance().getUserCountryISO();
+        this.userIsoCountry = userIsoCountry;
         bgColors[0] = getDrawable(context, R.drawable.pink_round_back_ground);
         bgColors[1] = getDrawable(context, R.drawable.blue_round_back_ground);
         bgColors[2] = getDrawable(context, R.drawable.red_round_back_ground);

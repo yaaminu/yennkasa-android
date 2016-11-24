@@ -10,6 +10,7 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.pairapp.BuildConfig;
 import com.pairapp.data.UnproccessedMessage;
+import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.net.sockets.MessageParser;
 import com.pairapp.util.Config;
@@ -41,13 +42,18 @@ public class MessageCenter2 extends FirebaseMessagingService {
     public void onMessageReceived(RemoteMessage remoteMessage) {
         String payload = remoteMessage.getData().get(PAYLOAD);
         PLog.d(TAG, "push message received %s", payload);
-        if (UserManager.getInstance().isUserVerified()) {
-            processPayload(this, payload);
-        } else {
-            PLog.f(TAG, "user is not verified, but recieved push!!!");
-            if (BuildConfig.DEBUG) {
-                throw new RuntimeException("push enabled when user is not verified");
+        Realm userRealm = User.Realm(this);
+        try {
+            if (UserManager.getInstance().isUserVerified(userRealm)) {
+                processPayload(this, payload);
+            } else {
+                PLog.f(TAG, "user is not verified, but recieved push!!!");
+                if (BuildConfig.DEBUG) {
+                    throw new RuntimeException("push enabled when user is not verified");
+                }
             }
+        } finally {
+            userRealm.close();
         }
     }
 

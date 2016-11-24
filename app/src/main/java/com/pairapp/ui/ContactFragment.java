@@ -43,7 +43,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Sw
     private final ContactsManager.Filter<Contact> filter = new ContactsManager.Filter<Contact>() {
         @Override
         public boolean accept(Contact contact) {
-            return !UserManager.getInstance().isCurrentUser(contact.numberInIEE_Format);
+            return !UserManager.getInstance().isCurrentUser(userRealm, contact.numberInIEE_Format);
         }
     };
     private final Comparator<Contact> comparator = new Comparator<Contact>() {
@@ -68,7 +68,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Sw
         }
     };
     private ContactsAdapter adapter;
-    private Realm realm;
+    private Realm userRealm;
     private TextView emptyTextView;
     private ListView listView;
     private View refreshButton;
@@ -112,7 +112,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Sw
     public void onCreate(Bundle savedInstanceState) {
         setRetainInstance(true);
         super.onCreate(savedInstanceState);
-        realm = User.Realm(getActivity());
+        userRealm = User.Realm(getActivity());
     }
 
     @Override
@@ -122,7 +122,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Sw
         // Inflate the layout for this fragment
         setHasOptionsMenu(true);
         View view = inflater.inflate(R.layout.fragment_contact, container, false);
-        adapter = new ContactsAdapter(getActivity(), contacts, false);
+        adapter = new ContactsAdapter(getActivity(), UserManager.getInstance().getUserCountryISO(userRealm), contacts, false);
         //required so that we can operate on it with no fear since calling getListView before onCreateView returns is not safe
         listView = ((ListView) view.findViewById(R.id.list));
         swipeRefreshLayout = ((SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh_layout));
@@ -159,19 +159,19 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Sw
     @Override
     public void onResume() {
         super.onResume();
-        realm.addChangeListener(this);
+        userRealm.addChangeListener(this);
         refreshLocalContacts();
     }
 
     @Override
     public void onPause() {
-        realm.removeChangeListener(this);
+        userRealm.removeChangeListener(this);
         super.onPause();
     }
 
     @Override
     public void onDestroy() {
-        realm.close();
+        userRealm.close();
         super.onDestroy();
     }
 
@@ -191,7 +191,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Sw
             @Override
             public void run() {
                 if (getActivity() != null) {
-                    ContactSyncService.syncIfRequired(getActivity());
+                    ContactSyncService.syncIfRequired(userRealm, getActivity());
                     refreshLocalContacts();
                 }
             }

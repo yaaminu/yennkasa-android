@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
 
@@ -51,7 +50,6 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
     public static final String SELECTED_USERS = "selectedUsers";
     private final Set<String> existingGroupMembers = new HashSet<>();
     private String TAG = InviteActivity.class.getSimpleName();
-    private Realm realm;
     private UsersAdapter usersAdapter;
     private Set<String> selectedUsers;
     private String groupId;
@@ -93,7 +91,6 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
             selectedUserNames = new HashSet<>();
 
         }
-        realm = User.Realm(this);
         usersAdapter = new CustomUserAdapter(prepareQuery().findAllSorted(User.FIELD_NAME));
         fragment = new ItemsSelector();
         getSupportFragmentManager()
@@ -118,9 +115,9 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
 //    }
 
     private RealmQuery<User> prepareQuery() {
-        User potentiallyGroup = realm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
+        User potentiallyGroup = userRealm.where(User.class).equalTo(User.FIELD_ID, groupId).findFirst();
         if (potentiallyGroup != null) {
-            RealmQuery<User> userRealmQuery = realm.where(User.class)
+            RealmQuery<User> userRealmQuery = userRealm.where(User.class)
                     .notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
                     .notEqualTo(User.FIELD_ID, getMainUserId());
             List<User> existingMembers = potentiallyGroup.getMembers();
@@ -135,7 +132,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
             }
             NavUtils.navigateUpFromSameTask(this);
         }
-        return realm.where(User.class).equalTo(User.FIELD_ID, " "); //empty results because we are exiting
+        return userRealm.where(User.class).equalTo(User.FIELD_ID, " "); //empty results because we are exiting
     }
 
     @Override
@@ -157,7 +154,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
     private void proceedToAddMembers() {
         PLog.i(TAG, "add members" + selectedUsers.toString());
         final ProgressDialog progressView = ProgressDialog.show(this, "", getString(R.string.st_please_wait), false, false, null);
-        userManager.addMembersToGroup(groupId, selectedUsers, new UserManager.CallBack() {
+        userManager.addMembersToGroup(userRealm, groupId, selectedUsers, new UserManager.CallBack() {
             @Override
             public void done(Exception e) {
                 progressView.dismiss();
@@ -170,13 +167,6 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
         });
     }
 
-    @Override
-    protected void onDestroy() {
-        if (realm != null) {
-            realm.close();
-        }
-        super.onDestroy();
-    }
 
     @Override
     public BaseAdapter getAdapter() {
@@ -227,8 +217,8 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
         String formattedText = text;
         try {
             formattedText = PhoneNumberNormaliser.cleanNonDialableChars(formattedText);
-            formattedText = PhoneNumberNormaliser.toIEE(formattedText, userManager.getUserCountryISO());
-            if (!PhoneNumberNormaliser.isValidPhoneNumber("+" + formattedText, userManager.getUserCountryISO())) {
+            formattedText = PhoneNumberNormaliser.toIEE(formattedText, userManager.getUserCountryISO(userRealm));
+            if (!PhoneNumberNormaliser.isValidPhoneNumber("+" + formattedText, userManager.getUserCountryISO(userRealm))) {
                 throw new NumberParseException(NumberParseException.ErrorType.NOT_A_NUMBER, "invalid phone number");
             }
             finallyAddNumber(formattedText);
@@ -319,7 +309,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
     private class CustomUserAdapter extends MultiChoiceUsersAdapter {
 
         public CustomUserAdapter(RealmResults<User> realmResults) {
-            super(delegate, realm, realmResults, selectedUsers, R.id.cb_checked);
+            super(delegate, userRealm, realmResults, selectedUsers, R.id.cb_checked);
         }
 
         @Override

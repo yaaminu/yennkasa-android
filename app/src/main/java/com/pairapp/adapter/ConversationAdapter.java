@@ -13,7 +13,6 @@ import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.ui.ImageLoader;
 import com.pairapp.ui.PairAppBaseActivity;
-import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.ViewUtils;
 
 import java.util.Date;
@@ -29,7 +28,6 @@ import static android.text.format.DateUtils.getRelativeTimeSpanString;
  * @author Null-Pointer on 5/30/2015.
  */
 public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
-    private static final String TAG = ConversationAdapter.class.getSimpleName();
     private Delegate delegate;
 
 
@@ -91,8 +89,8 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
             formattedDate = ((now - then) < ONE_MINUTE) ? context.getString(R.string.now) : getRelativeTimeSpanString(then, now, MINUTE_IN_MILLIS);
             holder.dateLastActive.setText(formattedDate);
 
-            if (UserManager.getInstance().isGroup(conversation.getPeerId())) {
-                if (Message.isOutGoing(message)) {
+            if (UserManager.getInstance().isGroup(delegate.realm(), conversation.getPeerId())) {
+                if (Message.isOutGoing(delegate.realm(), message)) {
                     summary.append(context.getString(R.string.you)).append(":  ");
                 } else {
                     summary.append(UserManager.getInstance().getName(delegate.realm(), message.getFrom())).append(":  ");
@@ -102,8 +100,8 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
                 summary.append(message.getMessageBody());
                 // holder.mediaMessageIcon.setVisibility(View.GONE);
             } else if (Message.isCallMessage(message)) {
-                holder.chatSummary.setCompoundDrawablesWithIntrinsicBounds(CallLogAdapter.getDrawable(message), 0, 0, 0);
-                summary.append("  ").append(Message.getCallSummary(context, message));
+                holder.chatSummary.setCompoundDrawablesWithIntrinsicBounds(CallLogAdapter.getDrawable(delegate.realm(), message), 0, 0, 0);
+                summary.append("  ").append(Message.getCallSummary(context, delegate.realm(), message));
             } else {
                 summary.append(PairApp.typeToString(context, message));
             }
@@ -112,7 +110,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         if (delegate.isCurrentUserTyping(conversation.getPeerId())) {
             holder.chatSummary.setTextColor(delegate.context().getResources().getColor(R.color.colorPrimaryDark));
         } else if (message != null) {
-            if (Message.isIncoming(message) && message.getState() != Message.STATE_SEEN) {
+            if (Message.isIncoming(delegate.realm(), message) && message.getState() != Message.STATE_SEEN) {
                 holder.chatSummary.setTextColor(context.getResources().getColor(R.color.black));
             } else if (message.getState() == Message.STATE_SEND_FAILED) {
                 holder.chatSummary.setTextColor(context.getResources().getColor(R.color.red));

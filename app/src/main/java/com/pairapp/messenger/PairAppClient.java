@@ -17,6 +17,7 @@ import com.pairapp.Errors.PairappException;
 import com.pairapp.call.CallController;
 import com.pairapp.call.CallManager;
 import com.pairapp.data.Message;
+import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.ParseClient;
@@ -107,13 +108,18 @@ public class PairAppClient extends Service {
     }
 
     public static void startIfRequired(Context context) {
-        if (!UserManager.getInstance().isUserVerified()) {
-            PLog.w(TAG, " pariapp client wont start when a user is not logged in");
-            return;
-        }
-        if (!isClientStarted.get()) {
-            Intent pairAppClient = new Intent(context, PairAppClient.class);
-            context.startService(pairAppClient);
+        Realm realm = User.Realm(context);
+        try {
+            if (!UserManager.getInstance().isUserVerified(realm)) {
+                PLog.w(TAG, " pariapp client wont start when a user is not logged in");
+                return;
+            }
+            if (!isClientStarted.get()) {
+                Intent pairAppClient = new Intent(context, PairAppClient.class);
+                context.startService(pairAppClient);
+            }
+        } finally {
+            realm.close();
         }
     }
 
@@ -132,8 +138,8 @@ public class PairAppClient extends Service {
         Worker.cancelDownload(Config.getApplicationContext(), message);
     }
 
-    static void ensureUserLoggedIn() {
-        if (!UserManager.getInstance().isUserVerified()) {
+    static void ensureUserLoggedIn(Realm userRealm) {
+        if (!UserManager.getInstance().isUserVerified(userRealm)) {
             throw new IllegalStateException("no user logged in");
         }
     }
@@ -154,15 +160,20 @@ public class PairAppClient extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
-        if (!UserManager.getInstance().isUserVerified()) {
-            PLog.f(TAG, " pariapp client wont start when a user is not logged in");
-            stopSelf();
-            return START_NOT_STICKY;
+        Realm userRealm = User.Realm(this);
+        try {
+            if (!UserManager.getInstance().isUserVerified(userRealm)) {
+                PLog.f(TAG, " pariapp client wont start when a user is not logged in");
+                stopSelf();
+                return START_NOT_STICKY;
+            }
+            if (intent != null && MessengerBus.HANG_UP_CALL.equals(intent.getAction())) { // TODO: 7/25/2016 find a better way to do this
+                postableBus().post(Event.create(MessengerBus.HANG_UP_CALL, null, intent.getParcelableExtra(BaseCallActivity.EXTRA_CALL_DATA)));
+            }
+            return START_STICKY;
+        } finally {
+            userRealm.close();
         }
-        if (intent != null && MessengerBus.HANG_UP_CALL.equals(intent.getAction())) { // TODO: 7/25/2016 find a better way to do this
-            postableBus().post(Event.create(MessengerBus.HANG_UP_CALL, null, intent.getParcelableExtra(BaseCallActivity.EXTRA_CALL_DATA)));
-        }
-        return START_STICKY;
     }
 
     @Override
@@ -177,49 +188,53 @@ public class PairAppClient extends Service {
         return null;
     }
 
-    private synchronized void bootClient() {
+    synchronized void bootClient() {
         ThreadUtils.ensureNotMain();
         if (!isClientStarted.get()) {
+            Realm userRealm = User.Realm(this);
+            try {
+                monitor = new DispatcherMonitorImpl(this, disPatchingThreads);
+                String currentUserId = UserManager.getMainUserId(userRealm);
+                messagePacker = MessagePacker.create(currentUserId, new ZlibCompressor());
 
-            monitor = new DispatcherMonitorImpl(this, disPatchingThreads);
-            String currentUserId = UserManager.getMainUserId();
-            messagePacker = MessagePacker.create(currentUserId, new ZlibCompressor());
+                messageParser = new MessageParserImpl(messagePacker);
+                sender = new SenderImpl(authenticator, messageParser);
+                statusManager = StatusManager.create(sender, messagePacker, listenableBus());
+                webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, sender,
+                        new MessageEncoderImpl(messagePacker));
 
-            messageParser = new MessageParserImpl(messagePacker);
-            sender = new SenderImpl(authenticator, messageParser);
-            statusManager = StatusManager.create(sender, messagePacker, listenableBus());
-            webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, sender,
-                    new MessageEncoderImpl(messagePacker));
+                sender.start(); //this must always come after initialising websocketdispatcher.
 
-            sender.start(); //this must always come after initialising websocketdispatcher.
+                incomingMessageProcessor = new IncomingMessageProcessor(statusManager, postableBus());
+                messagePacker.observe().subscribe(incomingMessageProcessor);
 
-            incomingMessageProcessor = new IncomingMessageProcessor(statusManager, postableBus());
-            messagePacker.observe().subscribe(incomingMessageProcessor);
+                callController = CallManager.create(getApplication(),
+                        currentUserId, callManagerBus,
+                        registrationTokenSource,
+                        BuildConfig.DEBUG);
+                callController.setup();
 
-            callController = CallManager.create(getApplication(),
-                    currentUserId, callManagerBus,
-                    registrationTokenSource,
-                    BuildConfig.DEBUG);
-            callController.setup();
+                eventsListener = new PairAppClientEventsListener(new PairAppClientInterface(this, callController, sender, messagePacker,
+                        statusManager, WORKER_THREAD.handler, messageParser));
 
-            eventsListener = new PairAppClientEventsListener(new PairAppClientInterface(this, callController, sender, messagePacker,
-                    statusManager, WORKER_THREAD.handler, messageParser));
+                callManagerBus.register(eventsListener,
+                        ON_CAL_ERROR, ON_IN_COMING_CALL, CALL_PUSH_PAYLOAD,
+                        ON_CAL_ENDED, ON_CALL_ESTABLISHED, VIDEO_CALL_LOCAL_VIEW, VIDEO_CALL_REMOTE_VIEW,
+                        ON_CALL_PROGRESSING, ON_CALL_MUTED, ON_LOUD_SPEAKER);
 
-            callManagerBus.register(eventsListener,
-                    ON_CAL_ERROR, ON_IN_COMING_CALL, CALL_PUSH_PAYLOAD,
-                    ON_CAL_ENDED, ON_CALL_ESTABLISHED, VIDEO_CALL_LOCAL_VIEW, VIDEO_CALL_REMOTE_VIEW,
-                    ON_CALL_PROGRESSING, ON_CALL_MUTED, ON_LOUD_SPEAKER);
-
-            postableBus().register(eventsListener, OFFLINE, ONLINE, NOT_TYPING, TYPING,
-                    STOP_MONITORING_USER, START_MONITORING_USER,
-                    MESSAGE_RECEIVED, MESSAGE_SEEN,
-                    ON_MESSAGE_DELIVERED, ON_MESSAGE_SEEN,
-                    SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH, GET_STATUS_MANAGER, CLEAR_NEW_MESSAGE_NOTIFICATION,
-                    REVERT_SENDING, EDIT_SENT_MESSAGE, MESSAGE_REVERT_RESULTS, MESSAGE_EDIT_RESULTS,
-                    VOICE_CALL_USER, VIDEO_CALL_USER, HANG_UP_CALL, ANSWER_CALL, ENABLE_SPEAKER, MUTE_CALL,
-                    MESSAGE_PUSH_INCOMING, ON_CALL_PUSH_PAYLOAD_RECEIVED);
-            isClientStarted.set(true);
-            NotificationManager.INSTANCE.reNotifyForReceivedMessages(this);
+                postableBus().register(eventsListener, OFFLINE, ONLINE, NOT_TYPING, TYPING,
+                        STOP_MONITORING_USER, START_MONITORING_USER,
+                        MESSAGE_RECEIVED, MESSAGE_SEEN,
+                        ON_MESSAGE_DELIVERED, ON_MESSAGE_SEEN,
+                        SEND_MESSAGE, CANCEL_MESSAGE_DISPATCH, GET_STATUS_MANAGER, CLEAR_NEW_MESSAGE_NOTIFICATION,
+                        REVERT_SENDING, EDIT_SENT_MESSAGE, MESSAGE_REVERT_RESULTS, MESSAGE_EDIT_RESULTS,
+                        VOICE_CALL_USER, VIDEO_CALL_USER, HANG_UP_CALL, ANSWER_CALL, ENABLE_SPEAKER, MUTE_CALL,
+                        MESSAGE_PUSH_INCOMING, ON_CALL_PUSH_PAYLOAD_RECEIVED);
+                isClientStarted.set(true);
+                NotificationManager.INSTANCE.reNotifyForReceivedMessages(this, currentUserId);
+            } finally {
+                userRealm.close();
+            }
         }
     }
 
@@ -233,7 +248,12 @@ public class PairAppClient extends Service {
         @NonNull
         @Override
         public String requestNewToken() throws PairappException {
-            return UserManager.getInstance().getNewAuthTokenSync();
+            Realm realm = User.Realm(Config.getApplicationContext());
+            try {
+                return UserManager.getInstance().getNewAuthTokenSync(realm);
+            } finally {
+                realm.close();
+            }
         }
     };
 

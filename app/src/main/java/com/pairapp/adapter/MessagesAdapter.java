@@ -112,7 +112,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     public int getItemViewType(int position) {
         Message message = getItem(position);
         currentMessageType = message.getType();
-        isOutgoingMessage = Message.isOutGoing(message);
+        isOutgoingMessage = Message.isOutGoing(delegate.userRealm(), message);
         if (currentMessageType == Message.TYPE_TYPING_MESSAGE) {
             return TYPING_MESSAGE;
         }
@@ -226,8 +226,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         };
         if (currentMessageType == Message.TYPE_CALL) {
             holder.textMessage.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
-            holder.textMessage.setCompoundDrawablesWithIntrinsicBounds(CallLogAdapter.getDrawable(message), 0, 0, 0);
-            holder.textMessage.setText("  " + Message.getCallSummary(context, message));
+            holder.textMessage.setCompoundDrawablesWithIntrinsicBounds(CallLogAdapter.getDrawable(delegate.userRealm(), message), 0, 0, 0);
+            holder.textMessage.setText("  " + Message.getCallSummary(context, delegate.userRealm(), message));
             CallBody callBody = message.getCallBody();
             assert callBody != null;
             if (callBody.getCallType() == CallBody.CALL_TYPE_VOICE) {
@@ -373,7 +373,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     }
 
     private void cancelDownloadOrSending(Message message) {
-        if (Message.isIncoming(message)) {
+        if (Message.isIncoming(delegate.userRealm(), message)) {
             if (message.getMessageBody().startsWith("http")) {
                 if (delegate.getProgress(message) >= 0) {
                     delegate.cancelDownload(message);

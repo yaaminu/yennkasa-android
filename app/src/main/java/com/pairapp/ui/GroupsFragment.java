@@ -61,7 +61,7 @@ public class GroupsFragment extends ListFragment {
         super.onActivityCreated(savedInstanceState);
         final RealmResults<User> groups = realm.where(User.class).equalTo(User.FIELD_TYPE, User.TYPE_GROUP).findAllSorted(User.FIELD_NAME);
         BaseAdapter adapter = new GroupsAdapter(getActivity(), groups);
-        UserManager.getInstance().fetchGroups();
+        UserManager.getInstance().fetchGroups(realm);
         setListAdapter(adapter);
     }
 

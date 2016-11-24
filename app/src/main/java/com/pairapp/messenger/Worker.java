@@ -13,6 +13,7 @@ import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.Errors.PairappException;
 import com.pairapp.R;
 import com.pairapp.data.Message;
+import com.pairapp.data.User;
 import com.pairapp.ui.ChatActivity;
 import com.pairapp.util.Config;
 import com.pairapp.util.FileUtils;
@@ -140,11 +141,16 @@ public class Worker extends IntentService {
         private boolean fromBackground;
 
         public DownloadRunnable(Message message, boolean fromBackground) {
-            messageId = message.getId();
-            messageBody = message.getMessageBody();
-            peer = Message.isGroupMessage(message) ? message.getTo() : message.getFrom();
-            type = message.getType();
-            this.fromBackground = fromBackground;
+            Realm userRealm = User.Realm(Config.getApplicationContext());
+            try {
+                messageId = message.getId();
+                messageBody = message.getMessageBody();
+                peer = Message.isGroupMessage(userRealm, message) ? message.getTo() : message.getFrom();
+                type = message.getType();
+                this.fromBackground = fromBackground;
+            } finally {
+                userRealm.close();
+            }
         }
 
         @Override

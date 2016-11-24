@@ -19,6 +19,8 @@ import com.pairapp.util.UiHelpers;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.realm.Realm;
+
 import static com.pairapp.messenger.MessengerBus.OFFLINE;
 import static com.pairapp.messenger.MessengerBus.ONLINE;
 import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS;
@@ -34,11 +36,13 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
     protected final UserManager userManager = UserManager.getInstance();
     private boolean isUserVerified = false;
     private static volatile boolean promptShown = false;
+    protected Realm userRealm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        isUserVerified = userManager.isUserVerified();
+        userRealm = User.Realm(this);
+        isUserVerified = userManager.isUserVerified(userRealm);
         NavigationManager.onCreate(this);
     }
 
@@ -128,14 +132,15 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
     protected void onDestroy() {
         super.onDestroy();
         NavigationManager.onDestroy(this);
+        userRealm.close();
     }
 
     protected final User getCurrentUser() {
-        return userManager.getCurrentUser();
+        return userManager.getCurrentUser(userRealm);
     }
 
     protected final boolean isUserLoggedIn() {
-        return userManager.isUserLoggedIn();
+        return userManager.isUserLoggedIn(userRealm);
     }
 
     protected final boolean isUserVerified() {
@@ -143,7 +148,7 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
     }
 
     protected final String getMainUserId() {
-        return UserManager.getMainUserId();
+        return UserManager.getMainUserId(userRealm);
     }
 
     @Override

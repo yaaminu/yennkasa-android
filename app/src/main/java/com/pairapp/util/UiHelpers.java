@@ -196,9 +196,6 @@ public class UiHelpers {
         context.startActivity(intent);
     }
 
-    public static void gotoProfileActivity(Context context) {
-        gotoProfileActivity(context, UserManager.getMainUserId());
-    }
 
     public static void gotoProfileActivity(Context context, String id, Bitmap placeHolder, Bitmap error) {
         Intent intent = new Intent(context, ProfileActivity.class);

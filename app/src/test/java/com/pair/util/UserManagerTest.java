@@ -22,6 +22,7 @@ public class UserManagerTest {
 
     Context context;
     Realm realm;
+
     @Before
     public void setUp() throws Exception {
         context = Mockito.mock(Context.class);
@@ -36,7 +37,7 @@ public class UserManagerTest {
 
     @Test
     public void testGetMainUser() throws Exception {
-        User user = UserManager.getInstance().getCurrentUser();
+        User user = UserManager.getInstance().getCurrentUser(realm);
         Assert.assertNull(user);
 
     }

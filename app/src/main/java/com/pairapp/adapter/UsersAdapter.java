@@ -82,10 +82,10 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
         ViewHolder holder = (ViewHolder) convertView.getTag();
         holder.userName.setText(user.getName());
 
-        if (UserManager.getInstance().isGroup(user.getUserId())) {
+        if (UserManager.getInstance().isGroup(realm, user.getUserId())) {
             holder.userPhone.setText(R.string.group);
         } else {
-            holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId(), UserManager.getInstance().getUserCountryISO()));
+            holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId(), UserManager.getInstance().getUserCountryISO(realm)));
         }
         if (!multiSelect) {
             ImageLoader.load(context, user.getDP())
@@ -175,7 +175,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
                     .notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP)
                     .endGroup()
                     .notEqualTo(User.FIELD_ID, UserManager.getInstance()
-                            .getCurrentUser()
+                            .getCurrentUser(realm)
                             .getUserId())
                     .findAllSorted(User.FIELD_NAME, Sort.ASCENDING, User.FIELD_TYPE, Sort.DESCENDING);
         } else {

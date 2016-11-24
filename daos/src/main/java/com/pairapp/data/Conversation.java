@@ -74,7 +74,7 @@ public class Conversation extends RealmObject {
     }
 
     @SuppressWarnings("ConstantConditions")
-    public synchronized static boolean newSession(Realm realm, Conversation conversation) {
+    public synchronized static boolean newSession(Realm realm, String currentUserId, Conversation conversation) {
         if (conversation == null) {
             throw new IllegalArgumentException("conversation is null");
         }
@@ -88,7 +88,7 @@ public class Conversation extends RealmObject {
             message = realm.createObject(Message.class);
             message.setId(conversation.getPeerId() + formatted);
             message.setMessageBody(formatted);
-            message.setTo(UserManager.getInstance().getCurrentUser().getUserId());
+            message.setTo(currentUserId);
             message.setFrom(conversation.getPeerId());
             message.setDateComposed(now);
             message.setType(TYPE_DATE_MESSAGE);
@@ -97,21 +97,21 @@ public class Conversation extends RealmObject {
         return false;
     }
 
-    public synchronized static void newConversation(Context context, String peerId) {
-        newConversation(context, peerId, false);
+    public synchronized static void newConversation(Context context, String currentUserId, String peerId) {
+        newConversation(context, currentUserId, peerId, false);
     }
 
-    public synchronized static void newConversation(Context context, String peerId, boolean active) {
+    public synchronized static void newConversation(Context context, String currentUserId, String peerId, boolean active) {
         Realm realm = Realm(context);
-        newConversation(realm, peerId, active);
+        newConversation(realm, currentUserId, peerId, active);
         realm.close();
     }
 
-    public synchronized static Conversation newConversation(Realm realm, String peerId) {
-        return newConversation(realm, peerId, false);
+    public synchronized static Conversation newConversation(Realm realm, String currentUserId, String peerId) {
+        return newConversation(realm, currentUserId, peerId, false);
     }
 
-    public synchronized static Conversation newConversation(Realm realm, String peerId, boolean active) {
+    public synchronized static Conversation newConversation(Realm realm, String currentUserId, String peerId, boolean active) {
         Conversation newConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
         realm.beginTransaction();
         if (newConversation == null) {
@@ -121,7 +121,7 @@ public class Conversation extends RealmObject {
             newConversation.setLastActiveTime(new Date());
             newConversation.setSummary("no message");
         }
-        newSession(realm, newConversation);
+        newSession(realm, currentUserId, newConversation);
         realm.commitTransaction();
         return newConversation;
     }

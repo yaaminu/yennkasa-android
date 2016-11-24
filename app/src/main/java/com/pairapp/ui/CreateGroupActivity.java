@@ -52,7 +52,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     private Set<String> selectedUsersNames = new TreeSet<>();
     private Set<String> selectedUsers = new HashSet<>();
     private String groupName;
-    private Realm realm;
+    private Realm userRealm;
     private CustomUsersAdapter adapter;
     private EditText groupNameEt;
     private int stage = 0;
@@ -93,9 +93,8 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         ViewUtils.setTypeface(groupNameEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         dpPreview = findViewById(R.id.rl_group_dp_preview);
         groupNameEt.addTextChangedListener(this);
-        realm = User.Realm(this);
         RealmResults<User> users = getQuery().findAllSorted(User.FIELD_NAME);
-        adapter = new CustomUsersAdapter(realm, users);
+        adapter = new CustomUsersAdapter(userRealm, users);
         progressDialog = new ProgressDialog(this);
         progressDialog.setMessage(getString(R.string.st_please_wait));
         progressDialog.setCancelable(false);
@@ -113,8 +112,8 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     }
 
     private RealmQuery<User> getQuery() {
-        return realm.where(User.class).notEqualTo(User.FIELD_ID, userManager
-                .getCurrentUser().getUserId()).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP);
+        return userRealm.where(User.class).notEqualTo(User.FIELD_ID, userManager
+                .getCurrentUser(userRealm).getUserId()).notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP);
     }
 
     private void proceedToAddMembers() {
@@ -154,10 +153,15 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
 
             @Override
             protected Boolean doInBackground(Void... params) {
-                android.support.v4.util.Pair<String, String> errorNamePair = userManager.isValidGroupName(finalName);
-                finalName = errorNamePair.first;
-                errorMessage = errorNamePair.second;
-                return errorMessage == null;
+                Realm userRealm = User.Realm(CreateGroupActivity.this);
+                try {
+                    android.support.v4.util.Pair<String, String> errorNamePair = userManager.isValidGroupName(userRealm, finalName);
+                    finalName = errorNamePair.first;
+                    errorMessage = errorNamePair.second;
+                    return errorMessage == null;
+                } finally {
+                    userRealm.close();
+                }
             }
         };
 
@@ -253,7 +257,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     private void continueProcess() {
         if (selectedUsers.size() >= 2) {
             progressDialog.show();
-            userManager.createGroup(groupName, selectedUsers, new UserManager.CreateGroupCallBack() {
+            userManager.createGroup(userRealm, groupName, selectedUsers, new UserManager.CreateGroupCallBack() {
                 @Override
                 public void done(Exception e, String groupId) {
                     onGroupCreated(e, groupId);
@@ -291,12 +295,6 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         }
     }
 
-
-    @Override
-    protected void onDestroy() {
-        realm.close();
-        super.onDestroy();
-    }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -352,7 +350,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
         String phoneNumber = item.trim();
         if (!TextUtils.isEmpty(phoneNumber)) {
             String original = phoneNumber; //see usage below
-            final String userCountryISO = userManager.getUserCountryISO();
+            final String userCountryISO = userManager.getUserCountryISO(userRealm);
             try {
                 phoneNumber = PhoneNumberNormaliser.cleanNonDialableChars(phoneNumber);
                 phoneNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userCountryISO);

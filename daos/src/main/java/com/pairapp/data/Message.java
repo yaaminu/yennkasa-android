@@ -96,21 +96,18 @@ public class Message extends RealmObject {
     /**
      * @return a new id that is likely unique.there is no guarantee that this will be unique
      */
-    private static String generateIdPossiblyUnique(String to) {
+    private static String generateIdPossiblyUnique(Realm realm, String mainUserId, String to) {
         //before changing how we generate ids make sure all components relying on this behaviour are updated
         //eg: MessageActivity (the name might have changed)
         if (to == null) {
             throw new IllegalArgumentException("to == null");
         }
-        Application appContext = Config.getApplication();
-        Realm realm = REALM(appContext);
         String id;
         synchronized (idLock) {
             long count = realm.where(Message.class).equalTo(FIELD_TO, to).count() + 1;
-            id = count + "@" + UserManager.getMainUserId() + "@" + to + "@" + System.currentTimeMillis();
+            id = count + "@" + mainUserId + "@" + to + "@" + System.currentTimeMillis();
         }
         PLog.i(TAG, "generated message id: " + id);
-        realm.close();
         return id;
     }
 
@@ -164,12 +161,12 @@ public class Message extends RealmObject {
         return message.getType() == TYPE_TYPING_MESSAGE;
     }
 
-    public static boolean isIncoming(Message message) {
-        return !isOutGoing(message);
+    public static boolean isIncoming(Realm userRealm, Message message) {
+        return !isOutGoing(userRealm, message);
     }
 
-    public static boolean isOutGoing(Message message) {
-        return UserManager.getInstance().isCurrentUser(message.getFrom());
+    public static boolean isOutGoing(Realm userRealm, Message message) {
+        return UserManager.getInstance().isCurrentUser(userRealm, message.getFrom());
     }
 
     /**
@@ -182,20 +179,20 @@ public class Message extends RealmObject {
      * @param peer     the other party in the call
      * @return the newly createdMessage
      * @throws io.realm.exceptions.RealmException if you are not in a transaction
-     * @see {@link Message#makeNew(Realm, String, String, int)}
+     * @see {@link Message#makeNew(Realm, String, String, String, int)}
      */
     @NonNull
-    public static Message makeNewCallMessageAndPersist(Realm theRealm, String peer, long callDate, CallBody callBody, boolean isOutGoing) {
+    public static Message makeNewCallMessageAndPersist(Realm theRealm, String mainUserId, String peer, long callDate, CallBody callBody, boolean isOutGoing) {
         Message message = theRealm.createObject(Message.class);
         message.setDateComposed(new Date(callDate));
         message.setCallBody(theRealm.copyToRealm(callBody));
-        message.setId(generateIdPossiblyUnique(peer));
+        message.setId(generateIdPossiblyUnique(theRealm, mainUserId, peer));
         if (isOutGoing) {
-            message.setFrom(UserManager.getMainUserId());
+            message.setFrom(mainUserId);
             message.setTo(peer);
         } else {
             message.setFrom(peer);
-            message.setTo(UserManager.getMainUserId());
+            message.setTo(mainUserId);
         }
         message.setState(Message.STATE_SEEN);
         message.setType(TYPE_CALL);
@@ -216,10 +213,10 @@ public class Message extends RealmObject {
      * @throws com.pairapp.Errors.PairappException if the message is invalid. this could be because
      *                                             a binary message is too huge, etc
      * @throws io.realm.exceptions.RealmException  if you are not in a transaction
-     * @see {@link Message#makeNewCallMessageAndPersist(Realm, String, long, CallBody, boolean)}
+     * @see {@link Message#makeNewCallMessageAndPersist(Realm, String, String, long, CallBody, boolean)}
      * @see {@link MessageUtils#validate(Message)}
      */
-    public static Message makeNew(Realm theRealm, String body, String to, int type) throws PairappException {
+    public static Message makeNew(Realm theRealm, String mainUserId, String body, String to, int type) throws PairappException {
         if (type == TYPE_BIN_MESSAGE || type == TYPE_PICTURE_MESSAGE || type == TYPE_VIDEO_MESSAGE) {
             File file = new File(body);
             if (!file.exists()) {
@@ -232,8 +229,8 @@ public class Message extends RealmObject {
         Message message = theRealm.createObject(Message.class);
         message.setDateComposed(new Date());
         message.setMessageBody(body);
-        message.setId(generateIdPossiblyUnique(to));
-        message.setFrom(UserManager.getMainUserId());
+        message.setId(generateIdPossiblyUnique(theRealm, mainUserId, to));
+        message.setFrom(mainUserId);
         message.setState(Message.STATE_PENDING);
         message.setType(type);
         message.setTo(to);
@@ -318,8 +315,8 @@ public class Message extends RealmObject {
         return copy;
     }
 
-    public static boolean isGroupMessage(Message message) {
-        return UserManager.getInstance().isGroup(message.getTo());
+    public static boolean isGroupMessage(Realm userRealm, Message message) {
+        return UserManager.getInstance().isGroup(userRealm, message.getTo());
     }
 
     public static String formatTimespan(long timespan) {
@@ -334,12 +331,12 @@ public class Message extends RealmObject {
     }
 
     @NonNull
-    public static String getCallSummary(Context context, Message message) {
+    public static String getCallSummary(Context context, Realm userRealm, Message message) {
         //noinspection ConstantConditions
         int callDuration = message.getCallBody().getCallDuration();
         return DateUtils.formatDateTime(context, message.getDateComposed().getTime(),
                 DateUtils.FORMAT_SHOW_TIME).toLowerCase() + "   " +
-                (Message.isOutGoing(message) || callDuration > 0 ? "" + formatTimespan(callDuration) : GenericUtils.getString(R.string.missed_call));
+                (Message.isOutGoing(userRealm, message) || callDuration > 0 ? "" + formatTimespan(callDuration) : GenericUtils.getString(R.string.missed_call));
     }
 
     public int getType() {
@@ -409,7 +406,12 @@ public class Message extends RealmObject {
         if (TextUtils.isEmpty(json)) {
             throw new IllegalArgumentException("json == null || json is empty");
         }
-        return MessageJsonAdapter.INSTANCE.fromJson(json);
+        Realm userRealm = User.Realm(Config.getApplicationContext());
+        try {
+            return MessageJsonAdapter.INSTANCE.fromJson(UserManager.getMainUserId(userRealm), json);
+        } finally {
+            userRealm.close();
+        }
     }
 
     public static Message markMessageSeen(Realm realm, String msgId) {
@@ -455,12 +457,12 @@ public class Message extends RealmObject {
         return message.getType() == TYPE_CALL;
     }
 
-    public static boolean canRevert(Message msg) {
-        return isOutGoing(msg) && (msg.getState() ==
+    public static boolean canRevert(Realm userRealm, Message msg) {
+        return isOutGoing(userRealm, msg) && (msg.getState() ==
                 STATE_PENDING || msg.getState() == Message.STATE_SENT || msg.getState() == Message.STATE_RECEIVED);
     }
 
-    public static boolean canEdit(Message msg) {
-        return Message.isTextMessage(msg) && canRevert(msg);
+    public static boolean canEdit(Realm userRealm, Message msg) {
+        return Message.isTextMessage(msg) && canRevert(userRealm, msg);
     }
 }

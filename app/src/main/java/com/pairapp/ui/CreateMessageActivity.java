@@ -82,7 +82,7 @@ public class CreateMessageActivity extends MessageActivity
     private int attachmentType;
 
     private UsersAdapter adapter;
-    private Realm realm;
+    private Realm userRealm;
     private Toolbar toolBar;
     private boolean isAttaching = false;
     private boolean isNotDefaultIntent = false;
@@ -140,7 +140,6 @@ public class CreateMessageActivity extends MessageActivity
                 adapter.notifyDataSetChanged();
             }
         }
-        realm = User.Realm(this);
         adapter = new CustomAdapter();
         final Intent intent = getIntent();
 
@@ -269,7 +268,7 @@ public class CreateMessageActivity extends MessageActivity
     }
 
     private RealmQuery<User> prepareQuery() {
-        RealmQuery<User> query = realm.where(User.class);
+        RealmQuery<User> query = userRealm.where(User.class);
 
         forwardedFrom = getIntent().getStringExtra(EXTRA_FORWARDED_FROM);
         if (forwardedFrom != null) {
@@ -391,12 +390,6 @@ public class CreateMessageActivity extends MessageActivity
         tvAttachmentDescription.setText(attachmentDescription);
         ViewUtils.hideViews(inputPanel);
         ViewUtils.showViews(attachmentPreview);
-    }
-
-    @Override
-    protected void onDestroy() {
-        realm.close();
-        super.onDestroy();
     }
 
     @Override
@@ -567,7 +560,7 @@ public class CreateMessageActivity extends MessageActivity
 
     private class CustomAdapter extends MultiChoiceUsersAdapter {
         private CustomAdapter() {
-            super(delegagte, realm, prepareQuery().findAllSorted(User.FIELD_NAME, Sort.ASCENDING, User.FIELD_TYPE, Sort.DESCENDING), selectedItems, R.id.cb_checked);
+            super(delegagte, userRealm, prepareQuery().findAllSorted(User.FIELD_NAME, Sort.ASCENDING, User.FIELD_TYPE, Sort.DESCENDING), selectedItems, R.id.cb_checked);
         }
 
         @Override
@@ -580,7 +573,7 @@ public class CreateMessageActivity extends MessageActivity
             if (TextUtils.isEmpty(constraint)) {
                 return prepareQuery().findAllSorted(User.FIELD_NAME, Sort.ASCENDING, User.FIELD_TYPE, Sort.DESCENDING);
             }
-            RealmQuery<User> query = realm.where(User.class);//.equalTo(User.FIELD_TYPE, User.TYPE_GROUP);
+            RealmQuery<User> query = userRealm.where(User.class);//.equalTo(User.FIELD_TYPE, User.TYPE_GROUP);
 
             if (TextUtils.isDigitsOnly(constraint)) {
                 query.notEqualTo(User.FIELD_TYPE, User.TYPE_GROUP).contains(User.FIELD_ID, constraint);

@@ -48,40 +48,45 @@ class StatusBarNotifier {
     Timer timer = new Timer();
 
     void notifyUser(Context context, Message message, String sender) {
-        final String notificationMessage = formatNotificationMessage(message, sender);
-        if (notificationMessage == null) {
-            return;
-        }
-        Intent action;
-        if (LiveCenter.getTotalUnreadMessages() > 1) {
-            action = new Intent(context, MainActivity.class);
-        } else {
-            action = new Intent(context, ChatActivity.class);
-            action.putExtra(ChatActivity.EXTRA_PEER_ID, Message.isGroupMessage(message) ? message.getTo() : message.getFrom());
-        }
+        Realm userRealm = User.Realm(context);
+        try {
+            final String notificationMessage = formatNotificationMessage(message, sender);
+            if (notificationMessage == null) {
+                return;
+            }
+            Intent action;
+            if (LiveCenter.getTotalUnreadMessages() > 1) {
+                action = new Intent(context, MainActivity.class);
+            } else {
+                action = new Intent(context, ChatActivity.class);
+                action.putExtra(ChatActivity.EXTRA_PEER_ID, Message.isGroupMessage(userRealm, message) ? message.getTo() : message.getFrom());
+            }
 
-        PendingIntent pendingIntent = PendingIntent.getActivity(Config.getApplicationContext(),
-                MESSAGE_PENDING_INTENT_REQUEST_CODE,
-                action,
-                PendingIntent.FLAG_CANCEL_CURRENT);
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(Config.getApplication());
-        builder.setTicker(notificationMessage)
-                .setContentTitle(context.getString(R.string.new_message))
-                .setAutoCancel(true);
+            PendingIntent pendingIntent = PendingIntent.getActivity(Config.getApplicationContext(),
+                    MESSAGE_PENDING_INTENT_REQUEST_CODE,
+                    action,
+                    PendingIntent.FLAG_CANCEL_CURRENT);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(Config.getApplication());
+            builder.setTicker(notificationMessage)
+                    .setContentTitle(context.getString(R.string.new_message))
+                    .setAutoCancel(true);
 
-        builder.setContentText(notificationMessage);
-        builder.setStyle(new NotificationCompat.BigTextStyle().bigText(notificationMessage));
-        builder.setSmallIcon(R.drawable.ic_stat_icon)
-                .setContentIntent(pendingIntent);
-        if (UserManager.getInstance().getBoolPref(UserManager.LIGHTS, false)) {
-            builder.setLights(Color.GREEN, 1500, 3000);
+            builder.setContentText(notificationMessage);
+            builder.setStyle(new NotificationCompat.BigTextStyle().bigText(notificationMessage));
+            builder.setSmallIcon(R.drawable.ic_stat_icon)
+                    .setContentIntent(pendingIntent);
+            if (UserManager.getInstance().getBoolPref(UserManager.LIGHTS, false)) {
+                builder.setLights(Color.GREEN, 1500, 3000);
+            }
+            Notification notification = builder.build();
+            doNotify(context, userRealm, notification, message);
+        } finally {
+            userRealm.close();
         }
-        Notification notification = builder.build();
-        doNotify(context, notification, message);
     }
 
-    private void doNotify(Context context, Notification notification, Message message) {
-        String senderId = Message.isGroupMessage(message) ? message.getTo() : message.getFrom();
+    private void doNotify(Context context, Realm userRealm, Notification notification, Message message) {
+        String senderId = Message.isGroupMessage(userRealm, message) ? message.getTo() : message.getFrom();
         NotificationManagerCompat.from(context).notify(MESSAGE_NOTIFICATION_ID, notification);
         if (shouldPlayTone.getAndSet(false)) {
             timer.schedule(new TimerTask() {
