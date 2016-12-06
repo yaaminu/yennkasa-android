@@ -9,9 +9,6 @@ import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.rey.material.widget.Slider;
-import com.rey.material.widget.Switch;
-
 public class CustomViewPager extends ViewPager {
 
     public CustomViewPager(Context context, AttributeSet attrs) {
@@ -27,8 +24,6 @@ public class CustomViewPager extends ViewPager {
     }
 
     protected boolean customCanScroll(View v) {
-        if (v instanceof Slider || v instanceof Switch)
-            return true;
         return false;
     }
 }

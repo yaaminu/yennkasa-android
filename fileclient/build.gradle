@@ -27,7 +27,7 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
+//    compile fileTree(include: ['*.jar'], dir: 'libs')
     compile project(':utils')
     testCompile 'junit:junit:4.12'
     compile 'com.parse:parse-android:1.13.0'

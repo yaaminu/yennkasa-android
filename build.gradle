@@ -10,7 +10,7 @@ buildscript {
 
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.2.0'
+        classpath 'com.android.tools.build:gradle:2.2.2'
         classpath 'io.realm:realm-gradle-plugin:0.89.1'
         classpath 'com.google.gms:google-services:3.0.0'
 
@@ -20,8 +20,6 @@ buildscript {
     }
 }
 
-buildscript {
-}
 allprojects {
     repositories {
         jcenter()

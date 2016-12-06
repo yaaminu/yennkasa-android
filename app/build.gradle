@@ -18,15 +18,17 @@ android {
         applicationId "com.pairapp"
         minSdkVersion 9
         targetSdkVersion 23
-        versionCode 25
-        versionName "0.8.8(beta)"
+        versionCode 26
+        versionName "0.8.9b26"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
+
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+//
     }
     sourceSets {
         main {
@@ -40,6 +42,15 @@ android {
             exclude 'META-INF/NOTICE.txt'
         }
     }
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a' //select ABIs to build APKs for
+            universalApk true //generate an additional APK that contains all the ABIs
+        }
+    }
+
 }
 
 dependencies {
@@ -81,9 +92,22 @@ dependencies {
     compile 'com.google.firebase:firebase-messaging:9.4.0'
 }
 
+// map for the version code
+project.ext.versionCodes = ['armeabi': 1, 'armeabi-v7a': 2, 'arm64-v8a': 3, 'mips': 5, 'mips64': 6, 'x86': 8, 'x86_64': 9]
+
+android.applicationVariants.all { variant ->
+    // assign different version code for each output
+    variant.outputs.each { output ->
+        output.versionCodeOverride =
+                project.ext.versionCodes.get(output.getFilter(com.android.build.OutputFile.ABI), 0) * 1000000 + android.defaultConfig.versionCode
+    }
+}
+
 crashlytics {
     enableNdk true
     androidNdkOut 'src/main/obj'
     androidNdkLibsOut 'src/main/libs'
 }
 apply plugin: 'com.google.gms.google-services'
+
+

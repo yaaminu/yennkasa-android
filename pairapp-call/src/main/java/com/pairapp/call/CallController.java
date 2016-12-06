@@ -2,6 +2,9 @@ package com.pairapp.call;
 
 import android.support.annotation.IntDef;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 /**
  * @author aminu on 7/14/2016.
  */
@@ -34,6 +37,7 @@ public interface CallController {
 
     void handleCallPushPayload(String payload);
 
+    @Retention(RetentionPolicy.SOURCE)
     @IntDef({CALL_TYPE_VOICE, CALL_TYPE_VIDEO, CALL_TYPE_CONFERENCE_VOICE})
     @interface CallType {
     }
