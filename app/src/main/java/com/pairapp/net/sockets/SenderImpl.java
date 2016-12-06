@@ -48,16 +48,14 @@ public class SenderImpl implements Sender {
     private final MessageQueueImpl.Consumer consumer = new MessageQueueImpl.Consumer() {
         @Override
         public void consume(Sendable item) {
-            if (pairappSocket != null) {
-                pairappSocket.send(stringToBytes(item.getData()));
-            } else {
+            if (pairappSocket == null || !pairappSocket.send(stringToBytes(item.getData()))){
                 messageQueue.onProcessed(item, false);
             }
         }
 
         @Override
         public int highWaterMark() {
-            return pairappSocket != null && pairappSocket.isConnected() ? 30 : 0;
+            return pairappSocket != null && pairappSocket.isConnected() ? 1 : 0;
         }
     };
     @SuppressWarnings("FieldCanBeLocal")
@@ -109,7 +107,6 @@ public class SenderImpl implements Sender {
             pairappSocket.init();
         }
         this.messageQueue.initBlocking(true);
-        // TODO: 11/10/2016 why start the message que here but not when the socketconnection is open?
         this.messageQueue.start();
     }
 
@@ -245,7 +242,6 @@ public class SenderImpl implements Sender {
         public void onOpen() {
             ensureStarted();
             MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(SOCKET_CONNECTION, null, CONNECTED));
-            // TODO: 11/10/2016 whey not actually start the message queue here in the first place?
             //like this :
 //            if (!messageQueue.isStarted()) {
 //                messageQueue.stopProcessing();
@@ -263,6 +259,9 @@ public class SenderImpl implements Sender {
             // TODO: 11/10/2016  should we allow ourselves to be usable again?
             // TODO: 11/10/2016 check for reasons why the connection was closed
             // TODO: 11/10/2016 stop the message queue?
+            if (messageQueue.isStarted()) {
+                messageQueue.pauseProcessing();
+            }
             //if it's for authentication reasons, we will have to request it somehow, create a new connection
             //and start processin again
             switch (code) {
@@ -279,9 +278,6 @@ public class SenderImpl implements Sender {
                             PLog.d(TAG, "another job already running");
                             return;
                         }
-                        if (messageQueue.isStarted()) {
-                            messageQueue.pauseProcessing();
-                        }
                         pairappSocket = null;
                         EventBus.getDefault().register(eventsListener, TokenRefreshJob.TOKEN_NEW_REFRESH);
                         refreshJob = TokenRefreshJob.create(authenticator);
@@ -297,6 +293,9 @@ public class SenderImpl implements Sender {
         public void onClose() {
             // TODO: 11/10/2016 stop the message queue?
             // TODO: 11/10/2016  should we allow ourselves to be usable again?
+            if (messageQueue.isStarted()) {
+                messageQueue.pauseProcessing();
+            }
         }
 
         @Override

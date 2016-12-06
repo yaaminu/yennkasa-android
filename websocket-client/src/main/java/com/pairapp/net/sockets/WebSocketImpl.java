@@ -14,15 +14,20 @@ import java.net.URI;
  */
 class WebSocketImpl implements IWebSocket {
     public static final WebSocketFactory SOCKET_FACTORY = new WebSocketFactory();
+    public static final int QUEUE_SIZE = 3;
     private final WebSocket webSocket;
 
     public WebSocketImpl(URI uri, int timeout) throws IOException {
-        webSocket = SOCKET_FACTORY.createSocket(uri, timeout);
+        webSocket = SOCKET_FACTORY.createSocket(uri, timeout).setFrameQueueSize(QUEUE_SIZE);
     }
 
     @Override
-    public void send(byte[] message) {
-        webSocket.sendBinary(message);
+    public boolean send(byte[] message) {
+        if(webSocket.isOpen() && webSocket.getSocket() != null && webSocket.getSocket().isConnected()) {
+            webSocket.sendBinary(message);
+            return true;
+        }
+        return false;
     }
 
     @Override

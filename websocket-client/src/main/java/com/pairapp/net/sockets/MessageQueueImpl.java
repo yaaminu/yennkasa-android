@@ -9,13 +9,14 @@ import com.pairapp.util.PLog;
 
 import java.util.List;
 import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author aminu on 7/9/2016.
  */
+@SuppressWarnings("WeakerAccess")
 class MessageQueueImpl implements MessageQueue<Sendable> {
 
     public static final String TAG = MessageQueueImpl.class.getSimpleName();
@@ -30,6 +31,7 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
     private volatile boolean started;
     private int runningState;
 
+    @Nullable
     private Executor executor;
     @SuppressWarnings("FieldCanBeLocal")
     private final QueueItemCleanedListener queueItemCleanedListener = new QueueItemCleanedListener() {
@@ -50,6 +52,7 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
             }
         }
     };
+    private boolean asyncExecution = false;
 
     MessageQueueImpl(QueueDataSource queueDataSource, Hooks hooks, Consumer consumer) {
         GenericUtils.ensureNotNull(hooks, queueDataSource);
@@ -72,13 +75,30 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
             PLog.w(TAG, "already initialised");
             return;
         }
-
+         this.asyncExecution = asyncExecution;
         initialised = true;
         itemsStore.registerCallback(queueItemCleanedListener);
         itemsStore.init();
+    }
+
+    public synchronized void start() {
+        if (!isInitialised()) throw new IllegalStateException("not initialised");
+        if (isStarted()) throw new IllegalStateException("already started");
+        if (runningState == STOPPED_PROCESSING) throw new IllegalStateException("stopped");
+        initialiseExecutorIfRequired();
+        started = true;
+        runningState = PROCESSING;
+        processItems();
+    }
+
+    private synchronized void initialiseExecutorIfRequired() {
+        if(executor  != null && executor instanceof ExecutorService && !((ExecutorService) executor).isShutdown()){
+            PLog.d(TAG,"executor already started");
+            return;
+        }
+        shutDownExecutorIfRequired();
         if (asyncExecution) {
-            executor = new ThreadPoolExecutor(2, Math.max(consumer.highWaterMark() / 4, 4), 5,
-                    TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(128));
+            executor = Executors.newSingleThreadExecutor();
         } else {
             executor = new Executor() {
                 @Override
@@ -87,15 +107,6 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
                 }
             };
         }
-    }
-
-    public synchronized void start() {
-        if (!isInitialised()) throw new IllegalStateException("not initialised");
-        if (isStarted()) throw new IllegalStateException("already started");
-        if (runningState == STOPPED_PROCESSING) throw new IllegalStateException("stopped");
-        started = true;
-        runningState = PROCESSING;
-        processItems();
     }
 
     private void processItems() {
@@ -108,6 +119,7 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
     }
 
     private void processNext(final Sendable item) {
+        GenericUtils.ensureNotNull(executor != null);
         executor.execute(new Runnable() {
             @Override
             public void run() {
@@ -122,6 +134,7 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
         if (runningState == STOPPED_PROCESSING) {
             throw new IllegalStateException("cannot pause a stopped queue");
         }
+        shutDownExecutorIfRequired();
         runningState = PAUSED_PROCESSING;
     }
 
@@ -130,6 +143,7 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
         if (runningState == STOPPED_PROCESSING) {
             throw new IllegalStateException("cannot resume a stopped queue");
         }
+        initialiseExecutorIfRequired();
         runningState = PROCESSING;
         processItems();
     }
@@ -140,8 +154,20 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
             PLog.w(TAG, "queue already stopped");
             return;
         }
+        shutDownExecutorIfRequired();
         runningState = STOPPED_PROCESSING;
         started = false;
+    }
+
+    private void shutDownExecutorIfRequired() {
+        if(executor != null && executor instanceof ExecutorService && !((ExecutorService) executor).isShutdown()){
+            ((ExecutorService) executor).shutdown();
+            try {
+                ((ExecutorService) executor).awaitTermination(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                PLog.f(TAG,e.getMessage(),e);
+            }
+        }
     }
 
     @Nullable
@@ -199,7 +225,7 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
     }
 
     @Override
-    public boolean remove(@NonNull Sendable item) {
+    public synchronized boolean remove(@NonNull Sendable item) {
         ensureStateValid();
         if (itemsStore.removeByCollpaseKey(item.getCollapseKey())) {
             removeItem(item, Hooks.FORCEFULLY_REMOVED);
@@ -225,7 +251,7 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
     }
 
     @Override
-    public boolean clear() {
+    public synchronized boolean clear() {
         ensureStateValid();
         List<Sendable> items = itemsStore.pending();
         for (Sendable item : items) {
@@ -239,7 +265,6 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
     }
 
     interface Consumer {
-        int DEFAULT_HIGH_WATER_MARK = 8;
 
         void consume(Sendable item);
 

@@ -17,7 +17,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -30,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @author aminu on 6/19/2016.
  */
+@SuppressWarnings("ALL")
 public class WebSocketClient {
     private static final String TAG = WebSocketClient.class.getSimpleName();
     public static final int PING_INTERVAL = 1000 * 40; //heroku disconnects at 55 seconds
@@ -40,7 +40,6 @@ public class WebSocketClient {
     private IWebSocket internalWebSocket;
     private final AtomicBoolean selfClosed = new AtomicBoolean(false);
     private final Timer timer;
-    private final List<Object> backLog;
     private final URI uri;
     private final int timeout;
 
@@ -54,7 +53,6 @@ public class WebSocketClient {
         this.networkProvider = networkProvider;
         this.headers = headers;
         timer = new Timer("webSocketClient timer", true);
-        backLog = new ArrayList<>(2);
     }
 
 
@@ -82,12 +80,11 @@ public class WebSocketClient {
         return networkProvider.connected() && internalWebSocket.isOpen();
     }
 
-    public synchronized void send(byte[] bytes) {
+    public synchronized boolean send(byte[] bytes) {
         if (networkProvider.connected() && internalWebSocket.isOpen()) {
-            internalWebSocket.send(bytes);
-        } else {
-            backLog.add(bytes);
+            return internalWebSocket.send(bytes);
         }
+        return false;
     }
 
     public synchronized void closeConnectionBlocking() {
@@ -126,6 +123,7 @@ public class WebSocketClient {
         }
     }
 
+    @SuppressWarnings("WeakerAccess")
     public static class Builder {
         private URI uri;
         private Logger logger;
@@ -245,25 +243,6 @@ public class WebSocketClient {
         @Override
         public void onConnected(WebSocket websocket, Map<String, List<String>> headers) throws Exception {
             logger.Log(Logger.V, TAG, "connected to %s @ %s", websocket.getURI().toString(), new Date().toString());
-            synchronized (WebSocketClient.this) {
-                int i = 0;
-                for (int index = 0; index < backLog.size(); index++) {
-                    Object o = backLog.get(i);
-                    if (o instanceof String) {
-                        internalWebSocket.send(((String) o).getBytes());
-                    } else {
-                        internalWebSocket.send((byte[]) o);
-                    }
-                    i++;
-                }
-                if (!backLog.isEmpty()) {
-                    //only remove the messages in the backlog we could send
-                    List<Object> subString = backLog.subList(0, i + 1);
-                    for (Object o : subString) {
-                        backLog.remove(o);
-                    }
-                }
-            }
             listener.onOpen();
         }
 
@@ -361,6 +340,7 @@ public class WebSocketClient {
 
         @Override
         public void onFrameUnsent(WebSocket websocket, WebSocketFrame frame) throws Exception {
+            onSendFailed(frame);
         }
 
         @Override
@@ -391,11 +371,7 @@ public class WebSocketClient {
 
         @Override
         public void onSendError(WebSocket websocket, WebSocketException cause, WebSocketFrame frame) throws Exception {
-            if (cause.getError() == WebSocketError.IO_ERROR_IN_WRITING) {
-                if (frame != null) {
-                    listener.onSendError(frame.isBinaryFrame(), frame.getPayload());
-                }
-            }
+            onSendFailed(frame);
         }
 
         @Override
@@ -415,6 +391,12 @@ public class WebSocketClient {
         public void onSendingHandshake(WebSocket websocket, String requestLine, List<String[]> headers) throws Exception {
         }
     };
+
+    private void onSendFailed(WebSocketFrame frame) {
+        if (frame != null && frame.isDataFrame()) {
+            listener.onSendError(frame.isBinaryFrame(), frame.getPayload());
+    }
+    }
 
     private static final long DEFAULT_DELAY = 1000;
     private long reconnectDelay = DEFAULT_DELAY;

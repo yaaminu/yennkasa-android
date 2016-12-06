@@ -9,7 +9,7 @@ import com.neovisionaries.ws.client.WebSocketState;
  */
 public interface IWebSocket {
 
-    void send(byte[] message);
+    boolean send(byte[] message);
 
     void connect() throws WebSocketException;
 

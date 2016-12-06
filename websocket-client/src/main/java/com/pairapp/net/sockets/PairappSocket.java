@@ -51,11 +51,10 @@ class PairappSocket {
         webSocketClient.closeConnectionBlocking();
     }
 
-    public void send(byte[] bytes) {
+    public boolean send(byte[] bytes) {
         ThreadUtils.ensureNotMain();
         if (initialized.get()) {
-            webSocketClient.send(bytes);
-
+          return  webSocketClient.send(bytes);
         } else {
             throw new IllegalStateException("not initialised, did you forget to call init()");
         }
