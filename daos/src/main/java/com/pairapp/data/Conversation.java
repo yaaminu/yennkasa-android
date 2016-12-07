@@ -140,8 +140,13 @@ public class Conversation extends RealmObject {
         return newConversation;
     }
 
+    @Deprecated //use Realm();
     public static Realm Realm(Context context) {
         return Message.REALM(context);
+    }
+
+    public static Realm Realm() {
+        return Message.REALM();
     }
 
     public static Conversation copy(Conversation conversation) {
