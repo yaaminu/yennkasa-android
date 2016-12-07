@@ -25,6 +25,7 @@ import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -79,28 +80,41 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Sw
             UiHelpers.showToast(getString(R.string.refreshing), Toast.LENGTH_LONG);
         }
     };
-    private final ContactsManager.FindCallback<List<Contact>> contactsFindCallback = new ContactsManager.FindCallback<List<Contact>>() {
+    private boolean isDestroyed;
+
+    static class FindCallbackImpl implements ContactsManager.FindCallback<List<Contact>> {
+        private final WeakReference<ContactFragment> fragment;
+
+        public FindCallbackImpl(ContactFragment fragment) {
+            this.fragment = new WeakReference<>(fragment);
+        }
+
         @Override
         public void done(List<Contact> freshContacts) {
-            emptyTextView.setText(R.string.st_empty_contacts);
-            ViewUtils.showViews(refreshButton);
-            if (freshContacts.size() < 1) {
-                ViewUtils.showViews(refreshButton);
-                refreshButton.setOnClickListener(listener);
-            } else {
-                ViewUtils.hideViews(refreshButton);
-                refreshButton.setOnClickListener(null);
-            }
-            contacts = freshContacts;
-            adapter.refill(contacts);
-            listView.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    swipeRefreshLayout.setRefreshing(false);
+            final ContactFragment contactFragment = fragment.get();
+            if (contactFragment != null && !contactFragment.isDestroyed) {
+                contactFragment.emptyTextView.setText(R.string.st_empty_contacts);
+                ViewUtils.showViews(contactFragment.refreshButton);
+                if (freshContacts.size() < 1) {
+                    ViewUtils.showViews(contactFragment.refreshButton);
+                    contactFragment.refreshButton.setOnClickListener(contactFragment.listener);
+                } else {
+                    ViewUtils.hideViews(contactFragment.refreshButton);
+                    contactFragment.refreshButton.setOnClickListener(null);
                 }
-            }, 10000);
+                contacts = freshContacts;
+                contactFragment.adapter.refill(contacts);
+                contactFragment.listView.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        contactFragment.swipeRefreshLayout.setRefreshing(false);
+                    }
+                }, 10000);
+            }
         }
-    };
+    }
+
+    private static ContactsManager.FindCallback<List<Contact>> contactsFindCallback;
     private SwipeRefreshLayout swipeRefreshLayout;
 
     public ContactFragment() {
@@ -110,8 +124,10 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Sw
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        setRetainInstance(true);
         super.onCreate(savedInstanceState);
+        setRetainInstance(true);
+        contactsFindCallback = new FindCallbackImpl(this);
+        isDestroyed = false;
         userRealm = User.Realm(getActivity());
     }
 
@@ -172,6 +188,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Sw
     @Override
     public void onDestroy() {
         userRealm.close();
+        isDestroyed = true;
         super.onDestroy();
     }
 
