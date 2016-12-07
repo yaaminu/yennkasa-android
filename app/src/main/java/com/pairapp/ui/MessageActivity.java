@@ -1,13 +1,8 @@
 package com.pairapp.ui;
 
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.util.Pair;
@@ -33,6 +28,7 @@ import com.pairapp.util.GenericUtils;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
+import com.pairapp.util.ThreadUtils;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
 import com.rockerhieu.emojicon.EmojiconGridFragment;
@@ -41,7 +37,6 @@ import com.rockerhieu.emojicon.emoji.Emojicon;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -58,29 +53,28 @@ import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
  */
 public abstract class MessageActivity extends PairAppActivity implements LiveCenter.ProgressListener, TextWatcher, EmojiconsFragment.OnEmojiconBackspaceClickedListener, EmojiconGridFragment.OnEmojiconClickedListener {
 
-    public static final String CONVERSATION_ACTIVE = "active";
     private static final String TAG = MessageActivity.class.getSimpleName();
     public static final String EMOJI_FRAGMENT = "emojiFragment";
-    private Worker worker;
     private boolean isTypingEmoji = false;
     private ImageButton emoji, camera, mic;
     private EditText messageEt;
 
-    protected final void resendMessage(String messageId) {
-        android.os.Message msg = android.os.Message.obtain();
-        msg.what = Worker.RESEND_MESSAGE;
-        msg.obj = messageId;
-        worker.sendMessage(msg);
+    protected final void resendMessage(final String msgId) {
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                resendFailedMessage(msgId);
+            }
+        }, false);
     }
 
-    protected final void editMessage(String msgId, String newContent) {
-        android.os.Message msg = android.os.Message.obtain();
-        msg.what = Worker.EDIT_MESSAGE;
-        Bundle bundle = new Bundle(2);
-        bundle.putString(Message.FIELD_ID, msgId);
-        bundle.putString(Message.FIELD_MESSAGE_BODY, newContent);
-        msg.setData(bundle);
-        worker.sendMessage(msg);
+    protected final void editMessage(final String msgId, final String newContent) {
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                editSentMessage(msgId, newContent);
+            }
+        }, false);
     }
 
     @Override
@@ -158,104 +152,84 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         postEvent(Event.createSticky(SEND_MESSAGE, null, Message.copy(message)));
     }
 
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        sendStopSignal();
-        worker = new Worker(this);
-        worker.start();
-    }
-
-    @Override
-    protected void onDestroy() {
-        sendStopSignal();
-        super.onDestroy();
-    }
-
-    private void sendStopSignal() {
-        if (worker != null && worker.isAlive()) {
-            android.os.Message message = android.os.Message.obtain();
-            message.what = Worker.STOP;
-            worker.sendMessage(message);
-        }
-    }
-
     protected final void sendMessage(final String messageBody, final Set<String> recipientIds, final int type, final MessageActivity.SendCallback callback) {
-        AsyncTask<Void, Void, Void> sendMessageTask = new AsyncTask<Void, Void, Void>() {
+        TaskManager.executeNow(new Runnable() {
             @Override
-            protected Void doInBackground(Void... params) {
-                for (String recipientId : recipientIds) {
-                    sendMessage(messageBody, recipientId, type);
+            public void run() {
+                if (ThreadUtils.isMainThread()) {
+                    callback.onSendComplete(null);
+                } else {
+                    for (String recipientId : recipientIds) {
+                        sendMessage(messageBody, recipientId, type, false);
+                    }
+                    TaskManager.executeOnMainThread(this);
                 }
-                return null;
             }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                callback.onSendComplete(null);
-            }
-        };
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-            sendMessageTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        } else {
-            sendMessageTask.execute();
-        }
+        }, false);
     }
 
-    protected final void sendMessage(String messageBody, String recipient, int type) {
+    protected final void sendMessage(final String messageBody, final String recipient, final int type) {
         sendMessage(messageBody, recipient, type, false);
     }
 
-    protected final void sendMessage(final int requestCode, final Intent data, final String recipient) {
+    protected final void sendMessageActive(final String messageBody, final String recipient, final int type, final boolean isActive) {
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                sendMessage(messageBody, recipient, type, isActive);
+            }
+        }, false);
+    }
 
+    protected final void sendMessage(final int requestCode, final Intent data, final String recipient) {
         final ProgressDialog dialog = new ProgressDialog(this);
         dialog.setCancelable(false);
         dialog.setMessage(getString(R.string.st_please_wait));
-        runOnUiThread(new Runnable() {
+        dialog.show();
+
+        TaskManager.executeNow(new Runnable() {
             @Override
             public void run() {
-                dialog.show();
-
-                final Runnable runnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Pair<String, Integer> pathAndType = UiHelpers.completeAttachIntent(requestCode, data);
-                            sendMessage(pathAndType.first, recipient, pathAndType.second);
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    dialog.dismiss();
-                                }
-                            });
-                        } catch (final PairappException e) {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    dialog.dismiss();
-                                    UiHelpers.showErrorDialog(MessageActivity.this, e.getMessage());
-                                }
-                            });
+                try {
+                    Pair<String, Integer> pathAndType = UiHelpers.completeAttachIntent(requestCode, data);
+                    sendMessage(pathAndType.first, recipient, pathAndType.second);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            dialog.dismiss();
                         }
-                    }
-                };
-                TaskManager.executeNow(runnable, false);
+                    });
+                } catch (final PairappException e) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            dialog.dismiss();
+                            UiHelpers.showErrorDialog(MessageActivity.this, e.getMessage());
+                        }
+                    });
+                }
             }
-        });
+        }, false);
     }
 
-    protected final void sendMessage(String messageBody, String recipient, int type, boolean active) {
-        android.os.Message message = android.os.Message.obtain();
-        message.what = Worker.SEND_MESSAGE;
-        Bundle bundle = new Bundle(4);
-        bundle.putString(Message.FIELD_MESSAGE_BODY, messageBody);
-        bundle.putString(Message.FIELD_TO, recipient);
-        bundle.putInt(Message.FIELD_TYPE, type);
-        bundle.putBoolean(CONVERSATION_ACTIVE, active);
-        message.setData(bundle);
-        worker.sendMessage(message);
+    private void sendMessage(String msgBody, String to, int msgType, boolean active) {
+        ThreadUtils.ensureNotMain();
+        Realm realm = Conversation.Realm(this);
+        try {
+            Message message = createMessage(msgBody, to, msgType, active);
+            final String messageId = message.getId();
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    onMessageQueued(messageId);
+                }
+            });
+            doSendMessage(message);
+        } catch (PairappException e) {
+            ErrorCenter.reportError(TAG, e.getMessage());
+        } finally {
+            realm.close();
+        }
     }
 
     protected final void onMessageSeen(final Message message) {
@@ -268,80 +242,11 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         }, false);
     }
 
-    private final class Worker extends HandlerThread implements Handler.Callback {
-        public static final String TAG = "dispatchThread";
-        @SuppressWarnings("unused")
-        final static int START = 0x1,
-                STOP = 0x2, SEND_MESSAGE = 0x3, SEND_MESSAGE_TO_MANY = 0x4, RESEND_MESSAGE = 0x5, MARK_AS_SEEN = 0x6,
-                EDIT_MESSAGE = 0x7;
-        private final Context context;
-        private final Set<android.os.Message> waitingMessages = new HashSet<>();
-        private Handler handler;
-        private Realm realm;
-
-        public Worker(Context context) {
-            super("messageHandlerThread", android.os.Process.THREAD_PRIORITY_DEFAULT);
-            this.context = context;
-        }
-
-        @Override
-        public boolean handleMessage(final android.os.Message msg) {
-            switch (msg.what) {
-                case STOP:
-                    doStop();
-                    break;
-                case SEND_MESSAGE:
-                    try {
-
-                        /***************************************************************************************/
-                        //quick fix for sending duplicate picture/video/binary messages
-                        Bundle bundle = msg.getData();
-                        int msgType = bundle.getInt(Message.FIELD_TYPE);
-                        if (msgType != Message.TYPE_TEXT_MESSAGE) {
-                            RealmResults<Message> messages = realm.where(Message.class)
-                                    .equalTo(Message.FIELD_MESSAGE_BODY, bundle.getString(Message.FIELD_MESSAGE_BODY))
-                                    .findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.DESCENDING);
-                            if (!messages.isEmpty()) {
-                                if (System.currentTimeMillis() - messages.first().getDateComposed().getTime() < 1000 * 10) {
-                                    PLog.w(TAG, "attempt to send duplicate message");
-                                    UiHelpers.showToast("Not sending duplicate message");
-                                    return true;
-                                }
-                            }
-                        }
-                        /***********************************************************************************************/
-                        Message message = createMessage(msg.getData());
-                        final String messageId = message.getId();
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                onMessageQueued(messageId);
-                            }
-                        });
-                        doSendMessage(message);
-                    } catch (PairappException e) {
-                        // TODO: 9/20/2015 handle error well
-                        ErrorCenter.reportError(TAG, e.getMessage());
-                    }
-                    break;
-                case SEND_MESSAGE_TO_MANY:
-                    throw new UnsupportedOperationException();
-                case EDIT_MESSAGE:
-                    editSentMessage(msg);
-                    break;
-                case RESEND_MESSAGE:
-                    resendFailedMessage(msg);
-                    break;
-                default:
-                    throw new AssertionError();
-            }
-            return true;
-        }
-
-        private void editSentMessage(android.os.Message msg) {
-            final String msgId = msg.getData().getString(Message.FIELD_ID), newContent = msg.getData().getString(Message.FIELD_MESSAGE_BODY);
-            GenericUtils.ensureNotEmpty(newContent);
-            GenericUtils.ensureNotEmpty(msgId);
+    private void editSentMessage(final String msgId, String newContent) {
+        ThreadUtils.ensureNotMain();
+        GenericUtils.ensureNotEmpty(msgId, newContent);
+        Realm realm = Message.REALM();
+        try {
             final Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
             if (message != null && !message.getMessageBody().equals(newContent)) {
                 realm.beginTransaction();
@@ -355,10 +260,16 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                     }
                 });
             }
+        } finally {
+            realm.close();
         }
+        // TODO: 12/6/16 notify user of failed attempt to edit message
+    }
 
-        private void resendFailedMessage(android.os.Message msg) {
-            final String msgId = ((String) msg.obj);
+    private void resendFailedMessage(final String msgId) {
+        ThreadUtils.ensureNotMain();
+        Realm realm = Message.REALM();
+        try {
             final Message message = realm.where(Message.class).equalTo(Message.FIELD_ID, msgId).findFirst();
             if (message != null) {
                 if (message.getState() == Message.STATE_SEND_FAILED) {
@@ -386,89 +297,55 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                 return;
             }
             PLog.w(MessageActivity.TAG, "failed to resend message, reason: message deleted");
-        }
-
-        void sendMessage(android.os.Message message) {
-            if (handler == null) {
-                //queue the message
-                synchronized (waitingMessages) {
-                    waitingMessages.add(message);
-                }
-            } else {
-                handler.sendMessage(message);
-            }
-        }
-
-        @Override
-        protected void onLooperPrepared() {
-            handler = new Handler(getLooper(), this);
-            realm = Message.REALM(context);
-            synchronized (waitingMessages) {
-                for (android.os.Message waitingMessage : waitingMessages) {
-                    handler.sendMessage(waitingMessage);
-                }
-                waitingMessages.clear();
-            }
-        }
-
-        void doStop() {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                quitSafely();
-            } else {
-                quit();
-            }
+        } finally {
             realm.close();
         }
+    }
 
-        private Message createMessage(Bundle bundle) throws PairappException {
-            return createMessage(bundle.getString(Message.FIELD_MESSAGE_BODY),
-                    bundle.getString(Message.FIELD_TO), bundle.getInt(Message.FIELD_TYPE),
-                    bundle.getBoolean(CONVERSATION_ACTIVE, false));
-        }
 
-        private Message createMessage(String messageBody, String recipient, int type, boolean active) throws PairappException {
-            Realm userRealm = User.Realm(MessageActivity.this);
-            try {
-                Conversation currConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, recipient).findFirst();
-                if (currConversation == null) {
-                    currConversation = Conversation.newConversation(realm, UserManager.getMainUserId(userRealm), recipient, active);
-                }
-                realm.beginTransaction();
-                boolean newDay = trySetupNewSession(currConversation, userRealm);
-                Message message = Message.makeNew(realm, UserManager.getMainUserId(userRealm), messageBody, recipient, type);
-                if (newDay) {
-                    //realm dates are in seconds not milliseconds. this has an undesirable effect of making our date waitingMessages
-                    // and the first message of the day have the same date in seconds precision which in return can cause sorting problems.
-                    // to curb this we force this message to be newer than the date message. by first committing the transaction and also making the message
-                    // to be sent newer
-                    realm.commitTransaction();
-                    realm.beginTransaction();
-                    message.setDateComposed(new Date(System.currentTimeMillis() + 10)); //always force new waitingMessages to be newer
-                }
-                currConversation.setLastMessage(message);
-                currConversation.setLastActiveTime(message.getDateComposed());
-                String summary;
-                if (type == Message.TYPE_TEXT_MESSAGE) {
-                    summary = message.getMessageBody();
-                } else {
-                    summary = MessageUtils.getDescription(type);
-                }
-                currConversation.setSummary(summary);
-                realm.commitTransaction();
-                return message;
-            } catch (PairappException e) { //caught for the for the purpose of cleanup
-                realm.cancelTransaction();
-                throw new PairappException(e.getMessage(), "");
-            } finally {
-                userRealm.close();
+    private Message createMessage(String messageBody, String recipient, int type, boolean active) throws PairappException {
+        Realm userRealm = User.Realm(MessageActivity.this),
+                realm = Conversation.Realm(this);
+        try {
+            Conversation currConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, recipient).findFirst();
+            if (currConversation == null) {
+                currConversation = Conversation.newConversation(realm, UserManager.getMainUserId(userRealm), recipient, active);
             }
+            realm.beginTransaction();
+            boolean newDay = trySetupNewSession(currConversation, realm, userRealm);
+            Message message = Message.makeNew(realm, UserManager.getMainUserId(userRealm), messageBody, recipient, type);
+            if (newDay) {
+                //realm dates are in seconds not milliseconds. this has an undesirable effect of making our date waitingMessages
+                // and the first message of the day have the same date in seconds precision which in return can cause sorting problems.
+                // to curb this we force this message to be newer than the date message. by first committing the transaction and also making the message
+                // to be sent newer
+                realm.commitTransaction();
+                realm.beginTransaction();
+                message.setDateComposed(new Date(System.currentTimeMillis() + 10)); //always force new waitingMessages to be newer
+            }
+            currConversation.setLastMessage(message);
+            currConversation.setLastActiveTime(message.getDateComposed());
+            String summary;
+            if (type == Message.TYPE_TEXT_MESSAGE) {
+                summary = message.getMessageBody();
+            } else {
+                summary = MessageUtils.getDescription(type);
+            }
+            currConversation.setSummary(summary);
+            realm.commitTransaction();
+            return message;
+        } catch (PairappException e) { //caught for the for the purpose of cleanup
+            realm.cancelTransaction();
+            throw new PairappException(e.getMessage(), "");
+        } finally {
+            userRealm.close();
+            realm.close();
         }
+    }
 
-        private boolean trySetupNewSession(Conversation conversation, Realm userRealm) {
-            //set up session
-            return Conversation.newSession(realm, UserManager.getMainUserId(userRealm), conversation);
-        }
-
+    private boolean trySetupNewSession(Conversation conversation, Realm realm, Realm userRealm) {
+        //set up session
+        return Conversation.newSession(realm, UserManager.getMainUserId(userRealm), conversation);
     }
 
     protected void reportProgress(String messageId, int progress) {

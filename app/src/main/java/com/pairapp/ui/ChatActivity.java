@@ -476,7 +476,8 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                         editingMessage = false;
                         editMessage(messageId, content);
                     } else {
-                        super.sendMessage(content, peer.getUserId(), Message.TYPE_TEXT_MESSAGE, true);
+                        super.sendMessageActive(content, peer.getUserId(),
+                                Message.TYPE_TEXT_MESSAGE, true);
                         handler.post(new Runnable() {
                             @Override
                             public void run() {

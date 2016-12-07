@@ -54,7 +54,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import io.realm.Case;
-import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import io.realm.Sort;
@@ -82,7 +81,6 @@ public class CreateMessageActivity extends MessageActivity
     private int attachmentType;
 
     private UsersAdapter adapter;
-    private Realm userRealm;
     private Toolbar toolBar;
     private boolean isAttaching = false;
     private boolean isNotDefaultIntent = false;
