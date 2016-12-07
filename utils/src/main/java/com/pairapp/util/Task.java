@@ -35,7 +35,7 @@ public abstract class Task extends com.path.android.jobqueue.Job {
 
     protected abstract Task fromJSON(JSONObject jsonObject);
 
-    static class JobSerializer implements SqliteJobQueue.JobSerializer {
+   public static class JobSerializer implements SqliteJobQueue.JobSerializer {
 
         private static final String CLASS = "class";
 

@@ -22,7 +22,7 @@ public class PLog implements CustomLogger {
     private static int sLevel = LEVEL_VERBOSE;
     private final String TAG;
 
-    PLog(String tag) {
+    public PLog(String tag) {
         if (tag == null) {
             throw new IllegalArgumentException("tag == null");
         }

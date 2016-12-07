@@ -14,9 +14,12 @@ import com.pairapp.util.Config;
 import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.PLog;
+import com.pairapp.util.Task;
 import com.pairapp.util.TaskManager;
-import com.pairapp.workers.BootReceiver;
 import com.path.android.jobqueue.Job;
+import com.path.android.jobqueue.JobManager;
+import com.path.android.jobqueue.TagConstraint;
+import com.path.android.jobqueue.config.Configuration;
 import com.path.android.jobqueue.di.DependencyInjector;
 import com.squareup.leakcanary.LeakCanary;
 
@@ -32,12 +35,14 @@ public class PairApp extends Application {
     //    //    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
 //    private static final String TWITTER_KEY = "p1KaIqoXt9ujhMaOPcQY4Xxi9";
 //    private static final String TWITTER_SECRET = "0m16n21jk5jNpyTusC6DrGvxmLlMcEfRUCRIkINfJoFy8oM1rZ";
-    private DependencyInjector injector = new DependencyInjector() {
+    private static final DependencyInjector injector = new DependencyInjector() {
         @Override
         public void inject(Job job) {
 
         }
     };
+    @SuppressWarnings("FieldCanBeLocal") //keeps this alive after application#oncreate
+    private JobRunnerImpl jobRunner;
 
     private static void enableComponent(Class clazz) {
         PLog.d(TAG, "enabling " + clazz.getSimpleName());
@@ -127,8 +132,40 @@ public class PairApp extends Application {
         Fabric.with(this, new Crashlytics());
         PLog.setLogLevel(BuildConfig.DEBUG ? PLog.LEVEL_VERBOSE : PLog.LEVEL_FATAL);
         Config.init(this);
-        TaskManager.init(this, injector);
+        jobRunner = new JobRunnerImpl(this, injector);
+        TaskManager.init(jobRunner);
         ConnectionUtils.init(this);
         PairAppClient.startIfRequired(this);
     }
+
+    @SuppressWarnings("WeakerAccess")
+    static final class JobRunnerImpl implements TaskManager.JobRunner {
+        private final JobManager jobManager;
+
+        public JobRunnerImpl(Application application, DependencyInjector injector) {
+            final Configuration config = new Configuration.Builder(application)
+                    .injector(injector)
+                    .customLogger(new PLog("JobRunner"))
+                    .jobSerializer(new Task.JobSerializer())
+                    .build();
+            this.jobManager = new JobManager(application, config);
+        }
+
+        @Override
+        public long runJob(Task task) {
+            return jobManager.addJob(task);
+        }
+
+        @Override
+        public void cancelJobs(String tag) {
+            jobManager.cancelJobs(TagConstraint.ALL, tag);
+        }
+
+        @Override
+        public void start() {
+            jobManager.start();
+        }
+    }
+
+
 }
