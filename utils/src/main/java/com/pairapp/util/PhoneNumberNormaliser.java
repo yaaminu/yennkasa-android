@@ -1,9 +1,15 @@
 package com.pairapp.util;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.support.annotation.Nullable;
+import android.telephony.TelephonyManager;
+
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 
@@ -103,5 +109,36 @@ public class PhoneNumberNormaliser {
     public static String getTrunkPrefix(String countryCode) {
         PhoneNumberUtil util = PhoneNumberUtil.getInstance();
         return util.getNddPrefixForRegion(countryCode, true);
+    }
+
+    @Nullable
+    @SuppressLint("HardwareIds")
+    public static String getUserPhoneNumber(Context context) {
+        TelephonyManager manager = ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE));
+
+        try {
+            String line1Number = manager.getLine1Number();
+            if (GenericUtils.isEmpty(line1Number)) return null;
+
+            String userCountry = manager.getSimCountryIso();
+            if (userCountry == null) {
+                userCountry = "";
+            } else {
+                userCountry = userCountry.toUpperCase(Locale.US);
+            }
+            String phoneNumber = PhoneNumberNormaliser.toLocalFormat(line1Number,
+                    GenericUtils.isEmpty(userCountry) ? Locale.getDefault().getCountry() : userCountry);
+            if (!isValidPhoneNumber(phoneNumber, userCountry)) {
+                return null;
+            }
+            PLog.d(TAG, phoneNumber);
+            return phoneNumber;
+        } catch (Exception e) {
+            PLog.f(TAG, e.getMessage(), e);
+            if (BuildConfig.DEBUG) {
+                throw new RuntimeException(e);
+            }
+            return null;
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.pairapp.ui;
 
+import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -9,8 +10,10 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -45,6 +48,7 @@ import java.io.IOException;
 import java.util.Locale;
 
 import io.realm.Realm;
+import io.realm.RealmResults;
 
 /**
  * @author by Null-Pointer on 5/28/2015.
@@ -165,14 +169,15 @@ public class LoginFragment extends Fragment {
         }
     };
     private CountriesListAdapter countriesSpinnerAdapter;
-    private AsyncTask<Void, Void, Void> setUpCountriesTask = new AsyncTask<Void, Void, Void>() {
+    private AsyncTask<Void, Void, Integer> setUpCountriesTask = new AsyncTask<Void, Void, Integer>() {
         @Override
         protected void onPreExecute() {
             progressDialog.show();
         }
 
+        @NonNull
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Integer doInBackground(Void... params) {
             Realm realm = Country.REALM(Config.getApplicationContext());
             try {
                 // TODO: 8/4/2015 change this and pass the input stream directly to realm
@@ -180,8 +185,9 @@ public class LoginFragment extends Fragment {
                 JSONObject cursor;
                 Locale locale;
                 realm.beginTransaction();
-                realm.clear(Country.class);
-
+                realm.delete(Country.class);
+                realm.commitTransaction();
+                realm.beginTransaction();
                 for (int i = 0; i < array.length(); i++) {
                     cursor = array.getJSONObject(i);
                     if (cursor.optString(Country.FIELD_CCC, "").isEmpty()) {
@@ -200,28 +206,42 @@ public class LoginFragment extends Fragment {
                     realm.copyToRealm(country);
                 }
                 realm.commitTransaction();
-                for (Country country : realm.where(Country.class).findAll()) {
-                    PLog.i(TAG, country.toString());
-                }
+                return getCurrentContryPosition(realm);
             } catch (IOException | JSONException e) {
                 if (BuildConfig.DEBUG) {
                     PLog.e(TAG, e.getMessage(), e.getCause());
                 } else {
                     PLog.e(TAG, e.getMessage());
                 }
+                return 0;
             } finally {
                 realm.close();
             }
-            return null;
         }
 
         @Override
-        protected void onPostExecute(Void aVoid) {
+        protected void onPostExecute(Integer integer) {
             progressDialog.dismiss();
-            setUpSpinner();
+            setUpSpinner(integer == null ? 0 : integer);
         }
 
     };
+
+    private Integer getCurrentContryPosition(Realm realm) {
+        String currentUserContry = ((TelephonyManager) Config.getApplication()
+                .getSystemService(Context.TELEPHONY_SERVICE)).getSimCountryIso();
+        if (currentUserContry != null) {
+            currentUserContry = currentUserContry.toUpperCase();
+            RealmResults<Country> results = realm.where(Country.class).findAllSorted(Country.FIELD_NAME);
+            for (int i = 0; i < results.size(); i++) {
+                if (results.get(i).getIso2letterCode().equalsIgnoreCase(currentUserContry)) {
+                    return i + 1; //first position is dummy value!!!
+                }
+            }
+        }
+        return 0;
+    }
+
     private TextView signUpLoginNotice;
 
     public LoginFragment() {
@@ -260,7 +280,7 @@ public class LoginFragment extends Fragment {
         validator = new FormValidator();
         validator.addStrategy(phoneNumberStrategy)
                 .addStrategy(usernameStrategy);
-        setUpSpinner();
+        setUpSpinner(0);
         signUpLoginNotice = (TextView) view.findViewById(R.id.problems_logging_in);
         ViewUtils.setTypeface(signUpLoginNotice, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         signUpLoginNotice.setOnClickListener(listener);
@@ -299,11 +319,9 @@ public class LoginFragment extends Fragment {
                 phoneNumberEt.setText(userName);
             }
         }
-
-//        //re-use appName
-//        appName = ((android.widget.TextView) view.findViewById(R.id.tv_app_name));
-//        ViewUtils.setTypeface(appName, TypeFaceUtil.DROID_SERIF_REGULAR_TTF);
-
+        if (phoneNumberEt.getText().toString().trim().isEmpty()) {
+            phoneNumberEt.setText(PhoneNumberNormaliser.getUserPhoneNumber(getContext()));
+        }
         return view;
     }
 
@@ -313,11 +331,13 @@ public class LoginFragment extends Fragment {
         setUpCountriesAndContinue();
     }
 
+    @SuppressLint("CommitPrefEdits")
     @Override
     public void onPause() {
         super.onPause();
         callback.getActivityPreferences().edit().putString(LOCALE_KEY, Locale.getDefault().getCountry()).commit();
     }
+
 
     private void setUpCountriesAndContinue() {
         //we need to do all the time to automatically handle configuration changes see setupCountriesTask#doInBackGround
@@ -327,10 +347,15 @@ public class LoginFragment extends Fragment {
             setUpCountriesTask.execute();
         } else {
             Realm realm = Country.REALM(getActivity());
-            long countries = realm.where(Country.class).count();
-            realm.close();
-            if (countries < 240) {
-                setUpCountriesTask.execute();
+            try {
+                long countries = realm.where(Country.class).count();
+                if (countries < 240) {
+                    setUpCountriesTask.execute();
+                } else {
+                    setUpSpinner(getCurrentContryPosition(realm));
+                }
+            } finally {
+                realm.close();
             }
         }
     }
@@ -357,11 +382,12 @@ public class LoginFragment extends Fragment {
         UiHelpers.showErrorDialog(getActivity(), getString(R.string.required_field_error, field));
     }
 
-    private void setUpSpinner() {
-        countriesSpinnerAdapter = new CountriesListAdapter(getActivity(), realm.where(Country.class).findAllSorted(Country.FIELD_NAME));
+    private void setUpSpinner(int defaultPosition) {
+        countriesSpinnerAdapter = new CountriesListAdapter(getActivity(),
+                realm.where(Country.class).findAllSorted(Country.FIELD_NAME));
         countriesSpinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(countriesSpinnerAdapter);
-        spinner.setSelection(0);
+        spinner.setSelection(defaultPosition);
         spinner.setOnItemSelectedListener(onItemSelectedListener);
     }
 
