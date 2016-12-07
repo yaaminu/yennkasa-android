@@ -4,8 +4,6 @@ import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
 import com.parse.ParseException;
 import com.parse.ParseFile;
-import com.parse.ProgressCallback;
-import com.parse.SaveCallback;
 
 import org.apache.commons.io.FileUtils;
 
@@ -32,29 +30,24 @@ public class ParseFileClient implements FileApi {
         GenericUtils.ensureConditionTrue(file.exists() && file.isFile(), "invalid file");
         if (file.length() > FileUtils.ONE_MB * 10) {
             callback.done(new FileClientException("file too large", -1), null);
-        } else if (Runtime.getRuntime().freeMemory() < file.length() + 2048) {
-            callback.done(new FileClientException("system out of memory", -1), null);
         } else {
+            if (Runtime.getRuntime().freeMemory() < file.length() + 2048) {
+                PLog.d(TAG, "forcing gc");
+                PLog.d(TAG, "before gc %s", Runtime.getRuntime().freeMemory());
+                System.gc();
+                PLog.d(TAG, "after gc %s", Runtime.getRuntime().freeMemory());
+            }
             final ParseFile pFile;
             try {
                 pFile = new ParseFile(file.getName(), FileUtils.readFileToByteArray(file));
-                pFile.saveInBackground(new SaveCallback() {
-                    @Override
-                    public void done(ParseException e) {
-                        if (e != null) {
-                            PLog.e(TAG, e.getMessage(), e.getCause());
-                        }
-                        callback.done(e == null ? null : new FileClientException(e.getCause(), -1), pFile.getUrl());
-                    }
-                }, new ProgressCallback() {
-                    @Override
-                    public void done(Integer integer) {
-                        listener.onProgress(file.length(), (file.length() * integer) / 100);
-                    }
-                });
-            } catch (IOException e) {
-                PLog.e(TAG, e.getMessage(), e.getCause());
+                listener.onProgress(file.length(), 0L);
+                pFile.save();
+                listener.onProgress(file.length(), file.length());
+                callback.done(null, pFile.getUrl());
+            } catch (IOException | ParseException e) {
+                PLog.e(TAG, e.getMessage(), e);
                 callback.done(new FileClientException(e.getMessage(), -1), null);
+
             }
         }
 
