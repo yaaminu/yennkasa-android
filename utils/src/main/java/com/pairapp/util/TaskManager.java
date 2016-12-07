@@ -129,10 +129,11 @@ public class TaskManager {
         synchronized (expressQueueLock) {
             if (expressExecutionQueueTooLong()) {
                 execute(runnable, requiresNetwork);
+                return;
             }
             expressQueueLength++;
         }
-        cachedThreadPool.execute(runnable);
+            cachedThreadPool.execute(runnable);
     }
 
     public static Future<?> executeNow(Callable<?> callable, boolean requiresNetwork) {
