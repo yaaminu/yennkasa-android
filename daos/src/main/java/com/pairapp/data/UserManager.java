@@ -1695,26 +1695,6 @@ public final class UserManager {
         TaskManager.executeNow(runnable, false);
     }
 
-    public void dissolveGroup(Realm realm, User group, final CallBack callback) {
-        if (group == null) {
-            throw new IllegalArgumentException("group == null");
-        }
-        //noinspection ThrowableResultOfMethodCallIgnored
-        Exception e = checkPermission(realm, group.getUserId());
-        if (e != null) {
-            doNotify(e, callback);
-        }
-        final String groupId = group.getUserId();
-        userApi.removeGroup(group.getAdmin().getUserId(), group.getUserId(), new UserApiV2.Callback<HttpResponse>() {
-            @Override
-            public void done(Exception e, HttpResponse aVoid) {
-                if (e == null) {
-                    cleanUserTraces(groupId);
-                }
-                doNotify(e, callback);
-            }
-        });
-    }
 
     private final Lock blockLock = new ReentrantLock(true),
             muteLock = new ReentrantLock(true);

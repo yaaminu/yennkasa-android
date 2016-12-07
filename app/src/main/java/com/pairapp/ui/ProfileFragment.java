@@ -116,12 +116,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                     }, null);
                     break;
                 case R.id.bt_dissolve_group:
-                    UiHelpers.showErrorDialog(getActivity(), R.string.dissolve_group_prompt, R.string.yes, android.R.string.no, new UiHelpers.Listener() {
-                        @Override
-                        public void onClick() {
-                            dissolveGroup();
-                        }
-                    }, null);
+                    UiHelpers.showToast(R.string.unimplemented);
                     break;
                 case R.id.bt_call:
                     attemptCall();
@@ -189,23 +184,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 .create().show();
     }
 
-    private void dissolveGroup() {
-        final ProgressDialog dialog = new ProgressDialog(getContext());
-        dialog.setMessage(getString(R.string.st_please_wait));
-        dialog.setCancelable(false);
-        dialog.show();
-        UserManager.getInstance().dissolveGroup(realm, user, new UserManager.CallBack() {
-            @Override
-            public void done(Exception e) {
-                dialog.dismiss();
-                if (e != null) {
-                    UiHelpers.showErrorDialog(getActivity(), e.getMessage());
-                } else {
-                    getActivity().finish();
-                }
-            }
-        });
-    }
 
     public ProfileFragment() {
         // Required empty public constructor

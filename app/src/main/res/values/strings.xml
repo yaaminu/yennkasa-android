@@ -364,4 +364,5 @@
     <string name="message_edited_description">Your message to %s was updated successfully</string>
     <string name="message_reverted_description">Your message to %s was reverted</string>
     <string name="error_cannot_edit_message">Cannot edit message</string>
+    <string name="unimplemented">Not Implemented</string>
 </resources>

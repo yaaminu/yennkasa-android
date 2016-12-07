@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- *  by Null-Pointer on 5/27/2015.
+ * by Null-Pointer on 5/27/2015.
  */
 public interface UserApiV2 {
 
@@ -18,57 +18,55 @@ public interface UserApiV2 {
 
     void sendVerificationToken(String userId, Callback<HttpResponse> callback);
 
-    void registerUser( User user, Callback<User> callback);
+    void registerUser(User user, Callback<User> callback);
 
-    void logIn( User object, Callback<User> callback);
+    void logIn(User object, Callback<User> callback);
 
-    void syncContacts( List<String> userIds, Callback<List<User>> response);
+    void syncContacts(List<String> userIds, Callback<List<User>> response);
 
-    void getUser( String id, Callback<User> response);
+    void getUser(String id, Callback<User> response);
 
-    void getGroups( String id, Callback<List<User>> response);
+    void getGroups(String id, Callback<List<User>> response);
 
-    void changeDp( String userOrGroup,  String id,  File file, Callback<HttpResponse> response);
+    void changeDp(String userOrGroup, String id, File file, Callback<HttpResponse> response);
 
-    void createGroup( String by,  String name,  Collection<String> members, Callback<User> response);
+    void createGroup(String by, String name, Collection<String> members, Callback<User> response);
 
-    void getGroup( String id, Callback<User> group);
+    void getGroup(String id, Callback<User> group);
 
-    void getGroupMembers( String id, Callback<List<User>> response);
+    void getGroupMembers(String id, Callback<List<User>> response);
 
-    void addMembersToGroup( String id
-            ,  String by
-            ,  Collection<String> members
+    void addMembersToGroup(String id
+            , String by
+            , Collection<String> members
             , Callback<HttpResponse> response);
 
-    void removeMembersFromGroup( String id
-            ,  String by
-            ,  List<String> members
+    void removeMembersFromGroup(String id
+            , String by
+            , List<String> members
             , Callback<HttpResponse> response);
 
     // FIXME: 7/19/2015 change this when our backend start using sessions
-    void leaveGroup( String id,  String userId,  String password, Callback<HttpResponse> response);
+    void leaveGroup(String id, String userId, String password, Callback<HttpResponse> response);
 
 
-    void verifyUser( String userId,  String token, String pushID, Callback<SessionData> callback);
+    void verifyUser(String userId, String token, String pushID, Callback<SessionData> callback);
 
-    void resendToken( String userId,  String password, Callback<HttpResponse> response);
+    void resendToken(String userId, String password, Callback<HttpResponse> response);
 
-    HttpResponse resetUnverifiedAccount( String userId);
+    HttpResponse resetUnverifiedAccount(String userId);
 
     HttpResponse requestPasswordReset(String number);
 
-    void removeGroup(String adminId, String groupId, Callback<HttpResponse> callback);
 
     boolean isUserAuthenticated();
 
 
-    
     String newAuthToken() throws PairappException;
 
     void updatePushID(String newPushID) throws PairappException;
 
-    
+
     Pair<String, Long> getSinchToken();
 
     interface Callback<T> {
