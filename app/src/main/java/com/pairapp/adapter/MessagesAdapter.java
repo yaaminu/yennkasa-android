@@ -2,10 +2,12 @@ package com.pairapp.adapter;
 
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.media.ThumbnailUtils;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.util.LruCache;
 import android.text.format.DateUtils;
 import android.util.SparseIntArray;
@@ -28,7 +30,6 @@ import com.pairapp.util.PLog;
 import com.pairapp.util.PreviewsHelper;
 import com.pairapp.util.SimpleDateUtil;
 import com.pairapp.util.TaskManager;
-import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
 import com.pairapp.view.ProgressWheel;
@@ -66,6 +67,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
 
     private final Delegate delegate;
     private final boolean isGroupMessages;
+    private final int greenColor;
 
     public MessagesAdapter(Delegate delegate, RealmResults<Message> realmResults, boolean isGroupMessages) {
         super(delegate.getContext(), realmResults, true);
@@ -78,6 +80,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         messageStates.put(Message.STATE_RECEIVED, R.drawable.ic_message_delivered_12dp);
         this.isGroupMessages = isGroupMessages;
         PICASSO = Picasso.with(context);
+        this.greenColor = ContextCompat.getColor(delegate.getContext(), R.color.colorPrimaryDark);
     }
 
     //optimisations as we are facing performance issues
@@ -348,10 +351,17 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         }
         if (progress >= 0) {
             ViewUtils.showViews(holder.progressRootView, holder.progressBar);
-            if (progress == 0 || isOutgoingMessage/* currently upload progress is fake and cannot be relied upon*/) {
+            if (progress == 0) {
+                holder.progressBar.setBarColor(Color.WHITE);
                 holder.progressBar.spin();
             } else {
-                holder.progressBar.setProgress(progress);
+                if (isOutgoingMessage) {
+                    holder.progressBar.spin(); //upload progress are fake
+                } else {
+                    holder.progressBar.setProgress(progress);
+                    holder.progressBar.setLinearProgress(true);
+                }
+                holder.progressBar.setBarColor(greenColor);
             }
             ViewUtils.showViews(holder.playOrDownload);
             holder.playOrDownload.setImageResource(0);
