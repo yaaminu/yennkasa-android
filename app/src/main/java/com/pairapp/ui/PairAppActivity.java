@@ -362,7 +362,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     }
 
 
-    protected void postEvent(Event event) {
+    protected static void postEvent(Event event) {
         EventBus bus = get(PAIRAPP_CLIENT_POSTABLE_BUS);
         if (event.isSticky()) {
             bus.postSticky(event);

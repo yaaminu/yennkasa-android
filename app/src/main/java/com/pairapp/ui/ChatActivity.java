@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -36,7 +34,6 @@ import com.pairapp.R;
 import com.pairapp.adapter.GroupsAdapter;
 import com.pairapp.adapter.MessagesAdapter;
 import com.pairapp.data.CallBody;
-import com.pairapp.data.ContactsManager;
 import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
@@ -71,7 +68,6 @@ import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import io.realm.Sort;
 
-import static com.pairapp.data.Message.REALM;
 import static com.pairapp.data.Message.TYPE_TEXT_MESSAGE;
 import static com.pairapp.messenger.MessengerBus.NOT_TYPING;
 import static com.pairapp.messenger.MessengerBus.ON_USER_OFFLINE;
@@ -81,7 +77,7 @@ import static com.pairapp.messenger.MessengerBus.ON_USER_TYPING;
 import static com.pairapp.messenger.MessengerBus.START_MONITORING_USER;
 import static com.pairapp.messenger.MessengerBus.STOP_MONITORING_USER;
 import static com.pairapp.messenger.MessengerBus.TYPING;
-import static com.pairapp.ui.UnknownContactFragment.*;
+import static com.pairapp.ui.UnknownContactFragment.UserProvider;
 
 
 @SuppressWarnings({"ConstantConditions"})
@@ -648,9 +644,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         final boolean wasLastForTheDay = nextToCurrMessage == null || Message.isDateMessage(nextToCurrMessage);
         final Message deletedMessage = Message.copy(currMessage);
         currMessage.deleteFromRealm();
-        if (deletedMessage.getState() == Message.STATE_PENDING) {
-            postEvent(Event.create(MessengerBus.REVERT_SENDING, null, deletedMessage.getId()));
-        }
+//        if (deletedMessage.getState() == Message.STATE_PENDING) {
+//            postEvent(Event.create(MessengerBus.REVERT_SENDING, null, deletedMessage.getId()));
+//        }
         if (Message.isDateMessage(previousToCurrMessage) &&
                 wasLastForTheDay) {
             previousToCurrMessage.deleteFromRealm(); //this will be a date message so delete it as there is no message for that day

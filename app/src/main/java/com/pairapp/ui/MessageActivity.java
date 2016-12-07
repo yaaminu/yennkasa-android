@@ -23,6 +23,7 @@ import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.messenger.MessengerBus;
+import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.LiveCenter;
@@ -146,11 +147,11 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         super.onPause();
     }
 
-    private void doSendMessage(final Message message) {
+    private static void doSendMessage(final Message message) {
         postEvent(Event.createSticky(SEND_MESSAGE, null, Message.copy(message)));
     }
 
-    protected final void sendMessage(final String messageBody, final Set<String> recipientIds, final int type, final MessageActivity.SendCallback callback) {
+    protected static final void sendMessage(final String messageBody, final Set<String> recipientIds, final int type, final MessageActivity.SendCallback callback) {
         TaskManager.executeNow(new Runnable() {
             @Override
             public void run() {
@@ -210,18 +211,12 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         }, false);
     }
 
-    private void sendMessage(String msgBody, String to, int msgType, boolean active) {
+    private static void sendMessage(String msgBody, String to, int msgType, boolean active) {
         ThreadUtils.ensureNotMain();
-        Realm realm = Conversation.Realm(this);
+        Realm realm = Conversation.Realm();
         try {
             Message message = createMessage(msgBody, to, msgType, active);
             final String messageId = message.getId();
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    onMessageQueued(messageId);
-                }
-            });
             doSendMessage(message);
         } catch (PairappException e) {
             ErrorCenter.reportError(TAG, e.getMessage());
@@ -301,9 +296,9 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
     }
 
 
-    private Message createMessage(String messageBody, String recipient, int type, boolean active) throws PairappException {
-        Realm userRealm = User.Realm(MessageActivity.this),
-                realm = Conversation.Realm(this);
+    private static Message createMessage(String messageBody, String recipient, int type, boolean active) throws PairappException {
+        Realm userRealm = User.Realm(Config.getApplicationContext()),
+                realm = Conversation.Realm();
         try {
             Conversation currConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, recipient).findFirst();
             if (currConversation == null) {
@@ -341,7 +336,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         }
     }
 
-    private boolean trySetupNewSession(Conversation conversation, Realm realm, Realm userRealm) {
+    private static boolean trySetupNewSession(Conversation conversation, Realm realm, Realm userRealm) {
         //set up session
         return Conversation.newSession(realm, UserManager.getMainUserId(userRealm), conversation);
     }
