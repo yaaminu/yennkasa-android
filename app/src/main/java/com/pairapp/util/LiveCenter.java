@@ -187,6 +187,7 @@ public class LiveCenter {
                 if (previous > 0 && previous > progress) {
                     throw new IllegalStateException("progress can only be incremented");
                 }
+                tagProgressMap.put(tag, progress);
                 if (progress == 0 || progress - previous >= 1) {
                     notifyListeners(allProgressListeners, tag, progress);
                 } else {
