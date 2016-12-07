@@ -1,6 +1,5 @@
 package com.pairapp.messenger;
 
-import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.pairapp.Errors.PairappException;
@@ -11,11 +10,13 @@ import com.pairapp.net.FileApi;
 import com.pairapp.net.FileClientException;
 import com.pairapp.util.Config;
 import com.pairapp.util.ConnectionUtils;
+import com.pairapp.util.FileUtils;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
 import com.pairapp.util.ThreadUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
@@ -27,9 +28,9 @@ import io.realm.Realm;
 /**
  * @author Null-Pointer on 8/29/2015.
  */
+@SuppressWarnings("ALL")
 abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     public static final String TAG = AbstractMessageDispatcher.class.getSimpleName();
-    public static final String UPLOAD_CACHE = "uploadCache" + TAG;
 
     private class ProgressListenerImpl implements FileApi.ProgressListener {
 
@@ -41,6 +42,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
 
         @Override
         public void onProgress(long expected, long processed) {
+            ThreadUtils.ensureNotMain();
             final int progress = (int) ((100 * processed) / expected);
             PLog.d(TAG, "progress : %s", progress + "%");
             synchronized (monitors) {
@@ -75,26 +77,19 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                 return;
             }
 
-            final String isAlreadyUploaded = actualFile.lastModified() + actualFile.getAbsolutePath();
-            final SharedPreferences preferences = Config.getPreferences(UPLOAD_CACHE);
-            String uri = preferences.getString(isAlreadyUploaded, null);
             final ProgressListenerImpl listener = new ProgressListenerImpl(message);
-            if (uri != null) {
-                PLog.d(TAG, "not uploading file at path: %s, because it's already uploaded", uri);
-                message.setMessageBody(uri);
-                listener.onProgress(actualFile.length(), actualFile.length()); //tell listeners that we are done
-                proceedToSend(message);
-            } else {
-                if (checkIfCancelled()) {
-                    PLog.d(TAG, "message with id: %s cancelled", message.getId());
-                    throw new DispatchCancelledException();
-                }
+            if (checkIfCancelled()) {
+                PLog.d(TAG, "message with id: %s cancelled", message.getId());
+                throw new DispatchCancelledException();
+            }
+            try {
+                File tmpFile = new File(Config.getTempDir(),
+                        FileUtils.hashFile(actualFile));
+                org.apache.commons.io.FileUtils.copyFile(actualFile, tmpFile);
                 file_service.saveFileToBackend(actualFile, new FileApi.FileSaveCallback() {
                     @Override
                     public void done(FileClientException e, String locationUrl) {
                         if (e == null) {
-                            //cache the uri... all these bullshit will be a thing of the past once we add job manager
-                            preferences.edit().putString(isAlreadyUploaded, locationUrl).apply();
                             if (checkIfCancelled()) {
                                 PLog.d(TAG, "message with id: %s cancelled", message.getId());
                                 onFailed(message.getId(), MessageUtils.ERROR_CANCELLED);
@@ -112,9 +107,12 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                         }
                     }
                 }, listener);
+            } catch (IOException e) {
+                onFailed(message.getId(), MessageUtils.ERROR_FILE_UPLOAD_FAILED);
             }
         }
     }
+//    }
 
     private void proceedToSend(final Message message) {
         PLog.d(TAG, "dispatching message: " + message.getMessageBody()
@@ -158,11 +156,6 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             if (realmMessage != null && realmMessage.isValid()) {
                 if (realmMessage.getState() == Message.STATE_PENDING) {
                     realmMessage.setState(Message.STATE_SEND_FAILED);
-                }
-                File file = new File(realmMessage.getMessageBody());
-                if (file.exists()) {
-                    SharedPreferences prefs = Config.getPreferences(UPLOAD_CACHE);
-                    prefs.edit().remove(file.lastModified() + file.getAbsolutePath()).apply();
                 }
             }
             realm.commitTransaction();
