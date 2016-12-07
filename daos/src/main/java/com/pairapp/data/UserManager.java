@@ -837,8 +837,11 @@ public final class UserManager {
     }
 
     private File saveDpLocally(String userId, File imageFile) {
-        StringBuilder name = new StringBuilder(FileUtils.hashFile(imageFile));
-        if (TextUtils.isEmpty(name)) { //STOPSHIP
+        StringBuilder name = null;
+        try {
+            name = new StringBuilder(FileUtils.hashFile(imageFile));
+        } catch (IOException e) {
+            PLog.f(TAG, e.getMessage(), e);
             return null;
         }
         name.append("_").append(userId.replaceAll("[\\Q@\\E\\s]+", "_"));

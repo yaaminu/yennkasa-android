@@ -160,9 +160,10 @@ public class FileUtils {
         }
     }
 
-    public static String hashFile(File source) {
+    public static String hashFile(File source) throws IOException {
+        MessageDigest digest = null;
         try {
-            MessageDigest digest = MessageDigest.getInstance("sha1");
+            digest = MessageDigest.getInstance("sha1");
             digest.reset();
             byte[] hash;// digest.digest(org.apache.commons.io.FileUtils.readFileToByteArray(source));
             final byte[] buffer = new byte[4096];
@@ -183,8 +184,9 @@ public class FileUtils {
             }
             PLog.d(TAG, "hash: " + hashString);
             return hashString;
-        } catch (NoSuchAlgorithmException | IOException e) {
-            throw new RuntimeException(e.getCause());
+
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -295,7 +297,7 @@ public class FileUtils {
      *
      * @param context The context.
      * @param uri     The Uri to query.
-     * author paulburke
+     *                author paulburke
      */
     @TargetApi(Build.VERSION_CODES.KITKAT)
     private static String getPathInternal(final Context context, final Uri uri, boolean loadIfNotFoundLocally) {
