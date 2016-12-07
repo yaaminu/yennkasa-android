@@ -42,8 +42,6 @@ import java.util.Set;
 
 import butterknife.OnClick;
 import io.realm.Realm;
-import io.realm.RealmResults;
-import io.realm.Sort;
 
 import static com.pairapp.messenger.MessengerBus.MESSAGE_SEEN;
 import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
