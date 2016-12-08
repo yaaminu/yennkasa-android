@@ -25,6 +25,7 @@ import com.pairapp.R;
 import com.pairapp.data.ContactSyncService;
 import com.pairapp.data.UserManager;
 import com.pairapp.messenger.PairAppClient;
+import com.pairapp.messenger.SmsReciever;
 import com.pairapp.util.Config;
 import com.pairapp.util.GcmUtils;
 import com.pairapp.util.TypeFaceUtil;
@@ -125,9 +126,11 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
 
         switch (stage) {
             case DP_STAGE:
+                PairApp.disableComponent(SmsReciever.class);
                 fragment = new ChooseDisplayPictureFragment();
                 break;
             case VERIFICATION_STAGE:
+                PairApp.enableComponent(SmsReciever.class);
                 fragment = new VerificationFragment();
                 break;
             case LOGIN_STAGE:

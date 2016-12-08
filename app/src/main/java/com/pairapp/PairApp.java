@@ -44,7 +44,7 @@ public class PairApp extends Application {
     @SuppressWarnings("FieldCanBeLocal") //keeps this alive after application#oncreate
     private JobRunnerImpl jobRunner;
 
-    private static void enableComponent(Class clazz) {
+    public static void enableComponent(Class clazz) {
         PLog.d(TAG, "enabling " + clazz.getSimpleName());
         ComponentName receiver = new ComponentName(Config.getApplication(), clazz);
 
@@ -55,7 +55,7 @@ public class PairApp extends Application {
                 PackageManager.DONT_KILL_APP);
     }
 
-    private static void disableComponent(Class clazz) {
+    public static void disableComponent(Class clazz) {
         PLog.d(TAG, "disabling " + clazz.getSimpleName());
         ComponentName receiver = new ComponentName(Config.getApplication(), clazz);
 
