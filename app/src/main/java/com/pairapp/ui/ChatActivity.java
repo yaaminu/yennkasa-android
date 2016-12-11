@@ -443,6 +443,8 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             postEvent(Event.create(STOP_MONITORING_USER, null, peer.getUserId()));
         }
         unRegister(ON_USER_ONLINE, ON_USER_OFFLINE, ON_USER_STOP_TYPING, ON_USER_TYPING);
+        String s1 = messageEt.getText().toString();
+        Config.getPreferences(TAG + SAVED_MESSAGES_MESSAGE_BOX).edit().putString(peer.getUserId(), s1).apply();
         super.onPause();
     }
 
@@ -455,8 +457,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     protected void onDestroy() {
         messageConversationRealm.close();
-        String s1 = messageEt.getText().toString();
-        Config.getPreferences(TAG + SAVED_MESSAGES_MESSAGE_BOX).edit().putString(peer.getUserId(), s1).apply();
         clearRecentChat(peer.getUserId());
         super.onDestroy();
     }
