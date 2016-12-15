@@ -1,6 +1,5 @@
 package com.pairapp.ui;
 
-import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -10,7 +9,6 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.view.ActionMode;
@@ -46,7 +44,6 @@ import com.pairapp.util.FileUtils;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
-import com.pairapp.util.PhoneNumberNormaliser;
 import com.pairapp.util.SimpleDateUtil;
 import com.pairapp.util.TaskManager;
 import com.pairapp.util.TypeFaceUtil;
@@ -91,7 +88,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public static final int PICK_PHOTO_REQUEST = 0x2;
     public static final int PICK_VIDEO_REQUEST = 0x3;
     public static final int PICK_FILE_REQUEST = 0x4;
-    public static final int ADD_TO_CONTACTS_REQUEST = 0x6;
     public static final int RECORD_AUDIO_REQUEST = 0x7;
     public static final String TYPING_MESSAGE = "typingMessage";
     public static final String CURSOR = "cursor";
@@ -323,6 +319,16 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         setUpCurrentConversation();
         sendButton.setOnClickListener(this);
         setUpListView();
+        if (!peer.getInContacts() && !User.isGroup(peer)) {
+            new Handler().post(new Runnable() {
+                @Override
+                public void run() {
+                    getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.fragment_unknown_contact_fragment, new UnknownContactFragment())
+                            .commit();
+                }
+            });
+        }
         // TODO: 8/22/2015 in future we will move to the last  un seen message if any
     }
 
@@ -353,9 +359,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         final User admin = peer.getAdmin();
         menu.findItem(R.id.action_invite_friends)
                 .setVisible(peer.getType() == User.TYPE_GROUP && admin != null && admin.getUserId().equals(mainUser.getUserId()));
-        boolean visible = peer.getType() != User.TYPE_GROUP
-                && !peer.getInContacts();
-        menu.findItem(R.id.action_add_contact).setVisible(visible);
         menu.findItem(R.id.action_call_user).setVisible(peer.getAdmin() == null);
         menu.findItem(R.id.action_video_call_user).setVisible(peer.getAdmin() == null);
         return super.onPrepareOptionsMenu(menu);
@@ -375,15 +378,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             Intent intent = new Intent(this, InviteActivity.class);
             intent.putExtra(InviteActivity.EXTRA_GROUP_ID, peer.getUserId());
             startActivityForResult(intent, ADD_USERS_REQUEST);
-            return true;
-        } else if (id == R.id.action_add_contact) {
-            Intent intent = new Intent(ContactsContract.Intents.SHOW_OR_CREATE_CONTACT);
-            intent.setData(Uri.parse("tel:" + PhoneNumberNormaliser.toLocalFormat(peer.getUserId(), peer.getCountry())));
-            try {
-                startActivityForResult(intent, ADD_TO_CONTACTS_REQUEST);
-            } catch (ActivityNotFoundException e) {
-                UiHelpers.showPlainOlDialog(this, getString(R.string.no_contact_app_on_device));
-            }
             return true;
         } else if (id == R.id.action_call_user) {
             callUser(MessengerBus.VOICE_CALL_USER, peer.getUserId());
@@ -498,13 +492,20 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         if (resultCode != RESULT_OK) {
             return;
         }
-        if (requestCode == ADD_TO_CONTACTS_REQUEST) {
-            userManager.fetchUserIfRequired(userRealm, peer.getUserId(), true);
-            supportInvalidateOptionsMenu();
-        } else {
-            sendMessage(requestCode, data, peer.getUserId());
+        switch (requestCode) {
+            case TAKE_PHOTO_REQUEST:
+            case TAKE_VIDEO_REQUEST:
+            case PICK_PHOTO_REQUEST:
+            case PICK_VIDEO_REQUEST:
+            case PICK_FILE_REQUEST:
+            case RECORD_AUDIO_REQUEST:
+                sendMessage(requestCode, data, peer.getUserId());
+                break;
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
         }
     }
+
 
     @Override
     protected void onMessageQueued(@SuppressWarnings("UnusedParameters") String messageId) {
@@ -920,13 +921,13 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     }
 
     @Override
-    public boolean isCurrentUserRegistered() {
-        return peer.isValid();
+    public boolean hideNotice() {
+//        return currConversation.getLastMessage() != null;
+        return peer.getInContacts() || User.isGroup(peer);
     }
 
     @Override
-    public boolean hideNotice() {
-//        return currConversation.getLastMessage() != null;
-        return true;
+    public Realm realm() {
+        return userRealm;
     }
 }

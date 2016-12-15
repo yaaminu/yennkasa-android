@@ -12,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
+import android.provider.ContactsContract;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
 import android.support.v4.util.Pair;
@@ -28,6 +29,7 @@ import com.pairapp.R;
 import com.pairapp.adapter.SimpleAdapter;
 import com.pairapp.data.ContactsManager;
 import com.pairapp.data.Message;
+import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.ui.ChatActivity;
@@ -53,6 +55,7 @@ import static android.widget.Toast.LENGTH_SHORT;
 public class UiHelpers {
 
     private static final String TAG = UiHelpers.class.getSimpleName();
+    public static final int ADD_TO_CONTACTS_REQUEST = 0x3ec;
     private static Uri mMediaUri; //this is safe as at any point in time one activity may be doing this
     private static DialogInterface.OnClickListener dialogListener = new DialogInterface.OnClickListener() {
         @Override
@@ -471,6 +474,23 @@ public class UiHelpers {
                 }).setTitle(context.getString(R.string.invite_via));
                 builder.create().show();
             }
+        }
+    }
+
+    public static void addToContact(FragmentActivity activity, User user) {
+        Intent intent = new Intent(ContactsContract.Intents.Insert.ACTION);
+        // Sets the MIME type to match the Contacts Provider
+        intent.setType(ContactsContract.RawContacts.CONTENT_TYPE);
+
+        intent.putExtra(ContactsContract.Intents.Insert.PHONE, PhoneNumberNormaliser.toLocalFormat(user.getUserId(), user.getCountry()));
+        intent.putExtra(ContactsContract.Intents.Insert.PHONE, PhoneNumberNormaliser.toLocalFormat(user.getUserId(), user.getCountry()));
+        String name = user.getName();
+        intent.putExtra(ContactsContract.Intents.Insert.NAME, name.startsWith("@") ? name.substring(1) : name);
+        try {
+            activity.startActivityForResult(intent, ADD_TO_CONTACTS_REQUEST);
+        } catch (ActivityNotFoundException e) {
+            // TODO: 8/23/2015 should we tell the user or is it that our intent was wrongly targeted?
+            showPlainOlDialog(activity, activity.getString(R.string.no_contact_app_on_device));
         }
     }
 

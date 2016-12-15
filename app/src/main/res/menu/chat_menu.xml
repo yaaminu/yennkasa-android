@@ -20,11 +20,4 @@
         android:orderInCategory="101"
         android:title="@string/video_call"
         app:showAsAction="always" />
-
-    <item
-        android:id="@+id/action_add_contact"
-        android:icon="@drawable/ic_person_add_white_24dp"
-        android:orderInCategory="103"
-        android:title="@string/add_contact"
-        app:showAsAction="ifRoom" />
 </menu>

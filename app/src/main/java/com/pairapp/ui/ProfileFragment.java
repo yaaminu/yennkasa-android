@@ -4,7 +4,6 @@ package com.pairapp.ui;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -13,7 +12,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
@@ -65,10 +63,9 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     public static final String ARG_USER_ID = ProfileActivity.EXTRA_USER_ID;
     private static final String TAG = ProfileFragment.class.getSimpleName();
 
-    private static final int PICK_PHOTO_REQUEST = 0x3e9,
-            TAKE_PHOTO_REQUEST = 0x3ea,
-            CROP_PHOTO_REQUEST = 0x3eb,
-            ADD_TO_CONTACTS_REQUEST = 0x3ec;
+    private static final int PICK_PHOTO_REQUEST = 0x3e9;
+    private static final int TAKE_PHOTO_REQUEST = 0x3ea;
+    private static final int CROP_PHOTO_REQUEST = 0x3eb;
 
     private boolean dpLoaded = false;
     private ImageView displayPicture;
@@ -327,14 +324,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_add_contact) {
-            Intent intent = new Intent(ContactsContract.Intents.SHOW_OR_CREATE_CONTACT);
-            intent.setData(Uri.parse("tel:" + PhoneNumberNormaliser.toLocalFormat(user.getUserId(), user.getCountry())));
-            try {
-                getActivity().startActivityForResult(intent, ADD_TO_CONTACTS_REQUEST);
-            } catch (ActivityNotFoundException e) {
-                // TODO: 8/23/2015 should we tell the user or is it that our intent was wrongly targeted?
-                UiHelpers.showPlainOlDialog(getActivity(), getString(R.string.no_contact_app_on_device));
-            }
+            UiHelpers.addToContact(getActivity(), user);
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -463,7 +453,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
                 String filePath = data.getData().getPath();
                 changingDp = true;
                 userManager.changeDp(user.getUserId(), filePath, DP_CALLBACK);
-            } else if (requestCode == ADD_TO_CONTACTS_REQUEST) {
+            } else if (requestCode == UiHelpers.ADD_TO_CONTACTS_REQUEST) {
                 userManager.fetchUserIfRequired(realm, user.getUserId());
                 getActivity().supportInvalidateOptionsMenu();
             }

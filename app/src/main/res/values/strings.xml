@@ -367,4 +367,7 @@
     <string name="unimplemented">Not Implemented</string>
     <string name="username_required">Your username can\'t be empty</string>
     <string name="search_hint">Search...</string>
+    <string name="block2">Block</string>
+    <string name="not_in_contacts_notice">%s is not in your address book</string>
+    <string name="block_user_confirmatory_alert">Are you sure you want to block this user?</string>
 </resources>
