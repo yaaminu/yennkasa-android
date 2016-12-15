@@ -238,8 +238,8 @@
     <string name="feedback_sent_successfully">Feedback sent successfully. Thanks for your support and co-operation
     </string>
     <string name="app_name_cap">PAIRAPP</string>
-    <string name="idea_inc">© Amean.</string>
-    <string name="app_version">V 0.0.1 beta</string>
+    <string name="idea_inc">© Hyper.</string>
+    <string name="copyright">© Hyper.</string>
     <string name="legal_notice">LEGAL NOTICE</string>
     <string name="error_feedback_subject_too_lonng">Subject may not exceed 40 characters</string>
     <string name="silent">Silent</string>
@@ -365,4 +365,5 @@
     <string name="message_reverted_description">Your message to %s was reverted</string>
     <string name="error_cannot_edit_message">Cannot edit message</string>
     <string name="unimplemented">Not Implemented</string>
+    <string name="username_required">Your username can\'t be empty</string>
 </resources>
