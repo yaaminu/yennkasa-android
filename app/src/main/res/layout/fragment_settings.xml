@@ -15,5 +15,6 @@
         android:paddingLeft="@dimen/padding_ll_login_fragment_left"
         android:paddingRight="@dimen/padding_ll_login_fragment_right"
         android:paddingStart="@dimen/padding_ll_login_fragment_left"
-        android:paddingTop="@dimen/padding_ll_login_fragment_top" />
+        android:paddingTop="@dimen/padding_ll_login_fragment_top"
+        android:scrollbars="none" />
 </FrameLayout>
