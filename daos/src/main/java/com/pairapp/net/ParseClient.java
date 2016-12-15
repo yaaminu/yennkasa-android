@@ -2,7 +2,6 @@ package com.pairapp.net;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;

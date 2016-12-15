@@ -39,7 +39,8 @@ public class ParseFileClient implements FileApi {
             }
             final ParseFile pFile;
             try {
-                pFile = new ParseFile(file.getName(), FileUtils.readFileToByteArray(file));
+                pFile = new ParseFile(file.getName(), FileUtils.readFileToByteArray(file),
+                        com.pairapp.util.FileUtils.getMimeType(file.getName()));
                 listener.onProgress(file.length(), 0L);
                 pFile.save();
                 listener.onProgress(file.length(), file.length());
