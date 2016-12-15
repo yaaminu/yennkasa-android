@@ -26,6 +26,7 @@ import com.squareup.leakcanary.LeakCanary;
 import java.util.regex.Pattern;
 
 import io.fabric.sdk.android.Fabric;
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 
 /**
  * @author Null-Pointer on 6/6/2015.
@@ -135,6 +136,9 @@ public class PairApp extends Application {
         jobRunner = new JobRunnerImpl(this, injector);
         TaskManager.init(jobRunner);
         ConnectionUtils.init(this);
+        CalligraphyConfig config = new CalligraphyConfig.Builder().setDefaultFontPath(null)
+                .build();
+        CalligraphyConfig.initDefault(config);
         PairAppClient.startIfRequired(this);
     }
 
