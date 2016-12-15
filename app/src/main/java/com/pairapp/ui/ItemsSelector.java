@@ -188,7 +188,7 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         if (interactionListener.filter() != null) {
             MenuItem item = menu.add(Menu.NONE, R.id.action_search, 2000, R.string.search);
-            item.setIcon(R.drawable.abc_ic_search_api_mtrl_alpha);
+            item.setIcon(R.drawable.ic_search_white_24dp);
             MenuItemCompat.setShowAsAction(item, MenuItemCompat.SHOW_AS_ACTION_IF_ROOM);
         }
         if (interactionListener.supportAddCustom()) {

@@ -28,6 +28,6 @@
         android:layout_marginRight="@dimen/fab_delta_right"
         android:src="@drawable/ic_phone_white"
         app:fabSize="mini"
-        app:layout_anchor="@+id/cordinator"
+        app:layout_anchor="@+id/recycler_view"
         app:layout_anchorGravity="bottom|right|end" />
 </android.support.design.widget.CoordinatorLayout>
