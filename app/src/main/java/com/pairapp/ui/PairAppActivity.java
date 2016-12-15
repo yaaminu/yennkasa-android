@@ -78,10 +78,10 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 UiHelpers.enterChatRoom(self, Message.isGroupMessage(userRealm, latestMessage) ? latestMessage.getTo() : latestMessage.getFrom());
             } else {
                 if (self instanceof MainActivity) {
-                    ((MainActivity) self).setPagePosition(MainActivity.MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT);
+                    ((MainActivity) self).setPagePosition(MainActivity.CONVERSATION_TAB);
                 } else {
                     Intent intent = new Intent(self, MainActivity.class);
-                    intent.putExtra(MainActivity.DEFAULT_FRAGMENT, MainActivity.MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT);
+                    intent.putExtra(MainActivity.DEFAULT_FRAGMENT, MainActivity.CONVERSATION_TAB);
                     startActivity(intent);
                     finish(); //better use flags instead
                 }

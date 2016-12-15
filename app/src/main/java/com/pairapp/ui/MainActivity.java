@@ -4,11 +4,11 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.TabLayout;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.ViewPager;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 
 import com.pairapp.PairApp;
 import com.pairapp.R;
@@ -29,19 +29,72 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     public static final String DEFAULT_FRAGMENT = "default_fragment";
     public static final String TAG = MainActivity.class.getSimpleName();
     public static final String ARG_TITLE = "title";
-    private static int savedPosition = MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT;
+    public static final int CONVERSATION_TAB = 1;
+    public static final int PEOPLE_TAB = 2;
 
-    @Bind(R.id.vp_pager)
-    ViewPager pager;
+    private static int savedPosition = 1;
 
-    @Bind(R.id.pts_title_strip)
-    TabLayout tabLayout;
+    @Bind(R.id.main_toolbar)
+    Toolbar toolbar;
+
+    @Bind(R.id.bottom_bar)
+    BottomNavigationView buttomBar;
+    private BottomNavigationView.OnNavigationItemSelectedListener navigationListener = new BottomNavigationView.OnNavigationItemSelectedListener() {
+        @Override
+        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+            switch (item.getItemId()) {
+                case R.id.tab_call:
+                    fragment = new CallLogFragment();
+                    break;
+                case R.id.tab_conversation:
+                    fragment = new ConversationsFragment();
+                    break;
+                case R.id.tab_people:
+                    fragment = new ContactFragment();
+                    break;
+                case R.id.tab_groups:
+                    fragment = new GroupsFragment();
+                    break;
+                default:
+                    throw new AssertionError("impossible");
+            }
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.container, fragment)
+                    .commit();
+            return true;
+        }
+    };
+
+    Fragment fragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         final Intent intent = getIntent();
         handleIntent(intent);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_search:
+                // TODO: 12/15/16 go to search activity
+                break;
+            case R.id.action_settings:
+                Intent intent = new Intent(this, SettingsActivityMain.class);
+                startActivity(intent);
+                break;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+
+        return true;
     }
 
     @Override
@@ -67,10 +120,8 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
             //noinspection ConstantConditions
             if (SetUpActivity.isEveryThingOk()) {
                 setupViews();
-                final int default_fragment = intent.getIntExtra(DEFAULT_FRAGMENT, savedPosition);
-                if (default_fragment >= MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT
-                        && default_fragment <= MyFragmentStatePagerAdapter.POSITION_SETTINGS_FRAGMENT)
-                    savedPosition = default_fragment;
+                savedPosition = intent.getIntExtra(DEFAULT_FRAGMENT, savedPosition);
+                // TODO: 12/15/16 use position
             } else {
                 UiHelpers.gotoSetUpActivity(this);
             }
@@ -83,8 +134,8 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     private void setupViews() {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        pager.setAdapter(new MyFragmentStatePagerAdapter(getSupportFragmentManager()));
-        tabLayout.setupWithViewPager(pager);
+        buttomBar.setOnNavigationItemSelectedListener(navigationListener);
+        setSupportActionBar(toolbar);
     }
 
     private boolean notIsMainIntent(Intent intent) {
@@ -101,18 +152,10 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         }
     }
 
-    @Override
-    protected void onStop() {
-        if (isUserVerified()) {
-            savedPosition = pager.getCurrentItem();
-        }
-        super.onStop();
-    }
-
 
     void setPagePosition(int newPosition) {
-        if (newPosition >= 0 && newPosition < pager.getAdapter().getCount() && pager.getCurrentItem() != newPosition) {
-            pager.setCurrentItem(newPosition, true);
+        if (newPosition >= 0 && newPosition < buttomBar.getMaxItemCount() && savedPosition != newPosition) {
+            // FIXME: 12/15/16 set to current index
         }
     }
 
@@ -120,56 +163,6 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     @Override
     protected SnackBar getSnackBar() {
         return ((SnackBar) findViewById(R.id.notification_bar));
-    }
-
-    //package private
-    class MyFragmentStatePagerAdapter extends FragmentStatePagerAdapter {
-        static final int
-                POSITION_CALL_LOGS = 0x0,
-                POSITION_CONVERSATION_FRAGMENT = 0x1,
-                POSITION_CONTACTS_FRAGMENT = 0x2,
-                POSITION_GROUP_FRAGMENT = 0x3, POSITION_SETTINGS_FRAGMENT = 0x4;
-        String[] pageTitles;
-
-        public MyFragmentStatePagerAdapter(FragmentManager fm) {
-            super(fm);
-            pageTitles = getResources().getStringArray(R.array.menuItems);
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-            Fragment fragment;
-            switch (position) {
-                case POSITION_CALL_LOGS:
-                    fragment = new CallLogFragment();
-                    break;
-                case POSITION_CONVERSATION_FRAGMENT:
-                    fragment = new ConversationsFragment();
-                    break;
-                case POSITION_CONTACTS_FRAGMENT:
-                    fragment = new ContactFragment();
-                    break;
-                case POSITION_GROUP_FRAGMENT:
-                    fragment = new GroupsFragment();
-                    break;
-                case POSITION_SETTINGS_FRAGMENT:
-                    fragment = new SettingsFragment2();
-                    break;
-                default:
-                    throw new AssertionError("impossible");
-            }
-            return fragment;
-        }
-
-        @Override
-        public int getCount() {
-            return pageTitles.length;
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            return pageTitles[position];
-        }
     }
 
     @Override
@@ -212,14 +205,5 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     @Override
     public int unSeenMessagesCount(Conversation conversation) {
         return LiveCenter.getUnreadMessageFor(conversation.getPeerId());
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (pager.getCurrentItem() != MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT) {
-            pager.setCurrentItem(MyFragmentStatePagerAdapter.POSITION_CONVERSATION_FRAGMENT, true);
-            return;
-        }
-        super.onBackPressed();
     }
 }

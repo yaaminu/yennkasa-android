@@ -210,6 +210,6 @@ public class CallLogFragment extends Fragment {
 
     @OnClick(R.id.fab_new_call)
     void newCall(View view) {
-        ((MainActivity) getActivity()).setPagePosition(MainActivity.MyFragmentStatePagerAdapter.POSITION_CONTACTS_FRAGMENT);
+        ((MainActivity) getActivity()).setPagePosition(MainActivity.PEOPLE_TAB);
     }
 }

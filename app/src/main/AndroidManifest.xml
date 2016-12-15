@@ -80,8 +80,8 @@
             android:configChanges="orientation|keyboardHidden"
             android:excludeFromRecents="true"
             android:label="@string/title_activity_set_up"
-            android:theme="@style/AppTheme.Fullscreen"
-            android:launchMode="singleTask" />
+            android:launchMode="singleTask"
+            android:theme="@style/AppTheme.Fullscreen" />
         <activity
             android:name=".ui.ChatActivity"
             android:configChanges="orientation|keyboard|keyboardHidden"
@@ -127,7 +127,6 @@
             android:launchMode="singleTask"
             android:parentActivityName=".ui.SetUpActivity"
             tools:ignore="UnusedAttribute">
-
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.pairapp.ui.SetUpActivity" />
@@ -224,6 +223,16 @@
             </intent-filter>
         </service>
         <!-- [END firebase_iid_service] -->
+        <activity
+            android:name=".ui.SettingsActivityMain"
+            android:label="@string/action_settings"
+            android:parentActivityName=".ui.MainActivity"
+            tools:ignore="UnusedAttribute">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.pairapp.ui.MainActivity" />
+
+        </activity>
     </application>
 
 </manifest>

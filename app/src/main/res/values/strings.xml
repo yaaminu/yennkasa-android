@@ -1,4 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <string name="app_name">PairApp</string>
     <string name="action_logout">Log out</string>
     <string name="title_activity_set_up">Get Started</string>
@@ -370,4 +370,8 @@
     <string name="block2">Block</string>
     <string name="not_in_contacts_notice">%s is not in your address book</string>
     <string name="block_user_confirmatory_alert">Are you sure you want to block this user?</string>
+    <string name="calls">Calls</string>
+    <string name="conversation">Conversations</string>
+    <string name="people">People</string>
+    <string name="groups">Groups</string>
 </resources>

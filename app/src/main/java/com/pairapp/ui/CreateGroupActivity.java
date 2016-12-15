@@ -52,7 +52,6 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     private Set<String> selectedUsersNames = new TreeSet<>();
     private Set<String> selectedUsers = new HashSet<>();
     private String groupName;
-    private Realm userRealm;
     private CustomUsersAdapter adapter;
     private EditText groupNameEt;
     private int stage = 0;
