@@ -84,9 +84,9 @@ public class CallLogFragment extends Fragment {
     }
 
 
-    private final RealmChangeListener changeListener = new RealmChangeListener() {
+    private final RealmChangeListener<Realm> changeListener = new RealmChangeListener<Realm>() {
         @Override
-        public void onChange() {
+        public void onChange(Realm r) {
             if (adapter != null) {
                 adapter.notifyDataSetChanged();
             }

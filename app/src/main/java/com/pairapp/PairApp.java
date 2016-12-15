@@ -26,6 +26,7 @@ import com.squareup.leakcanary.LeakCanary;
 import java.util.regex.Pattern;
 
 import io.fabric.sdk.android.Fabric;
+import io.realm.Realm;
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 
 /**
@@ -130,16 +131,22 @@ public class PairApp extends Application {
             return;
         }
         LeakCanary.install(this);
-        Fabric.with(this, new Crashlytics());
+        Realm.init(this);
         PLog.setLogLevel(BuildConfig.DEBUG ? PLog.LEVEL_VERBOSE : PLog.LEVEL_FATAL);
         Config.init(this);
-        jobRunner = new JobRunnerImpl(this, injector);
-        TaskManager.init(jobRunner);
-        ConnectionUtils.init(this);
         CalligraphyConfig config = new CalligraphyConfig.Builder().setDefaultFontPath(null)
                 .build();
         CalligraphyConfig.initDefault(config);
-        PairAppClient.startIfRequired(this);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Fabric.with(Config.getApplication(), new Crashlytics());
+                jobRunner = new JobRunnerImpl(Config.getApplication(), injector);
+                TaskManager.init(jobRunner);
+                ConnectionUtils.init(Config.getApplicationContext());
+                PairAppClient.startIfRequired(Config.getApplicationContext());
+            }
+        }).start();
     }
 
     @SuppressWarnings("WeakerAccess")

@@ -1684,7 +1684,7 @@ public final class UserManager {
             public void run() {
                 Realm realm = PersistedSetting.REALM(userPrefsLocation);
                 realm.beginTransaction();
-                realm.clear(PersistedSetting.class);
+                realm.delete(PersistedSetting.class);
                 realm.commitTransaction();
                 initialiseSettings();
                 if (callback != null) {

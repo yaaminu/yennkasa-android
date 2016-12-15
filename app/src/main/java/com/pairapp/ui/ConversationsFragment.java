@@ -134,7 +134,7 @@ public class ConversationsFragment extends ListFragment {
         View view = inflater.inflate(R.layout.fragment_inbox, container, false);
         realm = Conversation.Realm(getActivity());
         userRealm = User.Realm(getActivity());
-        conversations = realm.allObjectsSorted(Conversation.class, Conversation.FIELD_LAST_ACTIVE_TIME, Sort.DESCENDING);
+        conversations = realm.where(Conversation.class).findAllSorted(Conversation.FIELD_LAST_ACTIVE_TIME, Sort.DESCENDING);
         conversationAdapter = new ConversationAdapter(delegate);
         FloatingActionButton actionButton = ((FloatingActionButton) view.findViewById(R.id.fab_new_message));
         //noinspection deprecation

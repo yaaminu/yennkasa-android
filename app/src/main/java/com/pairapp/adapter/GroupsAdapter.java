@@ -24,7 +24,7 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
     private static final String TAG = GroupsAdapter.class.getSimpleName();
 
     public GroupsAdapter(Context context, RealmResults<User> realmResults) {
-        super(context, realmResults, true);
+        super(context, realmResults);
     }
 
     public static String join(CharSequence delimiter, List<User> users) {

@@ -126,7 +126,7 @@ public class Sendable extends RealmObject {
 
     public static Realm Realm(File folder) {
         GenericUtils.ensureNotNull(folder);
-        return Realm.getInstance(new RealmConfiguration.Builder(folder).deleteRealmIfMigrationNeeded().build());
+        return Realm.getInstance(new RealmConfiguration.Builder().directory(folder).deleteRealmIfMigrationNeeded().build());
     }
 
     public static class Builder {

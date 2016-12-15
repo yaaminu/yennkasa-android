@@ -41,7 +41,7 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
     }
 
     public UsersAdapter(Context context, Realm realm, RealmResults<User> realmResults, boolean multiChoice) {
-        super(context, realmResults, true);
+        super(context, realmResults);
         filterResults = realmResults;
         this.layoutResource = multiChoice ? R.layout.multi_select_user_item : R.layout.user_item;
         this.multiSelect = multiChoice;
