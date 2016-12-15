@@ -145,7 +145,7 @@ public class PersistedSetting extends RealmObject {
 
     static {
         File file = Config.getApplicationContext().getDir("data", Context.MODE_PRIVATE);
-        config = new RealmConfiguration.Builder(file)
+        config = new RealmConfiguration.Builder().directory(file)
                 .name("settings.realm")
                 .schemaVersion(0)
                 .deleteRealmIfMigrationNeeded().build();

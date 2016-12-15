@@ -32,7 +32,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
 
 
     public ConversationAdapter(Delegate delegate) {
-        super(delegate.context(), delegate.dataSet(), delegate.autoUpdate());
+        super(delegate.context(), delegate.dataSet());
         this.delegate = delegate;
     }
 

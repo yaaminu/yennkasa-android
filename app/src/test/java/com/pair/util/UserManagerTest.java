@@ -27,7 +27,7 @@ public class UserManagerTest {
     public void setUp() throws Exception {
         context = Mockito.mock(Context.class);
         Mockito.when(context.getFilesDir()).thenReturn(new File("C:\\Users\\Null-Pointer\\Desktop\\realm"));
-        realm = Realm.getInstance(context);
+        realm = User.Realm(context);
     }
 
     @After

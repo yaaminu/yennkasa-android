@@ -70,7 +70,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
     private final int greenColor;
 
     public MessagesAdapter(Delegate delegate, RealmResults<Message> realmResults, boolean isGroupMessages) {
-        super(delegate.getContext(), realmResults, true);
+        super(delegate.getContext(), realmResults);
         this.delegate = delegate;
         messageStates = new SparseIntArray(4);
         messageStates.put(Message.STATE_PENDING, R.drawable.ic_message_pending_12dp);

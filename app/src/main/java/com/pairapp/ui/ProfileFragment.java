@@ -58,7 +58,7 @@ import io.realm.RealmChangeListener;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class ProfileFragment extends Fragment implements RealmChangeListener {
+public class ProfileFragment extends Fragment implements RealmChangeListener<Realm> {
 
     public static final String ARG_USER_ID = ProfileActivity.EXTRA_USER_ID;
     private static final String TAG = ProfileFragment.class.getSimpleName();
@@ -419,7 +419,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener {
     }
 
     @Override
-    public void onChange() {
+    public void onChange(Realm o) {
         try {
             userName.setText(user.getName());
             if (!userManager.isGroup(realm, user.getUserId())) {

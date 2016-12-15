@@ -37,7 +37,7 @@ import io.realm.RealmChangeListener;
 /**
  * A simple {@link ListFragment} subclass.
  */
-public class ContactFragment extends Fragment implements RealmChangeListener, SwipeRefreshLayout.OnRefreshListener, AdapterView.OnItemClickListener {
+public class ContactFragment extends Fragment implements RealmChangeListener<Realm>, SwipeRefreshLayout.OnRefreshListener, AdapterView.OnItemClickListener {
 
     private static final String TAG = ContactFragment.class.getSimpleName();
     private static List<Contact> contacts = new ArrayList<>();
@@ -193,7 +193,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener, Sw
     }
 
     @Override
-    public void onChange() {
+    public void onChange(Realm o) {
         refreshLocalContacts();
     }
 
