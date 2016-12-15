@@ -85,7 +85,8 @@ public class PhoneNumberNormaliser {
     public static String getCCC(String userCountryISO) {
         if (userCountryISO == null) throw new IllegalArgumentException("user country iso is null");
         PhoneNumberUtil util = PhoneNumberUtil.getInstance();
-        int ccc = util.getCountryCodeForRegion(userCountryISO);
+        int ccc = util.getCountryCodeForRegion(userCountryISO.toUpperCase(Locale.US));
+        if (ccc <= 0) return "";
         return ccc + "";
     }
 
