@@ -42,6 +42,7 @@ import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 public class SetUpActivity extends PairAppBaseActivity implements VerificationFragment.Callbacks,
         ChooseDisplayPictureFragment.Callbacks, LoginFragment.Callbacks {
 
+    public static final int REQUEST_CODE_GET_COUNTRY = 10001;
     static final int UNKNOWN = -1, LOGIN_STAGE = 0, VERIFICATION_STAGE = 1, DP_STAGE = 2, COMPLETE = 3;
     private static final String STAGE = "staSKDFDge", SETUP_PREFS_KEY = "setuSLFKA", OUR_TAG = "ourTag";
     public static final int PERMISSION_REQUEST_CODE = 101;

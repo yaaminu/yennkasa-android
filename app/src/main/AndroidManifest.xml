@@ -80,6 +80,7 @@
             android:configChanges="orientation|keyboardHidden"
             android:excludeFromRecents="true"
             android:label="@string/title_activity_set_up"
+            android:theme="@style/AppTheme.Fullscreen"
             android:launchMode="singleTask" />
         <activity
             android:name=".ui.ChatActivity"
@@ -118,6 +119,18 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.pairapp.ui.MainActivity" />
+        </activity>
+        <activity
+            android:name=".ui.CountryLists"
+            android:configChanges="orientation|keyboardHidden|fontScale|locale"
+            android:label="@string/select_country"
+            android:launchMode="singleTask"
+            android:parentActivityName=".ui.SetUpActivity"
+            tools:ignore="UnusedAttribute">
+
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.pairapp.ui.SetUpActivity" />
         </activity>
         <activity
             android:name=".ui.UsersActivity"
@@ -168,34 +181,6 @@
             android:enabled="false"
             android:exported="false" />
 
-        <!--<receiver-->
-        <!--android:name="com.parse.ParseBroadcastReceiver"-->
-        <!--android:exported="true">-->
-        <!--<intent-filter>-->
-        <!--<action android:name="android.intent.action.BOOT_COMPLETED" />-->
-        <!--<action android:name="android.intent.action.USER_PRESENT" />-->
-        <!--</intent-filter>-->
-        <!--</receiver>-->
-        <!--<receiver-->
-        <!--android:name=".messenger.MessageCenter"-->
-        <!--android:exported="false">-->
-        <!--<intent-filter>-->
-        <!--<action android:name="com.parse.push.intent.RECEIVE" />-->
-        <!--<action android:name="com.parse.push.intent.DELETE" />-->
-        <!--<action android:name="com.parse.push.intent.OPEN" />-->
-        <!--</intent-filter>-->
-        <!--</receiver>-->
-        <!--<receiver-->
-        <!--android:name="com.parse.GcmBroadcastReceiver"-->
-        <!--android:permission="com.google.android.c2dm.permission.SEND">-->
-        <!--<intent-filter>-->
-        <!--<action android:name="com.google.android.c2dm.intent.RECEIVE" />-->
-        <!--<action android:name="com.google.android.c2dm.intent.REGISTRATION" />-->
-
-        <!--<category android:name="com.idea.pairapp" />-->
-        <!--</intent-filter>-->
-        <!--</receiver>-->
-
         <activity
             android:name=".ui.LoginSignupPrompt"
             android:excludeFromRecents="true"
@@ -225,8 +210,8 @@
             android:launchMode="singleTask" />
         <activity
             android:name=".ui.VideoCallActivity"
-            android:theme="@style/AppTheme.Fullscreen"
-            android:launchMode="singleTask" />
+            android:launchMode="singleTask"
+            android:theme="@style/AppTheme.Fullscreen" />
 
         <service android:name=".messenger.MessageCenter2">
             <intent-filter>

@@ -366,4 +366,5 @@
     <string name="error_cannot_edit_message">Cannot edit message</string>
     <string name="unimplemented">Not Implemented</string>
     <string name="username_required">Your username can\'t be empty</string>
+    <string name="search_hint">Search...</string>
 </resources>

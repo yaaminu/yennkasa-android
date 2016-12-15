@@ -1,6 +1,7 @@
 package com.pairapp.ui;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -47,6 +48,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnTextChanged;
+import butterknife.OnTouch;
 import io.realm.Realm;
 
 /**
@@ -141,9 +143,15 @@ public class LoginFragment extends Fragment {
 
     @SuppressLint("SetTextI18n")
     private void initialiseUserCountryCCC() {
-        TelephonyManager manager = ((TelephonyManager) getActivity().getSystemService(Context.TELEPHONY_SERVICE));
-        String countryIso = manager.getSimCountryIso();
-        countryCCC.setText("+" + PhoneNumberNormaliser.getCCC(countryIso));
+        if (countryCCC.getText().toString().trim().isEmpty()) {
+            TelephonyManager manager = ((TelephonyManager) getActivity().getSystemService(Context.TELEPHONY_SERVICE));
+            String ccc = PhoneNumberNormaliser.getCCC(manager.getSimCountryIso());
+            if (GenericUtils.isEmpty(ccc)) {
+                countryCCC.setText("+000");
+            } else {
+                countryCCC.setText("+" + ccc);
+            }
+        }
     }
 
     public LoginFragment() {
@@ -179,6 +187,21 @@ public class LoginFragment extends Fragment {
         }
         phoneNumberEt.removeTextChangedListener(watcher);
         phoneNumberEt.addTextChangedListener(watcher);
+    }
+
+    //the ontouch callback seems to be called multiple times
+    //so we set a flag to handle this anomaly. always reset in
+    //onActivityResult()
+    boolean selectingCountry = false;
+
+    @OnTouch(R.id.tv_ccc)
+    boolean touch(View v) {
+        if (!selectingCountry) {
+            selectingCountry = true;
+            Intent intent = new Intent(getContext(), CountryLists.class);
+            startActivityForResult(intent, SetUpActivity.REQUEST_CODE_GET_COUNTRY);
+        }
+        return true;
     }
 
     @OnClick({R.id.bt_loginButton, R.id.problems_logging_in})
@@ -256,6 +279,19 @@ public class LoginFragment extends Fragment {
         callback.getActivityPreferences().edit().putString(LOCALE_KEY, Locale.getDefault().getCountry()).commit();
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == SetUpActivity.REQUEST_CODE_GET_COUNTRY) {
+            selectingCountry = false;
+            if (resultCode == Activity.RESULT_OK) {
+                String ccc = data.getStringExtra(Country.FIELD_CCC);
+                GenericUtils.ensureNotEmpty(ccc);
+                countryCCC.setText("+" + ccc);
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
 
     private void setUpCountriesAndContinue() {
         //we need to do all the time to automatically handle configuration changes see setupCountriesTask#doInBackGround
