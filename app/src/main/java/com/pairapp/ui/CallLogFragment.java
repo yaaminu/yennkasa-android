@@ -100,13 +100,13 @@ public class CallLogFragment extends Fragment {
         }
 
         @Override
-        public void onItemClick(PairappBaseAdapter<?> adapter, View view, int position, long id) {
+        public void onItemClick(PairappBaseAdapter<Message> adapter, View view, int position, long id) {
             onItemLongClick(adapter, view, position, id);
         }
 
         @Override
-        public boolean onItemLongClick(final PairappBaseAdapter<?> adapter, View view, final int position, long id) {
-            final Message message = (Message) adapter.getItem(position);
+        public boolean onItemLongClick(final PairappBaseAdapter<Message> adapter, View view, final int position, long id) {
+            final Message message = adapter.getItem(position);
             String[] items = new String[3];
             final boolean outGoing = Message.isOutGoing(delegate.userRealm(), message);
             items[0] = outGoing ? getString(R.string.call_again) : getString(R.string.call_back);

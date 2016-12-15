@@ -1,75 +1,47 @@
 package com.pairapp.adapter;
 
-import android.content.Context;
-import android.support.annotation.NonNull;
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.TextView;
 
 import com.pairapp.R;
 import com.pairapp.data.Country;
-import com.rey.material.widget.TextView;
 
-import io.realm.RealmResults;
 
-public class CountriesListAdapter extends ArrayAdapter<Country> {
-    private RealmResults<Country> countries;
+import butterknife.Bind;
 
-    public CountriesListAdapter(Context context, RealmResults<Country> countries) {
-        super(context, android.R.layout.simple_list_item_1);
-        this.countries = countries;
+public class CountriesListAdapter extends PairappBaseAdapter<Country> {
+
+    public CountriesListAdapter(Delegate<Country> delegate) {
+        super(delegate);
     }
 
     @Override
-    public int getCount() {
-        return countries.size() + 1;
+    public Holder onCreateViewHolder(ViewGroup parent, int viewType) {
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        View view = inflater.inflate(R.layout.country_spinner_item, parent, false);
+        return new ViewHolder(view);
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
-    public Country getItem(int position) {
-        if (position == 0) {
-            Country selectCountry = new Country();
-            selectCountry.setName(getContext().getString(R.string.select_country));
-            selectCountry.setCcc("");
-            selectCountry.setCcc("");
-            return selectCountry;
-        }
-        return countries.get(position - 1);
-    }
-
-    @Override
-    public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
-        return getView(position, convertView, parent);
-    }
-
-    @Override
-    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
-        final Context context = getContext();
-        LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-        ViewHolder holder;
-        // FIXME: 8/14/2015 ensure we use the view holder pattern;
-        if (convertView == null) {
-            convertView = inflater.inflate(R.layout.country_spinner_item, parent, false);
-            holder = new ViewHolder();
-            holder.name = ((TextView) convertView.findViewById(R.id.tv_country_name));
-            holder.CCC = (TextView) convertView.findViewById(R.id.tv_country_ccc);
-            convertView.setTag(holder);
-        }
-        holder = ((ViewHolder) convertView.getTag());
-
+    protected void doBindHolder(Holder holder, int position) {
         Country country = getItem(position);
-        holder.name.setText(country.getName());
-        if (position == 0) {
-            holder.CCC.setText("");
-        } else {
-            holder.CCC.setText("+" + country.getCcc());
-        }
-        return convertView;
+        ((ViewHolder) holder).CCC.setText("+" + country.getCcc());
+        ((ViewHolder) holder).name.setText(country.getName());
     }
 
-    private class ViewHolder {
+    @SuppressWarnings("WeakerAccess")
+    static class ViewHolder extends Holder {
+        @Bind(R.id.tv_country_ccc)
         TextView CCC;
+        @Bind(R.id.tv_country_name)
+        TextView name;
+
+        public ViewHolder(View v) {
+            super(v);
+        }
     }
 }

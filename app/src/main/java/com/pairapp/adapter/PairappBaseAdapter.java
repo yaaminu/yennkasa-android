@@ -144,7 +144,7 @@ public abstract class PairappBaseAdapter<T> extends RecyclerView.Adapter<Pairapp
          * @param position the current position in the data set
          * @param id       the id of the current item
          */
-        void onItemClick(PairappBaseAdapter<?> adapter, View view, int position, long id);
+        void onItemClick(PairappBaseAdapter<T> adapter, View view, int position, long id);
 
         /**
          * @param adapter  the adapter to which this view is bound
@@ -152,7 +152,7 @@ public abstract class PairappBaseAdapter<T> extends RecyclerView.Adapter<Pairapp
          * @param position the current position in the data set
          * @param id       the id of the current item
          */
-        boolean onItemLongClick(PairappBaseAdapter<?> adapter, View view, int position, long id);
+        boolean onItemLongClick(PairappBaseAdapter<T> adapter, View view, int position, long id);
 
         /**
          * @return the dataset used to back this adapter, may not be null
