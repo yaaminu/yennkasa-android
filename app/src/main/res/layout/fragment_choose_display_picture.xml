@@ -20,7 +20,6 @@
                 android:id="@+id/riv_group_avatar_preview"
                 android:layout_width="@dimen/dp_thumbnail_width_large"
                 android:layout_height="@dimen/dp_thumbnail_height_large"
-                android:adjustViewBounds="true"
                 android:clickable="true"
                 android:contentDescription="@string/display_picture"
                 android:scaleType="centerCrop"

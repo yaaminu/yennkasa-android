@@ -64,13 +64,14 @@
 
         </com.pairapp.view.LinearLayout>
 
-        <com.pairapp.view.RoundedImageView
+        <ImageButton
             android:id="@+id/iv_retry"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_toLeftOf="@+id/ll_message_body_view"
             android:layout_toStartOf="@+id/ll_message_body_view"
+            android:background="@color/transparent"
             android:src="@drawable/ic_action_replay" />
 
         <ImageView

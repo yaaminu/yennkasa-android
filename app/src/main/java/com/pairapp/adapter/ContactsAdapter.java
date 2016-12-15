@@ -15,7 +15,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.pairapp.R;
-import com.pairapp.data.UserManager;
 import com.pairapp.messenger.MessengerBus;
 import com.pairapp.ui.ImageLoader;
 import com.pairapp.util.Event;
@@ -26,8 +25,6 @@ import com.pairapp.util.ViewUtils;
 
 import java.util.List;
 import java.util.Locale;
-
-import io.realm.Realm;
 
 import static com.pairapp.data.ContactsManager.Contact;
 
@@ -135,7 +132,6 @@ public class ContactsAdapter extends BaseAdapter {
                     .placeholder(R.drawable.user_avartar)
                     .resize((int) context.getResources().getDimension(R.dimen.thumbnail_width), (int) context.getResources().getDimension(R.dimen.thumbnail_height))
                     .onlyScaleDown()
-                    .centerInside()
                     .into(targetOnclick);
             holder.userName.setClickable(true);
             holder.userDp.setClickable(true);
