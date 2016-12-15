@@ -1,10 +1,31 @@
-<com.rey.material.widget.TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/copy_right"
-    android:layout_width="wrap_content"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_alignParentBottom="true"
     android:layout_centerHorizontal="true"
-    android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
-    android:text="@string/idea_inc"
-    android:textSize="@dimen/standard_text_size"
-    android:textStyle="bold" />
+    android:layout_gravity="bottom|center_horizontal"
+    android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/copy_right"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
+        android:layout_weight="1"
+        android:gravity="start"
+        android:padding="@dimen/default_gap"
+        android:text="@string/copyright"
+        android:textColor="@color/white" />
+
+    <TextView
+        android:id="@+id/tv_app_version"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
+        android:layout_weight="1"
+        android:gravity="end"
+        android:padding="@dimen/default_gap"
+        android:textColor="@color/white"
+        tools:text="v0.9.8b20" />
+</LinearLayout>

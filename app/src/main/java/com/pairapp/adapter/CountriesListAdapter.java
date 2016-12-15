@@ -1,6 +1,7 @@
 package com.pairapp.adapter;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,11 +9,7 @@ import android.widget.ArrayAdapter;
 
 import com.pairapp.R;
 import com.pairapp.data.Country;
-import com.pairapp.util.TypeFaceUtil;
-import com.pairapp.util.ViewUtils;
 import com.rey.material.widget.TextView;
-
-import java.util.Locale;
 
 import io.realm.RealmResults;
 
@@ -42,12 +39,12 @@ public class CountriesListAdapter extends ArrayAdapter<Country> {
     }
 
     @Override
-    public View getDropDownView(int position, View convertView, ViewGroup parent) {
+    public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
         return getView(position, convertView, parent);
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
         final Context context = getContext();
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -58,11 +55,9 @@ public class CountriesListAdapter extends ArrayAdapter<Country> {
             holder = new ViewHolder();
             holder.name = ((TextView) convertView.findViewById(R.id.tv_country_name));
             holder.CCC = (TextView) convertView.findViewById(R.id.tv_country_ccc);
-            ViewUtils.setTypeface(holder.name, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-            ViewUtils.setTypeface(holder.CCC, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-            convertView.setTag(R.id.tag,holder);
+            convertView.setTag(holder);
         }
-        holder = ((ViewHolder) convertView.getTag(R.id.tag));
+        holder = ((ViewHolder) convertView.getTag());
 
         Country country = getItem(position);
         holder.name.setText(country.getName());
@@ -74,13 +69,7 @@ public class CountriesListAdapter extends ArrayAdapter<Country> {
         return convertView;
     }
 
-    private String GetCountryZipCode(String ssid) {
-        Locale loc = new Locale("", ssid);
-
-        return loc.getDisplayCountry().trim();
-    }
-
     private class ViewHolder {
-        TextView name, CCC;
+        TextView CCC;
     }
 }

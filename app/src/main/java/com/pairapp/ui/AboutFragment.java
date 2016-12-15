@@ -1,6 +1,7 @@
 package com.pairapp.ui;
 
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -25,6 +26,7 @@ public class AboutFragment extends Fragment {
     }
 
 
+    @SuppressLint("SetTextI18n")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -34,7 +36,7 @@ public class AboutFragment extends Fragment {
         ViewUtils.setTypeface(legalNotice, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         TextView appname = (TextView) view.findViewById(R.id.tv_app_name),
                 appVersion = ((TextView) view.findViewById(R.id.tv_app_version));
-        appVersion.setText(BuildConfig.VERSION_NAME + " (" + BuildConfig.VERSION_CODE + ")");
+        appVersion.setText(BuildConfig.VERSION_NAME + BuildConfig.VERSION_CODE);
         ViewUtils.setTypeface(appname, TypeFaceUtil.two_d_font);
         ViewUtils.setTypeface(appVersion, TypeFaceUtil.ROBOTO_REGULAR_TTF);
 
