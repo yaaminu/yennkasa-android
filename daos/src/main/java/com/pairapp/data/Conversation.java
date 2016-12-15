@@ -85,13 +85,16 @@ public class Conversation extends RealmObject {
                 .equalTo(Message.FIELD_ID, conversation.getPeerId() + formatted)
                 .findFirst();
         if (message == null) { //session not yet set up!
-            message = realm.createObject(Message.class);
+            message = new Message();
             message.setId(conversation.getPeerId() + formatted);
             message.setMessageBody(formatted);
             message.setTo(currentUserId);
             message.setFrom(conversation.getPeerId());
             message.setDateComposed(now);
             message.setType(TYPE_DATE_MESSAGE);
+            //make sure you return the result of createObject()
+            /*message  = */
+            realm.createObject(Message.class, message);
             return true;
         }
         return false;
@@ -115,11 +118,12 @@ public class Conversation extends RealmObject {
         Conversation newConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
         realm.beginTransaction();
         if (newConversation == null) {
-            newConversation = realm.createObject(Conversation.class);
+            newConversation = new Conversation();
             newConversation.setActive(active);
             newConversation.setPeerId(peerId);
             newConversation.setLastActiveTime(new Date());
             newConversation.setSummary("no message");
+            newConversation = realm.createObject(Conversation.class, newConversation);
         }
         newSession(realm, currentUserId, newConversation);
         realm.commitTransaction();
@@ -130,11 +134,12 @@ public class Conversation extends RealmObject {
         Conversation newConversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
         if (newConversation == null) {
             realm.beginTransaction();
-            newConversation = realm.createObject(Conversation.class);
+            newConversation = new Conversation();
             newConversation.setActive(active);
             newConversation.setPeerId(peerId);
             newConversation.setLastActiveTime(new Date());
             newConversation.setSummary("no message");
+            newConversation = realm.createObject(Conversation.class, newConversation);
             realm.commitTransaction();
         }
         return newConversation;

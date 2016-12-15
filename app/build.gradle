@@ -18,8 +18,8 @@ android {
         applicationId "com.pairapp"
         minSdkVersion 9
         targetSdkVersion 25
-        versionCode 39
-        versionName "0.15.15b"
+        versionCode 40
+        versionName "0.15.16b"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
