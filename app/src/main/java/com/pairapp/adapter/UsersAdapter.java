@@ -15,8 +15,6 @@ import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.ui.ImageLoader;
 import com.pairapp.util.PhoneNumberNormaliser;
-import com.pairapp.util.TypeFaceUtil;
-import com.pairapp.util.ViewUtils;
 import com.rey.material.widget.CheckBox;
 
 import java.util.regex.Pattern;

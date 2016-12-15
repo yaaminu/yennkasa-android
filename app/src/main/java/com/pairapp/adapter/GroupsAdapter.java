@@ -11,8 +11,6 @@ import com.pairapp.R;
 import com.pairapp.data.User;
 import com.pairapp.ui.ImageLoader;
 import com.pairapp.util.PLog;
-import com.pairapp.util.TypeFaceUtil;
-import com.pairapp.util.ViewUtils;
 
 import java.util.List;
 

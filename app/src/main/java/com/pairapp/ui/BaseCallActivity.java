@@ -40,7 +40,6 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 
 import static android.view.WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD;
-import static android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
 import static android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED;
 import static android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON;
 import static com.pairapp.messenger.MessengerBus.ANSWER_CALL;

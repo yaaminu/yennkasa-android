@@ -1,5 +1,4 @@
-<com.pairapp.view.LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -19,12 +18,12 @@
             android:adjustViewBounds="true"
             android:contentDescription="@string/display_picture"
             android:scaleType="centerCrop"
-            android:src="@drawable/group_avatar"/>
+            android:src="@drawable/group_avatar" />
 
         <include
             android:id="@+id/pb_progress"
             layout="@layout/progressbar"
-            android:visibility="visible"/>
+            android:visibility="visible" />
 
         <com.pairapp.view.LinearLayout
             android:layout_width="wrap_content"
@@ -35,15 +34,13 @@
             <include
                 android:id="@+id/bt_take_photo_change_dp"
                 layout="@layout/fab_generic_smal"
-                android:contentDescription="@string/change_dp"
-                />
+                android:contentDescription="@string/change_dp" />
 
             <include
                 android:id="@+id/bt_pick_photo_change_dp"
                 layout="@layout/fab_generic_smal"
                 android:contentDescription="@string/change_dp"
-                app:fab_iconSrc="@drawable/ic_action_picture"
-                />
+                app:fab_iconSrc="@drawable/ic_action_picture" />
         </com.pairapp.view.LinearLayout>
     </com.pairapp.view.FrameLayout>
 
@@ -69,7 +66,7 @@
             android:padding="@dimen/padding_button"
             android:text="@string/message"
             android:textColor="@color/white"
-            android:textSize="@dimen/standard_text_size"/>
+            android:textSize="@dimen/standard_text_size" />
 
         <com.rey.material.widget.Button
             android:id="@+id/bt_call"
@@ -80,7 +77,7 @@
             android:text="@string/call"
             android:textColor="@color/white"
             android:textSize="@dimen/standard_text_size"
-            android:visibility="visible"/>
+            android:visibility="visible" />
 
         <com.rey.material.widget.Button
             android:id="@+id/bt_dissolve_group"
@@ -91,7 +88,7 @@
             android:text="@string/dissolve_group"
             android:textColor="@color/white"
             android:textSize="@dimen/standard_text_size"
-            android:visibility="visible"/>
+            android:visibility="visible" />
 
         <com.rey.material.widget.Button
             android:id="@+id/bt_exit_group"
@@ -102,10 +99,10 @@
             android:text="@string/leave"
             android:textColor="@color/white"
             android:textSize="@dimen/standard_text_size"
-            android:visibility="visible"/>
+            android:visibility="visible" />
     </LinearLayout>
 
-    <include layout="@layout/divider_span_full"/>
+    <include layout="@layout/divider_span_full" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -142,10 +139,10 @@
                     android:singleLine="true"
                     android:text="@string/username_placeholder"
                     android:textColor="#000"
-                    android:textSize="@dimen/edit_text_size"/>
+                    android:textSize="@dimen/edit_text_size" />
             </com.pairapp.view.LinearLayout>
 
-            <include layout="@layout/divider_span_full"/>
+            <include layout="@layout/divider_span_full" />
 
             <include
                 android:id="@+id/tv_user_phone_group_admin"
@@ -154,10 +151,9 @@
                 android:layout_height="0dp"
                 android:layout_marginTop="@dimen/profile_list_item_padding_top"
                 android:layout_weight="1"
-                android:minHeight="?android:attr/listPreferredItemHeight"
-                />
+                android:minHeight="?android:attr/listPreferredItemHeight" />
 
-            <include layout="@layout/divider_span_full"/>
+            <include layout="@layout/divider_span_full" />
 
             <include
                 android:id="@+id/tv_shared_groups_or_group_members"
@@ -166,7 +162,7 @@
                 android:layout_height="0dp"
                 android:layout_marginTop="@dimen/profile_list_item_padding_top"
                 android:layout_weight="1"
-                android:minHeight="?android:attr/listPreferredItemHeight"/>
+                android:minHeight="?android:attr/listPreferredItemHeight" />
         </com.pairapp.view.LinearLayout>
     </ScrollView>
 </com.pairapp.view.LinearLayout>
