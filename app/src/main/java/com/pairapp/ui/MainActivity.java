@@ -136,6 +136,10 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         ButterKnife.bind(this);
         buttomBar.setOnNavigationItemSelectedListener(navigationListener);
         setSupportActionBar(toolbar);
+        fragment = new CallLogFragment();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.container, fragment)
+                .commit();
     }
 
     private boolean notIsMainIntent(Intent intent) {
@@ -151,7 +155,6 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
             }
         }
     }
-
 
     void setPagePosition(int newPosition) {
         if (newPosition >= 0 && newPosition < buttomBar.getMaxItemCount() && savedPosition != newPosition) {
