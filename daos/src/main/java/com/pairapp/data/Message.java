@@ -182,10 +182,10 @@ public class Message extends RealmObject {
      */
     @NonNull
     public static Message makeNewCallMessageAndPersist(Realm theRealm, String mainUserId, String peer, long callDate, CallBody callBody, boolean isOutGoing) {
-        Message message = new Message();
+        Message message = theRealm.createObject(Message.class, generateIdPossiblyUnique(theRealm, mainUserId, peer));
+//        message.setId();
         message.setDateComposed(new Date(callDate));
         message.setCallBody(theRealm.copyToRealm(callBody));
-        message.setId(generateIdPossiblyUnique(theRealm, mainUserId, peer));
         if (isOutGoing) {
             message.setFrom(mainUserId);
             message.setTo(peer);
@@ -195,7 +195,6 @@ public class Message extends RealmObject {
         }
         message.setState(Message.STATE_SEEN);
         message.setType(TYPE_CALL);
-        message = theRealm.createObject(Message.class, message);
         return message;
     }
 
@@ -226,15 +225,14 @@ public class Message extends RealmObject {
                 throw new PairappException("file is too large", MessageUtils.ERROR_ATTACHMENT_TOO_LARGE);
             }
         }
-        Message message = new Message();
+        Message message = theRealm.createObject(Message.class, generateIdPossiblyUnique(theRealm, mainUserId, to));
+//        message.setId();
         message.setDateComposed(new Date());
         message.setMessageBody(body);
-        message.setId(generateIdPossiblyUnique(theRealm, mainUserId, to));
         message.setFrom(mainUserId);
         message.setState(Message.STATE_PENDING);
         message.setType(type);
         message.setTo(to);
-        message = theRealm.createObject(Message.class, message);
         return message;
     }
 
