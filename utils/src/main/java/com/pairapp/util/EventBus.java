@@ -4,6 +4,8 @@ import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -358,6 +360,7 @@ public class EventBus {
         }
     }
 
+    @Retention(RetentionPolicy.SOURCE)
     @IntDef({MAIN, ANY, BACKGROUND})
     @interface ThreadMode {
     }

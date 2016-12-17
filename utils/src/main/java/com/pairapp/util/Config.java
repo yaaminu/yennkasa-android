@@ -23,9 +23,9 @@ public class Config {
 
     private static final String SERVER_URL_REMOTE = "https://chat-server-data.herokuapp.com";
     private static final String SERVER_URL_LOCAL = "http://10.0.3.2:4000";
-    private static final String SERVER_URL_LOCAL_REAL_DEVICE = "http://192.168.43.42:4000";
+    private static final String SERVER_URL_LOCAL_REAL_DEVICE = "http://192.168.43.115:4000";
 
-    private static final String MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE = "http://192.168.43.42:3000";
+    private static final String MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE = "http://192.168.43.58:3000";
     private static final String MESSAGE_SOCKET_API_LOCAL = "http://10.0.3.2:3000";
 
     private static final String LIVE_SOCKET_API_REMOTE = "https://chat-server-live.herokuapp.com";
