@@ -169,7 +169,7 @@
                 android:layout_weight="1"
                 android:gravity="center_vertical">
 
-                <com.rockerhieu.emojicon.EmojiconEditText
+                <EditText
                     android:id="@+id/et_message"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -180,7 +180,7 @@
                     android:maxHeight="@dimen/multiline_text_box_max_height"
                     android:padding="@dimen/padding_ll_login_fragment_right"
                     android:textSize="@dimen/edit_text_size"
-                    app:emojiconSize="@dimen/edit_text_size" />
+                    />
                 <!--android:text="llaaal\nlkklkk\nkklkjkjlkk\nkljklkkjlklk\nkljkljklkklk"-->
             </LinearLayout>
 

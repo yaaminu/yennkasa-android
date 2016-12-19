@@ -6,6 +6,9 @@ buildscript {
         maven {
             url 'https://maven.fabric.io/public'
         }
+        maven {
+            url 'http://maven.stickerpipe.com/artifactory/stickerfactory'
+        }
         mavenLocal()
 
     }
@@ -24,6 +27,9 @@ allprojects {
     repositories {
         jcenter()
         maven { url 'https://maven.fabric.io/public' }
+        maven {
+            url 'http://maven.stickerpipe.com/artifactory/stickerfactory'
+        }
         mavenLocal()
     }
 }

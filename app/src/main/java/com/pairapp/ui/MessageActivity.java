@@ -3,14 +3,13 @@ package com.pairapp.ui;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.util.Pair;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 
 import com.pairapp.BuildConfig;
@@ -32,9 +31,6 @@ import com.pairapp.util.TaskManager;
 import com.pairapp.util.ThreadUtils;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
-import com.rockerhieu.emojicon.EmojiconGridFragment;
-import com.rockerhieu.emojicon.EmojiconsFragment;
-import com.rockerhieu.emojicon.emoji.Emojicon;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -43,6 +39,7 @@ import java.util.Set;
 
 import butterknife.OnClick;
 import io.realm.Realm;
+import vc908.stickerfactory.ui.fragment.StickersFragment;
 
 import static com.pairapp.messenger.MessengerBus.MESSAGE_SEEN;
 import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
@@ -50,13 +47,15 @@ import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
 /**
  * @author by Null-Pointer on 9/19/2015.
  */
-public abstract class MessageActivity extends PairAppActivity implements LiveCenter.ProgressListener, TextWatcher, EmojiconsFragment.OnEmojiconBackspaceClickedListener, EmojiconGridFragment.OnEmojiconClickedListener {
+public abstract class MessageActivity extends PairAppActivity implements LiveCenter.ProgressListener, TextWatcher {
 
     private static final String TAG = MessageActivity.class.getSimpleName();
     public static final String EMOJI_FRAGMENT = "emojiFragment";
     private boolean isTypingEmoji = false;
     private ImageButton emoji, camera, mic;
     private EditText messageEt;
+    private EmojiStickerSelectedListener emojiStickerSelectedListener;
+    FrameLayout stickersContainer;
 
     protected final void resendMessage(final String msgId) {
         TaskManager.executeNow(new Runnable() {
@@ -79,48 +78,34 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+        stickersContainer = ((FrameLayout) findViewById(R.id.emoji_pannel_slot));
         messageEt = (EditText) findViewById(R.id.et_message);
         emoji = ((ImageButton) findViewById(R.id.ib_attach_emoji));
         camera = ((ImageButton) findViewById(R.id.ib_attach_capture_photo));
         mic = ((ImageButton) findViewById(R.id.ib_attach_record_audio));
         messageEt.addTextChangedListener(this);
+        emojiStickerSelectedListener = new EmojiStickerSelectedListener(messageEt);
+        StickersFragment emojiFragment = new StickersFragment();
+        emojiFragment.setOnStickerSelectedListener(emojiStickerSelectedListener);
+        emojiFragment.setOnEmojiBackspaceClickListener(emojiStickerSelectedListener);
+        getSupportFragmentManager().beginTransaction().replace(R.id.emoji_pannel_slot, emojiFragment,
+                EMOJI_FRAGMENT).commit();
         messageEt.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus) {
-                    FragmentManager supportFragmentManager = getSupportFragmentManager();
-                    Fragment f = supportFragmentManager.findFragmentByTag(EMOJI_FRAGMENT);
-                    if (f != null) {
-                        supportFragmentManager.beginTransaction().remove(f).commit();
-                        emoji.setImageResource(R.drawable.ic_msg_panel_smiles);
-                        isTypingEmoji = false;
-                    }
+                    ViewUtils.hideViews(stickersContainer);
+                    emoji.setImageResource(R.drawable.ic_msg_panel_smiles);
+                    isTypingEmoji = false;
                 }
             }
         });
         messageEt.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FragmentManager supportFragmentManager = getSupportFragmentManager();
-                Fragment f = supportFragmentManager.findFragmentByTag(EMOJI_FRAGMENT);
-                if (f != null) {
-                    supportFragmentManager.beginTransaction().remove(f).commit();
-                    emoji.setImageResource(R.drawable.ic_msg_panel_smiles);
-                    isTypingEmoji = false;
-                }
-            }
-        });
-        messageEt.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                FragmentManager supportFragmentManager = getSupportFragmentManager();
-                Fragment f = supportFragmentManager.findFragmentByTag(EMOJI_FRAGMENT);
-                if (f != null && f.isInLayout() && isTypingEmoji) {
-                    supportFragmentManager.beginTransaction().remove(f).commit();
-                    emoji.setImageResource(R.drawable.ic_msg_panel_smiles);
-                    isTypingEmoji = false;
-                }
-                return false;
+                ViewUtils.hideViews(stickersContainer);
+                emoji.setImageResource(R.drawable.ic_msg_panel_smiles);
+                isTypingEmoji = false;
             }
         });
     }
@@ -272,7 +257,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                         message.deleteFromRealm();
                         realm.commitTransaction();
                         doSendMessage(newMessage);
-                        runOnUiThread(new Runnable() {
+                        TaskManager.executeOnMainThread(new Runnable() {
                             @Override
                             public void run() {
                                 onMessageQueued(msgId);
@@ -407,43 +392,37 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
 
     @OnClick(R.id.ib_attach_emoji)
     public final void toggleEmoji(View view) {
-        ImageButton button = ((ImageButton) view);
-        Fragment emojiFragment = getSupportFragmentManager().findFragmentByTag(EMOJI_FRAGMENT);
-        InputMethodManager manager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        final ImageButton button = ((ImageButton) view);
+        final InputMethodManager manager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
         if (isTypingEmoji) {
-            //remove emojiFragment
-            if (emojiFragment != null) {
-                getSupportFragmentManager().beginTransaction().remove(emojiFragment).commit();
-            }
+            ViewUtils.hideViews(stickersContainer);
             //show keyboard
             manager.showSoftInput(messageEt, 0);
 
             //set the icon to emoji
             button.setImageResource(R.drawable.ic_msg_panel_smiles);
+            isTypingEmoji = false;
         } else {
             //hide keyboard
             manager.hideSoftInputFromWindow(messageEt.getWindowToken(), 0);
 
-            //show emoji fragment
-            if (emojiFragment == null) {
-                emojiFragment = EmojiconsFragment.newInstance(false);
-            }
-            getSupportFragmentManager().beginTransaction().replace(R.id.emoji_pannel_slot, emojiFragment,
-                    EMOJI_FRAGMENT).commit();
-            //set the icon to keyboard
-            button.setImageResource(R.drawable.ic_msg_panel_kb);
+            stickersContainer.getHandler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    //show emoji fragment
+                    ViewUtils.showViews(stickersContainer);
+                    //set the icon to keyboard
+                    button.setImageResource(R.drawable.ic_msg_panel_kb);
+                    isTypingEmoji = !isTypingEmoji;
+                }
+            }, 200);
         }
-        isTypingEmoji = !isTypingEmoji;
     }
 
     @Override
     public void onBackPressed() {
         if (isTypingEmoji) {
-            //remove emoji fragment
-            Fragment emojiFragment = getSupportFragmentManager().findFragmentByTag(EMOJI_FRAGMENT);
-            if (emojiFragment != null) {
-                getSupportFragmentManager().beginTransaction().remove(emojiFragment).commit();
-            }
+            ViewUtils.hideViews(stickersContainer);
             //set the icon to emoji
             emoji.setImageResource(R.drawable.ic_msg_panel_smiles);
             isTypingEmoji = false;
@@ -452,15 +431,6 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         }
     }
 
-    @Override
-    public void onEmojiconClicked(Emojicon emojicon) {
-        EmojiconsFragment.input(messageEt, emojicon);
-    }
-
-    @Override
-    public void onEmojiconBackspaceClicked(View v) {
-        EmojiconsFragment.backspace(messageEt);
-    }
 
     @Override
     public void onTextChanged(CharSequence s, int start, int before, int count) {

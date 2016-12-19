@@ -1,8 +1,6 @@
 package com.pairapp.data;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -20,23 +18,9 @@ import static com.pairapp.data.Message.FIELD_TYPE;
 /**
  * @author by Null-Pointer on 5/27/2015.
  */
-class MessageJsonAdapter implements BaseJsonAdapter<Message> {
-    @Override
-    public JsonObject toJson(Message message) {
-        JsonObject obj = new JsonObject();
+class MessageJsonAdapter {
 
-        obj.addProperty(FIELD_FROM, message.getFrom());
-        obj.addProperty(FIELD_TO, message.getTo());
-        obj.addProperty(FIELD_STATE, message.getState());
-        obj.addProperty(FIELD_ID, message.getId());
-        obj.addProperty(FIELD_MESSAGE_BODY, message.getMessageBody());
-        obj.addProperty(FIELD_DATE_COMPOSED, message.getDateComposed().getTime());
-        obj.addProperty(FIELD_TYPE, message.getType());
-        return obj;
-    }
-
-    @SuppressWarnings("unused")
-    public JSONObject toJSON(Message message) {
+    public static JSONObject toJson(Message message) {
         try {
             JSONObject obj = new JSONObject();
             obj.put(FIELD_FROM, message.getFrom());
@@ -52,16 +36,12 @@ class MessageJsonAdapter implements BaseJsonAdapter<Message> {
         }
     }
 
-    @Override
-    public JsonArray toJson(Collection<Message> messages) {
-        JsonArray array = new JsonArray();
-        for (Message message : messages) {
-            array.add(toJson(message));
-        }
-        return array;
+    public static JSONArray toJson(Collection<Message> t) {
+        throw new UnsupportedOperationException();
     }
 
-    public Message fromJson(String currentUserId, String json) {
+
+    public static Message fromJson(String currentUserId, String json) {
         try {
             JSONObject obj = new JSONObject(json);
             Message message = new Message();
@@ -77,6 +57,4 @@ class MessageJsonAdapter implements BaseJsonAdapter<Message> {
             throw new IllegalArgumentException(e.getCause());
         }
     }
-
-    static final MessageJsonAdapter INSTANCE = new MessageJsonAdapter();
 }

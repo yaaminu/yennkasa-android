@@ -4,6 +4,7 @@ import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.support.multidex.MultiDexApplication;
 
 import com.crashlytics.android.Crashlytics;
 import com.pairapp.data.ContactSyncService;
@@ -32,7 +33,7 @@ import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 /**
  * @author Null-Pointer on 6/6/2015.
  */
-public class PairApp extends Application {
+public class PairApp extends MultiDexApplication {
     public static final String TAG = PairApp.class.getName();
     //    //    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
 //    private static final String TWITTER_KEY = "p1KaIqoXt9ujhMaOPcQY4Xxi9";

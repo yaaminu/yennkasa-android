@@ -20,7 +20,7 @@
         android:scaleType="centerCrop"
         android:src="@drawable/user_avartar" />
 
-    <com.rockerhieu.emojicon.EmojiconTextView
+    <TextView
         android:id="@+id/tv_chat_summary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -33,7 +33,6 @@
         android:textColor="@color/light_gray"
         android:textSize="@dimen/standard_text_size"
         android:textStyle="bold"
-        app:emojiconAlignment="baseline"
         tools:text="  Summary of conversation with a very long message " />
 
 

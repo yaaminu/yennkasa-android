@@ -77,7 +77,8 @@
                 android:scrollbars="none"
                 android:scrollingCache="@bool/scrolling_cache_chat_activity"
                 android:transcriptMode="normal"
-                tools:ignore="UnusedAttribute" />
+                tools:ignore="UnusedAttribute"
+                tools:listitem="@layout/out_going_audio_message_list_item" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -104,7 +105,7 @@
                     android:src="@drawable/ic_smiley_24dp" />
 
 
-                <com.rockerhieu.emojicon.EmojiconEditText
+                <EditText
                     android:id="@+id/et_message"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -115,8 +116,7 @@
                     android:hint="@string/message_box_hint"
                     android:inputType="textMultiLine|textLongMessage"
                     android:maxHeight="@dimen/multiline_text_box_max_height"
-                    android:textSize="@dimen/edit_text_size"
-                    app:emojiconSize="@dimen/edit_text_size" />
+                    android:textSize="@dimen/edit_text_size" />
 
                 <ImageButton
                     android:id="@+id/ib_attach_capture_photo"
@@ -178,7 +178,8 @@
             <FrameLayout
                 android:id="@+id/emoji_pannel_slot"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="@dimen/soft_input_height"
+                android:visibility="gone">
 
             </FrameLayout>
         </LinearLayout>

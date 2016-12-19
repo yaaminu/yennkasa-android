@@ -1,16 +1,16 @@
 package com.pairapp.data;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.Collection;
 
 /**
- * Created by Null-Pointer on 5/26/2015.
+ * @author by Null-Pointer on 5/26/2015.
  */
 public interface BaseJsonAdapter<T> {
-    JsonObject toJson(T t);
+    JSONObject toJson(T t);
 
-    JsonArray toJson(Collection<T> t);
+    JSONArray toJson(Collection<T> t);
 
 }

@@ -166,6 +166,11 @@
                 android:value="com.pairapp.ui.MainActivity" />
         </activity>
 
+        <provider
+            android:name="vc908.stickerfactory.provider.StickersProvider"
+            android:authorities="com.pairapp.stickersProvider"
+            android:exported="false" />
+
         <service android:name="com.parse.PushService" />
         <service
             android:name=".data.ContactSyncService"

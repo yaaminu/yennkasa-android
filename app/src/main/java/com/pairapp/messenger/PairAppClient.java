@@ -28,6 +28,7 @@ import com.pairapp.ui.BaseCallActivity;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
+import com.pairapp.util.FileUtils;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
 import com.pairapp.util.TaskManager;
@@ -36,6 +37,7 @@ import com.pairapp.util.ThreadUtils;
 import org.json.JSONObject;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -44,6 +46,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.realm.Realm;
+import vc908.stickerfactory.StickersManager;
 
 import static com.pairapp.call.CallController.CALL_PUSH_PAYLOAD;
 import static com.pairapp.call.CallController.ON_CALL_ESTABLISHED;
@@ -147,6 +150,15 @@ public class PairAppClient extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        StickersManager.initialize("fd82531004986458d9d4fd66eacf9e20", this, BuildConfig.DEBUG);
+        Realm realm = User.Realm(this);
+
+        try {
+            StickersManager.setUser(FileUtils.hash(UserManager.getMainUserId(realm)),
+                    Collections.singletonMap("versionCode", String.valueOf(BuildConfig.VERSION_CODE)));
+        } finally {
+            realm.close();
+        }
         PLog.i(TAG, "starting pairapp client");
         if (WORKER_THREAD != null && WORKER_THREAD.isAlive()) {
             WORKER_THREAD.quit();

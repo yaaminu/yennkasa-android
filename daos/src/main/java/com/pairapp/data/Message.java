@@ -398,7 +398,7 @@ public class Message extends RealmObject {
         if (message == null) {
             throw new IllegalArgumentException("message == null");
         }
-        return MessageJsonAdapter.INSTANCE.toJSON(message).toString();
+        return MessageJsonAdapter.toJson(message).toString();
     }
 
     public static Message fromJSON(String json) {
@@ -407,7 +407,7 @@ public class Message extends RealmObject {
         }
         Realm userRealm = User.Realm(Config.getApplicationContext());
         try {
-            return MessageJsonAdapter.INSTANCE.fromJson(UserManager.getMainUserId(userRealm), json);
+            return MessageJsonAdapter.fromJson(UserManager.getMainUserId(userRealm), json);
         } finally {
             userRealm.close();
         }

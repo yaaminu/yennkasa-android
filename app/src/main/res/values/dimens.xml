@@ -102,4 +102,5 @@
     <dimen name="unseen_message_width">24dp</dimen>
     <dimen name="unseen_message_height">24dp</dimen>
     <dimen name="message_list_item_sender_size">12sp</dimen>
+    <dimen name="soft_input_height">300dp</dimen>
 </resources>
