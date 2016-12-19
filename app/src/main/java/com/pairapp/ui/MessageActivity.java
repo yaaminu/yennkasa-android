@@ -95,7 +95,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus) {
                     ViewUtils.hideViews(stickersContainer);
-                    emoji.setImageResource(R.drawable.ic_msg_panel_smiles);
+                    emoji.setImageResource(R.drawable.sp_ic_stickers);
                     isTypingEmoji = false;
                 }
             }
@@ -104,7 +104,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
             @Override
             public void onClick(View v) {
                 ViewUtils.hideViews(stickersContainer);
-                emoji.setImageResource(R.drawable.ic_msg_panel_smiles);
+                emoji.setImageResource(R.drawable.sp_ic_stickers);
                 isTypingEmoji = false;
             }
         });
@@ -400,7 +400,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
             manager.showSoftInput(messageEt, 0);
 
             //set the icon to emoji
-            button.setImageResource(R.drawable.ic_msg_panel_smiles);
+            button.setImageResource(R.drawable.sp_ic_stickers);
             isTypingEmoji = false;
         } else {
             //hide keyboard
@@ -412,7 +412,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                     //show emoji fragment
                     ViewUtils.showViews(stickersContainer);
                     //set the icon to keyboard
-                    button.setImageResource(R.drawable.ic_msg_panel_kb);
+                    button.setImageResource(R.drawable.sp_ic_keyboard);
                     isTypingEmoji = !isTypingEmoji;
                 }
             }, 200);
@@ -424,7 +424,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         if (isTypingEmoji) {
             ViewUtils.hideViews(stickersContainer);
             //set the icon to emoji
-            emoji.setImageResource(R.drawable.ic_msg_panel_smiles);
+            emoji.setImageResource(R.drawable.sp_ic_stickers);
             isTypingEmoji = false;
         } else {
             super.onBackPressed();
