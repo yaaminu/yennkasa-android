@@ -7,6 +7,7 @@ import android.support.multidex.MultiDexApplication;
 
 import com.crashlytics.android.Crashlytics;
 import com.pairapp.data.ContactSyncService;
+import com.pairapp.messenger.MessageCenter2;
 import com.pairapp.messenger.MessageProcessor;
 import com.pairapp.messenger.PairAppClient;
 import com.pairapp.util.Config;
@@ -20,8 +21,6 @@ import com.path.android.jobqueue.TagConstraint;
 import com.path.android.jobqueue.config.Configuration;
 import com.path.android.jobqueue.di.DependencyInjector;
 import com.squareup.leakcanary.LeakCanary;
-
-import java.util.regex.Pattern;
 
 import io.fabric.sdk.android.Fabric;
 import io.realm.Realm;
@@ -70,12 +69,14 @@ public class PairApp extends MultiDexApplication {
         enableComponent(ContactSyncService.class);
         enableComponent(PairAppClient.class);
         enableComponent(MessageProcessor.class);
+        enableComponent(MessageCenter2.class);
     }
 
     public static void disableComponents() {
         disableComponent(ContactSyncService.class);
         disableComponent(PairAppClient.class);
         disableComponent(MessageProcessor.class);
+        disableComponent(MessageCenter2.class);
     }
 
     @Override

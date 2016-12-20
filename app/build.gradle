@@ -20,7 +20,7 @@ android {
         targetSdkVersion 25
         multiDexEnabled true
         versionCode 45
-        versionName "0.18.18b"
+        versionName "0.19.18b"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
