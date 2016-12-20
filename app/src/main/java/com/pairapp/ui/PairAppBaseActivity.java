@@ -34,7 +34,7 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
     @SuppressWarnings("unused")
     private static final String TAG = PairAppBaseActivity.class.getSimpleName();
     protected final UserManager userManager = UserManager.getInstance();
-    private boolean isUserVerified = false;
+    private static boolean isUserVerified = false;
     private static volatile boolean promptShown = false;
     protected Realm userRealm;
 
@@ -42,7 +42,9 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         userRealm = User.Realm(this);
-        isUserVerified = userManager.isUserVerified(userRealm);
+        if (!isUserVerified) {
+            isUserVerified = userManager.isUserVerified(userRealm);
+        }
         NavigationManager.onCreate(this);
     }
 
