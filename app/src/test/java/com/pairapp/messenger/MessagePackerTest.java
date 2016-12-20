@@ -72,25 +72,25 @@ public class MessagePackerTest {
     @Test
     public void testPack() throws Exception {
         try {
-            messagePacker.pack("hello world", "132fgroup", false);
+            messagePacker.packNormalMessage("hello world", "132fgroup", false);
             fail("if a message is not a group message, it should not allow ids that cannot be coalesced into long");
         } catch (NumberFormatException e) {
             //expected
         }
         try {
-            messagePacker.pack("hello world", "aaffa", false);
+            messagePacker.packNormalMessage("hello world", "aaffa", false);
             fail("if a message is not a group message, it should not allow ids that cannot be coalesced into long");
         } catch (NumberFormatException e) {
             //expected
         }
         try {
-            messagePacker.pack("hello world", "group", true);
+            messagePacker.packNormalMessage("hello world", "group", true);
             fail("if a message is a group message, it should not allow a recipient id less than 8 bytes");
         } catch (IllegalArgumentException e) {
             //expected
         }
         try {
-            messagePacker.pack("hello world", "group-namewhichislongenough", true);
+            messagePacker.packNormalMessage("hello world", "group-namewhichislongenough", true);
             fail("if a message is a group message, it should not allow a recipient id to contain the dash character");
         } catch (IllegalArgumentException e) {
             //expected
@@ -100,7 +100,7 @@ public class MessagePackerTest {
         long recipient = 987654321;
         object.put("type", 10);
         object.put("messageBody", "hello world");
-        ByteBuffer buffer = ByteBuffer.wrap(messagePacker.pack(object.toString(), recipient + "", false));
+        ByteBuffer buffer = ByteBuffer.wrap(messagePacker.packNormalMessage(object.toString(), recipient + "", false));
         buffer.order(ByteOrder.BIG_ENDIAN);
         assertEquals("length is invalid", 11 + compressor.compress(object.toString().getBytes()).length, buffer.array().length);
         assertEquals("message header must be persistable", 0x4, buffer.get());
@@ -111,7 +111,7 @@ public class MessagePackerTest {
 
         //group messages
         String recipientGroup = "brothersfromonehood";
-        buffer = ByteBuffer.wrap(messagePacker.pack(object.toString(), recipientGroup, true));
+        buffer = ByteBuffer.wrap(messagePacker.packNormalMessage(object.toString(), recipientGroup, true));
         buffer.order(ByteOrder.BIG_ENDIAN);
         assertEquals("length is invalid", 3 + recipientGroup.getBytes().length + compressor.compress(object.toString().getBytes()).length, buffer.array().length);
         assertEquals("message header must be persistable", 0x4, buffer.get());

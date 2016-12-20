@@ -6,7 +6,6 @@ import android.support.annotation.Nullable;
 import com.pairapp.util.BuildConfig;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
-import com.pairapp.util.UiHelpers;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -49,7 +48,7 @@ public class MessagePacker {
         return new MessagePacker(currentUserId, compressor);
     }
 
-    public byte[] pack(String messageJson, String recipient, boolean isGroupMessage) {
+    public byte[] packNormalMessage(String messageJson, String recipient, boolean isGroupMessage) {
         GenericUtils.ensureNotNull(messageJson, recipient);
         byte[] msgBuffer = compressor.compress(messageJson.getBytes());
         int msgLength = 1/*header for server*/

@@ -14,7 +14,6 @@ import android.util.Log;
 
 import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.R;
-import com.pairapp.call.BuildConfig;
 import com.pairapp.call.CallController;
 import com.pairapp.call.CallData;
 import com.pairapp.data.CallBody;
@@ -445,7 +444,7 @@ class PairAppClientInterface {
                 object.put(MessageProcessor.EDIT, "1"); //just ensure that the edit key is set.
                 object.put(Message.FIELD_MESSAGE_BODY, msg.getMessageBody());
             }
-            if (sender.unsendMessage(SenderImpl.createMessageSendable(msg.getId(), messagePacker.pack(object.toString(),
+            if (sender.unsendMessage(SenderImpl.createMessageSendable(msg.getId(), messagePacker.packNormalMessage(object.toString(),
                     Message.isGroupMessage(userRealm, msg) ? msg.getFrom() : msg.getTo(),
                     Message.isGroupMessage(userRealm, msg))))) {
                 realm.beginTransaction();
@@ -513,7 +512,7 @@ class PairAppClientInterface {
             } else {
                 object.put(MessageProcessor.EDIT_RESULTS, "1"); //just ensure that the edit key is set.
             }
-            if (sender.unsendMessage(SenderImpl.createMessageSendable(messageId, messagePacker.pack(object.toString(), to, false)))) {
+            if (sender.unsendMessage(SenderImpl.createMessageSendable(messageId, messagePacker.packNormalMessage(object.toString(), to, false)))) {
                 notifyRevertOrEditSentMessageSuccess(reverting);
             }
         } catch (JSONException e) {

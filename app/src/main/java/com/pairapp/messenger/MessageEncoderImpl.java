@@ -21,7 +21,7 @@ class MessageEncoderImpl implements WebSocketDispatcher.MessageEncoder {
     public byte[] encode(Message message) {
         Realm realm = User.Realm(Config.getApplicationContext());
         try {
-            return messagePacker.pack(Message.toJSON(message), message.getTo(), Message.isGroupMessage(realm, message));
+            return messagePacker.packNormalMessage(Message.toJSON(message), message.getTo(), Message.isGroupMessage(realm, message));
         } finally {
             realm.close();
         }
