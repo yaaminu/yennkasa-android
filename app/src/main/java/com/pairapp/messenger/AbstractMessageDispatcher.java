@@ -203,7 +203,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     @Override
     public final void dispatch(Message message) {
         ThreadUtils.ensureNotMain();
-        if (!ConnectionUtils.isConnectedOrConnecting() && !Message.isTextMessage(message)) {
+        if (!ConnectionUtils.isConnectedOrConnecting() && message.hasAttachment()) {
             Log.w(TAG, "no internet connection, message can not be sent now");
             onFailed(message.getId(), MessageUtils.ERROR_NOT_CONNECTED);
             return;

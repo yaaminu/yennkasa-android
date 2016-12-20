@@ -16,11 +16,11 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
 
-import com.pairapp.PairApp;
 import com.pairapp.R;
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
+import com.pairapp.data.util.MessageUtils;
 import com.pairapp.ui.ChatActivity;
 import com.pairapp.ui.MainActivity;
 import com.pairapp.util.Config;
@@ -188,7 +188,7 @@ class StatusBarNotifier {
                 return getString(R.string.new_message);
             case 1:
                 if (unReadMessages == 1) {
-                    String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(applicationContext, message);
+                    String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : MessageUtils.typeToString(applicationContext, message);
                     text = sender + ":  " + messageBody;
                 } else {
                     text = unReadMessages + " " + getString(R.string.new_message_from) + " " + sender;

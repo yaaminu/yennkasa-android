@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.v4.util.Pair;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -24,6 +25,7 @@ import com.pairapp.data.util.MessageUtils;
 import com.pairapp.messenger.MessengerBus;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
+import com.pairapp.util.EventBus;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
@@ -39,6 +41,8 @@ import java.util.Set;
 
 import butterknife.OnClick;
 import io.realm.Realm;
+import vc908.stickerfactory.ui.OnEmojiBackspaceClickListener;
+import vc908.stickerfactory.ui.OnStickerSelectedListener;
 import vc908.stickerfactory.ui.fragment.StickersFragment;
 
 import static com.pairapp.messenger.MessengerBus.MESSAGE_SEEN;
@@ -47,14 +51,15 @@ import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
 /**
  * @author by Null-Pointer on 9/19/2015.
  */
-public abstract class MessageActivity extends PairAppActivity implements LiveCenter.ProgressListener, TextWatcher {
+public abstract class MessageActivity extends PairAppActivity implements
+        LiveCenter.ProgressListener, TextWatcher, OnStickerSelectedListener, OnEmojiBackspaceClickListener {
 
     private static final String TAG = MessageActivity.class.getSimpleName();
     public static final String EMOJI_FRAGMENT = "emojiFragment";
+    public static final String ON_MESSAGE_QUEUED = "onMessageQueued";
     private boolean isTypingEmoji = false;
     private ImageButton emoji, camera, mic;
     private EditText messageEt;
-    private EmojiStickerSelectedListener emojiStickerSelectedListener;
     FrameLayout stickersContainer;
 
     protected final void resendMessage(final String msgId) {
@@ -76,6 +81,17 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
     }
 
     @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this, ON_MESSAGE_QUEUED);
+    }
+
+    @Override
+    protected void onDestroy() {
+        EventBus.getDefault().unregister(ON_MESSAGE_QUEUED, this);
+    }
+
+    @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
         stickersContainer = ((FrameLayout) findViewById(R.id.emoji_pannel_slot));
@@ -84,10 +100,9 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         camera = ((ImageButton) findViewById(R.id.ib_attach_capture_photo));
         mic = ((ImageButton) findViewById(R.id.ib_attach_record_audio));
         messageEt.addTextChangedListener(this);
-        emojiStickerSelectedListener = new EmojiStickerSelectedListener(messageEt);
         StickersFragment emojiFragment = new StickersFragment();
-        emojiFragment.setOnStickerSelectedListener(emojiStickerSelectedListener);
-        emojiFragment.setOnEmojiBackspaceClickListener(emojiStickerSelectedListener);
+        emojiFragment.setOnStickerSelectedListener(this);
+        emojiFragment.setOnEmojiBackspaceClickListener(this);
         getSupportFragmentManager().beginTransaction().replace(R.id.emoji_pannel_slot, emojiFragment,
                 EMOJI_FRAGMENT).commit();
         messageEt.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -132,11 +147,12 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         super.onPause();
     }
 
-    private static void doSendMessage(final Message message) {
+    private static void doSendMessage(Realm realm, final Message message) {
         postEvent(Event.createSticky(SEND_MESSAGE, null, Message.copy(message)));
+        EventBus.getDefault().post(Event.create(ON_MESSAGE_QUEUED, null, realm.copyFromRealm(message)));
     }
 
-    protected static final void sendMessage(final String messageBody, final Set<String> recipientIds, final int type, final MessageActivity.SendCallback callback) {
+    protected static void sendMessage(final String messageBody, final Set<String> recipientIds, final int type, final MessageActivity.SendCallback callback) {
         TaskManager.executeNow(new Runnable() {
             @Override
             public void run() {
@@ -201,8 +217,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         Realm realm = Conversation.Realm();
         try {
             Message message = createMessage(msgBody, to, msgType, active);
-            final String messageId = message.getId();
-            doSendMessage(message);
+            doSendMessage(realm, message);
         } catch (PairappException e) {
             ErrorCenter.reportError(TAG, e.getMessage());
         } finally {
@@ -231,12 +246,6 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                 message.setMessageBody(newContent);
                 realm.commitTransaction();
                 postEvent(Event.create(MessengerBus.EDIT_SENT_MESSAGE, null, msgId));
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        onMessageQueued(msgId);
-                    }
-                });
             }
         } finally {
             realm.close();
@@ -244,7 +253,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
         // TODO: 12/6/16 notify user of failed attempt to edit message
     }
 
-    private void resendFailedMessage(final String msgId) {
+    private static void resendFailedMessage(final String msgId) {
         ThreadUtils.ensureNotMain();
         Realm realm = Message.REALM();
         try {
@@ -256,13 +265,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
                         Message newMessage = Message.makeNew(realm, message.getFrom(), message.getMessageBody(), message.getTo(), message.getType());
                         message.deleteFromRealm();
                         realm.commitTransaction();
-                        doSendMessage(newMessage);
-                        TaskManager.executeOnMainThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                onMessageQueued(msgId);
-                            }
-                        });
+                        doSendMessage(realm, newMessage);
                     } catch (PairappException e) {
                         ErrorCenter.reportError(message.getId(), e.getMessage());
                     }
@@ -307,7 +310,7 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
             if (type == Message.TYPE_TEXT_MESSAGE) {
                 summary = message.getMessageBody();
             } else {
-                summary = MessageUtils.getDescription(type);
+                summary = MessageUtils.typeToString(Config.getApplicationContext(), message);
             }
             currConversation.setSummary(summary);
             realm.commitTransaction();
@@ -332,9 +335,6 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
     protected void onCancelledOrDone(String messageId) {
     }
 
-    protected void onMessageQueued(@SuppressWarnings("UnusedParameters") String messageId /* for sub classes*/) {
-
-    }
 
     private static final Map<Object, Integer> progresses = new HashMap<>();
 
@@ -455,5 +455,34 @@ public abstract class MessageActivity extends PairAppActivity implements LiveCen
 
     protected interface SendCallback {
         void onSendComplete(Exception e);
+    }
+
+    @Override
+    public final void onEmojiBackspaceClicked() {
+        KeyEvent event = new KeyEvent(0, 0, 0, KeyEvent.KEYCODE_DEL, 0, 0, 0, 0, KeyEvent.KEYCODE_ENDCALL);
+        messageEt.dispatchKeyEvent(event);
+    }
+
+    @Override
+    public final void onStickerSelected(final String stickerCode) {
+        onSendSticker(stickerCode);
+    }
+
+    @Override
+    public final void onEmojiSelected(String emoji) {
+        messageEt.append(emoji);
+    }
+
+    protected abstract void onSendSticker(String stickerCode);
+
+    @Override
+    protected void handleEvent(Event event) {
+        if (event.getTag().equals(ON_MESSAGE_QUEUED)) {
+            assert event.getData() != null;
+            onMessageQueued(((Message) event.getData()).getId());
+        }
+    }
+
+    protected void onMessageQueued(String messageId) {
     }
 }

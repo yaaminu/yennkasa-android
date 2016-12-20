@@ -5,12 +5,12 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.pairapp.PairApp;
 import com.pairapp.R;
 import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
+import com.pairapp.data.util.MessageUtils;
 import com.pairapp.ui.ImageLoader;
 import com.pairapp.ui.PairAppBaseActivity;
 import com.pairapp.util.ViewUtils;
@@ -103,7 +103,7 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
                 holder.chatSummary.setCompoundDrawablesWithIntrinsicBounds(CallLogAdapter.getDrawable(delegate.realm(), message), 0, 0, 0);
                 summary.append("  ").append(Message.getCallSummary(context, delegate.realm(), message));
             } else {
-                summary.append(PairApp.typeToString(context, message));
+                summary.append(MessageUtils.typeToString(context, message));
             }
         }
         holder.chatSummary.setTextColor(context.getResources().getColor(R.color.light_gray));

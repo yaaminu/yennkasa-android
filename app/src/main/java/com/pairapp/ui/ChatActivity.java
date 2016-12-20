@@ -261,7 +261,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             String name = bundle.getString(EXTRA_NAME);
             peer = createUser(peerId, name, true);
         }
-
         setContentView(R.layout.activity_chat);
         ButterKnife.bind(this);
         handler = new Handler();
@@ -508,7 +507,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
 
     @Override
-    protected void onMessageQueued(@SuppressWarnings("UnusedParameters") String messageId) {
+    protected void onMessageQueued(String messageId) {
         PLog.d(TAG, "message with id: %s queued", messageId);
         messagesListView.setSelection(messages.size());
     }
@@ -758,7 +757,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         }
     }
 
-    private volatile boolean playerPlaying = false;
+    @Override
+    protected void onSendSticker(final String stickerCode) {
+        super.sendMessageActive(stickerCode, peer.getUserId(), Message.TYPE_STICKER, true);
+    }
 
     @Override
     public void notifyUser(Context context, final Message message, String sender) {
@@ -775,7 +777,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         @Override
         public void onCompletion(MediaPlayer mp) {
             mp.release();
-            playerPlaying = false;
             player = null;
         }
     };

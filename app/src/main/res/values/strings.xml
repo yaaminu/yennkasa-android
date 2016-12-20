@@ -374,4 +374,10 @@
     <string name="conversation">Conversations</string>
     <string name="people">People</string>
     <string name="groups">Groups</string>
+    <string name="sticker">sticker</string>
+    <string name="sending_state">Sending</string>
+    <string name="sent_state">Sent</string>
+    <string name="received_state">Received</string>
+    <string name="seen_state">Seen</string>
+    <string name="failed_state">Failed</string>
 </resources>

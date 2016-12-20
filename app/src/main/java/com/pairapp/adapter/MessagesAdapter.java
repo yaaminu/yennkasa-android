@@ -42,6 +42,7 @@ import java.util.Date;
 import io.realm.Realm;
 import io.realm.RealmBaseAdapter;
 import io.realm.RealmResults;
+import vc908.stickerfactory.StickersManager;
 
 /**
  * @author Null-Pointer on 5/31/2015.
@@ -58,7 +59,9 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             INCOMING_MESSAGE_EXTRA = 0x8,
             OUTGOING_MESSAGE_EXTRA = 0x9,
             CALL_MESSAGE_ITEM_NORMAL = 0xa,
-            CALL_MESSAGE_ITEM_EXTRA = 0xb;
+            CALL_MESSAGE_ITEM_EXTRA = 0xb,
+            STICKER_MESSAGE_IN = 0xc,
+            STICKER_MESSAGE_OUT = 0xd;
 
 
     private final SparseIntArray messageStates;
@@ -108,7 +111,9 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             R.layout.list_item_message_incoming_extra,
             R.layout.list_item_message_outgoing_extra,
             R.layout.list_item_message_call_normal,
-            R.layout.list_item_message_call_extra
+            R.layout.list_item_message_call_extra,
+            R.layout.list_item_sticker_in,
+            R.layout.list_item_sticker_out
     };
 
     @Override
@@ -123,6 +128,9 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         if (currentMessageType == Message.TYPE_DATE_MESSAGE) {
             return DATE_MESSAGE;
         }
+        if (currentMessageType == Message.TYPE_STICKER) {
+            return isOutgoingMessage ? STICKER_MESSAGE_OUT : STICKER_MESSAGE_IN;
+        }
 
         if (currentMessageType == Message.TYPE_CALL) {
             if (position < getCount() - 1 && getItem(position + 1).getType() == Message.TYPE_CALL) {
@@ -135,7 +143,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             String messageBody = message.getMessageBody();
             //should we worry about '\r'?
             int length = messageBody.length();
-            int dateLength = DateUtils.formatDateTime(context, message.getDateComposed().getTime(), DateUtils.FORMAT_SHOW_TIME).length();
+            int dateLength = formatDate(message.getDateComposed()).length();
             useOneLine = length < dateLength * 4 && messageBody.indexOf('\n') == -1;
         }
 
@@ -187,7 +195,6 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         }
         holder = (ViewHolder) convertView.getTag();
 
-        holder.textMessage.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
         Date messageDateComposed = message.getDateComposed();
         View.OnTouchListener touchListener = new View.OnTouchListener() {
             @Override
@@ -203,6 +210,17 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         }
         if (currentMessageType == Message.TYPE_TYPING_MESSAGE) {
             convertView.setOnTouchListener(touchListener);
+            return convertView;
+        }
+        if (currentMessageType == Message.TYPE_STICKER) {
+            if (Message.isOutGoing(delegate.userRealm(), message)) {
+                holder.dateComposed.setText(getStateDescription(message.getState()));
+            }
+            holder.dateComposed.append("  " + formatDate(message.getDateComposed()));
+
+            StickersManager.with(convertView.getContext())
+                    .loadSticker(message.getMessageBody())
+                    .into(holder.preview);
             return convertView;
         }
 
@@ -263,7 +281,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         holder.playOrDownload.setOnClickListener(null);
         //common to all
         holder.dateComposed.setVisibility(View.VISIBLE);
-        String dateComposed = DateUtils.formatDateTime(context, messageDateComposed.getTime(), DateUtils.FORMAT_SHOW_TIME);
+        String dateComposed = formatDate(messageDateComposed);
         if (isOutgoingMessage) {
             holder.dateComposed.setText("  " + dateComposed);
             int drawableRes = messageStates.get(message.getState());
@@ -325,6 +343,9 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                                 @Override
                                 public void onBitmapFailed(Drawable drawable) {
                                     holder.preview.setImageDrawable(drawable);
+                                    if (com.pairapp.BuildConfig.DEBUG) {
+                                        UiHelpers.showToast("FAiled to load image");
+                                    }
                                 }
 
                                 @Override
@@ -335,6 +356,10 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                 } else {
                     holder.preview.setImageBitmap(bitmap);
                 }
+            } else if (currentMessageType == Message.TYPE_STICKER) {
+                StickersManager.with(convertView.getContext())
+                        .loadSticker(messageBody)
+                        .into(holder.preview);
             } else {
                 holder.preview.setImageResource(placeHolderDrawable);
             }
@@ -369,6 +394,27 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             holder.playOrDownload.setOnClickListener(listener);
         }
         return convertView;
+    }
+
+    private String getStateDescription(int state) {
+        switch (state) {
+            case Message.STATE_PENDING:
+                return context.getString(R.string.sending_state);
+            case Message.STATE_SENT:
+                return context.getString(R.string.sent_state);
+            case Message.STATE_RECEIVED:
+                return context.getString(R.string.received_state);
+            case Message.STATE_SEEN:
+                return context.getString(R.string.seen_state);
+            case Message.STATE_SEND_FAILED:
+                return context.getString(R.string.failed_state);
+            default:
+                throw new AssertionError();
+        }
+    }
+
+    private String formatDate(Date messageDateComposed) {
+        return DateUtils.formatDateTime(context, messageDateComposed.getTime(), DateUtils.FORMAT_SHOW_TIME);
     }
 
     private String getSenderName(Message message) {

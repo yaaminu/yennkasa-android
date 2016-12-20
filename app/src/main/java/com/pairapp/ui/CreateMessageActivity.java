@@ -461,6 +461,11 @@ public class CreateMessageActivity extends MessageActivity
     }
 
     @Override
+    protected void onSendSticker(String stickerCode) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.attachment_preview:

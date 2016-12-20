@@ -58,7 +58,8 @@ public class Message extends RealmObject {
             TYPE_CALL = 0x3f2, //don't touch me!
             TYPE_TYPING_MESSAGE = 0x3f3, //don't touch me!
             TYPE_DATE_MESSAGE = 0x3f4, //don't touch me!
-            TYPE_LOG_MESSAGE = 0x3f5;//don't touch me!
+            TYPE_LOG_MESSAGE = 0x3f5,//don't touch me!,
+            TYPE_STICKER = 0x3f6;//don't touch me!
 
     public static final String FIELD_ID = "id",
             FIELD_FROM = "from",
@@ -454,6 +455,11 @@ public class Message extends RealmObject {
 
     public static boolean isCallMessage(Message message) {
         return message.getType() == TYPE_CALL;
+    }
+
+
+    public boolean hasAttachment() {
+        return getType() == TYPE_PICTURE_MESSAGE || getType() == TYPE_VIDEO_MESSAGE || getType() == TYPE_BIN_MESSAGE;
     }
 
     public static boolean canRevert(Realm userRealm, Message msg) {

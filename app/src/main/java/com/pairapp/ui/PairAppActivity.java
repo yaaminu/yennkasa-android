@@ -23,11 +23,11 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.pairapp.BuildConfig;
-import com.pairapp.PairApp;
 import com.pairapp.R;
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
+import com.pairapp.data.util.MessageUtils;
 import com.pairapp.messenger.MessengerBus;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
@@ -174,7 +174,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                     return new Pair<>(peerId, getString(R.string.new_message));
                 case 1:
                     if (totalUnreadMessages == 1) {
-                        String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : PairApp.typeToString(this, message);
+                        String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : MessageUtils.typeToString(this, message);
                         text = sender + ":  " + messageBody;
                     } else {
                         text = totalUnreadMessages + " " + getString(R.string.new_message_from) + " " + sender;
