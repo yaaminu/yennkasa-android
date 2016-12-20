@@ -89,6 +89,7 @@ public abstract class MessageActivity extends PairAppActivity implements
     @Override
     protected void onDestroy() {
         EventBus.getDefault().unregister(ON_MESSAGE_QUEUED, this);
+        super.onDestroy();
     }
 
     @Override
