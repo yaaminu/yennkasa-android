@@ -2,18 +2,15 @@ package com.pairapp;
 
 import android.app.Application;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.pm.PackageManager;
 import android.support.multidex.MultiDexApplication;
 
 import com.crashlytics.android.Crashlytics;
 import com.pairapp.data.ContactSyncService;
-import com.pairapp.data.Message;
 import com.pairapp.messenger.MessageProcessor;
 import com.pairapp.messenger.PairAppClient;
 import com.pairapp.util.Config;
 import com.pairapp.util.ConnectionUtils;
-import com.pairapp.util.FileUtils;
 import com.pairapp.util.PLog;
 import com.pairapp.util.Task;
 import com.pairapp.util.TaskManager;
@@ -79,50 +76,6 @@ public class PairApp extends MultiDexApplication {
         disableComponent(ContactSyncService.class);
         disableComponent(PairAppClient.class);
         disableComponent(MessageProcessor.class);
-    }
-
-    private static final Pattern documentPattern = Pattern.compile("pdf|doc|docx|odt|epub|xls|xlsx|csv", Pattern.CASE_INSENSITIVE),
-            textPattern = Pattern.compile("txt|html|json", Pattern.CASE_INSENSITIVE),
-            appPattern = Pattern.compile("apk", Pattern.CASE_INSENSITIVE),
-            presentationPattern = Pattern.compile("ppt|pptx", Pattern.CASE_INSENSITIVE),
-            archivePattern = Pattern.compile("zip|tar|bz|rar|7z|gzip|gz", Pattern.CASE_INSENSITIVE),
-            audioPattern = Pattern.compile("mp3|amr|wav|m4a|ogg|mp2", Pattern.CASE_INSENSITIVE);
-
-
-    public static String typeToString(Context context, Message message) {
-        switch (message.getType()) {
-            case Message.TYPE_PICTURE_MESSAGE:
-                return context.getString(R.string.picture);
-            case Message.TYPE_VIDEO_MESSAGE:
-                return context.getString(com.pairapp.R.string.video);
-            case Message.TYPE_TEXT_MESSAGE:
-                return context.getString(com.pairapp.R.string.message);
-            case Message.TYPE_BIN_MESSAGE:
-                String ext = FileUtils.getExtension(message.getMessageBody(), "");
-                if (documentPattern.matcher(ext).find()) {
-                    return context.getString(R.string.document);
-                }
-                if (textPattern.matcher(ext).find()) {
-                    return context.getString(R.string.text_file);
-                }
-                if (appPattern.matcher(ext).find()) {
-                    return context.getString(R.string.application);
-                }
-                if (presentationPattern.matcher(ext).find()) {
-                    return context.getString(R.string.presentation);
-                }
-
-                if (archivePattern.matcher(ext).find()) {
-                    return context.getString(R.string.archive);
-                }
-                if (audioPattern.matcher(ext).find()) {
-                    return context.getString(R.string.audio);
-                }
-                return context.getString(R.string.file);
-
-            default:
-                throw new AssertionError("Unknown message type");
-        }
     }
 
     @Override

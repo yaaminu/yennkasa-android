@@ -5,12 +5,12 @@ import android.content.Context;
 import com.pairapp.Errors.PairappException;
 import com.pairapp.data.Message;
 import com.pairapp.data.R;
-import com.pairapp.util.Config;
 import com.pairapp.util.PLog;
 
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
+import java.util.regex.Pattern;
 
 /**
  * @author Null-Pointer on 8/27/2015.
@@ -48,7 +48,7 @@ public class MessageUtils {
             throw new PairappException(msg, ERROR_IS_TYPING_MESSAGE);
         }
 
-        if (message.getType() != Message.TYPE_TEXT_MESSAGE) { //is it a binary message?
+        if (message.hasAttachment()) { //is it a binary message?
             if (message.getMessageBody().startsWith("file://") && !new File(message.getMessageBody()).exists()) {
                 String msg = "error: " + message.getMessageBody() + " is not a valid file path";
                 PLog.w(TAG, msg);
@@ -76,23 +76,54 @@ public class MessageUtils {
         return true;
     }
 
-    public static String getDescription(int type) {
-        Context context = Config.getApplicationContext();
-        switch (type) {
-            case Message.TYPE_BIN_MESSAGE:
-                return context.getString(R.string.File);
-            case Message.TYPE_VIDEO_MESSAGE:
-                return context.getString(R.string.Video);
-            case Message.TYPE_PICTURE_MESSAGE:
-                //fall through
-            default:
-                return context.getString(R.string.Image);
-        }
-    }
-
     public static boolean isSendableMessage(Message message) {
         return Message.isPictureMessage(message) || Message.isTextMessage(message) || Message.isBinMessage(message)
                 || Message.isVideoMessage(message);
     }
 
+    private static final Pattern documentPattern = Pattern.compile("pdf|doc|docx|odt|epub|xls|xlsx|csv", Pattern.CASE_INSENSITIVE),
+            textPattern = Pattern.compile("txt|html|json", Pattern.CASE_INSENSITIVE),
+            appPattern = Pattern.compile("apk", Pattern.CASE_INSENSITIVE),
+            presentationPattern = Pattern.compile("ppt|pptx", Pattern.CASE_INSENSITIVE),
+            archivePattern = Pattern.compile("zip|tar|bz|rar|7z|gzip|gz", Pattern.CASE_INSENSITIVE),
+            audioPattern = Pattern.compile("mp3|amr|wav|m4a|ogg|mp2", Pattern.CASE_INSENSITIVE);
+
+
+    public static String typeToString(Context context, Message message) {
+        switch (message.getType()) {
+            case Message.TYPE_STICKER:
+                return context.getString(R.string.sticker);
+            case Message.TYPE_PICTURE_MESSAGE:
+                return context.getString(R.string.picture);
+            case Message.TYPE_VIDEO_MESSAGE:
+                return context.getString(R.string.video);
+            case Message.TYPE_TEXT_MESSAGE:
+                return context.getString(R.string.message);
+            case Message.TYPE_BIN_MESSAGE:
+                String ext = com.pairapp.util.FileUtils.getExtension(message.getMessageBody(), "");
+                if (documentPattern.matcher(ext).find()) {
+                    return context.getString(R.string.document);
+                }
+                if (textPattern.matcher(ext).find()) {
+                    return context.getString(R.string.text_file);
+                }
+                if (appPattern.matcher(ext).find()) {
+                    return context.getString(R.string.application);
+                }
+                if (presentationPattern.matcher(ext).find()) {
+                    return context.getString(R.string.presentation);
+                }
+
+                if (archivePattern.matcher(ext).find()) {
+                    return context.getString(R.string.archive);
+                }
+                if (audioPattern.matcher(ext).find()) {
+                    return context.getString(R.string.audio);
+                }
+                return context.getString(R.string.file);
+
+            default:
+                throw new AssertionError("Unknown message type");
+        }
+    }
 }

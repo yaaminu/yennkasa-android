@@ -46,4 +46,15 @@
     <string name="not_connected">Can\'t connect, check your internet settings and try again.</string>
     <string name="verification_code">Your verification code is</string>
     <string name="missed_call">Missed Call</string>
+    <string name="sticker">Sticker</string>
+    <string name="picture">Picture</string>
+    <string name="video">Video</string>
+    <string name="message">Text Message</string>
+    <string name="document">Document</string>
+    <string name="text_file">Text File</string>
+    <string name="application">Application</string>
+    <string name="presentation">Presentation</string>
+    <string name="archive">Archive</string>
+    <string name="audio">Audio Message</string>
+    <string name="file">File</string>
 </resources>
