@@ -58,7 +58,7 @@ import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import io.realm.Sort;
 
-public class CreateMessageActivity extends MessageActivity
+public class CreateMessageActivity extends PairAppActivity
         implements ItemsSelector.OnFragmentInteractionListener, TextWatcher, View.OnClickListener {
 
     static final String EXTRA_FORWARDED_FROM = "fLKDFAJKAom"; //reduce the likeliness of conflict
@@ -113,7 +113,6 @@ public class CreateMessageActivity extends MessageActivity
         toolBar = (Toolbar) findViewById(R.id.main_toolbar);
         setSupportActionBar(toolBar);
         messageEt = ((EditText) findViewById(R.id.et_message));
-        messageEt.addTextChangedListener(this);
         sendMenuItem = findViewById(R.id.tv_menu_item_send);
         attachMenuItem = findViewById(R.id.tv_menu_item_attach);
         attachMenuItem.setOnClickListener(listener);
@@ -331,7 +330,7 @@ public class CreateMessageActivity extends MessageActivity
         }
         final ProgressDialog progressDialog = ProgressDialog.show(this, "", getString(R.string.st_please_wait), false, false, null);
         progressDialog.show();
-        sendMessage(messageBody, selectedItems, type, new SendCallback() {
+        MessageActivity.sendMessage(messageBody, selectedItems, type, new MessageActivity.SendCallback() {
             @Override
             public void onSendComplete(Exception e) {
                 progressDialog.dismiss();
@@ -455,15 +454,20 @@ public class CreateMessageActivity extends MessageActivity
 
 
     @Override
-    public void afterTextChanged(Editable s) {
-        supportInvalidateOptionsMenu();
-        super.afterTextChanged(s);
+    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
     }
 
     @Override
-    protected void onSendSticker(String stickerCode) {
-        throw new UnsupportedOperationException();
+    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
     }
+
+    @Override
+    public void afterTextChanged(Editable s) {
+        supportInvalidateOptionsMenu();
+    }
+
 
     @Override
     public void onClick(View v) {

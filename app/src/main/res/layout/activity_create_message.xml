@@ -150,18 +150,18 @@
             android:paddingTop="8dp"
             tools:ignore="UnusedAttribute">
 
-            <ImageButton
-                android:id="@+id/ib_attach_emoji"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
-                android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
-                android:adjustViewBounds="true"
-                android:background="@color/transparent"
-                android:onClick="toggleEmoji"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_msg_panel_smiles" />
+            <!--<ImageButton-->
+            <!--android:id="@+id/ib_attach_emoji"-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:layout_gravity="center_vertical"-->
+            <!--android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"-->
+            <!--android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"-->
+            <!--android:adjustViewBounds="true"-->
+            <!--android:background="@color/transparent"-->
+            <!--android:onClick="toggleEmoji"-->
+            <!--android:scaleType="centerInside"-->
+            <!--android:src="@drawable/ic_msg_panel_smiles" />-->
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -174,47 +174,17 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@color/transparent"
+                    android:clickable="false"
                     android:gravity="bottom"
                     android:hint="@string/message_box_hint"
                     android:inputType="textMultiLine|textLongMessage"
                     android:maxHeight="@dimen/multiline_text_box_max_height"
                     android:padding="@dimen/padding_ll_login_fragment_right"
-                    android:textSize="@dimen/edit_text_size"
-                    />
+                    android:textSize="@dimen/edit_text_size" />
                 <!--android:text="llaaal\nlkklkk\nkklkjkjlkk\nkljklkkjlklk\nkljkljklkklk"-->
             </LinearLayout>
 
-            <ImageButton
-                android:id="@+id/ib_attach_capture_photo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
-                android:adjustViewBounds="true"
-                android:background="@color/transparent"
-                android:onClick="attachCamera"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_photo_camera_black_24dp" />
-
-            <ImageButton
-                android:id="@+id/ib_attach_record_audio"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
-                android:adjustViewBounds="true"
-                android:background="@color/transparent"
-                android:onClick="attachVoiceNote"
-                android:scaleType="centerInside"
-                android:src="@drawable/ic_mic_black_24dp" />
-
-
         </LinearLayout>
-
-        <FrameLayout
-            android:id="@+id/emoji_pannel_slot"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"></FrameLayout>
     </com.pairapp.view.LinearLayout>
 
     <include layout="@layout/snack_bar" />
