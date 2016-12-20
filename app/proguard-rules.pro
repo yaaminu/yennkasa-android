@@ -26,36 +26,18 @@
 -keep class com.parse.** { *; }
 #---------------------------------butterknife-------------------------------------------------#
 # Retain generated class which implement Unbinder.
--keep public class * implements butterknife.Unbinder { public <init>(...); }
-
-# Prevent obfuscation of types which use ButterKnife annotations since the simple name
-# is used to reflectively look up the generated ViewBinding.
--keep class butterknife.*
--keepclasseswithmembernames class * { @butterknife.* <methods>; }
--keepclasseswithmembernames class * { @butterknife.* <fields>; }
-
+-keep class butterknife.** { *; }
 -dontwarn butterknife.internal.**
+-keep class **$$ViewBinder { *; }
 
+-keepclasseswithmembernames class * {
+    @butterknife.* <fields>;
+}
+
+-keepclasseswithmembernames class * {
+    @butterknife.* <methods>;
+}
 #-----------------------------------------butterknife--------------------------------------------#
--keepattributes Signature
-
-# For using GSON @Expose annotation
--keepattributes *Annotation*
-
-# Gson specific classes
--keep class sun.misc.Unsafe { *; }
-#-keep class com.google.gson.stream.** { *; }
-
-# Application classes that will be serialized/deserialized over Gson
--keep class com.google.gson.examples.android.model.** { *; }
-
-# Prevent proguard from stripping interface information from TypeAdapterFactory,
-# JsonSerializer, JsonDeserializer instances (so they can be used in @JsonAdapter)
--keep class * implements com.google.gson.TypeAdapterFactory
--keep class * implements com.google.gson.JsonSerializer
--keep class * implements com.google.gson.JsonDeserializer
-
-##---------------End: proguard configuration for Gson  ----------
 
 ###---------------okhtttp2-----------------------###
 #
@@ -86,7 +68,23 @@
 # If your rest service methods throw custom exceptions, because you've defined an ErrorHandler.
 -keepattributes Signature
 
--dontwarn com.sinch.android.rtc.**
+#-------------------------sinch------------------------
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+-dontwarn org.apache.http.annotation.**
+
+-keep class com.sinch.** { *; }
+-keep interface com.sinch.** { *; }
+-keep class org.webrtc.** { *; }
+#-------------------------------end sinch-----------------
+
+######## calligraphy######################################
+
+-keep class uk.co.chrisjenx.calligraphy.* { *; }
+-keep class uk.co.chrisjenx.calligraphy.*$* { *; }
+##################### calligraphy##############################
 
 # Also you must note that if you are using GSON for conversion from JSON to POJO representation, you must ignore those POJO classes from being obfuscated.
 # Here include the POJO's that have you have created for mapping JSON response to POJO for example.
