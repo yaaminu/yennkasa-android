@@ -226,7 +226,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
         try {
             MessageUtils.validate(message); //might throw
             //is the message a binary message?
-            if (!Message.isTextMessage(message)) {
+            if (message.hasAttachment()) {
                 //upload the file first before continuing
                 if (checkIfCancelled()) {
                     PLog.d(TAG, "message with id: %s cancelled", message.getId());
@@ -257,7 +257,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     @Override
     public final boolean cancelDispatchMayFail(Message message) {
         Thread t = disPatchingThreads.get(message.getId());
-        if (t != null && t.isAlive() && !Message.isTextMessage(message)) {
+        if (t != null && t.isAlive() && message.hasAttachment()) {
             t.interrupt();
             return true;
         }

@@ -300,7 +300,7 @@ public class PairAppClient extends Service {
         } finally {
             realm.close();
         }
-        if (!Message.isTextMessage(message)) {
+        if (message.hasAttachment()) {
             try {
                 LiveCenter.acquireProgressTag(message.getId());
             } catch (PairappException e) {
@@ -389,7 +389,7 @@ public class PairAppClient extends Service {
                 return null;
             }
         };
-        disPatchingThreads.put(message.getId(), TaskManager.executeNow(sendTask, true));
+        disPatchingThreads.put(message.getId(), TaskManager.execute(sendTask, true));
     }
 
     private void doSendMessages(Collection<Message> messages) {

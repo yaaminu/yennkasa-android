@@ -437,7 +437,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                     delegate.download(message);
                 }
             }
-        } else if (message.getState() == Message.STATE_PENDING && !Message.isTextMessage(message)) {
+        } else if (message.getState() == Message.STATE_PENDING && message.hasAttachment()) {
             delegate.onCancelSendMessage(message);
         }
 
