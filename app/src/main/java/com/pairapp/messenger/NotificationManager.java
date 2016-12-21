@@ -76,15 +76,18 @@ public final class NotificationManager {
     void reNotifyForReceivedMessages(Context con, String currentUserId) {
         ThreadUtils.ensureNotMain();
         Realm realm = Message.REALM(con);
-        List<Message> messages = realm.where(Message.class)
-                .notEqualTo(Message.FIELD_FROM, currentUserId)
-                .equalTo(Message.FIELD_STATE, Message.STATE_RECEIVED)
-                .notEqualTo(Message.FIELD_TYPE, Message.TYPE_CALL)
-                .findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.DESCENDING);
-        if (!messages.isEmpty()) {
-            Message message = messages.get(messages.size() - 1);
-            onNewMessage(con, realm.copyFromRealm(message));
+        try {
+            List<Message> messages = realm.where(Message.class)
+                    .notEqualTo(Message.FIELD_FROM, currentUserId)
+                    .equalTo(Message.FIELD_STATE, Message.STATE_RECEIVED)
+                    .notEqualTo(Message.FIELD_TYPE, Message.TYPE_CALL)
+                    .findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.DESCENDING);
+            if (!messages.isEmpty()) {
+                Message message = messages.get(messages.size() - 1);
+                onNewMessage(con, realm.copyFromRealm(message));
+            }
+        } finally {
+            realm.close();
         }
-        realm.close();
     }
 }

@@ -142,7 +142,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
     @Override
     protected void onDestroy() {
-        if (isUserVerified()) {
+        if (messageRealm != null) {
             messageRealm.close();
         }
         super.onDestroy();

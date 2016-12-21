@@ -93,13 +93,16 @@ class DispatcherMonitorImpl implements Dispatcher.DispatcherMonitor {
             }
         } else {
             Realm messageRealm = Message.REALM(context);
-            Message message = messageRealm.where(Message.class).equalTo(Message.FIELD_ID, id).findFirst();
-            if (message == null) {
-                return;
+            try {
+                Message message = messageRealm.where(Message.class).equalTo(Message.FIELD_ID, id).findFirst();
+                if (message == null) {
+                    return;
+                }
+                previousProgress = new Pair<>(message.getTo(), progress);
+                progressMap.put(id, previousProgress);
+            } finally {
+                messageRealm.close();
             }
-            previousProgress = new Pair<>(message.getTo(), progress);
-            progressMap.put(id, previousProgress);
-            messageRealm.close();
         }
 
         Intent intent = new Intent(context, ChatActivity.class);
