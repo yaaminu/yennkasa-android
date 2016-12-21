@@ -213,11 +213,12 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             return convertView;
         }
         if (currentMessageType == Message.TYPE_STICKER) {
+            String formattedDate = "  " + formatDate(message.getDateComposed());
             if (Message.isOutGoing(delegate.userRealm(), message)) {
-                holder.dateComposed.setText(getStateDescription(message.getState()));
+                holder.dateComposed.setText(getStateDescription(message.getState()) + formattedDate);
+            } else {
+                holder.dateComposed.setText(formattedDate);
             }
-            holder.dateComposed.append("  " + formatDate(message.getDateComposed()));
-
             StickersManager.with(convertView.getContext())
                     .loadSticker(message.getMessageBody())
                     .into(holder.preview);

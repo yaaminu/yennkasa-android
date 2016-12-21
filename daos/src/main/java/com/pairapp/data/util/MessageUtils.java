@@ -78,7 +78,7 @@ public class MessageUtils {
 
     public static boolean isSendableMessage(Message message) {
         return Message.isPictureMessage(message) || Message.isTextMessage(message) || Message.isBinMessage(message)
-                || Message.isVideoMessage(message);
+                || Message.isVideoMessage(message) || message.getType() == Message.TYPE_STICKER;
     }
 
     private static final Pattern documentPattern = Pattern.compile("pdf|doc|docx|odt|epub|xls|xlsx|csv", Pattern.CASE_INSENSITIVE),

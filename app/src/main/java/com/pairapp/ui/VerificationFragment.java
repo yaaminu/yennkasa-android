@@ -14,9 +14,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.pairapp.Errors.ErrorCenter;
+import com.pairapp.PairApp;
 import com.pairapp.R;
 import com.pairapp.data.UserManager;
 import com.pairapp.messenger.FireBaseInstantIDService;
+import com.pairapp.messenger.SmsReciever;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
