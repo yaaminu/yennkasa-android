@@ -124,7 +124,7 @@ class MessageQueueItemDataSource implements QueueDataSource {
         try {
             realm.beginTransaction();
             if (item.getIndex() == INVALID_INDEX) {
-                synchronized (MessageQueueItemDataSource.class) { //generate the id
+                synchronized (MessageQueueItemDataSource.class) { //generatePublicPrivateKeyPair the id
                     Number highestIndex = realm.where(Sendable.class).max(FIELD_INDEX);
                     if (highestIndex != null) {
                         item.setIndex(highestIndex.longValue() + 1);

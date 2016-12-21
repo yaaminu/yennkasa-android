@@ -10,6 +10,7 @@ import com.pairapp.data.ContactSyncService;
 import com.pairapp.messenger.MessageCenter2;
 import com.pairapp.messenger.MessageProcessor;
 import com.pairapp.messenger.PairAppClient;
+import com.pairapp.messenger.SmsReciever;
 import com.pairapp.util.Config;
 import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.PLog;
@@ -20,7 +21,6 @@ import com.path.android.jobqueue.JobManager;
 import com.path.android.jobqueue.TagConstraint;
 import com.path.android.jobqueue.config.Configuration;
 import com.path.android.jobqueue.di.DependencyInjector;
-import com.squareup.leakcanary.LeakCanary;
 
 import io.fabric.sdk.android.Fabric;
 import io.realm.Realm;
@@ -77,15 +77,16 @@ public class PairApp extends MultiDexApplication {
         disableComponent(PairAppClient.class);
         disableComponent(MessageProcessor.class);
         disableComponent(MessageCenter2.class);
+        disableComponent(SmsReciever.class);
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        if (LeakCanary.isInAnalyzerProcess(this)) {
-            return;
-        }
-        LeakCanary.install(this);
+//        if (LeakCanary.isInAnalyzerProcess(this)) {
+//            return;
+//        }
+//        LeakCanary.install(this);
         Realm.init(this);
         PLog.setLogLevel(BuildConfig.DEBUG ? PLog.LEVEL_VERBOSE : PLog.LEVEL_FATAL);
         Config.init(this);

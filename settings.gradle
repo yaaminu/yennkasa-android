@@ -1,1 +1,1 @@
-include ':app', ':lib', ':daos', ':websocket-client', ':utils', ':fileclient', ':cropper', ':pairapp-call'
+include ':app', ':lib', ':daos', ':websocket-client', ':utils', ':fileclient', ':cropper', ':pairapp-call', ':crypto'
