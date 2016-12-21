@@ -1,34 +1,21 @@
 package com.pairapp.messenger;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.os.Build;
-import android.os.Debug;
-import android.provider.Settings;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.pairapp.BuildConfig;
-import com.pairapp.data.UnproccessedMessage;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
-import com.pairapp.net.sockets.MessageParser;
-import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 import io.realm.Realm;
-import io.realm.RealmResults;
-import io.realm.Sort;
-import rx.functions.Action1;
 
-import static com.pairapp.messenger.MessengerBus.*;
+import static com.pairapp.messenger.MessengerBus.MESSAGE_PUSH_INCOMING;
+import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS;
+import static com.pairapp.messenger.MessengerBus.get;
 
 /**
  * @author by aminu on 11/8/2016.

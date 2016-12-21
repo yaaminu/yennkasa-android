@@ -1,7 +1,6 @@
 package com.pairapp.messenger;
 
 import android.os.Handler;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 

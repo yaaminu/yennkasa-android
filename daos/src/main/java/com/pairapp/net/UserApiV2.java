@@ -50,7 +50,11 @@ public interface UserApiV2 {
     void leaveGroup(String id, String userId, String password, Callback<HttpResponse> response);
 
 
-    void verifyUser(String userId, String token, String pushID, Callback<SessionData> callback);
+    void verifyUser(String userId, String token, String pushID, String publicKey, Callback<SessionData> callback);
+
+    void getPublicKeyForUser(String userId, Callback<String> callback);
+
+    String getPublicKeyForUserSync(String userId);
 
     void resendToken(String userId, String password, Callback<HttpResponse> response);
 

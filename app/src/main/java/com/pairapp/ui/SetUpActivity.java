@@ -57,6 +57,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
         public void done(Exception e) {
             progressDialog.dismiss();
             if (e == null) {
+                PairApp.enableComponent(SmsReciever.class);
                 stage = VERIFICATION_STAGE;
                 next();
             } else {
@@ -166,6 +167,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
 
     @Override
     public void onVerified() {
+        PairApp.disableComponent(SmsReciever.class);
         stage = DP_STAGE;
         next();
     }

@@ -42,7 +42,7 @@ interface Dispatcher<T> extends Closeable {
 
         void onDispatchSucceeded(String id);
 
-        void onProgress(String id, int progress,int max);
+        void onProgress(String id, int progress, int max);
 
         void onAllDispatched();
     }

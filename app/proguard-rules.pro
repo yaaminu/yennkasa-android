@@ -37,17 +37,6 @@
 -keepclasseswithmembernames class * {
     @butterknife.* <methods>;
 }
-#-----------------------------------------butterknife--------------------------------------------#
-
-###---------------okhtttp2-----------------------###
-#
-#-dontwarn com.squareup.okhttp.**
-#-keep class com.squareup.okhttp.** { ;}
-#-dontwarn okio.**
-##------------------------------------------------####
-
-#------retrofit---------------------#
-# Retrofit 1.X
 
 -keep class com.squareup.okhttp.** { *; }
 -keep class retrofit.** { *; }
@@ -86,6 +75,7 @@
 -keep class uk.co.chrisjenx.calligraphy.*$* { *; }
 ##################### calligraphy##############################
 
-# Also you must note that if you are using GSON for conversion from JSON to POJO representation, you must ignore those POJO classes from being obfuscated.
-# Here include the POJO's that have you have created for mapping JSON response to POJO for example.
-#-----------------------------------#------------------------#
+# org.spongycastle.pro: Spongy Castle.
+-dontwarn org.spongycastle.jce.provider.*LDAP*
+-dontwarn org.spongycastle.x509.util.*LDAP*
+##############################################

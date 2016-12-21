@@ -97,7 +97,7 @@ public class Message extends RealmObject {
      * @return a new id that is likely unique.there is no guarantee that this will be unique
      */
     private static String generateIdPossiblyUnique(Realm realm, String mainUserId, String to) {
-        //before changing how we generate ids make sure all components relying on this behaviour are updated
+        //before changing how we generatePublicPrivateKeyPair ids make sure all components relying on this behaviour are updated
         //eg: MessageActivity (the name might have changed)
         if (to == null) {
             throw new IllegalArgumentException("to == null");

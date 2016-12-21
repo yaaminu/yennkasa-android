@@ -9,8 +9,10 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.v4.util.Pair;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 
+import com.example.Crypto;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.Errors.PairappException;
@@ -20,6 +22,7 @@ import com.pairapp.net.UserApiV2;
 import com.pairapp.util.Config;
 import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.FileUtils;
+import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
 import com.pairapp.util.PhoneNumberNormaliser;
 import com.pairapp.util.TaskManager;
@@ -33,6 +36,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.KeyPair;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -959,6 +963,17 @@ public final class UserManager {
         return User.Realm(Config.getApplicationContext());
     }
 
+    public String getPrivateKey() {
+        String privateKey = getStringPref("user.rsa.private.key.encoded", null);
+        if (GenericUtils.isEmpty(privateKey))
+            throw new IllegalStateException("private key is null");
+        return privateKey;
+    }
+
+    public String publicKeyForUser(String userId) {
+        return userApi.getPublicKeyForUserSync(userId);
+    }
+
     public void signUp(final String name, final String phoneNumber, final String countryIso, final CallBack callback) {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             doNotify(NO_CONNECTION_ERROR, callback);
@@ -1016,7 +1031,7 @@ public final class UserManager {
         });
     }
 
-    public void verifyUser(Realm realm, final String token, String pushID, final CallBack callBack) {
+    public void verifyUser(final Realm realm, final String token, final String pushID, final CallBack callBack) {
         if (isUserVerified(realm)) {
             doNotify(null, callBack);
             return;
@@ -1032,19 +1047,31 @@ public final class UserManager {
         if (!isUserLoggedIn(realm)) {
             throw new IllegalStateException("no user logged for verification");
         }
-        userApi.verifyUser(getCurrentUser(realm).getUserId(), token, pushID, new UserApiV2.Callback<UserApiV2.SessionData>() {
+        final String userId = getCurrentUser(realm).getUserId();
+        TaskManager.execute(new Runnable() {
             @Override
-            public void done(Exception e, UserApiV2.SessionData data) {
-                if (e == null) {
-                    putSessionPref(KEY_ACCESS_TOKEN, data.accessToken);
-                    putSessionPref(KEY_USER_VERIFIED, true);
-                    initialiseSettings();
-                    doNotify(null, callBack);
-                } else {
-                    doNotify(e, callBack);
+            public void run() {
+                synchronized (UserManager.class) {
+                    KeyPair keyPair = Crypto.RSA.generatePublicPrivateKeyPair();
+                    putPref("user.rsa.private.key.encoded", Base64.encodeToString(keyPair.getPrivate().getEncoded(), Base64.DEFAULT));
+                    String publicKey = Base64.encodeToString(keyPair.getPublic().getEncoded(), Base64.DEFAULT);
+                    putPref("user.rsa.public.key.encoded", publicKey);
+                    userApi.verifyUser(userId, token, pushID, publicKey, new UserApiV2.Callback<UserApiV2.SessionData>() {
+                        @Override
+                        public void done(Exception e, UserApiV2.SessionData data) {
+                            if (e == null) {
+                                putSessionPref(KEY_ACCESS_TOKEN, data.accessToken);
+                                putSessionPref(KEY_USER_VERIFIED, true);
+                                initialiseSettings();
+                                doNotify(null, callBack);
+                            } else {
+                                doNotify(e, callBack);
+                            }
+                        }
+                    });
                 }
             }
-        });
+        }, false);
     }
 
     private void initialiseSettings() {

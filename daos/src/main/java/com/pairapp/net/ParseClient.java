@@ -256,7 +256,7 @@ public class ParseClient implements UserApiV2 {
     }
 
     @SuppressLint("HardwareIds")
-    private void registerForPushes(String userId, String pushID) throws ParseException {
+    private void registerForPushes(String userId, String pushID, String publicKey) throws ParseException {
         ParseInstallation installation = ParseInstallation.getCurrentInstallation();
         installation.put(FIELD_ID, userId);
         //required by the server for verification in installation related queries
@@ -265,22 +265,12 @@ public class ParseClient implements UserApiV2 {
         installation.put("deviceId1", deviceID1);
         installation.put("deviceId2", FileUtils.hash(Settings.Secure.getString(Config.getApplicationContext()
                 .getContentResolver(), Settings.Secure.ANDROID_ID)));
-
-        //the server will automatically generate an authentication token.
+        installation.put("user.public.key.rsa", publicKey);
+        //the server will automatically generatePublicPrivateKeyPair an authentication token.
         //and store it in the current installation before persisting it to the database.
         // But we cannot query for Installation objects on clients so we have to make another cloud
         // function call (see below) to retrieve the token.
-        try {
-            installation.save();
-        } catch (ParseException e) {
-            PLog.d(TAG, e.getMessage(), e);
-            //work around for a bug in the parse SDK
-            if (e.getCode() == 135) {
-                PLog.d(TAG, "parse bug resurfaced !!!");
-            } else {
-                throw e;
-            }
-        }
+        installation.save();
         requestForToken(pushID, false);
     }
 
@@ -621,15 +611,17 @@ public class ParseClient implements UserApiV2 {
     }
 
     @Override
-    public void verifyUser(final String userId, final String token, final String pushID, final Callback<SessionData> callback) {
+    public void verifyUser(final String userId, final String token, final String publicKey, final String pushID, final Callback<SessionData> callback) {
         TaskManager.execute(new Runnable() {
             public void run() {
-                doVerifyUser(userId, token, pushID, callback);
+                doVerifyUser(userId, token, pushID, publicKey, callback);
             }
         }, true);
     }
 
-    private void doVerifyUser(String userId, String token, String pushId, Callback<SessionData> callback) {
+    private void doVerifyUser(String userId, String token, String pushId, String publicKey, Callback<SessionData> callback) {
+        GenericUtils.ensureNotEmpty(userId, token, pushId, publicKey);
+        // FIXME: 12/21/16 make a cloud function call
         try {
             ParseObject object = ParseUser.getCurrentUser();
             if (object == null) {
@@ -646,7 +638,7 @@ public class ParseClient implements UserApiV2 {
             if (token1.equals(token)) {
                 object.put(FIELD_VERIFIED, true);
                 object.save();
-                registerForPushes(userId, pushId);
+                registerForPushes(userId, pushId, publicKey);
                 final String accessToken = ParseInstallation.getCurrentInstallation().getInstallationId();
                 notifyCallback(callback, null, new SessionData(FileUtils.hash(accessToken.getBytes()), userId));
             } else {
@@ -951,5 +943,29 @@ public class ParseClient implements UserApiV2 {
             }
         }
         return null;
+    }
+
+    @Override
+    public void getPublicKeyForUser(String userId, Callback<String> callback) {
+        GenericUtils.ensureNotEmpty(userId);
+        try {
+            String publicKey = ParseCloud.callFunction("getPublicKeyForUser", Collections.singletonMap(PARSE_CONSTANTS.FIELD_ID, userId));
+            callback.done(null, publicKey);
+        } catch (ParseException e) {
+            PLog.e(TAG, e.getMessage(), e);
+            callback.done(prepareErrorReport(e), null);
+        }
+    }
+
+    @Nullable
+    @Override
+    public String getPublicKeyForUserSync(String userId) {
+        GenericUtils.ensureNotEmpty(userId);
+        try {
+            return ParseCloud.callFunction("getPublicKeyForUser", Collections.singletonMap(PARSE_CONSTANTS.FIELD_ID, userId));
+        } catch (ParseException e) {
+            PLog.e(TAG, e.getMessage(), e);
+            return null;
+        }
     }
 }
