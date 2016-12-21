@@ -7,7 +7,6 @@ import android.util.Base64;
 
 import com.pairapp.BuildConfig;
 import com.pairapp.Errors.PairappException;
-import com.pairapp.R;
 import com.pairapp.messenger.MessengerBus;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
@@ -17,7 +16,6 @@ import com.pairapp.util.PLog;
 import com.pairapp.util.SimpleDateUtil;
 import com.pairapp.util.Task;
 import com.pairapp.util.TaskManager;
-import com.pairapp.util.UiHelpers;
 
 import java.io.File;
 import java.util.Collections;
@@ -48,7 +46,7 @@ public class SenderImpl implements Sender {
     private final MessageQueueImpl.Consumer consumer = new MessageQueueImpl.Consumer() {
         @Override
         public void consume(Sendable item) {
-            if (pairappSocket == null || !pairappSocket.send(stringToBytes(item.getData()))){
+            if (pairappSocket == null || !pairappSocket.send(stringToBytes(item.getData()))) {
                 messageQueue.onProcessed(item, false);
             }
         }
