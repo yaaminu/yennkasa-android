@@ -136,7 +136,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         ButterKnife.bind(this);
         buttomBar.setOnNavigationItemSelectedListener(navigationListener);
         setSupportActionBar(toolbar);
-        fragment = new CallLogFragment();
+        fragment = new ConversationsFragment();
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, fragment)
                 .commit();

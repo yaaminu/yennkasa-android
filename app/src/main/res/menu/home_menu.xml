@@ -2,12 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
-    <item
-        android:id="@+id/tab_call"
-        android:enabled="true"
-        android:icon="@drawable/ic_history_white_24dp"
-        android:title="@string/calls"
-        app:showAsAction="always" />
+
     <item
         android:id="@+id/tab_conversation"
         android:enabled="true"
@@ -15,6 +10,12 @@
         android:title="@string/conversation"
         app:showAsAction="always"
         tools:ignore="AlwaysShowAction" />
+    <item
+        android:id="@+id/tab_call"
+        android:enabled="true"
+        android:icon="@drawable/ic_history_white_24dp"
+        android:title="@string/calls"
+        app:showAsAction="always" />
     <item
         android:id="@+id/tab_people"
         android:enabled="true"
