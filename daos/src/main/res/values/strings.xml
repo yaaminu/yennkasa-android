@@ -44,7 +44,7 @@
     <string name="server_down">The server is down</string>
     <string name="encryptionNotAvailable">Your phone does not support encryption of data, your data will be saved without been encrypted</string>
     <string name="not_connected">Can\'t connect, check your internet settings and try again.</string>
-    <string name="verification_code">Your verification code is</string>
+    <string name="verification_code">Your PairApp verification code is:</string>
     <string name="missed_call">Missed Call</string>
     <string name="sticker">Sticker</string>
     <string name="picture">Picture</string>

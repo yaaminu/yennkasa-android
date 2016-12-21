@@ -18,8 +18,6 @@ import com.pairapp.data.BuildConfig;
 import com.pairapp.data.R;
 import com.pairapp.data.User;
 import com.pairapp.util.Config;
-import com.pairapp.util.Event;
-import com.pairapp.util.EventBus;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.MediaUtils;
@@ -706,7 +704,6 @@ public class ParseClient implements UserApiV2 {
             object.save();
             sendToken(userId, token);
             notifyCallback(response, null, new HttpResponse(200, "successfully reset token"));
-            EventBus.getDefault().postSticky(Event.createSticky(VERIFICATION_CODE_RECEIVED, null, token));
         } catch (ParseException e) {
             notifyCallback(response, prepareErrorReport(e), null);
         }
@@ -903,7 +900,6 @@ public class ParseClient implements UserApiV2 {
                 String token = object.getString(PARSE_CONSTANTS.FIELD_TOKEN);
                 sendToken(userId, Integer.parseInt(token));
                 notifyCallback(callback, null, new HttpResponse(200, "token sent"));
-                EventBus.getDefault().postSticky(Event.createSticky(VERIFICATION_CODE_RECEIVED, null, token));
             }
         }, true);
     }
