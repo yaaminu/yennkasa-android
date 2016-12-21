@@ -1217,10 +1217,13 @@ public final class UserManager {
 
     private void cleanMessages(String peerId) {
         Realm messageRealm = Message.REALM(Config.getApplicationContext());
-        messageRealm.beginTransaction();
-        messageRealm.where(Message.class).equalTo(Message.FIELD_TO, peerId).findAll().deleteAllFromRealm();
-        messageRealm.commitTransaction();
-        messageRealm.close();
+        try {
+            messageRealm.beginTransaction();
+            messageRealm.where(Message.class).equalTo(Message.FIELD_TO, peerId).findAll().deleteAllFromRealm();
+            messageRealm.commitTransaction();
+        } finally {
+            messageRealm.close();
+        }
     }
 
     public boolean isAdmin(Realm realm, String id) {
@@ -1271,24 +1274,31 @@ public final class UserManager {
 
     private void cleanUp() {
         if (Config.getApplicationWidePrefs().getBoolean(CLEANED_UP, false)) {
+
             Realm realm = PersistedSetting.REALM(userPrefsLocation);
             clearClass(realm, PersistedSetting.class);
             realm.close();
+
             realm = PersistedSetting.REALM(sessionFile);
             clearClass(realm, PersistedSetting.class);
             realm.close();
+
             realm = Message.REALM(Config.getApplicationContext());
             clearClass(realm, Message.class);
             realm.close();
+
             realm = Conversation.Realm(Config.getApplicationContext());
             clearClass(realm, Conversation.class);
             realm.close();
+
             realm = newUserRealm();
             clearClass(realm, User.class);
             realm.close();
+
             realm = Country.REALM(Config.getApplicationContext());
             clearClass(realm, Country.class);
             realm.close();
+
             clearAllPrefs();
         }
     }
@@ -1585,24 +1595,27 @@ public final class UserManager {
     private void createPrefs(JSONArray array) throws JSONException {
 
         Realm realm = PersistedSetting.REALM(userPrefsLocation);
-        JSONObject cursor;
-        List<PersistedSetting> settings = new ArrayList<>(array.length());
-        for (int i = 0; i < array.length(); i++) {
-            cursor = array.getJSONObject(i);
-            String key = cursor.getString(PersistedSetting.FIELD_KEY);
-            int order = cursor.getInt(PersistedSetting.FIELD_ORDER);
-            int type = cursor.getInt(PersistedSetting.FIELD_TYPE);
-            if (type == 0) {
-                break;
-            }
-            Object defaultValue = cursor.opt(DEFAULT_VALUE);
+        try {
+            JSONObject cursor;
+            List<PersistedSetting> settings = new ArrayList<>(array.length());
+            for (int i = 0; i < array.length(); i++) {
+                cursor = array.getJSONObject(i);
+                String key = cursor.getString(PersistedSetting.FIELD_KEY);
+                int order = cursor.getInt(PersistedSetting.FIELD_ORDER);
+                int type = cursor.getInt(PersistedSetting.FIELD_TYPE);
+                if (type == 0) {
+                    break;
+                }
+                Object defaultValue = cursor.opt(DEFAULT_VALUE);
 
-            settings.add(createPref(key, type, defaultValue, order));
+                settings.add(createPref(key, type, defaultValue, order));
+            }
+            realm.beginTransaction();
+            realm.copyToRealmOrUpdate(settings);
+            realm.commitTransaction();
+        } finally {
+            realm.close();
         }
-        realm.beginTransaction();
-        realm.copyToRealmOrUpdate(settings);
-        realm.commitTransaction();
-        realm.close();
     }
 
     private PersistedSetting createPref(String key, int type, Object value, int order) {
@@ -1683,12 +1696,16 @@ public final class UserManager {
             @Override
             public void run() {
                 Realm realm = PersistedSetting.REALM(userPrefsLocation);
-                realm.beginTransaction();
-                realm.delete(PersistedSetting.class);
-                realm.commitTransaction();
-                initialiseSettings();
-                if (callback != null) {
-                    doNotify(null, callback);
+                try {
+                    realm.beginTransaction();
+                    realm.delete(PersistedSetting.class);
+                    realm.commitTransaction();
+                    initialiseSettings();
+                    if (callback != null) {
+                        doNotify(null, callback);
+                    }
+                } finally {
+                    realm.close();
                 }
             }
         };

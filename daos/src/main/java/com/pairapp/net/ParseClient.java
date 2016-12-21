@@ -620,18 +620,6 @@ public class ParseClient implements UserApiV2 {
         doRemoveMembersFromGroup(id, Collections.singletonList(userId), response);
     }
 
-
-//    @NonNull
-//    private Map<String, String> getNames() {
-//        Map<String, String> credentials;
-//        credentials = new HashMap<>();
-//        //////////////////////////////////////////////////////////////////////////////
-//        credentials.put("key", "doTbKQlpZyNZohX7KPYGNQXIghATCx");
-//        credentials.put("password", "Dq8FLrF7HjeiyJBFGv9acNvOLV1Jqm");
-//        /////////////////////////////////////////////////////////////////////////////////////
-//        return credentials;
-//    }
-
     @Override
     public void verifyUser(final String userId, final String token, final String pushID, final Callback<SessionData> callback) {
         TaskManager.execute(new Runnable() {

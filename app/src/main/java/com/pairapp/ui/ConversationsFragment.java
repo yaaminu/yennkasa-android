@@ -241,20 +241,23 @@ public class ConversationsFragment extends ListFragment {
         TaskManager.executeNow(new Runnable() {
             @Override
             public void run() {
-                Realm userRealm = User.Realm(getActivity());
-                User user = userRealm.where(User.class).equalTo(User.FIELD_ID, senderId).findFirst();
-                if (user != null && !user.getInContacts() && user.getType() == User.TYPE_NORMAL_USER) {
-                    Realm messageRealm = Message.REALM(getActivity());
-                    Message msg = messageRealm.where(Message.class).equalTo(Message.FIELD_FROM, senderId).findFirst();
-                    if (msg == null) {
-                        //remove this user
-                        userRealm.beginTransaction();
-                        user.deleteFromRealm();
-                        userRealm.commitTransaction();
+                Realm userRealm = User.Realm(getActivity()),
+                        messageRealm = Message.REALM(getActivity());
+                try {
+                    User user = userRealm.where(User.class).equalTo(User.FIELD_ID, senderId).findFirst();
+                    if (user != null && !user.getInContacts() && user.getType() == User.TYPE_NORMAL_USER) {
+                        Message msg = messageRealm.where(Message.class).equalTo(Message.FIELD_FROM, senderId).findFirst();
+                        if (msg == null) {
+                            //remove this user
+                            userRealm.beginTransaction();
+                            user.deleteFromRealm();
+                            userRealm.commitTransaction();
+                        }
                     }
+                } finally {
                     messageRealm.close();
+                    userRealm.close();
                 }
-                userRealm.close();
             }
         }, false);
     }

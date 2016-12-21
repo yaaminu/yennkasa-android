@@ -412,14 +412,17 @@ public class PairAppClient extends Service {
                 //this is because we want to give user impression that the message has been cancelled.
                 monitor.onDispatchFailed(message.getId(), MessageUtils.ERROR_CANCELLED);
                 Realm realm = Message.REALM(PairAppClient.this);
-                message.setState(Message.STATE_SEND_FAILED);
-                Message liveMessage = realm.where(Message.class).equalTo(Message.FIELD_ID, message.getId()).findFirst();
-                if (liveMessage != null && liveMessage.getState() == Message.STATE_PENDING) {
-                    realm.beginTransaction();
-                    liveMessage.setState(Message.STATE_SEND_FAILED);
-                    realm.commitTransaction();
+                try {
+                    message.setState(Message.STATE_SEND_FAILED);
+                    Message liveMessage = realm.where(Message.class).equalTo(Message.FIELD_ID, message.getId()).findFirst();
+                    if (liveMessage != null && liveMessage.getState() == Message.STATE_PENDING) {
+                        realm.beginTransaction();
+                        liveMessage.setState(Message.STATE_SEND_FAILED);
+                        realm.commitTransaction();
+                    }
+                } finally {
+                    realm.close();
                 }
-                realm.close();
             }
         }, false);
     }

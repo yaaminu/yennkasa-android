@@ -175,7 +175,6 @@ public class Worker extends IntentService {
 
         private void doDownload() {
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-            Realm realm = null;
             final File finalFile;
             String destination = messageBody.substring(messageBody.lastIndexOf('/'));
             String extension = FileUtils.getExtension(destination);
@@ -224,9 +223,9 @@ public class Worker extends IntentService {
                     }
                 }
             };
+            Realm realm = Message.REALM(Config.getApplicationContext());
             try {
                 FileUtils.save(finalFile, messageBody, listener);
-                realm = Message.REALM(Config.getApplicationContext());
                 Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
                 if (toBeUpdated != null) {
                     realm.beginTransaction();
