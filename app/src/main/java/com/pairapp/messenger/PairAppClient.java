@@ -10,6 +10,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.util.LruCache;
 import android.support.v4.util.Pair;
 
 import com.pairapp.BuildConfig;
@@ -24,6 +25,8 @@ import com.pairapp.net.ParseClient;
 import com.pairapp.net.ParseFileClient;
 import com.pairapp.net.sockets.MessageParser;
 import com.pairapp.net.sockets.SenderImpl;
+import com.pairapp.security.MessageEncryptor;
+import com.pairapp.security.RSA;
 import com.pairapp.ui.BaseCallActivity;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
@@ -36,6 +39,8 @@ import com.pairapp.util.ThreadUtils;
 
 import org.json.JSONObject;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -106,6 +111,7 @@ public class PairAppClient extends Service {
     private CallController callController;
     private final EventBus callManagerBus = EventBus.getBusOrCreate(shadowClazz.class);
     private MessageParser messageParser;
+    private LruCache<String, PublicKey> cache;
 
     private static class shadowClazz {
     }
@@ -150,6 +156,7 @@ public class PairAppClient extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        cache = new LruCache<>(10);
         StickersManager.initialize("fd82531004986458d9d4fd66eacf9e20", this, BuildConfig.DEBUG);
         Realm realm = User.Realm(this);
 
@@ -200,6 +207,12 @@ public class PairAppClient extends Service {
         return null;
     }
 
+    @Override
+    public void onTrimMemory(int level) {
+        cache.evictAll();
+        super.onTrimMemory(level);
+    }
+
     synchronized void bootClient() {
         ThreadUtils.ensureNotMain();
         if (!isClientStarted.get()) {
@@ -207,7 +220,8 @@ public class PairAppClient extends Service {
             try {
                 monitor = new DispatcherMonitorImpl(this, disPatchingThreads);
                 String currentUserId = UserManager.getMainUserId(userRealm);
-                messagePacker = MessagePacker.create(currentUserId, new ZlibCompressor());
+                messagePacker = MessagePacker.create(currentUserId, new ZlibCompressor(),
+                        new CryptoImpl(new MessageEncryptor(new PrivatePublicKeySourceImpl(cache), BuildConfig.DEBUG)));
 
                 messageParser = new MessageParserImpl(messagePacker);
                 sender = new SenderImpl(authenticator, messageParser);
@@ -461,4 +475,64 @@ public class PairAppClient extends Service {
             return UserManager.getInstance().getSinchRegistrationToken();
         }
     };
+
+    private static class CryptoImpl implements MessagePacker.Cryptor {
+
+        private final MessageEncryptor encryptor;
+
+        public CryptoImpl(MessageEncryptor encryptor) {
+            this.encryptor = encryptor;
+        }
+
+        @NonNull
+        @Override
+        public byte[] encrypt(@NonNull String recipient, @NonNull byte[] input) throws MessageEncryptor.EncryptionException {
+            return encryptor.encrypt(recipient, input);
+        }
+
+        @NonNull
+        @Override
+        public byte[] decrypt(@NonNull byte[] input) throws MessageEncryptor.EncryptionException {
+            return encryptor.decrypt(input);
+        }
+
+    }
+
+    static class PrivatePublicKeySourceImpl implements MessageEncryptor.PrivatePublicKeySource {
+
+        private final PrivateKey privateKey;
+        private final LruCache<String, PublicKey> publicKeysCache;
+
+        public PrivatePublicKeySourceImpl(LruCache<String, PublicKey> cache) {
+            this.privateKey = createPrivateKeyFromBase64EncodedString
+                    (UserManager.getInstance().getPrivateKey());
+            this.publicKeysCache = cache;
+        }
+
+        @NonNull
+        @Override
+        public PrivateKey getPrivateKeyForThisUser() throws MessageEncryptor.EncryptionException {
+            return this.privateKey;
+        }
+
+        @Override
+        @Nullable
+        public synchronized PublicKey getPublicKeyFor(String userId) throws MessageEncryptor.EncryptionException {
+            PublicKey publicKey = publicKeysCache.get(userId);
+            if (publicKey != null) return publicKey;
+            String publicKeyString = UserManager.getInstance().publicKeyForUser(userId);
+            if (publicKeyString == null) {
+                throw new MessageEncryptor.EncryptionException("public key not found", MessageEncryptor.EncryptionException.PUBLIC_KEY_NOT_FOUND);
+            }
+            publicKey = RSA.getRSAPublicKeyFromString(publicKeyString);
+            publicKeysCache.put(userId, publicKey);
+            return publicKey;
+        }
+
+        private PrivateKey createPrivateKeyFromBase64EncodedString(String privateKeyBase64) {
+            return RSA.getRSAPrivateKeyFromString(privateKeyBase64);
+        }
+
+    }
+
 }

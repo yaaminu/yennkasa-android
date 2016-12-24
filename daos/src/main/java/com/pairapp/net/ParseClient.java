@@ -4,9 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.Build;
 import android.os.SystemClock;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
@@ -68,7 +66,6 @@ import static com.pairapp.net.PARSE_CONSTANTS.GROUP_CLASS_NAME;
  * @author Null-Pointer on 8/27/2015.
  */
 public class ParseClient implements UserApiV2 {
-
     private static final String TAG = ParseClient.class.getSimpleName();
     public static final String PENDING_DP = "pendingDp";
     public static final String VERIFICATION_CODE_RECEIVED = "code.verification.recived";
@@ -257,20 +254,13 @@ public class ParseClient implements UserApiV2 {
 
     @SuppressLint("HardwareIds")
     private void registerForPushes(String userId, String pushID, String publicKey) throws ParseException {
+        ParseCloud.callFunction("setPublicKeyForUser", Collections.singletonMap("publicKey", publicKey));
         ParseInstallation installation = ParseInstallation.getCurrentInstallation();
         installation.put(FIELD_ID, userId);
         //required by the server for verification in installation related queries
         installation.put(PUSH_ID, pushID);
-        String deviceID1 = FileUtils.hash(userId + ":" + Build.MODEL + Build.MANUFACTURER + Build.CPU_ABI);
-        installation.put("deviceId1", deviceID1);
-        installation.put("deviceId2", FileUtils.hash(Settings.Secure.getString(Config.getApplicationContext()
-                .getContentResolver(), Settings.Secure.ANDROID_ID)));
-        installation.put("user.public.key.rsa", publicKey);
-        //the server will automatically generatePublicPrivateKeyPair an authentication token.
-        //and store it in the current installation before persisting it to the database.
-        // But we cannot query for Installation objects on clients so we have to make another cloud
-        // function call (see below) to retrieve the token.
         installation.save();
+//        installation.put("saved", true);
         requestForToken(pushID, false);
     }
 
@@ -611,7 +601,7 @@ public class ParseClient implements UserApiV2 {
     }
 
     @Override
-    public void verifyUser(final String userId, final String token, final String publicKey, final String pushID, final Callback<SessionData> callback) {
+    public void verifyUser(final String userId, final String token, final String pushID, final String publicKey, final Callback<SessionData> callback) {
         TaskManager.execute(new Runnable() {
             public void run() {
                 doVerifyUser(userId, token, pushID, publicKey, callback);
@@ -962,7 +952,9 @@ public class ParseClient implements UserApiV2 {
     public String getPublicKeyForUserSync(String userId) {
         GenericUtils.ensureNotEmpty(userId);
         try {
-            return ParseCloud.callFunction("getPublicKeyForUser", Collections.singletonMap(PARSE_CONSTANTS.FIELD_ID, userId));
+            String publicKeyForUser = ParseCloud.callFunction("getPublicKeyForUser", Collections.singletonMap(PARSE_CONSTANTS.FIELD_ID, userId));
+            PLog.d(TAG, "public key for %s is: %s", userId, publicKeyForUser);
+            return publicKeyForUser;
         } catch (ParseException e) {
             PLog.e(TAG, e.getMessage(), e);
             return null;

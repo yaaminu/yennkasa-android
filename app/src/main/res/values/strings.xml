@@ -380,4 +380,5 @@
     <string name="received_state">Delivered</string>
     <string name="seen_state">Seen</string>
     <string name="failed_state">Failed</string>
+    <string name="message_edit_failed">Failed to update your message to %s</string>
 </resources>

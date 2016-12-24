@@ -97,6 +97,11 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         stage = userManager.getIntPref(STAGE, UNKNOWN);

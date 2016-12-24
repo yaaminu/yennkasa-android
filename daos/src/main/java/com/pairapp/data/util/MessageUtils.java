@@ -29,6 +29,8 @@ public class MessageUtils {
     public static final String ERROR_IS_DATE_MESSAGE = "is date message";
     public static final String ERROR_IS_TYPING_MESSAGE = "is typing message";
     public static final String ERROR_CANCELLED = "canclled";
+    public static final String ERROR_ENCODING_FAILED = "packaging error";
+
     private static final String TAG = MessageUtils.class.getSimpleName();
 
     public static boolean validate(Message message) throws PairappException {

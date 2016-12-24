@@ -12,6 +12,7 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.util.Pair;
 import android.util.Log;
 
+import com.pairapp.BuildConfig;
 import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.R;
 import com.pairapp.call.CallController;
@@ -392,18 +393,36 @@ class PairAppClientInterface {
     }
 
     public void onIncomingPushMessage(String dataBase64) {
-        parser.feedBase64(dataBase64);
+        try {
+            parser.feedBase64(dataBase64);
+        } catch (MessageParser.MessageParserException e) {
+            PLog.f(TAG, e.getMessage(), e);
+            if (BuildConfig.DEBUG) {
+                throw new RuntimeException(e);
+            }
+            // TODO: 12/22/16 this could be because the sender used our stale public key
+            // for encryption so we persist this message as a blob, send a hint to the
+            //sender that we could not decrypt his message so they should use our
+            //new public key if possible
+        }
     }
 
     public void onRouteCallViaPush(Pair<String, String> data) {
-        byte[] packed = messagePacker.packCallMessage(data.first, data.second);
-        Sendable sendable = new Sendable.Builder()
-                .collapseKey("call:" + data.first)
-                .data(sender.bytesToString(packed))
-                .maxRetries(3)
-                .surviveRestarts(false)
-                .validUntil(System.currentTimeMillis() + 15000).build();
-        sender.sendMessage(sendable);
+        byte[] packed;
+        try {
+            packed = messagePacker.packCallMessage(data.first, data.second);
+            Sendable sendable = new Sendable.Builder()
+                    .collapseKey("call:" + data.first)
+                    .data(sender.bytesToString(packed))
+                    .maxRetries(3)
+                    .surviveRestarts(false)
+                    .validUntil(System.currentTimeMillis() + 15000).build();
+            sender.sendMessage(sendable);
+        } catch (MessagePacker.MessagePackerException e) {
+            PLog.f(TAG, e.getMessage(), e);
+            //is this the best we  can do?
+            throw new RuntimeException();
+        }
     }
 
     public void onInComingCallPushPayload(String payload) {
@@ -454,6 +473,15 @@ class PairAppClientInterface {
             }
         } catch (JSONException e) {
             throw new RuntimeException(e);
+        } catch (MessagePacker.MessagePackerException e) {
+            PLog.f(TAG, e.getMessage(), e);
+            User recipient = UserManager.getInstance()
+                    .fetchUserIfRequired(userRealm, msg.getTo());
+            if (BuildConfig.DEBUG) {
+                throw new RuntimeException();
+            }
+            ErrorCenter.reportError("error.edit.message", context.getString(R.string.message_edit_failed,
+                    recipient.getName()), ErrorCenter.ReportStyle.DIALOG_NOT, ErrorCenter.INDEFINITE);
         } finally {
             userRealm.close();
         }
@@ -512,11 +540,17 @@ class PairAppClientInterface {
             } else {
                 object.put(MessageProcessor.EDIT_RESULTS, "1"); //just ensure that the edit key is set.
             }
-            if (sender.unsendMessage(SenderImpl.createMessageSendable(messageId, messagePacker.packNormalMessage(object.toString(), to, false)))) {
+            if (sender.unsendMessage(SenderImpl.createMessageSendable(messageId,
+                    messagePacker.packNormalMessage(object.toString(), to, false)))) {
                 notifyRevertOrEditSentMessageSuccess(reverting);
             }
         } catch (JSONException e) {
             throw new RuntimeException(e);
+        } catch (MessagePacker.MessagePackerException e) {
+            PLog.f(TAG, e.getMessage(), e);
+            if (BuildConfig.DEBUG) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

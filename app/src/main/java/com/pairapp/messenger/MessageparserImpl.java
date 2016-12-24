@@ -18,12 +18,17 @@ class MessageParserImpl implements MessageParser {
     }
 
     @Override
-    public void feed(byte[] bytes) {
-        messagePacker.unpack(bytes);
+    public void feed(byte[] bytes) throws MessageParserException {
+        try {
+            messagePacker.unpack(bytes);
+        } catch (MessagePacker.MessagePackerException e) {
+            PLog.f(TAG, e.getMessage(), e);
+            throw new MessageParserException(e);
+        }
     }
 
     @Override
-    public void feedBase64(String message) {
+    public void feedBase64(String message) throws MessageParserException {
         PLog.d(TAG, "parser received a base64 message");
         PLog.d(TAG, "message: %s", message);
         feed(Base64.decode(message, Base64.DEFAULT));

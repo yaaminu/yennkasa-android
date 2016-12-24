@@ -7,18 +7,18 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
 
-import com.example.Crypto;
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.Errors.PairappException;
 import com.pairapp.net.HttpResponse;
 import com.pairapp.net.ParseClient;
 import com.pairapp.net.UserApiV2;
+import com.pairapp.security.RSA;
 import com.pairapp.util.Config;
 import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.FileUtils;
@@ -970,8 +970,14 @@ public final class UserManager {
         return privateKey;
     }
 
+    @Nullable
     public String publicKeyForUser(String userId) {
-        return userApi.getPublicKeyForUserSync(userId);
+        String publicKey = getStringPref("user.rsa.public.key.encoded." + userId, null);
+        if (GenericUtils.isEmpty(publicKey)) {
+            publicKey = userApi.getPublicKeyForUserSync(userId);
+            putSessionPref("user.rsa.public.key.encoded." + userId, publicKey);
+        }
+        return publicKey;
     }
 
     public void signUp(final String name, final String phoneNumber, final String countryIso, final CallBack callback) {
@@ -1052,9 +1058,9 @@ public final class UserManager {
             @Override
             public void run() {
                 synchronized (UserManager.class) {
-                    KeyPair keyPair = Crypto.RSA.generatePublicPrivateKeyPair();
-                    putPref("user.rsa.private.key.encoded", Base64.encodeToString(keyPair.getPrivate().getEncoded(), Base64.DEFAULT));
-                    String publicKey = Base64.encodeToString(keyPair.getPublic().getEncoded(), Base64.DEFAULT);
+                    KeyPair keyPair = RSA.generatePublicPrivateKeyPair();
+                    putPref("user.rsa.private.key.encoded", RSA.encodeRSAPrivateKeyToString(keyPair.getPrivate()));
+                    String publicKey = RSA.encodeRSAPublicKeyToString(keyPair.getPublic());
                     putPref("user.rsa.public.key.encoded", publicKey);
                     userApi.verifyUser(userId, token, pushID, publicKey, new UserApiV2.Callback<UserApiV2.SessionData>() {
                         @Override

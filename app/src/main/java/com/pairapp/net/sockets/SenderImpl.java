@@ -7,6 +7,7 @@ import android.util.Base64;
 
 import com.pairapp.BuildConfig;
 import com.pairapp.Errors.PairappException;
+import com.pairapp.messenger.MessagePacker.MessagePackerException;
 import com.pairapp.messenger.MessengerBus;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
@@ -24,6 +25,7 @@ import java.util.Set;
 
 import io.realm.Realm;
 
+import static com.pairapp.messenger.MessagePacker.MessagePackerException.ENCRYPTION_FAILED;
 import static com.pairapp.messenger.MessengerBus.CONNECTED;
 import static com.pairapp.messenger.MessengerBus.CONNECTING;
 import static com.pairapp.messenger.MessengerBus.DISCONNECTED;
@@ -228,7 +230,22 @@ public class SenderImpl implements Sender {
     private final PairappSocket.PairappSocketListener listener = new PairappSocket.PairappSocketListener() {
         @Override
         public void onMessage(byte[] bytes) {
-            parser.feed(bytes);
+            try {
+                parser.feed(bytes);
+            } catch (MessageParser.MessageParserException e) {
+                PLog.f(TAG, e.getMessage(), e);
+                if (BuildConfig.DEBUG) {
+                    throw new RuntimeException(e);
+                }
+                if (e.getCause() instanceof MessagePackerException) {
+                    if (((MessagePackerException) e.getCause()).getErrorCode() == ENCRYPTION_FAILED) {
+                        // TODO: 12/22/16 this could be because the sender used our stale public key
+                        // for encryption so we persist this message as a blob, send a hint to the
+                        //sender that we could not decrypt his message so they should use our
+                        //new public key if possible
+                    }
+                }
+            }
         }
 
         @Override

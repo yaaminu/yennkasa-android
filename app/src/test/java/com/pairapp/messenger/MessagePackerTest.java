@@ -1,5 +1,9 @@
 package com.pairapp.messenger;
 
+import android.support.annotation.NonNull;
+
+import com.pairapp.security.MessageEncryptor;
+
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
@@ -47,7 +51,7 @@ public class MessagePackerTest {
     @Before
     public void setUp() throws Exception {
         onCompleteCalled = false;
-        messagePacker = MessagePacker.create("233266349205", new ZlibCompressor());
+        messagePacker = MessagePacker.create("233266349205", new ZlibCompressor(), new CryptoImplTest());
     }
 
     @After
@@ -60,12 +64,12 @@ public class MessagePackerTest {
     @Test
     public void testCreate() throws Exception {
         try {
-            messagePacker = MessagePacker.create("2222a", new ZlibCompressor());
+            messagePacker = MessagePacker.create("2222a", new ZlibCompressor(), new CryptoImplTest());
             fail("must throw");
         } catch (NumberFormatException expected) {
             //better
         }
-        messagePacker = MessagePacker.create("233266564229", new ZlibCompressor());
+        messagePacker = MessagePacker.create("233266564229", new ZlibCompressor(), new CryptoImplTest());
         assertNotNull(messagePacker);
     }
 
@@ -253,7 +257,7 @@ public class MessagePackerTest {
         }
     }
 
-    private void testCallPushMessage() {
+    private void testCallPushMessage() throws Exception {
         byte[] message = "hello world".getBytes();
         ByteBuffer buffer = ByteBuffer.allocate(1 + message.length + 8); //8 for timestamp
         buffer.order(ByteOrder.BIG_ENDIAN);
@@ -267,7 +271,7 @@ public class MessagePackerTest {
         assertEquals("inconsistent timestamp", timestamp, dataEvent.getServerTimeStamp());
     }
 
-    private void testOffline() {
+    private void testOffline() throws Exception {
         ByteBuffer buffer = ByteBuffer.allocate(9);
         int recipient;
         buffer.put(0, (byte) 0x1);
@@ -280,7 +284,7 @@ public class MessagePackerTest {
         assertEquals("" + recipient, dataEvent.getData());
     }
 
-    private void testMsgStatus() {
+    private void testMsgStatus() throws Exception {
         byte[] idBytes = "msgId".getBytes();
         ByteBuffer buffer = ByteBuffer.allocate(idBytes.length + 1 + 8);//1 for header, 8 for timestamp
         buffer.put(MessagePacker.MESSAGE_STATUS_DELIVERED);
@@ -307,7 +311,7 @@ public class MessagePackerTest {
         assertEquals("msgId", dataEvent.getData());
     }
 
-    private void testOnline() {
+    private void testOnline() throws Exception {
         ByteBuffer buffer = ByteBuffer.allocate(9);
         buffer.put((byte) 0x2);
         int recipient = 123456789;
@@ -320,7 +324,7 @@ public class MessagePackerTest {
         assertEquals("" + recipient, dataEvent.getData());
     }
 
-    private void testTyping() {
+    private void testTyping() throws Exception {
         ByteBuffer buffer = ByteBuffer.allocate(9);
         buffer.put(MessagePacker.TYPING);
         int recipient = 123456789;
@@ -449,5 +453,20 @@ public class MessagePackerTest {
     @Test
     public void testObserve() throws Exception {
         messagePacker.observe().subscribe(subscriber);
+    }
+
+    static class CryptoImplTest implements MessagePacker.Cryptor {
+
+        @NonNull
+        @Override
+        public byte[] encrypt(@NonNull String recipient, @NonNull byte[] input) throws MessageEncryptor.EncryptionException {
+            return input;
+        }
+
+        @NonNull
+        @Override
+        public byte[] decrypt(@NonNull byte[] input) throws MessageEncryptor.EncryptionException {
+            return input;
+        }
     }
 }

@@ -3,6 +3,7 @@ package com.pairapp.messenger;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import com.pairapp.security.MessageEncryptor;
 import com.pairapp.util.BuildConfig;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
@@ -36,21 +37,32 @@ public class MessagePacker {
     // TODO: 11/10/2016 why assume userID is a long?
     private final long currentUserId;
     private final Compressor compressor;
+    private final Cryptor cryptor;
 
-    private MessagePacker(String currentUserId, Compressor compressor) {
+    private MessagePacker(String currentUserId, Compressor compressor, Cryptor cryptor) {
         // TODO: 11/10/2016 make userID a string
         this.currentUserId = Long.parseLong(currentUserId, 10);
         this.compressor = compressor;
+        this.cryptor = cryptor;
     }
 
-    public static MessagePacker create(String currentUserId, Compressor compressor) {
+    public static MessagePacker create(String currentUserId, Compressor compressor, Cryptor cryptor) {
         GenericUtils.ensureNotEmpty(currentUserId);
-        return new MessagePacker(currentUserId, compressor);
+        GenericUtils.ensureNotNull(cryptor, compressor);
+        return new MessagePacker(currentUserId, compressor, cryptor);
     }
 
-    public byte[] packNormalMessage(String messageJson, String recipient, boolean isGroupMessage) {
+    public byte[] packNormalMessage(String messageJson, String recipient, boolean isGroupMessage) throws MessagePackerException {
         GenericUtils.ensureNotNull(messageJson, recipient);
-        byte[] msgBuffer = compressor.compress(messageJson.getBytes());
+        byte[] msgBuffer;
+        try {
+            msgBuffer = cryptor.encrypt(recipient, compressor.compress(messageJson.getBytes()));
+        } catch (MessageEncryptor.EncryptionException e) {
+            if (com.pairapp.BuildConfig.DEBUG) {
+                throw new RuntimeException();
+            }
+            throw new MessagePackerException(MessagePackerException.ENCRYPTION_FAILED, e);
+        }
         int msgLength = 1/*header for server*/
                 + 1/*delimiter for header  and payload*/
                 + 1/*header for clients*/
@@ -195,8 +207,9 @@ public class MessagePacker {
     }
 
     @NonNull
-    public byte[] packCallMessage(@NonNull String recipient, @NonNull String payload) {
-        int capacity = 1/*server*/ + recipient.getBytes().length + 1/*delimiter*/ + 1/*clientHeader*/ + payload.getBytes().length;
+    public byte[] packCallMessage(@NonNull String recipient, @NonNull String payload) throws MessagePackerException {
+        int capacity = 1/*server*/ + recipient.getBytes().length + 1/*delimiter*/ +
+                1/*clientHeader*/ + payload.getBytes().length;
         ByteBuffer byteBuffer = ByteBuffer.allocate(capacity);
         byteBuffer.order(ByteOrder.BIG_ENDIAN);
         byteBuffer.put((byte) (NO_PERSIST_PUSH_IF_POSSIBLE | NO_TRUNCATE_PUSH));
@@ -207,7 +220,7 @@ public class MessagePacker {
         return byteBuffer.array();
     }
 
-    public void unpack(byte[] data) {
+    public void unpack(byte[] data) throws MessagePackerException {
         if (onSubscribe.subscriber == null || onSubscribe.subscriber.isUnsubscribed()) {
             throw new IllegalStateException("can't invoke unpack without an observer.");
         }
@@ -220,7 +233,7 @@ public class MessagePacker {
     }
 
     @Nullable
-    private DataEvent doUnpack(byte[] data) {
+    private DataEvent doUnpack(byte[] data) throws MessagePackerException {
         if (data == null || data.length <= 0) {
             throw new IllegalArgumentException("invalid data");
         }
@@ -247,14 +260,17 @@ public class MessagePacker {
                 try {
                     byte[] msgBytes = new byte[data.length - (1 + 8)]; //1 for header and 8 for server-timestamp
                     buffer.get(msgBytes, 0, msgBytes.length);
-                    msgBytes = compressor.decompress(msgBytes);
+                    msgBytes = compressor.decompress(cryptor.decrypt(msgBytes));
                     event = new DataEvent(header, new String(msgBytes), buffer.getLong());
                 } catch (DataFormatException e) {
                     PLog.f(TAG, e.getMessage(), e);
                     if (com.pairapp.BuildConfig.DEBUG) {
                         throw new AssertionError(e);
                     }
-                    event = null;
+                    throw new MessagePackerException(MessagePackerException.DECOMPRESSION_FAILED, e);
+                } catch (MessageEncryptor.EncryptionException e) {
+                    PLog.f(TAG, e.getMessage(), e);
+                    throw new MessagePackerException(MessagePackerException.DECRYPTION_FAILED, e);
                 }
                 break;
             case MESSAGE_STATUS_DELIVERED:
@@ -347,4 +363,29 @@ public class MessagePacker {
         @NonNull
         byte[] decompress(@NonNull byte[] input) throws DataFormatException;
     }
+
+    public interface Cryptor {
+        @NonNull
+        byte[] encrypt(@NonNull String recipient, @NonNull byte[] input) throws MessageEncryptor.EncryptionException;
+
+        @NonNull
+        byte[] decrypt(@NonNull byte[] input) throws MessageEncryptor.EncryptionException;
+    }
+
+    public static class MessagePackerException extends Exception {
+        public static final int ENCRYPTION_FAILED = 1,
+                DECRYPTION_FAILED = 2;
+        public static final int DECOMPRESSION_FAILED = 3;
+        private final int errorCode;
+
+        public MessagePackerException(int errorCode, Throwable cause) {
+            super(cause);
+            this.errorCode = errorCode;
+        }
+
+        public int getErrorCode() {
+            return errorCode;
+        }
+    }
+
 }

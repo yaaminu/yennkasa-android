@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
 
 import com.pairapp.data.Message;
+import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.FileApi;
 import com.pairapp.net.sockets.SendListener;
 import com.pairapp.net.sockets.Sender;
@@ -76,9 +77,14 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
     @SuppressLint("CommitPrefEdits")
     @Override
     protected void dispatchToUser(Message message) {
-        byte[] encoded = messageEncoder.encode(message);
-        Config.getPreferences(SEND_QUEUE_PREFS).edit().putString(FileUtils.hash(encoded), message.getId()).commit();
-        sender.sendMessage(SenderImpl.createMessageSendable(message.getId(), encoded));
+        byte[] encoded;
+        try {
+            encoded = messageEncoder.encode(message);
+            Config.getPreferences(SEND_QUEUE_PREFS).edit().putString(FileUtils.hash(encoded), message.getId()).commit();
+            sender.sendMessage(SenderImpl.createMessageSendable(message.getId(), encoded));
+        } catch (MessagePacker.MessagePackerException e) {
+            onFailed(message.getId(), MessageUtils.ERROR_ENCODING_FAILED);
+        }
     }
 
     @Override
@@ -87,6 +93,6 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
     }
 
     interface MessageEncoder {
-        byte[] encode(Message message);
+        byte[] encode(Message message) throws MessagePacker.MessagePackerException;
     }
 }
