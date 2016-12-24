@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
@@ -129,9 +128,9 @@ public class ParseClient implements UserApiV2 {
             cleanExistingInstallation(_id);
             ParseUser parseUser = new ParseUser(); //(USER_CLASS_NAME).whereEqualTo(FIELD_ID, _id).getFirst();
             parseUser.setPassword(makePass(user));
-            parseUser.setUsername(_id);
+            parseUser.setUsername(!name.startsWith("@") ? "@" : "" + name);
             parseUser.put(FIELD_ID, _id);
-            parseUser.put(FIELD_NAME, "@" + (TextUtils.isEmpty(name) ? _id : name));
+            parseUser.put(FIELD_NAME, !name.startsWith("@") ? "@" : "" + name);
             parseUser.put(FIELD_COUNTRY, country);
             parseUser.put(FIELD_ACCOUNT_CREATED, new Date());
             parseUser.put(FIELD_LAST_ACTIVITY, new Date());
@@ -143,16 +142,15 @@ public class ParseClient implements UserApiV2 {
             user = parseObjectToUser(parseUser);
             notifyCallback(callback, null, user);
         } catch (ParseException e) {
+            PLog.d(TAG, e.getMessage(), e);
             int code = e.getCode();
-            if (code == ParseException.USERNAME_TAKEN || code == ParseException.OBJECT_NOT_FOUND) {
+            if (code == ParseException.OBJECT_NOT_FOUND) {
                 PLog.d(TAG, "user already signed, logging in user instead");
                 doLogIn(user, callback);
+            } else if (code == ParseException.USERNAME_TAKEN) {
+                notifyCallback(callback, new Exception(GenericUtils.getString(R.string.user_name_taken, user.getName())), null);
             } else if (code == ParseException.CONNECTION_FAILED) {
                 notifyCallback(callback, new Exception(Config.getApplicationContext().getString(R.string.st_unable_to_connect)), null);
-            } else if (code == ParseException.EXCEEDED_QUOTA) {
-                notifyCallback(callback, new Exception(Config.getApplicationContext().getString(R.string.server_down)), null);
-            } else if (code == ParseException.REQUEST_LIMIT_EXCEEDED) {
-                notifyCallback(callback, new Exception(Config.getApplicationContext().getString(R.string.server_down)), null);
             } else {
                 notifyCallback(callback, new Exception(Config.getApplicationContext().getString(R.string.an_error_occurred)), null);
             }
@@ -211,20 +209,10 @@ public class ParseClient implements UserApiV2 {
             parseUser.save();
             notifyCallback(callback, null, user);
         } catch (ParseException e) {
-            String message = "";
+            String message;
             final int errorCode = e.getCode();
-            if (errorCode == ParseException.MUST_CREATE_USER_THROUGH_SIGNUP
-                    || errorCode == ParseException.OBJECT_NOT_FOUND
-                    ) {
-                message = Config.getApplicationContext().getString(R.string.login_error_message);
-            } else if (errorCode == ParseException.CONNECTION_FAILED) {
+            if (errorCode == ParseException.CONNECTION_FAILED) {
                 message = Config.getApplicationContext().getString(R.string.st_unable_to_connect);
-            } else if (errorCode == ParseException.REQUEST_LIMIT_EXCEEDED) {
-                sleep();
-                doLogIn(user, callback); //recursive call
-            } else if (errorCode == ParseException.EXCEEDED_QUOTA) {
-                PLog.e(TAG, "exceeded quota");
-                message = Config.getApplicationContext().getString(R.string.server_down);
             } else {
                 message = Config.getApplicationContext().getString(R.string.an_error_occurred);
             }
@@ -232,21 +220,6 @@ public class ParseClient implements UserApiV2 {
         }
     }
 
-    private void sleep() {
-        //maximum of 120000(2 mins) and minimum of 45000(45 seconds)
-        sleep(120000, 45000);
-    }
-
-    private void sleep(long min, long max) {
-        if (max < 100) {
-            throw new IllegalArgumentException("max < 100");
-        }
-        SecureRandom random = new SecureRandom();
-        int num = (int) Math.abs(random.nextDouble() * (max - min) + min);
-        //we need an unsigned (+ve) number
-        num = Math.abs(num);
-        SystemClock.sleep(num);
-    }
 
     private String makePass(User user) {
         return FileUtils.hash(user.getUserId().getBytes());
