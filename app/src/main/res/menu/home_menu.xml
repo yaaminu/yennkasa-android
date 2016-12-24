@@ -13,7 +13,7 @@
     <item
         android:id="@+id/tab_call"
         android:enabled="true"
-        android:icon="@drawable/ic_history_white_24dp"
+        android:icon="@drawable/ic_call_white_24dp"
         android:title="@string/calls"
         app:showAsAction="always" />
     <item

@@ -6,9 +6,10 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.pairapp.PairApp;
 import com.pairapp.R;
@@ -19,6 +20,7 @@ import com.rey.material.widget.SnackBar;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 
 /**
@@ -74,27 +76,24 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         handleIntent(intent);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_search:
-                // TODO: 12/15/16 go to search activity
-                break;
-            case R.id.action_settings:
-                Intent intent = new Intent(this, SettingsActivityMain.class);
-                startActivity(intent);
-                break;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-
-        return true;
+    @OnClick(R.id.action_more)
+    void onMenuButtonClicked(View view) {
+        PopupMenu popupMenu = new PopupMenu(this, view);
+        popupMenu.inflate(R.menu.main);
+        popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                if (item.getItemId() == R.id.action_settings) {
+                    Intent intent = new Intent(MainActivity.this, SettingsActivityMain.class);
+                    startActivity(intent);
+                    return true;
+                } else {
+                    throw new AssertionError();
+                }
+            }
+        });
+        popupMenu.show();
     }
 
     @Override

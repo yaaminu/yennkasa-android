@@ -13,11 +13,17 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
-            android:gravity="center"
             android:minHeight="?attr/actionBarSize"
+            android:padding="4dp"
             android:title=""
-            android:visibility="visible"
-            app:theme="@style/AppBar" />
+            android:weightSum="1"
+            app:theme="@style/AppBar">
+
+            <include
+                layout="@layout/search_bar_card"
+                android:layout_width="match_parent"
+                android:layout_height="40dp" />
+        </android.support.v7.widget.Toolbar>
 
         <include layout="@layout/inline_notification_bar_layout" />
 

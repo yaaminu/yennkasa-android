@@ -4,6 +4,7 @@ package com.pairapp.ui;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -142,7 +143,8 @@ public class ContactFragment extends Fragment implements RealmChangeListener<Rea
         //required so that we can operate on it with no fear since calling getListView before onCreateView returns is not safe
         listView = ((ListView) view.findViewById(R.id.list));
         swipeRefreshLayout = ((SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh_layout));
-        swipeRefreshLayout.setColorSchemeColors(R.color.colorPrimaryDark);
+        swipeRefreshLayout.setColorSchemeColors(ContextCompat
+                .getColor(getContext(), R.color.colorAccent));
         refreshButton = view.findViewById(R.id.refresh_button);
         ViewUtils.setTypeface(((TextView) refreshButton), TypeFaceUtil.ROBOTO_REGULAR_TTF);
 
