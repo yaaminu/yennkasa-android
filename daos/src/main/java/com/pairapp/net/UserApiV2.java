@@ -73,6 +73,8 @@ public interface UserApiV2 {
 
     Pair<String, Long> getSinchToken();
 
+    void search(String query, Callback<List<User>> callback);
+
     interface Callback<T> {
         void done(Exception e, T t);
     }

@@ -5,6 +5,8 @@
     style="@style/Material.Widget.SnackBar.Mobile.MultiLine"
     android:layout_width="match_parent"
     android:layout_height="@dimen/action_bar_height"
+    android:layout_alignParentBottom="true"
+    android:layout_gravity="bottom"
     android:minHeight="@dimen/action_bar_height"
     android:visibility="gone"
     app:sb_actionText="@string/close"

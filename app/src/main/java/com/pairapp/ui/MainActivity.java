@@ -8,8 +8,11 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
+import android.widget.EditText;
 
 import com.pairapp.PairApp;
 import com.pairapp.R;
@@ -21,6 +24,8 @@ import com.rey.material.widget.SnackBar;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.OnFocusChange;
+import butterknife.OnTextChanged;
 
 
 /**
@@ -33,7 +38,6 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     public static final String ARG_TITLE = "title";
     public static final int CONVERSATION_TAB = 1;
     public static final int PEOPLE_TAB = 2;
-
     private static int savedPosition = 1;
 
     @Bind(R.id.main_toolbar)
@@ -96,6 +100,24 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         popupMenu.show();
     }
 
+    @OnFocusChange(R.id.et_filter)
+    void onFocusChanged(boolean hasFocus) {
+        if (hasFocus) {
+            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        }
+    }
+
+    @OnTextChanged(R.id.et_filter)
+    void onTextChanged(Editable editable) {
+        String text = editable.toString().trim();
+        if (text.length() > 0) {
+            Intent intent = new Intent(this, SearchActivity.class);
+            intent.putExtra(SearchActivity.EXTRA_TEXT, text);
+            ((EditText) ButterKnife.findById(this, R.id.et_filter)).setText("");
+            startActivity(intent);
+        }
+    }
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -145,6 +167,18 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         return intent != null && intent.getAction() != null && !intent.getAction().equals(Intent.ACTION_MAIN);
     }
 
+    @Bind(R.id.et_filter)
+    EditText filterEt;
+
+    @Override
+    public void onBackPressed() {
+        if (filterEt.hasFocus()) {
+            filterEt.clearFocus();
+        } else {
+            super.onBackPressed();
+        }
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -153,6 +187,12 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                 setPagePosition(savedPosition);
             }
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        filterEt.clearFocus();
     }
 
     void setPagePosition(int newPosition) {

@@ -324,7 +324,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
     @Override
     public View emptyView() {
         TextView emptyView = new TextView(this);
-        emptyView.setText(R.string.add_custom_number);
+        emptyView.setText(R.string.not_content);
         emptyView.setTextSize(R.dimen.standard_text_size);
         return emptyView;
     }
@@ -336,7 +336,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
 
     @Override
     public boolean supportAddCustom() {
-        return true;
+        return false;
     }
 
     @Override

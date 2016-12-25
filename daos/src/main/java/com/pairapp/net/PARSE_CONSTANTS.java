@@ -17,6 +17,6 @@ public class PARSE_CONSTANTS {
             FIELD_TOKEN = "token",
             FIELD_DP = "DP",
             FIELD_VERIFIED = "verified",
-            FIELD_AUTH_TOKEN = "authToken";
+            FIELD_AUTH_TOKEN = "authToken", FIELD_VERSION = "version";
 
 }

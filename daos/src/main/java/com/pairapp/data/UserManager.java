@@ -21,6 +21,8 @@ import com.pairapp.net.UserApiV2;
 import com.pairapp.security.RSA;
 import com.pairapp.util.Config;
 import com.pairapp.util.ConnectionUtils;
+import com.pairapp.util.Event;
+import com.pairapp.util.EventBus;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
@@ -81,6 +83,7 @@ public final class UserManager {
     private static final String PART_1 = FileUtils.hash("vncewe4209ipk;lj82lkja90");
     public static final String MUTED_USERS = "MUTED)USERS";
     public static final String VERIFICAITON_CODE_RECIEVED = ParseClient.VERIFICATION_CODE_RECEIVED;
+    public static final String EVENT_SEARCH_RESULTS = "searchResults";
     private final File sessionFile;
     private final Object mainUserLock = new Object();
     private final Exception NO_CONNECTION_ERROR;
@@ -189,7 +192,7 @@ public final class UserManager {
 
     private UserManager() {
         NO_CONNECTION_ERROR = new Exception(Config.getApplicationContext().getString(R.string.not_connected));
-        userApi = ParseClient.getInstance(preprocessor);
+        userApi = ParseClient.getInstance(preprocessor, BuildConfig.VERSION_CODE);
         userPrefsLocation = Config.getApplicationContext().getDir(USER_PREFS_FILE_NAME, Context.MODE_PRIVATE);
         sessionFile = Config.getApplicationContext().getDir(sessionPrefFileName, Context.MODE_PRIVATE);
     }
@@ -1196,6 +1199,16 @@ public final class UserManager {
             rateLimiter.put(tag, SystemClock.uptimeMillis());
         }
         return true;
+    }
+
+
+    public void search(String query) {
+        userApi.search(query, new UserApiV2.Callback<List<User>>() {
+            @Override
+            public void done(Exception e, List<User> users) {
+                EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, e == null ? null : e, users));
+            }
+        });
     }
 
     public void leaveGroup(Realm realm, final String id, final CallBack callBack) {

@@ -11,6 +11,7 @@ import android.text.Editable;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.EditText;
 
 import com.pairapp.R;
@@ -61,6 +62,8 @@ public class CountryLists extends AppCompatActivity {
         searchSubject = BehaviorSubject.create();
         setContentView(R.layout.activity_countries);
         ButterKnife.bind(this);
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+        filterEt.requestFocus();
         setSupportActionBar(toolbar);
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);

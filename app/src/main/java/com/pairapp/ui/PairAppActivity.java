@@ -372,13 +372,21 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     }
 
     protected void registerForEvent(Object tag, Object... tags) {
-        get(PAIRAPP_CLIENT_LISTENABLE_BUS).register(this, tag, tags);
+        registerForEvent(get(PAIRAPP_CLIENT_LISTENABLE_BUS), tag, tags);
+    }
+
+    protected void registerForEvent(EventBus bus, Object tag, Object... tags) {
+        bus.register(this, tag, tags);
     }
 
     protected void unRegister(Object tag, Object... otherTags) {
-        get(PAIRAPP_CLIENT_LISTENABLE_BUS).unregister(tag, this);
+        unRegister(get(PAIRAPP_CLIENT_LISTENABLE_BUS), tag, otherTags);
+    }
+
+    protected void unRegister(EventBus bus, Object tag, Object... otherTags) {
+        bus.unregister(tag, this);
         for (Object otherTag : otherTags) {
-            get(PAIRAPP_CLIENT_LISTENABLE_BUS).unregister(otherTag, this);
+            bus.unregister(otherTag, this);
         }
     }
 

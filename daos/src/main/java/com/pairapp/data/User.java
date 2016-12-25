@@ -37,7 +37,8 @@ public class User extends RealmObject {
             FIELD_LAST_ACTIVITY = "lastActivity",
             FIELD_COUNTRY = "country",
             FIELD_IN_CONTACTS = "inContacts",
-            FIELD_DP = "DP";
+            FIELD_DP = "DP", FIELD_VERSION = "version";
+
     private static final String TAG = User.class.getSimpleName();
     @PrimaryKey
     private String userId;
@@ -50,6 +51,7 @@ public class User extends RealmObject {
     private User admin; // this represents admins for a group
     private int type;
     private boolean inContacts;
+    private int version;
 
     //required no-arg c'tor
     public User() {
@@ -92,6 +94,14 @@ public class User extends RealmObject {
 
     public String getDP() {
         return DP;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
+
+    public int getVersion() {
+        return version;
     }
 
     public void setDP(String DP) {

@@ -58,7 +58,9 @@ import static com.pairapp.net.PARSE_CONSTANTS.FIELD_MEMBERS;
 import static com.pairapp.net.PARSE_CONSTANTS.FIELD_NAME;
 import static com.pairapp.net.PARSE_CONSTANTS.FIELD_TOKEN;
 import static com.pairapp.net.PARSE_CONSTANTS.FIELD_VERIFIED;
+import static com.pairapp.net.PARSE_CONSTANTS.FIELD_VERSION;
 import static com.pairapp.net.PARSE_CONSTANTS.GROUP_CLASS_NAME;
+import static com.parse.ParseCloud.callFunction;
 
 
 /**
@@ -86,12 +88,13 @@ public class ParseClient implements UserApiV2 {
 
         }
     };
+    private int appVersion;
 
 
-    public static ParseClient getInstance(Preprocessor processor) {
+    public static ParseClient getInstance(Preprocessor processor, int appVersion) {
         synchronized (ParseClient.class) {
             if (INSTANCE == null) {
-                INSTANCE = new ParseClient(processor);
+                INSTANCE = new ParseClient(processor, appVersion);
             }
         }
         return INSTANCE;
@@ -121,18 +124,24 @@ public class ParseClient implements UserApiV2 {
 
 
     private synchronized void doRegisterUser(User user, final Callback<User> callback) {
+
+        GenericUtils.ensureNotEmpty(user.getUserId(), user.getName(), user.getCountry());
+        GenericUtils.ensureConditionTrue(!user.getName().startsWith("@"), "Name must start wit @");
         String _id = user.getUserId(),
-                name = user.getName(),
+                name = "@" + user.getName(),
                 country = user.getCountry();
+        user.setName(name);
+        user.setVersion(appVersion);
         try {
             cleanExistingInstallation(_id);
             ParseUser parseUser = new ParseUser(); //(USER_CLASS_NAME).whereEqualTo(FIELD_ID, _id).getFirst();
             parseUser.setPassword(makePass(user));
-            parseUser.setUsername(!name.startsWith("@") ? "@" : "" + name);
+            parseUser.setUsername(name);
             parseUser.put(FIELD_ID, _id);
-            parseUser.put(FIELD_NAME, !name.startsWith("@") ? "@" : "" + name);
+            parseUser.put(FIELD_NAME, name);
             parseUser.put(FIELD_COUNTRY, country);
             parseUser.put(FIELD_ACCOUNT_CREATED, new Date());
+            parseUser.put(FIELD_VERSION, this.appVersion);
             parseUser.put(FIELD_LAST_ACTIVITY, new Date());
             parseUser.put(FIELD_VERIFIED, false);
             parseUser.put(FIELD_DP, "avatar_empty");
@@ -144,11 +153,9 @@ public class ParseClient implements UserApiV2 {
         } catch (ParseException e) {
             PLog.d(TAG, e.getMessage(), e);
             int code = e.getCode();
-            if (code == ParseException.OBJECT_NOT_FOUND) {
+            if (code == ParseException.OBJECT_NOT_FOUND || code == ParseException.USERNAME_TAKEN) {
                 PLog.d(TAG, "user already signed, logging in user instead");
                 doLogIn(user, callback);
-            } else if (code == ParseException.USERNAME_TAKEN) {
-                notifyCallback(callback, new Exception(GenericUtils.getString(R.string.user_name_taken, user.getName())), null);
             } else if (code == ParseException.CONNECTION_FAILED) {
                 notifyCallback(callback, new Exception(Config.getApplicationContext().getString(R.string.st_unable_to_connect)), null);
             } else {
@@ -202,7 +209,7 @@ public class ParseClient implements UserApiV2 {
             if (parseUser != null) {
                 ParseUser.logOut();
             }
-            parseUser = ParseUser.logIn(user.getUserId(), makePass(user));
+            parseUser = ParseUser.logIn(user.getName(), makePass(user));
             parseUser.put(FIELD_VERIFIED, false);
             parseUser.put(FIELD_TOKEN, "" + genVerificationToken());
             user = parseObjectToUser(parseUser);
@@ -211,7 +218,9 @@ public class ParseClient implements UserApiV2 {
         } catch (ParseException e) {
             String message;
             final int errorCode = e.getCode();
-            if (errorCode == ParseException.CONNECTION_FAILED) {
+            if (errorCode == ParseException.OBJECT_NOT_FOUND) {
+                message = GenericUtils.getString(R.string.user_name_taken, user.getName());
+            } else if (errorCode == ParseException.CONNECTION_FAILED) {
                 message = Config.getApplicationContext().getString(R.string.st_unable_to_connect);
             } else {
                 message = Config.getApplicationContext().getString(R.string.an_error_occurred);
@@ -227,7 +236,7 @@ public class ParseClient implements UserApiV2 {
 
     @SuppressLint("HardwareIds")
     private void registerForPushes(String userId, String pushID, String publicKey) throws ParseException {
-        ParseCloud.callFunction("setPublicKeyForUser", Collections.singletonMap("publicKey", publicKey));
+        callFunction("setPublicKeyForUser", Collections.singletonMap("publicKey", publicKey));
         ParseInstallation installation = ParseInstallation.getCurrentInstallation();
         installation.put(FIELD_ID, userId);
         //required by the server for verification in installation related queries
@@ -245,7 +254,7 @@ public class ParseClient implements UserApiV2 {
         if (changingPushId) {
             params.put("newPushId", "true");
         }
-        String token = ParseCloud.callFunction("genToken", params);
+        String token = callFunction("genToken", params);
         PLog.d(TAG, "request new token");
         PLog.d(TAG, token);
         GenericUtils.ensureNotEmpty(token);
@@ -400,7 +409,7 @@ public class ParseClient implements UserApiV2 {
             params.put(FIELD_DP, "avatar_empty");
             params.put(FIELD_NAME, name);
             params.put(FIELD_MEMBERS, TextUtils.join(",", members));
-            ParseObject results = ParseCloud.callFunction("createGroup", params);
+            ParseObject results = callFunction("createGroup", params);
             User freshGroup = parseObjectToGroup(results);
             preProcessor.process(freshGroup);
             notifyCallback(response, null, freshGroup);
@@ -464,8 +473,8 @@ public class ParseClient implements UserApiV2 {
     //as we don't know how the user has stored the numbers in the people(contact) app
     //for eg +233 20 444 1069 could be stored in multiple unpredictable ways.
     //the contact manager can retrieve all the contacts standardised them to how
-    private ParseClient(Preprocessor preProcessor) {
-        init(Config.getApplication());
+    private ParseClient(Preprocessor preProcessor, int appVersion) {
+        init(Config.getApplication(), appVersion);
         displayPictureFileClient = DisplayPictureFileClient.createInstance(ParseFileClient.getInstance());
         this.preProcessor = preProcessor == null ? dummyProcessor : preProcessor;
     }
@@ -528,7 +537,7 @@ public class ParseClient implements UserApiV2 {
             Map<String, String> params = new HashMap<>(2);
             params.put("members", TextUtils.join(",", members));
             params.put("userId", id);
-            ParseCloud.callFunction("addMembers", params);
+            callFunction("addMembers", params);
             notifyCallback(response, null, new HttpResponse(200, "successfully added " + members.size() + " new members"));
         } catch (ParseException e) {
             notifyCallback(response, prepareErrorReport(e), null);
@@ -553,7 +562,7 @@ public class ParseClient implements UserApiV2 {
             Map<String, String> params = new HashMap<>(2);
             params.put("members", TextUtils.join(",", members));
             params.put("userId", id);
-            ParseCloud.callFunction("removeMembers", params);
+            callFunction("removeMembers", params);
             notifyCallback(response, null, new HttpResponse(200, "successfully removed " + members.size() + "  members"));
         } catch (ParseException e) {
             notifyCallback(response, prepareErrorReport(e), null);
@@ -689,6 +698,7 @@ public class ParseClient implements UserApiV2 {
         user.setCountry(object.getString(FIELD_COUNTRY));
         user.setType(User.TYPE_NORMAL_USER);
         user.setInContacts(false);
+        user.setVersion(object.getInt(FIELD_VERSION));
         return user;
     }
 
@@ -814,10 +824,11 @@ public class ParseClient implements UserApiV2 {
         object.saveEventually();
     }
 
-    private void init(Application application) {
+    private void init(Application application, int appVersion) {
         if (application == null) {
             throw new IllegalArgumentException("application is null!");
         }
+        this.appVersion = appVersion;
         ParseACL defaultAcl = new ParseACL();
         defaultAcl.setPublicReadAccess(true);
         defaultAcl.setPublicWriteAccess(true);
@@ -899,7 +910,7 @@ public class ParseClient implements UserApiV2 {
         if (userVerified) {
             try {
                 Map<String, ?> params = new HashMap<>(0);
-                Map<String, Object> results = ParseCloud.callFunction("genSinchToken", params);
+                Map<String, Object> results = callFunction("genSinchToken", params);
                 return Pair.create((String) results.get("token"), (long) ((Integer) results.get("sequence")));
             } catch (ParseException e) {
                 return null;
@@ -909,10 +920,38 @@ public class ParseClient implements UserApiV2 {
     }
 
     @Override
+    public void search(final String query, final Callback<List<User>> callback) {
+        TaskManager.execute(new Runnable() {
+            @Override
+            public void run() {
+                doSearch(query, callback);
+            }
+        }, true);
+    }
+
+    private void doSearch(String query, Callback<List<User>> callback) {
+        try {
+            List<ParseObject> results =
+                    ParseCloud.callFunction("searchUsers", Collections.singletonMap("query", query));
+
+            if (results.isEmpty()) {
+                callback.done(new Exception("Your search return no results"), null);
+            }
+            List<User> users = new ArrayList<>(results.size());
+            for (ParseObject result : results) {
+                users.add(parseObjectToUser(result));
+            }
+            callback.done(null, users);
+        } catch (ParseException e) {
+            callback.done(prepareErrorReport(e), null);
+        }
+    }
+
+    @Override
     public void getPublicKeyForUser(String userId, Callback<String> callback) {
         GenericUtils.ensureNotEmpty(userId);
         try {
-            String publicKey = ParseCloud.callFunction("getPublicKeyForUser", Collections.singletonMap(PARSE_CONSTANTS.FIELD_ID, userId));
+            String publicKey = callFunction("getPublicKeyForUser", Collections.singletonMap(PARSE_CONSTANTS.FIELD_ID, userId));
             callback.done(null, publicKey);
         } catch (ParseException e) {
             PLog.e(TAG, e.getMessage(), e);
@@ -925,7 +964,7 @@ public class ParseClient implements UserApiV2 {
     public String getPublicKeyForUserSync(String userId) {
         GenericUtils.ensureNotEmpty(userId);
         try {
-            String publicKeyForUser = ParseCloud.callFunction("getPublicKeyForUser", Collections.singletonMap(PARSE_CONSTANTS.FIELD_ID, userId));
+            String publicKeyForUser = callFunction("getPublicKeyForUser", Collections.singletonMap(PARSE_CONSTANTS.FIELD_ID, userId));
             PLog.d(TAG, "public key for %s is: %s", userId, publicKeyForUser);
             return publicKeyForUser;
         } catch (ParseException e) {
