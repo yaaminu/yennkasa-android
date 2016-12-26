@@ -354,10 +354,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        User mainUser = getCurrentUser();
-        final User admin = peer.getAdmin();
-        menu.findItem(R.id.action_invite_friends)
-                .setVisible(peer.getType() == User.TYPE_GROUP && admin != null && admin.getUserId().equals(mainUser.getUserId()));
         menu.findItem(R.id.action_call_user).setVisible(peer.getAdmin() == null);
         menu.findItem(R.id.action_video_call_user).setVisible(peer.getAdmin() == null);
         return super.onPrepareOptionsMenu(menu);
@@ -373,12 +369,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == R.id.action_invite_friends) {
-            Intent intent = new Intent(this, InviteActivity.class);
-            intent.putExtra(InviteActivity.EXTRA_GROUP_ID, peer.getUserId());
-            startActivityForResult(intent, ADD_USERS_REQUEST);
-            return true;
-        } else if (id == R.id.action_call_user) {
+        if (id == R.id.action_call_user) {
             callUser(MessengerBus.VOICE_CALL_USER, peer.getUserId());
         } else if (id == R.id.action_video_call_user) {
             callUser(MessengerBus.VIDEO_CALL_USER, peer.getUserId());
