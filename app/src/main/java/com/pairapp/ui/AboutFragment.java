@@ -36,7 +36,7 @@ public class AboutFragment extends Fragment {
         ViewUtils.setTypeface(legalNotice, TypeFaceUtil.ROBOTO_REGULAR_TTF);
         TextView appname = (TextView) view.findViewById(R.id.tv_app_name),
                 appVersion = ((TextView) view.findViewById(R.id.tv_app_version));
-        appVersion.setText(BuildConfig.VERSION_NAME + BuildConfig.VERSION_CODE);
+        appVersion.setText(BuildConfig.VERSION_NAME);
         ViewUtils.setTypeface(appname, TypeFaceUtil.two_d_font);
         ViewUtils.setTypeface(appVersion, TypeFaceUtil.ROBOTO_REGULAR_TTF);
 

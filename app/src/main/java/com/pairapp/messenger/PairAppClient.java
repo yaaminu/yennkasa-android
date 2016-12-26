@@ -162,7 +162,7 @@ public class PairAppClient extends Service {
 
         try {
             StickersManager.setUser(FileUtils.hash(UserManager.getMainUserId(realm)),
-                    Collections.singletonMap("versionCode", String.valueOf(BuildConfig.VERSION_CODE)));
+                    Collections.singletonMap("version", String.valueOf(BuildConfig.VERSION_NAME)));
         } finally {
             realm.close();
         }

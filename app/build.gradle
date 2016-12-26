@@ -8,7 +8,7 @@ repositories {
 
 android {
 
-    compileSdkVersion 25
+    compileSdkVersion project.properties.projectCompileSdkVersion
     buildToolsVersion project.properties.projectBuildToolsVersion
 
     testOptions {
@@ -16,8 +16,8 @@ android {
     }
     defaultConfig {
         applicationId "com.pairapp"
-        minSdkVersion 9
-        targetSdkVersion 25
+        minSdkVersion project.properties.projectMinSdkVersion
+        targetSdkVersion project.properties.projectTargetSdkVersion
         multiDexEnabled true
         versionCode project.properties.projectVersionCode
         versionName project.properties.projectVersionName
@@ -49,7 +49,7 @@ android {
     }
     splits {
         abi {
-            enable false
+            enable project.properties.projectSplitEnabled
             reset()
             include 'x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a' //select ABIs to build APKs for
             universalApk true

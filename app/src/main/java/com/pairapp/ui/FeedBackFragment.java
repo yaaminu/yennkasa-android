@@ -19,11 +19,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.pairapp.BuildConfig;
+import com.pairapp.R;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
 import com.pairapp.messenger.PairAppClient;
-import com.pairapp.BuildConfig;
-import com.pairapp.R;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.GcmUtils;
 import com.pairapp.util.MediaUtils;
@@ -83,7 +83,7 @@ public class FeedBackFragment extends Fragment {
                     reportObject.put("manufacturer", Build.MANUFACTURER);
                     reportObject.put("reportedBy", UserManager.getMainUserId(userRealm));
                     reportObject.put("time", new Date());
-                    reportObject.put("pairapVersion", BuildConfig.VERSION_NAME + " release" + BuildConfig.VERSION_CODE);
+                    reportObject.put("pairapVersion", BuildConfig.VERSION_NAME);
                     reportObject.put("pairapVersionCode", BuildConfig.VERSION_CODE);
                     reportObject.put("apiVersion", Build.VERSION.SDK_INT);
                     reportObject.put("hasGooglePlayServices", GcmUtils.hasGcm());

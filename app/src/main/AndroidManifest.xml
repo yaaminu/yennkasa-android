@@ -264,6 +264,15 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.pairapp.ui.MainActivity" />
         </activity>
+
+        <receiver
+            android:name=".util.ConnectivityReceiver"
+            android:enabled="false"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

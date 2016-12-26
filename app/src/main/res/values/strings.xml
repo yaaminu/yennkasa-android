@@ -384,4 +384,5 @@
     <string name="find_people">Find friends, meet new ones</string>
     <string name="not_content">No Content</string>
     <string name="city_name_too_short">City name is too short</string>
+    <string name="city_name_invalid">Invalid city name</string>
 </resources>

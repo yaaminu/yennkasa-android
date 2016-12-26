@@ -147,14 +147,21 @@ public class LoginFragment extends Fragment {
     private FormValidator.ValidationStrategy cityStrategy = new FormValidator.ValidationStrategy() {
         @Override
         public boolean validate() {
-            String cityName = userCity.getText().toString().trim();
-
-            if (cityName.length() >= 2) {
-                if (cityName.matches("[\\w| \\-]{2,}"))
-                    return true;
+            city = userCity.getText().toString().trim();
+            if (city.length() == 1) {
+                UiHelpers.showErrorDialog(getActivity(), getString(R.string.city_name_too_short));
+                return false;
             }
-            UiHelpers.showErrorDialog(getActivity(), getString(R.string.city_name_too_short));
-            return false;
+            if (city.length() >= 2) {
+                if (city.matches("[\\w| \\-']{2,}")) {
+                    return true;
+                } else {
+                    UiHelpers.showErrorDialog(getActivity(), getString(R.string.city_name_invalid));
+                    return false;
+                }
+            }
+            //city name is optional
+            return true;
         }
     };
     private String city;
@@ -281,7 +288,7 @@ public class LoginFragment extends Fragment {
         if (phoneNumberEt.getText().toString().trim().isEmpty()) {
             phoneNumberEt.setText(PhoneNumberNormaliser.getUserPhoneNumber(getContext()));
         }
-        version.setText(BuildConfig.VERSION_NAME + BuildConfig.VERSION_CODE);
+        version.setText(BuildConfig.VERSION_NAME);
         return view;
     }
 

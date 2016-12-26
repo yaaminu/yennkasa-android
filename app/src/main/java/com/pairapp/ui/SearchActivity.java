@@ -85,25 +85,24 @@ public class SearchActivity extends PairAppActivity {
                         return charSequence.toString().trim();
                     }
                 })
-                .filter(new Func1<String, Boolean>() {
-                    @Override
-                    public Boolean call(String s) {
-                        return s.length() >= 2;
-                    }
-                })
                 .debounce(1, TimeUnit.SECONDS)
                 .subscribeOn(AndroidSchedulers.mainThread())
                 .observeOn(Schedulers.io())
                 .subscribe(new Action1<String>() {
                     @Override
                     public void call(String query) {
+                        if (query.length() < 2) {
+                            searchResults = null;
+                        }
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
                                 refreshDisplay(true);
                             }
                         });
-                        userManager.search(query);
+                        if (query.length() >= 2) {
+                            userManager.search(query);
+                        }
                     }
                 });
 
@@ -209,7 +208,7 @@ public class SearchActivity extends PairAppActivity {
         protected void doBindHolder(Holder holder, int position) {
             User item = getItem(position);
             ((VH) holder).userName.setText(item.getName());
-            ((VH) holder).location.setText("  " + item.getCity());
+            ((VH) holder).location.setText("  " + item.getCityName());
             Context context = ((VH) holder).itemView.getContext();
             ImageLoader.load(context, item.getDP())
                     .error(R.drawable.user_avartar)
