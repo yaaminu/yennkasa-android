@@ -78,18 +78,6 @@
             android:textColor="@color/white"
             android:textSize="@dimen/standard_text_size"
             android:visibility="visible" />
-
-
-        <com.rey.material.widget.Button
-            android:id="@+id/bt_exit_group"
-            style="@style/profile_fragment_round_button_style"
-            android:drawableEnd="@drawable/ic_delete_white_24dp"
-            android:drawableRight="@drawable/ic_delete_white_24dp"
-            android:padding="@dimen/padding_button"
-            android:text="@string/leave"
-            android:textColor="@color/white"
-            android:textSize="@dimen/standard_text_size"
-            android:visibility="visible" />
     </LinearLayout>
 
     <include layout="@layout/divider_span_full" />
@@ -126,7 +114,7 @@
                     android:layout_weight="1"
                     android:clickable="true"
                     android:ellipsize="end"
-                    android:singleLine="true"
+                    android:lines="1"
                     android:text="@string/username_placeholder"
                     android:textColor="#000"
                     android:textSize="@dimen/edit_text_size" />
@@ -136,17 +124,6 @@
 
             <include
                 android:id="@+id/tv_user_phone_group_admin"
-                layout="@layout/title_subtitle"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginTop="@dimen/profile_list_item_padding_top"
-                android:layout_weight="1"
-                android:minHeight="?android:attr/listPreferredItemHeight" />
-
-            <include layout="@layout/divider_span_full" />
-
-            <include
-                android:id="@+id/tv_shared_groups_or_group_members"
                 layout="@layout/title_subtitle"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"

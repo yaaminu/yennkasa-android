@@ -68,7 +68,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
 
     private boolean dpLoaded = false;
     private ImageView displayPicture;
-    private TextView userName, userPhoneOrAdminName, mutualGroupsOrMembersTv;
+    private TextView userName, userPhoneOrAdminName;
     private User user;
     private Realm realm;
     private View progressView, changeDpButton, changeDpButton2;
@@ -89,7 +89,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
             }
         }
     };
-    private TextView phoneOrAdminTitle, mutualGroupsOrMembersTvTitle;
+    private TextView phoneOrAdminTitle;
     private UserManager userManager;
     //    private int DP_HEIGHT;
 //    private int DP_WIDTH;
@@ -101,18 +101,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
                 case R.id.bt_message:
                     UiHelpers.enterChatRoom(v.getContext(), user.getUserId());
                     getActivity().finish();
-                    break;
-                case R.id.bt_exit_group:
-                    hideProgressView();
-                    UiHelpers.showErrorDialog(getActivity(), R.string.leave_group_prompt, R.string.yes, android.R.string.no, new UiHelpers.Listener() {
-                        @Override
-                        public void onClick() {
-                            leaveGroup();
-                        }
-                    }, null);
-                    break;
-                case R.id.bt_dissolve_group:
-                    UiHelpers.showToast(R.string.unimplemented);
                     break;
                 case R.id.bt_call:
                     attemptCall();
@@ -235,14 +223,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
         userPhoneOrAdminName = ((TextView) parent.findViewById(R.id.tv_subtitle));
         ViewUtils.setTypeface(phoneOrAdminTitle, TypeFaceUtil.ROBOTO_BOLD_TTF);
         ViewUtils.setTypeface(userPhoneOrAdminName, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-        //re-use parent
-        parent = view.findViewById(R.id.tv_shared_groups_or_group_members);
-        mutualGroupsOrMembersTv = ((TextView) parent.findViewById(R.id.tv_subtitle));
-        mutualGroupsOrMembersTvTitle = (TextView) parent.findViewById(R.id.tv_title);
-
-        ViewUtils.setTypeface(mutualGroupsOrMembersTv, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-        ViewUtils.setTypeface(mutualGroupsOrMembersTvTitle, TypeFaceUtil.ROBOTO_BOLD_TTF);
-
 
         //end view hookup
         realm = User.Realm(getActivity());
@@ -253,7 +233,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
         //common to all
         userName.setText(user.getName());
         displayPicture.setOnClickListener(clickListener);
-        if (user.getType() == User.TYPE_GROUP) {
+        if (user.getType() == User.TYPE_NORMAL_USER) {
             setUpViewSingleUserWay();
         }
         //noinspection deprecation
@@ -326,24 +306,11 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
         if (userManager.isCurrentUser(realm, user.getUserId())) {
             callButton.setVisibility(View.GONE);
             sendMessageButton.setVisibility(View.GONE);
-            ((View) mutualGroupsOrMembersTvTitle.getParent()).setVisibility(View.GONE);
             changeDpButton.setOnClickListener(clickListener);
             changeDpButton2.setOnClickListener(clickListener);
         } else {
             changeDpButton.setVisibility(View.GONE);
             changeDpButton2.setVisibility(View.GONE);
-            mutualGroupsOrMembersTvTitle.setText(R.string.shared_groups);
-            mutualGroupsOrMembersTv.setText(R.string.groups_you_share_in_common);
-            ((View) mutualGroupsOrMembersTv.getParent()).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Bundle bundle = new Bundle(1);
-                    bundle.putString(UsersActivity.EXTRA_USER_ID, user.getUserId());
-                    Intent intent = new Intent(getActivity(), UsersActivity.class);
-                    intent.putExtras(bundle);
-                    startActivity(intent);
-                }
-            });
             callButton.setOnClickListener(clickListener);
         }
         //noinspection ConstantConditions
