@@ -278,14 +278,14 @@ public class ContactFragment extends Fragment implements RealmChangeListener<Rea
     @Override
     public void onPause() {
         userRealm.removeChangeListener(this);
-        if (subscription != null && !subscription.isUnsubscribed()) {
-            subscription.unsubscribe();
-        }
         super.onPause();
     }
 
     @Override
     public void onDestroy() {
+        if (subscription != null && !subscription.isUnsubscribed()) {
+            subscription.unsubscribe();
+        }
         userRealm.close();
         isDestroyed = true;
         super.onDestroy();
