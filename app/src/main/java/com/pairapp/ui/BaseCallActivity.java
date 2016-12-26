@@ -114,13 +114,16 @@ public abstract class BaseCallActivity extends PairAppActivity {
                 break;
             case CallData.PROGRESSING:
             case CallData.TRANSFERRING:
-                tvCallState.setText(R.string.connecting);
+                tvCallState.setText(R.string.call_progressing);
                 if (callData.isOutGoing()) {
                     ViewUtils.hideViews(declineCall, answerCall);
                     ViewUtils.showViews(endCall, mute, enableSpeaker);
                 } else {
                     ViewUtils.showViews(declineCall, answerCall);
                     ViewUtils.hideViews(endCall, mute, enableSpeaker);
+                    if (answeringCall) {
+                        tvCallState.setText(R.string.connecting);
+                    }
                 }
                 break;
             case CallData.ESTABLISHED:
@@ -216,10 +219,12 @@ public abstract class BaseCallActivity extends PairAppActivity {
                 .cancel(getPeer().getUserId(), MessengerBus.CALL_NOTIFICATION_ID);
     }
 
+    boolean delibratelyEndingCall = false;
+
     @Override
     protected void onStop() {
         super.onStop();
-        if (getCallData().getCallState() != CallData.ENDED) {
+        if (getCallData().getCallState() != CallData.ENDED && !delibratelyEndingCall) {
             Intent intent = new Intent(this, PairAppClient.class);
             intent.setAction(MessengerBus.HANG_UP_CALL);
             intent.putExtra(EXTRA_CALL_DATA, callData);
@@ -293,19 +298,27 @@ public abstract class BaseCallActivity extends PairAppActivity {
         }
     }
 
+    boolean answeringCall;
+
     @OnClick(R.id.bt_answer_call)
     public void answerCall(View v) {
         postEvent(Event.create(ANSWER_CALL, null, callData));
+        answeringCall = true;
+        refreshDisplay();
     }
 
     @OnClick(R.id.bt_end_call)
     public void endCall(View v) {
+        delibratelyEndingCall = true;
         postEvent(Event.create(MessengerBus.HANG_UP_CALL, null, callData));
+        finish();
     }
 
     @OnClick(R.id.bt_decline_call)
     public void declineCall(View v) {
+        delibratelyEndingCall = true;
         postEvent(Event.create(MessengerBus.HANG_UP_CALL, null, callData));
+        finish();
     }
 
     @OnClick(R.id.bt_mute)
@@ -341,5 +354,10 @@ public abstract class BaseCallActivity extends PairAppActivity {
     @Override
     public void setContentView(View view, ViewGroup.LayoutParams params) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void onBackPressed() {
+        //do nothing!!
     }
 }

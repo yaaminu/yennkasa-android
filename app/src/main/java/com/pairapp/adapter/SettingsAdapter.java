@@ -150,6 +150,8 @@ public class SettingsAdapter extends BaseAdapter {
                     if (i == DialogInterface.BUTTON_POSITIVE) {
                         settings.setBoolValue(false);
                         actuallyUpdateSearchSettings(context, false);
+                    } else {
+                        notifyDataSetChanged();
                     }
                 }
             };
