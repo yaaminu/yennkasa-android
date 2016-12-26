@@ -23,6 +23,12 @@
         <item name="android:paddingLeft">@dimen/padding_ll_login_fragment_left</item>
     </style>
 
+    <style name="city_edittext_style" parent="base_style">
+        <item name="android:hint">@string/city_hint</item>
+        <item name="android:inputType">text</item>
+        <item name="android:paddingLeft">@dimen/padding_ll_login_fragment_left</item>
+    </style>
+
     <style name="phone_number_editText_style" parent="base_style">
         <item name="android:hint">@string/phone_hint</item>
         <item name="android:inputType">phone</item>
@@ -58,4 +64,5 @@
         <item name="android:padding">8dp</item>
     </style>
 
+    <string name="city_hint">Your town/city</string>
 </resources>

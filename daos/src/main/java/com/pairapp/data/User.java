@@ -52,29 +52,19 @@ public class User extends RealmObject {
     private int type;
     private boolean inContacts;
     private int version;
+    private String city;
 
     //required no-arg c'tor
     public User() {
     }
 
-//    //copy constructor
-//    @Deprecated
-//    public User(User other) {
-//        //realm forces us to use setters and getters everywhere for predictable results
-//        //null check because is good not to throw in constructors(not so sure if its true)
-//        if (other != null) {
-//            this.setUserId(other.getUserId());
-//            this.setAccountCreated(other.getAccountCreated());
-//            this.setLastActivity(other.getLastActivity());
-//            this.setName(other.getName());
-//            this.setType(other.getType());
-//            this.setAdmin(other.getAdmin());
-//            this.setDP(other.getDP());
-//            this.setCountry(other.getCountry());
-//            this.setMembers(other.getMembers());
-//            this.setInContacts(other.getInContacts());
-//        }
-//    }
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public String getCity() {
+        return city;
+    }
 
     public boolean getInContacts() {
         return inContacts;

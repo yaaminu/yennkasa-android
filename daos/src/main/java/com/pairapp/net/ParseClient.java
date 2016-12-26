@@ -50,6 +50,7 @@ import java.util.concurrent.Semaphore;
 
 import static com.pairapp.net.PARSE_CONSTANTS.FIELD_ACCOUNT_CREATED;
 import static com.pairapp.net.PARSE_CONSTANTS.FIELD_ADMIN;
+import static com.pairapp.net.PARSE_CONSTANTS.FIELD_CITY;
 import static com.pairapp.net.PARSE_CONSTANTS.FIELD_COUNTRY;
 import static com.pairapp.net.PARSE_CONSTANTS.FIELD_DP;
 import static com.pairapp.net.PARSE_CONSTANTS.FIELD_ID;
@@ -60,6 +61,7 @@ import static com.pairapp.net.PARSE_CONSTANTS.FIELD_TOKEN;
 import static com.pairapp.net.PARSE_CONSTANTS.FIELD_VERIFIED;
 import static com.pairapp.net.PARSE_CONSTANTS.FIELD_VERSION;
 import static com.pairapp.net.PARSE_CONSTANTS.GROUP_CLASS_NAME;
+import static com.pairapp.net.PARSE_CONSTANTS.SEARCHABLE;
 import static com.parse.ParseCloud.callFunction;
 
 
@@ -134,7 +136,7 @@ public class ParseClient implements UserApiV2 {
         user.setVersion(appVersion);
         try {
             cleanExistingInstallation(_id);
-            ParseUser parseUser = new ParseUser(); //(USER_CLASS_NAME).whereEqualTo(FIELD_ID, _id).getFirst();
+            ParseUser parseUser = new ParseUser();
             parseUser.setPassword(makePass(user));
             parseUser.setUsername(name);
             parseUser.put(FIELD_ID, _id);
@@ -145,6 +147,8 @@ public class ParseClient implements UserApiV2 {
             parseUser.put(FIELD_LAST_ACTIVITY, new Date());
             parseUser.put(FIELD_VERIFIED, false);
             parseUser.put(FIELD_DP, "avatar_empty");
+            parseUser.put(SEARCHABLE, true);
+            parseUser.put(FIELD_CITY, user.getCity());
             parseUser.put(FIELD_TOKEN, genVerificationToken() + "");
             parseUser.signUp();
             parseUser = ParseUser.getCurrentUser();
@@ -212,6 +216,7 @@ public class ParseClient implements UserApiV2 {
             parseUser = ParseUser.logIn(user.getName(), makePass(user));
             parseUser.put(FIELD_VERIFIED, false);
             parseUser.put(FIELD_TOKEN, "" + genVerificationToken());
+            parseUser.put(FIELD_CITY, user.getCity());
             user = parseObjectToUser(parseUser);
             parseUser.save();
             notifyCallback(callback, null, user);
@@ -699,6 +704,7 @@ public class ParseClient implements UserApiV2 {
         user.setType(User.TYPE_NORMAL_USER);
         user.setInContacts(false);
         user.setVersion(object.getInt(FIELD_VERSION));
+        user.setCity(object.getString(PARSE_CONSTANTS.FIELD_CITY));
         return user;
     }
 
@@ -932,7 +938,7 @@ public class ParseClient implements UserApiV2 {
     private void doSearch(String query, Callback<List<User>> callback) {
         try {
             List<ParseObject> results =
-                    ParseCloud.callFunction("searchUsers", Collections.singletonMap("query", query));
+                    ParseCloud.callFunction("search", Collections.singletonMap("query", query));
 
             if (results.isEmpty()) {
                 callback.done(new Exception("Your search return no results"), null);

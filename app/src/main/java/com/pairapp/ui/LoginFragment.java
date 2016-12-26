@@ -19,6 +19,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.pairapp.BuildConfig;
@@ -61,7 +62,10 @@ public class LoginFragment extends Fragment {
     public static final String USER_NAME = "userName";
     public static final String USER_ID = "userId";
     public static final String COUNTRY = "country";
-    private static final java.lang.String SAVED_COUNTRY = "saved.country";
+    private static final String SAVED_COUNTRY = "saved.country";
+
+    @Bind(R.id.et_user_city)
+    EditText userCity;
 
     @Bind(R.id.bt_loginButton)
     Button loginButton;
@@ -140,6 +144,20 @@ public class LoginFragment extends Fragment {
             return true;
         }
     };
+    private FormValidator.ValidationStrategy cityStrategy = new FormValidator.ValidationStrategy() {
+        @Override
+        public boolean validate() {
+            String cityName = userCity.getText().toString().trim();
+
+            if (cityName.length() >= 2) {
+                if (cityName.matches("[\\w| \\-]{2,}"))
+                    return true;
+            }
+            UiHelpers.showErrorDialog(getActivity(), getString(R.string.city_name_too_short));
+            return false;
+        }
+    };
+    private String city;
 
     @SuppressLint("SetTextI18n")
     private void initialiseUserCountryCCC() {
@@ -229,7 +247,8 @@ public class LoginFragment extends Fragment {
         countriesRealm = Country.REALM(getActivity());
         validator = new FormValidator();
         validator.addStrategy(phoneNumberStrategy)
-                .addStrategy(usernameStrategy);
+                .addStrategy(usernameStrategy)
+                .addStrategy(cityStrategy);
     }
 
     @SuppressLint("SetTextI18n")
@@ -385,8 +404,8 @@ public class LoginFragment extends Fragment {
             }
         }
         userName = usernameEt.getText().toString().trim();
-
-        if (userCountryStrategy.validate() && usernameStrategy.validate() && phoneNumberStrategy.validate()) {
+        city = userCity.getText().toString().trim();
+        if (userCountryStrategy.validate() && usernameStrategy.validate() && phoneNumberStrategy.validate() && cityStrategy.validate()) {
             attemptLoginOrSignUp();
         }
     }
@@ -396,7 +415,7 @@ public class LoginFragment extends Fragment {
     }
 
     private void doAttemptCLogin() {
-        callback.onSignUp(userName, phoneNumber, userCountry);
+        callback.onSignUp(userName, phoneNumber, userCountry, city);
     }
 
     private void showRequiredFieldDialog(String field) {
@@ -414,7 +433,7 @@ public class LoginFragment extends Fragment {
 
     interface Callbacks {
 
-        void onSignUp(String userName, String phoneNumber, String userIsoCountry);
+        void onSignUp(String userName, String phoneNumber, String userIsoCountry, String city);
 
         SharedPreferences getActivityPreferences();
     }

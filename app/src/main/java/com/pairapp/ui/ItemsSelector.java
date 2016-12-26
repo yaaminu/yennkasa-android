@@ -107,7 +107,7 @@ public class ItemsSelector extends Fragment implements View.OnClickListener, Tex
 ////             TODO: 9/19/2015 fix this
 ////            add the view to the parent of the collection container(list/grid)
 //            final ViewGroup parent = (ViewGroup) defaultEmptyView.getParent();
-//            parent.addView(emptyView, 0, defaultEmptyView.getLayoutParams());
+//            parent.addView(searchProgress, 0, defaultEmptyView.getLayoutParams());
 //            parent.removeView(defaultEmptyView);
         }
         defaultEmptyView.setText(((TextView) emptyView).getText());

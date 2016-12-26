@@ -5,6 +5,8 @@ package com.pairapp.net;
  */
 public class PARSE_CONSTANTS {
     public static final String FEEDBACK_CLASS_NAME = "feedback";
+    public static final String FIELD_CITY = "city";
+    public static final String SEARCHABLE = "searchable";
     static final String USER_CLASS_NAME = "user", GROUP_CLASS_NAME = "group";
     public static final String FIELD_ID = "userId",
             FIELD_NAME = "name",

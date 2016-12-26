@@ -260,9 +260,9 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     }
 
     @Override
-    public void onSignUp(String userName, String phoneNumber, String userIsoCountry) {
+    public void onSignUp(String userName, String phoneNumber, String userIsoCountry, String city) {
         progressDialog.show();
-        userManager.signUp(userName, phoneNumber, userIsoCountry, loginOrSignUpCallback);
+        userManager.signUp(userName, phoneNumber, userIsoCountry, city, loginOrSignUpCallback);
     }
 
     @Override

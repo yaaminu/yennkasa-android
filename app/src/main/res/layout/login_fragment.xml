@@ -87,6 +87,12 @@
                     android:paddingTop="@dimen/padding_ll_login_fragment_top" />
             </LinearLayout>
 
+            <EditText
+                android:id="@+id/et_user_city"
+                style="@style/city_edittext_style"
+                android:layout_height="wrap_content"
+                android:paddingTop="@dimen/padding_ll_login_fragment_top" />
+
             <Button
                 android:id="@+id/bt_loginButton"
                 android:layout_width="match_parent"

@@ -383,4 +383,5 @@
     <string name="message_edit_failed">Failed to update your message to %s</string>
     <string name="find_people">Find friends, meet new ones</string>
     <string name="not_content">No Content</string>
+    <string name="city_name_too_short">City must be at least 3 letters long</string>
 </resources>

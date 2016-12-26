@@ -46,6 +46,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -983,15 +984,17 @@ public final class UserManager {
         return publicKey;
     }
 
-    public void signUp(final String name, final String phoneNumber, final String countryIso, final CallBack callback) {
+    public void signUp(final String name, final String phoneNumber, final String countryIso,
+                       String city, final CallBack callback) {
         if (!ConnectionUtils.isConnectedOrConnecting()) {
             doNotify(NO_CONNECTION_ERROR, callback);
             return;
         }
-        completeSignUp(name, phoneNumber, countryIso, callback);
+        completeSignUp(name, phoneNumber, countryIso, city, callback);
     }
 
-    private void completeSignUp(final String name, final String phoneNumber, final String countryIso, final CallBack callback) {
+    private void completeSignUp(final String name, final String phoneNumber,
+                                final String countryIso, String city, final CallBack callback) {
         if (TextUtils.isEmpty(phoneNumber)) {
             doNotify(new Exception("phone number is invalid"), callback);
         } else if (TextUtils.isEmpty(countryIso)) {
@@ -1005,7 +1008,7 @@ public final class UserManager {
                     return;
                 }
             }
-            doSignup(name, phoneNumber, countryIso, callback);
+            doSignup(name, phoneNumber, countryIso, city, callback);
 
         }
     }
@@ -1013,6 +1016,7 @@ public final class UserManager {
     private void doSignup(final String name,
                           final String phoneNumber,
                           final String countryIso,
+                          String city,
                           final CallBack callback) {
         String thePhoneNumber;
         try {
@@ -1024,8 +1028,9 @@ public final class UserManager {
         }
         final User user = new User();
         user.setUserId(thePhoneNumber);
-        user.setName(name);
+        user.setName(name.toLowerCase(Locale.getDefault()));
         user.setCountry(countryIso);
+        user.setCity(city.toLowerCase(Locale.getDefault()));
         userApi.registerUser(user, new UserApiV2.Callback<User>() {
             @Override
             public void done(Exception e, User backEndUser) {

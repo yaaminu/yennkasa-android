@@ -1,0 +1,65 @@
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/list_item_height"
+    android:layout_marginBottom="@dimen/list_item_margin_bottom"
+    android:descendantFocusability="afterDescendants"
+    android:minHeight="?android:attr/listPreferredItemHeight"
+    tools:ignore="RtlHardcoded,HardcodedText">
+
+    <com.pairapp.view.RoundedImageView
+        android:id="@+id/iv_display_picture"
+        android:layout_width="@dimen/thumbnail_width"
+        android:layout_height="@dimen/thumbnail_height"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="@dimen/thumbnail_margin"
+        android:contentDescription="@string/content_desc_user_avatar"
+        android:gravity="center_vertical"
+        android:scaleType="centerCrop"
+        android:src="@drawable/user_avartar" />
+
+    <LinearLayout
+        android:id="@+id/name_city_parent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/iv_display_picture"
+        android:layout_toRightOf="@+id/iv_display_picture">
+
+        <TextView
+            android:id="@+id/tv_user_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:lines="1"
+            android:text="name"
+            android:textColor="@color/black"
+            android:textSize="@dimen/standard_text_size"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_user_city"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/iv_display_picture"
+        android:layout_alignLeft="@+id/name_city_parent"
+        android:drawableLeft="@drawable/ic_place_black_24dp"
+        android:gravity="bottom"
+        android:lines="1"
+        android:scrollHorizontally="true"
+        android:text="  Kumasi"
+        android:textSize="@dimen/standard_text_size"
+        android:textStyle="italic" />
+
+    <include
+        layout="@layout/divider"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_alignLeft="@+id/tv_user_phone_group_admin"
+        android:layout_alignParentBottom="true"
+        android:layout_alignStart="@+id/ll_conversation_desc"
+        android:layout_marginEnd="@dimen/divider_right_offset"
+        android:layout_marginRight="@dimen/divider_right_offset"
+        android:gravity="bottom" />
+</com.pairapp.view.RelativeLayout>

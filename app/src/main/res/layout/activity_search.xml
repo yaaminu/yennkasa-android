@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_search"
     android:layout_width="match_parent"
@@ -7,13 +8,30 @@
     android:background="#eee"
     tools:context="com.pairapp.ui.SearchActivity">
 
-    <android.support.v7.widget.Toolbar
+    <FrameLayout
+        android:id="@+id/search_parent"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="?attr/actionBarSize">
+        android:layout_height="wrap_content">
 
         <include layout="@layout/search_bar_main" />
-    </android.support.v7.widget.Toolbar>
+    </FrameLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/search_parent"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:visibility="visible" />
+
+    <com.pairapp.view.ProgressWheel
+        android:id="@+id/empty_view"
+        android:layout_width="@dimen/dp_thumbnail_width_large"
+        android:layout_height="@dimen/dp_thumbnail_height_large"
+        android:layout_centerInParent="true"
+        app:matProg_barColor="@color/colorAccent"
+        app:matProg_progressIndeterminate="true" />
 
     <include layout="@layout/snack_bar_bottom" />
 </RelativeLayout>
