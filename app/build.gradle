@@ -9,7 +9,7 @@ repositories {
 android {
 
     compileSdkVersion 25
-    buildToolsVersion "23.0.1"
+    buildToolsVersion project.properties.projectBuildToolsVersion
 
     testOptions {
         unitTests.returnDefaultValues = true
@@ -19,8 +19,8 @@ android {
         minSdkVersion 9
         targetSdkVersion 25
         multiDexEnabled true
-        versionCode 47
-        versionName "0.40.19b"
+        versionCode project.properties.projectVersionCode
+        versionName project.properties.projectVersionName
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

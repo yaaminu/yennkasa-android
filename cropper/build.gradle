@@ -5,12 +5,15 @@ group = "com.edmodo"
 
 android {
 
-    compileSdkVersion 21
-    buildToolsVersion "21.1.2"
+    compileSdkVersion project.properties.projectCompileSdkVersion
+    buildToolsVersion project.properties.projectBuildToolsVersion
 
     defaultConfig {
-        minSdkVersion 7
-        targetSdkVersion 21
+        minSdkVersion project.properties.projectMinSdkVersion
+        targetSdkVersion project.properties.projectTargetSdkVersion
+
+        versionCode project.properties.projectVersionCode
+        versionName project.properties.projectVersionName
     }
 
     buildTypes {
