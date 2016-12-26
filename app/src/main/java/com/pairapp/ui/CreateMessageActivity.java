@@ -24,11 +24,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
-import android.widget.EditText;
 import android.widget.Filterable;
-import android.widget.TextView;
 
-import com.pairapp.BuildConfig;
 import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.Errors.PairappException;
 import com.pairapp.R;
@@ -39,7 +36,6 @@ import com.pairapp.data.User;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.MediaUtils;
 import com.pairapp.util.PLog;
-import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
 import com.rey.material.widget.CheckBox;
@@ -59,7 +55,7 @@ import io.realm.RealmResults;
 import io.realm.Sort;
 
 public class CreateMessageActivity extends PairAppActivity
-        implements ItemsSelector.OnFragmentInteractionListener, TextWatcher, View.OnClickListener {
+        implements ItemsSelector.OnFragmentInteractionListener, TextWatcher {
 
     static final String EXTRA_FORWARDED_FROM = "fLKDFAJKAom"; //reduce the likeliness of conflict
     private static final String TAG = CreateMessageActivity.class.getSimpleName();
@@ -72,12 +68,8 @@ public class CreateMessageActivity extends PairAppActivity
     public static final String ATTACHMENT_PATH = "attachmentPath";
     public static final String ATTACHMENT_TYPE = "attachmentType";
     public static final String ATTACHMENT_DESCRIPTION = "attachmentDescription";
-    private View inputPanel;
     private Set<String> selectedItems = new HashSet<>();
-    private EditText messageEt;
-    private TextView tvAttachmentDescription;
-    private View attachmentPreview;
-    private String attachmentBody;
+    private String attachmentBodyORMessageBody;
     private int attachmentType;
 
     private UsersAdapter adapter;
@@ -86,15 +78,12 @@ public class CreateMessageActivity extends PairAppActivity
     private boolean isNotDefaultIntent = false;
     private Set<String> selectedUserNames = new TreeSet<>();
     private Fragment fragment;
-    View attachMenuItem, sendMenuItem;
+    View sendMenuItem;
 
     View.OnClickListener listener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             switch (v.getId()) {
-                case R.id.tv_menu_item_attach:
-                    UiHelpers.attach(CreateMessageActivity.this);
-                    break;
                 case R.id.tv_menu_item_send:
                     onSendMenuItemClicked();
                     break;
@@ -112,20 +101,8 @@ public class CreateMessageActivity extends PairAppActivity
         setContentView(R.layout.activity_create_message);
         toolBar = (Toolbar) findViewById(R.id.main_toolbar);
         setSupportActionBar(toolBar);
-        messageEt = ((EditText) findViewById(R.id.et_message));
         sendMenuItem = findViewById(R.id.tv_menu_item_send);
-        attachMenuItem = findViewById(R.id.tv_menu_item_attach);
-        attachMenuItem.setOnClickListener(listener);
         sendMenuItem.setOnClickListener(listener);
-        attachmentPreview = findViewById(R.id.attachment_preview);
-        View cancelAttachment = findViewById(R.id.cancel_attachment);
-        tvAttachmentDescription = (TextView) findViewById(R.id.attachment_description);
-
-        ViewUtils.setTypeface(tvAttachmentDescription, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-        ViewUtils.setTypeface(messageEt, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-        inputPanel = findViewById(R.id.ll_input_panel);
-        attachmentPreview.setOnClickListener(this);
-        cancelAttachment.setOnClickListener(this);
 
         selectedItems.clear();
         if (savedInstanceState != null) {
@@ -150,12 +127,9 @@ public class CreateMessageActivity extends PairAppActivity
             if (intentAction.equals(Intent.ACTION_SEND)) {
                 if (intent.getStringExtra(Intent.EXTRA_TEXT) != null) {
                     //text message.
-                    String message = intent.getStringExtra(Intent.EXTRA_TEXT);
-                    messageEt.setText(message);
+                    attachmentBodyORMessageBody = intent.getStringExtra(Intent.EXTRA_TEXT);
                     isAttaching = false;
                     isNotDefaultIntent = true;
-                    ViewUtils.hideViews(attachmentPreview);
-                    ViewUtils.showViews(inputPanel);
                 } else if (intent.getParcelableExtra(Intent.EXTRA_STREAM) != null) {
                     //binary message
                     //may be content uri i.e content:// style
@@ -178,44 +152,23 @@ public class CreateMessageActivity extends PairAppActivity
                 }
             }
         } else {
-            ViewUtils.hideViews(attachmentPreview);
-            ViewUtils.showViews(inputPanel);
             isNotDefaultIntent = false;
         }
 
         if (adapter.getCount() >= 1) {
             fragment = new ItemsSelector();
             if (savedInstanceState != null) {
-                String typingMessage = savedInstanceState.getString(TYPING_MESSAGE);
-                if (typingMessage != null) {
-                    messageEt.setText(typingMessage);
-                    ViewUtils.hideViews(attachmentPreview);
-                    ViewUtils.showViews(inputPanel);
-                } else {
-                    isAttaching = savedInstanceState.getBoolean(WAS_ATTACHING, false);
-                    if (isAttaching) {
-                        int type = savedInstanceState.getInt(ATTACHMENT_TYPE, -1);
-                        typingMessage = savedInstanceState.getString(ATTACHMENT_PATH);
-                        String attachmentDescription = savedInstanceState.getString(ATTACHMENT_DESCRIPTION);
-                        if (type != -1 && typingMessage != null && attachmentDescription != null) {
-                            attachmentBody = typingMessage;
-                            attachmentType = type;
-                            ViewUtils.showViews(attachmentPreview);
-                            tvAttachmentDescription.setText(attachmentDescription);
-                            ViewUtils.hideViews(inputPanel);
-                        } else {
-                            ViewUtils.hideViews(attachmentPreview);
-                            ViewUtils.hideViews(inputPanel);
-                        }
-                    } else {
-                        ViewUtils.hideViews(attachmentPreview);
-                        ViewUtils.hideViews(inputPanel);
+                attachmentBodyORMessageBody = savedInstanceState.getString(TYPING_MESSAGE);
+                isAttaching = savedInstanceState.getBoolean(WAS_ATTACHING, false);
+                if (isAttaching) {
+                    int type = savedInstanceState.getInt(ATTACHMENT_TYPE, -1);
+                    attachmentBodyORMessageBody = savedInstanceState.getString(ATTACHMENT_PATH);
+                    if (type != -1 && attachmentBodyORMessageBody != null && attachmentDescription != null) {
+                        attachmentType = type;
                     }
                 }
             }
         } else {
-            ViewUtils.hideViews(attachmentPreview);
-            ViewUtils.hideViews(inputPanel);
             fragment = new NoticeFragment();
         }
         getSupportFragmentManager().beginTransaction()
@@ -245,8 +198,6 @@ public class CreateMessageActivity extends PairAppActivity
                         NavUtils.navigateUpFromSameTask(CreateMessageActivity.this);
                     }
                 }, false);
-                ViewUtils.showViews(inputPanel);
-                ViewUtils.hideViews(attachmentPreview);
                 setActionBArTitle(null);
             }
         } else {
@@ -285,52 +236,24 @@ public class CreateMessageActivity extends PairAppActivity
     public boolean onPrepareOptionsMenu(Menu menu) {
 //        toolbarManager.onPrepareMenu();
         final boolean showMenu = adapter.getCount() >= 1;
-        ViewUtils.toggleVisibility(sendMenuItem, ((!messageEt.getText().toString().isEmpty() || isAttaching)
-                && !selectedItems.isEmpty() && showMenu));
-        ViewUtils.toggleVisibility(attachMenuItem, !selectedItems.isEmpty() && !isAttaching && !isNotDefaultIntent && showMenu);
+        ViewUtils.toggleVisibility(sendMenuItem, !TextUtils.isEmpty(attachmentBodyORMessageBody)
+                && !selectedItems.isEmpty() && showMenu);
         return super.onPrepareOptionsMenu(menu);
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        //toolBar.inflateMenu(R.menu.menu_create_message);
-//        return super.onCreateOptionsMenu(menu);
-//    }
-
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        if (id == R.id.action_attach) {
-//            UiHelpers.attach(this);
-//            return true;
-//        } else if (id == R.id.action_send_message) {
-//            onSendMenuItemClicked();
-//            return true;
-//        }
-//        return super.onOptionsItemSelected(item);
-//    }
-
     private void onSendMenuItemClicked() {
         int type;
-        String messageBody;
         if (isAttaching) {
             type = attachmentType;
-            messageBody = attachmentBody;
         } else {
-            messageBody = messageEt.getText().toString().trim();
-            if (TextUtils.isEmpty(messageBody)) {
+            if (TextUtils.isEmpty(attachmentBodyORMessageBody)) {
                 return;
             }
             type = Message.TYPE_TEXT_MESSAGE;
         }
         final ProgressDialog progressDialog = ProgressDialog.show(this, "", getString(R.string.st_please_wait), false, false, null);
         progressDialog.show();
-        MessageActivity.sendMessage(messageBody, selectedItems, type, new MessageActivity.SendCallback() {
+        MessageActivity.sendMessage(attachmentBodyORMessageBody, selectedItems, type, new MessageActivity.SendCallback() {
             @Override
             public void onSendComplete(Exception e) {
                 progressDialog.dismiss();
@@ -381,12 +304,9 @@ public class CreateMessageActivity extends PairAppActivity
 
     private void doAttach(Pair<String, Integer> pathAndType) throws IOException {
         attachmentDescription = new File(pathAndType.first).getName() + "\n" + FileUtils.sizeInLowestPrecision(pathAndType.first);
-        attachmentBody = pathAndType.first;
+        attachmentBodyORMessageBody = pathAndType.first;
         attachmentType = pathAndType.second;
         isAttaching = true;
-        tvAttachmentDescription.setText(attachmentDescription);
-        ViewUtils.hideViews(inputPanel);
-        ViewUtils.showViews(attachmentPreview);
     }
 
     @Override
@@ -411,7 +331,7 @@ public class CreateMessageActivity extends PairAppActivity
 
     @Override
     public boolean multiChoice() {
-        return true;
+        return isNotDefaultIntent;
     }
 
     @Override
@@ -431,25 +351,10 @@ public class CreateMessageActivity extends PairAppActivity
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//        User user = adapter.getItem(position);
-//        if (((ListView) parent).isItemChecked(position)) {
-//            selectedItems.add(user.getUserId());
-//            selectedUserNames.add(user.getName());
-//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-//                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(true);
-//            } else {
-//                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(true);
-//            }
-//        } else {
-//            selectedItems.remove(user.getUserId());
-//            selectedUserNames.remove(user.getName());
-//            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
-//                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedImmediately(false);
-//            } else {
-//                ((CheckBox) view.findViewById(R.id.cb_checked)).setCheckedAnimated(false);
-//            }
-//        }
-//        supportInvalidateOptionsMenu();
+        if (!isNotDefaultIntent) {
+            UiHelpers.enterChatRoom(this, adapter.getItem(position).getUserId());
+            finish();
+        }
     }
 
 
@@ -468,36 +373,6 @@ public class CreateMessageActivity extends PairAppActivity
         supportInvalidateOptionsMenu();
     }
 
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.attachment_preview:
-                if (isAttaching && attachmentBody != null) {
-                    try {
-                        UiHelpers.attemptToViewFile(this, attachmentBody);
-                    } catch (PairappException e) {
-                        ErrorCenter.reportError("viewAttachment", e.getMessage());
-                    }
-                    break;
-                }
-                if (BuildConfig.DEBUG) {
-                    throw new IllegalStateException("this view should be hidden");
-                }
-                PLog.i(TAG, "missing message body");
-                break;
-            case R.id.cancel_attachment:
-                isAttaching = false;
-                attachmentBody = null;
-                attachmentType = -1;
-                ViewUtils.hideViews(attachmentPreview);
-                ViewUtils.showViews(inputPanel);
-                supportInvalidateOptionsMenu();
-                break;
-            default:
-                throw new AssertionError("unknown view");
-        }
-    }
 
     @Override
     public Spanned getNoticeText() {
@@ -565,7 +440,7 @@ public class CreateMessageActivity extends PairAppActivity
         }
     };
 
-    private class CustomAdapter extends MultiChoiceUsersAdapter {
+    class CustomAdapter extends MultiChoiceUsersAdapter {
         private CustomAdapter() {
             super(delegagte, userRealm, prepareQuery().findAllSorted(User.FIELD_NAME, Sort.ASCENDING, User.FIELD_TYPE, Sort.DESCENDING), selectedItems, R.id.cb_checked);
         }
@@ -573,6 +448,17 @@ public class CreateMessageActivity extends PairAppActivity
         @Override
         protected RealmQuery<User> getOriginalQuery() {
             return prepareQuery();
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View view = super.getView(position, convertView, parent);
+            if (adapter.getCount() > 1 && isNotDefaultIntent) {
+                view.findViewById(R.id.cb_checked).setVisibility(View.VISIBLE);
+            } else {
+                view.findViewById(R.id.cb_checked).setVisibility(View.GONE);
+            }
+            return view;
         }
 
         @Override
@@ -604,7 +490,7 @@ public class CreateMessageActivity extends PairAppActivity
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putString(TYPING_MESSAGE, messageEt.getText().toString());
+        outState.putString(TYPING_MESSAGE, attachmentBodyORMessageBody);
         outState.putStringArrayList(SELECTED_USERS, new ArrayList<>(selectedItems));
         outState.putStringArrayList(SELECTED_USER_NAMES, new ArrayList<>(selectedUserNames));
         outState.putBoolean(WAS_ATTACHING, isAttaching);
@@ -612,7 +498,7 @@ public class CreateMessageActivity extends PairAppActivity
             outState.putString(FORWARD_FROM, forwardedFrom);
         }
         outState.putBoolean(NOT_DEFAULT_INTENT, isNotDefaultIntent);
-        outState.putString(ATTACHMENT_PATH, attachmentBody);
+        outState.putString(ATTACHMENT_PATH, attachmentBodyORMessageBody);
         outState.putInt(ATTACHMENT_TYPE, attachmentType);
         outState.putString(ATTACHMENT_DESCRIPTION, attachmentDescription);
         super.onSaveInstanceState(outState);
