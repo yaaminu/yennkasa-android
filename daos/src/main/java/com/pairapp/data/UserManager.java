@@ -1857,10 +1857,11 @@ public final class UserManager {
         return userApi.getSinchToken();
     }
 
-    public void enableSearch(boolean enableSearch, final CallBack callBack) {
+    public void enableSearch(final boolean enableSearch, final CallBack callBack) {
         userApi.enableSearch(enableSearch, new UserApiV2.Callback<Boolean>() {
             @Override
             public void done(Exception e, Boolean aBoolean) {
+                putPref(ENABLE_SEARCH, enableSearch);
                 doNotify(e, callBack);
             }
         });
