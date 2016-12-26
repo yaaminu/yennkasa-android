@@ -22,8 +22,6 @@ public interface UserApiV2 {
 
     void logIn(User object, Callback<User> callback);
 
-    void syncContacts(List<String> userIds, Callback<List<User>> response);
-
     void getUser(String id, Callback<User> response);
 
     void getGroups(String id, Callback<List<User>> response);

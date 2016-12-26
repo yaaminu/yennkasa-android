@@ -1,13 +1,18 @@
 package com.pairapp.ui;
 
 
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.ListFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -17,11 +22,12 @@ import android.widget.Toast;
 
 import com.pairapp.R;
 import com.pairapp.adapter.ContactsAdapter;
-import com.pairapp.data.ContactSyncService;
 import com.pairapp.data.ContactsManager;
 import com.pairapp.data.ContactsManager.Contact;
 import com.pairapp.data.User;
 import com.pairapp.data.UserManager;
+import com.pairapp.messenger.MessengerBus;
+import com.pairapp.util.Event;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
@@ -33,6 +39,10 @@ import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
+import rx.Observer;
+import rx.Subscription;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.schedulers.Schedulers;
 
 
 /**
@@ -82,6 +92,87 @@ public class ContactFragment extends Fragment implements RealmChangeListener<Rea
         }
     };
     private boolean isDestroyed;
+    private ContactsAdapter.Delegate delegate = new ContactsAdapter.Delegate() {
+        @Override
+        public void onContactMenuOptionSelected(final MenuItem item, final Contact contact) {
+            if (contact.isRegisteredUser || item.getItemId() == R.id.action_invite) {
+                handleMenuItemClick(item.getItemId(), contact);
+            } else {
+                checkUserAvailability(item.getItemId(), contact);
+            }
+        }
+    };
+
+    private void checkUserAvailability(final int itemId, final Contact contact) {
+        final ProgressDialog dialog = new ProgressDialog(getContext());
+        dialog.setMessage(getString(R.string.check_user_availability, contact.name, getString(R.string.app_name)));
+        dialog.setCancelable(false);
+        dialog.show();
+        subscription = UserManager.getInstance().isRegistered(contact.numberInIEE_Format)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<User>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        dialog.dismiss();
+                        suggestInvitationToUser(contact);
+                    }
+
+                    @Override
+                    public void onNext(User user) {
+                        dialog.dismiss();
+                        handleMenuItemClick(itemId, contact);
+                    }
+                });
+    }
+
+    @Nullable
+    private Subscription subscription;
+
+    private void suggestInvitationToUser(final Contact contact) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(getContext())
+                .setTitle(getString(R.string.invite_user, contact.name))
+                .setMessage(getString(R.string.invite_prompt, contact.name, getString(R.string.app_name)))
+                .setCancelable(true)
+                .setPositiveButton(getString(R.string.invite_user_title, contact.name), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        UiHelpers.doInvite(getContext(), contact);
+                    }
+                });
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                builder.create().show();
+            }
+        });
+    }
+
+    public void handleMenuItemClick(int itemId, Contact contact) {
+        switch (itemId) {
+            case R.id.action_call_user:
+                Event event = Event.create(MessengerBus.VOICE_CALL_USER, null, contact.numberInIEE_Format);
+                MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
+                break;
+            case R.id.action_video_call_user:
+                event = Event.create(MessengerBus.VIDEO_CALL_USER, null, contact.numberInIEE_Format);
+                MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
+                break;
+            case R.id.action_text:
+                UiHelpers.enterChatRoom(getContext(), contact.numberInIEE_Format);
+                break;
+            case R.id.action_invite:
+                UiHelpers.doInvite(getContext(), contact);
+                break;
+            default:
+                throw new AssertionError();
+        }
+    }
 
     static class FindCallbackImpl implements ContactsManager.FindCallback<List<Contact>> {
         private final WeakReference<ContactFragment> fragment;
@@ -139,7 +230,9 @@ public class ContactFragment extends Fragment implements RealmChangeListener<Rea
         // Inflate the layout for this fragment
         setHasOptionsMenu(true);
         View view = inflater.inflate(R.layout.fragment_contact, container, false);
-        adapter = new ContactsAdapter(getActivity(), UserManager.getInstance().getUserCountryISO(userRealm), contacts, false);
+        adapter = new ContactsAdapter(getActivity(),
+                UserManager.getInstance().getUserCountryISO(userRealm),
+                contacts, false, delegate);
         //required so that we can operate on it with no fear since calling getListView before onCreateView returns is not safe
         listView = ((ListView) view.findViewById(R.id.list));
         swipeRefreshLayout = ((SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh_layout));
@@ -170,6 +263,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener<Rea
         if (contact.isRegisteredUser) {
             UiHelpers.enterChatRoom(getActivity(), contact.numberInIEE_Format);
         } else {
+            checkUserAvailability(R.id.action_text, contact);
             Log.d(TAG, "clicked an unregistered user");
         }
     }
@@ -184,6 +278,9 @@ public class ContactFragment extends Fragment implements RealmChangeListener<Rea
     @Override
     public void onPause() {
         userRealm.removeChangeListener(this);
+        if (subscription != null && !subscription.isUnsubscribed()) {
+            subscription.unsubscribe();
+        }
         super.onPause();
     }
 
@@ -210,7 +307,6 @@ public class ContactFragment extends Fragment implements RealmChangeListener<Rea
             @Override
             public void run() {
                 if (getActivity() != null) {
-                    ContactSyncService.syncIfRequired(userRealm, getActivity());
                     refreshLocalContacts();
                 }
             }

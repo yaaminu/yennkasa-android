@@ -385,4 +385,9 @@
     <string name="not_content">No Content</string>
     <string name="city_name_too_short">City name is too short</string>
     <string name="city_name_invalid">Invalid city name</string>
+    <string name="check_user_availability" formatted="false">Checking if %s is on %s</string>
+    <string name="invite_user">Invite %s</string>
+    <string name="invite_prompt" formatted="false">%s is not on %s. Would you like to send an invitation link?</string>
+    <string name="invite_user_title">Invite %s</string>
+    <string name="no_app_for_sharing_text">No app for sharing text. This is strange!!!</string>
 </resources>

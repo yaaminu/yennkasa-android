@@ -57,6 +57,8 @@ import io.realm.Realm;
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.RealmResults;
+import rx.Observable;
+import rx.Subscriber;
 
 /**
  * @author by Null-Pointer on 5/27/2015.
@@ -721,7 +723,39 @@ public final class UserManager {
         }
     }
 
+    public Observable<User> isRegistered(final String phoneNumber) {
+        ThreadUtils.ensureNotMain();
+        return Observable.create(new Observable.OnSubscribe<User>() {
+            @Override
+            public void call(final Subscriber<? super User> subscriber) {
+                userApi.getUser(phoneNumber, new UserApiV2.Callback<User>() {
+                    @Override
+                    public void done(Exception e, User user) {
+                        if (e == null) {
+                            Realm realm = newUserRealm();
+                            try {
+                                realm.beginTransaction();
+                                realm.copyToRealmOrUpdate(user);
+                                realm.commitTransaction();
+                            } finally {
+                                realm.close();
+                            }
+                            subscriber.onNext(user);
+                        } else {
+                            subscriber.onError(e);
+                        }
+                        subscriber.onCompleted();
+                    }
+                });
+            }
+        });
+    }
+
     private void doRefreshUser(final String userId) {
+        doRefreshUser(userId, null);
+    }
+
+    private void doRefreshUser(final String userId, @Nullable final CallBack callback) {
         userApi.getUser(userId, new UserApiV2.Callback<User>() {
             @Override
             public void done(Exception e, User onlineUser) {
@@ -742,10 +776,10 @@ public final class UserManager {
         });
     }
 
-
     public boolean isGroup(Realm realm, String userId) {
         return realm.where(User.class).equalTo(User.FIELD_ID, userId).equalTo(User.FIELD_TYPE, User.TYPE_GROUP).findFirst() != null;
     }
+
 
     public void fetchGroups(Realm realm) {
         doRefreshGroups(realm);
@@ -1158,27 +1192,6 @@ public final class UserManager {
 //        realm.close();
 //    }
 
-    void syncContacts(final List<String> array) {
-        if (!ConnectionUtils.isConnected()) {
-            return;
-        }
-        final String syncContacts = "syncContacts";
-
-        if (rateLimitNotExceeded(syncContacts, AlarmManager.INTERVAL_FIFTEEN_MINUTES / 3)) {
-            userApi.syncContacts(array, new UserApiV2.Callback<List<User>>() {
-                @Override
-                public void done(Exception e, List<User> users) {
-                    if (e == null) {
-                        saveFreshUsers(users);
-                    } else {
-                        resetRateLimit(syncContacts);
-                    }
-                }
-            });
-        } else {
-            PLog.d(TAG, "sync aborted... last synced was not too long ago");
-        }
-    }
 
     private void resetRateLimit(Object tag) {
         synchronized (rateLimiter) {

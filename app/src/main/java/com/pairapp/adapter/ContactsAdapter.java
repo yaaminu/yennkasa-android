@@ -15,9 +15,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.pairapp.R;
-import com.pairapp.messenger.MessengerBus;
 import com.pairapp.ui.ImageLoader;
-import com.pairapp.util.Event;
 import com.pairapp.util.PhoneNumberNormaliser;
 import com.pairapp.util.TypeFaceUtil;
 import com.pairapp.util.UiHelpers;
@@ -38,15 +36,18 @@ public class ContactsAdapter extends BaseAdapter {
             R.layout.registered_contact_item,
             R.layout.unregistered_contact_item,
     };
+    private final Delegate delegate;
     private List<Contact> contacts;
     private boolean isAddOrRemoveFromGroup;
     private FragmentActivity context;
     private final Drawable[] bgColors = new Drawable[5];
 
-    public ContactsAdapter(FragmentActivity context, String userIsoCountry, List<Contact> contacts, boolean isAddOrRemoveFromGroup) {
+    public ContactsAdapter(FragmentActivity context, String userIsoCountry, List<Contact> contacts,
+                           boolean isAddOrRemoveFromGroup, Delegate delegate) {
         this.contacts = contacts;
         this.isAddOrRemoveFromGroup = isAddOrRemoveFromGroup;
         this.context = context;
+        this.delegate = delegate;
         this.userIsoCountry = userIsoCountry;
         bgColors[0] = getDrawable(context, R.drawable.pink_round_back_ground);
         bgColors[1] = getDrawable(context, R.drawable.blue_round_back_ground);
@@ -193,33 +194,16 @@ public class ContactsAdapter extends BaseAdapter {
                 menu.getMenu().findItem(R.id.action_text).setVisible(true);
                 menu.getMenu().findItem(R.id.action_invite).setVisible(false);
             } else {
-                menu.getMenu().findItem(R.id.action_call_user).setVisible(false);
-                menu.getMenu().findItem(R.id.action_text).setVisible(false);
-                menu.getMenu().findItem(R.id.action_video_call_user).setVisible(false);
+                menu.getMenu().findItem(R.id.action_call_user).setVisible(true);
+                menu.getMenu().findItem(R.id.action_text).setVisible(true);
+                menu.getMenu().findItem(R.id.action_video_call_user).setVisible(true);
                 menu.getMenu().findItem(R.id.action_invite).setVisible(true);
             }
             menu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
-                    switch (item.getItemId()) {
-                        case R.id.action_call_user:
-                            Event event = Event.create(MessengerBus.VOICE_CALL_USER, null, contact.numberInIEE_Format);
-                            MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
-                            break;
-                        case R.id.action_video_call_user:
-                            event = Event.create(MessengerBus.VIDEO_CALL_USER, null, contact.numberInIEE_Format);
-                            MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
-                            break;
-                        case R.id.action_text:
-                            UiHelpers.enterChatRoom(v.getContext(), contact.numberInIEE_Format);
-                            break;
-                        case R.id.action_invite:
-                            UiHelpers.doInvite(v.getContext(), contact);
-                            break;
-                        default:
-                            throw new AssertionError();
-                    }
-                    return false;
+                    delegate.onContactMenuOptionSelected(item, contact);
+                    return true;
                 }
             });
             menu.show();
@@ -236,4 +220,7 @@ public class ContactsAdapter extends BaseAdapter {
         public View more;
     }
 
+    public interface Delegate {
+        void onContactMenuOptionSelected(MenuItem item, Contact contact);
+    }
 }

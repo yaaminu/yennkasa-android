@@ -13,6 +13,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
 import android.support.v4.util.Pair;
@@ -235,10 +236,6 @@ public class UiHelpers {
         context.startActivity(intent);
     }
 
-    public static void attemptToViewFile(FragmentActivity context, String path) throws PairappException {
-        attemptToViewFile(context, new File(path));
-    }
-
     public static void attemptToViewFile(FragmentActivity context, File file) throws PairappException {
         if (file.exists()) {
             Intent intent;
@@ -404,7 +401,7 @@ public class UiHelpers {
         context.startActivity(intent);
     }
 
-    public static void doInvite(final Context context, final ContactsManager.Contact contact) {
+    public static void doInvite(@NonNull final Context context, @NonNull final ContactsManager.Contact contact) {
         final String message = context.getString(R.string.invite_message);
         PackageManager manager = context.getPackageManager();
         final Intent intent = new Intent(Intent.ACTION_SEND);
@@ -415,11 +412,11 @@ public class UiHelpers {
         final List<ResolveInfo> infos = manager.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
 //        List<ResolveInfo> noPairap = new Arr
         PLog.d(TAG, "resolved: " + infos.size());
-        if (infos.isEmpty() && contact == null) {
+        if (infos.isEmpty()) {
             showToast(context.getString(R.string.no_app_for_sharing));
         }
 
-        if (contact != null && infos.isEmpty()) {
+        if (infos.isEmpty()) {
             final Listener listener = new Listener() {
                 @Override
                 public void onClick() {
@@ -449,18 +446,8 @@ public class UiHelpers {
                     activityInfos.add(activityInfo);
                 }
             }
-            if (activityInfos.isEmpty() && contact != null) {
-                final Listener listener = new Listener() {
-                    @Override
-                    public void onClick() {
-                        SmsManager.getDefault().sendTextMessage("+" + contact.numberInIEE_Format, null, message, null, null);
-                    }
-                };
-                showErrorDialog((FragmentActivity) context,
-                        context.getString(R.string.charges_may_apply),
-                        context.getString(android.R.string.ok),
-                        context.getString(android.R.string.cancel),
-                        listener, null);
+            if (activityInfos.isEmpty()) {
+                UiHelpers.showPlainOlDialog(context, context.getString(R.string.no_app_for_sharing_text));
             } else {
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
                 SimpleAdapter adapter = new SimpleAdapter(icons, titles);
@@ -468,8 +455,16 @@ public class UiHelpers {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         ActivityInfo activityInfo = activityInfos.get(which);
-                        intent.setClassName(activityInfo.packageName, activityInfo.name);
-                        context.startActivity(intent);
+                        if (activityInfo.packageName.equals("com.android.mms")) {
+                            Intent smsIntent = new Intent(Intent.ACTION_VIEW);
+                            smsIntent.putExtra("address", contact.phoneNumber);
+                            smsIntent.putExtra("sms_body", message);
+                            smsIntent.setData(Uri.parse("smsto:" + contact.phoneNumber));
+                            context.startActivity(smsIntent);
+                        } else {
+                            intent.setClassName(activityInfo.packageName, activityInfo.name);
+                            context.startActivity(intent);
+                        }
                     }
                 }).setTitle(context.getString(R.string.invite_via));
                 builder.create().show();

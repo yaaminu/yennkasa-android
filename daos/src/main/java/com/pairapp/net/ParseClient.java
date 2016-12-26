@@ -31,6 +31,7 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
 import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -49,7 +50,6 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 
 import static com.pairapp.net.PARSE_CONSTANTS.FIELD_ACCOUNT_CREATED;
-import static com.pairapp.net.PARSE_CONSTANTS.FIELD_ADMIN;
 import static com.pairapp.net.PARSE_CONSTANTS.FIELD_CITY;
 import static com.pairapp.net.PARSE_CONSTANTS.FIELD_COUNTRY;
 import static com.pairapp.net.PARSE_CONSTANTS.FIELD_DP;
@@ -73,6 +73,7 @@ public class ParseClient implements UserApiV2 {
     public static final String PENDING_DP = "pendingDp";
     public static final String VERIFICATION_CODE_RECEIVED = "code.verification.recived";
     public static final String PUSH_ID = "pushId";
+    public static final String FIELD_ADMIN_JSON = "adminJson";
     private static ParseClient INSTANCE;
     private DisplayPictureFileClient displayPictureFileClient;
     private final Preprocessor preProcessor;
@@ -270,31 +271,6 @@ public class ParseClient implements UserApiV2 {
     }
 
     @Override
-    public void syncContacts(final List<String> userIds, final Callback<List<User>> callback) {
-        TaskManager.execute(new Runnable() {
-            @Override
-            public void run() {
-                doSyncContacts(userIds, callback);
-            }
-        }, true);
-    }
-
-    public void doSyncContacts(List<String> userIds, Callback<List<User>> callback) {
-        ParseQuery<ParseUser> query = makeUserParseQuery();
-        try {
-            List<ParseUser> objects = query.whereContainedIn(FIELD_ID, userIds).whereEqualTo(FIELD_VERIFIED, true).find();
-            List<User> users = new ArrayList<>(objects.size());
-            for (ParseObject object : objects) {
-                users.add(parseObjectToUser(object));
-            }
-            preProcessor.process(users);
-            notifyCallback(callback, null, users);
-        } catch (ParseException e) {
-            notifyCallback(callback, e, null);
-        }
-    }
-
-    @Override
     public void getUser(final String id, final Callback<User> response) {
         TaskManager.execute(new Runnable() {
             public void run() {
@@ -328,6 +304,10 @@ public class ParseClient implements UserApiV2 {
             List<ParseObject> objects = makeParseQuery(GROUP_CLASS_NAME).whereEqualTo(FIELD_MEMBERS, id).find();
             List<User> groups = new ArrayList<>(objects.size());
             for (ParseObject object : objects) {
+                if (!object.has(FIELD_ADMIN_JSON)) {
+                    object.delete();
+                    continue;
+                }
                 groups.add(parseObjectToGroup(object));
             }
             preProcessor.process(groups);
@@ -757,15 +737,27 @@ public class ParseClient implements UserApiV2 {
     @NonNull
     private User parseObjectToGroup(ParseObject object) throws ParseException {
         PLog.v(TAG, "processing: " + object.toString());
-        User user = new User();
-        user.setName(object.getString(FIELD_NAME));
-        user.setUserId(object.getString(FIELD_ID));
-        user.setDP(resolveDp(object));
-        final ParseObject parseObject = object.getParseObject(FIELD_ADMIN);
-        parseObject.fetchIfNeeded();
-        user.setType(User.TYPE_GROUP);
-        user.setAdmin(parseObjectToUser(parseObject));
-        return user;
+        try {
+            User user = new User();
+            user.setName(object.getString(FIELD_NAME));
+            user.setUserId(object.getString(FIELD_ID));
+            user.setDP(resolveDp(object));
+            String adminJSON = object.getString(FIELD_ADMIN_JSON);
+            user.setType(User.TYPE_GROUP);
+            JSONObject jsonObject = new JSONObject(adminJSON);
+            User admin = new User();
+            admin.setCity(jsonObject.optString(FIELD_CITY, ""));
+            admin.setVersion(jsonObject.getInt(FIELD_VERSION));
+            admin.setName(jsonObject.getString(FIELD_NAME));
+            admin.setCountry(jsonObject.getString(FIELD_COUNTRY));
+            admin.setDP(jsonObject.getString(FIELD_DP));
+            admin.setUserId(jsonObject.getString(FIELD_ID));
+            admin.setType(User.TYPE_NORMAL_USER);
+            user.setAdmin(admin);
+            return user;
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void notifyCallback(Callback<User> callback, Exception error, User user) {
