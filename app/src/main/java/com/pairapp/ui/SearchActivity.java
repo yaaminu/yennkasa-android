@@ -90,14 +90,14 @@ public class SearchActivity extends PairAppActivity {
                 .observeOn(Schedulers.io())
                 .subscribe(new Action1<String>() {
                     @Override
-                    public void call(String query) {
+                    public void call(final String query) {
                         if (query.length() < 2) {
                             searchResults = null;
                         }
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                refreshDisplay(true);
+                                refreshDisplay(query.length() >= 2);
                             }
                         });
                         if (query.length() >= 2) {
