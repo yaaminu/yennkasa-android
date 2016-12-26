@@ -152,7 +152,7 @@
                     android:background="@color/transparent"
                     android:contentDescription="@string/content_description_attach_more"
                     android:scaleType="centerInside"
-                    android:src="@drawable/ic_more_horiz_black_24dp" />
+                    android:src="@drawable/ic_attach_more_24dp" />
 
                 <com.pairapp.view.FrameLayout
                     android:id="@+id/iv_send"
