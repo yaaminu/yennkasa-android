@@ -12,3 +12,5 @@ anr.txt
 *.iml
 .idea/*
 
+version.properties
+app/hs_err_pid19919.log
