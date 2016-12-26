@@ -1,5 +1,6 @@
 package com.pairapp.ui;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -204,6 +205,7 @@ public class SearchActivity extends PairAppActivity {
             height = (int) context.getResources().getDimension(R.dimen.thumbnail_height);
         }
 
+        @SuppressLint("SetTextI18n")
         @Override
         protected void doBindHolder(Holder holder, int position) {
             User item = getItem(position);
@@ -239,7 +241,7 @@ public class SearchActivity extends PairAppActivity {
 
     }
 
-    private final PairappBaseAdapter.Delegate delegate = new PairappBaseAdapter.Delegate<User>() {
+    private final PairappBaseAdapter.Delegate<User> delegate = new PairappBaseAdapter.Delegate<User>() {
         @Override
         public void onItemClick(PairappBaseAdapter<User> adapter, View view, int position, long id) {
             UiHelpers.gotoProfileActivity(SearchActivity.this, adapter.getItem(position).getUserId());
