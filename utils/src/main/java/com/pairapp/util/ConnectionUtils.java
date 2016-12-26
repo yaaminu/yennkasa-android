@@ -1,9 +1,7 @@
 package com.pairapp.util;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
@@ -29,21 +27,16 @@ public class ConnectionUtils {
     private static final String TAG = ConnectionUtils.class.getSimpleName();
     private static final AtomicBoolean isConnected = new AtomicBoolean(false);
 
-    public static void init(final Context context) {
+    public static void init() {
         if (!initialised) {
             initialised = true;
             setUpConnectionState(null);
-            context.getApplicationContext().registerReceiver(new BroadcastReceiver() {
-                public void onReceive(Context context, Intent intent) {
-                    setUpConnectionState(intent);
-                }
-            }, new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE"));
         }
     }
 
     private static volatile boolean initialised = false;
 
-    private static void setUpConnectionState(Intent intent) {
+    static synchronized void setUpConnectionState(Intent intent) {
         if (intent == null) {
             NetworkInfo networkInfo = getNetworkInfo();
             isConnected.set(networkInfo != null && (networkInfo.isConnected() || networkInfo.isConnectedOrConnecting()));

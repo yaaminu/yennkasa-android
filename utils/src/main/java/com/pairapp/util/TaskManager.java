@@ -55,18 +55,23 @@ public class TaskManager {
         if (!initialised.getAndSet(true)) {
             PLog.w(TAG, "initialising %s", TAG);
             jobManager = new WeakReference<>(runner);
-            try {
-                JobRunner jobRunner = jobManager.get();
-                if (jobRunner == null) throw new IllegalStateException();
-                jobRunner.start();
+            JobRunner jobRunner = jobManager.get();
+            if (jobRunner == null) throw new IllegalStateException();
+            jobRunner.start();
 
-                File file = Config.getTempDir();
-                if (file.exists()) {
-                    org.apache.commons.io.FileUtils.cleanDirectory(Config.getTempDir());
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    File file = Config.getTempDir();
+                    try {
+                        if (file.exists()) {
+                            org.apache.commons.io.FileUtils.cleanDirectory(Config.getTempDir());
+                        }
+                    } catch (IOException ignored) {
+
+                    }
                 }
-            } catch (IOException ignored) {
-
-            }
+            }).start();
         }
     }
 
@@ -76,7 +81,7 @@ public class TaskManager {
             throw new IllegalArgumentException("invalid job");
         }
         JobRunner jobRunner = jobManager.get();
-        if(jobRunner == null){
+        if (jobRunner == null) {
             throw new IllegalStateException();
         }
         return jobRunner.runJob(job);
@@ -147,7 +152,7 @@ public class TaskManager {
 
     public static void cancelJobSync(String tag) {
         JobRunner jobRunner = jobManager.get();
-        if(jobRunner == null){
+        if (jobRunner == null) {
             throw new IllegalStateException();
         }
         jobRunner.cancelJobs(tag);

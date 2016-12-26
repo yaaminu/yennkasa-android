@@ -2,9 +2,11 @@ package com.pairapp.data;
 
 import android.content.Context;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 
 import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.util.Config;
+import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
 
 import java.io.File;
@@ -62,8 +64,16 @@ public class User extends RealmObject {
         this.city = city;
     }
 
-    public String getCity() {
+    private String getCity() {
         return city;
+    }
+
+    public String getCityName() {
+        String tmp = getCity();
+        if (TextUtils.isEmpty(tmp)) {
+            return GenericUtils.getString(R.string.unknown);
+        }
+        return tmp;
     }
 
     public boolean getInContacts() {

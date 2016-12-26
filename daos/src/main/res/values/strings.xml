@@ -58,4 +58,5 @@
     <string name="audio">Audio Message</string>
     <string name="file">File</string>
     <string name="user_name_taken">%s is taken. Try a different one</string>
+    <string name="unknown">unknown</string>
 </resources>

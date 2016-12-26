@@ -148,7 +148,7 @@ public class ParseClient implements UserApiV2 {
             parseUser.put(FIELD_VERIFIED, false);
             parseUser.put(FIELD_DP, "avatar_empty");
             parseUser.put(SEARCHABLE, true);
-            parseUser.put(FIELD_CITY, user.getCity());
+            parseUser.put(FIELD_CITY, user.getCityName());
             parseUser.put(FIELD_TOKEN, genVerificationToken() + "");
             parseUser.signUp();
             parseUser = ParseUser.getCurrentUser();
@@ -216,7 +216,7 @@ public class ParseClient implements UserApiV2 {
             parseUser = ParseUser.logIn(user.getName(), makePass(user));
             parseUser.put(FIELD_VERIFIED, false);
             parseUser.put(FIELD_TOKEN, "" + genVerificationToken());
-            parseUser.put(FIELD_CITY, user.getCity());
+            parseUser.put(FIELD_CITY, user.getCityName());
             user = parseObjectToUser(parseUser);
             parseUser.save();
             notifyCallback(callback, null, user);
