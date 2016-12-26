@@ -73,6 +73,8 @@ public interface UserApiV2 {
 
     void search(String query, Callback<List<User>> callback);
 
+    void enableSearch(boolean enableSearch, Callback<Boolean> callback);
+
     interface Callback<T> {
         void done(Exception e, T t);
     }

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
@@ -920,6 +921,29 @@ public class ParseClient implements UserApiV2 {
             }
         }
         return null;
+    }
+
+    @Override
+    public void enableSearch(final boolean enableSearch, final Callback<Boolean> callback) {
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (ParseClient.class) {
+                    try {
+                        SystemClock.sleep(3000);
+                        ParseUser currentUser = ParseUser.getCurrentUser();
+                        boolean existingValue = currentUser.getBoolean(SEARCHABLE);
+                        if (existingValue != enableSearch) {
+                            currentUser.put(SEARCHABLE, enableSearch);
+                            currentUser.save();
+                        }
+                        callback.done(null, true);
+                    } catch (ParseException e) {
+                        callback.done(prepareErrorReport(e), false);
+                    }
+                }
+            }
+        }, true);
     }
 
     @Override

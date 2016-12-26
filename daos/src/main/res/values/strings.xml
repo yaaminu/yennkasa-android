@@ -16,10 +16,13 @@
     <string name="error_space_in_name">names cannot contain spaces</string>
     <string name="storage_title">Storage</string>
     <string name="network_title">Media Auto Download</string>
+    <string name="privacy_title">Privacy</string>
     <string name="notifications_title">Notifications</string>
     <string name="vibrateOnNewMessage_title">Vibration</string>
     <string name="vibrateOnNewMessage_summary">Vibrate on new message</string>
     <string name="litLightOnNewMessage_title">Lights</string>
+    <string name="enableSearch_title">Enable Search</string>
+    <string name="enableSearch_summary">Makes other users find you even if you are not in their contacts</string>
     <string name="litLightOnNewMessage_summary">Show light on new message</string>
     <string name="inAppNotifications_title">In-app notifications</string>
     <string name="inAppNotifications_summary">Enable/disable in-app notification</string>

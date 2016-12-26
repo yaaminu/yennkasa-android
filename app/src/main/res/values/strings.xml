@@ -390,4 +390,6 @@
     <string name="invite_prompt" formatted="false">%s is not on %s. Would you like to send an invitation link?</string>
     <string name="invite_user_title">Invite %s</string>
     <string name="no_app_for_sharing_text">No app for sharing text. This is strange!!!</string>
+    <string name="disableSearchWarning">You wont be able to search for other users\n Do you want to continue?</string>
+    <string name="enable_search_message">In order to search for others, you must enable searching.\n Do you want to enable?</string>
 </resources>

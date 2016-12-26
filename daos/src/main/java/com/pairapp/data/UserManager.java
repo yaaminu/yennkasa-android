@@ -1,7 +1,6 @@
 package com.pairapp.data;
 
 import android.annotation.SuppressLint;
-import android.app.AlarmManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -97,6 +96,7 @@ public final class UserManager {
     /**************************
      * important constants
      *****************************************/
+    public static final String ENABLE_SEARCH = "enableSearch";
     public static final String IN_APP_NOTIFICATIONS = "inAppNotifications",
             NEW_MESSAGE_TONE = "newMessageTone", VIBRATE = "vibrateOnNewMessage",
             LIGHTS = "litLightOnNewMessage", DELETE_ATTACHMENT_ON_DELETE = "deleteAttachmentsOnMessageDelete",
@@ -1855,6 +1855,15 @@ public final class UserManager {
 
     public Pair<String, Long> getSinchRegistrationToken() {
         return userApi.getSinchToken();
+    }
+
+    public void enableSearch(boolean enableSearch, final CallBack callBack) {
+        userApi.enableSearch(enableSearch, new UserApiV2.Callback<Boolean>() {
+            @Override
+            public void done(Exception e, Boolean aBoolean) {
+                doNotify(e, callBack);
+            }
+        });
     }
 
 

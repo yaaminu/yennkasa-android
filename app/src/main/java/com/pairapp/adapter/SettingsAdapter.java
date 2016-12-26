@@ -1,5 +1,9 @@
 package com.pairapp.adapter;
 
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -11,7 +15,9 @@ import android.widget.CompoundButton;
 import com.pairapp.R;
 import com.pairapp.data.PersistedSetting;
 import com.pairapp.data.UserManager;
+import com.pairapp.util.TaskManager;
 import com.pairapp.util.TypeFaceUtil;
+import com.pairapp.util.UiHelpers;
 import com.pairapp.util.ViewUtils;
 import com.rey.material.widget.CheckBox;
 import com.rey.material.widget.TextView;
@@ -98,21 +104,27 @@ public class SettingsAdapter extends BaseAdapter {
         if (setting.getType() != PersistedSetting.TYPE_CATEGORY) {
             if (setting.getType() == PersistedSetting.TYPE_TRUE_FALSE) {
                 holder.checkBox.setCheckedImmediately(setting.getBoolValue());
+                final View finalConvertView = convertView;
                 holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                        boolean boolValue = setting.getBoolValue();
-                        UserManager.getInstance().putPref(setting.getKey(), !boolValue);
-                        setting.setBoolValue(!boolValue);
+                        if (setting.getKey().equals(UserManager.ENABLE_SEARCH)) {
+                            updateSearchPreference(finalConvertView.getContext(), setting);
+                        } else {
+                            boolean boolValue = setting.getBoolValue();
+                            UserManager.getInstance().putPref(setting.getKey(), !boolValue);
+                            setting.setBoolValue(!boolValue);
+                        }
                     }
                 });
+                holder.summary.setText(setting.getSummary());
             } else {
                 holder.summary.setText(setting.getSummary());
             }
             convertView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                 delegate.onItemClick(((AdapterView) parent),v,position,-1);
+                    delegate.onItemClick(((AdapterView) parent), v, position, -1);
                 }
             });
         } else {
@@ -127,6 +139,51 @@ public class SettingsAdapter extends BaseAdapter {
         } catch (Exception e) { //index out of bound
         }
         return convertView;
+    }
+
+    private void updateSearchPreference(final Context context, final PersistedSetting settings) {
+        boolean enable = !settings.getBoolValue();
+        if (!enable) {
+            DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    if (i == DialogInterface.BUTTON_POSITIVE) {
+                        settings.setBoolValue(false);
+                        actuallyUpdateSearchSettings(context, false);
+                    }
+                }
+            };
+            new AlertDialog.Builder(context)
+                    .setMessage(R.string.disableSearchWarning)
+                    .setCancelable(false)
+                    .setPositiveButton(android.R.string.ok, listener)
+                    .setNegativeButton(android.R.string.cancel, listener)
+                    .create().show();
+        } else {
+            settings.setBoolValue(true);
+            actuallyUpdateSearchSettings(context, true);
+        }
+    }
+
+    private void actuallyUpdateSearchSettings(final Context context, boolean enable) {
+        final ProgressDialog dialog = new ProgressDialog(context);
+        dialog.setMessage(context.getString(R.string.st_please_wait));
+        dialog.setCancelable(false);
+        dialog.show();
+        UserManager.getInstance().enableSearch(enable, new UserManager.CallBack() {
+            @Override
+            public void done(final Exception e) {
+                dialog.dismiss();
+                if (e != null) {
+                    TaskManager.executeOnMainThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            UiHelpers.showPlainOlDialog(context, e.getMessage());
+                        }
+                    });
+                }
+            }
+        });
     }
 
     private class ViewHolder {

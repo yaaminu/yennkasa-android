@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="@dimen/list_item_padding"
-    >
+    android:padding="@dimen/list_item_padding">
 
     <com.rey.material.widget.TextView
         android:id="@+id/tv_title"
@@ -14,11 +12,11 @@
         android:paddingBottom="@dimen/padding_ll_login_fragment_bottom"
         android:text="Category"
         android:textSize="@dimen/setting_item_category"
-        android:textStyle="bold"/>
+        android:textStyle="bold" />
 
     <include
         layout="@layout/divider_span_full"
         android:layout_width="match_parent"
         android:layout_height="@dimen/setting_category_divider_height"
-        android:layout_alignParentBottom="true"/>
+        android:layout_alignParentBottom="true" />
 </RelativeLayout>

@@ -179,10 +179,6 @@
 
         <service android:name="com.parse.PushService" />
         <service
-            android:name=".data.ContactSyncService"
-            android:enabled="false"
-            android:exported="false" />
-        <service
             android:name=".messenger.MessageProcessor"
             android:enabled="false"
             android:exported="false" />

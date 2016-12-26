@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.support.multidex.MultiDexApplication;
 
 import com.crashlytics.android.Crashlytics;
-import com.pairapp.data.ContactSyncService;
 import com.pairapp.messenger.MessageCenter2;
 import com.pairapp.messenger.MessageProcessor;
 import com.pairapp.messenger.PairAppClient;
@@ -68,7 +67,6 @@ public class PairApp extends MultiDexApplication {
     public static void enableComponents() {
 //        enableComponent(BootReceiver.class);
         enableComponent(ConnectivityReceiver.class);
-        enableComponent(ContactSyncService.class);
         enableComponent(PairAppClient.class);
         enableComponent(MessageProcessor.class);
         enableComponent(MessageCenter2.class);
@@ -76,7 +74,6 @@ public class PairApp extends MultiDexApplication {
 
     public static void disableComponents() {
         disableComponent(ConnectivityReceiver.class);
-        disableComponent(ContactSyncService.class);
         disableComponent(PairAppClient.class);
         disableComponent(MessageProcessor.class);
         disableComponent(MessageCenter2.class);

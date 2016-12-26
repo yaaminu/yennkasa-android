@@ -1,8 +1,7 @@
-<com.pairapp.view.RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
     style="@style/FlatButtonRippleStyle"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:descendantFocusability="beforeDescendants"
     android:minHeight="?android:attr/listPreferredItemHeight"
@@ -11,6 +10,7 @@
     tools:ignore="RtlHardcoded">
 
     <com.pairapp.view.LinearLayout
+        android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
@@ -22,26 +22,35 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/username_hint"
-            android:textSize="@dimen/standard_text_size"
             android:textColor="@color/abc_primary_text_material_light"
-            tools:ignore="RtlHardcoded"/>
+            android:textSize="@dimen/standard_text_size"
+            tools:ignore="RtlHardcoded" />
 
         <com.rey.material.widget.CheckBox
             android:id="@+id/cb_checked"
             style="@style/CheckBoxDrawable"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:checked="false"/>
+            android:checked="false" />
     </com.pairapp.view.LinearLayout>
+
+    <com.rey.material.widget.TextView
+        android:id="@+id/tv_summary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/main"
+        android:paddingBottom="@dimen/default_gap"
+        android:paddingTop="@dimen/default_gap"
+        android:textSize="12sp"
+        tools:text="@string/enableSearch_summary" />
 
     <include
         android:id="@+id/divider"
         layout="@layout/divider"
         android:layout_width="match_parent"
         android:layout_height="@dimen/inbox_preferred_list_item_divider_height"
+        android:layout_alignParentBottom="true"
         android:layout_marginLeft="@dimen/divider_right_offset"
         android:layout_marginRight="@dimen/divider_right_offset"
-        android:gravity="bottom"
-        android:layout_alignParentBottom="true"
-        />
+        android:gravity="bottom" />
 </com.pairapp.view.RelativeLayout>

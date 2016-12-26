@@ -1,11 +1,14 @@
 package com.pairapp.ui;
 
+import android.app.ProgressDialog;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -17,6 +20,7 @@ import android.widget.EditText;
 import com.pairapp.PairApp;
 import com.pairapp.R;
 import com.pairapp.data.Conversation;
+import com.pairapp.data.UserManager;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.UiHelpers;
 import com.rey.material.widget.SnackBar;
@@ -106,6 +110,45 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
 
     @OnTextChanged(R.id.et_filter)
     void onTextChanged(Editable editable) {
+        if (UserManager.getInstance().getBoolPref(UserManager.ENABLE_SEARCH, true)) {
+            gotoSearch(editable);
+        } else {
+            suggestEnable(editable);
+        }
+    }
+
+    private void suggestEnable(final Editable editable) {
+        new AlertDialog.Builder(this)
+                .setMessage(R.string.enable_search_message)
+                .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        enableSearch(editable);
+                    }
+                }).setNegativeButton(R.string.cancel, null)
+                .create().show();
+
+    }
+
+    private void enableSearch(final Editable editable) {
+        final ProgressDialog dialog = new ProgressDialog(this);
+        dialog.setMessage(getString(R.string.st_please_wait));
+        dialog.setCancelable(false);
+        dialog.show();
+        userManager.enableSearch(true, new UserManager.CallBack() {
+            @Override
+            public void done(Exception e) {
+                dialog.dismiss();
+                if (e == null) {
+                    gotoSearch(editable);
+                } else {
+                    UiHelpers.showPlainOlDialog(MainActivity.this, e.getMessage());
+                }
+            }
+        });
+    }
+
+    private void gotoSearch(Editable editable) {
         String text = editable.toString().trim();
         if (text.length() > 0) {
             Intent intent = new Intent(this, SearchActivity.class);
