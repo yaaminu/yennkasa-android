@@ -79,16 +79,6 @@
             android:textSize="@dimen/standard_text_size"
             android:visibility="visible" />
 
-        <com.rey.material.widget.Button
-            android:id="@+id/bt_dissolve_group"
-            style="@style/profile_fragment_round_button_style"
-            android:drawableEnd="@drawable/ic_delete_white_24dp"
-            android:drawableRight="@drawable/ic_delete_white_24dp"
-            android:padding="@dimen/padding_button"
-            android:text="@string/dissolve_group"
-            android:textColor="@color/white"
-            android:textSize="@dimen/standard_text_size"
-            android:visibility="visible" />
 
         <com.rey.material.widget.Button
             android:id="@+id/bt_exit_group"

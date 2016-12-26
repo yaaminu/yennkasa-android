@@ -22,11 +22,4 @@
         android:icon="@drawable/ic_person_black_24dp"
         android:title="@string/people"
         app:showAsAction="always" />
-    <item
-        android:id="@+id/tab_groups"
-        android:enabled="true"
-        android:icon="@drawable/ic_groups_24dp"
-        android:orderInCategory="100"
-        android:title="@string/groups"
-        app:showAsAction="always" />
 </menu>

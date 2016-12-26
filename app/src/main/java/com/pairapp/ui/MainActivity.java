@@ -58,9 +58,6 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                 case R.id.tab_people:
                     fragment = new ContactFragment();
                     break;
-                case R.id.tab_groups:
-                    fragment = new GroupsFragment();
-                    break;
                 default:
                     throw new AssertionError("impossible");
             }

@@ -376,11 +376,12 @@ public class ParseClient implements UserApiV2 {
 
     @Override
     public void createGroup(final String by, final String name, final Collection<String> members, final Callback<User> response) {
-        TaskManager.execute(new Runnable() {
-            public void run() {
-                doCreateGroup(by, name, members, response);
-            }
-        }, true);
+//        TaskManager.execute(new Runnable() {
+//            public void run() {
+//                doCreateGroup(by, name, members, response);
+//            }
+//        }, true);
+        throw new UnsupportedOperationException();
     }
 
     private void doCreateGroup(String by, String name, Collection<String> members, Callback<User> response) {
@@ -405,11 +406,12 @@ public class ParseClient implements UserApiV2 {
 
     @Override
     public void getGroup(final String id, final Callback<User> callback) {
-        TaskManager.execute(new Runnable() {
-            public void run() {
-                doGetGroup(id, callback);
-            }
-        }, true);
+//        TaskManager.execute(new Runnable() {
+//            public void run() {
+//                doGetGroup(id, callback);
+//            }
+//        }, true);
+        throw new UnsupportedOperationException();
     }
 
     private void doGetGroup(String id, Callback<User> callback) {
@@ -426,11 +428,12 @@ public class ParseClient implements UserApiV2 {
 
     @Override
     public void getGroupMembers(final String id, final Callback<List<User>> response) {
-        TaskManager.execute(new Runnable() {
-            public void run() {
-                doGetGroupMembers(id, response);
-            }
-        }, true);
+//        TaskManager.execute(new Runnable() {
+//            public void run() {
+//                doGetGroupMembers(id, response);
+//            }
+//        }, true);
+        throw new UnsupportedOperationException();
     }
 
     private void doGetGroupMembers(String id, Callback<List<User>> response) {
@@ -506,11 +509,12 @@ public class ParseClient implements UserApiV2 {
 
     @Override
     public void addMembersToGroup(final String id, final String by, final Collection<String> members, final Callback<HttpResponse> response) {
-        TaskManager.execute(new Runnable() {
-            public void run() {
-                doAddMembersToGroup(id, members, response);
-            }
-        }, true);
+//        TaskManager.execute(new Runnable() {
+//            public void run() {
+//                doAddMembersToGroup(id, members, response);
+//            }
+//        }, true);
+        throw new UnsupportedOperationException();
     }
 
     private void doAddMembersToGroup(String id, Collection<String> members, Callback<HttpResponse> response) {
@@ -531,11 +535,12 @@ public class ParseClient implements UserApiV2 {
 
     @Override
     public void removeMembersFromGroup(final String id, final String by, final List<String> members, final Callback<HttpResponse> response) {
-        TaskManager.execute(new Runnable() {
-            public void run() {
-                doRemoveMembersFromGroup(id, members, response);
-            }
-        }, true);
+//        TaskManager.execute(new Runnable() {
+//            public void run() {
+//                doRemoveMembersFromGroup(id, members, response);
+//            }
+//        }, true);
+        throw new UnsupportedOperationException();
     }
 
     private void doRemoveMembersFromGroup(String id, List<String> members, Callback<HttpResponse> response) {

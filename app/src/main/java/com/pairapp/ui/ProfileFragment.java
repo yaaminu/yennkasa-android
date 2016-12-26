@@ -13,7 +13,6 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AlertDialog;
@@ -73,7 +72,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
     private User user;
     private Realm realm;
     private View progressView, changeDpButton, changeDpButton2;
-    private android.widget.Button exitGroupButton, callButton, deleteGroup, sendMessageButton;
+    private android.widget.Button callButton, sendMessageButton;
     private ProgressDialog progressDialog;
     private Uri image_capture_out_put_uri;
     private boolean changingDp = false;
@@ -212,18 +211,12 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
         changeDpButton = view.findViewById(R.id.bt_pick_photo_change_dp);
         changeDpButton2 = view.findViewById(R.id.bt_take_photo_change_dp);
         progressView = view.findViewById(R.id.pb_progress);
-        deleteGroup = (android.widget.Button) view.findViewById(R.id.bt_dissolve_group);
-        ViewUtils.setTypeface(deleteGroup, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-
         sendMessageButton = (android.widget.Button) view.findViewById(R.id.bt_message);
         sendMessageButton.setOnClickListener(clickListener);
         ViewUtils.setTypeface(sendMessageButton, TypeFaceUtil.ROBOTO_REGULAR_TTF);
 
         callButton = (android.widget.Button) view.findViewById(R.id.bt_call);
         ViewUtils.setTypeface(callButton, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-
-        exitGroupButton = (android.widget.Button) view.findViewById(R.id.bt_exit_group);
-        ViewUtils.setTypeface(exitGroupButton, TypeFaceUtil.ROBOTO_REGULAR_TTF);
 
         progressDialog = new ProgressDialog(getActivity());
         progressDialog.setCancelable(false);
@@ -261,8 +254,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
         userName.setText(user.getName());
         displayPicture.setOnClickListener(clickListener);
         if (user.getType() == User.TYPE_GROUP) {
-            setUpViewsGroupWay();
-        } else {
             setUpViewSingleUserWay();
         }
         //noinspection deprecation
@@ -355,61 +346,12 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
             });
             callButton.setOnClickListener(clickListener);
         }
-        exitGroupButton.setVisibility(View.GONE);
-        deleteGroup.setVisibility(View.GONE);
         //noinspection ConstantConditions
         phoneOrAdminTitle.setText(R.string.phone);
         phoneInlocalFormat = PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId(), userManager.getUserCountryISO(realm));
         userPhoneOrAdminName.setText(phoneInlocalFormat);
     }
 
-    private void setUpViewsGroupWay() {
-        //noinspection ConstantConditions
-        callButton.setVisibility(View.GONE);
-        if (userManager.isAdmin(realm, user.getUserId())) {
-            deleteGroup.setVisibility(View.VISIBLE);
-            deleteGroup.setOnClickListener(clickListener);
-            exitGroupButton.setVisibility(View.GONE);
-        } else {
-            exitGroupButton.setVisibility(View.VISIBLE);
-            exitGroupButton.setOnClickListener(clickListener);
-            deleteGroup.setVisibility(View.GONE);
-        }
-        //any member can change dp of a group
-        changeDpButton2.setOnClickListener(clickListener);
-        changeDpButton.setOnClickListener(clickListener);
-
-        // TODO: 8/25/2015 add a lock drawable to the right of this text view
-        phoneOrAdminTitle.setText(R.string.admin);
-        userPhoneOrAdminName.setText(userManager.isAdmin(realm, user.getUserId())
-                ? getString(R.string.you) : user.getAdmin().getName());
-
-        ((View) phoneOrAdminTitle.getParent()).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Fragment fragment = new ProfileFragment();
-                Bundle bundle = new Bundle(1);
-                bundle.putString(ARG_USER_ID, user.getAdmin().getUserId());
-                fragment.setArguments(bundle);
-                getFragmentManager().beginTransaction()
-                        .replace(R.id.container, fragment)
-                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                        .commit();
-            }
-        });
-        mutualGroupsOrMembersTvTitle.setText(R.string.st_group_members);
-        mutualGroupsOrMembersTv.setText(user.getMembers().size() + getString(R.string.Members));
-        ((View) mutualGroupsOrMembersTv.getParent()).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Bundle bundle = new Bundle(1);
-                bundle.putString(UsersActivity.EXTRA_USER_ID, user.getUserId());
-                Intent intent = new Intent(getActivity(), UsersActivity.class);
-                intent.putExtras(bundle);
-                startActivity(intent);
-            }
-        });
-    }
 
     private void choosePicture() {
         Intent attachIntent;
