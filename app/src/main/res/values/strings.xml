@@ -393,4 +393,5 @@
     <string name="disableSearchWarning">You wont be able to search for other users\n Do you want to continue?</string>
     <string name="enable_search_message">In order to search for others, you must enable searching.\n Do you want to enable?</string>
     <string name="call_progressing">progressing</string>
+    <string name="switch_camera">switch camera</string>
 </resources>

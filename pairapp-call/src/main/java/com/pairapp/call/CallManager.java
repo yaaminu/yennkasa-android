@@ -9,6 +9,7 @@ import android.support.annotation.StringRes;
 import android.support.v4.util.Pair;
 import android.widget.Toast;
 
+import com.pairapp.data.UserManager;
 import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
@@ -17,6 +18,7 @@ import com.sinch.android.rtc.Sinch;
 import com.sinch.android.rtc.SinchClient;
 import com.sinch.android.rtc.calling.Call;
 import com.sinch.android.rtc.calling.CallState;
+import com.sinch.android.rtc.video.VideoScalingType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -78,6 +80,7 @@ public class CallManager implements CallController {
         client.addSinchClientListener(new ClientListener(source));
         client.getCallClient().addCallClientListener(callCenter);
         client.getCallClient().setRespectNativeCalls(false); // TODO: 7/15/2016 let users change this in settings
+        client.getVideoController().setResizeBehaviour(VideoScalingType.ASPECT_FILL);
         //noinspection ConstantConditions
         client.start();
     }
@@ -85,6 +88,10 @@ public class CallManager implements CallController {
     @Nullable
     @Override
     public synchronized CallData callUser(@NonNull String callRecipient, @CallType int callType) {
+        if (UserManager.getInstance().isBlocked(callRecipient)) {
+            bus.post(Event.create(ON_CAL_ERROR, new Exception(ERR_CANT_CALL_BLOCKED_USER, null), callRecipient));
+            return null;
+        }
         if (!ConnectionUtils.isConnected() || !client.isStarted()) {
             notifyClientNotStarted(callRecipient);
             return null;
@@ -170,6 +177,14 @@ public class CallManager implements CallController {
     private void notifyClientNotStarted(@NonNull String peer) {
         bus.post(Event.create(ON_CAL_ERROR, new Exception(ERR_NOT_CONNECTED, null), peer));
         PLog.w(TAG, "client not started");
+    }
+
+    @Override
+    public void switchCamera(CallData data) {
+        Call call = client.getCallClient().getCall(data.getCallId());
+        if (call != null) {
+            client.getVideoController().toggleCaptureDevicePosition();
+        }
     }
 
     @Override

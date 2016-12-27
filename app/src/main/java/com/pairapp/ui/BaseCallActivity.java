@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v7.app.AlertDialog;
@@ -59,6 +60,7 @@ public abstract class BaseCallActivity extends PairAppActivity {
     @Bind(R.id.iv_user_avatar)
     ImageView userAvatar;
 
+    @Nullable
     @Bind(R.id.tv_user_name)
     TextView tvUserName;
 
@@ -243,7 +245,9 @@ public abstract class BaseCallActivity extends PairAppActivity {
     }
 
     private void populateUserData() {
-        tvUserName.setText(peer.getName());
+        if (tvUserName != null) {
+            tvUserName.setText(peer.getName());
+        }
         Resources resources = getResources();
         ImageLoader.load(this, peer.getDP())
                 .error(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)

@@ -59,4 +59,5 @@
     <color name="colorPrimaryDarker">#FF053781</color>
     <color name="orange">#FFF2AF3A</color>
     <color name="faded_white">#cfff</color>
+    <color name="translucent_white">#77ffffff</color>
 </resources>

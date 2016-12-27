@@ -553,4 +553,8 @@ class PairAppClientInterface {
             }
         }
     }
+
+    public void switchCamera(CallData data) {
+        callController.switchCamera(data);
+    }
 }

@@ -26,6 +26,8 @@ public interface CallController {
     String VIDEO_CALL_REMOTE_VIEW = "video call remote view";
     String ERR_VIDEO_LOAD_FAILED = "err_video_load_failed";
     String CALL_PUSH_PAYLOAD = "call.push.payload";
+    String ERR_CANT_CALL_BLOCKED_USER = "EBLOCKED";
+    String VIDEO_CALL_VIEW = "call.video.remote.view";
 
     void hangUp(CallData data);
 
@@ -36,6 +38,8 @@ public interface CallController {
     void muteCall(CallData data);
 
     void handleCallPushPayload(String payload);
+
+    void switchCamera(CallData data);
 
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({CALL_TYPE_VOICE, CALL_TYPE_VIDEO, CALL_TYPE_CONFERENCE_VOICE})

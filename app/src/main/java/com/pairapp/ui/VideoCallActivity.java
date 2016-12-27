@@ -2,11 +2,13 @@ package com.pairapp.ui;
 
 import android.content.Intent;
 import android.support.annotation.LayoutRes;
-import android.view.Gravity;
+import android.support.v4.util.Pair;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import com.pairapp.R;
 import com.pairapp.messenger.MessengerBus;
@@ -16,6 +18,7 @@ import com.pairapp.util.PLog;
 import com.pairapp.util.ViewUtils;
 
 import butterknife.Bind;
+import butterknife.OnClick;
 
 import static com.pairapp.messenger.MessengerBus.ON_ADD_VIDEO_CALL_LOCAL_VIEW;
 import static com.pairapp.messenger.MessengerBus.ON_ADD_VIDEO_CALL_REMOTE_VIEW;
@@ -23,11 +26,23 @@ import static com.pairapp.messenger.MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS;
 
 public class VideoCallActivity extends BaseCallActivity {
 
-    @Bind(R.id.remote_view)
-    FrameLayout remoteView;
+    @Bind(R.id.remoteVideo)
+    LinearLayout remoteVideo;
+    @Bind(R.id.localVideo)
+    RelativeLayout localVideo;
 
-    @Bind(R.id.local_view)
-    FrameLayout localView;
+    boolean cameraFacesFront = true;
+
+    @OnClick(R.id.switch_camera)
+    void switchCamera(View view) {
+        postEvent(Event.create(MessengerBus.SWITCH_CAMERA, null, getCallData()));
+        if (cameraFacesFront) {
+            ((ImageButton) view).setImageResource(R.drawable.ic_camera_rear_white_24dp);
+        } else {
+            ((ImageButton) view).setImageResource(R.drawable.ic_camera_front_white_24dp);
+        }
+        view.invalidate();
+    }
 
     private static final String TAG = "VideoCallActivity";
 
@@ -75,32 +90,25 @@ public class VideoCallActivity extends BaseCallActivity {
         @Override
         public void onEvent(EventBus yourBus, Event event) {
             PLog.d(TAG, "received event  %s", event);
-            View view = (View) event.getData();
-            assert view != null;
-            ViewParent parent = view.getParent();
-            if (parent != null) {
-                ((ViewGroup) parent).removeView(view);
-            }
-            if (ON_ADD_VIDEO_CALL_LOCAL_VIEW.equals(event.getTag())) {
+            if (ON_ADD_VIDEO_CALL_REMOTE_VIEW.equals(event.getTag())) {
+                //noinspection unchecked
+                Pair<View, View> views = (Pair<View, View>) event.getData();
+                assert views != null;
+                ViewParent parent = views.first.getParent();
+                if (parent != null) {
+                    ((ViewGroup) parent).removeView(views.first);
+                }
+                parent = views.second.getParent();
+                if (parent != null) {
+                    ((ViewGroup) parent).removeView(views.second);
+                }
                 PLog.d(TAG, "adding local view");
-
-                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
-                params.gravity = Gravity.CENTER;
-                localView.addView(view, 0, params);
                 ViewUtils.hideViews(userAvatar);
-                ViewUtils.showViews(((ViewGroup) localView.getParent()));
-                localView.invalidate();
-            } else if (ON_ADD_VIDEO_CALL_REMOTE_VIEW.equals(event.getTag())) {
+                localVideo.addView(views.first);
+
                 PLog.d(TAG, "adding remote view");
-
-                FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                        FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
-                params.gravity = Gravity.CENTER;
-                remoteView.addView(view, 0, params);
+                remoteVideo.addView(views.second);
                 ViewUtils.hideViews(userAvatar);
-                ViewUtils.showViews(remoteView);
-                remoteView.invalidate();
             } else {
                 throw new AssertionError();
             }

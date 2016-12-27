@@ -22,7 +22,6 @@ import com.pairapp.BuildConfig;
 import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.PairApp;
 import com.pairapp.R;
-import com.pairapp.data.ContactSyncService;
 import com.pairapp.data.UserManager;
 import com.pairapp.messenger.PairAppClient;
 import com.pairapp.messenger.SmsReciever;
@@ -189,7 +188,6 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
         }
         getActivityPreferences().edit().putInt(STAGE, COMPLETE).commit();
         PairApp.enableComponents();
-        ContactSyncService.syncIfRequired(userRealm, this);
         PairAppClient.startIfRequired(this);
         UiHelpers.gotoMainActivity(this);
     }
