@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Process;
 import android.provider.ContactsContract;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 
 import com.google.i18n.phonenumbers.NumberParseException;
@@ -51,7 +52,7 @@ public class ContactsManager {
 
     public List<Contact> findAllContactsSync(Filter<Contact> filter, Comparator<Contact> comparator)
             throws PairappException {
-        int results = Config.getApplicationContext().checkCallingPermission(Manifest.permission.READ_CONTACTS);
+        int results = ContextCompat.checkSelfPermission(Config.getApplicationContext(), Manifest.permission.READ_CONTACTS);
         if (results == PackageManager.PERMISSION_DENIED) {
             throw new PairappException("Permission denied");
         }
