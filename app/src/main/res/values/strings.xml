@@ -349,7 +349,7 @@
     <string name="log_entry_deleted_message">Log entry deleted successfully</string>
     <string name="connected">Connected</string>
     <string name="video_call">Start Video Call</string>
-    <string name="missed_call_notification" formatted="false">You missed %d calls from %s</string>
+    <string name="missed_call_notification" formatted="false">You missed %d %s from %s</string>
     <string name="slogan">Bringing Conversations To Life!!!</string>
     <string name="other">" other "</string>
     <string name="content_description_attach_more">More attachment options</string>
@@ -397,4 +397,6 @@
     <string name="recieve_sms_explanation">To make the registration process seamless, we need to detect when you receive new SMS and automatically fill the  code for you.</string>
     <string name="reason_for_file_system_required">We are sorry but %s cannot run without permission to access your file system</string>
     <string name="permission_denied_title">Permission Denied</string>
+    <string name="calls_">calls</string>
+    <string name="call_">call</string>
 </resources>

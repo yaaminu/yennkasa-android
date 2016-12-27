@@ -311,14 +311,16 @@ class PairAppClientInterface {
                     .lessThanOrEqualTo(Message.FIELD_CALL_BODY + "." + CallBody.FIELD_CALL_DURATION, 0)
                     .findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.DESCENDING);
 
-            if (messages.size() > 0) {
+            int size = messages.size();
+            if (size > 0) {
                 String recipientsSummary = generateString(messages.distinct(Message.FIELD_FROM));
-                String contentText = context.getString(R.string.missed_call_notification, messages.size(), recipientsSummary);
+                String contentText = context.getString(R.string.missed_call_notification, size,
+                        (context.getString(size > 1 ? R.string.calls_ : R.string.call_)), recipientsSummary);
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
                 builder.setContentTitle(context.getString(R.string.pairapp_call));
                 builder.setContentText(contentText);
                 builder.setStyle(new NotificationCompat.BigTextStyle().bigText(contentText));
-                builder.setSmallIcon(R.drawable.ic_stat_icon);
+                builder.setSmallIcon(R.drawable.ic_call_missed_white_24dp);
                 builder.setAutoCancel(true);
                 builder.setTicker(contentText);
                 Intent intent = new Intent(context, MainActivity.class);
