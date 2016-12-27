@@ -149,7 +149,7 @@ class PairAppClientEventsListener implements EventBus.EventsListener {
                 case CallController.VIDEO_CALL_LOCAL_VIEW:
                     get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(MessengerBus.ON_ADD_VIDEO_CALL_LOCAL_VIEW, null, event.getData()));
                     break;
-                case CallController.VIDEO_CALL_REMOTE_VIEW:
+                case CallController.VIDEO_CALL_VIEW:
                     get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(MessengerBus.ON_ADD_VIDEO_CALL_REMOTE_VIEW, null, event.getData()));
                     break;
                 case CLEAR_NEW_MESSAGE_NOTIFICATION:
@@ -184,6 +184,9 @@ class PairAppClientEventsListener implements EventBus.EventsListener {
                     assert revertResults != null;
                     //noinspection ThrowableResultOfMethodCallIgnored
                     pairAppClientInterface.notifyEditSentMessageResults(revertResults.first, revertResults.second, event.getError() != null);
+                    break;
+                case MessengerBus.SWITCH_CAMERA:
+                    pairAppClientInterface.switchCamera(((CallData) event.getData()));
                     break;
                 default:
                     throw new AssertionError();

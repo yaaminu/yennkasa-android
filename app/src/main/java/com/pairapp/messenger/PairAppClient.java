@@ -63,6 +63,7 @@ import static com.pairapp.call.CallController.ON_IN_COMING_CALL;
 import static com.pairapp.call.CallController.ON_LOUD_SPEAKER;
 import static com.pairapp.call.CallController.VIDEO_CALL_LOCAL_VIEW;
 import static com.pairapp.call.CallController.VIDEO_CALL_REMOTE_VIEW;
+import static com.pairapp.call.CallController.VIDEO_CALL_VIEW;
 import static com.pairapp.messenger.MessengerBus.ANSWER_CALL;
 import static com.pairapp.messenger.MessengerBus.CANCEL_MESSAGE_DISPATCH;
 import static com.pairapp.messenger.MessengerBus.CLEAR_NEW_MESSAGE_NOTIFICATION;
@@ -86,6 +87,7 @@ import static com.pairapp.messenger.MessengerBus.REVERT_SENDING;
 import static com.pairapp.messenger.MessengerBus.SEND_MESSAGE;
 import static com.pairapp.messenger.MessengerBus.START_MONITORING_USER;
 import static com.pairapp.messenger.MessengerBus.STOP_MONITORING_USER;
+import static com.pairapp.messenger.MessengerBus.SWITCH_CAMERA;
 import static com.pairapp.messenger.MessengerBus.TYPING;
 import static com.pairapp.messenger.MessengerBus.VIDEO_CALL_USER;
 import static com.pairapp.messenger.MessengerBus.VOICE_CALL_USER;
@@ -246,7 +248,7 @@ public class PairAppClient extends Service {
                 callManagerBus.register(eventsListener,
                         ON_CAL_ERROR, ON_IN_COMING_CALL, CALL_PUSH_PAYLOAD,
                         ON_CAL_ENDED, ON_CALL_ESTABLISHED, VIDEO_CALL_LOCAL_VIEW, VIDEO_CALL_REMOTE_VIEW,
-                        ON_CALL_PROGRESSING, ON_CALL_MUTED, ON_LOUD_SPEAKER);
+                        ON_CALL_PROGRESSING, ON_CALL_MUTED, ON_LOUD_SPEAKER, SWITCH_CAMERA, VIDEO_CALL_VIEW);
 
                 postableBus().register(eventsListener, OFFLINE, ONLINE, NOT_TYPING, TYPING,
                         STOP_MONITORING_USER, START_MONITORING_USER,

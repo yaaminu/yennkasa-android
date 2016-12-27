@@ -3,12 +3,14 @@ package com.pairapp.call;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
+import android.view.View;
 
 import com.pairapp.data.BuildConfig;
 import com.pairapp.data.CallBody;
 import com.pairapp.data.Conversation;
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
+import com.pairapp.data.UserManager;
 import com.pairapp.util.Config;
 import com.pairapp.util.Event;
 import com.pairapp.util.EventBus;
@@ -72,18 +74,24 @@ class CallCenter implements CallClientListener, VideoCallListener {
 
     @Override
     public synchronized void onIncomingCall(final CallClient callClient, final Call call) {
+        String remoteUserId = call.getRemoteUserId();
         if (isCallOngoing()) {
             call.hangup();
-            PLog.d(TAG, "call with id %s from %s rejected because user is already on phone with %s", call.getCallId(), call.getRemoteUserId(), "" + currentPeer);
+            PLog.d(TAG, "call with id %s from %s rejected because user is already on phone with %s", call.getCallId(), remoteUserId, "" + currentPeer);
             // TODO: 7/24/2016 broadcast an event that we rejected a call because the user is busy. to emulate "number busy" semantics
             return;
         }
-        isCallOngoing = true;
-        currentCallId = call.getCallId();
-        player.playRingtone();
-        currentPeer = call.getRemoteUserId();
-        call.addCallListener(this);
-        broadCastBus.postSticky(Event.createSticky(CallController.ON_IN_COMING_CALL, null, CallData.from(call, getCallType(call), System.currentTimeMillis())));
+        if (UserManager.getInstance().isBlocked(remoteUserId)) {
+            PLog.d(TAG, "blocked user calling. not forwarding call");
+            call.hangup();
+        } else {
+            isCallOngoing = true;
+            currentCallId = call.getCallId();
+            player.playRingtone();
+            currentPeer = remoteUserId;
+            call.addCallListener(this);
+            broadCastBus.postSticky(Event.createSticky(CallController.ON_IN_COMING_CALL, null, CallData.from(call, getCallType(call), System.currentTimeMillis())));
+        }
     }
 
     @Override
@@ -102,7 +110,16 @@ class CallCenter implements CallClientListener, VideoCallListener {
         player.stopProgressTone();
         player.stopRingtone();
         currentCallStart = System.currentTimeMillis();
-        broadCastBus.postSticky(Event.createSticky(ON_CALL_ESTABLISHED, null, CallData.from(call, getCallType(call), currentCallStart)));
+        boolean isVideoCall = getCallType(call) == CALL_TYPE_VIDEO;
+        SinchClient sinchClient = clientWeakReference.get();
+        //we'd rather crash. we will rather crash than check for nullablity
+        if (isVideoCall) {
+            sinchClient.getAudioController().enableSpeaker();
+        } else {
+            sinchClient.getAudioController().disableSpeaker();
+        }
+        broadCastBus.postSticky(Event.createSticky(ON_CALL_ESTABLISHED, null,
+                CallData.from(call, getCallType(call), currentCallStart, false, isVideoCall)));
     }
 
     @Override
@@ -159,11 +176,12 @@ class CallCenter implements CallClientListener, VideoCallListener {
 
             removeVideoTrackEventsIfPossible();
 
-            remoteVideoTrackEvent = Event.create(CallController.VIDEO_CALL_REMOTE_VIEW, null, controller.getRemoteView());
+            Pair<View, View> viewViewPair = Pair.create(controller.getLocalView(), controller.getRemoteView());
+            remoteVideoTrackEvent = Event.create(CallController.VIDEO_CALL_VIEW, null, viewViewPair);
             broadCastBus.post(remoteVideoTrackEvent);
 
-            localVideoTrackEvent = Event.create(CallController.VIDEO_CALL_LOCAL_VIEW, null, controller.getLocalView());
-            broadCastBus.post(localVideoTrackEvent);
+//            localVideoTrackEvent = Event.create(CallController.VIDEO_CALL_LOCAL_VIEW, null, controller.getLocalView());
+//            broadCastBus.post(localVideoTrackEvent);
         } else {
             broadCastBus.post(Event.create(ON_CAL_ERROR, new Exception(CallController.ERR_VIDEO_LOAD_FAILED), call.getRemoteUserId()));
         }
@@ -176,6 +194,8 @@ class CallCenter implements CallClientListener, VideoCallListener {
         if (localVideoTrackEvent != null) {
             broadCastBus.removeStickyEvent(localVideoTrackEvent);
         }
+        remoteVideoTrackEvent = null;
+        localVideoTrackEvent = null;
     }
 
     private int ourCallTypeToCallBodyCallType(int callType) {

@@ -23,7 +23,8 @@ buildscript {
         projectTargetSdkVersion = 23
         projectVersionName = "${versionMajor}.${versionMinor}.${versionPatch}(" + String.format("%d", versionBuild) + ")"
         projectVersionCode = versionBuild
-        projectSplitEnabled = true
+        projectSplitEnabled = false
+
     }
     repositories {
         jcenter()

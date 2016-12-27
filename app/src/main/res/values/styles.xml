@@ -303,11 +303,18 @@
         <item name="android:layout_margin">@dimen/default_gap</item>
         <item name="android:layout_width">56dp</item>
         <item name="android:layout_height">56dp</item>
+    </style>
+
+    <style name="circular_call_button.color_primary">
         <item name="android:background">@drawable/round_button</item>
     </style>
 
     <style name="circular_call_button.red">
         <item name="android:background">@drawable/round_red_button</item>
+    </style>
+
+    <style name="circular_call_button.white">
+        <item name="android:background">@drawable/white_outline</item>
     </style>
 
     <dimen name="profile_fragment_round_icons_padding">8dp</dimen>

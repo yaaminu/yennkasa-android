@@ -48,6 +48,7 @@ public class MessengerBus {
     public static final String EDIT_SENT_MESSAGE = "message.send.edit";
     public static final String MESSAGE_EDIT_RESULTS = "message.edit.results";
     public static final String MESSAGE_REVERT_RESULTS = "message.revert.results";
+    public static final String SWITCH_CAMERA = "switchCamera";
 
     public static EventBus get(String bus) {
         GenericUtils.ensureNotNull(bus);
