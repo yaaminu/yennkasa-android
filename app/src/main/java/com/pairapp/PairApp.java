@@ -11,7 +11,6 @@ import com.pairapp.messenger.MessageProcessor;
 import com.pairapp.messenger.PairAppClient;
 import com.pairapp.messenger.SmsReciever;
 import com.pairapp.util.Config;
-import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.ConnectivityReceiver;
 import com.pairapp.util.PLog;
 import com.pairapp.util.Task;
@@ -95,14 +94,13 @@ public class PairApp extends MultiDexApplication {
         CalligraphyConfig config = new CalligraphyConfig.Builder().setDefaultFontPath(null)
                 .build();
         CalligraphyConfig.initDefault(config);
-        jobRunner = new JobRunnerImpl(Config.getApplication(), injector);
-        TaskManager.init(jobRunner);
-        ConnectionUtils.init();
         PairAppClient.startIfRequired(Config.getApplicationContext());
         new Thread(new Runnable() {
             @Override
             public void run() {
                 Fabric.with(Config.getApplication(), new Crashlytics());
+                jobRunner = new JobRunnerImpl(Config.getApplication(), injector);
+                TaskManager.init(jobRunner);
             }
         }).start();
     }

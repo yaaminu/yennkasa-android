@@ -88,13 +88,11 @@ public class TaskManager {
     }
 
     public static void executeOnMainThread(Runnable r) {
-        ensureInitialised();
         new Handler(Looper.getMainLooper()).post(r);
     }
 
     @NonNull
     public static Future<?> execute(Callable<?> task, boolean requiresNetwork) {
-        ensureInitialised();
         if (requiresNetwork) {
             return NETWORK_EXECUTOR.submit(task);
         } else {
@@ -103,7 +101,6 @@ public class TaskManager {
     }
 
     public static void execute(Runnable runnable, boolean requiresNetwork) {
-        ensureInitialised();
         if (requiresNetwork) {
             NETWORK_EXECUTOR.execute(runnable);
         } else {
@@ -116,7 +113,6 @@ public class TaskManager {
 
 
     public static void executeNow(Runnable runnable, boolean requiresNetwork) {
-        ensureInitialised();
         synchronized (expressQueueLock) {
             if (expressExecutionQueueTooLong()) {
                 execute(runnable, requiresNetwork);
@@ -128,7 +124,6 @@ public class TaskManager {
     }
 
     public static Future<?> executeNow(Callable<?> callable, boolean requiresNetwork) {
-        ensureInitialised();
         synchronized (expressQueueLock) {
             if (expressExecutionQueueTooLong()) {
                 return execute(callable, requiresNetwork);
@@ -144,11 +139,6 @@ public class TaskManager {
         }
     }
 
-    private static void ensureInitialised() {
-        if (!initialised.get()) {
-            throw new IllegalArgumentException("did you forget to init()?");
-        }
-    }
 
     public static void cancelJobSync(String tag) {
         JobRunner jobRunner = jobManager.get();

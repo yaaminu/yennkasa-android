@@ -159,15 +159,6 @@ public class PairAppClient extends Service {
     public void onCreate() {
         super.onCreate();
         cache = new LruCache<>(10);
-        StickersManager.initialize("fd82531004986458d9d4fd66eacf9e20", this, BuildConfig.DEBUG);
-        Realm realm = User.Realm(this);
-
-        try {
-            StickersManager.setUser(FileUtils.hash(UserManager.getMainUserId(realm)),
-                    Collections.singletonMap("version", String.valueOf(BuildConfig.VERSION_NAME)));
-        } finally {
-            realm.close();
-        }
         PLog.i(TAG, "starting pairapp client");
         if (WORKER_THREAD != null && WORKER_THREAD.isAlive()) {
             WORKER_THREAD.quit();
@@ -218,6 +209,14 @@ public class PairAppClient extends Service {
     synchronized void bootClient() {
         ThreadUtils.ensureNotMain();
         if (!isClientStarted.get()) {
+            StickersManager.initialize("fd82531004986458d9d4fd66eacf9e20", this, BuildConfig.DEBUG);
+            Realm realm = User.Realm(this);
+            try {
+                StickersManager.setUser(FileUtils.hash(UserManager.getMainUserId(realm)),
+                        Collections.singletonMap("version", String.valueOf(BuildConfig.VERSION_NAME)));
+            } finally {
+                realm.close();
+            }
             Realm userRealm = User.Realm(this);
             try {
                 monitor = new DispatcherMonitorImpl(this, disPatchingThreads);
