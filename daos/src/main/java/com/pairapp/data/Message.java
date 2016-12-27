@@ -85,6 +85,7 @@ public class Message extends RealmObject {
     private int type;
 
     private CallBody callBody;
+    private String attachmentSize;
 
     /**
      * you are strongly advised to use the factory {@link Message#makeNew}
@@ -469,5 +470,14 @@ public class Message extends RealmObject {
 
     public static boolean canEdit(Realm userRealm, Message msg) {
         return Message.isTextMessage(msg) && canRevert(userRealm, msg);
+    }
+
+    @Nullable
+    public String getAttachmentSize() {
+        return attachmentSize;
+    }
+
+    public void setAttachmentSize(String attachmentSize) {
+        this.attachmentSize = attachmentSize;
     }
 }

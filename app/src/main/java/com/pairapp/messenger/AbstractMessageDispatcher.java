@@ -1,5 +1,6 @@
 package com.pairapp.messenger;
 
+import android.net.Uri;
 import android.util.Log;
 
 import com.pairapp.Errors.PairappException;
@@ -8,11 +9,13 @@ import com.pairapp.data.User;
 import com.pairapp.data.util.MessageUtils;
 import com.pairapp.net.FileApi;
 import com.pairapp.net.FileClientException;
+import com.pairapp.security.MessageEncryptor;
 import com.pairapp.util.Config;
 import com.pairapp.util.ConnectionUtils;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.GenericUtils;
 import com.pairapp.util.PLog;
+import com.pairapp.util.SimpleDateUtil;
 import com.pairapp.util.ThreadUtils;
 
 import java.io.File;
@@ -83,10 +86,10 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                 throw new DispatchCancelledException();
             }
             try {
-                File tmpFile = new File(Config.getTempDir(),
-                        FileUtils.hashFile(actualFile));
-                org.apache.commons.io.FileUtils.copyFile(actualFile, tmpFile);
-                file_service.saveFileToBackend(actualFile, new FileApi.FileSaveCallback() {
+                final File tmpFile = new File(Config.getTempDir(),
+                        FileUtils.hashFile(actualFile) + "-" + SimpleDateUtil.timeStampNow() + "." + FileUtils.getExtension(actualFile.getAbsolutePath()));
+                final int index = MessageEncryptor.ecryptFile(actualFile, tmpFile);
+                file_service.saveFileToBackend(tmpFile, new FileApi.FileSaveCallback() {
                     @Override
                     public void done(FileClientException e, String locationUrl) {
                         if (e == null) {
@@ -95,7 +98,11 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                                 onFailed(message.getId(), MessageUtils.ERROR_CANCELLED);
                                 return;
                             }
-                            message.setMessageBody(locationUrl); //do not persist this change.
+                            //always use the tmpFile and not the actual file
+                            Uri finalUri = Uri.parse(locationUrl).buildUpon()
+                                    .appendQueryParameter("t", "" + index)
+                                    .appendQueryParameter("size", FileUtils.sizeInLowestPrecision(tmpFile.length())).build();
+                            message.setMessageBody(finalUri.toString()); //do not persist this change.
                             proceedToSend(message);
                         } else {
                             if (checkIfCancelled()) {
@@ -109,6 +116,8 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                 }, listener);
             } catch (IOException e) {
                 onFailed(message.getId(), MessageUtils.ERROR_FILE_UPLOAD_FAILED);
+            } catch (MessageEncryptor.EncryptionException e) {
+                onFailed(message.getId(), MessageUtils.ENCRYPTION_FAILED);
             }
         }
     }

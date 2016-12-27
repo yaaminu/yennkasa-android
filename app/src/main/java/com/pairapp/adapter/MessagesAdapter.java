@@ -269,6 +269,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                 holder.progressBar,
                 holder.playOrDownload,
                 holder.textMessage,
+                holder.attachmenSize,
                 holder.retry,
                 holder.progressRootView,
                 holder.sendersName);
@@ -366,6 +367,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             }
             holder.preview.setOnClickListener(listener);
         } else {
+            ViewUtils.showViews(holder.attachmenSize);
+            holder.attachmenSize.setText(message.getAttachmentSize());
             holder.preview.setImageResource(placeHolderDrawable);
             if (progress <= -1) {
                 if (!isOutgoingMessage) {
@@ -376,6 +379,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             }
         }
         if (progress >= 0) {
+            ViewUtils.hideViews(holder.attachmenSize);
             ViewUtils.showViews(holder.progressRootView, holder.progressBar);
             if (progress == 0) {
                 holder.progressBar.setBarColor(Color.WHITE);
@@ -543,6 +547,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         private View progressRootView;
         private ProgressWheel progressBar;
         private ImageButton call_button;
+        TextView attachmenSize;
         //TODO add more fields as we support different media/file types
     }
 }

@@ -3,6 +3,7 @@ package com.pairapp.messenger;
 import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
@@ -258,6 +259,10 @@ public class MessageProcessor extends IntentService {
         message.setDateComposed(newestMessage == null ? new Date(Math.min(System.currentTimeMillis(), timestamp)) : new Date());
 
         message.setState(Message.STATE_RECEIVED);
+        if (message.hasAttachment()) {
+            String size = Uri.parse(message.getMessageBody()).getQueryParameter("size");
+            message.setAttachmentSize(size);
+        }
         //if user has invalid date settings
         conversation.setLastActiveTime(new Date(Math.max(timestamp, System.currentTimeMillis())));
         try {

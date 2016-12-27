@@ -58,6 +58,15 @@
                     android:src="@drawable/background_hd"
                     android:visibility="visible" />
 
+                <TextView
+                    android:id="@+id/attachment_size"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|end"
+                    android:background="@drawable/black_round"
+                    android:padding="@dimen/default_gap"
+                    android:textColor="@color/white"
+                    tools:text="12MB" />
 
                 <FrameLayout
                     android:id="@+id/fl_progress_root_view"
