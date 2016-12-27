@@ -108,6 +108,10 @@ public class SettingsAdapter extends BaseAdapter {
                 holder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                     @Override
                     public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        if (selfChanged) {
+                            selfChanged = false;
+                            return;
+                        }
                         if (setting.getKey().equals(UserManager.ENABLE_SEARCH)) {
                             updateSearchPreference(finalConvertView.getContext(), setting);
                         } else {
@@ -141,6 +145,8 @@ public class SettingsAdapter extends BaseAdapter {
         return convertView;
     }
 
+    boolean selfChanged = false;
+
     private void updateSearchPreference(final Context context, final PersistedSetting settings) {
         boolean enable = !settings.getBoolValue();
         if (!enable) {
@@ -151,6 +157,7 @@ public class SettingsAdapter extends BaseAdapter {
                         settings.setBoolValue(false);
                         actuallyUpdateSearchSettings(context, false);
                     } else {
+                        selfChanged = true;
                         notifyDataSetChanged();
                     }
                 }
