@@ -32,6 +32,7 @@ public class MessageUtils {
     public static final String ERROR_ENCODING_FAILED = "packaging error";
 
     private static final String TAG = MessageUtils.class.getSimpleName();
+    public static final String ENCRYPTION_FAILED = "encryptionFailed";
 
     public static boolean validate(Message message) throws PairappException {
 

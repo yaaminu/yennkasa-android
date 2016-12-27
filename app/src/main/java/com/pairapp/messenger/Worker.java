@@ -5,20 +5,24 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
 
+import com.pairapp.BuildConfig;
 import com.pairapp.Errors.ErrorCenter;
 import com.pairapp.Errors.PairappException;
 import com.pairapp.R;
 import com.pairapp.data.Message;
 import com.pairapp.data.User;
+import com.pairapp.security.MessageEncryptor;
 import com.pairapp.ui.ChatActivity;
 import com.pairapp.util.Config;
 import com.pairapp.util.FileUtils;
 import com.pairapp.util.LiveCenter;
 import com.pairapp.util.PLog;
+import com.pairapp.util.SimpleDateUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -214,7 +218,7 @@ public class Worker extends IntentService {
                                 .setProgress(100, progress, progress <= 0)
                                 .setContentIntent(PendingIntent.getActivity(Config.getApplicationContext(), 1003, intent, PendingIntent.FLAG_UPDATE_CURRENT))
                                 .setSubText(progress > 0 ? Config.getApplicationContext().getString(R.string.downloaded) + FileUtils.sizeInLowestPrecision(processed) + "/" + FileUtils.sizeInLowestPrecision(expected) : Config.getApplicationContext().getString(R.string.loading))
-                                .setSmallIcon(R.drawable.ic_stat_icon).build();
+                                .setSmallIcon(R.drawable.ic_file_download_white_36dp).build();
                         NotificationManagerCompat manager = NotificationManagerCompat.from(Config.getApplicationContext());// getSystemService(NOTIFICATION_SERVICE));
                         manager.notify(messageId, PairAppClient.notId, notification);
                     }
@@ -224,8 +228,11 @@ public class Worker extends IntentService {
                 }
             };
             Realm realm = Message.REALM(Config.getApplicationContext());
+            File tmp = new File(Config.getTempDir(), finalFile.getName() + SimpleDateUtil.timeStampNow());
             try {
-                FileUtils.save(finalFile, messageBody, listener);
+                FileUtils.save(tmp, messageBody, listener);
+                String index = Uri.parse(messageBody).getQueryParameter("t");
+                MessageEncryptor.decryptFile(Integer.parseInt(index), tmp, finalFile);
                 Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
                 if (toBeUpdated != null) {
                     realm.beginTransaction();
@@ -238,8 +245,20 @@ public class Worker extends IntentService {
             } catch (IOException e) {
                 //noinspection ResultOfMethodCallIgnored
                 finalFile.delete();
-
+                //noinspection ResultOfMethodCallIgnored
+                tmp.delete();
                 PLog.d(TAG, e.getMessage(), e.getCause());
+                Exception error = new Exception(Config.getApplicationContext().getString(R.string.download_failed), e.getCause());
+                onComplete(messageId, error);
+            } catch (MessageEncryptor.EncryptionException e) {
+                if (BuildConfig.DEBUG) {
+                    throw new RuntimeException(e);
+                }
+                PLog.d(TAG, e.getMessage(), e.getCause());
+                //noinspection ResultOfMethodCallIgnored
+                finalFile.delete();
+                //noinspection ResultOfMethodCallIgnored
+                tmp.delete();
                 Exception error = new Exception(Config.getApplicationContext().getString(R.string.download_failed), e.getCause());
                 onComplete(messageId, error);
             } finally {
