@@ -137,7 +137,6 @@ public class ParseClient implements UserApiV2 {
         user.setName(name);
         user.setVersion(appVersion);
         try {
-            cleanExistingInstallation(_id);
             ParseUser parseUser = new ParseUser();
             parseUser.setPassword(makePass(user));
             parseUser.setUsername(name);
@@ -173,28 +172,11 @@ public class ParseClient implements UserApiV2 {
     private void sendToken(String userId, int verificationToken) {
         final String destinationAddress = "+" + userId;
         String message = Config.getApplicationContext().getString(R.string.verification_code) + "  " + verificationToken;
-        // FIXME: 4/24/2016 uncomment this!!!!
-        // STOPSHIP: dont build release build.
-        SmsManager.getDefault().
-                sendTextMessage(destinationAddress,
-                        null, message,
-                        null, null);
-        deleteMessage(destinationAddress, message);
+        // TODO: 12/27/16 make a cloud function call
+        SmsManager.getDefault()
+                .sendTextMessage(destinationAddress, null, message, null, null);
     }
 
-    private void cleanExistingInstallation(String _id) throws ParseException {
-//        call a cloud code or something of that sort
-//        ParseInstallation installation = ParseInstallation.getQuery().whereEqualTo(FIELD_ID, _id).getFirst();
-//        installation.delete();
-    }
-
-    @NonNull
-    private ParseACL makeReadWriteACL() {
-        ParseACL acl = new ParseACL();
-        acl.setPublicWriteAccess(true);
-        acl.setPublicReadAccess(true);
-        return acl;
-    }
 
     @Override
     public void logIn(final User user, final Callback<User> callback) {
@@ -210,7 +192,6 @@ public class ParseClient implements UserApiV2 {
 
     private synchronized void doLogIn(User user, Callback<User> callback) {
         try {
-            cleanExistingInstallation(user.getUserId());
             ParseUser parseUser = ParseUser.getCurrentUser();
             if (parseUser != null) {
                 ParseUser.logOut();
@@ -951,6 +932,7 @@ public class ParseClient implements UserApiV2 {
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
+                SystemClock.sleep(5000);
                 doSearch(query, callback);
             }
         }, true);
