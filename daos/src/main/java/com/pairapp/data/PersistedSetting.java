@@ -148,6 +148,7 @@ public class PersistedSetting extends RealmObject {
         config = new RealmConfiguration.Builder().directory(file)
                 .name("settings.realm")
                 .schemaVersion(0)
+                .encryptionKey(UserManager.getKey())
                 .deleteRealmIfMigrationNeeded().build();
     }
 

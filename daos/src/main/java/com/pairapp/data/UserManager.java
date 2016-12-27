@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 
 import com.google.i18n.phonenumbers.NumberParseException;
@@ -234,7 +235,7 @@ public final class UserManager {
         }
     }
 
-    static byte[] getKey() {
+    public static synchronized byte[] getKey() {
         SharedPreferences preferences = Config.getPreferences("lskalkaiakf");
         String part1 = preferences.getString(PART_1, null),
                 part2 = preferences.getString(PART_2, null);
@@ -243,35 +244,34 @@ public final class UserManager {
             return getKey();
         }
         byte[] ret = new byte[64],
-                part1Byte = part1.getBytes(),
-                part2Byte = part2.getBytes();
+                part1Byte = Base64.decode(part1, Base64.DEFAULT),
+                part2Byte = Base64.decode(part2, Base64.DEFAULT);
 
         if (part1Byte.length < 32 || part2Byte.length < 32) {
             genKey();
             return getKey();
         }
+        int cursor1 = 0, cursor2 = 0;
         //noinspection ManualArrayCopy
-        for (int i = 0; i < 32; i++) { //shuffle the bytes
-            ret[i] = part1Byte[i];
-        }
-        //noinspection ManualArrayCopy
-        for (int i = 0; i < 32; i++) { //shuffle the bytes
-            ret[i + 32] = part2Byte[i];
+        for (int i = 0; i < 64; i++) { //shuffle the bytes
+            ret[i] = i % 2 == 0 ? part1Byte[cursor1++] : part2Byte[cursor2++];
         }
         return ret;
     }
 
-    private static void genKey() {
+    @SuppressLint("CommitPrefEdits")
+    private static synchronized void genKey() {
         SecureRandom random = new SecureRandom();
         SharedPreferences preferences = Config.getPreferences("lskalkaiakf");
         byte[] randBytes = new byte[32];
         random.nextBytes(randBytes);
-        String keyString = FileUtils.bytesToString(randBytes);
+        String keyString = Base64.encodeToString(randBytes, Base64.DEFAULT);
         random.nextBytes(randBytes);
-        preferences.edit().putString(PART_1, keyString).apply();
-        keyString = FileUtils.bytesToString(randBytes);
-        preferences.edit().putString(PART_2, keyString)
-                .apply();
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(PART_1, keyString);
+        keyString = Base64.encodeToString(randBytes, Base64.DEFAULT);
+        editor.putString(PART_2, keyString)
+                .commit();
     }
 
     public String getCurrentUserAuthToken() {

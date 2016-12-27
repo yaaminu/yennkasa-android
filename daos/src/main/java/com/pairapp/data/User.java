@@ -256,7 +256,7 @@ public class User extends RealmObject {
         File dataFile = context.getDir("users", Context.MODE_PRIVATE);
 
         try {
-            return Realm.getInstance(config/*, UserManager.getKey()*/);
+            return Realm.getInstance(config);
         } catch (RealmException e) {
             ErrorCenter.reportError("realmSecureError", context.getString(R.string.encryptionNotAvailable), null);
             return Realm.getInstance(config);
@@ -273,6 +273,7 @@ public class User extends RealmObject {
                 .directory(file)
                 .name("userstore.realm")
                 .schemaVersion(0)
+                .encryptionKey(UserManager.getKey())
                 .deleteRealmIfMigrationNeeded().build();
     }
 }

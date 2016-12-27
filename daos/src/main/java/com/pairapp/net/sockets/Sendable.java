@@ -1,5 +1,6 @@
 package com.pairapp.net.sockets;
 
+import com.pairapp.data.UserManager;
 import com.pairapp.util.GenericUtils;
 
 import java.io.File;
@@ -126,7 +127,10 @@ public class Sendable extends RealmObject {
 
     public static Realm Realm(File folder) {
         GenericUtils.ensureNotNull(folder);
-        return Realm.getInstance(new RealmConfiguration.Builder().directory(folder).deleteRealmIfMigrationNeeded().build());
+        return Realm.getInstance(new RealmConfiguration.Builder().directory(folder)
+                .schemaVersion(0)
+                .encryptionKey(UserManager.getKey())
+                .deleteRealmIfMigrationNeeded().build());
     }
 
     public static class Builder {

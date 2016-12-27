@@ -135,6 +135,7 @@ public class Message extends RealmObject {
         config = new RealmConfiguration.Builder().directory(file)
                 .name("messagestore.realm")
                 .schemaVersion(0)
+                .encryptionKey(UserManager.getKey())
                 .deleteRealmIfMigrationNeeded().build();
     }
 
