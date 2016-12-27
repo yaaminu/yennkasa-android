@@ -28,7 +28,7 @@ public class Config {
     private static final String MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE = "http://192.168.43.115:3000";
     private static final String MESSAGE_SOCKET_API_LOCAL = "http://10.0.3.2:3000";
 
-    private static final String LIVE_SOCKET_API_REMOTE = "https://chat-server-live.herokuapp.com";
+    private static final String LIVE_SOCKET_API_REMOTE = "https://chat-server-yenkasa.herokuapp.com";
     private static final String ENV_PROD = "prod";
     private static final String ENV_DEV = "dev";
     public static final String PAIRAPP_ENV = getEnvironment();
@@ -46,7 +46,12 @@ public class Config {
 
     public static void init(Application pairApp) {
         Config.application = pairApp;
-        setUpDirs();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                setUpDirs();
+            }
+        });
     }
 
 
@@ -228,12 +233,12 @@ public class Config {
     }
 
     public static String getMessageEndpoint() {
-        if (isEmulator()) {
-            return MESSAGE_SOCKET_API_LOCAL;
-        } else {
-            return MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE;
-        }
-//        return LIVE_SOCKET_API_REMOTE;
+//        if (isEmulator()) {
+//            return MESSAGE_SOCKET_API_LOCAL;
+//        } else {
+//            return MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE;
+//        }
+        return LIVE_SOCKET_API_REMOTE;
     }
 
     private static final Map<String, String> properties = new HashMap<>();
