@@ -16,6 +16,7 @@ import com.pairapp.util.ConnectivityReceiver;
 import com.pairapp.util.PLog;
 import com.pairapp.util.Task;
 import com.pairapp.util.TaskManager;
+import com.pairapp.workers.BootReceiver;
 import com.path.android.jobqueue.Job;
 import com.path.android.jobqueue.JobManager;
 import com.path.android.jobqueue.TagConstraint;
@@ -65,7 +66,7 @@ public class PairApp extends MultiDexApplication {
     }
 
     public static void enableComponents() {
-//        enableComponent(BootReceiver.class);
+        enableComponent(BootReceiver.class);
         enableComponent(ConnectivityReceiver.class);
         enableComponent(PairAppClient.class);
         enableComponent(MessageProcessor.class);
@@ -73,6 +74,7 @@ public class PairApp extends MultiDexApplication {
     }
 
     public static void disableComponents() {
+        disableComponent(BootReceiver.class);
         disableComponent(ConnectivityReceiver.class);
         disableComponent(PairAppClient.class);
         disableComponent(MessageProcessor.class);
