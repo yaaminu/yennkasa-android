@@ -100,41 +100,47 @@ public class ChooseDisplayPictureFragment extends Fragment {
 
         @Override
         public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom loadedFrom) {
-            PLog.d(TAG, "loaded");
-            if (bitmap.getHeight() == 0) {
-                ErrorCenter.reportError(TAG, getString(R.string.error_failed_to_open_image));
-                displayPicture.setImageResource(placeHolderDp);
-            } else {
-                displayPicture.setImageBitmap(bitmap);
-                UiHelpers.showErrorDialog(getActivity(), getString(R.string.dp_prompt),
-                        getString(R.string.yes), getString(R.string.no), new UiHelpers.Listener() {
-                            @Override
-                            public void onClick() {
-                                previewLabel.setText("");
-                                callback.onDp(dp);
-                            }
-                        }, new UiHelpers.Listener() {
-                            @Override
-                            public void onClick() {
-                                previewLabel.setText(noDpNotice);
-                                displayPicture.setImageResource(placeHolderDp);
-                            }
-                        });
+            if (getActivity() != null) {
+                PLog.d(TAG, "loaded");
+                if (bitmap.getHeight() == 0) {
+                    ErrorCenter.reportError(TAG, getString(R.string.error_failed_to_open_image));
+                    displayPicture.setImageResource(placeHolderDp);
+                } else {
+                    displayPicture.setImageBitmap(bitmap);
+                    UiHelpers.showErrorDialog(getActivity(), getString(R.string.dp_prompt),
+                            getString(R.string.yes), getString(R.string.no), new UiHelpers.Listener() {
+                                @Override
+                                public void onClick() {
+                                    previewLabel.setText("");
+                                    callback.onDp(dp);
+                                }
+                            }, new UiHelpers.Listener() {
+                                @Override
+                                public void onClick() {
+                                    previewLabel.setText(noDpNotice);
+                                    displayPicture.setImageResource(placeHolderDp);
+                                }
+                            });
+                }
             }
         }
 
         @Override
         public void onBitmapFailed(Drawable drawable) {
             PLog.d(TAG, "failed");
-            previewLabel.setText(noDpNotice);
-            displayPicture.setImageDrawable(drawable);
+            if (getActivity() != null) {
+                previewLabel.setText(noDpNotice);
+                displayPicture.setImageDrawable(drawable);
+            }
         }
 
         @Override
         public void onPrepareLoad(Drawable drawable) {
             PLog.d(TAG, "before load");
-            displayPicture.setImageDrawable(drawable);
-            previewLabel.setText(R.string.loading);
+            if (getActivity() != null) {
+                displayPicture.setImageDrawable(drawable);
+                previewLabel.setText(R.string.loading);
+            }
         }
     };
     private boolean dpShown = false;

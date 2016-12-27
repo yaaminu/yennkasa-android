@@ -278,7 +278,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
             view.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View view, MotionEvent motionEvent) {
-                    if (SystemClock.uptimeMillis() - created > 5000) {
+                    if (SystemClock.uptimeMillis() - created > 2000) {
                         runnable.run();
                     }
                     return true;
@@ -301,7 +301,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
         public void onResume() {
             super.onResume();
             created = SystemClock.uptimeMillis();
-            new Handler().postDelayed(runnable, 15000);
+            new Handler().postDelayed(runnable, 5000);
         }
 
         private void goToNext() {
@@ -337,6 +337,8 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
                         }
                         if (grantResults[1] != PackageManager.PERMISSION_GRANTED) {
                             explainReason(RECEIVE_SMS);
+                        } else {
+                            goToNext();
                         }
                     } else {
                         showDialogAndKillApp();
@@ -361,6 +363,8 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
                         }).setNegativeButton(android.R.string.cancel, null)
                         .setCancelable(false)
                         .show();
+            } else {
+                goToNext();
             }
         }
 
