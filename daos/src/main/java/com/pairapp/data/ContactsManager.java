@@ -1,7 +1,9 @@
 package com.pairapp.data;
 
+import android.Manifest;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Handler;
 import android.os.Looper;
@@ -10,6 +12,7 @@ import android.provider.ContactsContract;
 import android.text.TextUtils;
 
 import com.google.i18n.phonenumbers.NumberParseException;
+import com.pairapp.Errors.PairappException;
 import com.pairapp.util.Config;
 import com.pairapp.util.PLog;
 import com.pairapp.util.PhoneNumberNormaliser;
@@ -22,6 +25,8 @@ import java.util.List;
 import java.util.Set;
 
 import io.realm.Realm;
+
+import static com.pairapp.util.Config.getApplicationContext;
 
 /**
  * @author Null-Pointer on 6/11/2015.
@@ -44,14 +49,19 @@ public class ContactsManager {
         return getCursor(context);
     }
 
-    public List<Contact> findAllContactsSync(Filter<Contact> filter, Comparator<Contact> comparator) {
+    public List<Contact> findAllContactsSync(Filter<Contact> filter, Comparator<Contact> comparator)
+            throws PairappException {
+        int results = Config.getApplicationContext().checkCallingPermission(Manifest.permission.READ_CONTACTS);
+        if (results == PackageManager.PERMISSION_DENIED) {
+            throw new PairappException("Permission denied");
+        }
         return doFindAllContacts(filter, comparator, getCursor(Config.getApplicationContext()));
     }
 
     public final Contact findContact(String userId) {
-        Cursor cursor = getCursor(Config.getApplicationContext());
+        Cursor cursor = getCursor(getApplicationContext());
         String phoneNumber, standardisedNumber;
-        Realm userRealm = User.Realm(Config.getApplicationContext());
+        Realm userRealm = User.Realm(getApplicationContext());
         try {
             if (cursor != null && cursor.moveToFirst()) {
                 do {
@@ -84,21 +94,32 @@ public class ContactsManager {
         return null;
     }
 
-    public void findAllContacts(final Filter<Contact> filter, final Comparator<Contact> comparator, final FindCallback<List<Contact>> callback) {
+    public void findAllContacts(final Filter<Contact> filter, final Comparator<Contact> comparator,
+                                final FindCallback<List<Contact>> callback) {
         //noinspection ConstantConditions
         final Handler handler = new Handler(Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper());
         new Thread(new Runnable() {
             @Override
             public void run() {
                 android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
-                final List<Contact> contacts = findAllContactsSync(filter, comparator);
-                //run on the thread on which clients originally called us if possible
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        callback.done(contacts);
-                    }
-                });
+                final List<Contact> contacts;
+                try {
+                    contacts = findAllContactsSync(filter, comparator);
+                    //run on the thread on which clients originally called us if possible
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.done(null, contacts);
+                        }
+                    });
+                } catch (final PairappException e) {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.done(e, null);
+                        }
+                    });
+                }
             }
         }).start();
     }
@@ -113,7 +134,7 @@ public class ContactsManager {
         if (cursor == null || cursor.getCount() == 0) {
             return Collections.emptyList();
         }
-        Context context = Config.getApplicationContext();
+        Context context = getApplicationContext();
         Realm realm = User.Realm(context);
         //noinspection TryFinallyCanBeTryWithResources
         try {
@@ -173,7 +194,7 @@ public class ContactsManager {
     }
 
     public interface FindCallback<T> {
-        void done(T t);
+        void done(Exception e, T t);
     }
 
     public interface Filter<T> {

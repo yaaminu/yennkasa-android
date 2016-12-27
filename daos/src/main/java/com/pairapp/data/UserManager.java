@@ -151,18 +151,22 @@ public final class UserManager {
                 } finally {
                     realm.close();
                 }
-                ContactsManager.getInstance().findAllContactsSync(new ContactsManager.Filter<ContactsManager.Contact>() {
-                    @Override
-                    public boolean accept(ContactsManager.Contact contact) throws AbortOperation {
-                        if (contact.numberInIEE_Format.equals(userId)) {
-                            user.setName(contact.name);
-                            idsAndNames.put(userId, contact.name);
-                            user.setInContacts(true);
-                            throw new AbortOperation("done"); //contact manager will stop processing contacts
+                try {
+                    ContactsManager.getInstance().findAllContactsSync(new ContactsManager.Filter<ContactsManager.Contact>() {
+                        @Override
+                        public boolean accept(ContactsManager.Contact contact) throws AbortOperation {
+                            if (contact.numberInIEE_Format.equals(userId)) {
+                                user.setName(contact.name);
+                                idsAndNames.put(userId, contact.name);
+                                user.setInContacts(true);
+                                throw new AbortOperation("done"); //contact manager will stop processing contacts
+                            }
+                            return false; //we don't care about return values
                         }
-                        return false; //we don't care about return values
-                    }
-                }, null);
+                    }, null);
+                } catch (PairappException e) {
+                    PLog.f(TAG, e.getMessage());
+                }
             } finally {
                 processLock.unlock();
             }

@@ -182,9 +182,12 @@ public class ContactFragment extends Fragment implements RealmChangeListener<Rea
         }
 
         @Override
-        public void done(List<Contact> freshContacts) {
+        public void done(Exception e, List<Contact> freshContacts) {
             final ContactFragment contactFragment = fragment.get();
-            if (contactFragment != null && !contactFragment.isDestroyed) {
+            if (contactFragment == null || !contactFragment.isDestroyed) return;
+            if (e != null) {
+                UiHelpers.showPlainOlDialog(fragment.get().getContext(), e.getMessage());
+            } else {
                 contactFragment.emptyTextView.setText(R.string.st_empty_contacts);
                 ViewUtils.showViews(contactFragment.refreshButton);
                 if (freshContacts.size() < 1) {

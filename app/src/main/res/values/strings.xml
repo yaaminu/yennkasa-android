@@ -394,4 +394,7 @@
     <string name="enable_search_message">In order to search for others, you must enable searching.\n Do you want to enable?</string>
     <string name="call_progressing">progressing</string>
     <string name="switch_camera">switch camera</string>
+    <string name="recieve_sms_explanation">To make the registration process seamless, we need to detect when you receive new SMS and automatically fill the  code for you.</string>
+    <string name="reason_for_file_system_required">We are sorry but %s cannot run without permission to access your file system</string>
+    <string name="permission_denied_title">Permission Denied</string>
 </resources>

@@ -33,9 +33,7 @@ import com.pairapp.util.ViewUtils;
 
 import io.realm.Realm;
 
-import static android.Manifest.permission.CAMERA;
-import static android.Manifest.permission.READ_CONTACTS;
-import static android.Manifest.permission.RECORD_AUDIO;
+import static android.Manifest.permission.RECEIVE_SMS;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 
@@ -46,7 +44,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     static final int UNKNOWN = -1, LOGIN_STAGE = 0, VERIFICATION_STAGE = 1, DP_STAGE = 2, COMPLETE = 3;
     private static final String STAGE = "staSKDFDge", SETUP_PREFS_KEY = "setuSLFKA", OUR_TAG = "ourTag";
     public static final int PERMISSION_REQUEST_CODE = 101;
-    private static final String[] permissions = new String[]{READ_CONTACTS, WRITE_EXTERNAL_STORAGE, RECORD_AUDIO, CAMERA,};
+    private static final String[] permissions = new String[]{WRITE_EXTERNAL_STORAGE, RECEIVE_SMS};
     int attempts = 0;
     private int stage = UNKNOWN;
     private ProgressDialog progressDialog;
@@ -331,31 +329,51 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
                                                @NonNull String permissions[], @NonNull int[] grantResults) {
             switch (requestCode) {
                 case PERMISSION_REQUEST_CODE: {
-                    boolean allowedAll = true;
                     if (grantResults.length == permissions.length) {
-                        for (int i = 0; i < grantResults.length; i++) {
-                            if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                                allowedAll = false;
-                                break;
-                            }
-                        }
-                        if (allowedAll) {
-                            goToNext();
-                        } else {
+                        if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                            //we cannot continue without file system access
                             showDialogAndKillApp();
+                            return;
+                        }
+                        if (grantResults[1] != PackageManager.PERMISSION_GRANTED) {
+                            explainReason(RECEIVE_SMS);
                         }
                     } else {
                         showDialogAndKillApp();
                     }
                 }
+                break;
+                default:
+                    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+            }
+        }
+
+
+        private void explainReason(String receiveSms) {
+            if (shouldShowRequestPermissionRationale(receiveSms)) {
+                new AlertDialog.Builder(getContext())
+                        .setMessage(R.string.recieve_sms_explanation)
+                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                requestForPermission();
+                            }
+                        }).setNegativeButton(android.R.string.cancel, null)
+                        .setCancelable(false)
+                        .show();
             }
         }
 
         private void showDialogAndKillApp() {
             new AlertDialog.Builder(getContext())
-                    .setMessage("Some required permissions were not granted. This app cannot continue to run")
-                    .setTitle("Permission Denied")
-                    .setPositiveButton(android.R.string.ok, null)
+                    .setMessage(getString(R.string.reason_for_file_system_required, getString(R.string.app_name)))
+                    .setTitle(R.string.permission_denied_title)
+                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            getActivity().finish();
+                        }
+                    })
                     .setOnDismissListener(new DialogInterface.OnDismissListener() {
                         @Override
                         public void onDismiss(DialogInterface dialog) {
