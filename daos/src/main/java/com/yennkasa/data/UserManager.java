@@ -14,7 +14,7 @@ import android.util.Log;
 
 import com.google.i18n.phonenumbers.NumberParseException;
 import com.yennkasa.Errors.ErrorCenter;
-import com.yennkasa.Errors.PairappException;
+import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.net.HttpResponse;
 import com.yennkasa.net.ParseClient;
 import com.yennkasa.net.UserApiV2;
@@ -165,7 +165,7 @@ public final class UserManager {
                             return false; //we don't care about return values
                         }
                     }, null);
-                } catch (PairappException e) {
+                } catch (YennkasaException e) {
                     PLog.f(TAG, e.getMessage());
                 }
             } finally {
@@ -1848,12 +1848,12 @@ public final class UserManager {
         return true;
     }
 
-    public String getNewAuthTokenSync(Realm realm) throws PairappException {
-        if (!isUserVerified(realm)) throw new PairappException("not registered");
+    public String getNewAuthTokenSync(Realm realm) throws YennkasaException {
+        if (!isUserVerified(realm)) throw new YennkasaException("not registered");
         return userApi.newAuthToken();
     }
 
-    public void updatePushID(String newPushId) throws PairappException {
+    public void updatePushID(String newPushId) throws YennkasaException {
         userApi.updatePushID(newPushId);
     }
 

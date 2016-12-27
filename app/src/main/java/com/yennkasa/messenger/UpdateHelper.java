@@ -33,7 +33,7 @@ class UpdateHelper {
         ThreadUtils.ensureNotMain();
         try {
             updateLock.acquire();
-            final String version = data1.getString(PairAppClient.VERSION);
+            final String version = data1.getString(YennkasaClient.VERSION);
             final int versionCode = data1.getInt("versionCode");
             if (versionCode > BuildConfig.VERSION_CODE) {
                 PLog.i(TAG, "update available, latest version: %s", version);
@@ -46,7 +46,7 @@ class UpdateHelper {
                         .setSubText(applicationContext.getString(R.string.download_update))
                         .setSmallIcon(R.drawable.ic_stat_icon).build();
                 NotificationManagerCompat manager = NotificationManagerCompat.from(applicationContext);// getSystemService(NOTIFICATION_SERVICE));
-                manager.notify("update" + TAG, PairAppClient.notId, notification);
+                manager.notify("update" + TAG, YennkasaClient.notId, notification);
                 SharedPreferences preferences = Config.getApplicationWidePrefs();
                 final String savedUpdate = preferences.getString(UPDATE_KEY, null);
                 if (savedUpdate != null) {

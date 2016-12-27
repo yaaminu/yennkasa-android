@@ -23,7 +23,7 @@ import com.yennkasa.BuildConfig;
 import com.yennkasa.R;
 import com.yennkasa.data.User;
 import com.yennkasa.data.UserManager;
-import com.yennkasa.messenger.PairAppClient;
+import com.yennkasa.messenger.YennkasaClient;
 import com.yennkasa.util.FileUtils;
 import com.yennkasa.util.GcmUtils;
 import com.yennkasa.util.MediaUtils;
@@ -109,7 +109,7 @@ public class FeedBackFragment extends Fragment {
                     startActivity(intent);
                     throw new ActivityNotFoundException();
                 } catch (ActivityNotFoundException e) {
-                    PairAppClient.sendFeedBack(reportObject, attachments);
+                    YennkasaClient.sendFeedBack(reportObject, attachments);
                     UiHelpers.showToast(R.string.feedback_sent_successfully);
                 }
             } catch (JSONException e) {

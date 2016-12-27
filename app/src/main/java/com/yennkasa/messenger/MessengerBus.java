@@ -54,9 +54,9 @@ public class MessengerBus {
         GenericUtils.ensureNotNull(bus);
         switch (bus) {
             case PAIRAPP_CLIENT_LISTENABLE_BUS:
-                return PairAppClient.listenableBus();
+                return YennkasaClient.listenableBus();
             case PAIRAPP_CLIENT_POSTABLE_BUS:
-                return PairAppClient.postableBus();
+                return YennkasaClient.postableBus();
             default:
                 throw new AssertionError();
         }

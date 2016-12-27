@@ -2,7 +2,7 @@ package com.yennkasa.data.util;
 
 import android.content.Context;
 
-import com.yennkasa.Errors.PairappException;
+import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.data.Message;
 import com.yennkasa.data.R;
 import com.yennkasa.util.PLog;
@@ -34,7 +34,7 @@ public class MessageUtils {
     private static final String TAG = MessageUtils.class.getSimpleName();
     public static final String ENCRYPTION_FAILED = "encryptionFailed";
 
-    public static boolean validate(Message message) throws PairappException {
+    public static boolean validate(Message message) throws YennkasaException {
 
         if (message == null) {
             throw new IllegalArgumentException("null message!"); //we wont report this
@@ -43,38 +43,38 @@ public class MessageUtils {
         if (message.getType() == Message.TYPE_DATE_MESSAGE) {
             final String msg = "attempted to send a date message,but will not be sent";
             PLog.w(TAG, msg);
-            throw new PairappException(msg, ERROR_IS_DATE_MESSAGE);
+            throw new YennkasaException(msg, ERROR_IS_DATE_MESSAGE);
         }
         if (message.getType() == Message.TYPE_TYPING_MESSAGE) {
             final String msg = "attempted to send a typing message,but will not be sent";
             PLog.w(TAG, msg);
-            throw new PairappException(msg, ERROR_IS_TYPING_MESSAGE);
+            throw new YennkasaException(msg, ERROR_IS_TYPING_MESSAGE);
         }
 
         if (message.hasAttachment()) { //is it a binary message?
             if (message.getMessageBody().startsWith("file://") && !new File(message.getMessageBody()).exists()) {
                 String msg = "error: " + message.getMessageBody() + " is not a valid file path";
                 PLog.w(TAG, msg);
-                throw new PairappException(msg, ERROR_FILE_DOES_NOT_EXIST);
+                throw new YennkasaException(msg, ERROR_FILE_DOES_NOT_EXIST);
 
             } else { //file exists lets check the size
                 if (new File(message.getMessageBody()).length() > FileUtils.ONE_MB * 16) {//larger
                     final String msg = "error: " + message.getMessageBody() + " is too large. max allowed size is  8MB";
                     PLog.w(TAG, msg);
-                    throw new PairappException(msg, ERROR_ATTACHMENT_TOO_LARGE);
+                    throw new YennkasaException(msg, ERROR_ATTACHMENT_TOO_LARGE);
                 }
             }
         } else { //text message
             if (message.getMessageBody().getBytes().length > FileUtils.ONE_KB * 3) { //3KB so that we can accommodate other fields which stays pretty constant
                 final String msg = "error " + message.getMessageBody() + " is too large. max allowed size is than 4KB";
                 PLog.w(TAG, msg);
-                throw new PairappException(msg, ERROR_MESSAGE_BODY_TOO_LARGE);
+                throw new YennkasaException(msg, ERROR_MESSAGE_BODY_TOO_LARGE);
             }
         }
         if ((message.getState() != Message.STATE_PENDING) && (message.getState() != Message.STATE_SEND_FAILED)) {
             final String msg = "attempted to send a sent message, but will not be sent";
             PLog.w(TAG, msg);
-            throw new PairappException(msg, ERROR_MESSAGE_ALREADY_SENT);
+            throw new YennkasaException(msg, ERROR_MESSAGE_ALREADY_SENT);
         }
         return true;
     }

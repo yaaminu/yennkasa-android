@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 import android.text.TextUtils;
 
 import com.yennkasa.BuildConfig;
-import com.yennkasa.Errors.PairappException;
+import com.yennkasa.Errors.YennkasaException;
 
 import java.lang.ref.WeakReference;
 import java.util.Collection;
@@ -127,16 +127,16 @@ public class LiveCenter {
      * one must {code release} this tag when done with it.
      *
      * @param tag the tag to identify this task. may not be null
-     * @throws PairappException if the tag is already in use
+     * @throws YennkasaException if the tag is already in use
      * @see #releaseProgressTag(Object)
      */
-    public static void acquireProgressTag(Object tag) throws PairappException {
+    public static void acquireProgressTag(Object tag) throws YennkasaException {
         if (tag == null) {
             throw new IllegalArgumentException("tag == null");
         }
         synchronized (progressLock) {
             if (tagProgressMap.containsKey(tag)) {
-                throw new PairappException("tag in use");
+                throw new YennkasaException("tag in use");
             }
             tagProgressMap.put(tag, 0);
             notifyListeners(allProgressListeners, tag, 0);

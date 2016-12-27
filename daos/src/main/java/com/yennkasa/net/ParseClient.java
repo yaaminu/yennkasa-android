@@ -11,7 +11,7 @@ import android.support.v4.util.Pair;
 import android.telephony.SmsManager;
 import android.text.TextUtils;
 
-import com.yennkasa.Errors.PairappException;
+import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.data.BuildConfig;
 import com.yennkasa.data.R;
 import com.yennkasa.data.User;
@@ -861,26 +861,26 @@ public class ParseClient implements UserApiV2 {
 
     @NonNull
     @Override
-    public String newAuthToken() throws PairappException {
+    public String newAuthToken() throws YennkasaException {
         String pushID = ParseInstallation.getCurrentInstallation().getString(PUSH_ID);
         GenericUtils.ensureNotEmpty(pushID);
         try {
             return requestForToken(pushID, false);
         } catch (ParseException e) {
             PLog.d(TAG, e.getMessage(), e);
-            throw new PairappException(e.getMessage(), e.getCode() + "");
+            throw new YennkasaException(e.getMessage(), e.getCode() + "");
         }
     }
 
     @Override
-    public void updatePushID(String newPushID) throws PairappException {
+    public void updatePushID(String newPushID) throws YennkasaException {
         ParseUser user = ParseUser.getCurrentUser();
         boolean userVerified = user.getBoolean(FIELD_VERIFIED);
         if (userVerified) {
             try {
                 requestForToken(newPushID, true);
             } catch (ParseException e) {
-                throw new PairappException(e.getMessage(), "unknown");
+                throw new YennkasaException(e.getMessage(), "unknown");
             }
         } else {
             PLog.d(TAG, "no user logged in, cannot update push id");

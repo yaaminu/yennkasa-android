@@ -20,10 +20,10 @@ import android.widget.TextView;
 
 import com.yennkasa.BuildConfig;
 import com.yennkasa.Errors.ErrorCenter;
-import com.yennkasa.PairApp;
+import com.yennkasa.Yennkasa;
 import com.yennkasa.R;
 import com.yennkasa.data.UserManager;
-import com.yennkasa.messenger.PairAppClient;
+import com.yennkasa.messenger.YennkasaClient;
 import com.yennkasa.messenger.SmsReciever;
 import com.yennkasa.util.Config;
 import com.yennkasa.util.GcmUtils;
@@ -54,7 +54,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
         public void done(Exception e) {
             progressDialog.dismiss();
             if (e == null) {
-                PairApp.enableComponent(SmsReciever.class);
+                Yennkasa.enableComponent(SmsReciever.class);
                 stage = VERIFICATION_STAGE;
                 next();
             } else {
@@ -130,11 +130,11 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
 
         switch (stage) {
             case DP_STAGE:
-                PairApp.disableComponent(SmsReciever.class);
+                Yennkasa.disableComponent(SmsReciever.class);
                 fragment = new ChooseDisplayPictureFragment();
                 break;
             case VERIFICATION_STAGE:
-                PairApp.enableComponent(SmsReciever.class);
+                Yennkasa.enableComponent(SmsReciever.class);
                 fragment = new VerificationFragment();
                 break;
             case LOGIN_STAGE:
@@ -169,7 +169,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
 
     @Override
     public void onVerified() {
-        PairApp.disableComponent(SmsReciever.class);
+        Yennkasa.disableComponent(SmsReciever.class);
         stage = DP_STAGE;
         next();
     }
@@ -185,8 +185,8 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
             return;
         }
         getActivityPreferences().edit().putInt(STAGE, COMPLETE).commit();
-        PairApp.enableComponents();
-        PairAppClient.startIfRequired(this);
+        Yennkasa.enableComponents();
+        YennkasaClient.startIfRequired(this);
         UiHelpers.gotoMainActivity(this);
     }
 

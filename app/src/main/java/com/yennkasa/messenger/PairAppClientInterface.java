@@ -49,7 +49,7 @@ import io.realm.Sort;
 
 import static com.yennkasa.messenger.MessengerBus.GET_STATUS_MANAGER;
 import static com.yennkasa.messenger.MessengerBus.ON_CALL_EVENT;
-import static com.yennkasa.messenger.PairAppClient.listenableBus;
+import static com.yennkasa.messenger.YennkasaClient.listenableBus;
 
 /**
  * @author aminu on 7/15/2016.
@@ -84,7 +84,7 @@ class PairAppClientInterface {
     void sendMessage(Message message) {
         android.os.Message msg = android.os.Message.obtain();
         msg.obj = Message.copy(message);
-        msg.what = PairAppClient.MessageHandler.SEND_MESSAGE;
+        msg.what = YennkasaClient.MessageHandler.SEND_MESSAGE;
         handler.sendMessage(msg);
     }
 
@@ -96,7 +96,7 @@ class PairAppClientInterface {
             }
             android.os.Message msg = android.os.Message.obtain();
             msg.obj = Message.copy(message);
-            msg.what = PairAppClient.MessageHandler.CANCEL_DISPATCH;
+            msg.what = YennkasaClient.MessageHandler.CANCEL_DISPATCH;
             handler.sendMessage(msg);
         } finally {
             userRealm.close();
@@ -111,7 +111,7 @@ class PairAppClientInterface {
         }
         backStack.remove(activity);
         if (backStack.isEmpty()) {
-            PLog.d(PairAppClient.TAG, "marking user as offline");
+            PLog.d(YennkasaClient.TAG, "marking user as offline");
             statusManager.announceStatusChange(false);
         }
     }
@@ -122,7 +122,7 @@ class PairAppClientInterface {
             throw new IllegalArgumentException();
         }
         if (backStack.isEmpty()) {
-            Log.d(PairAppClient.TAG, "marking user as online");
+            Log.d(YennkasaClient.TAG, "marking user as online");
             statusManager.announceStatusChange(true);
         }
         backStack.add(activity);

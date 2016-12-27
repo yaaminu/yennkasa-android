@@ -5,7 +5,7 @@ import android.content.Intent;
 
 import com.yennkasa.data.User;
 import com.yennkasa.data.UserManager;
-import com.yennkasa.messenger.PairAppClient;
+import com.yennkasa.messenger.YennkasaClient;
 import com.yennkasa.util.PLog;
 import com.parse.ParseBroadcastReceiver;
 
@@ -24,7 +24,7 @@ public class BootReceiver extends ParseBroadcastReceiver {
         Realm realm = User.Realm(context);
         try {
             if (UserManager.getInstance().isUserVerified(realm)) {
-                PairAppClient.startIfRequired(context);
+                YennkasaClient.startIfRequired(context);
             }
         } finally {
             realm.close();

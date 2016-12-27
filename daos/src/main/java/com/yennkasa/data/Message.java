@@ -6,7 +6,7 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 
-import com.yennkasa.Errors.PairappException;
+import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.data.util.MessageUtils;
 import com.yennkasa.util.Config;
 import com.yennkasa.util.FileUtils;
@@ -212,20 +212,20 @@ public class Message extends RealmObject {
      * @param to       the recipient of the {@code message}
      * @param type     the type of the message
      * @return the newly createdMessage
-     * @throws com.yennkasa.Errors.PairappException if the message is invalid. this could be because
+     * @throws com.yennkasa.Errors.YennkasaException if the message is invalid. this could be because
      *                                             a binary message is too huge, etc
      * @throws io.realm.exceptions.RealmException  if you are not in a transaction
      * @see {@link Message#makeNewCallMessageAndPersist(Realm, String, String, long, CallBody, boolean)}
      * @see {@link MessageUtils#validate(Message)}
      */
-    public static Message makeNew(Realm theRealm, String mainUserId, String body, String to, int type) throws PairappException {
+    public static Message makeNew(Realm theRealm, String mainUserId, String body, String to, int type) throws YennkasaException {
         if (type == TYPE_BIN_MESSAGE || type == TYPE_PICTURE_MESSAGE || type == TYPE_VIDEO_MESSAGE) {
             File file = new File(body);
             if (!file.exists()) {
-                throw new PairappException("file does not exists", MessageUtils.ERROR_FILE_DOES_NOT_EXIST);
+                throw new YennkasaException("file does not exists", MessageUtils.ERROR_FILE_DOES_NOT_EXIST);
             }
             if (file.length() > FileUtils.ONE_MB * 16) {
-                throw new PairappException("file is too large", MessageUtils.ERROR_ATTACHMENT_TOO_LARGE);
+                throw new YennkasaException("file is too large", MessageUtils.ERROR_ATTACHMENT_TOO_LARGE);
             }
         }
         Message message = theRealm.createObject(Message.class, generateIdPossiblyUnique(theRealm, mainUserId, to));

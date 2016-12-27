@@ -6,7 +6,7 @@ import android.support.annotation.Nullable;
 import android.util.Base64;
 
 import com.yennkasa.BuildConfig;
-import com.yennkasa.Errors.PairappException;
+import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.messenger.MessagePacker.MessagePackerException;
 import com.yennkasa.messenger.MessengerBus;
 import com.yennkasa.util.Config;
@@ -41,21 +41,21 @@ public class SenderImpl implements Sender {
     private final MessageParser parser;
     private final Authenticator authenticator;
     @Nullable
-    private PairappSocket pairappSocket;
+    private YennkasaSocket yennkasaSocket;
     private final MessageQueueImpl messageQueue;
     private volatile boolean started = false;
     @SuppressWarnings("FieldCanBeLocal")
     private final MessageQueueImpl.Consumer consumer = new MessageQueueImpl.Consumer() {
         @Override
         public void consume(Sendable item) {
-            if (pairappSocket == null || !pairappSocket.send(stringToBytes(item.getData()))) {
+            if (yennkasaSocket == null || !yennkasaSocket.send(stringToBytes(item.getData()))) {
                 messageQueue.onProcessed(item, false);
             }
         }
 
         @Override
         public int highWaterMark() {
-            return pairappSocket != null && pairappSocket.isConnected() ? 1 : 0;
+            return yennkasaSocket != null && yennkasaSocket.isConnected() ? 1 : 0;
         }
     };
     @SuppressWarnings("FieldCanBeLocal")
@@ -95,7 +95,7 @@ public class SenderImpl implements Sender {
 
     private void initialiseSocket(String token) {
         GenericUtils.ensureNotEmpty(token);
-        pairappSocket = PairappSocket.create(Collections.singletonMap("Authorization", token), listener);
+        yennkasaSocket = YennkasaSocket.create(Collections.singletonMap("Authorization", token), listener);
     }
 
     public synchronized void start() {
@@ -103,8 +103,8 @@ public class SenderImpl implements Sender {
             throw new IllegalStateException("can\'t use a stopped sender");
         }
         started = true;
-        if (pairappSocket != null) {
-            pairappSocket.init();
+        if (yennkasaSocket != null) {
+            yennkasaSocket.init();
         }
         this.messageQueue.initBlocking(true);
         this.messageQueue.start();
@@ -154,8 +154,8 @@ public class SenderImpl implements Sender {
             started = false;
             // TODO: 11/10/2016 why do we have to check if queue is start()ed before disconnecting?
             if (messageQueue.isStarted()) {
-                if (pairappSocket != null && pairappSocket.isConnected()) {
-                    pairappSocket.disConnectBlocking();
+                if (yennkasaSocket != null && yennkasaSocket.isConnected()) {
+                    yennkasaSocket.disConnectBlocking();
                 }
                 messageQueue.stopProcessing();
             }
@@ -227,7 +227,7 @@ public class SenderImpl implements Sender {
     }
 
     @SuppressWarnings("FieldCanBeLocal")
-    private final PairappSocket.PairappSocketListener listener = new PairappSocket.PairappSocketListener() {
+    private final YennkasaSocket.YennkasaSocketListener listener = new YennkasaSocket.YennkasaSocketListener() {
         @Override
         public void onMessage(byte[] bytes) {
             try {
@@ -293,7 +293,7 @@ public class SenderImpl implements Sender {
                             PLog.d(TAG, "another job already running");
                             return;
                         }
-                        pairappSocket = null;
+                        yennkasaSocket = null;
                         EventBus.getDefault().register(eventsListener, TokenRefreshJob.TOKEN_NEW_REFRESH);
                         refreshJob = TokenRefreshJob.create(authenticator);
                         TaskManager.runJob(refreshJob);
@@ -375,7 +375,7 @@ public class SenderImpl implements Sender {
         String getToken();
 
         @NonNull
-        String requestNewToken() throws PairappException;
+        String requestNewToken() throws YennkasaException;
     }
 
     private byte[] encodeToBytes(String data) {
@@ -400,8 +400,8 @@ public class SenderImpl implements Sender {
                         String newToken = (String) event.getData();
                         GenericUtils.ensureNotEmpty(newToken);
                         initialiseSocket(newToken);
-                        assert pairappSocket != null;
-                        pairappSocket.init();
+                        assert yennkasaSocket != null;
+                        yennkasaSocket.init();
                         messageQueue.resumeProcessing();
                     }
                 } else {

@@ -5,7 +5,7 @@ import org.junit.Test;
 /**
  * @author aminu on 7/11/2016.
  */
-public class PairappSocketTest {
+class YennkasaSocketTest {
 
     @Test
     public void testInit() throws Exception {

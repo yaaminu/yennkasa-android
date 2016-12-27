@@ -12,7 +12,7 @@ import com.yennkasa.data.Country;
 
 import butterknife.Bind;
 
-public class CountriesListAdapter extends PairappBaseAdapter<Country> {
+public class CountriesListAdapter extends YennkasaBaseAdapter<Country> {
 
     public CountriesListAdapter(Delegate<Country> delegate) {
         super(delegate);

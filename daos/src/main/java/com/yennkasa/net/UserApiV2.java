@@ -2,7 +2,7 @@ package com.yennkasa.net;
 
 import android.support.v4.util.Pair;
 
-import com.yennkasa.Errors.PairappException;
+import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.data.User;
 
 import java.io.File;
@@ -64,9 +64,9 @@ public interface UserApiV2 {
     boolean isUserAuthenticated();
 
 
-    String newAuthToken() throws PairappException;
+    String newAuthToken() throws YennkasaException;
 
-    void updatePushID(String newPushID) throws PairappException;
+    void updatePushID(String newPushID) throws YennkasaException;
 
 
     Pair<String, Long> getSinchToken();

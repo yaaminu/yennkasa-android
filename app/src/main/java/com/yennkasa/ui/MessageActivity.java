@@ -15,7 +15,7 @@ import android.widget.ImageButton;
 
 import com.yennkasa.BuildConfig;
 import com.yennkasa.Errors.ErrorCenter;
-import com.yennkasa.Errors.PairappException;
+import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.R;
 import com.yennkasa.data.Conversation;
 import com.yennkasa.data.Message;
@@ -200,7 +200,7 @@ public abstract class MessageActivity extends PairAppActivity implements
                             dialog.dismiss();
                         }
                     });
-                } catch (final PairappException e) {
+                } catch (final YennkasaException e) {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -219,7 +219,7 @@ public abstract class MessageActivity extends PairAppActivity implements
         try {
             Message message = createMessage(msgBody, to, msgType, active);
             doSendMessage(realm, message);
-        } catch (PairappException e) {
+        } catch (YennkasaException e) {
             ErrorCenter.reportError(TAG, e.getMessage());
         } finally {
             realm.close();
@@ -267,7 +267,7 @@ public abstract class MessageActivity extends PairAppActivity implements
                         message.deleteFromRealm();
                         realm.commitTransaction();
                         doSendMessage(realm, newMessage);
-                    } catch (PairappException e) {
+                    } catch (YennkasaException e) {
                         ErrorCenter.reportError(message.getId(), e.getMessage());
                     }
                     return;
@@ -285,7 +285,7 @@ public abstract class MessageActivity extends PairAppActivity implements
     }
 
 
-    private static Message createMessage(String messageBody, String recipient, int type, boolean active) throws PairappException {
+    private static Message createMessage(String messageBody, String recipient, int type, boolean active) throws YennkasaException {
         Realm userRealm = User.Realm(Config.getApplicationContext()),
                 realm = Conversation.Realm();
         try {
@@ -316,9 +316,9 @@ public abstract class MessageActivity extends PairAppActivity implements
             currConversation.setSummary(summary);
             realm.commitTransaction();
             return message;
-        } catch (PairappException e) { //caught for the for the purpose of cleanup
+        } catch (YennkasaException e) { //caught for the for the purpose of cleanup
             realm.cancelTransaction();
-            throw new PairappException(e.getMessage(), "");
+            throw new YennkasaException(e.getMessage(), "");
         } finally {
             userRealm.close();
             realm.close();

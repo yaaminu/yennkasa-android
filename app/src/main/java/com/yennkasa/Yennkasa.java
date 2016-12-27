@@ -8,7 +8,7 @@ import android.support.multidex.MultiDexApplication;
 import com.crashlytics.android.Crashlytics;
 import com.yennkasa.messenger.MessageCenter2;
 import com.yennkasa.messenger.MessageProcessor;
-import com.yennkasa.messenger.PairAppClient;
+import com.yennkasa.messenger.YennkasaClient;
 import com.yennkasa.messenger.SmsReciever;
 import com.yennkasa.util.Config;
 import com.yennkasa.util.ConnectivityReceiver;
@@ -29,8 +29,8 @@ import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 /**
  * @author Null-Pointer on 6/6/2015.
  */
-public class PairApp extends MultiDexApplication {
-    public static final String TAG = PairApp.class.getName();
+public class Yennkasa extends MultiDexApplication {
+    public static final String TAG = Yennkasa.class.getName();
     //    //    // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
 //    private static final String TWITTER_KEY = "p1KaIqoXt9ujhMaOPcQY4Xxi9";
 //    private static final String TWITTER_SECRET = "0m16n21jk5jNpyTusC6DrGvxmLlMcEfRUCRIkINfJoFy8oM1rZ";
@@ -67,7 +67,7 @@ public class PairApp extends MultiDexApplication {
     public static void enableComponents() {
         enableComponent(BootReceiver.class);
         enableComponent(ConnectivityReceiver.class);
-        enableComponent(PairAppClient.class);
+        enableComponent(YennkasaClient.class);
         enableComponent(MessageProcessor.class);
         enableComponent(MessageCenter2.class);
     }
@@ -75,7 +75,7 @@ public class PairApp extends MultiDexApplication {
     public static void disableComponents() {
         disableComponent(BootReceiver.class);
         disableComponent(ConnectivityReceiver.class);
-        disableComponent(PairAppClient.class);
+        disableComponent(YennkasaClient.class);
         disableComponent(MessageProcessor.class);
         disableComponent(MessageCenter2.class);
         disableComponent(SmsReciever.class);
@@ -94,7 +94,7 @@ public class PairApp extends MultiDexApplication {
         CalligraphyConfig config = new CalligraphyConfig.Builder().setDefaultFontPath(null)
                 .build();
         CalligraphyConfig.initDefault(config);
-        PairAppClient.startIfRequired(Config.getApplicationContext());
+        YennkasaClient.startIfRequired(Config.getApplicationContext());
         new Thread(new Runnable() {
             @Override
             public void run() {

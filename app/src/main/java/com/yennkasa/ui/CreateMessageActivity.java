@@ -27,7 +27,7 @@ import android.widget.BaseAdapter;
 import android.widget.Filterable;
 
 import com.yennkasa.Errors.ErrorCenter;
-import com.yennkasa.Errors.PairappException;
+import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.R;
 import com.yennkasa.adapter.MultiChoiceUsersAdapter;
 import com.yennkasa.adapter.UsersAdapter;
@@ -271,7 +271,7 @@ public class CreateMessageActivity extends PairAppActivity
                 protected Pair<String, Integer> doInBackground(Void... params) {
                     try {
                         return UiHelpers.completeAttachIntent(requestCode, data);
-                    } catch (PairappException e) {
+                    } catch (YennkasaException e) {
 
                         return null;
                     }

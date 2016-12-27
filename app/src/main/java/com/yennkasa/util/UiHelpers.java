@@ -25,7 +25,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.yennkasa.BuildConfig;
-import com.yennkasa.Errors.PairappException;
+import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.R;
 import com.yennkasa.adapter.SimpleAdapter;
 import com.yennkasa.data.ContactsManager;
@@ -236,7 +236,7 @@ public class UiHelpers {
         context.startActivity(intent);
     }
 
-    public static void attemptToViewFile(FragmentActivity context, File file) throws PairappException {
+    public static void attemptToViewFile(FragmentActivity context, File file) throws YennkasaException {
         if (file.exists()) {
             Intent intent;
             if (MediaUtils.isImage(file.getAbsolutePath())) {
@@ -252,7 +252,7 @@ public class UiHelpers {
                 showErrorDialog(context, R.string.error_sorry_no_application_to_open_file);
             }
         } else {
-            throw new PairappException("File not found", MessageUtils.ERROR_FILE_DOES_NOT_EXIST);
+            throw new YennkasaException("File not found", MessageUtils.ERROR_FILE_DOES_NOT_EXIST);
         }
     }
 
@@ -333,7 +333,7 @@ public class UiHelpers {
         return FileUtils.resolveContentUriToFilePath(data.getData(), true);
     }
 
-    public static Pair<String, Integer> completeAttachIntent(int requestCode, Intent data) throws PairappException {
+    public static Pair<String, Integer> completeAttachIntent(int requestCode, Intent data) throws YennkasaException {
         String actualPath;
         /*************************************************
          we cannot rely on external programs to return the right type of file based on the
@@ -354,7 +354,7 @@ public class UiHelpers {
                 if (file1.renameTo(file)) {
                     actualPath = file.getAbsolutePath();
                 } else {
-                    throw new PairappException(Config.getApplicationContext().getString(R.string.audio_record_failed));
+                    throw new YennkasaException(Config.getApplicationContext().getString(R.string.audio_record_failed));
                 }
                 break;
             case ChatActivity.TAKE_PHOTO_REQUEST:
@@ -379,10 +379,10 @@ public class UiHelpers {
                 throw new AssertionError("impossible");
         }
         if (TextUtils.isEmpty(actualPath)) {
-            throw new PairappException(getString(Config.getApplicationContext(), R.string.error_use_file_manager), MessageUtils.ERROR_FILE_DOES_NOT_EXIST);
+            throw new YennkasaException(getString(Config.getApplicationContext(), R.string.error_use_file_manager), MessageUtils.ERROR_FILE_DOES_NOT_EXIST);
         }
         if (new File(actualPath).length() <= 0) {
-            throw new PairappException(getString(Config.getApplicationContext(),
+            throw new YennkasaException(getString(Config.getApplicationContext(),
                     R.string.attachment_invalid) + Config.getApplicationContext().getString(R.string.new_line_path)
                     + actualPath + Config.getApplicationContext().getString(R.string.path));
         }

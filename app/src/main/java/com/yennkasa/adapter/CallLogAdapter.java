@@ -26,7 +26,7 @@ import static android.text.format.DateUtils.getRelativeTimeSpanString;
 /**
  * @author aminu on 7/20/2016.
  */
-public class CallLogAdapter extends PairappBaseAdapter<Message> {
+public class CallLogAdapter extends YennkasaBaseAdapter<Message> {
 
     private final LayoutInflater layoutInflater;
 
@@ -90,7 +90,7 @@ public class CallLogAdapter extends PairappBaseAdapter<Message> {
         return new VHolder(layoutInflater.inflate(R.layout.call_log_item, parent, false));
     }
 
-    public interface CallLogDelegate extends PairappBaseAdapter.Delegate<Message> {
+    public interface CallLogDelegate extends YennkasaBaseAdapter.Delegate<Message> {
         @NonNull
         Context getContext();
 
@@ -100,7 +100,7 @@ public class CallLogAdapter extends PairappBaseAdapter<Message> {
 }
 
 
-class VHolder extends PairappBaseAdapter.Holder {
+class VHolder extends YennkasaBaseAdapter.Holder {
 
     @Bind(R.id.tv_sender)
     TextView peerName;

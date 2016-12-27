@@ -19,7 +19,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.yennkasa.Errors.ErrorCenter;
-import com.yennkasa.Errors.PairappException;
+import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.R;
 import com.yennkasa.data.CallBody;
 import com.yennkasa.data.Message;
@@ -241,7 +241,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                     } else if (id == R.id.call_item_view || id == R.id.ib_call_button) {
                         delegate.onCallClicked(message);
                     }
-                } catch (PairappException e) {
+                } catch (YennkasaException e) {
                     ErrorCenter.reportError("viewFile", e.getMessage());
                 }
             }
@@ -426,7 +426,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         return UserManager.getInstance().getName(delegate.userRealm(), message.getFrom());
     }
 
-    private void openMessage(Message message) throws PairappException {
+    private void openMessage(Message message) throws YennkasaException {
         File messageFile = new File(message.getMessageBody());
         if (messageFile.exists()) {
             UiHelpers.attemptToViewFile((PairAppBaseActivity) context, messageFile);

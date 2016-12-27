@@ -254,7 +254,7 @@ public class Config {
     }
 
     public static String linksEndPoint() {
-        return "https://pairapp-link-maker.herokuapp.com";
+        return "https://yennkasa-link-maker.herokuapp.com";
     }
 
     public static SharedPreferences getPreferences(String s) {

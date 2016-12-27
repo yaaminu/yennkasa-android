@@ -13,7 +13,7 @@ import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 
 import com.google.i18n.phonenumbers.NumberParseException;
-import com.yennkasa.Errors.PairappException;
+import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.util.Config;
 import com.yennkasa.util.PLog;
 import com.yennkasa.util.PhoneNumberNormaliser;
@@ -51,10 +51,10 @@ public class ContactsManager {
     }
 
     public List<Contact> findAllContactsSync(Filter<Contact> filter, Comparator<Contact> comparator)
-            throws PairappException {
+            throws YennkasaException {
         int results = ContextCompat.checkSelfPermission(Config.getApplicationContext(), Manifest.permission.READ_CONTACTS);
         if (results == PackageManager.PERMISSION_DENIED) {
-            throw new PairappException("Permission denied");
+            throw new YennkasaException("Permission denied");
         }
         return doFindAllContacts(filter, comparator, getCursor(Config.getApplicationContext()));
     }
@@ -113,7 +113,7 @@ public class ContactsManager {
                             callback.done(null, contacts);
                         }
                     });
-                } catch (final PairappException e) {
+                } catch (final YennkasaException e) {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {

@@ -12,7 +12,7 @@ import android.text.TextUtils;
 
 import com.yennkasa.BuildConfig;
 import com.yennkasa.Errors.ErrorCenter;
-import com.yennkasa.Errors.PairappException;
+import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.R;
 import com.yennkasa.data.Message;
 import com.yennkasa.data.User;
@@ -121,7 +121,7 @@ public class Worker extends IntentService {
         try {
             LiveCenter.acquireProgressTag(message.getId());
             runningDownloads.put(message.getId(), service.submit(new DownloadRunnable(message, isAutoDownload)));
-        } catch (PairappException e) {
+        } catch (YennkasaException e) {
             throw new RuntimeException(e.getCause());
         }
     }
@@ -220,7 +220,7 @@ public class Worker extends IntentService {
                                 .setSubText(progress > 0 ? Config.getApplicationContext().getString(R.string.downloaded) + FileUtils.sizeInLowestPrecision(processed) + "/" + FileUtils.sizeInLowestPrecision(expected) : Config.getApplicationContext().getString(R.string.loading))
                                 .setSmallIcon(R.drawable.ic_file_download_white_36dp).build();
                         NotificationManagerCompat manager = NotificationManagerCompat.from(Config.getApplicationContext());// getSystemService(NOTIFICATION_SERVICE));
-                        manager.notify(messageId, PairAppClient.notId, notification);
+                        manager.notify(messageId, YennkasaClient.notId, notification);
                     }
                     if (progress == 100 && !done) {
                         done = true;

@@ -3,7 +3,7 @@ package com.yennkasa.messenger;
 import android.net.Uri;
 import android.util.Log;
 
-import com.yennkasa.Errors.PairappException;
+import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.data.Message;
 import com.yennkasa.data.User;
 import com.yennkasa.data.util.MessageUtils;
@@ -245,7 +245,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             } else {
                 proceedToSend(message);
             }
-        } catch (PairappException e) {
+        } catch (YennkasaException e) {
             onFailed(message.getId(), e.getMessage());
         }
     }

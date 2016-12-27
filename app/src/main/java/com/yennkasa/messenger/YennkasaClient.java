@@ -14,7 +14,7 @@ import android.support.v4.util.LruCache;
 import android.support.v4.util.Pair;
 
 import com.yennkasa.BuildConfig;
-import com.yennkasa.Errors.PairappException;
+import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.call.CallController;
 import com.yennkasa.call.CallManager;
 import com.yennkasa.data.Message;
@@ -93,8 +93,8 @@ import static com.yennkasa.messenger.MessengerBus.VIDEO_CALL_USER;
 import static com.yennkasa.messenger.MessengerBus.VOICE_CALL_USER;
 
 
-public class PairAppClient extends Service {
-    public static final String TAG = PairAppClient.class.getSimpleName();
+public class YennkasaClient extends Service {
+    public static final String TAG = YennkasaClient.class.getSimpleName();
     static final String VERSION = "version";
     static final int notId = 10983;
     private static AtomicBoolean isClientStarted = new AtomicBoolean(false);
@@ -126,7 +126,7 @@ public class PairAppClient extends Service {
                 return;
             }
             if (!isClientStarted.get()) {
-                Intent pairAppClient = new Intent(context, PairAppClient.class);
+                Intent pairAppClient = new Intent(context, YennkasaClient.class);
                 context.startService(pairAppClient);
             }
         } finally {
@@ -274,7 +274,7 @@ public class PairAppClient extends Service {
 
         @NonNull
         @Override
-        public String requestNewToken() throws PairappException {
+        public String requestNewToken() throws YennkasaException {
             Realm realm = User.Realm(Config.getApplicationContext());
             try {
                 return UserManager.getInstance().getNewAuthTokenSync(realm);
@@ -318,7 +318,7 @@ public class PairAppClient extends Service {
         if (message.hasAttachment()) {
             try {
                 LiveCenter.acquireProgressTag(message.getId());
-            } catch (PairappException e) {
+            } catch (YennkasaException e) {
                 throw new RuntimeException(e.getCause());
             }
         }
@@ -426,7 +426,7 @@ public class PairAppClient extends Service {
                 //notice that we don't rely on the future to be null before we cancel notifications
                 //this is because we want to give user impression that the message has been cancelled.
                 monitor.onDispatchFailed(message.getId(), MessageUtils.ERROR_CANCELLED);
-                Realm realm = Message.REALM(PairAppClient.this);
+                Realm realm = Message.REALM(YennkasaClient.this);
                 try {
                     message.setState(Message.STATE_SEND_FAILED);
                     Message liveMessage = realm.where(Message.class).equalTo(Message.FIELD_ID, message.getId()).findFirst();

@@ -16,7 +16,7 @@ import android.widget.EditText;
 
 import com.yennkasa.R;
 import com.yennkasa.adapter.CountriesListAdapter;
-import com.yennkasa.adapter.PairappBaseAdapter;
+import com.yennkasa.adapter.YennkasaBaseAdapter;
 import com.yennkasa.data.Country;
 import com.yennkasa.util.ViewUtils;
 
@@ -79,9 +79,9 @@ public class CountryLists extends AppCompatActivity {
         super.onDestroy();
     }
 
-    private final PairappBaseAdapter.Delegate<Country> delegate = new PairappBaseAdapter.Delegate<Country>() {
+    private final YennkasaBaseAdapter.Delegate<Country> delegate = new YennkasaBaseAdapter.Delegate<Country>() {
         @Override
-        public void onItemClick(PairappBaseAdapter<Country> adapter, View view, int position, long id) {
+        public void onItemClick(YennkasaBaseAdapter<Country> adapter, View view, int position, long id) {
             Intent intent = new Intent();
             intent.putExtra(Country.FIELD_CCC, adapter.getItem(position).getCcc());
             setResult(RESULT_OK, intent);
@@ -89,7 +89,7 @@ public class CountryLists extends AppCompatActivity {
         }
 
         @Override
-        public boolean onItemLongClick(PairappBaseAdapter<Country> adapter, View view, int position, long id) {
+        public boolean onItemLongClick(YennkasaBaseAdapter<Country> adapter, View view, int position, long id) {
             return false;
         }
 

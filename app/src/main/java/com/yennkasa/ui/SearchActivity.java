@@ -18,7 +18,7 @@ import android.widget.TextView;
 
 import com.jakewharton.rxbinding.widget.RxTextView;
 import com.yennkasa.R;
-import com.yennkasa.adapter.PairappBaseAdapter;
+import com.yennkasa.adapter.YennkasaBaseAdapter;
 import com.yennkasa.data.User;
 import com.yennkasa.data.UserManager;
 import com.yennkasa.util.Event;
@@ -194,7 +194,7 @@ public class SearchActivity extends PairAppActivity {
     }
 
 
-    static class SearchResultsAdapter extends PairappBaseAdapter<User> {
+    static class SearchResultsAdapter extends YennkasaBaseAdapter<User> {
 
         private final int width;
         private final int height;
@@ -241,14 +241,14 @@ public class SearchActivity extends PairAppActivity {
 
     }
 
-    private final PairappBaseAdapter.Delegate<User> delegate = new PairappBaseAdapter.Delegate<User>() {
+    private final YennkasaBaseAdapter.Delegate<User> delegate = new YennkasaBaseAdapter.Delegate<User>() {
         @Override
-        public void onItemClick(PairappBaseAdapter<User> adapter, View view, int position, long id) {
+        public void onItemClick(YennkasaBaseAdapter<User> adapter, View view, int position, long id) {
             UiHelpers.gotoProfileActivity(SearchActivity.this, adapter.getItem(position).getUserId());
         }
 
         @Override
-        public boolean onItemLongClick(PairappBaseAdapter<User> adapter, View view, int position, long id) {
+        public boolean onItemLongClick(YennkasaBaseAdapter<User> adapter, View view, int position, long id) {
             return false;
         }
 

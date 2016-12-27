@@ -17,7 +17,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
 
-import com.yennkasa.PairApp;
+import com.yennkasa.Yennkasa;
 import com.yennkasa.R;
 import com.yennkasa.data.Conversation;
 import com.yennkasa.data.UserManager;
@@ -187,7 +187,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                 UiHelpers.gotoSetUpActivity(this);
             }
         } else {
-            PairApp.disableComponents();
+            Yennkasa.disableComponents();
             UiHelpers.gotoSetUpActivity(this);
         }
     }

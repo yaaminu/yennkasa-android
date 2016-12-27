@@ -25,7 +25,7 @@ import com.yennkasa.data.Message;
 import com.yennkasa.data.User;
 import com.yennkasa.data.UserManager;
 import com.yennkasa.messenger.MessengerBus;
-import com.yennkasa.messenger.PairAppClient;
+import com.yennkasa.messenger.YennkasaClient;
 import com.yennkasa.util.Event;
 import com.yennkasa.util.PLog;
 import com.yennkasa.util.ViewUtils;
@@ -227,7 +227,7 @@ public abstract class BaseCallActivity extends PairAppActivity {
     protected void onStop() {
         super.onStop();
         if (getCallData().getCallState() != CallData.ENDED && !delibratelyEndingCall) {
-            Intent intent = new Intent(this, PairAppClient.class);
+            Intent intent = new Intent(this, YennkasaClient.class);
             intent.setAction(MessengerBus.HANG_UP_CALL);
             intent.putExtra(EXTRA_CALL_DATA, callData);
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this)

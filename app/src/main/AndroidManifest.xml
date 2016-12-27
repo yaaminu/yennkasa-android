@@ -32,7 +32,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
-        android:name="com.yennkasa.PairApp"
+        android:name="com.yennkasa.Yennkasa"
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
@@ -181,7 +181,7 @@
             android:enabled="false"
             android:exported="false" />
         <service
-            android:name="com.yennkasa.messenger.PairAppClient"
+            android:name="com.yennkasa.messenger.YennkasaClient"
             android:enabled="false"
             android:exported="false" />
 

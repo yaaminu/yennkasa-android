@@ -21,14 +21,14 @@ import io.realm.Realm;
  * {@link Holder}
  * author Null-Pointer on 1/23/2016.
  */
-public abstract class PairappBaseAdapter<T> extends RecyclerView.Adapter<PairappBaseAdapter.Holder> {
+public abstract class YennkasaBaseAdapter<T> extends RecyclerView.Adapter<YennkasaBaseAdapter.Holder> {
 
-    private static final String TAG = PairappBaseAdapter.class.getSimpleName();
+    private static final String TAG = YennkasaBaseAdapter.class.getSimpleName();
     protected final Delegate<T> delegate;
     private List<T> items;
     private int lastBoundPosition = RecyclerView.NO_POSITION;
 
-    public PairappBaseAdapter(Delegate<T> delegate) {
+    public YennkasaBaseAdapter(Delegate<T> delegate) {
         this.items = delegate.dataSet();
         this.delegate = delegate;
     }
@@ -88,13 +88,13 @@ public abstract class PairappBaseAdapter<T> extends RecyclerView.Adapter<Pairapp
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                delegate.onItemClick(PairappBaseAdapter.this, view, position, getItemId(position));
+                delegate.onItemClick(YennkasaBaseAdapter.this, view, position, getItemId(position));
             }
         });
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
-                return delegate.onItemLongClick(PairappBaseAdapter.this, view, position, getItemId(position));
+                return delegate.onItemLongClick(YennkasaBaseAdapter.this, view, position, getItemId(position));
             }
         });
     }
@@ -144,7 +144,7 @@ public abstract class PairappBaseAdapter<T> extends RecyclerView.Adapter<Pairapp
          * @param position the current position in the data set
          * @param id       the id of the current item
          */
-        void onItemClick(PairappBaseAdapter<T> adapter, View view, int position, long id);
+        void onItemClick(YennkasaBaseAdapter<T> adapter, View view, int position, long id);
 
         /**
          * @param adapter  the adapter to which this view is bound
@@ -152,7 +152,7 @@ public abstract class PairappBaseAdapter<T> extends RecyclerView.Adapter<Pairapp
          * @param position the current position in the data set
          * @param id       the id of the current item
          */
-        boolean onItemLongClick(PairappBaseAdapter<T> adapter, View view, int position, long id);
+        boolean onItemLongClick(YennkasaBaseAdapter<T> adapter, View view, int position, long id);
 
         /**
          * @return the dataset used to back this adapter, may not be null

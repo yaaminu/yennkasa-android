@@ -37,7 +37,7 @@ import com.yennkasa.data.Message;
 import com.yennkasa.data.User;
 import com.yennkasa.data.UserManager;
 import com.yennkasa.messenger.MessengerBus;
-import com.yennkasa.messenger.PairAppClient;
+import com.yennkasa.messenger.YennkasaClient;
 import com.yennkasa.util.Config;
 import com.yennkasa.util.Event;
 import com.yennkasa.util.FileUtils;
@@ -146,7 +146,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         @Override
         public void download(Message message) {
             UiHelpers.showToast(getString(R.string.preparing_to_download), Toast.LENGTH_SHORT);
-            PairAppClient.downloadAttachment(message);
+            YennkasaClient.downloadAttachment(message);
         }
 
         @Override
@@ -156,7 +156,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
         @Override
         public void cancelDownload(Message message) {
-            PairAppClient.cancelDownload(message);
+            YennkasaClient.cancelDownload(message);
         }
 
         @Override

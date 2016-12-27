@@ -12,17 +12,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @author aminu on 6/19/2016.
  */
-class PairappSocket {
-    public static final String TAG = PairappSocket.class.getSimpleName();
+class YennkasaSocket {
+    public static final String TAG = YennkasaSocket.class.getSimpleName();
 
     private final WebSocketClient webSocketClient;
     private final AtomicBoolean initialized = new AtomicBoolean(false);
 
-    private PairappSocket(Map<String, String> headers, PairappSocketListener pairappSocketListener) {
+    private YennkasaSocket(Map<String, String> headers, YennkasaSocketListener yennkasaSocketListener) {
         webSocketClient = new WebSocketClient.Builder()
                 .endpoint(Config.getMessageEndpoint())
                 .headers(headers)
-                .listener(pairappSocketListener)
+                .listener(yennkasaSocketListener)
                 .networkProvider(networkProvider)
                 .logger(logger)
                 .timeOut(5000)
@@ -60,10 +60,10 @@ class PairappSocket {
         }
     }
 
-    public static PairappSocket create(Map<String, String> headers, PairappSocketListener listener) {
+    public static YennkasaSocket create(Map<String, String> headers, YennkasaSocketListener listener) {
         ThreadUtils.ensureNotMain();
         GenericUtils.ensureNotNull(headers);
-        return new PairappSocket(headers, listener);
+        return new YennkasaSocket(headers, listener);
     }
 
     private final ConnectionUtils.ConnectivityListener connectivityChangeListener = new ConnectionUtils.ConnectivityListener() {
@@ -130,11 +130,11 @@ class PairappSocket {
 
         @Override
         public void registerNetworkChangeListener(WebSocketClient.NetworkChangeListener listener) {
-            PairappSocket.this.changeListener = listener;
+            YennkasaSocket.this.changeListener = listener;
         }
     };
 
-    interface PairappSocketListener extends ClientListener {
+    interface YennkasaSocketListener extends ClientListener {
 
     }
 }

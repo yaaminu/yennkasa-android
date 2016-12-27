@@ -52,7 +52,7 @@ public class MessageCenter2 extends FirebaseMessagingService {
                 // TODO: 11/12/2016 Aminu is this message is going to be lost? or should we persist and replay it on next startup?
                 PLog.f(TAG, "oh no!!!! no handler available to handle push message.This is very strange");
                 PLog.f(TAG, "starting handler if possible");
-                PairAppClient.startIfRequired(context);
+                YennkasaClient.startIfRequired(context);
                 //keep looping till we are able to process this message
                 try {
                     Thread.sleep(3000);
