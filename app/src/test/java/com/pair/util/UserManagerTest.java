@@ -1,9 +1,9 @@
-package com.pairapp.util;
+package com.yennkasa.util;
 
 import android.content.Context;
 
-import com.pairapp.data.User;
-import com.pairapp.data.UserManager;
+import com.yennkasa.data.User;
+import com.yennkasa.data.UserManager;
 
 import org.junit.After;
 import org.junit.Assert;

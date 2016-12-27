@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <com.pairapp.view.RelativeLayout
+    <com.yennkasa.view.RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
@@ -26,7 +26,7 @@
             tools:ignore="HardcodedText"
             tools:text="sender" />
 
-        <com.pairapp.view.LinearLayout
+        <com.yennkasa.view.LinearLayout
             android:id="@+id/ll_message_body_view"
             style="@style/incoming_message_body_root_view.extra"
             android:layout_width="wrap_content"
@@ -45,7 +45,7 @@
                 android:text="12-12-12"
                 tools:ignore="HardcodedText" />
 
-            <com.pairapp.view.FrameLayout
+            <com.yennkasa.view.FrameLayout
                 android:id="@+id/fl_message_body_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -61,9 +61,9 @@
                     android:singleLine="true"
                     android:text="hi when are you coming was testing"
                     tools:ignore="HardcodedText" />
-            </com.pairapp.view.FrameLayout>
+            </com.yennkasa.view.FrameLayout>
 
-        </com.pairapp.view.LinearLayout>
+        </com.yennkasa.view.LinearLayout>
 
         <ImageButton
             android:id="@+id/iv_retry"
@@ -97,7 +97,7 @@
             android:minWidth="@dimen/thumbnail_width"
             android:visibility="gone" />
 
-        <com.pairapp.view.ProgressWheel
+        <com.yennkasa.view.ProgressWheel
             android:id="@+id/pb_download_progress_indeterminate"
             android:layout_width="48dp"
             android:layout_height="48dp"
@@ -107,7 +107,7 @@
             app:pv_circular="true"
             app:pv_progressMode="indeterminate"
             app:pv_progressStyle="@style/base_indeterminate_progress_style" />
-    </com.pairapp.view.RelativeLayout>
+    </com.yennkasa.view.RelativeLayout>
 
     <include layout="@layout/message_spacing_extra" />
 </LinearLayout>

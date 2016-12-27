@@ -1,12 +1,12 @@
-<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.yennkasa.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.pairapp.ui.CreateMessageActivity">
+    tools:context="com.yennkasa.ui.CreateMessageActivity">
 
-    <com.pairapp.view.LinearLayout
+    <com.yennkasa.view.LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:animateLayoutChanges="true"
@@ -59,8 +59,8 @@
             android:paddingLeft="@dimen/activity_horizontal_margin"
             android:paddingRight="@dimen/activity_horizontal_margin" />
 
-    </com.pairapp.view.LinearLayout>
+    </com.yennkasa.view.LinearLayout>
 
     <include layout="@layout/snack_bar" />
-</com.pairapp.view.RelativeLayout>
+</com.yennkasa.view.RelativeLayout>
 

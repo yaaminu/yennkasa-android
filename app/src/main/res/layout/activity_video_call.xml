@@ -42,7 +42,7 @@
         android:layout_gravity="start|left"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
         android:layout_marginTop="@dimen/activity_vertical_margin"
-        android:text="@string/pairapp_call"
+        android:text="@string/yennkasa_call"
         android:textColor="@color/white" />
 
 
@@ -65,7 +65,7 @@
         android:background="@color/transparent"
         android:orientation="vertical">
 
-        <com.pairapp.view.RoundedImageView
+        <com.yennkasa.view.RoundedImageView
             android:id="@+id/iv_user_avatar"
             android:layout_width="@dimen/video_call_local_view_width"
             android:layout_height="@dimen/video_call_local_view_height"

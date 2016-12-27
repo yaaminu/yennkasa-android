@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <com.pairapp.view.RelativeLayout
+    <com.yennkasa.view.RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -24,7 +24,7 @@
             android:textStyle="bold"
             tools:text="sender" />
 
-        <com.pairapp.view.LinearLayout
+        <com.yennkasa.view.LinearLayout
             android:id="@+id/ll_message_body_view"
             style="@style/incoming_message_body_root_view"
             android:layout_width="wrap_content"
@@ -32,7 +32,7 @@
             android:layout_below="@id/tv_sender_name"
             android:orientation="vertical">
 
-            <com.pairapp.view.FrameLayout
+            <com.yennkasa.view.FrameLayout
                 android:id="@+id/fl_message_body_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
@@ -67,7 +67,7 @@
                     android:visibility="gone">
 
 
-                    <com.pairapp.view.ProgressWheel
+                    <com.yennkasa.view.ProgressWheel
                         android:id="@+id/pb_download_progress_indeterminate"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
@@ -85,7 +85,7 @@
                         android:src="@drawable/ic_file_download_white_36dp"
                         android:visibility="gone" />
                 </FrameLayout>
-            </com.pairapp.view.FrameLayout>
+            </com.yennkasa.view.FrameLayout>
 
 
             <TextView
@@ -93,7 +93,7 @@
                 style="@style/message_incoming_date"
                 android:singleLine="true"
                 android:text="@string/sample_date" />
-        </com.pairapp.view.LinearLayout>
+        </com.yennkasa.view.LinearLayout>
         <!-- this textView is useless except that it frees us from checking for
         null-ness in the {@link MessagesAdapter}-->
         <TextView
@@ -116,7 +116,7 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             tools:ignore="ContentDescription" />
-    </com.pairapp.view.RelativeLayout>
+    </com.yennkasa.view.RelativeLayout>
 
     <include layout="@layout/message_spacing_normal" />
 </LinearLayout>

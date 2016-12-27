@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.pairapp.ui.SettingsActivityMain">
+    tools:context="com.yennkasa.ui.SettingsActivityMain">
 
     <include layout="@layout/toolbar" />
 
@@ -15,7 +15,7 @@
 
         <fragment
             android:id="@+id/settings_fragment"
-            android:name="com.pairapp.ui.SettingsFragment2"
+            android:name="com.yennkasa.ui.SettingsFragment2"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             tools:layout="@layout/fragment_settings_fragment2" />

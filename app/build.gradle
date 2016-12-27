@@ -15,7 +15,7 @@ android {
         unitTests.returnDefaultValues = true
     }
     defaultConfig {
-        applicationId "com.pairapp"
+        applicationId "com.yennkasa"
         minSdkVersion project.properties.projectMinSdkVersion
         targetSdkVersion project.properties.projectTargetSdkVersion
         multiDexEnabled true

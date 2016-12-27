@@ -1,4 +1,4 @@
-<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.yennkasa.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     style="@style/FlatButtonRippleStyle"
     android:layout_width="match_parent"
@@ -9,7 +9,7 @@
     android:padding="@dimen/list_item_padding"
     tools:ignore="RtlHardcoded">
 
-    <com.pairapp.view.LinearLayout
+    <com.yennkasa.view.LinearLayout
         android:id="@+id/main"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -32,7 +32,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="false" />
-    </com.pairapp.view.LinearLayout>
+    </com.yennkasa.view.LinearLayout>
 
     <com.rey.material.widget.TextView
         android:id="@+id/tv_summary"
@@ -53,4 +53,4 @@
         android:layout_marginLeft="@dimen/divider_right_offset"
         android:layout_marginRight="@dimen/divider_right_offset"
         android:gravity="bottom" />
-</com.pairapp.view.RelativeLayout>
+</com.yennkasa.view.RelativeLayout>

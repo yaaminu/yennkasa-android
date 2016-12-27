@@ -1,8 +1,8 @@
-package com.pairapp.util;
+package com.yennkasa.util;
 
 import android.net.Uri;
 
-import com.pairapp.BuildConfig;
+import com.yennkasa.BuildConfig;
 
 import junit.framework.TestCase;
 

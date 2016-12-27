@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.pairapp">
+    package="com.yennkasa">
 
     <uses-sdk
         android:minSdkVersion="9"
@@ -16,7 +16,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-    <uses-permission android:name="com.pairapp.permission.C2D_MESSAGE" />
+    <uses-permission android:name="com.yennkasa.permission.C2D_MESSAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
@@ -26,13 +26,13 @@
     <uses-permission android:name="android.permission.SEND_SMS" />
 
     <permission
-        android:name="com.pairapp.permission.C2D_MESSAGE"
+        android:name="com.yennkasa.permission.C2D_MESSAGE"
         android:protectionLevel="signature" />
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
-        android:name=".PairApp"
+        android:name="com.yennkasa.PairApp"
         android:allowBackup="true"
         android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
@@ -41,7 +41,7 @@
         android:theme="@style/Theme.AppTheme"
         tools:ignore="UnusedAttribute">
         <activity
-            android:name=".ui.MainActivity"
+            android:name="com.yennkasa.ui.MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleTask"
             android:windowSoftInputMode="adjustNothing">
@@ -80,129 +80,129 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.SetUpActivity"
+            android:name="com.yennkasa.ui.SetUpActivity"
             android:configChanges="orientation|keyboardHidden"
             android:excludeFromRecents="true"
             android:label="@string/title_activity_set_up"
             android:launchMode="singleTask"
             android:theme="@style/AppTheme.Fullscreen" />
         <activity
-            android:name=".ui.ChatActivity"
+            android:name="com.yennkasa.ui.ChatActivity"
             android:configChanges="orientation|keyboard|keyboardHidden"
             android:label="@string/title_activity_chat"
             android:launchMode="singleTask"
-            android:parentActivityName=".ui.MainActivity"
+            android:parentActivityName="com.yennkasa.ui.MainActivity"
             android:windowSoftInputMode="stateHidden|adjustResize"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity" />
+                android:value="com.yennkasa.ui.MainActivity" />
         </activity>
         <activity
-            android:name=".ui.ImageCropper"
+            android:name="com.yennkasa.ui.ImageCropper"
             android:configChanges="orientation|keyboardHidden|fontScale"
             android:excludeFromRecents="true"
             android:exported="false" />
         <activity
-            android:name=".ui.ProfileActivity"
+            android:name="com.yennkasa.ui.ProfileActivity"
             android:configChanges="keyboardHidden|fontScale"
             android:label="@string/title_activity_profile"
             android:launchMode="singleTop"
-            android:parentActivityName=".ui.MainActivity"
+            android:parentActivityName="com.yennkasa.ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity" />
+                android:value="com.yennkasa.ui.MainActivity" />
         </activity>
         <activity
-            android:name=".ui.InviteActivity"
+            android:name="com.yennkasa.ui.InviteActivity"
             android:configChanges="orientation|keyboardHidden|fontScale|locale"
             android:label="@string/title_invite_friends"
-            android:parentActivityName=".ui.MainActivity"
+            android:parentActivityName="com.yennkasa.ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity" />
+                android:value="com.yennkasa.ui.MainActivity" />
         </activity>
         <activity
-            android:name=".ui.CountryLists"
+            android:name="com.yennkasa.ui.CountryLists"
             android:configChanges="orientation|keyboardHidden|fontScale|locale"
             android:label="@string/select_country"
             android:launchMode="singleTask"
-            android:parentActivityName=".ui.SetUpActivity"
+            android:parentActivityName="com.yennkasa.ui.SetUpActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.SetUpActivity" />
+                android:value="com.yennkasa.ui.SetUpActivity" />
         </activity>
         <activity
-            android:name=".ui.UsersActivity"
+            android:name="com.yennkasa.ui.UsersActivity"
             android:configChanges="orientation|keyboardHidden|fontScale|locale"
             android:label="@string/title_activity_users"
-            android:parentActivityName=".ui.MainActivity"
+            android:parentActivityName="com.yennkasa.ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity" />
+                android:value="com.yennkasa.ui.MainActivity" />
         </activity>
         <activity
-            android:name=".ui.ImageViewer"
+            android:name="com.yennkasa.ui.ImageViewer"
             android:configChanges="orientation|keyboardHidden|fontScale|locale"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
         <activity
-            android:name=".ui.CreateGroupActivity"
+            android:name="com.yennkasa.ui.CreateGroupActivity"
             android:configChanges="orientation|keyboardHidden|fontScale|locale"
             android:label="@string/title_activity_create_group"
-            android:parentActivityName=".ui.MainActivity"
+            android:parentActivityName="com.yennkasa.ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity" />
+                android:value="com.yennkasa.ui.MainActivity" />
         </activity>
         <activity
-            android:name=".ui.CreateMessageActivity"
+            android:name="com.yennkasa.ui.CreateMessageActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|fontScale|locale"
             android:label="@string/title_activity_create_message"
-            android:parentActivityName=".ui.MainActivity"
+            android:parentActivityName="com.yennkasa.ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity" />
+                android:value="com.yennkasa.ui.MainActivity" />
         </activity>
 
         <provider
             android:name="vc908.stickerfactory.provider.StickersProvider"
-            android:authorities="com.pairapp.stickersProvider"
+            android:authorities="com.yennkasa.stickersProvider"
             android:exported="false" />
 
         <service android:name="com.parse.PushService" />
         <service
-            android:name=".messenger.MessageProcessor"
+            android:name="com.yennkasa.messenger.MessageProcessor"
             android:enabled="false"
             android:exported="false" />
         <service
-            android:name=".messenger.PairAppClient"
+            android:name="com.yennkasa.messenger.PairAppClient"
             android:enabled="false"
             android:exported="false" />
 
         <activity
-            android:name=".ui.LoginSignupPrompt"
+            android:name="com.yennkasa.ui.LoginSignupPrompt"
             android:excludeFromRecents="true"
             android:label="@string/title_activity_login_signup_prompt"
             android:launchMode="singleTask" />
         <activity
-            android:name=".ui.SettingsActivity"
+            android:name="com.yennkasa.ui.SettingsActivity"
             android:exported="false"
             android:label="@string/action_settings"
-            android:parentActivityName=".ui.MainActivity"
+            android:parentActivityName="com.yennkasa.ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity" />
+                android:value="com.yennkasa.ui.MainActivity" />
         </activity>
 
         <service
-            android:name=".messenger.Worker"
+            android:name="com.yennkasa.messenger.Worker"
             android:exported="false" />
 
         <meta-data
@@ -210,38 +210,38 @@
             android:value="992065039d2595e2d7ecab18e9062a2fd6152747" />
 
         <activity
-            android:name=".ui.VoiceCallActivity"
+            android:name="com.yennkasa.ui.VoiceCallActivity"
             android:launchMode="singleTask" />
         <activity
-            android:name=".ui.VideoCallActivity"
+            android:name="com.yennkasa.ui.VideoCallActivity"
             android:launchMode="singleTask"
             android:theme="@style/AppTheme.Fullscreen" />
 
         <service
-            android:name=".messenger.MessageCenter2"
+            android:name="com.yennkasa.messenger.MessageCenter2"
             android:enabled="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-        <service android:name=".messenger.FireBaseInstantIDService">
+        <service android:name="com.yennkasa.messenger.FireBaseInstantIDService">
             <intent-filter>
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
         <!-- [END firebase_iid_service] -->
         <activity
-            android:name=".ui.SettingsActivityMain"
+            android:name="com.yennkasa.ui.SettingsActivityMain"
             android:label="@string/action_settings"
-            android:parentActivityName=".ui.MainActivity"
+            android:parentActivityName="com.yennkasa.ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity" />
+                android:value="com.yennkasa.ui.MainActivity" />
         </activity>
 
         <receiver
-            android:name=".messenger.SmsReciever"
+            android:name="com.yennkasa.messenger.SmsReciever"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -250,17 +250,17 @@
         </receiver>
 
         <activity
-            android:name=".ui.SearchActivity"
+            android:name="com.yennkasa.ui.SearchActivity"
             android:launchMode="singleTask"
-            android:parentActivityName=".ui.MainActivity"
+            android:parentActivityName="com.yennkasa.ui.MainActivity"
             tools:ignore="UnusedAttribute">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.pairapp.ui.MainActivity" />
+                android:value="com.yennkasa.ui.MainActivity" />
         </activity>
 
         <receiver
-            android:name=".util.ConnectivityReceiver"
+            android:name="com.yennkasa.util.ConnectivityReceiver"
             android:enabled="false"
             android:exported="true">
             <intent-filter>
@@ -268,7 +268,7 @@
             </intent-filter>
         </receiver>
         <receiver
-            android:name=".workers.BootReceiver"
+            android:name="com.yennkasa.workers.BootReceiver"
             android:enabled="false"
             android:exported="true">
             <intent-filter>

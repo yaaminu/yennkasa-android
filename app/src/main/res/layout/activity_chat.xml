@@ -33,12 +33,6 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/parent_chat_activity_toolbar">
 
-        <!--<fragment-->
-        <!--android:name="com.pairapp.ui.UnknownContactFragment"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent"-->
-        <!--tools:layout="@layout/unknown_user_fragment">-->
-        <!--</fragment>-->
     </AbsoluteLayout>
 
     <RelativeLayout
@@ -154,7 +148,7 @@
                     android:scaleType="centerInside"
                     android:src="@drawable/ic_attach_more_24dp" />
 
-                <com.pairapp.view.FrameLayout
+                <com.yennkasa.view.FrameLayout
                     android:id="@+id/iv_send"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -171,7 +165,7 @@
                         android:scaleType="centerInside"
                         android:src="@drawable/ic_send_24dp" />
 
-                </com.pairapp.view.FrameLayout>
+                </com.yennkasa.view.FrameLayout>
 
             </LinearLayout>
 

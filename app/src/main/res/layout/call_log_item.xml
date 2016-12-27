@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.yennkasa.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_item_height"
@@ -10,7 +10,7 @@
     android:paddingTop="@dimen/list_item_padding"
     tools:ignore="RtlHardcoded">
 
-    <com.pairapp.view.RoundedImageView
+    <com.yennkasa.view.RoundedImageView
         android:id="@+id/iv_user_avatar"
         android:layout_width="@dimen/thumbnail_width"
         android:layout_height="@dimen/thumbnail_height"
@@ -78,4 +78,4 @@
         android:layout_marginLeft="@dimen/thumbnail_width"
         android:layout_marginRight="@dimen/divider_right_offset"
         android:layout_marginStart="@dimen/thumbnail_width" />
-</com.pairapp.view.RelativeLayout>
+</com.yennkasa.view.RelativeLayout>

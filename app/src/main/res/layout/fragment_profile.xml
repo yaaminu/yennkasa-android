@@ -1,12 +1,12 @@
-<com.pairapp.view.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.yennkasa.view.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.pairapp.ui.ProfileFragment">
+    tools:context="com.yennkasa.ui.ProfileFragment">
 
-    <com.pairapp.view.FrameLayout
+    <com.yennkasa.view.FrameLayout
         android:id="@+id/fl_dp_panel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -25,7 +25,7 @@
             layout="@layout/progressbar"
             android:visibility="visible" />
 
-        <com.pairapp.view.LinearLayout
+        <com.yennkasa.view.LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="right|bottom"
@@ -41,8 +41,8 @@
                 layout="@layout/fab_generic_smal"
                 android:contentDescription="@string/change_dp"
                 app:fab_iconSrc="@drawable/ic_action_picture" />
-        </com.pairapp.view.LinearLayout>
-    </com.pairapp.view.FrameLayout>
+        </com.yennkasa.view.LinearLayout>
+    </com.yennkasa.view.FrameLayout>
 
     <LinearLayout
         android:id="@+id/user_action_panel"
@@ -92,13 +92,13 @@
         android:layout_marginStart="@dimen/padding_ll_login_fragment_left"
         android:layout_marginTop="@dimen/profile_list_item_padding_top">
 
-        <com.pairapp.view.LinearLayout
+        <com.yennkasa.view.LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center_horizontal"
             android:orientation="vertical">
 
-            <com.pairapp.view.LinearLayout
+            <com.yennkasa.view.LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_marginTop="@dimen/profile_list_item_padding_top"
@@ -118,7 +118,7 @@
                     android:text="@string/username_placeholder"
                     android:textColor="#000"
                     android:textSize="@dimen/edit_text_size" />
-            </com.pairapp.view.LinearLayout>
+            </com.yennkasa.view.LinearLayout>
 
             <include layout="@layout/divider_span_full" />
 
@@ -130,6 +130,6 @@
                 android:layout_marginTop="@dimen/profile_list_item_padding_top"
                 android:layout_weight="1"
                 android:minHeight="?android:attr/listPreferredItemHeight" />
-        </com.pairapp.view.LinearLayout>
+        </com.yennkasa.view.LinearLayout>
     </ScrollView>
-</com.pairapp.view.LinearLayout>
+</com.yennkasa.view.LinearLayout>

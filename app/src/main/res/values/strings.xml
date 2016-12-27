@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PairApp</string>
+    <string name="app_name">Yennkasa</string>
     <string name="action_logout">Log out</string>
     <string name="title_activity_set_up">Get Started</string>
     <string name="username_hint">Username</string>
@@ -146,7 +146,7 @@
     </string>
     <string name="invalid_message">Message Invalid, Ensure the message does not exceed the size limit
     </string>
-    <string name="invite_message">"Try out PairApp, an instant messenger for android. Using the app, I can share anything not only pictures and text.It\'s free and fast! \n Download here: https://pairapp.parseapp.com
+    <string name="invite_message">"Try out Yennkasa, an instant messenger for android. Using the app, I can share anything not only pictures and text.It\'s free and fast! \n Download here: https://yennkasa.parseapp.com
     </string>
     <string name="sinch_error_report_message">we are having trouble setting things up,ensure your are connected to the internet and that your date is correct
     </string>
@@ -175,9 +175,9 @@
     <string name="send_to">Send to…</string>
     <string name="file_not_found">can\'t forward, file not found</string>
     <string name="unknown">Unknown</string>
-    <string name="no_contact_on_pairapp_notice">Listen,You currently don\'t have anyone in your \ contacts who uses PairApp.\n\n Quickly invite them to have a nice experience
+    <string name="no_contact_on_yennkasa_notice">Listen,You currently don\'t have anyone in your \ contacts who uses PairApp.\n\n Quickly invite them to have a nice experience
     </string>
-    <string name="no_contact_on_pairapp_notice_cap">LISTEN, YOU CURRENTLY DON\'T HAVE ANYONE IN YOUR CONTACTS USING PAIRAPP.\n\n QUICKLY INVITE THEM FOR A NICE CHAT EXPERIENCE.
+    <string name="no_contact_on_yennkasa_notice_cap">LISTEN, YOU CURRENTLY DON\'T HAVE ANYONE IN YOUR CONTACTS USING PAIRAPP.\n\n QUICKLY INVITE THEM FOR A NICE CHAT EXPERIENCE.
     </string>
     <string name="title_activity_login_signup_prompt">@string/app_name</string>
     <string name="added_custom_notice_toast">Number added successfully.</string>
@@ -338,7 +338,7 @@
     <string name="decline">Decline</string>
     <string name="ongoing_voice_call_notice">Ongoing voice call with %s</string>
     <string name="ongoing_video_call_notice">Ongoing video call with %s</string>
-    <string name="pairapp_call">PairApp Call</string>
+    <string name="yennkasa_call">PairApp Call</string>
     <string name="incoming_call">Incoming call from %s</string>
     <string name="mute_call">mute</string>
     <string name="speaker">speaker</string>

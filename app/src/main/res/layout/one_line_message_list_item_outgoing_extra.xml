@@ -6,11 +6,11 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <com.pairapp.view.RelativeLayout
+    <com.yennkasa.view.RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
-        <com.pairapp.view.LinearLayout
+        <com.yennkasa.view.LinearLayout
             android:id="@+id/ll_message_body_view"
             style="@style/outgoing_message_body_root_view.extra"
             android:layout_width="wrap_content"
@@ -18,7 +18,7 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <com.pairapp.view.FrameLayout
+            <com.yennkasa.view.FrameLayout
                 android:id="@+id/fl_message_body_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
@@ -31,7 +31,7 @@
                     android:singleLine="true"
                     android:text="hi when are you coming"
                     tools:ignore="HardcodedText" />
-            </com.pairapp.view.FrameLayout>
+            </com.yennkasa.view.FrameLayout>
 
             <TextView
                 android:id="@+id/tv_message_date"
@@ -44,7 +44,7 @@
                 android:singleLine="true"
                 android:text="  12-12-12"
                 tools:ignore="HardcodedText" />
-        </com.pairapp.view.LinearLayout>
+        </com.yennkasa.view.LinearLayout>
 
         <ImageButton
             android:id="@+id/iv_retry"
@@ -79,7 +79,7 @@
             android:minWidth="@dimen/thumbnail_width"
             android:visibility="gone" />
 
-        <com.pairapp.view.ProgressWheel
+        <com.yennkasa.view.ProgressWheel
             android:id="@+id/pb_download_progress_indeterminate"
             android:layout_width="48dp"
             android:layout_height="48dp"
@@ -102,7 +102,7 @@
             android:textSize="@dimen/standard_text_size"
             android:visibility="gone"
             tools:ignore="HardcodedText" />
-    </com.pairapp.view.RelativeLayout>
+    </com.yennkasa.view.RelativeLayout>
 
     <include layout="@layout/message_spacing_extra" />
 </LinearLayout>

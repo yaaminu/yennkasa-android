@@ -1,4 +1,4 @@
 <menu xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.pairapp.ui.UsersActivity">
+    tools:context="com.yennkasa.ui.UsersActivity">
 
 </menu>
