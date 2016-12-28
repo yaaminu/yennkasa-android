@@ -6,21 +6,22 @@ import android.content.pm.PackageManager;
 import android.support.multidex.MultiDexApplication;
 
 import com.crashlytics.android.Crashlytics;
-import com.yennkasa.messenger.MessageCenter2;
-import com.yennkasa.messenger.MessageProcessor;
-import com.yennkasa.messenger.YennkasaClient;
-import com.yennkasa.messenger.SmsReciever;
-import com.yennkasa.util.Config;
-import com.yennkasa.util.ConnectivityReceiver;
-import com.yennkasa.util.PLog;
-import com.yennkasa.util.Task;
-import com.yennkasa.util.TaskManager;
-import com.yennkasa.workers.BootReceiver;
 import com.path.android.jobqueue.Job;
 import com.path.android.jobqueue.JobManager;
 import com.path.android.jobqueue.TagConstraint;
 import com.path.android.jobqueue.config.Configuration;
 import com.path.android.jobqueue.di.DependencyInjector;
+import com.yennkasa.messenger.MessageCenter2;
+import com.yennkasa.messenger.MessageProcessor;
+import com.yennkasa.messenger.SmsReciever;
+import com.yennkasa.messenger.YennkasaClient;
+import com.yennkasa.util.Config;
+import com.yennkasa.util.ConnectionUtils;
+import com.yennkasa.util.ConnectivityReceiver;
+import com.yennkasa.util.PLog;
+import com.yennkasa.util.Task;
+import com.yennkasa.util.TaskManager;
+import com.yennkasa.workers.BootReceiver;
 
 import io.fabric.sdk.android.Fabric;
 import io.realm.Realm;
@@ -91,6 +92,7 @@ public class Yennkasa extends MultiDexApplication {
         Realm.init(this);
         PLog.setLogLevel(BuildConfig.DEBUG ? PLog.LEVEL_VERBOSE : PLog.LEVEL_FATAL);
         Config.init(this);
+        ConnectionUtils.init();
         CalligraphyConfig config = new CalligraphyConfig.Builder().setDefaultFontPath(null)
                 .build();
         CalligraphyConfig.initDefault(config);
