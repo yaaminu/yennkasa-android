@@ -180,7 +180,7 @@ public class Worker extends IntentService {
         private void doDownload() {
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
             final File finalFile;
-            String destination = messageBody.substring(messageBody.lastIndexOf('/'));
+            String destination = Uri.parse(messageBody).getLastPathSegment();//.substring(messageBody.lastIndexOf('/'));
             String extension = FileUtils.getExtension(destination);
             destination = FileUtils.hash(destination);
             if (!TextUtils.isEmpty(extension)) {
