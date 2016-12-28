@@ -18,6 +18,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 import com.yennkasa.Errors.ErrorCenter;
 import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.R;
@@ -33,8 +35,6 @@ import com.yennkasa.util.TaskManager;
 import com.yennkasa.util.UiHelpers;
 import com.yennkasa.util.ViewUtils;
 import com.yennkasa.view.ProgressWheel;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
 
 import java.io.File;
 import java.util.Date;
@@ -269,7 +269,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                 holder.progressBar,
                 holder.playOrDownload,
                 holder.textMessage,
-                holder.attachmenSize,
+                holder.attachmentSize,
                 holder.retry,
                 holder.progressRootView,
                 holder.sendersName);
@@ -367,8 +367,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             }
             holder.preview.setOnClickListener(listener);
         } else {
-            ViewUtils.showViews(holder.attachmenSize);
-            holder.attachmenSize.setText(message.getAttachmentSize());
+            ViewUtils.showViews(holder.attachmentSize);
+            holder.attachmentSize.setText(message.getAttachmentSize());
             holder.preview.setImageResource(placeHolderDrawable);
             if (progress <= -1) {
                 if (!isOutgoingMessage) {
@@ -379,7 +379,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
             }
         }
         if (progress >= 0) {
-            ViewUtils.hideViews(holder.attachmenSize);
+            ViewUtils.hideViews(holder.attachmentSize);
             ViewUtils.showViews(holder.progressRootView, holder.progressBar);
             if (progress == 0) {
                 holder.progressBar.setBarColor(Color.WHITE);
@@ -497,6 +497,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         holder.progressRootView = convertView.findViewById(R.id.fl_progress_root_view);
         holder.sendersName = ((TextView) convertView.findViewById(R.id.tv_sender_name));
         holder.call_button = (ImageButton) convertView.findViewById(R.id.ib_call_button);
+        holder.attachmentSize = ((TextView) convertView.findViewById(R.id.attachment_size));
         convertView.setTag(holder);
         return convertView;
     }
@@ -547,7 +548,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         private View progressRootView;
         private ProgressWheel progressBar;
         private ImageButton call_button;
-        TextView attachmenSize;
+        TextView attachmentSize;
         //TODO add more fields as we support different media/file types
     }
 }
