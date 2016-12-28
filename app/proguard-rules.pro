@@ -76,6 +76,7 @@
 ##################### calligraphy##############################
 
 # org.spongycastle.pro: Spongy Castle.
--dontwarn org.spongycastle.jce.provider.*LDAP*
--dontwarn org.spongycastle.x509.util.*LDAP*
+-keep class org.spongycastle.**
+-dontwarn org.spongycastle.jce.provider.X509LDAPCertStoreSpi
+-dontwarn org.spongycastle.x509.util.LDAPStoreHelper
 ##############################################

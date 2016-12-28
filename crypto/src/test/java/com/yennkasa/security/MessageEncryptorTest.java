@@ -3,7 +3,10 @@ package com.yennkasa.security;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -13,6 +16,39 @@ import java.security.PublicKey;
  * Created by yaaminu on 12/22/16.
  */
 public class MessageEncryptorTest {
+    @Test
+    public void ecryptFile() throws Exception {
+        File in = new File("/tmp/in.txt");
+        File out = new File("/tmp/crypt.txt"),
+                decrypt = new File("/tmp/out.decrypt");
+        if (out.exists()) out.delete();
+        if (in.exists()) in.delete();
+        FileWriter fileWriter = new FileWriter(in);
+        fileWriter.write("text input file");
+        fileWriter.close();
+        byte[] keys = encryptor.ecryptFile("recipient", in, out);
+        encryptor.decryptFile(keys, out, decrypt);
+
+
+        Assert.assertArrayEquals(Files.readAllBytes(in.toPath()), Files.readAllBytes(decrypt.toPath()));
+    }
+
+    @Test
+    public void decryptFile() throws Exception {
+        File in = new File("/tmp/in.txt");
+        File out = new File("/tmp/crypt.txt"),
+                decrypt = new File("/tmp/out.decrypt");
+        if (out.exists()) out.delete();
+        if (in.exists()) in.delete();
+        FileWriter fileWriter = new FileWriter(in);
+        fileWriter.write("text input file");
+        fileWriter.close();
+        byte[] keys = encryptor.ecryptFile("recipient", in, out);
+        encryptor.decryptFile(keys, out, decrypt);
+
+
+        Assert.assertArrayEquals(Files.readAllBytes(in.toPath()), Files.readAllBytes(decrypt.toPath()));
+    }
 
     private static Key privateKey, publicKey;
 

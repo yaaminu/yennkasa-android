@@ -1,6 +1,7 @@
 package com.yennkasa.messenger;
 
 import android.net.Uri;
+import android.util.Base64;
 import android.util.Log;
 
 import com.yennkasa.Errors.YennkasaException;
@@ -34,6 +35,7 @@ import io.realm.Realm;
 @SuppressWarnings("ALL")
 abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     public static final String TAG = AbstractMessageDispatcher.class.getSimpleName();
+    private final MessageEncryptor encryptor;
 
     private class ProgressListenerImpl implements FileApi.ProgressListener {
 
@@ -60,9 +62,10 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
     private final FileApi file_service;
 
 
-    AbstractMessageDispatcher(FileApi fileApi, DispatcherMonitor monitor) {
+    AbstractMessageDispatcher(FileApi fileApi, DispatcherMonitor monitor, MessageEncryptor encryptor) {
         GenericUtils.ensureNotNull(monitor, "monitor == null");
         this.file_service = fileApi;
+        this.encryptor = encryptor;
         synchronized (monitors) {
             monitors.add(monitor);
         }
@@ -88,7 +91,9 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
             try {
                 final File tmpFile = new File(Config.getTempDir(),
                         FileUtils.hashFile(actualFile) + "-" + SimpleDateUtil.timeStampNow() + "." + FileUtils.getExtension(actualFile.getAbsolutePath()));
-                final int index = MessageEncryptor.ecryptFile(actualFile, tmpFile);
+
+                String recipient = message.getTo();
+                final byte[] encryptedKeys = encryptor.ecryptFile(recipient, actualFile, tmpFile);
                 file_service.saveFileToBackend(tmpFile, new FileApi.FileSaveCallback() {
                     @Override
                     public void done(FileClientException e, String locationUrl) {
@@ -100,7 +105,7 @@ abstract class AbstractMessageDispatcher implements Dispatcher<Message> {
                             }
                             //always use the tmpFile and not the actual file
                             Uri finalUri = Uri.parse(locationUrl).buildUpon()
-                                    .appendQueryParameter("t", "" + index)
+                                    .appendQueryParameter("t", Base64.encodeToString(encryptedKeys, Base64.URL_SAFE))
                                     .appendQueryParameter("size", FileUtils.sizeInLowestPrecision(tmpFile.length())).build();
                             message.setMessageBody(finalUri.toString()); //do not persist this change.
                             proceedToSend(message);

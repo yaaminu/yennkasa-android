@@ -29,7 +29,7 @@ import java.util.Map;
 public class CallManager implements CallController {
 
     static final String TAG = CallManager.class.getSimpleName();
-    public static final String APPLICATION_KEY = "8a46c54f-0f44-481a-8727-63aa0561e6a7";
+    public static final String APPLICATION_KEY = "c9058af2-3114-4f09-924c-a50c2a99cf75";
 
     @NonNull
     private final Application application;
@@ -48,7 +48,7 @@ public class CallManager implements CallController {
         this.source = source;
         client = Sinch.getSinchClientBuilder()
                 .context(application)
-                .environmentHost(debug ? "sandbox.sinch.com" : "app.sinch.com")
+                .environmentHost(debug ? "sandbox.sinch.com" : "clientapi.sinch.com")
                 .userId(currUserId)
                 .applicationKey(APPLICATION_KEY)
                 .callerIdentifier(currUserId)

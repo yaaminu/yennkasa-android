@@ -10,7 +10,6 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.util.LruCache;
 import android.support.v4.util.Pair;
 
 import com.yennkasa.BuildConfig;
@@ -26,7 +25,6 @@ import com.yennkasa.net.ParseFileClient;
 import com.yennkasa.net.sockets.MessageParser;
 import com.yennkasa.net.sockets.SenderImpl;
 import com.yennkasa.security.MessageEncryptor;
-import com.yennkasa.security.RSA;
 import com.yennkasa.ui.BaseCallActivity;
 import com.yennkasa.util.Config;
 import com.yennkasa.util.Event;
@@ -39,8 +37,6 @@ import com.yennkasa.util.ThreadUtils;
 
 import org.json.JSONObject;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -113,7 +109,6 @@ public class YennkasaClient extends Service {
     private CallController callController;
     private final EventBus callManagerBus = EventBus.getBusOrCreate(shadowClazz.class);
     private MessageParser messageParser;
-    private LruCache<String, PublicKey> cache;
 
     private static class shadowClazz {
     }
@@ -158,7 +153,6 @@ public class YennkasaClient extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        cache = new LruCache<>(10);
         PLog.i(TAG, "starting yennkasa client");
         if (WORKER_THREAD != null && WORKER_THREAD.isAlive()) {
             WORKER_THREAD.quit();
@@ -202,7 +196,7 @@ public class YennkasaClient extends Service {
 
     @Override
     public void onTrimMemory(int level) {
-        cache.evictAll();
+        PrivatePublicKeySourceImpl.getInstance().onTrimMemory(level);
         super.onTrimMemory(level);
     }
 
@@ -221,14 +215,15 @@ public class YennkasaClient extends Service {
             try {
                 monitor = new DispatcherMonitorImpl(this, disPatchingThreads);
                 String currentUserId = UserManager.getMainUserId(userRealm);
+                MessageEncryptor encryptor = new MessageEncryptor(new PrivatePublicKeySourceImpl(), BuildConfig.DEBUG);
                 messagePacker = MessagePacker.create(currentUserId, new ZlibCompressor(),
-                        new CryptoImpl(new MessageEncryptor(new PrivatePublicKeySourceImpl(cache), BuildConfig.DEBUG)));
+                        new CryptoImpl(encryptor));
 
                 messageParser = new MessageParserImpl(messagePacker);
                 sender = new SenderImpl(authenticator, messageParser);
                 statusManager = StatusManager.create(sender, messagePacker, listenableBus());
                 webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, sender,
-                        new MessageEncoderImpl(messagePacker));
+                        new MessageEncoderImpl(messagePacker), encryptor);
 
                 sender.start(); //this must always come after initialising websocketdispatcher.
 
@@ -495,43 +490,6 @@ public class YennkasaClient extends Service {
         @Override
         public byte[] decrypt(@NonNull byte[] input) throws MessageEncryptor.EncryptionException {
             return encryptor.decrypt(input);
-        }
-
-    }
-
-    static class PrivatePublicKeySourceImpl implements MessageEncryptor.PrivatePublicKeySource {
-
-        private final PrivateKey privateKey;
-        private final LruCache<String, PublicKey> publicKeysCache;
-
-        public PrivatePublicKeySourceImpl(LruCache<String, PublicKey> cache) {
-            this.privateKey = createPrivateKeyFromBase64EncodedString
-                    (UserManager.getInstance().getPrivateKey());
-            this.publicKeysCache = cache;
-        }
-
-        @NonNull
-        @Override
-        public PrivateKey getPrivateKeyForThisUser() throws MessageEncryptor.EncryptionException {
-            return this.privateKey;
-        }
-
-        @Override
-        @Nullable
-        public synchronized PublicKey getPublicKeyFor(String userId) throws MessageEncryptor.EncryptionException {
-            PublicKey publicKey = publicKeysCache.get(userId);
-            if (publicKey != null) return publicKey;
-            String publicKeyString = UserManager.getInstance().publicKeyForUser(userId);
-            if (publicKeyString == null) {
-                throw new MessageEncryptor.EncryptionException("public key not found", MessageEncryptor.EncryptionException.PUBLIC_KEY_NOT_FOUND);
-            }
-            publicKey = RSA.getRSAPublicKeyFromString(publicKeyString);
-            publicKeysCache.put(userId, publicKey);
-            return publicKey;
-        }
-
-        private PrivateKey createPrivateKeyFromBase64EncodedString(String privateKeyBase64) {
-            return RSA.getRSAPrivateKeyFromString(privateKeyBase64);
         }
 
     }

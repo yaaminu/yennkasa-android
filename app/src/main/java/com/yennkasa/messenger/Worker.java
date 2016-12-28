@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
+import android.util.Base64;
 
 import com.yennkasa.BuildConfig;
 import com.yennkasa.Errors.ErrorCenter;
@@ -231,8 +232,9 @@ public class Worker extends IntentService {
             File tmp = new File(Config.getTempDir(), finalFile.getName() + SimpleDateUtil.timeStampNow());
             try {
                 FileUtils.save(tmp, messageBody, listener);
-                String index = Uri.parse(messageBody).getQueryParameter("t");
-                MessageEncryptor.decryptFile(Integer.parseInt(index), tmp, finalFile);
+                String encryptedKey = Uri.parse(messageBody).getQueryParameter("t");
+                MessageEncryptor encryptor = new MessageEncryptor(PrivatePublicKeySourceImpl.getInstance(), BuildConfig.DEBUG);
+                encryptor.decryptFile(Base64.decode(encryptedKey, Base64.URL_SAFE), tmp, finalFile);
                 Message toBeUpdated = realm.where(Message.class).equalTo(Message.FIELD_ID, messageId).findFirst();
                 if (toBeUpdated != null) {
                     realm.beginTransaction();

@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background_hd">
+    android:background="@color/sp_primary_light">
 
     <LinearLayout
         android:id="@+id/parent_chat_activity_toolbar"

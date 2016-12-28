@@ -148,7 +148,7 @@ public class SearchActivity extends PairAppActivity {
             //noinspection ThrowableResultOfMethodCallIgnored
             Exception error = event.getError();
             if (error != null) {
-                UiHelpers.showErrorDialog(this, error.getMessage());
+                UiHelpers.showToast(error.getMessage());
             }
             refreshDisplay(false);
         } else {

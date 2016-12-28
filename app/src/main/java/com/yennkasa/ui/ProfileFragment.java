@@ -25,6 +25,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.rey.material.widget.FloatingActionButton;
+import com.squareup.picasso.Callback;
 import com.yennkasa.Errors.ErrorCenter;
 import com.yennkasa.R;
 import com.yennkasa.data.User;
@@ -43,8 +45,6 @@ import com.yennkasa.util.TypeFaceUtil;
 import com.yennkasa.util.UiHelpers;
 import com.yennkasa.util.ViewUtils;
 import com.yennkasa.view.FrameLayout;
-import com.rey.material.widget.FloatingActionButton;
-import com.squareup.picasso.Callback;
 
 import java.io.File;
 import java.io.FileNotFoundException;

@@ -401,7 +401,11 @@ public final class UserManager {
     }
 
     public boolean isUserVerified(Realm realm) {
-        return isUserLoggedIn(realm) && getSessionBoolPref(KEY_USER_VERIFIED, false);
+        long start = System.nanoTime();
+        boolean userVerified = isUserLoggedIn(realm) && getSessionBoolPref(KEY_USER_VERIFIED, false);
+        long end = System.nanoTime();
+        PLog.d(TAG, "isUserVerifiedTook %d nano seconds", end - start);
+        return userVerified;
     }
 
 
@@ -1227,31 +1231,37 @@ public final class UserManager {
 
     public void search(final String query) {
         ThreadUtils.ensureNotMain();
-        ContactsManager.query(Config.getApplicationContext(), query)
-                .map(new Func1<List<ContactsManager.Contact>, List<User>>() {
-                    @Override
-                    public List<User> call(List<ContactsManager.Contact> contacts) {
-                        Realm realm = User.Realm(Config.getApplicationContext());
-                        try {
-                            List<User> ret = new ArrayList<>(contacts.size());
-                            for (ContactsManager.Contact contact : contacts) {
-                                User u = realm.copyFromRealm(realm.where(User.class).equalTo(User.FIELD_ID, contact.numberInIEE_Format).findFirst());
-                                if (u == null) {
-                                    u = new User();
-                                    u.setName(contact.name);
-                                    u.setUserId(contact.numberInIEE_Format);
-                                    u.setCity("");
-                                    u.setDP("");
-                                    u.setCountry("");
-                                }
-                                ret.add(u);
-                            }
-                            return ret;
-                        } finally {
-                            realm.close();
+        Observable<List<ContactsManager.Contact>> observable = Observable.just(ContactsManager.query(Config.getApplicationContext(), query));
+
+        observable.map(new Func1<List<ContactsManager.Contact>, List<User>>() {
+            @Override
+            public List<User> call(List<ContactsManager.Contact> contacts) {
+                Realm realm = User.Realm(Config.getApplicationContext());
+                try {
+                    if (contacts.isEmpty()) return Collections.emptyList();
+
+                    List<User> ret = new ArrayList<>(contacts.size());
+                    User u;
+                    for (ContactsManager.Contact contact : contacts) {
+                        u = realm.where(User.class).equalTo(User.FIELD_ID, contact.numberInIEE_Format).findFirst();
+                        if (u == null) {
+                            u = new User();
+                            u.setName(contact.name);
+                            u.setUserId(contact.numberInIEE_Format);
+                            u.setCity("");
+                            u.setDP("");
+                            u.setCountry("");
+                        } else {
+                            u = realm.copyFromRealm(u);
                         }
+                        ret.add(u);
                     }
-                })
+                    return ret;
+                } finally {
+                    realm.close();
+                }
+            }
+        })
                 .subscribe(new Subscriber<List<User>>() {
                     @Override
                     public void onCompleted() {
@@ -1264,17 +1274,28 @@ public final class UserManager {
 
                     @Override
                     public void onNext(final List<User> users) {
-                        EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, null, users));
+                        if (!users.isEmpty()) {
+                            EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, null, users));
+                        }
                         if (ConnectionUtils.isConnected()) {
                             userApi.search(query, new UserApiV2.Callback<List<User>>() {
                                 @Override
                                 public void done(Exception e, List<User> users2) {
                                     if (e == null) {
-                                        users2.addAll(users);
+                                        if (!users.isEmpty()) {
+                                            users2.addAll(users);
+                                        }
+                                        EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, null, users));
+                                    } else {
+                                        if (users.isEmpty()) {
+                                            //we should only report errors if we had no results locally and remotely
+                                            EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, e, null));
+                                        }
                                     }
-                                    EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, e == null ? null : e, users2));
                                 }
                             });
+                        } else {
+                            EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, null, users));
                         }
                     }
                 });

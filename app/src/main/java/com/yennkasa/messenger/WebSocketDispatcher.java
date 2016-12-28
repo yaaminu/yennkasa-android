@@ -9,6 +9,7 @@ import com.yennkasa.net.FileApi;
 import com.yennkasa.net.sockets.SendListener;
 import com.yennkasa.net.sockets.Sender;
 import com.yennkasa.net.sockets.SenderImpl;
+import com.yennkasa.security.MessageEncryptor;
 import com.yennkasa.util.Config;
 import com.yennkasa.util.FileUtils;
 
@@ -48,13 +49,13 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
 
     public static WebSocketDispatcher create(FileApi fileApi
             , DispatcherMonitor monitor, Sender socket
-            , MessageEncoder codec) {
-        return new WebSocketDispatcher(fileApi, monitor, socket, codec);
+            , MessageEncoder codec, MessageEncryptor encryptor) {
+        return new WebSocketDispatcher(fileApi, monitor, socket, codec, encryptor);
     }
 
     private WebSocketDispatcher(FileApi fileApi,
-                                DispatcherMonitor monitor, Sender socket, MessageEncoder messageEncoder) {
-        super(fileApi, monitor);
+                                DispatcherMonitor monitor, Sender socket, MessageEncoder messageEncoder, MessageEncryptor encryptor) {
+        super(fileApi, monitor, encryptor);
         this.sender = socket;
         this.messageEncoder = messageEncoder;
         socket.addSendListener(sendListener);

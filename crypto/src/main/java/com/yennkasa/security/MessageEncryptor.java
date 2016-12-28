@@ -1,7 +1,5 @@
 package com.yennkasa.security;
 
-import org.spongycastle.util.encoders.Base64;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -21,6 +19,8 @@ import java.util.Arrays;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+
+import static com.yennkasa.security.RSA.rsaDecrypt;
 
 /**
  * @author by yaaminu on 12/22/16.
@@ -97,7 +97,7 @@ public final class MessageEncryptor {
                         EncryptionException.PRIVATE_KEY_NOT_FOUND);
             }
             return AES.aesDecrypt
-                    (RSA.rsaDecrypt(privateKeyForThisUser,
+                    (rsaDecrypt(privateKeyForThisUser,
                             encryptedKey), iv, payload);
         } catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException e) {
             throw new RuntimeException(e);
@@ -116,18 +116,21 @@ public final class MessageEncryptor {
     /**
      * encrypts a file and returns the key index of the random key used
      *
-     * @param in  the input file
-     * @param out the output encrypted file
-     * @return the index of the key used
+     * @param recipient the receiver of the file
+     * @param in        the input file
+     * @param out       the output encrypted file
+     * @return the encrypted form of the key( key is encryprypted using RSA)
      * @throws IOException
+     * @throws EncryptionException
      */
-    public static int ecryptFile(File in, File out) throws IOException, EncryptionException {
+    public byte[] ecryptFile(String recipient, File in, File out) throws IOException, EncryptionException {
         InputStream iStream = new FileInputStream(in);
         OutputStream oStream = new FileOutputStream(out);
         try {
-            int index = genKey();
-            AES.aesEncryptWithSHA1Integrity(getKey(index), new byte[16], iStream, oStream);
-            return index;
+            byte[] key = new byte[16];
+            new SecureRandom().nextBytes(key);
+            AES.aesEncryptWithSHA1Integrity(key, new byte[16], iStream, oStream);
+            return RSA.rsaEncrypt(privatePublicKeySource.getPublicKeyFor(recipient), key);
         } catch (NoSuchPaddingException | NoSuchAlgorithmException |
                 InvalidKeyException | InvalidAlgorithmParameterException |
                 NoSuchProviderException | BadPaddingException |
@@ -143,12 +146,20 @@ public final class MessageEncryptor {
         }
     }
 
-    public static void decryptFile(int index, File in, File out) throws IOException, EncryptionException {
-        if (index < 0 || index > 15) {
-            throw new IllegalArgumentException("index over flow");
-        }
+    /**
+     * encrypts a file and returns the key index of the random key used
+     *
+     * @param encryptedKey the key for decryption.(key is rsaEncrypted)
+     * @param in           the input file
+     * @param out          the output encrypted file
+     * @throws IOException
+     * @throws EncryptionException
+     */
+    public void decryptFile(byte[] encryptedKey, File in, File out) throws IOException, EncryptionException {
         try {
-            AES.aesDecryptWithSHA1Integrity(getKey(index), in, out);
+            AES.aesDecryptWithSHA1Integrity(rsaDecrypt(privatePublicKeySource
+                            .getPrivateKeyForThisUser(), encryptedKey),
+                    in, out);
         } catch (NoSuchPaddingException | NoSuchAlgorithmException |
                 InvalidKeyException | InvalidAlgorithmParameterException |
                 NoSuchProviderException | BadPaddingException |
@@ -160,18 +171,6 @@ public final class MessageEncryptor {
         }
     }
 
-    static int genKey() {
-        int num = (int) Math.abs(new SecureRandom().nextDouble() * (16 - 1) + 1);
-        return 1432/*magic number*/ + Math.abs(num - 1);
-    }
-
-    static byte[] getKey(int index) {
-        index = index - 1432/*magic number*/;
-        if (index < 0 || index > 15) {
-            throw new IllegalArgumentException("index overflow");
-        }
-        return Base64.decode(keys.keys[index]);
-    }
 
     public interface PrivatePublicKeySource {
         PrivateKey getPrivateKeyForThisUser() throws EncryptionException;
@@ -202,14 +201,4 @@ public final class MessageEncryptor {
         }
     }
 
-    public static class keys {
-        static String[] keys = {"2VHFMRgEZREThThOnSj66A==", "yoSJJz+EaLAbWrS19ljQFA==",
-                "jYn0KIMZ3nbfujQNIysSug==", "TFuhknWWHPCXS5zo+oEDUg==",
-                "IXVtxnQeF27HIc9vJ7wkiw==", "EOiA5/dF1VWNcaAqAfrYPw==",
-                "Lmqsh+jaS3w/FuERV8NK1A==", "at8eccaDyMirD5ikrgeigA==",
-                "orMF7NNJhfvC28cI5r2MKQ==", "LbU6GMjOHhqXavmtUbrJSw==",
-                "6qIk//jAylibqKeLDQOOzw==", "3tv/+wL7oA+FzRF/L+rrTg==",
-                "8ERs2YUug+R+AuHKQwqOBQ==", "h+vMrpWupapc3oJYY0TiQw==",
-                "r79Tawfj31zWmJRBjTRd3A==", "+IUgrLwxRYro5CuWoGS81Q=="};
-    }
 }

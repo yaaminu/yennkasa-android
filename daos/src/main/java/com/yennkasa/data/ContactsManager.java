@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Set;
 
 import io.realm.Realm;
-import rx.Observable;
-import rx.Subscriber;
 
 import static com.yennkasa.util.Config.getApplicationContext;
 
@@ -44,44 +42,35 @@ public class ContactsManager {
 
     }
 
-    public static Observable<List<Contact>> query(final Context context, String query) {
+    public static List<Contact> query(final Context context, String query) {
         ThreadUtils.ensureNotMain();
         ContentResolver cr = context.getContentResolver();
-        String[] args = {query};
+        //if query is long enough search for contains otherwise search for starts with
+        String[] args = {(query.length() > 3 ? "%" : "") + query + "%"};
         final Cursor cursor = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, PROJECT_NAME_PHONE,
-                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + "=?", args, null);
-        if (cursor == null || !cursor.moveToFirst()) return Observable.empty();
-        return Observable.create(new Observable.OnSubscribe<List<Contact>>() {
-            @Override
-            public void call(Subscriber<? super List<Contact>> subscriber) {
-                Realm userRealm = User.Realm(context);
+                "display_name LIKE ?", args, null);
+        if (cursor == null || !cursor.moveToFirst()) return Collections.emptyList();
+        Realm userRealm = User.Realm(context);
+        try {
+            List<Contact> contacts = new ArrayList<>(cursor.getCount());
+            do {
+                String name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)),
+                        phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                 try {
-                    List<Contact> contacts = new ArrayList<>(cursor.getCount());
-                    do {
-                        String name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)),
-                                phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                        try {
-                            String ieeNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO(userRealm));
-                            contacts.add(new Contact(name, phoneNumber, false, "", ieeNumber));
-                        } catch (NumberParseException | IllegalArgumentException e) {
-                            PLog.e(TAG, e.getMessage());
-                        }
-
-                    } while (cursor.moveToNext());
-                    subscriber.onNext(contacts);
-                    subscriber.onCompleted();
-
-                } catch (Exception e) {
-                    subscriber.onError(e);
-                    subscriber.onCompleted();
-                } finally {
-                    userRealm.close();
-                    cursor.close();
+                    String ieeNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO(userRealm));
+                    contacts.add(new Contact(name, phoneNumber, false, "", ieeNumber));
+                } catch (NumberParseException | IllegalArgumentException e) {
+                    PLog.e(TAG, e.getMessage());
                 }
-            }
-        });
 
+            } while (cursor.moveToNext());
+            return contacts;
+        } finally {
+            userRealm.close();
+            cursor.close();
+        }
     }
+
 
     public static Cursor findAllContactsCursor(Context context) {
         return getCursor(context);

@@ -25,6 +25,7 @@
     <color name="sp_primary">@color/colorPrimary</color>
     <color name="sp_primary_dark">@color/colorPrimaryDark</color>
     <color name="sp_primary_light">#CFD8DC</color>
+    <color name="sp_placeholder_color_filer">@color/white</color>
     <array name="progress_colors">
         <item>#FF3F8AF8</item>
         <item>#FFD8433C</item>
