@@ -17,6 +17,9 @@ import android.widget.Filterable;
 import android.widget.Toast;
 
 import com.google.i18n.phonenumbers.NumberParseException;
+import com.rey.material.widget.CheckBox;
+import com.rey.material.widget.SnackBar;
+import com.rey.material.widget.TextView;
 import com.yennkasa.BuildConfig;
 import com.yennkasa.Errors.ErrorCenter;
 import com.yennkasa.R;
@@ -29,9 +32,6 @@ import com.yennkasa.util.PhoneNumberNormaliser;
 import com.yennkasa.util.TypeFaceUtil;
 import com.yennkasa.util.UiHelpers;
 import com.yennkasa.util.ViewUtils;
-import com.rey.material.widget.CheckBox;
-import com.rey.material.widget.SnackBar;
-import com.rey.material.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -187,7 +187,7 @@ public class InviteActivity extends PairAppActivity implements ItemsSelector.OnF
     public View emptyView() {
         TextView emptyView = new TextView(this);
         ViewUtils.setTypeface(emptyView, TypeFaceUtil.ROBOTO_REGULAR_TTF);
-        emptyView.setText(getString(R.string.add_custom_number));
+//        emptyView.setText(getString(R.string.add_custom_number));
         emptyView.setTextSize(R.dimen.standard_text_size);
         emptyView.setTextColor(getResources().getColor(R.color.black));
         return emptyView;
