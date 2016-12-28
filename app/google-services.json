@@ -10,6 +10,37 @@
       "client_info": {
         "mobilesdk_app_id": "1:53370059723:android:922447f760fa7c4f",
         "android_client_info": {
+          "package_name": "com.pairapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "53370059723-5grcb8bv7rdtqseht1ig7smmo5b8ugjq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjUMhHCqKC_VWYFHhCPdkI-5-qcqYiUxY"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:53370059723:android:10d8eb071b7024a3",
+        "android_client_info": {
           "package_name": "com.yennkasa"
         }
       },

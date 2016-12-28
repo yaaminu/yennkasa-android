@@ -166,8 +166,6 @@
     <string name="invalid_image">Invalid image</string>
     <string name="not_a_bitmap">Not a bitmap</string>
     <string name="add_custom">Add custom number</string>
-    <string name="add_custom_number">You can add other users who are not in your contacts by adding their numbers directly.\n They only have to be registered members of PairApp. It\'s that simple! :-)
-    </string>
     <string name="title_activity_create_message">New Message</string>
     <string name="message_box_hint">Type here…</string>
     <string name="st_group_name_hit">Name, e.g Brothers From One Hood</string>
@@ -175,9 +173,7 @@
     <string name="send_to">Send to…</string>
     <string name="file_not_found">can\'t forward, file not found</string>
     <string name="unknown">Unknown</string>
-    <string name="no_contact_on_yennkasa_notice">Listen,You currently don\'t have anyone in your \ contacts who uses PairApp.\n\n Quickly invite them to have a nice experience
-    </string>
-    <string name="no_contact_on_yennkasa_notice_cap">LISTEN, YOU CURRENTLY DON\'T HAVE ANYONE IN YOUR CONTACTS USING PAIRAPP.\n\n QUICKLY INVITE THEM FOR A NICE CHAT EXPERIENCE.
+    <string name="no_contact_on_yennkasa_notice_cap">LISTEN, YOU CURRENTLY DON\'T HAVE ANYONE IN YOUR CONTACTS USING YENNKASA.\n\n QUICKLY INVITE THEM FOR A NICE CHAT EXPERIENCE.
     </string>
     <string name="title_activity_login_signup_prompt">@string/app_name</string>
     <string name="added_custom_notice_toast">Number added successfully.</string>
@@ -213,7 +209,7 @@
     <string name="try_again">Try Again</string>
     <string name="dp_prompt">Are you sure you want to use this picture as the DP?</string>
     <string name="get_started_noitce">
-        <![CDATA[<p>Hi there! thanks for installing PairApp.<br/>Please take a few seconds to set things up.</p>]]>
+        <![CDATA[<p>Hi there! thanks for installing Yennkasa.<br/>Please take a few seconds to set things up.</p>]]>
     </string>
     <string name="complete">
         <![CDATA[<p>You are just an inch away from getting connected to your friends. Please take time to complete the set up process.</p>]]>
@@ -224,7 +220,7 @@
     <string name="Silent">Silent</string>
     <string name="title_activity_settings">SettingsActivity</string>
     <string name="Feedback">Feedback &amp; Suggestions</string>
-    <string name="about_app">About PairApp</string>
+    <string name="about_app">About Yennkasa</string>
     <string name="preferences">Preferences</string>
     <string name="error_use_file_manager">An error occurred while processing the attachment. Try using a file manager to pick the file if the problem persists
     </string>
@@ -237,9 +233,9 @@
     <string name="error_feedback_body_empty">Feedback body cannot be empty</string>
     <string name="feedback_sent_successfully">Feedback sent successfully. Thanks for your support and co-operation
     </string>
-    <string name="app_name_cap">PAIRAPP</string>
-    <string name="idea_inc">© Hyper.</string>
-    <string name="copyright">© Hyper.</string>
+    <string name="app_name_cap">YENNKASA</string>
+    <string name="idea_inc">© Yennkasa.</string>
+    <string name="copyright">© Yennkasa.</string>
     <string name="legal_notice">LEGAL NOTICE</string>
     <string name="error_feedback_subject_too_lonng">Subject may not exceed 40 characters</string>
     <string name="silent">Silent</string>
@@ -338,7 +334,7 @@
     <string name="decline">Decline</string>
     <string name="ongoing_voice_call_notice">Ongoing voice call with %s</string>
     <string name="ongoing_video_call_notice">Ongoing video call with %s</string>
-    <string name="yennkasa_call">PairApp Call</string>
+    <string name="yennkasa_call">Yennkasa</string>
     <string name="incoming_call">Incoming call from %s</string>
     <string name="mute_call">mute</string>
     <string name="speaker">speaker</string>
