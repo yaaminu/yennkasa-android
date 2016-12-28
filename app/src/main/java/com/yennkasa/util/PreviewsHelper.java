@@ -1,5 +1,6 @@
 package com.yennkasa.util;
 
+import android.net.Uri;
 import android.text.TextUtils;
 
 import com.yennkasa.R;
@@ -11,9 +12,15 @@ import java.util.Map;
 public class PreviewsHelper {
 
     final static Map<String, Integer> previewsMap = new HashMap<>();
+    final static android.support.v4.util.LruCache<String, String> cache = new android.support.v4.util.LruCache<>(30);
 
     public static int getPreview(String fileName) {
-        String ext = FileUtils.getExtension(fileName);
+        ThreadUtils.ensureMain();
+        String ext = cache.get(fileName);
+        if (ext == null) {
+            ext = FileUtils.getExtension(Uri.parse(fileName).getPath());
+            cache.put(fileName, ext);
+        }
         if (TextUtils.isEmpty(ext)) {
             return R.drawable.ic_preview_file_unknown_format_200dp;
         }
