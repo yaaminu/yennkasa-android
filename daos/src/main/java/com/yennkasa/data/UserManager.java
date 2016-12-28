@@ -59,6 +59,7 @@ import io.realm.RealmObject;
 import io.realm.RealmResults;
 import rx.Observable;
 import rx.Subscriber;
+import rx.functions.Func1;
 
 /**
  * @author by Null-Pointer on 5/27/2015.
@@ -153,7 +154,7 @@ public final class UserManager {
                     realm.close();
                 }
                 try {
-                    ContactsManager.getInstance().findAllContactsSync(new ContactsManager.Filter<ContactsManager.Contact>() {
+                    ContactsManager.findAllContactsSync(new ContactsManager.Filter<ContactsManager.Contact>() {
                         @Override
                         public boolean accept(ContactsManager.Contact contact) throws AbortOperation {
                             if (contact.numberInIEE_Format.equals(userId)) {
@@ -1224,14 +1225,61 @@ public final class UserManager {
     }
 
 
-    public void search(String query) {
-        userApi.search(query, new UserApiV2.Callback<List<User>>() {
-            @Override
-            public void done(Exception e, List<User> users) {
-                EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, e == null ? null : e, users));
-            }
-        });
+    public void search(final String query) {
+        ThreadUtils.ensureNotMain();
+        ContactsManager.query(Config.getApplicationContext(), query)
+                .map(new Func1<List<ContactsManager.Contact>, List<User>>() {
+                    @Override
+                    public List<User> call(List<ContactsManager.Contact> contacts) {
+                        Realm realm = User.Realm(Config.getApplicationContext());
+                        try {
+                            List<User> ret = new ArrayList<>(contacts.size());
+                            for (ContactsManager.Contact contact : contacts) {
+                                User u = realm.copyFromRealm(realm.where(User.class).equalTo(User.FIELD_ID, contact.numberInIEE_Format).findFirst());
+                                if (u == null) {
+                                    u = new User();
+                                    u.setName(contact.name);
+                                    u.setUserId(contact.numberInIEE_Format);
+                                    u.setCity("");
+                                    u.setDP("");
+                                    u.setCountry("");
+                                }
+                                ret.add(u);
+                            }
+                            return ret;
+                        } finally {
+                            realm.close();
+                        }
+                    }
+                })
+                .subscribe(new Subscriber<List<User>>() {
+                    @Override
+                    public void onCompleted() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, new Exception(e.getMessage(), e), null));
+                    }
+
+                    @Override
+                    public void onNext(final List<User> users) {
+                        EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, null, users));
+                        if (ConnectionUtils.isConnected()) {
+                            userApi.search(query, new UserApiV2.Callback<List<User>>() {
+                                @Override
+                                public void done(Exception e, List<User> users2) {
+                                    if (e == null) {
+                                        users2.addAll(users);
+                                    }
+                                    EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, e == null ? null : e, users2));
+                                }
+                            });
+                        }
+                    }
+                });
     }
+
 
     public void leaveGroup(Realm realm, final String id, final CallBack callBack) {
         if (!isGroup(realm, id) || isAdmin(realm, id)) {
@@ -1512,7 +1560,7 @@ public final class UserManager {
 
     private void mapUserToContactName(String userId) {
         ThreadUtils.ensureNotMain();
-        ContactsManager.Contact contact = ContactsManager.getInstance().findContact(userId);
+        ContactsManager.Contact contact = ContactsManager.findContact(userId);
         if (contact != null) {
             Realm realm = newUserRealm();
             try {
@@ -1878,6 +1926,7 @@ public final class UserManager {
 
     public interface CreateGroupCallBack {
         void done(Exception e, String groupId);
+
     }
 
     public String getName(Realm realm, String userId) {

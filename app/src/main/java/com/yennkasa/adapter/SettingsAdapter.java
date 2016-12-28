@@ -12,6 +12,8 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.CompoundButton;
 
+import com.rey.material.widget.CheckBox;
+import com.rey.material.widget.TextView;
 import com.yennkasa.R;
 import com.yennkasa.data.PersistedSetting;
 import com.yennkasa.data.UserManager;
@@ -19,8 +21,6 @@ import com.yennkasa.util.TaskManager;
 import com.yennkasa.util.TypeFaceUtil;
 import com.yennkasa.util.UiHelpers;
 import com.yennkasa.util.ViewUtils;
-import com.rey.material.widget.CheckBox;
-import com.rey.material.widget.TextView;
 
 import java.util.List;
 

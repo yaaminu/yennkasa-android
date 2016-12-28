@@ -276,4 +276,5 @@ public class User extends RealmObject {
                 .encryptionKey(UserManager.getKey())
                 .deleteRealmIfMigrationNeeded().build();
     }
+
 }

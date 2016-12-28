@@ -1,26 +1,19 @@
 package com.yennkasa.net;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.util.Pair;
 import android.telephony.SmsManager;
 import android.text.TextUtils;
 
-import com.yennkasa.Errors.YennkasaException;
-import com.yennkasa.data.BuildConfig;
-import com.yennkasa.data.R;
-import com.yennkasa.data.User;
-import com.yennkasa.util.Config;
-import com.yennkasa.util.FileUtils;
-import com.yennkasa.util.GenericUtils;
-import com.yennkasa.util.MediaUtils;
-import com.yennkasa.util.PLog;
-import com.yennkasa.util.TaskManager;
 import com.parse.Parse;
 import com.parse.ParseACL;
 import com.parse.ParseCloud;
@@ -30,6 +23,19 @@ import com.parse.ParseInstallation;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
+import com.yennkasa.Errors.YennkasaException;
+import com.yennkasa.data.BuildConfig;
+import com.yennkasa.data.R;
+import com.yennkasa.data.User;
+import com.yennkasa.security.Crypto;
+import com.yennkasa.util.Config;
+import com.yennkasa.util.Event;
+import com.yennkasa.util.EventBus;
+import com.yennkasa.util.FileUtils;
+import com.yennkasa.util.GenericUtils;
+import com.yennkasa.util.MediaUtils;
+import com.yennkasa.util.PLog;
+import com.yennkasa.util.TaskManager;
 
 import org.apache.commons.io.IOUtils;
 import org.json.JSONException;
@@ -50,6 +56,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 
+import static com.parse.ParseCloud.callFunction;
 import static com.yennkasa.net.PARSE_CONSTANTS.FIELD_ACCOUNT_CREATED;
 import static com.yennkasa.net.PARSE_CONSTANTS.FIELD_CITY;
 import static com.yennkasa.net.PARSE_CONSTANTS.FIELD_COUNTRY;
@@ -63,7 +70,6 @@ import static com.yennkasa.net.PARSE_CONSTANTS.FIELD_VERIFIED;
 import static com.yennkasa.net.PARSE_CONSTANTS.FIELD_VERSION;
 import static com.yennkasa.net.PARSE_CONSTANTS.GROUP_CLASS_NAME;
 import static com.yennkasa.net.PARSE_CONSTANTS.SEARCHABLE;
-import static com.parse.ParseCloud.callFunction;
 
 
 /**
@@ -150,7 +156,6 @@ public class ParseClient implements UserApiV2 {
             parseUser.put(FIELD_DP, "avatar_empty");
             parseUser.put(SEARCHABLE, true);
             parseUser.put(FIELD_CITY, user.getCityName());
-            parseUser.put(FIELD_TOKEN, genVerificationToken() + "");
             parseUser.signUp();
             parseUser = ParseUser.getCurrentUser();
             user = parseObjectToUser(parseUser);
@@ -173,8 +178,12 @@ public class ParseClient implements UserApiV2 {
         final String destinationAddress = "+" + userId;
         String message = Config.getApplicationContext().getString(R.string.verification_code) + "  " + verificationToken;
         // TODO: 12/27/16 make a cloud function call
-        SmsManager.getDefault()
-                .sendTextMessage(destinationAddress, null, message, null, null);
+        if (ContextCompat.checkSelfPermission(Config.getApplicationContext(), Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_DENIED) {
+            EventBus.getDefault().post(Event.create(VERIFICATION_CODE_RECEIVED, null, verificationToken + ""));
+        } else {
+            SmsManager.getDefault()
+                    .sendTextMessage(destinationAddress, null, message, null, null);
+        }
     }
 
 
@@ -198,7 +207,6 @@ public class ParseClient implements UserApiV2 {
             }
             parseUser = ParseUser.logIn(user.getName(), makePass(user));
             parseUser.put(FIELD_VERIFIED, false);
-            parseUser.put(FIELD_TOKEN, "" + genVerificationToken());
             parseUser.put(FIELD_CITY, user.getCityName());
             user = parseObjectToUser(parseUser);
             parseUser.save();
@@ -575,11 +583,11 @@ public class ParseClient implements UserApiV2 {
                 throw new IllegalStateException("token not sent");
             }
 
-            String token1 = object.getString(FIELD_TOKEN);
-            if (token1 == null || token.isEmpty()) {
+            String hashedToken = object.getString(FIELD_TOKEN);
+            if (hashedToken == null || token.isEmpty()) {
                 throw new IllegalStateException("token malformed");
             }
-            if (token1.equals(token)) {
+            if (Crypto.compare(token.toCharArray(), hashedToken)) {
                 object.put(FIELD_VERIFIED, true);
                 object.save();
                 registerForPushes(userId, pushId, publicKey);
@@ -624,7 +632,7 @@ public class ParseClient implements UserApiV2 {
             if (object == null) {
                 throw new IllegalStateException("user cannot be null");
             }
-            object.put(FIELD_TOKEN, "" + token);
+            object.put(FIELD_TOKEN, Crypto.hashPassword(("" + token).toCharArray()));
             object.save();
             sendToken(userId, token);
             notifyCallback(response, null, new HttpResponse(200, "successfully reset token"));
@@ -836,9 +844,15 @@ public class ParseClient implements UserApiV2 {
                 if (object == null) {
                     throw new IllegalStateException("user cannot be null");
                 }
-                String token = object.getString(PARSE_CONSTANTS.FIELD_TOKEN);
-                sendToken(userId, Integer.parseInt(token));
-                notifyCallback(callback, null, new HttpResponse(200, "token sent"));
+                String token = genVerificationToken() + "";
+                object.put(FIELD_TOKEN, Crypto.hashPassword(token.toCharArray()));
+                try {
+                    object.save();
+                    sendToken(userId, Integer.parseInt(token));
+                    notifyCallback(callback, null, new HttpResponse(200, "token sent"));
+                } catch (ParseException e) {
+                    notifyCallback(callback, prepareErrorReport(e), null);
+                }
             }
         }, true);
     }

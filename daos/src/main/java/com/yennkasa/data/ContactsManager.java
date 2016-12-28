@@ -17,6 +17,7 @@ import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.util.Config;
 import com.yennkasa.util.PLog;
 import com.yennkasa.util.PhoneNumberNormaliser;
+import com.yennkasa.util.ThreadUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,6 +27,8 @@ import java.util.List;
 import java.util.Set;
 
 import io.realm.Realm;
+import rx.Observable;
+import rx.Subscriber;
 
 import static com.yennkasa.util.Config.getApplicationContext;
 
@@ -33,7 +36,6 @@ import static com.yennkasa.util.Config.getApplicationContext;
  * @author Null-Pointer on 6/11/2015.
  */
 public class ContactsManager {
-    private static final ContactsManager INSTANCE = new ContactsManager();
     private static final String TAG = ContactsManager.class.getSimpleName();
     private static final String[] PROJECT_NAME_PHONE = new String[]{ContactsContract.CommonDataKinds.Phone.NUMBER,
             ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME};
@@ -42,27 +44,67 @@ public class ContactsManager {
 
     }
 
-    public static ContactsManager getInstance() {
-        return INSTANCE;
+    public static Observable<List<Contact>> query(final Context context, String query) {
+        ThreadUtils.ensureNotMain();
+        ContentResolver cr = context.getContentResolver();
+        String[] args = {query};
+        final Cursor cursor = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, PROJECT_NAME_PHONE,
+                ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + "=?", args, null);
+        if (cursor == null || !cursor.moveToFirst()) return Observable.empty();
+        return Observable.create(new Observable.OnSubscribe<List<Contact>>() {
+            @Override
+            public void call(Subscriber<? super List<Contact>> subscriber) {
+                Realm userRealm = User.Realm(context);
+                try {
+                    List<Contact> contacts = new ArrayList<>(cursor.getCount());
+                    do {
+                        String name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)),
+                                phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                        try {
+                            String ieeNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO(userRealm));
+                            contacts.add(new Contact(name, phoneNumber, false, "", ieeNumber));
+                        } catch (NumberParseException | IllegalArgumentException e) {
+                            PLog.e(TAG, e.getMessage());
+                        }
+
+                    } while (cursor.moveToNext());
+                    subscriber.onNext(contacts);
+                    subscriber.onCompleted();
+
+                } catch (Exception e) {
+                    subscriber.onError(e);
+                    subscriber.onCompleted();
+                } finally {
+                    userRealm.close();
+                    cursor.close();
+                }
+            }
+        });
+
     }
 
-    public Cursor findAllContactsCursor(Context context) {
+    public static Cursor findAllContactsCursor(Context context) {
         return getCursor(context);
     }
 
-    public List<Contact> findAllContactsSync(Filter<Contact> filter, Comparator<Contact> comparator)
+    public static List<Contact> findAllContactsSync(Filter<Contact> filter, Comparator<Contact> comparator)
             throws YennkasaException {
+        ensureHasPermission();
+        return doFindAllContacts(filter, comparator, getCursor(Config.getApplicationContext()));
+    }
+
+    private static void ensureHasPermission() throws YennkasaException {
         int results = ContextCompat.checkSelfPermission(Config.getApplicationContext(), Manifest.permission.READ_CONTACTS);
         if (results == PackageManager.PERMISSION_DENIED) {
             throw new YennkasaException("Permission denied");
         }
-        return doFindAllContacts(filter, comparator, getCursor(Config.getApplicationContext()));
     }
 
-    public final Contact findContact(String userId) {
+    public static final Contact findContact(String userId) {
         Cursor cursor = getCursor(getApplicationContext());
         String phoneNumber, standardisedNumber;
         Realm userRealm = User.Realm(getApplicationContext());
+        String userCountryISO = UserManager.getInstance().getUserCountryISO(userRealm);
         try {
             if (cursor != null && cursor.moveToFirst()) {
                 do {
@@ -73,7 +115,7 @@ public class ContactsManager {
                         continue;
                     }
                     try {
-                        standardisedNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO(userRealm));
+                        standardisedNumber = PhoneNumberNormaliser.toIEE(phoneNumber, userCountryISO);
                         if (userId.equals(standardisedNumber)) {
                             String name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
                             if (TextUtils.isEmpty(name)) { //some users can store numbers with no name; am a victim :-P
@@ -95,8 +137,8 @@ public class ContactsManager {
         return null;
     }
 
-    public void findAllContacts(final Filter<Contact> filter, final Comparator<Contact> comparator,
-                                final FindCallback<List<Contact>> callback) {
+    public static void findAllContacts(final Filter<Contact> filter, final Comparator<Contact> comparator,
+                                       final FindCallback<List<Contact>> callback) {
         //noinspection ConstantConditions
         final Handler handler = new Handler(Looper.myLooper() != null ? Looper.myLooper() : Looper.getMainLooper());
         new Thread(new Runnable() {
@@ -125,13 +167,13 @@ public class ContactsManager {
         }).start();
     }
 
-    private Cursor getCursor(Context context) {
+    private static Cursor getCursor(Context context) {
         ContentResolver cr = context.getContentResolver();
         return cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, PROJECT_NAME_PHONE,
                 null, null, null);
     }
 
-    private List<Contact> doFindAllContacts(Filter<Contact> filter, Comparator<Contact> comparator, Cursor cursor) {
+    private static List<Contact> doFindAllContacts(Filter<Contact> filter, Comparator<Contact> comparator, Cursor cursor) {
         if (cursor == null || cursor.getCount() == 0) {
             return Collections.emptyList();
         }

@@ -142,7 +142,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener<Rea
                 .setPositiveButton(getString(R.string.invite_user_title, contact.name), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        UiHelpers.doInvite(getContext(), contact);
+                        UiHelpers.doInvite(getContext(), contact.numberInIEE_Format);
                     }
                 });
         getActivity().runOnUiThread(new Runnable() {
@@ -167,7 +167,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener<Rea
                 UiHelpers.enterChatRoom(getContext(), contact.numberInIEE_Format);
                 break;
             case R.id.action_invite:
-                UiHelpers.doInvite(getContext(), contact);
+                UiHelpers.doInvite(getContext(), contact.numberInIEE_Format);
                 break;
             default:
                 throw new AssertionError();
@@ -303,7 +303,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener<Rea
     }
 
     private void refreshLocalContacts() {
-        ContactsManager.getInstance().findAllContacts(filter, comparator, contactsFindCallback);
+        ContactsManager.findAllContacts(filter, comparator, contactsFindCallback);
     }
 
     private void refresh() {

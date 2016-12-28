@@ -12,18 +12,19 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
 
-import com.yennkasa.Yennkasa;
+import com.rey.material.widget.SnackBar;
 import com.yennkasa.R;
+import com.yennkasa.Yennkasa;
 import com.yennkasa.data.Conversation;
 import com.yennkasa.data.UserManager;
 import com.yennkasa.util.LiveCenter;
 import com.yennkasa.util.UiHelpers;
-import com.rey.material.widget.SnackBar;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -111,13 +112,26 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     @OnTextChanged(R.id.et_filter)
     void onTextChanged(Editable editable) {
         if (UserManager.getInstance().getBoolPref(UserManager.ENABLE_SEARCH, true)) {
-            gotoSearch(editable);
+            gotoSearch(editable.toString());
         } else {
-            suggestEnable(editable);
+            suggestEnable(editable.toString().trim());
         }
     }
 
-    private void suggestEnable(final Editable editable) {
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_SEARCH) {
+            if (UserManager.getInstance().getBoolPref(UserManager.ENABLE_SEARCH, true)) {
+                gotoSearch("");
+            } else {
+                suggestEnable("");
+            }
+            return true;
+        }
+        return super.onKeyUp(keyCode, event);
+    }
+
+    private void suggestEnable(final String editable) {
         new AlertDialog.Builder(this)
                 .setMessage(R.string.enable_search_message)
                 .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
@@ -130,7 +144,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
 
     }
 
-    private void enableSearch(final Editable editable) {
+    private void enableSearch(final String editable) {
         final ProgressDialog dialog = new ProgressDialog(this);
         dialog.setMessage(getString(R.string.st_please_wait));
         dialog.setCancelable(false);
@@ -148,8 +162,8 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
         });
     }
 
-    private void gotoSearch(Editable editable) {
-        String text = editable.toString().trim();
+    private void gotoSearch(String query) {
+        String text = query.trim();
         if (text.length() > 0) {
             Intent intent = new Intent(this, SearchActivity.class);
             intent.putExtra(SearchActivity.EXTRA_TEXT, text);

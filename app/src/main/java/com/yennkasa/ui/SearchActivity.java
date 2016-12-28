@@ -1,10 +1,13 @@
 package com.yennkasa.ui;
 
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
@@ -17,6 +20,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.jakewharton.rxbinding.widget.RxTextView;
+import com.rey.material.widget.SnackBar;
 import com.yennkasa.R;
 import com.yennkasa.adapter.YennkasaBaseAdapter;
 import com.yennkasa.data.User;
@@ -25,7 +29,6 @@ import com.yennkasa.util.Event;
 import com.yennkasa.util.EventBus;
 import com.yennkasa.util.UiHelpers;
 import com.yennkasa.util.ViewUtils;
-import com.rey.material.widget.SnackBar;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,6 +40,7 @@ import butterknife.OnClick;
 import butterknife.OnTextChanged;
 import io.realm.Realm;
 import rx.Observable;
+import rx.Observer;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
@@ -171,6 +175,9 @@ public class SearchActivity extends PairAppActivity {
     @Override
     protected void onDestroy() {
         unRegister(EventBus.getDefault(), UserManager.EVENT_SEARCH_RESULTS, this);
+        if (subscription != null && !subscription.isUnsubscribed()) {
+            subscription.unsubscribe();
+        }
         super.onDestroy();
     }
 
@@ -241,10 +248,66 @@ public class SearchActivity extends PairAppActivity {
 
     }
 
+    private void checkUserAvailability(final User user) {
+        final ProgressDialog dialog = new ProgressDialog(this);
+        dialog.setMessage(getString(R.string.check_user_availability, user.getName(), getString(R.string.app_name)));
+        dialog.setCancelable(false);
+        dialog.show();
+        subscription = UserManager.getInstance().isRegistered(user.getUserId())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<User>() {
+                    @Override
+                    public void onCompleted() {
+
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        dialog.dismiss();
+                        suggestInvitationToUser(user);
+                    }
+
+                    @Override
+                    public void onNext(User user) {
+                        dialog.dismiss();
+                        UiHelpers.gotoProfileActivity(SearchActivity.this, user.getUserId());
+                    }
+                });
+    }
+
+    @Nullable
+    private Subscription subscription;
+
+    private void suggestInvitationToUser(final User user) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.invite_user, user.getName()))
+                .setMessage(getString(R.string.invite_prompt, user.getName(), getString(R.string.app_name)))
+                .setCancelable(true)
+                .setPositiveButton(getString(R.string.invite_user_title, user.getName()), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        UiHelpers.doInvite(SearchActivity.this, user.getUserId());
+                    }
+                });
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                builder.create().show();
+            }
+        });
+    }
+
     private final YennkasaBaseAdapter.Delegate<User> delegate = new YennkasaBaseAdapter.Delegate<User>() {
         @Override
         public void onItemClick(YennkasaBaseAdapter<User> adapter, View view, int position, long id) {
-            UiHelpers.gotoProfileActivity(SearchActivity.this, adapter.getItem(position).getUserId());
+            User user = adapter.getItem(position);
+            User tmp = userRealm.where(User.class).equalTo(User.FIELD_ID, user.getUserId()).findFirst();
+            if (tmp == null) {
+                checkUserAvailability(user);
+            } else {
+                UiHelpers.gotoProfileActivity(SearchActivity.this, user.getUserId());
+            }
         }
 
         @Override

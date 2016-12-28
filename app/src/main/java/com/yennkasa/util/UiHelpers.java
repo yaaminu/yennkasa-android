@@ -24,11 +24,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Toast;
 
+import com.rey.material.widget.CheckBox;
+import com.rey.material.widget.TextView;
 import com.yennkasa.BuildConfig;
 import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.R;
 import com.yennkasa.adapter.SimpleAdapter;
-import com.yennkasa.data.ContactsManager;
 import com.yennkasa.data.Message;
 import com.yennkasa.data.User;
 import com.yennkasa.data.UserManager;
@@ -40,8 +41,6 @@ import com.yennkasa.ui.MainActivity;
 import com.yennkasa.ui.ProfileActivity;
 import com.yennkasa.ui.SetUpActivity;
 import com.yennkasa.ui.SettingsActivity;
-import com.rey.material.widget.CheckBox;
-import com.rey.material.widget.TextView;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -401,7 +400,7 @@ public class UiHelpers {
         context.startActivity(intent);
     }
 
-    public static void doInvite(@NonNull final Context context, @NonNull final ContactsManager.Contact contact) {
+    public static void doInvite(@NonNull final Context context, @NonNull final String phoneNumber) {
         final String message = context.getString(R.string.invite_message);
         PackageManager manager = context.getPackageManager();
         final Intent intent = new Intent(Intent.ACTION_SEND);
@@ -420,7 +419,7 @@ public class UiHelpers {
             final Listener listener = new Listener() {
                 @Override
                 public void onClick() {
-                    SmsManager.getDefault().sendTextMessage("+" + contact.numberInIEE_Format, null, message, null, null);
+                    SmsManager.getDefault().sendTextMessage("+" + phoneNumber, null, message, null, null);
                 }
             };
             showErrorDialog((FragmentActivity) context,
@@ -457,9 +456,9 @@ public class UiHelpers {
                         ActivityInfo activityInfo = activityInfos.get(which);
                         if (activityInfo.packageName.equals("com.android.mms")) {
                             Intent smsIntent = new Intent(Intent.ACTION_VIEW);
-                            smsIntent.putExtra("address", contact.phoneNumber);
+                            smsIntent.putExtra("address", phoneNumber);
                             smsIntent.putExtra("sms_body", message);
-                            smsIntent.setData(Uri.parse("smsto:" + contact.phoneNumber));
+                            smsIntent.setData(Uri.parse("smsto:" + phoneNumber));
                             context.startActivity(smsIntent);
                         } else {
                             intent.setClassName(activityInfo.packageName, activityInfo.name);
