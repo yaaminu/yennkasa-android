@@ -1017,6 +1017,13 @@ public final class UserManager {
         return privateKey;
     }
 
+    public String getPublicKey() {
+        String publicKey = getStringPref("user.rsa.public.key.encoded", null);
+        if (GenericUtils.isEmpty(publicKey))
+            throw new IllegalStateException("public key is null");
+        return publicKey;
+    }
+
     @Nullable
     public String publicKeyForUser(String userId) {
         String publicKey = getStringPref("user.rsa.public.key.encoded." + userId, null);

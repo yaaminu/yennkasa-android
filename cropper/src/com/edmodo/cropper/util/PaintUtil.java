@@ -26,7 +26,7 @@ public class PaintUtil {
     // Private Constants ///////////////////////////////////////////////////////
 
 
-    private static final int DEFAULT_CORNER_COLOR = Color.parseColor("#FF37863c");
+    private static final int DEFAULT_CORNER_COLOR = Color.parseColor("#ff3f8af8");
     private static final String SEMI_TRANSPARENT = "#FFFFFFFF";
     private static final String DEFAULT_BACKGROUND_COLOR_ID = "#AAFFFFFF";
     private static final float DEFAULT_LINE_THICKNESS_DP = 3;
@@ -37,7 +37,7 @@ public class PaintUtil {
 
     /**
      * Creates the Paint object for drawing the crop window border.
-     * 
+     *
      * @param context the Context
      * @return new Paint object
      */
@@ -45,8 +45,8 @@ public class PaintUtil {
 
         // Set the line thickness for the crop window border.
         final float lineThicknessPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                                                                DEFAULT_LINE_THICKNESS_DP,
-                                                                context.getResources().getDisplayMetrics());
+                DEFAULT_LINE_THICKNESS_DP,
+                context.getResources().getDisplayMetrics());
 
         final Paint borderPaint = new Paint();
         borderPaint.setColor(Color.parseColor(SEMI_TRANSPARENT));
@@ -58,7 +58,7 @@ public class PaintUtil {
 
     /**
      * Creates the Paint object for drawing the crop window guidelines.
-     * 
+     *
      * @return the new Paint object
      */
     public static Paint newGuidelinePaint() {
@@ -73,7 +73,7 @@ public class PaintUtil {
     /**
      * Creates the Paint object for drawing the translucent overlay outside the
      * crop window.
-     * 
+     *
      * @param context the Context
      * @return the new Paint object
      */
@@ -87,7 +87,7 @@ public class PaintUtil {
 
     /**
      * Creates the Paint object for drawing the corners of the border
-     * 
+     *
      * @param context the Context
      * @return the new Paint object
      */
@@ -95,8 +95,8 @@ public class PaintUtil {
 
         // Set the line thickness for the crop window border.
         final float lineThicknessPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
-                                                                DEFAULT_CORNER_THICKNESS_DP,
-                                                                context.getResources().getDisplayMetrics());
+                DEFAULT_CORNER_THICKNESS_DP,
+                context.getResources().getDisplayMetrics());
 
         final Paint cornerPaint = new Paint();
         cornerPaint.setColor(DEFAULT_CORNER_COLOR);
@@ -108,7 +108,7 @@ public class PaintUtil {
 
     /**
      * Returns the value of the corner thickness
-     * 
+     *
      * @return Float equivalent to the corner thickness
      */
     public static float getCornerThickness() {
@@ -117,7 +117,7 @@ public class PaintUtil {
 
     /**
      * Returns the value of the line thickness of the border
-     * 
+     *
      * @return Float equivalent to the line thickness
      */
     public static float getLineThickness() {

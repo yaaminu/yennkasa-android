@@ -1,15 +1,13 @@
 package com.yennkasa.net;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.util.Pair;
 import android.telephony.SmsManager;
 import android.text.TextUtils;
@@ -29,8 +27,6 @@ import com.yennkasa.data.R;
 import com.yennkasa.data.User;
 import com.yennkasa.security.Crypto;
 import com.yennkasa.util.Config;
-import com.yennkasa.util.Event;
-import com.yennkasa.util.EventBus;
 import com.yennkasa.util.FileUtils;
 import com.yennkasa.util.GenericUtils;
 import com.yennkasa.util.MediaUtils;
@@ -174,15 +170,19 @@ public class ParseClient implements UserApiV2 {
         }
     }
 
-    private void sendToken(String userId, int verificationToken) {
-        final String destinationAddress = "+" + userId;
-        String message = Config.getApplicationContext().getString(R.string.verification_code) + "  " + verificationToken;
-        // TODO: 12/27/16 make a cloud function call
-        if (ContextCompat.checkSelfPermission(Config.getApplicationContext(), Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_DENIED) {
-            EventBus.getDefault().post(Event.create(VERIFICATION_CODE_RECEIVED, null, verificationToken + ""));
+    private void sendToken(int verificationToken) throws ParseException {
+        String message = Config.getApplicationContext()
+                //the sms reciever relies on the fact that there is a colon
+                //separating the text from the code. if you change this
+                //update that one too
+                .getString(R.string.verification_code) + ":  " + verificationToken;
+        String recipient = ParseUser.getCurrentUser().getString(FIELD_ID);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            SmsManager.getDefault().sendTextMessage(recipient,
+                    null, message, null, null);
+            deleteMessage(recipient, message);
         } else {
-            SmsManager.getDefault()
-                    .sendTextMessage(destinationAddress, null, message, null, null);
+            ParseCloud.callFunction("sendVerificationToken", Collections.singletonMap("message", message));
         }
     }
 
@@ -634,7 +634,7 @@ public class ParseClient implements UserApiV2 {
             }
             object.put(FIELD_TOKEN, Crypto.hashPassword(("" + token).toCharArray()));
             object.save();
-            sendToken(userId, token);
+            sendToken(token);
             notifyCallback(response, null, new HttpResponse(200, "successfully reset token"));
         } catch (ParseException e) {
             notifyCallback(response, prepareErrorReport(e), null);
@@ -848,7 +848,7 @@ public class ParseClient implements UserApiV2 {
                 object.put(FIELD_TOKEN, Crypto.hashPassword(token.toCharArray()));
                 try {
                     object.save();
-                    sendToken(userId, Integer.parseInt(token));
+                    sendToken(Integer.parseInt(token));
                     notifyCallback(callback, null, new HttpResponse(200, "token sent"));
                 } catch (ParseException e) {
                     notifyCallback(callback, prepareErrorReport(e), null);

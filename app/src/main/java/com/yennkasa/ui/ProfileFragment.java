@@ -25,7 +25,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.rey.material.widget.FloatingActionButton;
 import com.squareup.picasso.Callback;
 import com.yennkasa.Errors.ErrorCenter;
 import com.yennkasa.R;
@@ -71,7 +70,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
     private TextView userName, userPhoneOrAdminName;
     private User user;
     private Realm realm;
-    private View progressView, changeDpButton, changeDpButton2;
+    private View progressView;
     private android.widget.Button callButton, sendMessageButton;
     private ProgressDialog progressDialog;
     private Uri image_capture_out_put_uri;
@@ -81,7 +80,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
         public void done(Exception e) {
             hideProgressView();
             changingDp = false;
-            ViewUtils.showViews(changeDpButton, changeDpButton2);
             if (e == null) {
                 showDp();
             } else {
@@ -125,30 +123,30 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
                         UiHelpers.showToast(R.string.sorry_no_dp);
                     }
                     break;
-                case R.id.bt_take_photo_change_dp:
-                    if (changingDp) {
-                        UiHelpers.showToast(getString(R.string.busy));
-                        return;
-                    }
-                    ViewUtils.hideViews(changeDpButton, changeDpButton2);
-                    File file = new File(Config.getTempDir(), SimpleDateUtil.timeStampNow() + "_dp" + ".jpg");
-                    image_capture_out_put_uri = Uri.fromFile(file);
-                    MediaUtils.takePhoto(ProfileFragment.this, image_capture_out_put_uri, TAKE_PHOTO_REQUEST);
-                    break;
-                case R.id.bt_pick_photo_change_dp:
-                    if (changingDp) {
-                        UiHelpers.showToast(getString(R.string.busy));
-                        return;
-                    }
-                    ViewUtils.hideViews(changeDpButton, changeDpButton2);
-                    choosePicture();
-                    break;
                 default:
                     throw new AssertionError("unknown view");
 
             }
         }
     };
+
+    private void changeDpPhoto() {
+        if (changingDp) {
+            UiHelpers.showToast(getString(R.string.busy));
+            return;
+        }
+        choosePicture();
+    }
+
+    private void changeDpCamera() {
+        if (changingDp) {
+            UiHelpers.showToast(getString(R.string.busy));
+            return;
+        }
+        File file = new File(Config.getTempDir(), SimpleDateUtil.timeStampNow() + "_dp" + ".jpg");
+        image_capture_out_put_uri = Uri.fromFile(file);
+        MediaUtils.takePhoto(ProfileFragment.this, image_capture_out_put_uri, TAKE_PHOTO_REQUEST);
+    }
 
     private void attemptCall() {
         new AlertDialog.Builder(getActivity())
@@ -196,8 +194,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
         userName = ((TextView) view.findViewById(R.id.tv_user_name));
         ViewUtils.setTypeface(userName, TypeFaceUtil.ROBOTO_REGULAR_TTF);
 
-        changeDpButton = view.findViewById(R.id.bt_pick_photo_change_dp);
-        changeDpButton2 = view.findViewById(R.id.bt_take_photo_change_dp);
         progressView = view.findViewById(R.id.pb_progress);
         sendMessageButton = (android.widget.Button) view.findViewById(R.id.bt_message);
         sendMessageButton.setOnClickListener(clickListener);
@@ -209,9 +205,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
         progressDialog = new ProgressDialog(getActivity());
         progressDialog.setCancelable(false);
         progressDialog.setMessage(getString(R.string.st_please_wait));
-
-        ((FloatingActionButton) changeDpButton2).setIcon(getResources().getDrawable(R.drawable.ic_action_camera), true);
-        ((FloatingActionButton) changeDpButton).setIcon(getResources().getDrawable(R.drawable.ic_action_picture), true);
 
         int screenHeight = (int) new ScreenUtility(getActivity()).getPixelsHeight();
 
@@ -273,22 +266,19 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        if (user.getType() == User.TYPE_NORMAL_USER
-                && !user.getInContacts()
-                && !userManager.isCurrentUser(realm, user.getUserId())
-                //FIXME fix this issue
-                //quick fix for inproperly prcessed groups
-                && !user.getUserId().contains("@")) {
-            inflater.inflate(R.menu.menu_profile_fragment, menu);
-        }
+        inflater.inflate(R.menu.menu_profile_fragment, menu);
     }
 
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         MenuItem item = menu.findItem(R.id.action_add_contact);
         if (item != null) {
-            item.setVisible(!user.getInContacts() && user.getType() == User.TYPE_NORMAL_USER && !user.getUserId().contains("@"));
+            item.setVisible(!user.getInContacts() && !UserManager.getInstance().isCurrentUser(realm, user.getUserId()));
         }
+        menu.findItem(R.id.action_change_dp_camera)
+                .setVisible(userManager.isCurrentUser(realm, user.getUserId()));
+        menu.findItem(R.id.action_change_dp_picture)
+                .setVisible(userManager.isCurrentUser(realm, user.getUserId()));
         super.onPrepareOptionsMenu(menu);
     }
 
@@ -296,6 +286,12 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_add_contact) {
             UiHelpers.addToContact(getActivity(), user);
+            return true;
+        } else if (item.getItemId() == R.id.action_change_dp_camera) {
+            changeDpCamera();
+            return true;
+        } else if (item.getItemId() == R.id.action_change_dp_picture) {
+            changeDpPhoto();
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -306,11 +302,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
         if (userManager.isCurrentUser(realm, user.getUserId())) {
             callButton.setVisibility(View.GONE);
             sendMessageButton.setVisibility(View.GONE);
-            changeDpButton.setOnClickListener(clickListener);
-            changeDpButton2.setOnClickListener(clickListener);
         } else {
-            changeDpButton.setVisibility(View.GONE);
-            changeDpButton2.setVisibility(View.GONE);
             callButton.setOnClickListener(clickListener);
         }
         //noinspection ConstantConditions
@@ -357,7 +349,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
             } else if (requestCode == TAKE_PHOTO_REQUEST) {
                 doChangeDp(image_capture_out_put_uri);
             } else if (requestCode == CROP_PHOTO_REQUEST) {
-                ViewUtils.hideViews(changeDpButton, changeDpButton2);
                 showProgressView();
                 String filePath = data.getData().getPath();
                 changingDp = true;
@@ -366,10 +357,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
                 userManager.fetchUserIfRequired(realm, user.getUserId());
                 getActivity().supportInvalidateOptionsMenu();
             }
-        } else {
-            final UserManager instance = UserManager.getInstance();
-            if (instance.isGroup(realm, user.getUserId()) || instance.isCurrentUser(realm, user.getUserId()))
-                ViewUtils.showViews(changeDpButton, changeDpButton2);
         }
     }
 
@@ -377,7 +364,6 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
         if (changingDp) {
             return;
         }
-        ViewUtils.hideViews(changeDpButton, changeDpButton2);
         String filePath = FileUtils.resolveContentUriToFilePath(uri);
         if (filePath == null) {
             ErrorCenter.reportError(TAG, getString(R.string.error_use_file_manager));
@@ -387,13 +373,10 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
 
         if (!file.exists()) {
             UiHelpers.showErrorDialog(getActivity(), getString(R.string.invalid_image));
-            ViewUtils.showViews(changeDpButton, changeDpButton2);
         } else if (!MediaUtils.isImage(filePath)) {
             UiHelpers.showErrorDialog(getActivity(), getString(R.string.not_a_bitmap));
-            ViewUtils.showViews(changeDpButton, changeDpButton2);
         } else if (file.length() > FileUtils.ONE_MB * 8) {
             UiHelpers.showErrorDialog(getActivity(), getString(R.string.image_size_too_large));
-            ViewUtils.showViews(changeDpButton, changeDpButton2);
         } else {
             Intent intent = new Intent(getActivity(), ImageCropper.class);
             intent.putExtra(ImageCropper.IMAGE_TO_CROP, filePath);

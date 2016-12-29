@@ -5,5 +5,15 @@
         android:id="@+id/action_add_contact"
         android:icon="@drawable/ic_person_add_white_24dp"
         android:title="@string/add_contact"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_change_dp_camera"
+        android:icon="@drawable/ic_photo_camera_white_24dp"
+        android:title="@string/add_contact"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_change_dp_picture"
+        android:icon="@drawable/ic_photo_white_24dp"
+        android:title="@string/add_contact"
         app:showAsAction="always" />
 </menu>

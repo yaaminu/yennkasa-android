@@ -25,7 +25,7 @@ import java.util.Set;
 
 import io.realm.Realm;
 
-import static com.yennkasa.messenger.MessagePacker.MessagePackerException.ENCRYPTION_FAILED;
+import static com.yennkasa.messenger.MessagePacker.MessagePackerException.DECRYPTION_FAILED;
 import static com.yennkasa.messenger.MessengerBus.CONNECTED;
 import static com.yennkasa.messenger.MessengerBus.CONNECTING;
 import static com.yennkasa.messenger.MessengerBus.DISCONNECTED;
@@ -238,11 +238,11 @@ public class SenderImpl implements Sender {
                     throw new RuntimeException(e);
                 }
                 if (e.getCause() instanceof MessagePackerException) {
-                    if (((MessagePackerException) e.getCause()).getErrorCode() == ENCRYPTION_FAILED) {
+                    if (((MessagePackerException) e.getCause()).getErrorCode() == DECRYPTION_FAILED) {
                         // TODO: 12/22/16 this could be because the sender used our stale public key
-                        // for encryption so we persist this message as a blob, send a hint to the
-                        //sender that we could not decrypt his message so they should use our
-                        //new public key if possible
+                        //the sender must detect this by checking peridically from the server for
+                        //changing public keys. and updating it's local cache, and resending dropped messages
+                        //if possible
                     }
                 }
             }

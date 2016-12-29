@@ -1,5 +1,4 @@
 <com.yennkasa.view.LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -32,23 +31,6 @@
                 layout="@layout/progressbar"
                 android:visibility="visible" />
 
-            <com.yennkasa.view.LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:background="@color/transparent">
-
-                <include
-                    android:id="@+id/bt_take_photo_change_dp"
-                    layout="@layout/fab_generic_smal"
-                    android:contentDescription="@string/change_dp" />
-
-                <include
-                    android:id="@+id/bt_pick_photo_change_dp"
-                    layout="@layout/fab_generic_smal"
-                    android:contentDescription="@string/change_dp"
-                    app:fab_iconSrc="@drawable/ic_action_picture" />
-            </com.yennkasa.view.LinearLayout>
         </com.yennkasa.view.RelativeLayout>
 
         <LinearLayout

@@ -13,15 +13,15 @@ import android.support.annotation.NonNull;
 import android.view.View;
 
 import com.edmodo.cropper.CropImageView;
+import com.rey.material.widget.SnackBar;
+import com.squareup.picasso.Picasso.LoadedFrom;
+import com.squareup.picasso.Target;
 import com.yennkasa.R;
 import com.yennkasa.util.Config;
 import com.yennkasa.util.SimpleDateUtil;
 import com.yennkasa.util.TaskManager;
 import com.yennkasa.util.UiHelpers;
 import com.yennkasa.util.ViewUtils;
-import com.rey.material.widget.SnackBar;
-import com.squareup.picasso.Picasso.LoadedFrom;
-import com.squareup.picasso.Target;
 
 import java.io.File;
 import java.io.FileNotFoundException;
