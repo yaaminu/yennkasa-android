@@ -314,7 +314,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         setUpCurrentConversation();
         sendButton.setOnClickListener(this);
         setUpListView();
-        if (!peer.getInContacts() && !User.isGroup(peer)) {
+        if (!peer.getInContacts() && !User.isGroup(peer) && !getIntent().getBooleanExtra(EXTRA_HIDE_NUMBER, false)) {
             new Handler().post(new Runnable() {
                 @Override
                 public void run() {
@@ -911,8 +911,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     @Override
     public boolean hideNotice() {
-//        return currConversation.getLastMessage() != null;
-        return (peer.getInContacts() || User.isGroup(peer)) && !getIntent().getBooleanExtra(EXTRA_HIDE_NUMBER, false);
+        return peer.getInContacts() || getIntent().getBooleanExtra(EXTRA_HIDE_NUMBER, false);
     }
 
     @Override

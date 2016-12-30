@@ -20,11 +20,11 @@ import android.widget.TextView;
 
 import com.yennkasa.BuildConfig;
 import com.yennkasa.Errors.ErrorCenter;
-import com.yennkasa.Yennkasa;
 import com.yennkasa.R;
+import com.yennkasa.Yennkasa;
 import com.yennkasa.data.UserManager;
-import com.yennkasa.messenger.YennkasaClient;
 import com.yennkasa.messenger.SmsReciever;
+import com.yennkasa.messenger.YennkasaClient;
 import com.yennkasa.util.Config;
 import com.yennkasa.util.GcmUtils;
 import com.yennkasa.util.TypeFaceUtil;
@@ -33,7 +33,13 @@ import com.yennkasa.util.ViewUtils;
 
 import io.realm.Realm;
 
+import static android.Manifest.permission.ACCESS_NETWORK_STATE;
+import static android.Manifest.permission.CAMERA;
+import static android.Manifest.permission.MODIFY_AUDIO_SETTINGS;
+import static android.Manifest.permission.READ_CONTACTS;
+import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.Manifest.permission.RECEIVE_SMS;
+import static android.Manifest.permission.RECORD_AUDIO;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 
@@ -44,7 +50,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     static final int UNKNOWN = -1, LOGIN_STAGE = 0, VERIFICATION_STAGE = 1, DP_STAGE = 2, COMPLETE = 3;
     private static final String STAGE = "staSKDFDge", SETUP_PREFS_KEY = "setuSLFKA", OUR_TAG = "ourTag";
     public static final int PERMISSION_REQUEST_CODE = 101;
-    private static final String[] permissions = new String[]{WRITE_EXTERNAL_STORAGE, RECEIVE_SMS};
+    private static final String[] permissions = new String[]{WRITE_EXTERNAL_STORAGE, RECEIVE_SMS, READ_CONTACTS, RECORD_AUDIO, CAMERA, MODIFY_AUDIO_SETTINGS, READ_PHONE_STATE, ACCESS_NETWORK_STATE};
     int attempts = 0;
     private int stage = UNKNOWN;
     private ProgressDialog progressDialog;

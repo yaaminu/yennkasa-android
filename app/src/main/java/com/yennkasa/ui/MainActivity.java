@@ -276,13 +276,17 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
     @Override
     public void onConversionClicked(final Conversation conversation) {
         final User user = userManager.fetchUserIfRequired(userRealm, conversation.getPeerId(), false, true);
+        final boolean shouldShowNumber = (conversation.getLastMessage() != null &&
+                conversation.getPeerId().equals(conversation.getLastMessage().getFrom()))
+                || user.getInContacts();
         if (userManager.isBlocked(user.getUserId())) {
             UiHelpers.showErrorDialog(this, R.string.blocked_user_notice, R.string.agree, R.string.disagree, new UiHelpers.Listener() {
                 @Override
                 public void onClick() {
                     userManager.unBlockUser(user.getUserId());
                     UiHelpers.showToast(getString(R.string.user_unblocked));
-                    UiHelpers.enterChatRoom(MainActivity.this, user.getUserId(), user.getInContacts());
+                    UiHelpers.enterChatRoom(MainActivity.this, user.getUserId(),
+                            shouldShowNumber);
                 }
             }, new UiHelpers.Listener() {
                 @Override
@@ -290,7 +294,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                 }
             });
         } else {
-            UiHelpers.enterChatRoom(this, user.getUserId(), user.getInContacts());
+            UiHelpers.enterChatRoom(this, user.getUserId(), shouldShowNumber);
         }
     }
 

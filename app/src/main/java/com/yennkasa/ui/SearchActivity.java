@@ -289,7 +289,8 @@ public class SearchActivity extends PairAppActivity {
                     @Override
                     public void onNext(User user) {
                         dialog.dismiss();
-                        UiHelpers.gotoProfileActivity(SearchActivity.this, user.getUserId(), true);
+                        UiHelpers.gotoProfileActivity(SearchActivity.this, user.getUserId(), user.getInContacts());
+                        finish();
                     }
                 });
     }
@@ -326,11 +327,13 @@ public class SearchActivity extends PairAppActivity {
         public void onItemClick(YennkasaBaseAdapter<User> adapter, View view, int position, long id) {
             User user = adapter.getItem(position);
             User tmp = userRealm.where(User.class).equalTo(User.FIELD_ID, user.getUserId()).findFirst();
-            if (tmp == null) {
+            if (tmp == null && user.getCityName().equals(getString(R.string.unknown))) {
                 checkUserAvailability(user);
             } else {
                 UiHelpers.gotoProfileActivity(SearchActivity.this, user.getUserId(), user.getInContacts());
+                finish();
             }
+
         }
 
         @Override

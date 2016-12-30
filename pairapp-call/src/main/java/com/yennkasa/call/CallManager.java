@@ -48,7 +48,7 @@ public class CallManager implements CallController {
         this.source = source;
         client = Sinch.getSinchClientBuilder()
                 .context(application)
-                .environmentHost(debug ? "sandbox.sinch.com" : "clientapi.sinch.com")
+                .environmentHost("clientapi.sinch.com")
                 .userId(currUserId)
                 .applicationKey(APPLICATION_KEY)
                 .callerIdentifier(currUserId)

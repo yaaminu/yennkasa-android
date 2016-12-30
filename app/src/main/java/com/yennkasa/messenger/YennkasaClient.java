@@ -287,6 +287,7 @@ public class YennkasaClient extends Service {
             EventBus.resetBus(ListneableBusClazz.class);
             EventBus.resetBus(PostableBusClazz.class);
             EventBus.resetBus(shadowClazz.class);
+            EventBus.getDefault().unregister(UserManager.ACTION_SEND_MESSAGE, eventsListener);
             messagePacker.close();
             webSocketDispatcher.unRegisterMonitor(monitor);
             webSocketDispatcher.close();

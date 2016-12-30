@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -12,6 +13,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -243,6 +245,16 @@ public class LoginFragment extends Fragment {
                 PLog.d(TAG, "this is strange no browser");
                 UiHelpers.showErrorDialog(getActivity(), "You have no browser on you phone, you may install one from the play store");
             }
+        } else if (v.getId() == R.id.terms) {
+            // TODO: 12/23/2015 redirect user to my website
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("http://yennkasa.com/terms"));
+            try {
+                startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                PLog.d(TAG, "this is strange no browser");
+                UiHelpers.showErrorDialog(getActivity(), "You have no browser on you phone, you may install one from the play store");
+            }
         } else {
             throw new AssertionError();
         }
@@ -295,7 +307,17 @@ public class LoginFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        setUpCountriesAndContinue();
+        new AlertDialog.Builder(getContext())
+                .setMessage("Hi, There thanks for installing.\n" +
+                        "This is an early preview of the emerging Yennkasa IM. Kindly report all problems you encounter and your feedback at http://yennkasa.com/support. Thank you")
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        setUpCountriesAndContinue();
+                    }
+                }).setCancelable(false)
+                .create().show();
+
     }
 
     @SuppressLint("CommitPrefEdits")

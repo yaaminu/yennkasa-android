@@ -98,7 +98,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.bt_message:
-                    UiHelpers.enterChatRoom(v.getContext(), user.getUserId(), false);
+                    UiHelpers.enterChatRoom(v.getContext(), user.getUserId(), showNumber);
                     getActivity().finish();
                     break;
                 case R.id.bt_call:

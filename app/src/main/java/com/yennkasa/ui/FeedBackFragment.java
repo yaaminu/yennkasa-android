@@ -2,11 +2,11 @@ package com.yennkasa.ui;
 
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.rey.material.widget.CheckBox;
 import com.yennkasa.BuildConfig;
 import com.yennkasa.R;
 import com.yennkasa.data.User;
@@ -30,7 +31,6 @@ import com.yennkasa.util.MediaUtils;
 import com.yennkasa.util.TypeFaceUtil;
 import com.yennkasa.util.UiHelpers;
 import com.yennkasa.util.ViewUtils;
-import com.rey.material.widget.CheckBox;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -101,22 +101,19 @@ public class FeedBackFragment extends Fragment {
                     }
                     reportObject.put("locale", Locale.getDefault().getDisplayCountry());
                 }
-
-                Intent intent = new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:team.yennkasa.android@gmail.com"));
-                intent.putExtra(Intent.EXTRA_TEXT, reportObject.toString());
-                intent.putExtra(Intent.EXTRA_SUBJECT, title);
-                try {
-                    startActivity(intent);
-                    throw new ActivityNotFoundException();
-                } catch (ActivityNotFoundException e) {
-                    YennkasaClient.sendFeedBack(reportObject, attachments);
-                    UiHelpers.showToast(R.string.feedback_sent_successfully);
-                }
+                YennkasaClient.sendFeedBack(reportObject, attachments);
+                UiHelpers.showToast(R.string.feedback_sent_successfully);
             } catch (JSONException e) {
                 throw new RuntimeException(e.getCause());
             } finally {
                 userRealm.close();
             }
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    getActivity().finish();
+                }
+            });
         }
     };
     private EditText subjectEt;

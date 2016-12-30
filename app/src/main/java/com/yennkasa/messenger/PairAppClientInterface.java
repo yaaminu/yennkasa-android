@@ -574,7 +574,7 @@ class PairAppClientInterface {
                     .in(Message.FIELD_STATE, new Integer[]{STATE_PENDING, STATE_SENT})
                     .in(Message.FIELD_TYPE, new Integer[]{TYPE_BIN_MESSAGE, TYPE_STICKER, TYPE_VIDEO_MESSAGE, TYPE_TEXT_MESSAGE,
                             TYPE_PICTURE_MESSAGE})
-                    .lessThanOrEqualTo(Message.FIELD_DATE_COMPOSED, System.currentTimeMillis() - 1000)
+                    .greaterThanOrEqualTo(Message.FIELD_DATE_COMPOSED, System.currentTimeMillis() - 60 * 1000)
                     .findAllSorted(Message.FIELD_DATE_COMPOSED);
             for (Message message : messages) {
                 sendMessage(message);
