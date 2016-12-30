@@ -4,9 +4,11 @@ import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -205,11 +207,13 @@ public class SearchActivity extends PairAppActivity {
 
         private final int width;
         private final int height;
+        private final Drawable cityDrawable;
 
         public SearchResultsAdapter(Delegate<User> delegate, Context context) {
             super(delegate);
             width = (int) context.getResources().getDimension(R.dimen.thumbnail_width);
             height = (int) context.getResources().getDimension(R.dimen.thumbnail_height);
+            this.cityDrawable = ContextCompat.getDrawable(context, R.drawable.ic_place_black_24dp);
         }
 
         @SuppressLint("SetTextI18n")
@@ -217,7 +221,13 @@ public class SearchActivity extends PairAppActivity {
         protected void doBindHolder(Holder holder, int position) {
             User item = getItem(position);
             ((VH) holder).userName.setText(item.getName());
-            ((VH) holder).location.setText("  " + item.getCityName());
+            if (item.getAccountCreated() == 0) {
+                ((VH) holder).location.setCompoundDrawables(null, null, null, null);
+                ((VH) holder).location.setText("  +" + item.getUserId());
+            } else {
+                ((VH) holder).location.setCompoundDrawables(cityDrawable, null, null, null);
+                ((VH) holder).location.setText("  " + item.getCityName());
+            }
             Context context = ((VH) holder).itemView.getContext();
             ImageLoader.load(context, item.getDP())
                     .error(R.drawable.user_avartar)
@@ -284,7 +294,7 @@ public class SearchActivity extends PairAppActivity {
                 .setTitle(getString(R.string.invite_user, user.getName()))
                 .setMessage(getString(R.string.invite_prompt, user.getName(), getString(R.string.app_name)))
                 .setCancelable(true)
-                .setPositiveButton(getString(R.string.invite_user_title, user.getName()), new DialogInterface.OnClickListener() {
+                .setPositiveButton(getString(R.string.invite), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         UiHelpers.doInvite(SearchActivity.this, user.getUserId());

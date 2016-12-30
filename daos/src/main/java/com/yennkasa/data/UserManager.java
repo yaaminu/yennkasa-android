@@ -1254,7 +1254,7 @@ public final class UserManager {
                         if (u == null) {
                             u = new User();
                             u.setName(contact.name);
-                            u.setUserId(contact.numberInIEE_Format);
+                            u.setUserId(contact.phoneNumber);
                             u.setCity("");
                             u.setDP("");
                             u.setCountry("");
