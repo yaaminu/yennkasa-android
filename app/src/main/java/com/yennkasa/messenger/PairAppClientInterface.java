@@ -47,6 +47,13 @@ import io.realm.Realm;
 import io.realm.RealmResults;
 import io.realm.Sort;
 
+import static com.yennkasa.data.Message.STATE_PENDING;
+import static com.yennkasa.data.Message.STATE_SENT;
+import static com.yennkasa.data.Message.TYPE_BIN_MESSAGE;
+import static com.yennkasa.data.Message.TYPE_PICTURE_MESSAGE;
+import static com.yennkasa.data.Message.TYPE_STICKER;
+import static com.yennkasa.data.Message.TYPE_TEXT_MESSAGE;
+import static com.yennkasa.data.Message.TYPE_VIDEO_MESSAGE;
 import static com.yennkasa.messenger.MessengerBus.GET_STATUS_MANAGER;
 import static com.yennkasa.messenger.MessengerBus.ON_CALL_EVENT;
 import static com.yennkasa.messenger.YennkasaClient.listenableBus;
@@ -478,7 +485,7 @@ class PairAppClientInterface {
         } catch (MessagePacker.MessagePackerException e) {
             PLog.f(TAG, e.getMessage(), e);
             User recipient = UserManager.getInstance()
-                    .fetchUserIfRequired(userRealm, msg.getTo());
+                    .fetchUserIfRequired(userRealm, msg.getTo(), false, false);
             if (BuildConfig.DEBUG) {
                 throw new RuntimeException();
             }
@@ -558,5 +565,22 @@ class PairAppClientInterface {
 
     public void switchCamera(CallData data) {
         callController.switchCamera(data);
+    }
+
+    public void sendAllUndeliveredMessageFor(String userId) {
+        Realm realm = Message.REALM(context);
+        try {
+            RealmResults<Message> messages = realm.where(Message.class).equalTo(Message.FIELD_TO, userId)
+                    .in(Message.FIELD_STATE, new Integer[]{STATE_PENDING, STATE_SENT})
+                    .in(Message.FIELD_TYPE, new Integer[]{TYPE_BIN_MESSAGE, TYPE_STICKER, TYPE_VIDEO_MESSAGE, TYPE_TEXT_MESSAGE,
+                            TYPE_PICTURE_MESSAGE})
+                    .lessThanOrEqualTo(Message.FIELD_DATE_COMPOSED, System.currentTimeMillis() - 1000)
+                    .findAllSorted(Message.FIELD_DATE_COMPOSED);
+            for (Message message : messages) {
+                sendMessage(message);
+            }
+        } finally {
+            realm.close();
+        }
     }
 }

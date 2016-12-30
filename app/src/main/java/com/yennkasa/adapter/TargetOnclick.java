@@ -5,9 +5,9 @@ import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.yennkasa.util.UiHelpers;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Target;
+import com.yennkasa.util.UiHelpers;
 
 /**
  * Created by Null-Pointer on 11/20/2015.
@@ -15,17 +15,19 @@ import com.squareup.picasso.Target;
 class TargetOnclick implements View.OnClickListener, Target {
 
     private final String peerId;
+    private final boolean incontact;
     private Bitmap image;
     private ImageView iv;
 
-    public TargetOnclick(ImageView iv, String peerId) {
+    public TargetOnclick(ImageView iv, String peerId, boolean incontact) {
         this.iv = iv;
         this.peerId = peerId;
+        this.incontact = incontact;
     }
 
     @Override
     public void onClick(View v) {
-        UiHelpers.gotoProfileActivity(v.getContext(), peerId, image, image);
+        UiHelpers.gotoProfileActivity(v.getContext(), peerId, image, image, incontact);
     }
 
     @Override

@@ -164,7 +164,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener<Rea
                 MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
                 break;
             case R.id.action_text:
-                UiHelpers.enterChatRoom(getContext(), contact.numberInIEE_Format);
+                UiHelpers.enterChatRoom(getContext(), contact.numberInIEE_Format, true);
                 break;
             case R.id.action_invite:
                 UiHelpers.doInvite(getContext(), contact.numberInIEE_Format);
@@ -267,7 +267,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener<Rea
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Contact contact = (Contact) parent.getAdapter().getItem(position);
         if (contact.isRegisteredUser) {
-            UiHelpers.enterChatRoom(getActivity(), contact.numberInIEE_Format);
+            UiHelpers.enterChatRoom(getActivity(), contact.numberInIEE_Format, true);
         } else {
             checkUserAvailability(R.id.action_text, contact);
             Log.d(TAG, "clicked an unregistered user");

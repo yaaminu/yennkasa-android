@@ -27,6 +27,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.rey.material.widget.SnackBar;
 import com.yennkasa.Errors.ErrorCenter;
 import com.yennkasa.R;
 import com.yennkasa.adapter.GroupsAdapter;
@@ -49,7 +50,6 @@ import com.yennkasa.util.TaskManager;
 import com.yennkasa.util.TypeFaceUtil;
 import com.yennkasa.util.UiHelpers;
 import com.yennkasa.util.ViewUtils;
-import com.rey.material.widget.SnackBar;
 
 import java.io.File;
 import java.io.IOException;
@@ -95,8 +95,8 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public static final String WAS_TYPING = "wasTyping";
     public static final String SCROLL_POSITION = "scrollPosition";
     private static final String SAVED_MESSAGES_MESSAGE_BOX = "saved.Messages.message.box";
-    public static final String EXTRA_REGISTERED = "registered";
     public static final String EXTRA_NAME = "name";
+    public static final String EXTRA_HIDE_NUMBER = "HideNumber";
     private int cursor = -1;
     private boolean wasTyping = false;
     private final MessagesAdapter.Delegate delegate = new MessagesAdapter.Delegate() {
@@ -254,13 +254,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         messageConversationRealm = Message.REALM(this);
         Bundle bundle = getIntent().getExtras();
         String peerId = bundle.getString(EXTRA_PEER_ID);
-        boolean isKnowToBeUnRegistered = bundle.getBoolean(EXTRA_REGISTERED, false);
-        if (!isKnowToBeUnRegistered) {
-            peer = userManager.fetchUserIfRequired(userRealm, peerId, true);
-        } else {
-            String name = bundle.getString(EXTRA_NAME);
-            peer = createUser(peerId, name, true);
-        }
+        peer = userManager.fetchUserIfRequired(userRealm, peerId, true, true);
+        UserManager.getInstance().refreshPublicKeysIfRequired(peerId);
+
         setContentView(R.layout.activity_chat);
         ButterKnife.bind(this);
         handler = new Handler();
@@ -470,7 +466,8 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                 }
                 break;
             case R.id.main_toolbar:
-                UiHelpers.gotoProfileActivity(this, peer.getUserId());
+                UiHelpers.gotoProfileActivity(this, peer.getUserId(),
+                        !getIntent().getBooleanExtra(EXTRA_HIDE_NUMBER, false));
                 break;
             default:
                 throw new AssertionError();
@@ -915,7 +912,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Override
     public boolean hideNotice() {
 //        return currConversation.getLastMessage() != null;
-        return peer.getInContacts() || User.isGroup(peer);
+        return (peer.getInContacts() || User.isGroup(peer)) && !getIntent().getBooleanExtra(EXTRA_HIDE_NUMBER, false);
     }
 
     @Override

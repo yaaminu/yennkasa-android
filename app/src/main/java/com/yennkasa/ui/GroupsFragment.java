@@ -74,7 +74,7 @@ public class GroupsFragment extends ListFragment {
     @Override
     public void onListItemClick(ListView l, View v, int position, long id) {
         String groupId = ((User) l.getAdapter().getItem(position)).getUserId(); //very safe
-        UiHelpers.enterChatRoom(getActivity(), groupId);
+        UiHelpers.enterChatRoom(getActivity(), groupId, false);
     }
 
     private void gotoCreateGroupActivity() {

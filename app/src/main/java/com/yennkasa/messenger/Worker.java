@@ -183,7 +183,7 @@ public class Worker extends IntentService {
             final File finalFile;
             String destination = Uri.parse(messageBody).getLastPathSegment();//.substring(messageBody.lastIndexOf('/'));
             String extension = FileUtils.getExtension(destination);
-            destination = FileUtils.hash(destination);
+            destination = FileUtils.sha1(destination);
             if (!TextUtils.isEmpty(extension)) {
                 destination = destination + "." + extension;
             }

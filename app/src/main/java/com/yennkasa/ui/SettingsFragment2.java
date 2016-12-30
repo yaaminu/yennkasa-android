@@ -49,7 +49,7 @@ public class SettingsFragment2 extends ListFragment {
         try {
             switch (position) {
                 case 0:
-                    UiHelpers.gotoProfileActivity(getContext(), UserManager.getMainUserId(userRealm));
+                    UiHelpers.gotoProfileActivity(getContext(), UserManager.getMainUserId(userRealm), true);
                     break;
                 case 1:
                     UiHelpers.gotoSettingsActivity(getContext(), 1);

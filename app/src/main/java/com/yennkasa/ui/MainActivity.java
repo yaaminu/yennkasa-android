@@ -22,6 +22,7 @@ import com.rey.material.widget.SnackBar;
 import com.yennkasa.R;
 import com.yennkasa.Yennkasa;
 import com.yennkasa.data.Conversation;
+import com.yennkasa.data.User;
 import com.yennkasa.data.UserManager;
 import com.yennkasa.util.LiveCenter;
 import com.yennkasa.util.UiHelpers;
@@ -274,14 +275,14 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
 
     @Override
     public void onConversionClicked(final Conversation conversation) {
-        final String peerId = conversation.getPeerId();
-        if (userManager.isBlocked(peerId)) {
+        final User user = userManager.fetchUserIfRequired(userRealm, conversation.getPeerId(), false, true);
+        if (userManager.isBlocked(user.getUserId())) {
             UiHelpers.showErrorDialog(this, R.string.blocked_user_notice, R.string.agree, R.string.disagree, new UiHelpers.Listener() {
                 @Override
                 public void onClick() {
-                    userManager.unBlockUser(peerId);
+                    userManager.unBlockUser(user.getUserId());
                     UiHelpers.showToast(getString(R.string.user_unblocked));
-                    UiHelpers.enterChatRoom(MainActivity.this, peerId);
+                    UiHelpers.enterChatRoom(MainActivity.this, user.getUserId(), user.getInContacts());
                 }
             }, new UiHelpers.Listener() {
                 @Override
@@ -289,7 +290,7 @@ public class MainActivity extends PairAppActivity implements NoticeFragment.Noti
                 }
             });
         } else {
-            UiHelpers.enterChatRoom(this, peerId);
+            UiHelpers.enterChatRoom(this, user.getUserId(), user.getInContacts());
         }
     }
 

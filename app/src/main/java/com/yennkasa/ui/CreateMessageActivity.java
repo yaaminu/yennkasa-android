@@ -355,7 +355,8 @@ public class CreateMessageActivity extends PairAppActivity
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        String userId = adapter.getItem(position).getUserId();
+        User item = adapter.getItem(position);
+        String userId = item.getUserId();
         if (!isNotDefaultIntent) {
             if (getIntent().getBooleanExtra(EXTRA_CALLING, false)) {
                 String tag = getIntent().getBooleanExtra(EXTRA_IS_VIDEO, false)
@@ -365,7 +366,7 @@ public class CreateMessageActivity extends PairAppActivity
                 Event event = Event.create(tag, null, userId);
                 MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
             } else {
-                UiHelpers.enterChatRoom(this, userId);
+                UiHelpers.enterChatRoom(this, userId, item.getInContacts());
             }
             finish();
         }

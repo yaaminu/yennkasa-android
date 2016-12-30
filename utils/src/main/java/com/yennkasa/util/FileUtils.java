@@ -86,29 +86,33 @@ public class FileUtils {
         return extension;
     }
 
-    public static String hash(String source) {
+    public static String sha1(String source) {
         if (source == null) {
             throw new IllegalArgumentException();
         }
-        return hash(source.getBytes());
+        return sha1(source.getBytes());
     }
 
-    public static String hash(byte[] source) {
+    public static String md5(String input) {
+        return digest(input.getBytes(), "md5");
+    }
+
+    public static String sha1(byte[] source) {
         if (source == null) {
             throw new IllegalArgumentException("source == null");
         }
-        // FIXME: 11/10/2015 use salt
-        //noinspection unused
-//        byte[] salt = {
-//                1, 127, 0, 98, 83, 2, 89, 12, 12, 45, 90
-//        };
+        String algorithm = "sha1";
+        return digest(source, algorithm);
+    }
+
+    private static String digest(byte[] source, String algorithm) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("sha1");
+            MessageDigest digest = MessageDigest.getInstance(algorithm);
             digest.reset();
             //re-use param source
             source = digest.digest(source);
             String hashString = bytesToString(source);
-            PLog.d(TAG, "hash: " + hashString);
+            PLog.d(TAG, "sha1: " + hashString);
             return hashString;
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e.getCause());
@@ -182,7 +186,7 @@ public class FileUtils {
             for (int i = 0; i < hash.length; i++) {
                 hashString += Integer.toString((hash[i] & 0xff) + 0x100, 16).substring(1);
             }
-            PLog.d(TAG, "hash: " + hashString);
+            PLog.d(TAG, "sha1: " + hashString);
             return hashString;
 
         } catch (NoSuchAlgorithmException e) {

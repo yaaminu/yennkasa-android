@@ -2,6 +2,7 @@ package com.yennkasa.security;
 
 import org.spongycastle.util.encoders.Base64;
 
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -17,7 +18,10 @@ import java.security.spec.RSAKeyGenParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 /**
  * Created by yaaminu on 12/22/16.
@@ -49,23 +53,28 @@ public class RSA {
         }
     }
 
-    static byte[] rsaEncrypt(Key publicKey, byte[] input) {
+    static byte[] rsaEncrypt(Key publicKey, byte[] input) throws MessageEncryptor.EncryptionException {
         try {
             Cipher rsaCipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding", "SC");
             rsaCipher.init(Cipher.ENCRYPT_MODE, publicKey);
             return rsaCipher.doFinal(input);
-        } catch (Exception e) {
+        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             throw new RuntimeException(e);
+        } catch (NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidKeyException e) {
+            throw new MessageEncryptor.EncryptionException("deryptionFailed", MessageEncryptor.EncryptionException.DECRYPTION_FAILED);
         }
     }
 
-    static byte[] rsaDecrypt(Key privateKey, byte[] input) {
+    static byte[] rsaDecrypt(Key privateKey, byte[] input) throws MessageEncryptor.EncryptionException {
+        Cipher rsaCipher = null;
         try {
-            Cipher rsaCipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding", "SC");
+            rsaCipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA1AndMGF1Padding", "SC");
             rsaCipher.init(Cipher.DECRYPT_MODE, privateKey);
             return rsaCipher.doFinal(input);
-        } catch (Exception e) {
+        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             throw new RuntimeException(e);
+        } catch (NoSuchPaddingException | IllegalBlockSizeException | BadPaddingException | InvalidKeyException e) {
+            throw new MessageEncryptor.EncryptionException("deryptionFailed", MessageEncryptor.EncryptionException.DECRYPTION_FAILED);
         }
     }
 

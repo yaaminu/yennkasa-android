@@ -31,7 +31,7 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
         @SuppressLint("CommitPrefEdits")
         @Override
         public void onSentSucceeded(byte[] data) {
-            String hash = FileUtils.hash(data);
+            String hash = FileUtils.sha1(data);
             SharedPreferences preferences = Config.getPreferences(SEND_QUEUE_PREFS);
             onSent(preferences.getString(hash, ""));
             preferences.edit().remove(hash).commit();
@@ -40,7 +40,7 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
         @SuppressLint("CommitPrefEdits")
         @Override
         public void onSendFailed(byte[] data) {
-            String hash = FileUtils.hash(data);
+            String hash = FileUtils.sha1(data);
             SharedPreferences preferences = Config.getPreferences(SEND_QUEUE_PREFS);
             onFailed(preferences.getString(hash, ""), "error internal");
             preferences.edit().remove(hash).commit();
@@ -81,7 +81,7 @@ public class WebSocketDispatcher extends AbstractMessageDispatcher {
         byte[] encoded;
         try {
             encoded = messageEncoder.encode(message);
-            Config.getPreferences(SEND_QUEUE_PREFS).edit().putString(FileUtils.hash(encoded), message.getId()).commit();
+            Config.getPreferences(SEND_QUEUE_PREFS).edit().putString(FileUtils.sha1(encoded), message.getId()).commit();
             sender.sendMessage(SenderImpl.createMessageSendable(message.getId(), encoded));
         } catch (MessagePacker.MessagePackerException e) {
             onFailed(message.getId(), MessageUtils.ERROR_ENCODING_FAILED);

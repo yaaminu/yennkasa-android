@@ -64,6 +64,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
     private static final int PICK_PHOTO_REQUEST = 0x3e9;
     private static final int TAKE_PHOTO_REQUEST = 0x3ea;
     private static final int CROP_PHOTO_REQUEST = 0x3eb;
+    public static final String ARG_SHOW_NUMBER = ProfileActivity.EXTRA_SHOW_NUMBER;
 
     private boolean dpLoaded = false;
     private ImageView displayPicture;
@@ -97,7 +98,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.bt_message:
-                    UiHelpers.enterChatRoom(v.getContext(), user.getUserId());
+                    UiHelpers.enterChatRoom(v.getContext(), user.getUserId(), false);
                     getActivity().finish();
                     break;
                 case R.id.bt_call:
@@ -129,6 +130,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
             }
         }
     };
+    private boolean showNumber;
 
     private void changeDpPhoto() {
         if (changingDp) {
@@ -188,6 +190,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         super.onCreateView(inflater, container, savedInstanceState);
+        showNumber = getArguments().getBoolean(ARG_SHOW_NUMBER, false);
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
         displayPicture = ((android.widget.ImageView) view.findViewById(R.id.iv_display_picture));
@@ -222,7 +225,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
         userManager = UserManager.getInstance();
 
         String id = getArguments().getString(ARG_USER_ID);
-        user = UserManager.getInstance().fetchUserIfRequired(realm, id, true);
+        user = UserManager.getInstance().fetchUserIfRequired(realm, id, true, true);
         //common to all
         userName.setText(user.getName());
         displayPicture.setOnClickListener(clickListener);
@@ -273,7 +276,9 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
     public void onPrepareOptionsMenu(Menu menu) {
         MenuItem item = menu.findItem(R.id.action_add_contact);
         if (item != null) {
-            item.setVisible(!user.getInContacts() && !UserManager.getInstance().isCurrentUser(realm, user.getUserId()));
+            item.setVisible(!user.getInContacts() &&
+                    showNumber &&
+                    !UserManager.getInstance().isCurrentUser(realm, user.getUserId()));
         }
         menu.findItem(R.id.action_change_dp_camera)
                 .setVisible(userManager.isCurrentUser(realm, user.getUserId()));
@@ -308,6 +313,11 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
         //noinspection ConstantConditions
         phoneOrAdminTitle.setText(R.string.phone);
         phoneInlocalFormat = PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId(), userManager.getUserCountryISO(realm));
+        if (showNumber) {
+            userPhoneOrAdminName.setVisibility(View.VISIBLE);
+        } else {
+            userPhoneOrAdminName.setVisibility(View.GONE);
+        }
         userPhoneOrAdminName.setText(phoneInlocalFormat);
     }
 
@@ -354,7 +364,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
                 changingDp = true;
                 userManager.changeDp(user.getUserId(), filePath, DP_CALLBACK);
             } else if (requestCode == UiHelpers.ADD_TO_CONTACTS_REQUEST) {
-                userManager.fetchUserIfRequired(realm, user.getUserId());
+                userManager.fetchUserIfRequired(realm, user.getUserId(), false, true);
                 getActivity().supportInvalidateOptionsMenu();
             }
         }
@@ -412,7 +422,7 @@ public class ProfileFragment extends Fragment implements RealmChangeListener<Rea
             @Override
             public void run() {
                 if (!new File(copy.getDP()).exists()) {
-                    String originalPath = FileUtils.hash(copy.getDP() + "_" + copy.getUserId().replaceAll("\\s+", "_") + ".jpg");
+                    String originalPath = FileUtils.sha1(copy.getDP() + "_" + copy.getUserId().replaceAll("\\s+", "_") + ".jpg");
                     if (new File(Config.getAppProfilePicsBaseDir(), originalPath).exists()) {
                         return;
                     }

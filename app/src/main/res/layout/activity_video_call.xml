@@ -55,7 +55,8 @@
         android:background="?attr/selectableItemBackground"
         android:contentDescription="@string/switch_camera"
         android:padding="@dimen/default_gap"
-        android:src="@drawable/ic_camera_rear_white_24dp" />
+        android:src="@drawable/ic_camera_rear_white_24dp"
+        android:visibility="gone" />
 
     <LinearLayout
         android:layout_width="wrap_content"

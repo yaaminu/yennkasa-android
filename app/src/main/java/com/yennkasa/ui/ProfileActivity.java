@@ -8,8 +8,8 @@ import android.support.v4.app.NavUtils;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
-import com.yennkasa.R;
 import com.rey.material.widget.SnackBar;
+import com.yennkasa.R;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -18,6 +18,7 @@ public class ProfileActivity extends PairAppActivity {
 
     public static final String EXTRA_USER_ID = "user id";
     public static final String EXTRA_AVARTAR_PLACEHOLDER = "profileActivity.placeholder", EXTRA_AVARTAR_ERROR = "profileActivity.errorDrable";
+    public static final String EXTRA_SHOW_NUMBER = "SHOWnUBMER";
 
     @Bind(R.id.main_toolbar)
     Toolbar toolbar;

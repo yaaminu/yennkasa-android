@@ -1,5 +1,6 @@
 package com.yennkasa.net;
 
+import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
 
 import com.yennkasa.Errors.YennkasaException;
@@ -8,6 +9,7 @@ import com.yennkasa.data.User;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * by Null-Pointer on 5/27/2015.
@@ -52,6 +54,7 @@ public interface UserApiV2 {
 
     void getPublicKeyForUser(String userId, Callback<String> callback);
 
+    @Nullable
     String getPublicKeyForUserSync(String userId);
 
     void resendToken(String userId, String password, Callback<HttpResponse> response);
@@ -71,7 +74,7 @@ public interface UserApiV2 {
 
     Pair<String, Long> getSinchToken();
 
-    void search(String query, Callback<List<User>> callback);
+    void search(String query, Callback<Set<User>> callback);
 
     void enableSearch(boolean enableSearch, Callback<Boolean> callback);
 

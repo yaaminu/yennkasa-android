@@ -135,13 +135,13 @@ public class CallLogFragment extends Fragment {
                                     MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
                                     break;
                                 case 1:
-                                    UiHelpers.enterChatRoom(getContext(), peer);
+                                    User user = userRealm.where(User.class).equalTo(User.FIELD_ID, peer).findFirst();
+                                    UiHelpers.enterChatRoom(getContext(), peer, user != null && user.getInContacts());
                                     break;
                                 case 2:
                                     final Message copiedMessage = realm.copyFromRealm(message);
                                     realm.beginTransaction();
                                     message.deleteFromRealm();
-                                    realm.commitTransaction();
                                     //noinspection ConstantConditions
                                     Snackbar snackbar = Snackbar.make(getView(), R.string.log_entry_deleted_message, Snackbar.LENGTH_LONG);
                                     snackbar.setAction(R.string.undo, new View.OnClickListener() {
@@ -183,7 +183,7 @@ public class CallLogFragment extends Fragment {
         @NonNull
         @Override
         public User getUser(String peerId) {
-            return instance.fetchUserIfRequired(userRealm, peerId);
+            return instance.fetchUserIfRequired(userRealm, peerId, true, true);
         }
     };
 

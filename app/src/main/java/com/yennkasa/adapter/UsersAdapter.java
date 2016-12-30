@@ -10,12 +10,12 @@ import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.rey.material.widget.CheckBox;
 import com.yennkasa.R;
 import com.yennkasa.data.User;
 import com.yennkasa.data.UserManager;
 import com.yennkasa.ui.ImageLoader;
 import com.yennkasa.util.PhoneNumberNormaliser;
-import com.rey.material.widget.CheckBox;
 
 import java.util.regex.Pattern;
 
@@ -83,14 +83,16 @@ public class UsersAdapter extends RealmBaseAdapter<User> implements Filterable {
         if (UserManager.getInstance().isGroup(realm, user.getUserId())) {
             holder.userPhone.setText(R.string.group);
         } else {
-            holder.userPhone.setText(PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId(), UserManager.getInstance().getUserCountryISO(realm)));
+            holder.userPhone.setText(user.getInContacts() ?
+                    PhoneNumberNormaliser.toLocalFormat("+" + user.getUserId(),
+                            UserManager.getInstance().getUserCountryISO(realm)) : user.getCityName());
         }
         if (!multiSelect) {
             ImageLoader.load(context, user.getDP())
                     .error(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                     .placeholder(User.isGroup(user) ? R.drawable.group_avatar : R.drawable.user_avartar)
                     .resize((int) context.getResources().getDimension(R.dimen.thumbnail_width), (int) context.getResources().getDimension(R.dimen.thumbnail_height))
-                    .onlyScaleDown().into(new TargetOnclick(holder.iv, user.getUserId()));
+                    .onlyScaleDown().into(new TargetOnclick(holder.iv, user.getUserId(), user.getInContacts()));
         }
         return convertView;
     }

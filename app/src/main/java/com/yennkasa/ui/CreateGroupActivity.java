@@ -23,6 +23,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.i18n.phonenumbers.NumberParseException;
+import com.rey.material.widget.CheckBox;
+import com.rey.material.widget.SnackBar;
 import com.yennkasa.Errors.ErrorCenter;
 import com.yennkasa.R;
 import com.yennkasa.adapter.MultiChoiceUsersAdapter;
@@ -32,8 +34,6 @@ import com.yennkasa.util.PhoneNumberNormaliser;
 import com.yennkasa.util.TypeFaceUtil;
 import com.yennkasa.util.UiHelpers;
 import com.yennkasa.util.ViewUtils;
-import com.rey.material.widget.CheckBox;
-import com.rey.material.widget.SnackBar;
 
 import java.io.File;
 import java.util.HashSet;
@@ -279,7 +279,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
                         progressDialog.dismiss();
                         if (e == null) {
                             //hurray we changed dp successfully
-                            UiHelpers.enterChatRoom(CreateGroupActivity.this, groupId);
+                            UiHelpers.enterChatRoom(CreateGroupActivity.this, groupId, false);
                             finish();
                         } else {
                             ErrorCenter.reportError(TAG, e.getMessage());
@@ -288,7 +288,7 @@ public class CreateGroupActivity extends PairAppActivity implements AdapterView.
                 });
             } else {
                 progressDialog.dismiss();
-                UiHelpers.enterChatRoom(CreateGroupActivity.this, groupId);
+                UiHelpers.enterChatRoom(CreateGroupActivity.this, groupId, false);
                 finish();
             }
         }

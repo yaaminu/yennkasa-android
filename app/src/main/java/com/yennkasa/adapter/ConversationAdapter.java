@@ -66,10 +66,11 @@ public class ConversationAdapter extends RealmBaseAdapter<Conversation> {
         } else {
             holder.chatSummary.setText(conversation.getSummary());
         }
-        User peer = UserManager.getInstance().fetchUserIfRequired(delegate.realm(), conversation.getPeerId());
+        User peer = UserManager.getInstance().fetchUserIfRequired(delegate.realm(),
+                conversation.getPeerId(), true, false);
         String peerName = peer.getName();
         holder.peerName.setText(peerName);
-        TargetOnclick targetOnclick = new TargetOnclick(holder.senderAvatar, conversation.getPeerId());
+        TargetOnclick targetOnclick = new TargetOnclick(holder.senderAvatar, conversation.getPeerId(), !peerName.startsWith("@"));
         ImageLoader.load(context, peer.getDP())
                 .error(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)
                 .placeholder(User.isGroup(peer) ? R.drawable.group_avatar : R.drawable.user_avartar)

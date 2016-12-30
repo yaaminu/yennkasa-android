@@ -29,6 +29,7 @@ import com.yennkasa.data.User;
 import com.yennkasa.data.UserManager;
 import com.yennkasa.util.Event;
 import com.yennkasa.util.EventBus;
+import com.yennkasa.util.PhoneNumberNormaliser;
 import com.yennkasa.util.UiHelpers;
 import com.yennkasa.util.ViewUtils;
 
@@ -98,16 +99,16 @@ public class SearchActivity extends PairAppActivity {
                 .subscribe(new Action1<String>() {
                     @Override
                     public void call(final String query) {
-                        if (query.length() < 2) {
+                        if (query.length() < 1) {
                             searchResults = null;
                         }
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                refreshDisplay(query.length() >= 2);
+                                refreshDisplay(query.length() > 0);
                             }
                         });
-                        if (query.length() >= 2) {
+                        if (query.length() > 0) {
                             userManager.search(query);
                         }
                     }
@@ -208,12 +209,14 @@ public class SearchActivity extends PairAppActivity {
         private final int width;
         private final int height;
         private final Drawable cityDrawable;
+        private final String currentUserCountry;
 
-        public SearchResultsAdapter(Delegate<User> delegate, Context context) {
+        public SearchResultsAdapter(Delegate delegate, Context context) {
             super(delegate);
             width = (int) context.getResources().getDimension(R.dimen.thumbnail_width);
             height = (int) context.getResources().getDimension(R.dimen.thumbnail_height);
             this.cityDrawable = ContextCompat.getDrawable(context, R.drawable.ic_place_black_24dp);
+            currentUserCountry = delegate.currentUserCountry();
         }
 
         @SuppressLint("SetTextI18n")
@@ -221,11 +224,12 @@ public class SearchActivity extends PairAppActivity {
         protected void doBindHolder(Holder holder, int position) {
             User item = getItem(position);
             ((VH) holder).userName.setText(item.getName());
-            if (item.getAccountCreated() == 0) {
-                ((VH) holder).location.setCompoundDrawables(null, null, null, null);
-                ((VH) holder).location.setText("  +" + item.getUserId());
+            if (item.getInContacts()) {
+                ((VH) holder).location.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
+                ((VH) holder).location.setText(PhoneNumberNormaliser.toLocalFormat(item.getUserId(), currentUserCountry));
             } else {
-                ((VH) holder).location.setCompoundDrawables(cityDrawable, null, null, null);
+                ((VH) holder).location.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
+                ((VH) holder).location.setCompoundDrawablesWithIntrinsicBounds(cityDrawable, null, null, null);
                 ((VH) holder).location.setText("  " + item.getCityName());
             }
             Context context = ((VH) holder).itemView.getContext();
@@ -256,6 +260,10 @@ public class SearchActivity extends PairAppActivity {
             }
         }
 
+        interface Delegate extends YennkasaBaseAdapter.Delegate<User> {
+            String currentUserCountry();
+        }
+
     }
 
     private void checkUserAvailability(final User user) {
@@ -281,7 +289,7 @@ public class SearchActivity extends PairAppActivity {
                     @Override
                     public void onNext(User user) {
                         dialog.dismiss();
-                        UiHelpers.gotoProfileActivity(SearchActivity.this, user.getUserId());
+                        UiHelpers.gotoProfileActivity(SearchActivity.this, user.getUserId(), true);
                     }
                 });
     }
@@ -308,7 +316,12 @@ public class SearchActivity extends PairAppActivity {
         });
     }
 
-    private final YennkasaBaseAdapter.Delegate<User> delegate = new YennkasaBaseAdapter.Delegate<User>() {
+    private final SearchResultsAdapter.Delegate delegate = new SearchResultsAdapter.Delegate() {
+        @Override
+        public String currentUserCountry() {
+            return getCurrentUser().getCountry();
+        }
+
         @Override
         public void onItemClick(YennkasaBaseAdapter<User> adapter, View view, int position, long id) {
             User user = adapter.getItem(position);
@@ -316,7 +329,7 @@ public class SearchActivity extends PairAppActivity {
             if (tmp == null) {
                 checkUserAvailability(user);
             } else {
-                UiHelpers.gotoProfileActivity(SearchActivity.this, user.getUserId());
+                UiHelpers.gotoProfileActivity(SearchActivity.this, user.getUserId(), user.getInContacts());
             }
         }
 

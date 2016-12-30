@@ -235,7 +235,7 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
                     } else if (id == R.id.iv_message_preview) {
                         openMessage(message);
                     } else if (id == R.id.tv_sender_name) {
-                        UiHelpers.gotoProfileActivity(context, message.getFrom());
+                        UiHelpers.gotoProfileActivity(context, message.getFrom(), true);
                     } else if (id == R.id.iv_retry) {
                         delegate.onReSendMessage(message);
                     } else if (id == R.id.call_item_view || id == R.id.ib_call_button) {

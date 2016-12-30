@@ -9,6 +9,7 @@ import com.yennkasa.BuildConfig;
 import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.messenger.MessagePacker.MessagePackerException;
 import com.yennkasa.messenger.MessengerBus;
+import com.yennkasa.security.MessageEncryptor;
 import com.yennkasa.util.Config;
 import com.yennkasa.util.Event;
 import com.yennkasa.util.EventBus;
@@ -239,10 +240,15 @@ public class SenderImpl implements Sender {
                 }
                 if (e.getCause() instanceof MessagePackerException) {
                     if (((MessagePackerException) e.getCause()).getErrorCode() == DECRYPTION_FAILED) {
-                        // TODO: 12/22/16 this could be because the sender used our stale public key
-                        //the sender must detect this by checking peridically from the server for
-                        //changing public keys. and updating it's local cache, and resending dropped messages
-                        //if possible
+                        //this is an encryptionException!!!
+                        MessageEncryptor.EncryptionException ew = (MessageEncryptor.EncryptionException)
+                                e.getCause().getCause();
+                        if (ew.getErrorCode() == MessageEncryptor.EncryptionException.INVALID_PUBLIC_KEY) {
+                            // TODO: 12/22/16 this could be because the sender used our stale public key
+                            //the sender must detect this by checking peridically from the server for
+                            //changing public keys. and updating it's local cache, and resending dropped messages
+                            //if possible
+                        }
                     }
                 }
             }

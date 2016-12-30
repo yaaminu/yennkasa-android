@@ -236,7 +236,7 @@ public class LoginFragment extends Fragment {
         } else if (v.getId() == R.id.problems_logging_in) {
             // TODO: 12/23/2015 redirect user to my website
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse("http://yennkasa.parseapp.com/support?p=login&p=android_" + Build.VERSION.SDK_INT + "&clientVersion=" + BuildConfig.VERSION_NAME + "&locale=" + Locale.getDefault().getCountry()));
+            intent.setData(Uri.parse("http://yennkasa.com/support?p=login&p=android_" + Build.VERSION.SDK_INT + "&clientVersion=" + BuildConfig.VERSION_NAME + "&locale=" + Locale.getDefault().getCountry()));
             try {
                 startActivity(intent);
             } catch (ActivityNotFoundException e) {

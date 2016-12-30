@@ -6,6 +6,7 @@ import android.support.v4.util.Pair;
 import com.yennkasa.call.CallController;
 import com.yennkasa.call.CallData;
 import com.yennkasa.data.Message;
+import com.yennkasa.data.UserManager;
 import com.yennkasa.util.Event;
 import com.yennkasa.util.EventBus;
 import com.yennkasa.util.PLog;
@@ -64,6 +65,9 @@ class PairAppClientEventsListener implements EventBus.EventsListener {
             PLog.d(TAG, "event with tag: %s received", event);
             String tag = ((String) event.getTag());
             switch (tag) {
+                case UserManager.ACTION_SEND_MESSAGE:
+                    pairAppClientInterface.sendAllUndeliveredMessageFor(((String) event.getData()));
+                    break;
                 case ONLINE:
                     pairAppClientInterface.markUserAsOnline(((Activity) event.getData()));
                     break;

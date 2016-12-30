@@ -193,14 +193,15 @@ public class UiHelpers {
         showToast(getString(Config.getApplicationContext(), message));
     }
 
-    public static void enterChatRoom(Context context, String peerId) {
+    public static void enterChatRoom(Context context, String peerId, boolean inContacts) {
         Intent intent = new Intent(context, ChatActivity.class);
         intent.putExtra(ChatActivity.EXTRA_PEER_ID, peerId);
+        intent.putExtra(ChatActivity.EXTRA_HIDE_NUMBER, !inContacts);
         context.startActivity(intent);
     }
 
 
-    public static void gotoProfileActivity(Context context, String id, Bitmap placeHolder, Bitmap error) {
+    public static void gotoProfileActivity(Context context, String id, Bitmap placeHolder, Bitmap error, boolean inContacts) {
         Intent intent = new Intent(context, ProfileActivity.class);
         intent.putExtra(ProfileActivity.EXTRA_USER_ID, id);
         if (placeHolder != null) {
@@ -209,11 +210,13 @@ public class UiHelpers {
         if (error != null) {
             intent.putExtra(ProfileActivity.EXTRA_AVARTAR_ERROR, error);
         }
+        intent.putExtra(ProfileActivity.EXTRA_SHOW_NUMBER, inContacts);
         context.startActivity(intent);
     }
 
-    public static void gotoProfileActivity(Context context, String id) {
-        gotoProfileActivity(context, id, null, null);
+
+    public static void gotoProfileActivity(Context context, String id, boolean inContacts) {
+        gotoProfileActivity(context, id, null, null, inContacts);
     }
 
     public static void attach(FragmentActivity appBaseActivity) {

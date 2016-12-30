@@ -22,6 +22,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
 
+import com.rey.material.widget.SnackBar;
 import com.yennkasa.BuildConfig;
 import com.yennkasa.R;
 import com.yennkasa.data.Message;
@@ -39,7 +40,6 @@ import com.yennkasa.util.TaskManager;
 import com.yennkasa.util.ThreadUtils;
 import com.yennkasa.util.UiHelpers;
 import com.yennkasa.util.ViewUtils;
-import com.rey.material.widget.SnackBar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,7 +75,9 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 return;
             }
             if (totalUnreadMessages == 1) {
-                UiHelpers.enterChatRoom(self, Message.isGroupMessage(userRealm, latestMessage) ? latestMessage.getTo() : latestMessage.getFrom());
+                UiHelpers.enterChatRoom(self,
+                        Message.isGroupMessage(userRealm, latestMessage)
+                                ? latestMessage.getTo() : latestMessage.getFrom(), true);
             } else {
                 if (self instanceof MainActivity) {
                     ((MainActivity) self).setPagePosition(MainActivity.CONVERSATION_TAB);
@@ -159,7 +161,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 if (i > 3) {
                     break;
                 }
-                User user = userManager.fetchUserIfRequired(backgroundUserRealm, recentChatList.get(i));
+                User user = userManager.fetchUserIfRequired(backgroundUserRealm, recentChatList.get(i), true, true);
                 recentChatList.set(i, user.getName());
             }
             final int recentCount = recentChatList.size();

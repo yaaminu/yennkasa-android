@@ -55,6 +55,7 @@ public class User extends RealmObject {
     private boolean inContacts;
     private int version;
     private String city;
+    private long publicKeyLastChanged;
 
     //required no-arg c'tor
     public User() {
@@ -156,6 +157,13 @@ public class User extends RealmObject {
         this.accountCreated = accountCreated;
     }
 
+    public void setPublicKeyLastChanged(long publicKeyLastChanged) {
+        this.publicKeyLastChanged = publicKeyLastChanged;
+    }
+
+    public long getPublicKeyLastChanged() {
+        return publicKeyLastChanged;
+    }
 
     public RealmList<User> getMembers() {
         return members;
@@ -186,6 +194,22 @@ public class User extends RealmObject {
         clone.setCountry(other.getCountry());
         clone.setInContacts(other.getInContacts());
         return clone;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        User user = (User) o;
+
+        return getUserId() != null ? getUserId().equals(user.getUserId()) : user.getUserId() == null;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return getUserId() != null ? getUserId().hashCode() : 0;
     }
 
     public static List<User> copy(Iterable<User> users) {
@@ -222,7 +246,7 @@ public class User extends RealmObject {
     public static RealmList<User> aggregateUsers(Realm realm, Collection<String> membersId, ContactsManager.Filter<User> filter) {
         RealmList<User> members = new RealmList<>();
         for (String id : membersId) {
-            User user = UserManager.getInstance().fetchUserIfRequired(realm, id);
+            User user = UserManager.getInstance().fetchUserIfRequired(realm, id, false, true);
             try {
                 if (filter == null || filter.accept(user)) {
                     members.add(user);

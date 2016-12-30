@@ -161,9 +161,9 @@ public class UsersActivity extends PairAppBaseActivity implements ItemsSelector.
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         User user = (User) parent.getAdapter().getItem(position);
         if (userManager.isCurrentUser(userRealm, user.getUserId())) {
-            UiHelpers.gotoProfileActivity(this, user.getUserId());
+            UiHelpers.gotoProfileActivity(this, user.getUserId(), user.getInContacts());
         } else {
-            UiHelpers.enterChatRoom(this, user.getUserId());
+            UiHelpers.enterChatRoom(this, user.getUserId(), user.getInContacts());
         }
     }
 

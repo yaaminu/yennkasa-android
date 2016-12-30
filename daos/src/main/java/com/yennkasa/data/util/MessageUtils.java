@@ -71,11 +71,6 @@ public class MessageUtils {
                 throw new YennkasaException(msg, ERROR_MESSAGE_BODY_TOO_LARGE);
             }
         }
-        if ((message.getState() != Message.STATE_PENDING) && (message.getState() != Message.STATE_SEND_FAILED)) {
-            final String msg = "attempted to send a sent message, but will not be sent";
-            PLog.w(TAG, msg);
-            throw new YennkasaException(msg, ERROR_MESSAGE_ALREADY_SENT);
-        }
         return true;
     }
 

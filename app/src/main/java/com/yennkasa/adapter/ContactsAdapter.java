@@ -127,7 +127,7 @@ public class ContactsAdapter extends BaseAdapter {
             return convertView;
         }
         if (contact.isRegisteredUser) {
-            TargetOnclick targetOnclick = new TargetOnclick(holder.userDp, contact.numberInIEE_Format);
+            TargetOnclick targetOnclick = new TargetOnclick(holder.userDp, contact.numberInIEE_Format, true);
             ImageLoader.load(context, contact.DP)
                     .error(R.drawable.user_avartar)
                     .placeholder(R.drawable.user_avartar)
@@ -208,7 +208,7 @@ public class ContactsAdapter extends BaseAdapter {
             });
             menu.show();
         } else if (id == R.id.iv_display_picture && contact.isRegisteredUser) {
-            UiHelpers.gotoProfileActivity(v.getContext(), contact.numberInIEE_Format);
+            UiHelpers.gotoProfileActivity(v.getContext(), contact.numberInIEE_Format, true);
         }
     }
 

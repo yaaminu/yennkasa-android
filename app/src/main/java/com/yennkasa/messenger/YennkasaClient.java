@@ -206,7 +206,7 @@ public class YennkasaClient extends Service {
             StickersManager.initialize("fd82531004986458d9d4fd66eacf9e20", this, BuildConfig.DEBUG);
             Realm realm = User.Realm(this);
             try {
-                StickersManager.setUser(FileUtils.hash(UserManager.getMainUserId(realm)),
+                StickersManager.setUser(FileUtils.sha1(UserManager.getMainUserId(realm)),
                         Collections.singletonMap("version", String.valueOf(BuildConfig.VERSION_NAME)));
             } finally {
                 realm.close();
@@ -244,6 +244,7 @@ public class YennkasaClient extends Service {
                         ON_CAL_ENDED, ON_CALL_ESTABLISHED, VIDEO_CALL_LOCAL_VIEW, VIDEO_CALL_REMOTE_VIEW,
                         ON_CALL_PROGRESSING, ON_CALL_MUTED, ON_LOUD_SPEAKER, SWITCH_CAMERA, VIDEO_CALL_VIEW);
 
+                EventBus.getDefault().register(UserManager.ACTION_SEND_MESSAGE, eventsListener);
                 postableBus().register(eventsListener, OFFLINE, ONLINE, NOT_TYPING, TYPING,
                         STOP_MONITORING_USER, START_MONITORING_USER,
                         MESSAGE_RECEIVED, MESSAGE_SEEN,
@@ -302,7 +303,7 @@ public class YennkasaClient extends Service {
         try {
             String messageId = message.getId();
             Message tmp = realm.where(Message.class).equalTo(Message.FIELD_ID, message.getId()).findFirst();
-            if (tmp == null || tmp.getState() != Message.STATE_PENDING) {
+            if (tmp == null) {
                 PLog.d(TAG, "failed to send message, message either canceled or deleted by user");
                 monitor.onDispatchFailed(messageId, MessageUtils.ERROR_CANCELLED);
                 return;

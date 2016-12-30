@@ -77,6 +77,8 @@ public class ParseClient implements UserApiV2 {
     public static final String VERIFICATION_CODE_RECEIVED = "code.verification.recived";
     public static final String PUSH_ID = "pushId";
     public static final String FIELD_ADMIN_JSON = "adminJson";
+    public static final String NOT_CHANGED = "notChanged";
+    public static final String PUBLIC_KEY_LAST_CHANGED = "publicKeyLastChanged";
     private static ParseClient INSTANCE;
     private DisplayPictureFileClient displayPictureFileClient;
     private final Preprocessor preProcessor;
@@ -227,7 +229,7 @@ public class ParseClient implements UserApiV2 {
 
 
     private String makePass(User user) {
-        return FileUtils.hash(user.getUserId().getBytes());
+        return FileUtils.sha1(user.getUserId().getBytes());
     }
 
     @SuppressLint("HardwareIds")
@@ -342,7 +344,7 @@ public class ParseClient implements UserApiV2 {
                         } catch (ParseException e2) {
                             PLog.e(TAG, e2.getMessage(), e2.getCause());
                             preferences.edit().putString(id + PENDING_DP, url)
-                                    .putString(FileUtils.hash(url.getBytes()), file.getAbsolutePath())
+                                    .putString(FileUtils.sha1(url.getBytes()), file.getAbsolutePath())
                                     .apply();
                         }
                         notifyCallback(response, null, new HttpResponse(200, url));
@@ -592,7 +594,7 @@ public class ParseClient implements UserApiV2 {
                 object.save();
                 registerForPushes(userId, pushId, publicKey);
                 final String accessToken = ParseInstallation.getCurrentInstallation().getInstallationId();
-                notifyCallback(callback, null, new SessionData(FileUtils.hash(accessToken.getBytes()), userId));
+                notifyCallback(callback, null, new SessionData(FileUtils.sha1(accessToken.getBytes()), userId));
             } else {
                 String errorMessage = Config.getApplicationContext().getString(R.string.invalid_verification_code);
                 notifyCallback(callback, new Exception(errorMessage), null);
@@ -680,6 +682,7 @@ public class ParseClient implements UserApiV2 {
         user.setInContacts(false);
         user.setVersion(object.getInt(FIELD_VERSION));
         user.setCity(object.getString(PARSE_CONSTANTS.FIELD_CITY));
+        user.setPublicKeyLastChanged(object.getLong(PUBLIC_KEY_LAST_CHANGED));
         return user;
     }
 
@@ -700,8 +703,8 @@ public class ParseClient implements UserApiV2 {
                     object.save();
                     preferences.edit().remove(userId + PENDING_DP).commit();
                     PLog.v(TAG, "user with id: " + userId + " changed dp from " + userDp + " to " + pendingDp);
-                    preferences.edit().remove(FileUtils.hash(userDp.getBytes())).commit();
-                    String mappedDp = preferences.getString(FileUtils.hash(pendingDp.getBytes()), "");
+                    preferences.edit().remove(FileUtils.sha1(userDp.getBytes())).commit();
+                    String mappedDp = preferences.getString(FileUtils.sha1(pendingDp.getBytes()), "");
                     final File file = new File(mappedDp);
                     if (file.exists()) {
                         pendingDp = file.getAbsolutePath();
@@ -710,7 +713,7 @@ public class ParseClient implements UserApiV2 {
                 } catch (ParseException ignored) {
                 }
             }
-            String mappedDp = preferences.getString(FileUtils.hash(userDp.getBytes()), "");
+            String mappedDp = preferences.getString(FileUtils.sha1(userDp.getBytes()), "");
             final File file = new File(mappedDp);
             if (file.exists()) {
                 userDp = file.getAbsolutePath();
@@ -942,7 +945,7 @@ public class ParseClient implements UserApiV2 {
     }
 
     @Override
-    public void search(final String query, final Callback<List<User>> callback) {
+    public void search(final String query, final Callback<Set<User>> callback) {
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
@@ -952,7 +955,7 @@ public class ParseClient implements UserApiV2 {
         }, true);
     }
 
-    private void doSearch(String query, Callback<List<User>> callback) {
+    private void doSearch(String query, Callback<Set<User>> callback) {
         try {
             List<ParseObject> results =
                     ParseCloud.callFunction("search", Collections.singletonMap("query", query));
@@ -960,10 +963,11 @@ public class ParseClient implements UserApiV2 {
             if (results.isEmpty()) {
                 callback.done(new Exception("Your search return no results"), null);
             }
-            List<User> users = new ArrayList<>(results.size());
+            Set<User> users = new HashSet<>(results.size());
             for (ParseObject result : results) {
                 users.add(parseObjectToUser(result));
             }
+            preProcessor.process(users);
             callback.done(null, users);
         } catch (ParseException e) {
             callback.done(prepareErrorReport(e), null);
@@ -986,8 +990,13 @@ public class ParseClient implements UserApiV2 {
     @Override
     public String getPublicKeyForUserSync(String userId) {
         GenericUtils.ensureNotEmpty(userId);
+        String userKey = FileUtils.sha1(userId);
         try {
-            String publicKeyForUser = callFunction("getPublicKeyForUser", Collections.singletonMap(PARSE_CONSTANTS.FIELD_ID, userId));
+            Map<String, String> params = new HashMap<>(1);
+            params.put(PARSE_CONSTANTS.FIELD_ID, userId);
+            String publicKeyForUser =
+                    callFunction("getPublicKeyForUser",
+                            params);
             PLog.d(TAG, "public key for %s is: %s", userId, publicKeyForUser);
             return publicKeyForUser;
         } catch (ParseException e) {

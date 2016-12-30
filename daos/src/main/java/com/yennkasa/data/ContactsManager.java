@@ -42,23 +42,24 @@ public class ContactsManager {
 
     }
 
-    public static List<Contact> query(final Context context, String query) {
+    public static Set<Contact> query(final Context context, String query) {
         ThreadUtils.ensureNotMain();
         ContentResolver cr = context.getContentResolver();
         //if query is long enough search for contains otherwise search for starts with
         String[] args = {(query.length() > 3 ? "%" : "") + query + "%"};
         final Cursor cursor = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, PROJECT_NAME_PHONE,
                 "display_name LIKE ?", args, null);
-        if (cursor == null || !cursor.moveToFirst()) return Collections.emptyList();
+        if (cursor == null || !cursor.moveToFirst()) return Collections.emptySet();
         Realm userRealm = User.Realm(context);
         try {
-            List<Contact> contacts = new ArrayList<>(cursor.getCount());
+            Set<Contact> contacts = new HashSet<>(cursor.getCount());
             do {
                 String name = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)),
                         phoneNumber = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                 try {
-                    String ieeNumber = PhoneNumberNormaliser.toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO(userRealm));
-                    contacts.add(new Contact(name, phoneNumber, false, "", ieeNumber));
+                    String localFormat = PhoneNumberNormaliser
+                            .toIEE(phoneNumber, UserManager.getInstance().getUserCountryISO(userRealm));
+                    contacts.add(new Contact(name, localFormat, false, "", localFormat));
                 } catch (NumberParseException | IllegalArgumentException e) {
                     PLog.e(TAG, e.getMessage());
                 }

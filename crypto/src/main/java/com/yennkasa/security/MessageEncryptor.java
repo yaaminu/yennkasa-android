@@ -20,6 +20,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 
+import static com.yennkasa.security.MessageEncryptor.EncryptionException.INVALID_PUBLIC_KEY;
 import static com.yennkasa.security.RSA.rsaDecrypt;
 
 /**
@@ -99,9 +100,12 @@ public final class MessageEncryptor {
             return AES.aesDecrypt
                     (rsaDecrypt(privateKeyForThisUser,
                             encryptedKey), iv, payload);
+        } catch (InvalidKeyException e) {
+            if (debug) throw new RuntimeException(e);
+            throw new EncryptionException("invalid public key", INVALID_PUBLIC_KEY);
         } catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException e) {
             throw new RuntimeException(e);
-        } catch (InvalidAlgorithmParameterException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException e) {
+        } catch (InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
             if (debug) throw new RuntimeException(e);
             throw new EncryptionException("failed to encrypt", e, EncryptionException.ERR_UNKNOWN);
         }
@@ -180,7 +184,8 @@ public final class MessageEncryptor {
 
     public static class EncryptionException extends Exception {
         public static final int INTEGRITY_CHECK_FAILED = 1,
-                PUBLIC_KEY_NOT_FOUND = 2, PRIVATE_KEY_NOT_FOUND = 3;
+                PUBLIC_KEY_NOT_FOUND = 2, PRIVATE_KEY_NOT_FOUND = 3,
+                INVALID_PUBLIC_KEY = 4;
         public static final int ERR_UNKNOWN = -1;
         public static final int ENCRYPTION_FAILED = 4;
         public static final int DECRYPTION_FAILED = 5;

@@ -68,7 +68,7 @@ public final class UserManager {
 
     public static final String SILENT = "silent";
     private static final String TAG = UserManager.class.getSimpleName();
-    public static final String BLOCKED_USERS = FileUtils.hash(TAG + "blocked.users.messages");
+    public static final String BLOCKED_USERS = FileUtils.sha1(TAG + "blocked.users.messages");
     @SuppressWarnings("unused")
     public static final String KEY = TAG + "blocked.users.messages",
     //            KEY_USER_PASSWORD = "klfiildelklaklier",
@@ -83,11 +83,14 @@ public final class UserManager {
     public static final String KEY_ACCESS_TOKEN = "accessToken";
     private static final String CHANGE_DP_KEY = "dpChange";
     private static final String NO_DP_CHANGE = "no dp change";
-    private static final String PART_2 = FileUtils.hash("kloi3jlalfak982bbc,avqaafafals");
-    private static final String PART_1 = FileUtils.hash("vncewe4209ipk;lj82lkja90");
+    private static final String PART_2 = FileUtils.sha1("kloi3jlalfak982bbc,avqaafafals");
+    private static final String PART_1 = FileUtils.sha1("vncewe4209ipk;lj82lkja90");
     public static final String MUTED_USERS = "MUTED)USERS";
     public static final String VERIFICAITON_CODE_RECIEVED = ParseClient.VERIFICATION_CODE_RECEIVED;
     public static final String EVENT_SEARCH_RESULTS = "searchResults";
+    public static final String PUBLIC_KEY_CACHE_PREFS = "$$$$users.refresh.public.keys";
+    public static final String PREFIX_USER_CACHE = "user.id$$";
+    public static final String ACTION_SEND_MESSAGE = "com.yennkasa.intents.send.message";
     private final File sessionFile;
     private final Object mainUserLock = new Object();
     private final Exception NO_CONNECTION_ERROR;
@@ -141,18 +144,7 @@ public final class UserManager {
                     process(user.getAdmin());
                     return;
                 }
-                Realm realm = newUserRealm();
-                try {
-                    if (userId.equals(getMainUserId(realm))) {
-                        user.setName(Config.getApplicationContext().getString(R.string.you));
-                        idsAndNames.put(userId, user.getName());
-                        return;
-                    } else {
-                        idsAndNames.put(userId, user.getName());
-                    }
-                } finally {
-                    realm.close();
-                }
+                idsAndNames.put(userId, user.getName());
                 try {
                     ContactsManager.findAllContactsSync(new ContactsManager.Filter<ContactsManager.Contact>() {
                         @Override
@@ -339,7 +331,7 @@ public final class UserManager {
     }
 
 
-    private void putSessionPref(String key, Object value) {
+    private void putSessionPref(String key, @NonNull Object value) {
         try {
             Realm realm = PersistedSetting.REALM(sessionFile);
             realm.beginTransaction();
@@ -1025,13 +1017,28 @@ public final class UserManager {
     }
 
     @Nullable
-    public String publicKeyForUser(String userId) {
-        String publicKey = getStringPref("user.rsa.public.key.encoded." + userId, null);
+    public synchronized String publicKeyForUser(String userId) {
+        return publicKeyForUser(userId, false);
+    }
+
+    @Nullable
+    synchronized String publicKeyForUser(String userId, boolean ignoreLocalCache) {
+        String publicKey = null;
+        if (!ignoreLocalCache) {
+            publicKey = getStringPref("user.rsa.public.key.encoded." + userId, null);
+        }
         if (GenericUtils.isEmpty(publicKey)) {
             publicKey = userApi.getPublicKeyForUserSync(userId);
-            putSessionPref("user.rsa.public.key.encoded." + userId, publicKey);
+            if (publicKey != null) {
+                putSessionPref("user.rsa.public.key.encoded." + userId, publicKey);
+            }
         }
         return publicKey;
+    }
+
+    @Nullable
+    synchronized String localPublicKeyForUser(@NonNull String userId) {
+        return getStringPref("user.rsa.public.key.encoded." + userId, null);
     }
 
     public void signUp(final String name, final String phoneNumber, final String countryIso,
@@ -1238,23 +1245,24 @@ public final class UserManager {
 
     public void search(final String query) {
         ThreadUtils.ensureNotMain();
-        Observable<List<ContactsManager.Contact>> observable = Observable.just(ContactsManager.query(Config.getApplicationContext(), query));
+        Observable<Set<ContactsManager.Contact>> observable = Observable.just(ContactsManager.query(Config.getApplicationContext(), query.toLowerCase(Locale.getDefault())));
 
-        observable.map(new Func1<List<ContactsManager.Contact>, List<User>>() {
+        observable.map(new Func1<Set<ContactsManager.Contact>, Set<User>>() {
             @Override
-            public List<User> call(List<ContactsManager.Contact> contacts) {
+            public Set<User> call(Set<ContactsManager.Contact> contacts) {
                 Realm realm = User.Realm(Config.getApplicationContext());
                 try {
-                    if (contacts.isEmpty()) return Collections.emptyList();
+                    if (contacts.isEmpty()) return Collections.emptySet();
 
-                    List<User> ret = new ArrayList<>(contacts.size());
+                    Set<User> ret = new HashSet<>(contacts.size());
                     User u;
                     for (ContactsManager.Contact contact : contacts) {
                         u = realm.where(User.class).equalTo(User.FIELD_ID, contact.numberInIEE_Format).findFirst();
                         if (u == null) {
                             u = new User();
                             u.setName(contact.name);
-                            u.setUserId(contact.phoneNumber);
+                            u.setUserId(contact.numberInIEE_Format);
+                            u.setInContacts(true);
                             u.setCity("");
                             u.setDP("");
                             u.setCountry("");
@@ -1269,7 +1277,7 @@ public final class UserManager {
                 }
             }
         })
-                .subscribe(new Subscriber<List<User>>() {
+                .subscribe(new Subscriber<Set<User>>() {
                     @Override
                     public void onCompleted() {
                     }
@@ -1280,29 +1288,30 @@ public final class UserManager {
                     }
 
                     @Override
-                    public void onNext(final List<User> users) {
+                    public void onNext(final Set<User> users) {
                         if (!users.isEmpty()) {
-                            EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, null, users));
+                            EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, null, new ArrayList<>(users)));
                         }
-                        if (ConnectionUtils.isConnected()) {
-                            userApi.search(query, new UserApiV2.Callback<List<User>>() {
+                        if (query.length() > 1 && ConnectionUtils.isConnected()) {
+                            userApi.search(query.toLowerCase(Locale.getDefault()), new UserApiV2.Callback<Set<User>>() {
                                 @Override
-                                public void done(Exception e, List<User> users2) {
+                                public void done(Exception e, Set<User> users2) {
                                     if (e == null) {
                                         if (!users.isEmpty()) {
                                             users2.addAll(users);
                                         }
-                                        EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, null, users));
+                                        EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, null, new ArrayList<>(users2)));
                                     } else {
+                                        PLog.d(TAG, e.getMessage(), e);
                                         if (users.isEmpty()) {
                                             //we should only report errors if we had no results locally and remotely
-                                            EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, e, null));
+                                            EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, null, Collections.emptyList()));
                                         }
                                     }
                                 }
                             });
                         } else {
-                            EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, null, users));
+                            EventBus.getDefault().post(Event.create(EVENT_SEARCH_RESULTS, null, new ArrayList<>(users)));
                         }
                     }
                 });
@@ -1519,7 +1528,7 @@ public final class UserManager {
     public User fetchUserIfRequired(String userId) {
         Realm realm = newUserRealm();
         try {
-            User user = fetchUserIfRequired(realm, userId);
+            User user = fetchUserIfRequired(realm, userId, false, false);
             user = User.copy(user);
             return user;
         } finally {
@@ -1533,17 +1542,22 @@ public final class UserManager {
     }
 
     public User fetchUserIfRequired(Realm realm, final String userId, boolean refresh) {
+        return fetchUserIfRequired(realm, userId, refresh, false);
+    }
+
+    public User fetchUserIfRequired(Realm realm, final String userId, boolean refresh, boolean doNotpersist) {
         User peer = realm.where(User.class).equalTo(User.FIELD_ID, userId).findFirst();
 
         if (peer == null) {
             peer = new User();
             peer.setUserId(userId);
             if (userId.contains("@")) {
+                peer.setPublicKeyLastChanged(0);
                 peer.setType(User.TYPE_GROUP);
                 peer.setMembers(new RealmList<User>());
                 String[] parts = userId.split("\\Q@\\E");
                 peer.setName(parts[0]);
-                User admin = fetchUserIfRequired(realm, parts[1]);
+                User admin = fetchUserIfRequired(realm, parts[1], false, true);
                 peer.setAdmin(admin);
                 List<User> members = peer.getMembers();
                 members.add(admin);
@@ -1561,10 +1575,12 @@ public final class UserManager {
                 peer.setName(PhoneNumberNormaliser.toLocalFormat("+" + userId, getUserCountryISO(realm)));
                 refresh(userId, refresh);
             }
-            realm.beginTransaction();
-            realm.copyToRealmOrUpdate(peer);
-            realm.commitTransaction();
-        } else if (!peer.getInContacts()) {
+            if (!doNotpersist) {
+                realm.beginTransaction();
+                realm.copyToRealmOrUpdate(peer);
+                realm.commitTransaction();
+            }
+        } else if (!peer.getInContacts() && !doNotpersist) {
             refresh(userId, refresh);
         }
         return peer;
@@ -1945,6 +1961,22 @@ public final class UserManager {
                 doNotify(e, callBack);
             }
         });
+    }
+
+    public void refreshPublicKeysIfRequired(final String peerId) {
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (UserManager.class) {
+                    if (ConnectionUtils.isConnected()) {
+                        if (publicKeyForUser(peerId, true) != null) {
+                            //resend all messages
+                            EventBus.getDefault().post(Event.create(ACTION_SEND_MESSAGE, null, peerId));
+                        }
+                    }
+                }
+            }
+        }, true);
     }
 
 

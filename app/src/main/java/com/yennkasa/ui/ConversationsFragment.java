@@ -18,6 +18,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import com.rey.material.widget.FloatingActionButton;
 import com.yennkasa.R;
 import com.yennkasa.adapter.ConversationAdapter;
 import com.yennkasa.data.Conversation;
@@ -32,7 +33,6 @@ import com.yennkasa.util.LiveCenter;
 import com.yennkasa.util.PLog;
 import com.yennkasa.util.TaskManager;
 import com.yennkasa.util.UiHelpers;
-import com.rey.material.widget.FloatingActionButton;
 
 import java.io.File;
 import java.util.Date;

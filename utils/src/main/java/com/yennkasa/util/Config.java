@@ -34,7 +34,7 @@ public class Config {
     public static final String PAIRAPP_ENV = getEnvironment();
     private static final String logMessage = "calling getApplication when init has not be called";
     private static final String detailMessage = "application is null. Did you forget to call Config.init()?";
-    private static String APP_NAME = "PairApp";
+    private static String APP_NAME = "Yennkasa";
     private static Application application;
     private static AtomicBoolean isAppOpen = new AtomicBoolean(false);
     private static volatile String currentPeer = "";
@@ -56,7 +56,7 @@ public class Config {
 
 
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    private static void setUpDirs() {
+    private synchronized static void setUpDirs() {
         if (isExternalStorageAvailable()) {
             //no need to worry calling this several times
             //if the file is already a directory it will fail silently

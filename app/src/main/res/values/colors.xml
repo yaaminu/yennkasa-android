@@ -61,4 +61,6 @@
     <color name="orange">#FFF2AF3A</color>
     <color name="faded_white">#cfff</color>
     <color name="translucent_white">#77ffffff</color>
+    <color name="dard_green">#FF0A7E0A</color>
+    <color name="green">#28c128</color>
 </resources>

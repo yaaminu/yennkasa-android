@@ -116,7 +116,7 @@
     <string name="invalid_phone_number">%s is not a valid phone number</string>
     <string name="close">CLOSE</string>
     <string name="charges_may_apply">Standard charges from your operator may apply</string>
-    <string name="new_message_from">New message(s) from</string>
+    <string name="new_message_from">New message from</string>
     <string name="and">" and "</string>
     <string name="others">" others "</string>
     <string name="group_already_exists">"There is already a group with the name %s "</string>
@@ -146,7 +146,7 @@
     </string>
     <string name="invalid_message">Message Invalid, Ensure the message does not exceed the size limit
     </string>
-    <string name="invite_message">"Try out Yennkasa, an instant messenger for android. Using the app, I can share anything not only pictures and text.It\'s free and fast! \n Download here: https://yennkasa.parseapp.com
+    <string name="invite_message">"Try out Yennkasa, an instant messenger for android. Using the app, I can share anything not only pictures and text.It\'s free and fast! \n Download here: https://yennkasa.com/dl
     </string>
     <string name="sinch_error_report_message">we are having trouble setting things up,ensure your are connected to the internet and that your date is correct
     </string>
@@ -395,4 +395,5 @@
     <string name="calls_">calls</string>
     <string name="call_">call</string>
     <string name="undo">Undo</string>
+    <string name="message_from_2">new message from</string>
 </resources>

@@ -21,7 +21,7 @@ buildscript {
         projectBuildToolsVersion = "23.0.1"
         projectMinSdkVersion = 9
         projectTargetSdkVersion = 23
-        projectVersionName = "${versionMajor}.${versionMinor}.${versionPatch}(" + String.format("%d", versionBuild) + ")"
+        projectVersionName = "${versionMajor}.${versionMinor}.${versionPatch}.${String.format("%d", versionBuild)}"
         projectVersionCode = versionBuild
         projectSplitEnabled = true
 

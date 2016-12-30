@@ -191,17 +191,17 @@ class StatusBarNotifier {
                     String messageBody = Message.isTextMessage(message) ? message.getMessageBody() : MessageUtils.typeToString(applicationContext, message);
                     text = sender + ":  " + messageBody;
                 } else {
-                    text = unReadMessages + " " + getString(R.string.new_message_from) + " " + sender;
+                    text = unReadMessages + " " + getString(unReadMessages > 1 ? R.string.new_message_from : R.string.message_from_2) + " " + sender;
                 }
                 break;
             case 2:
-                text = unReadMessages + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + recentChatList.get(1);
+                text = unReadMessages + " " + getString(unReadMessages > 1 ? R.string.new_message_from : R.string.message_from_2) + " " + recentChatList.get(0) + getString(R.string.and) + recentChatList.get(1);
                 break;
             case 3:
-                text = unReadMessages + "  " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + ", " + recentChatList.get(1) + getString(R.string.and) + recentChatList.get(2);
+                text = unReadMessages + "  " + getString(unReadMessages > 1 ? R.string.new_message_from : R.string.message_from_2) + " " + recentChatList.get(0) + ", " + recentChatList.get(1) + getString(R.string.and) + recentChatList.get(2);
                 break;
             default:
-                text = "" + recentCount + " " + getString(R.string.new_message_from) + " " + recentChatList.get(0) + getString(R.string.and) + (recentCount - 1) + getString(R.string.others);
+                text = "" + recentCount + " " + getString(unReadMessages > 1 ? R.string.new_message_from : R.string.message_from_2) + " " + recentChatList.get(0) + getString(R.string.and) + (recentCount - 1) + getString(R.string.others);
                 break; //redundant but safe
         }
         return text;

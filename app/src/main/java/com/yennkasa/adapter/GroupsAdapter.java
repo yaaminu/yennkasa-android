@@ -58,7 +58,7 @@ public class GroupsAdapter extends RealmBaseAdapter<User> {
             holder = ((ViewHolder) convertView.getTag());
         }
         holder.groupName.setText(group.getName());
-        TargetOnclick targetOnclick = new TargetOnclick(holder.groupIcon, group.getUserId());
+        TargetOnclick targetOnclick = new TargetOnclick(holder.groupIcon, group.getUserId(), false);
         ImageLoader.load(context, group.getDP())
                 .placeholder(R.drawable.group_avatar)
                 .error(R.drawable.group_avatar)

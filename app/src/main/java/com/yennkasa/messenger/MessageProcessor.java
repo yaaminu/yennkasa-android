@@ -235,7 +235,7 @@ public class MessageProcessor extends IntentService {
             PLog.d(TAG, "%s is blocked", peerId);
             return;
         }
-        userManager.fetchUserIfRequired(peerId);
+        userManager.fetchUserIfRequired(userRealm, peerId, true, false);
         //all other operations are deferred till we set up the conversation
         Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
 

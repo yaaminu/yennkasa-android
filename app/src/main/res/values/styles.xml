@@ -317,6 +317,10 @@
         <item name="android:background">@drawable/white_outline</item>
     </style>
 
+    <style name="circular_call_button.green">
+        <item name="android:background">@drawable/round_green_button</item>
+    </style>
+
     <dimen name="profile_fragment_round_icons_padding">8dp</dimen>
     <dimen name="tab_pager_indicator_height">4dp</dimen>
 </resources>
