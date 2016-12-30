@@ -26,6 +26,8 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Filterable;
 
+import com.rey.material.widget.CheckBox;
+import com.rey.material.widget.SnackBar;
 import com.yennkasa.Errors.ErrorCenter;
 import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.R;
@@ -33,13 +35,13 @@ import com.yennkasa.adapter.MultiChoiceUsersAdapter;
 import com.yennkasa.adapter.UsersAdapter;
 import com.yennkasa.data.Message;
 import com.yennkasa.data.User;
+import com.yennkasa.messenger.MessengerBus;
+import com.yennkasa.util.Event;
 import com.yennkasa.util.FileUtils;
 import com.yennkasa.util.MediaUtils;
 import com.yennkasa.util.PLog;
 import com.yennkasa.util.UiHelpers;
 import com.yennkasa.util.ViewUtils;
-import com.rey.material.widget.CheckBox;
-import com.rey.material.widget.SnackBar;
 
 import java.io.File;
 import java.io.IOException;
@@ -68,6 +70,8 @@ public class CreateMessageActivity extends PairAppActivity
     public static final String ATTACHMENT_PATH = "attachmentPath";
     public static final String ATTACHMENT_TYPE = "attachmentType";
     public static final String ATTACHMENT_DESCRIPTION = "attachmentDescription";
+    public static final String EXTRA_CALLING = "calling";
+    public static final String EXTRA_IS_VIDEO = "videoCalling";
     private Set<String> selectedItems = new HashSet<>();
     private String attachmentBodyORMessageBody;
     private int attachmentType;
@@ -351,8 +355,18 @@ public class CreateMessageActivity extends PairAppActivity
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        String userId = adapter.getItem(position).getUserId();
         if (!isNotDefaultIntent) {
-            UiHelpers.enterChatRoom(this, adapter.getItem(position).getUserId());
+            if (getIntent().getBooleanExtra(EXTRA_CALLING, false)) {
+                String tag = getIntent().getBooleanExtra(EXTRA_IS_VIDEO, false)
+                        ? MessengerBus.VIDEO_CALL_USER
+                        : MessengerBus.VOICE_CALL_USER;
+
+                Event event = Event.create(tag, null, userId);
+                MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS).post(event);
+            } else {
+                UiHelpers.enterChatRoom(this, userId);
+            }
             finish();
         }
     }

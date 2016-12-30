@@ -3,6 +3,7 @@ package com.yennkasa.ui;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -143,7 +144,7 @@ public class CallLogFragment extends Fragment {
                                     realm.commitTransaction();
                                     //noinspection ConstantConditions
                                     Snackbar snackbar = Snackbar.make(getView(), R.string.log_entry_deleted_message, Snackbar.LENGTH_LONG);
-                                    snackbar.setAction("Undo", new View.OnClickListener() {
+                                    snackbar.setAction(R.string.undo, new View.OnClickListener() {
                                         @Override
                                         public void onClick(View v) {
                                             realm.beginTransaction();
@@ -210,6 +211,16 @@ public class CallLogFragment extends Fragment {
 
     @OnClick(R.id.fab_new_call)
     void newCall(View view) {
-        ((MainActivity) getActivity()).setPagePosition(MainActivity.PEOPLE_TAB);
+        new AlertDialog.Builder(getActivity())
+                .setItems(getResources().getStringArray(R.array.call_options), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent(getActivity(), CreateMessageActivity.class);
+                        intent.putExtra(CreateMessageActivity.EXTRA_CALLING, true);
+                        intent.putExtra(CreateMessageActivity.EXTRA_IS_VIDEO, which == 1);
+                        getActivity().startActivity(intent);
+                    }
+                })
+                .create().show();
     }
 }
