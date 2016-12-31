@@ -231,7 +231,7 @@ public class LoginFragment extends Fragment {
         return true;
     }
 
-    @OnClick({R.id.bt_loginButton, R.id.problems_logging_in})
+    @OnClick({R.id.bt_loginButton, R.id.problems_logging_in, R.id.terms})
     void onClick(View v) {
         if (v.getId() == R.id.bt_loginButton) {
             validateAndContinue();
