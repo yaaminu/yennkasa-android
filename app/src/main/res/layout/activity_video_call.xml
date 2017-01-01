@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/color_video_call_background"
@@ -8,13 +9,25 @@
     tools:context=".ui.VideoCallActivity"
     tools:ignore="RtlHardcoded,UnusedAttribute">
 
-    <FrameLayout
-        android:id="@+id/remote_view"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/transparent">
 
-    </FrameLayout>
+        <LinearLayout
+            android:id="@+id/remoteVideo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal" />
+
+        <RelativeLayout
+            android:id="@+id/localVideo"
+            android:layout_width="@dimen/dp_thumbnail_width_large"
+            android:layout_height="@dimen/dp_thumbnail_height_large"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true" />
+
+    </RelativeLayout>
 
     <include layout="@layout/snack_bar" />
 
@@ -23,52 +36,27 @@
         android:visibility="gone" />
 
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|right"
-        android:layout_marginRight="@dimen/activity_horizontal_margin"
-        android:layout_marginTop="@dimen/activity_vertical_margin"
-        android:animateLayoutChanges="true"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
-        tools:ignore="RtlHardcoded,UnusedAttribute">
-
-        <LinearLayout
-            android:id="@+id/local_view_parent"
-            android:layout_width="@dimen/video_call_local_view_width"
-            android:layout_height="@dimen/video_call_local_view_height"
-            android:background="@color/red"
-            android:padding="2dp"
-            android:visibility="gone">
-
-            <FrameLayout
-                android:id="@+id/local_view"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@color/color_video_call_background" />
-        </LinearLayout>
-
-        <TextView
-            android:id="@+id/tv_user_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_marginTop="@dimen/default_gap"
-            android:gravity="center"
-            android:textColor="@color/white"
-            tools:text="\@yaa_aminu" />
-    </LinearLayout>
-
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="start|left"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
         android:layout_marginTop="@dimen/activity_vertical_margin"
-        android:text="@string/pairapp_call"
+        android:text="@string/yennkasa_call"
         android:textColor="@color/white" />
 
+
+    <ImageButton
+        android:id="@+id/switch_camera"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginTop="50dp"
+        android:background="?attr/selectableItemBackground"
+        android:contentDescription="@string/switch_camera"
+        android:padding="@dimen/default_gap"
+        android:src="@drawable/ic_camera_rear_white_24dp"
+        android:visibility="gone" />
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -78,7 +66,7 @@
         android:background="@color/transparent"
         android:orientation="vertical">
 
-        <com.pairapp.view.RoundedImageView
+        <com.yennkasa.view.RoundedImageView
             android:id="@+id/iv_user_avatar"
             android:layout_width="@dimen/video_call_local_view_width"
             android:layout_height="@dimen/video_call_local_view_height"
@@ -98,5 +86,5 @@
             tools:text="dialing" />
     </LinearLayout>
 
-    <include layout="@layout/call_actions" />
+    <include layout="@layout/call_actions_vid" />
 </FrameLayout>

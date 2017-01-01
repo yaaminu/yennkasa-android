@@ -1,4 +1,4 @@
-package com.pairapp.util;
+package com.yennkasa.util;
 
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
 

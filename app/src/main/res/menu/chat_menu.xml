@@ -1,12 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.pairapp.ui.ChatActivity">
-    <item
-        android:id="@+id/action_invite_friends"
-        android:orderInCategory="100"
-        android:title="@string/invite_member"
-        app:showAsAction="never" />
+    tools:context="com.yennkasa.ui.ChatActivity">
     <item
         android:id="@+id/action_call_user"
         android:icon="@drawable/ic_phone_white"
@@ -20,11 +15,4 @@
         android:orderInCategory="101"
         android:title="@string/video_call"
         app:showAsAction="always" />
-
-    <item
-        android:id="@+id/action_add_contact"
-        android:icon="@drawable/ic_person_add_white_24dp"
-        android:orderInCategory="103"
-        android:title="@string/add_contact"
-        app:showAsAction="ifRoom" />
 </menu>

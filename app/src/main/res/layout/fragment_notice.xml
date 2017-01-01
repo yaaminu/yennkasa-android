@@ -4,7 +4,7 @@
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:background="@drawable/bg_messages"
-                tools:context="com.pairapp.ui.NoticeFragment">
+    tools:context="com.yennkasa.ui.NoticeFragment">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -25,7 +25,7 @@
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:padding="@dimen/abc_button_padding_horizontal_material"
-                android:text="@string/no_contact_on_pairapp_notice_cap"
+                android:text="@string/no_contact_on_yennkasa_notice_cap"
                 android:textColor="@color/light_gray"
                 android:textSize="@dimen/edit_text_size"
                 android:textStyle="bold"

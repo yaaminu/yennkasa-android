@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_margin="@dimen/default_gap"
-    android:background="#dfff"
+    android:background="@color/white"
     android:orientation="vertical">
 
     <TextView
@@ -13,8 +13,8 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:padding="@dimen/default_gap"
-        android:text="yaaaminu is not in your contacts list"
-        android:textColor="@color/colorPrimaryDark" />
+        android:textColor="@color/colorPrimaryDark"
+        tools:text="yaaaminu is not in your contacts list" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -29,7 +29,7 @@
             android:background="@drawable/round_corners"
             android:gravity="center"
             android:padding="@dimen/default_gap"
-            android:text="Block"
+            android:text="@string/block2"
             android:textColor="@color/white" />
 
         <android.support.v4.widget.Space

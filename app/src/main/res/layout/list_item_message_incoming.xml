@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <com.pairapp.view.RelativeLayout
+    <com.yennkasa.view.RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
@@ -24,7 +24,7 @@
             android:textStyle="bold"
             tools:text="sender" />
 
-        <com.pairapp.view.LinearLayout
+        <com.yennkasa.view.LinearLayout
             android:id="@+id/ll_message_body_view"
             style="@style/incoming_message_body_root_view"
             android:layout_width="wrap_content"
@@ -32,14 +32,14 @@
             android:layout_below="@id/tv_sender_name"
             android:orientation="vertical">
 
-            <com.pairapp.view.FrameLayout
+            <com.yennkasa.view.FrameLayout
                 android:id="@+id/fl_message_body_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
                 <!-- the max with on the textView is due to the width of the @+id/iv_message_preview
                  take it off and see the outcome
                  -->
-                <com.rockerhieu.emojicon.EmojiconTextView
+                <TextView
                     android:id="@+id/tv_log_message"
                     style="@style/message_incoming"
                     android:visibility="gone"
@@ -55,6 +55,17 @@
                     android:visibility="visible"
                     tools:src="@drawable/header" />
 
+                <TextView
+                    android:id="@+id/attachment_size"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="top|end"
+                    android:layout_margin="2dp"
+                    android:background="@drawable/black_round"
+                    android:padding="@dimen/default_gap"
+                    android:textColor="@color/white"
+                    tools:text="12MB" />
+
                 <FrameLayout
                     android:id="@+id/fl_progress_root_view"
                     android:layout_width="wrap_content"
@@ -67,7 +78,7 @@
                     android:visibility="gone">
 
 
-                    <com.pairapp.view.ProgressWheel
+                    <com.yennkasa.view.ProgressWheel
                         android:id="@+id/pb_download_progress_indeterminate"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
@@ -85,7 +96,7 @@
                         android:src="@drawable/ic_file_download_white_36dp"
                         android:visibility="gone" />
                 </FrameLayout>
-            </com.pairapp.view.FrameLayout>
+            </com.yennkasa.view.FrameLayout>
 
 
             <TextView
@@ -93,7 +104,7 @@
                 style="@style/message_incoming_date"
                 android:singleLine="true"
                 android:text="@string/sample_date" />
-        </com.pairapp.view.LinearLayout>
+        </com.yennkasa.view.LinearLayout>
         <!-- this textView is useless except that it frees us from checking for
         null-ness in the {@link MessagesAdapter}-->
         <TextView
@@ -116,7 +127,7 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             tools:ignore="ContentDescription" />
-    </com.pairapp.view.RelativeLayout>
+    </com.yennkasa.view.RelativeLayout>
 
     <include layout="@layout/message_spacing_normal" />
 </LinearLayout>

@@ -1,4 +1,4 @@
-<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.yennkasa.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -44,4 +44,4 @@
         app:sb_textColor="@color/preferred_primary_color" />
 
 
-</com.pairapp.view.RelativeLayout>
+</com.yennkasa.view.RelativeLayout>

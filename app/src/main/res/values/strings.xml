@@ -1,5 +1,5 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">PairApp</string>
+<resources>
+    <string name="app_name">Yennkasa</string>
     <string name="action_logout">Log out</string>
     <string name="title_activity_set_up">Get Started</string>
     <string name="username_hint">Username</string>
@@ -116,7 +116,7 @@
     <string name="invalid_phone_number">%s is not a valid phone number</string>
     <string name="close">CLOSE</string>
     <string name="charges_may_apply">Standard charges from your operator may apply</string>
-    <string name="new_message_from">New message(s) from</string>
+    <string name="new_message_from">New message from</string>
     <string name="and">" and "</string>
     <string name="others">" others "</string>
     <string name="group_already_exists">"There is already a group with the name %s "</string>
@@ -146,7 +146,7 @@
     </string>
     <string name="invalid_message">Message Invalid, Ensure the message does not exceed the size limit
     </string>
-    <string name="invite_message">"Try out PairApp, an instant messenger for android. Using the app, I can share anything not only pictures and text.It\'s free and fast! \n Download here: https://pairapp.parseapp.com
+    <string name="invite_message">"Try out Yennkasa, an instant messenger for android. Using the app, I can share anything not only pictures and text.It\'s free and fast! \n Download here: https://yennkasa.com/dl
     </string>
     <string name="sinch_error_report_message">we are having trouble setting things up,ensure your are connected to the internet and that your date is correct
     </string>
@@ -166,8 +166,6 @@
     <string name="invalid_image">Invalid image</string>
     <string name="not_a_bitmap">Not a bitmap</string>
     <string name="add_custom">Add custom number</string>
-    <string name="add_custom_number">You can add other users who are not in your contacts by adding their numbers directly.\n They only have to be registered members of PairApp. It\'s that simple! :-)
-    </string>
     <string name="title_activity_create_message">New Message</string>
     <string name="message_box_hint">Type here…</string>
     <string name="st_group_name_hit">Name, e.g Brothers From One Hood</string>
@@ -175,9 +173,7 @@
     <string name="send_to">Send to…</string>
     <string name="file_not_found">can\'t forward, file not found</string>
     <string name="unknown">Unknown</string>
-    <string name="no_contact_on_pairapp_notice">Listen,You currently don\'t have anyone in your \ contacts who uses PairApp.\n\n Quickly invite them to have a nice experience
-    </string>
-    <string name="no_contact_on_pairapp_notice_cap">LISTEN, YOU CURRENTLY DON\'T HAVE ANYONE IN YOUR CONTACTS USING PAIRAPP.\n\n QUICKLY INVITE THEM FOR A NICE CHAT EXPERIENCE.
+    <string name="no_contact_on_yennkasa_notice_cap">LISTEN, YOU CURRENTLY DON\'T HAVE ANYONE IN YOUR CONTACTS USING YENNKASA.\n\n QUICKLY INVITE THEM FOR A NICE CHAT EXPERIENCE.
     </string>
     <string name="title_activity_login_signup_prompt">@string/app_name</string>
     <string name="added_custom_notice_toast">Number added successfully.</string>
@@ -213,7 +209,7 @@
     <string name="try_again">Try Again</string>
     <string name="dp_prompt">Are you sure you want to use this picture as the DP?</string>
     <string name="get_started_noitce">
-        <![CDATA[<p>Hi there! thanks for installing PairApp.<br/>Please take a few seconds to set things up.</p>]]>
+        <![CDATA[<p>Hi there! thanks for installing Yennkasa.<br/>Please take a few seconds to set things up.</p>]]>
     </string>
     <string name="complete">
         <![CDATA[<p>You are just an inch away from getting connected to your friends. Please take time to complete the set up process.</p>]]>
@@ -224,7 +220,7 @@
     <string name="Silent">Silent</string>
     <string name="title_activity_settings">SettingsActivity</string>
     <string name="Feedback">Feedback &amp; Suggestions</string>
-    <string name="about_app">About PairApp</string>
+    <string name="about_app">About Yennkasa</string>
     <string name="preferences">Preferences</string>
     <string name="error_use_file_manager">An error occurred while processing the attachment. Try using a file manager to pick the file if the problem persists
     </string>
@@ -237,9 +233,9 @@
     <string name="error_feedback_body_empty">Feedback body cannot be empty</string>
     <string name="feedback_sent_successfully">Feedback sent successfully. Thanks for your support and co-operation
     </string>
-    <string name="app_name_cap">PAIRAPP</string>
-    <string name="idea_inc">© Amean.</string>
-    <string name="app_version">V 0.0.1 beta</string>
+    <string name="app_name_cap">YENNKASA</string>
+    <string name="idea_inc">© Yennkasa.</string>
+    <string name="copyright">© Yennkasa.</string>
     <string name="legal_notice">LEGAL NOTICE</string>
     <string name="error_feedback_subject_too_lonng">Subject may not exceed 40 characters</string>
     <string name="silent">Silent</string>
@@ -338,7 +334,7 @@
     <string name="decline">Decline</string>
     <string name="ongoing_voice_call_notice">Ongoing voice call with %s</string>
     <string name="ongoing_video_call_notice">Ongoing video call with %s</string>
-    <string name="pairapp_call">PairApp Call</string>
+    <string name="yennkasa_call">Yennkasa</string>
     <string name="incoming_call">Incoming call from %s</string>
     <string name="mute_call">mute</string>
     <string name="speaker">speaker</string>
@@ -349,7 +345,7 @@
     <string name="log_entry_deleted_message">Log entry deleted successfully</string>
     <string name="connected">Connected</string>
     <string name="video_call">Start Video Call</string>
-    <string name="missed_call_notification" formatted="false">You missed %d calls from %s</string>
+    <string name="missed_call_notification" formatted="false">You missed %d %s from %s</string>
     <string name="slogan">Bringing Conversations To Life!!!</string>
     <string name="other">" other "</string>
     <string name="content_description_attach_more">More attachment options</string>
@@ -364,4 +360,41 @@
     <string name="message_edited_description">Your message to %s was updated successfully</string>
     <string name="message_reverted_description">Your message to %s was reverted</string>
     <string name="error_cannot_edit_message">Cannot edit message</string>
+    <string name="unimplemented">Not Implemented</string>
+    <string name="username_required">Your username can\'t be empty</string>
+    <string name="search_hint">Search...</string>
+    <string name="block2">Block</string>
+    <string name="not_in_contacts_notice">%s is not in your address book</string>
+    <string name="block_user_confirmatory_alert">Are you sure you want to block this user?</string>
+    <string name="calls">Calls</string>
+    <string name="conversation">Conversations</string>
+    <string name="people">People</string>
+    <string name="groups">Groups</string>
+    <string name="sticker">sticker</string>
+    <string name="sending_state">Sending</string>
+    <string name="sent_state">Sent</string>
+    <string name="received_state">Delivered</string>
+    <string name="seen_state">Seen</string>
+    <string name="failed_state">Failed</string>
+    <string name="message_edit_failed">Failed to update your message to %s</string>
+    <string name="find_people">Search Yennkasa</string>
+    <string name="not_content">No Content</string>
+    <string name="city_name_too_short">City name is too short</string>
+    <string name="city_name_invalid">Invalid city name</string>
+    <string name="check_user_availability" formatted="false">Checking if %s is on %s</string>
+    <string name="invite_user">Invite %s</string>
+    <string name="invite_prompt" formatted="false">%s is not on %s. Would you like to send an invitation link?</string>
+    <string name="no_app_for_sharing_text">No app for sharing text. This is strange!!!</string>
+    <string name="disableSearchWarning">You wont be able to search for other users. Do you want to continue?</string>
+    <string name="enable_search_message">In order to search for others, you must enable searching. Do you want to enable?</string>
+    <string name="call_progressing">progressing</string>
+    <string name="switch_camera">switch camera</string>
+    <string name="recieve_sms_explanation">To make the registration process seamless, we need to detect when you receive new SMS and automatically fill the  code for you.</string>
+    <string name="reason_for_file_system_required">We are sorry but %s cannot run without permission to access your file system</string>
+    <string name="permission_denied_title">Permission Denied</string>
+    <string name="calls_">calls</string>
+    <string name="call_">call</string>
+    <string name="undo">Undo</string>
+    <string name="message_from_2">new message from</string>
+    <string name="terms">Terms And Agreement</string>
 </resources>

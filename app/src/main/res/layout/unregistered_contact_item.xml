@@ -1,4 +1,4 @@
-<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.yennkasa.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_item_height"
@@ -73,5 +73,5 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:src="@drawable/ic_more_vert_24dp" />
-</com.pairapp.view.RelativeLayout>
+</com.yennkasa.view.RelativeLayout>
 

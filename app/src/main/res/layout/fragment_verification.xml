@@ -1,33 +1,28 @@
-<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.yennkasa.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary">
 
     <TextView
         android:id="@+id/tv_app_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/panel"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:layout_marginBottom="@dimen/activity_vertical_margin"
         android:text="@string/app_name"
+        android:textColor="@color/white"
         android:textSize="@dimen/title_text_size_large"
         android:textStyle="bold" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/tv_app_name"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="@dimen/default_gap"
-        android:paddingBottom="@dimen/default_gap"
-        android:text="@string/slogan" />
-
-    <com.pairapp.view.LinearLayout
+    <com.yennkasa.view.LinearLayout
+        android:id="@+id/panel"
         android:layout_width="@dimen/login_signup_verificaton_panel_width"
         android:layout_height="wrap_content"
         android:layout_below="@+id/tv_verification_notice"
         android:layout_centerHorizontal="true"
         android:layout_centerInParent="true"
-        android:background="@color/transparent"
+        android:background="@color/white"
         android:gravity="center_horizontal"
         android:orientation="vertical"
         android:padding="@dimen/padding_ll_login_fragment_bottom">
@@ -74,9 +69,9 @@
             android:text="@string/st_send_again"
             android:textColor="@color/white"
             android:textSize="@dimen/standard_text_size" />
-    </com.pairapp.view.LinearLayout>
+    </com.yennkasa.view.LinearLayout>
 
-    <com.rey.material.widget.TextView
+    <TextView
         android:id="@+id/copy_right"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -84,6 +79,6 @@
         android:layout_centerHorizontal="true"
         android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
         android:text="@string/idea_inc"
-        android:textColor="@color/black"
+        android:textColor="@color/white"
         android:textStyle="bold" />
-</com.pairapp.view.RelativeLayout>
+</com.yennkasa.view.RelativeLayout>

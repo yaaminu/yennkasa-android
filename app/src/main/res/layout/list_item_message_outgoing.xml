@@ -6,26 +6,26 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <com.pairapp.view.RelativeLayout
+    <com.yennkasa.view.RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
 
-        <com.pairapp.view.RelativeLayout
+        <com.yennkasa.view.RelativeLayout
             android:id="@+id/ll_message_body_view"
             style="@style/outgoing_message_body_root_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <com.pairapp.view.FrameLayout
+            <com.yennkasa.view.FrameLayout
                 android:id="@+id/fl_message_body_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
                 <!-- the max with on the textView is due to the width of the @+id/iv_message_preview
                  take it off and see the outcome
                  -->
-                <com.rockerhieu.emojicon.EmojiconTextView
+                <TextView
                     android:id="@+id/tv_log_message"
                     style="@style/message_outgoing"
                     android:text="a sample message that spans across multiple lines dones it look nice or bad. i am just testing"
@@ -67,7 +67,7 @@
                     <!--android:progressDrawable="@drawable/progress_bar_drawable"-->
                     <!--/>-->
 
-                    <com.pairapp.view.ProgressWheel
+                    <com.yennkasa.view.ProgressWheel
                         android:id="@+id/pb_download_progress_indeterminate"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
@@ -88,7 +88,7 @@
 
                 </FrameLayout>
 
-            </com.pairapp.view.FrameLayout>
+            </com.yennkasa.view.FrameLayout>
 
             <TextView
                 android:id="@+id/tv_message_date"
@@ -99,7 +99,7 @@
                 android:singleLine="true"
                 android:text="  12-12-12"
                 tools:ignore="HardcodedText" />
-        </com.pairapp.view.RelativeLayout>
+        </com.yennkasa.view.RelativeLayout>
 
         <ImageButton
             android:id="@+id/iv_retry"
@@ -125,7 +125,7 @@
             android:visibility="gone"
             tools:ignore="HardcodedText" />
 
-    </com.pairapp.view.RelativeLayout>
+    </com.yennkasa.view.RelativeLayout>
 
     <include layout="@layout/message_spacing_normal" />
 

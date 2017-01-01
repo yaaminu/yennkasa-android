@@ -8,13 +8,13 @@
 
     <ImageButton
         android:id="@+id/bt_mute"
-        style="@style/circular_call_button"
+        style="@style/circular_call_button.color_primary"
         android:contentDescription="@string/speaker"
         android:src="@drawable/ic_mute_off_black_24dp" />
 
     <ImageButton
         android:id="@+id/bt_answer_call"
-        style="@style/circular_call_button"
+        style="@style/circular_call_button.green"
         android:contentDescription="@string/speaker"
         android:src="@drawable/ic_call_white_24dp" />
 
@@ -33,7 +33,7 @@
 
     <ImageButton
         android:id="@+id/bt_speaker"
-        style="@style/circular_call_button"
+        style="@style/circular_call_button.color_primary"
         android:contentDescription="@string/speaker"
         android:src="@drawable/ic_speaker_out_black_24dp" />
 

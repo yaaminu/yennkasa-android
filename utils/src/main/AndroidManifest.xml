@@ -1,9 +1,6 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools"
-          package="com.pairapp.util">
+<manifest xmlns:tools="http://schemas.android.com/tools"
+    package="com.yennkasa.util">
 
-    <application>
-    </application>
-    <uses-sdk
-        tools:overrideLibrary="com.securepreferences,com.tozny.crypto.android"/>
+    <uses-sdk tools:overrideLibrary="com.securepreferences,com.tozny.crypto.android" />
+    <application />
 </manifest>

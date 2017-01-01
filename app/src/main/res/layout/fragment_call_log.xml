@@ -4,7 +4,7 @@
     android:id="@+id/cordinator"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.pairapp.ui.CallLogFragment">
+    tools:context="com.yennkasa.ui.CallLogFragment">
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view"
@@ -16,6 +16,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
         android:gravity="center_horizontal"
         android:text="@string/call_log_empty_notice" />
 
@@ -28,6 +30,6 @@
         android:layout_marginRight="@dimen/fab_delta_right"
         android:src="@drawable/ic_phone_white"
         app:fabSize="mini"
-        app:layout_anchor="@+id/cordinator"
+        app:layout_anchor="@+id/recycler_view"
         app:layout_anchorGravity="bottom|right|end" />
 </android.support.design.widget.CoordinatorLayout>

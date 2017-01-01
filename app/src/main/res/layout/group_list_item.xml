@@ -1,4 +1,4 @@
-<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.yennkasa.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="@dimen/list_item_height"
     android:layout_marginBottom="@dimen/list_item_margin_bottom"
@@ -8,7 +8,7 @@
     android:paddingRight="@dimen/list_item_padding"
     android:paddingTop="@dimen/list_item_padding">
 
-    <com.pairapp.view.RoundedImageView
+    <com.yennkasa.view.RoundedImageView
         android:id="@+id/iv_group_dp"
         android:layout_width="@dimen/thumbnail_width"
         android:layout_height="@dimen/thumbnail_height"
@@ -18,7 +18,6 @@
         android:layout_margin="@dimen/thumbnail_margin"
         android:clickable="true"
         android:contentDescription="@string/content_desc_user_avatar"
-        android:scaleType="fitStart"
         android:src="@drawable/group_avatar" />
 
     <TextView
@@ -58,4 +57,4 @@
         android:layout_alignStart="@+id/tv_group_members"
         android:layout_toRightOf="@+id/iv_group_dp" />
 
-</com.pairapp.view.RelativeLayout>
+</com.yennkasa.view.RelativeLayout>

@@ -6,7 +6,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <com.pairapp.view.RelativeLayout
+    <com.yennkasa.view.RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
@@ -25,7 +25,7 @@
             tools:ignore="HardcodedText"
             tools:text="sender" />
 
-        <com.pairapp.view.LinearLayout
+        <com.yennkasa.view.LinearLayout
             android:id="@+id/ll_message_body_view"
             style="@style/incoming_message_body_root_view"
             android:layout_width="wrap_content"
@@ -44,7 +44,7 @@
                 android:text="12-12-12"
                 tools:ignore="HardcodedText" />
 
-            <com.pairapp.view.FrameLayout
+            <com.yennkasa.view.FrameLayout
                 android:id="@+id/fl_message_body_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -53,24 +53,25 @@
                 <!-- the max with on the textView is due to the width of the @+id/iv_message_preview
                  take it off and see the outcome
                  -->
-                <com.rockerhieu.emojicon.EmojiconTextView
+                <TextView
                     android:id="@+id/tv_log_message"
                     style="@style/message_incoming"
                     android:layout_gravity="center_vertical"
                     android:singleLine="true"
                     android:text="hi when are you coming was testing"
                     tools:ignore="HardcodedText" />
-            </com.pairapp.view.FrameLayout>
+            </com.yennkasa.view.FrameLayout>
 
-        </com.pairapp.view.LinearLayout>
+        </com.yennkasa.view.LinearLayout>
 
-        <com.pairapp.view.RoundedImageView
+        <ImageButton
             android:id="@+id/iv_retry"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_toLeftOf="@+id/ll_message_body_view"
             android:layout_toStartOf="@+id/ll_message_body_view"
+            android:background="@color/transparent"
             android:src="@drawable/ic_action_replay" />
 
         <ImageView
@@ -94,7 +95,7 @@
             android:minWidth="@dimen/thumbnail_width"
             android:visibility="gone" />
 
-        <com.pairapp.view.ProgressWheel
+        <com.yennkasa.view.ProgressWheel
             android:id="@+id/pb_download_progress_indeterminate"
             android:layout_width="48dp"
             android:layout_height="48dp"
@@ -104,7 +105,7 @@
             app:pv_circular="true"
             app:pv_progressMode="indeterminate"
             app:pv_progressStyle="@style/base_indeterminate_progress_style" />
-    </com.pairapp.view.RelativeLayout>
+    </com.yennkasa.view.RelativeLayout>
 
     <include layout="@layout/message_spacing_normal" />
 </LinearLayout>

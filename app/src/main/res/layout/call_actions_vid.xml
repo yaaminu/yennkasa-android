@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom|center_horizontal"
+    android:layout_marginBottom="@dimen/activity_vertical_margin"
+    android:background="@color/transparent"
+    tools:background="@color/color_video_call_background">
+
+
+    <ImageButton
+        android:id="@+id/bt_mute"
+        style="@style/circular_call_button.white"
+        android:contentDescription="@string/speaker"
+        android:src="@drawable/ic_mute_off_black_24dp" />
+
+    <ImageButton
+        android:id="@+id/bt_answer_call"
+        style="@style/circular_call_button.white"
+        android:contentDescription="@string/speaker"
+        android:src="@drawable/ic_call_white_24dp" />
+
+
+    <ImageButton
+        android:id="@+id/bt_end_call"
+        style="@style/circular_call_button.red"
+        android:contentDescription="@string/end_call"
+        android:src="@drawable/ic_call_end_black_24dp" />
+
+    <ImageButton
+        android:id="@+id/bt_decline_call"
+        style="@style/circular_call_button.red"
+        android:contentDescription="@string/decline"
+        android:src="@drawable/ic_call_end_black_24dp" />
+
+    <ImageButton
+        android:id="@+id/bt_speaker"
+        style="@style/circular_call_button.white"
+        android:contentDescription="@string/speaker"
+        android:src="@drawable/ic_speaker_out_black_24dp" />
+
+</LinearLayout>

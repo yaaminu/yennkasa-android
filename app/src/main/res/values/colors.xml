@@ -1,30 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="actionbar">#3cb879</color>
     <color name="body_background">#e8e8e8</color>
-    <color name="body_background_green">#82e783</color>
     <color name="server_status_bar">#2b2b2b</color>
     <color name="title_gray">#434343</color>
     <color name="white">#ffffff</color>
     <color name="out_going_message_text_color">#000</color>
-    <color name="color_msg_outgoing">#5eb964</color>
+    <color name="color_msg_outgoing">#ff3f8af8</color>
     <color name="color_msg_incoming">#eeee</color>
     <color name="color_msg_date">#cccccc</color>
     <color name="msg_border_color">#a1a1a1</color>
-    <color name="bg_btn_join">#1e6258</color>
+    <color name="bg_btn_join">#db13bc32</color>
     <color name="bg_msg_input">#e8e8e8</color>
     <color name="text_msg_input">#626262</color>
     <color name="lblFromName">#777777</color>
     <color name="light_gray">#999999</color>
-    <color name="colorPrimary">#5eb964</color>
-    <color name="colorPrimaryTranslucent">#aa5eb964</color>
-    <color name="normalControlStates">#789962</color>
-    <color name="colorPrimaryDark">#37863c</color>
-    <color name="colorAccent">#669955</color>
+    <color name="colorPrimary">#ff3f8af8</color>
+    <color name="colorPrimaryTranslucent">#aa3f8af8</color>
+    <color name="normalControlStates">#FF78909C</color>
+    <color name="colorPrimaryDark">#ff2158a9</color>
+    <color name="colorAccent">#FF4081</color>
     <color name="colorControlNormal">#FF78909C</color>
-    <color name="colorControlActivated">#60f492</color>
+    <color name="colorControlActivated">#FF4081</color>
     <color name="colorSwitchThumbNormal">#FF78909C</color>
-
+    <color name="sp_primary">@color/colorPrimary</color>
+    <color name="sp_primary_dark">@color/colorPrimaryDark</color>
+    <color name="sp_primary_light">#CFD8DC</color>
+    <color name="sp_placeholder_color_filer">@color/white</color>
     <array name="progress_colors">
         <item>#FF3F8AF8</item>
         <item>#FFD8433C</item>
@@ -49,14 +50,17 @@
     <color name="et_divider_focused">@color/colorControlActivated</color>
     <color name="et_divider_not_focused">#FF6D6D6D</color>
     <color name="et_divider_disable">#FFC1C1C1</color>
-    <color name="preferred_primary_color">#5eb964</color>
-    <color name="list_item_divider">#3d884a</color>
+    <color name="preferred_primary_color">@color/colorPrimary</color>
+    <color name="list_item_divider">#FF6D6D6D</color>
     <color name="black">#000</color>
     <color name="message_text_box_background">#115eb964</color>
     <color name="transparent">#0000</color>
     <color name="red">#aaff0000</color>
     <color name="red_deep">#AA830202</color>
-    <color name="colorPrimaryDarker">#1e6258</color>
+    <color name="colorPrimaryDarker">#FF053781</color>
     <color name="orange">#FFF2AF3A</color>
     <color name="faded_white">#cfff</color>
+    <color name="translucent_white">#77ffffff</color>
+    <color name="dard_green">#FF0A7E0A</color>
+    <color name="green">#28c128</color>
 </resources>

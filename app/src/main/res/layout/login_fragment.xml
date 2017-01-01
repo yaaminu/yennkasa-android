@@ -3,7 +3,7 @@
     android:id="@+id/fr_login"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#eee"
+    android:background="@color/colorPrimary"
     android:gravity="center_horizontal|top"
     android:orientation="vertical"
     android:paddingTop="@dimen/login_in_fragment_margin_top"
@@ -19,6 +19,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/app_name"
+        android:textColor="@color/white"
         android:textSize="@dimen/title_text_size_large" />
 
     <TextView
@@ -26,7 +27,8 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/default_gap"
         android:paddingBottom="@dimen/default_gap"
-        android:text="@string/slogan" />
+        android:text="@string/slogan"
+        android:textColor="@color/white" />
 
     <RelativeLayout
         android:id="@+id/login_sign_up_pane"
@@ -51,27 +53,48 @@
             android:paddingTop="@dimen/padding_ll_login_fragment_top"
             tools:ignore="RtlHardcoded,UnusedAttribute">
 
-            <Spinner
-                android:id="@+id/sp_ccc"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center" />
-
             <EditText
                 android:id="@+id/et_username"
                 style="@style/username_editText_style"
                 android:layout_height="wrap_content"
                 android:paddingTop="@dimen/padding_ll_login_fragment_top" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <EditText
+                    android:id="@+id/tv_ccc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawableRight="@drawable/ic_arrow_drop_down_black_24dp"
+                    android:inputType="phone"
+                    android:paddingTop="@dimen/padding_ll_login_fragment_top"
+                    tools:text="+233" />
+
+                <!--<View-->
+                <!--android:layout_width="1dp"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:layout_margin="@dimen/default_gap"-->
+                <!--android:background="@color/colorPrimary" />-->
+
+                <EditText
+                    android:id="@+id/et_phone_number_field"
+                    style="@style/phone_number_editText_style"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:paddingTop="@dimen/padding_ll_login_fragment_top" />
+            </LinearLayout>
+
             <EditText
-                android:id="@+id/et_phone_number_field"
-                style="@style/phone_number_editText_style"
+                android:id="@+id/et_user_city"
+                style="@style/city_edittext_style"
                 android:layout_height="wrap_content"
                 android:paddingTop="@dimen/padding_ll_login_fragment_top" />
 
-            <com.rey.material.widget.Button
+            <Button
                 android:id="@+id/bt_loginButton"
-                style="@style/FlatButtonRippleStyle"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/big_button_height"
                 android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
@@ -85,18 +108,30 @@
 
     </RelativeLayout>
 
-    <com.rey.material.widget.TextView
+    <TextView
         android:id="@+id/problems_logging_in"
-        style="@style/FlatButtonRippleStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
+        android:background="?attr/selectableItemBackground"
         android:clickable="true"
         android:gravity="center"
         android:paddingTop="@dimen/padding_ll_login_fragment_top"
         android:text="@string/problems_logging_in"
+        android:textColor="@color/white"
         android:textSize="@dimen/signup_have_an_account_size" />
 
+    <TextView
+        android:id="@+id/terms"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:background="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:gravity="center"
+        android:paddingTop="@dimen/padding_ll_login_fragment_top"
+        android:text="@string/terms"
+        android:textColor="@color/white" />
 
     <android.support.v4.widget.Space
         android:layout_width="match_parent"

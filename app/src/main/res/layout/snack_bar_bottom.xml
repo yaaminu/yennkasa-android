@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.rey.material.widget.SnackBar xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/notification_bar"
+    style="@style/Material.Widget.SnackBar.Mobile.MultiLine"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/action_bar_height"
+    android:layout_alignParentBottom="true"
+    android:layout_gravity="bottom"
+    android:minHeight="@dimen/action_bar_height"
+    android:visibility="gone"
+    app:sb_actionText="@string/close"
+    app:sb_actionTextColor="@color/white"
+    app:sb_duration="60000" />

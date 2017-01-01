@@ -1,8 +1,8 @@
-package com.pairapp.messenger;
+package com.yennkasa.messenger;
 
 import android.support.annotation.NonNull;
 
-import com.pairapp.data.Message;
+import com.yennkasa.data.Message;
 
 import org.junit.Test;
 

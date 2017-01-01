@@ -1,9 +1,9 @@
-<com.pairapp.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.yennkasa.view.RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.pairapp.ui.CreateGroupActivity">
+    tools:context="com.yennkasa.ui.CreateGroupActivity">
 
     <FrameLayout
         android:id="@+id/bar"
@@ -67,7 +67,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/bar" />
 
-    <com.pairapp.view.RelativeLayout
+    <com.yennkasa.view.RelativeLayout
         android:id="@+id/rl_main_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -91,7 +91,7 @@
 
         <fragment
             android:id="@+id/rl_group_dp_preview"
-            android:name="com.pairapp.ui.ChooseDisplayPictureFragment"
+            android:name="com.yennkasa.ui.ChooseDisplayPictureFragment"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@+id/et_group_name"
@@ -99,7 +99,7 @@
             android:layout_centerInParent="true"
             android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
             tools:layout="@layout/fragment_choose_display_picture"></fragment>
-    </com.pairapp.view.RelativeLayout>
+    </com.yennkasa.view.RelativeLayout>
 
     <include layout="@layout/snack_bar" />
-</com.pairapp.view.RelativeLayout>
+</com.yennkasa.view.RelativeLayout>

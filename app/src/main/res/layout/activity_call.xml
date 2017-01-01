@@ -30,14 +30,14 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="@dimen/default_gap"
-            android:text="@string/pairapp_call" />
+            android:text="@string/yennkasa_call" />
 
         <android.support.v4.widget.Space
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <com.pairapp.view.RoundedImageView
+        <com.yennkasa.view.RoundedImageView
             android:id="@+id/iv_user_avatar"
             android:layout_width="@dimen/dp_thumbnail_width_large"
             android:layout_height="@dimen/dp_thumbnail_height_large"

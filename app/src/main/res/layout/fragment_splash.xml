@@ -1,10 +1,10 @@
-<com.pairapp.view.RelativeLayout
+<com.yennkasa.view.RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/login_fragment_back_ground"
-    tools:context="com.pairapp.ui.AboutFragment">
+    tools:context="com.yennkasa.ui.AboutFragment">
 
     <com.rey.material.widget.TextView
         android:id="@+id/tv_app_name"
@@ -33,7 +33,7 @@
         android:layout_below="@+id/icon"
         android:layout_centerHorizontal="true"
         android:paddingTop="@dimen/padding_ll_login_fragment_bottom"
-        android:text="@string/app_version"
+        tools:text="5.24.2"
         android:textColor="@color/white"
         android:textSize="@dimen/standard_text_size_small"/>
 
@@ -64,4 +64,4 @@
         android:textSize="@dimen/standard_text_size"
         android:textStyle="bold"
         />
-</com.pairapp.view.RelativeLayout>
+</com.yennkasa.view.RelativeLayout>

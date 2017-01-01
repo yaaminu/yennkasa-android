@@ -1,5 +1,5 @@
 <menu
       xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.pairapp.ui.InviteActivity">
+    tools:context="com.yennkasa.ui.InviteActivity">
 
 </menu>

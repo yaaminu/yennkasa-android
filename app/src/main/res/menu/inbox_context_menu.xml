@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:pairapp="http://schemas.android.com/apk/res-auto">
+    xmlns:yennkasa="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/action_remove"
         android:title="@string/action_delete_conversation"
-        pairapp:showAsAction="never" />
+        yennkasa:showAsAction="never" />
     <item
         android:id="@+id/action_call_user"
         android:title="@string/action_call_sender"
-        pairapp:showAsAction="never" />
+        yennkasa:showAsAction="never" />
     <item
         android:id="@+id/action_send_message"
         android:title="send message"
-        pairapp:showAsAction="never" />
+        yennkasa:showAsAction="never" />
 
 </menu>

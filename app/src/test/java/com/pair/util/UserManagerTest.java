@@ -1,9 +1,9 @@
-package com.pairapp.util;
+package com.yennkasa.util;
 
 import android.content.Context;
 
-import com.pairapp.data.User;
-import com.pairapp.data.UserManager;
+import com.yennkasa.data.User;
+import com.yennkasa.data.UserManager;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -22,11 +22,12 @@ public class UserManagerTest {
 
     Context context;
     Realm realm;
+
     @Before
     public void setUp() throws Exception {
         context = Mockito.mock(Context.class);
         Mockito.when(context.getFilesDir()).thenReturn(new File("C:\\Users\\Null-Pointer\\Desktop\\realm"));
-        realm = Realm.getInstance(context);
+        realm = User.Realm(context);
     }
 
     @After
@@ -36,7 +37,7 @@ public class UserManagerTest {
 
     @Test
     public void testGetMainUser() throws Exception {
-        User user = UserManager.getInstance().getCurrentUser();
+        User user = UserManager.getInstance().getCurrentUser(realm);
         Assert.assertNull(user);
 
     }
