@@ -54,6 +54,13 @@ public class WebSocketClient {
         timer = new Timer("webSocketClient timer", true);
     }
 
+    public void reconnectNow() {
+        synchronized (this) {
+            reconnectDelay = 0L;
+            attemptReconnect();
+        }
+    }
+
 
     interface NetworkProvider {
         boolean connected();
@@ -394,7 +401,7 @@ public class WebSocketClient {
     private void onSendFailed(WebSocketFrame frame) {
         if (frame != null && frame.isDataFrame()) {
             listener.onSendError(frame.isBinaryFrame(), frame.getPayload());
-    }
+        }
     }
 
     private static final long DEFAULT_DELAY = 1000;

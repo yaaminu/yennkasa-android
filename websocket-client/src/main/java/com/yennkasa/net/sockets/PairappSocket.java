@@ -43,6 +43,12 @@ class YennkasaSocket {
         return initialized.get() && webSocketClient.isConnected();
     }
 
+    public void reconnect() {
+        if (!webSocketClient.isConnected()) {
+            webSocketClient.reconnectNow();
+        }
+    }
+
     public void disConnectBlocking() {
         ThreadUtils.ensureNotMain();
         if (!initialized.getAndSet(false)) {
@@ -54,7 +60,7 @@ class YennkasaSocket {
     public boolean send(byte[] bytes) {
         ThreadUtils.ensureNotMain();
         if (initialized.get()) {
-          return  webSocketClient.send(bytes);
+            return webSocketClient.send(bytes);
         } else {
             throw new IllegalStateException("not initialised, did you forget to call init()");
         }

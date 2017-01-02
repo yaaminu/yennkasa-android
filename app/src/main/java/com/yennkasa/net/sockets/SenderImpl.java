@@ -175,6 +175,10 @@ public class SenderImpl implements Sender {
         return encodeToBytes(data);
     }
 
+    @Override
+    public void attemptReconnect() {
+    }
+
     @SuppressWarnings("WeakerAccess")
     private class HooksImpl implements MessageQueue.Hooks {
 

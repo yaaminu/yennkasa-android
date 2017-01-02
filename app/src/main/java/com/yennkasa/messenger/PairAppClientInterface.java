@@ -404,6 +404,7 @@ class PairAppClientInterface {
     public void onIncomingPushMessage(String dataBase64) {
         try {
             //TODO notify the socket layer to reconnect immediatley
+            sender.attemptReconnect();
             parser.feedBase64(dataBase64);
         } catch (MessageParser.MessageParserException e) {
             PLog.f(TAG, e.getMessage(), e);

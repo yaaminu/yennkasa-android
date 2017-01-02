@@ -19,4 +19,6 @@ public interface Sender {
     String bytesToString(byte[] data);
 
     byte[] stringToBytes(String data);
+
+    void attemptReconnect();
 }
