@@ -69,7 +69,7 @@ class PairAppClientInterface {
     public static final String TAG = PairAppClientInterface.class.getSimpleName();
     private final MessageParser parser;
 
-    private Set<Activity> backStack = new HashSet<>(6);
+    private Set<Activity> backStack = new HashSet<>(1);
     private final Context context;
     private final Sender sender;
     private final StatusManager statusManager;
@@ -111,7 +111,7 @@ class PairAppClientInterface {
     }
 
 
-    void markUserAsOffline(Activity activity) {
+    synchronized void markUserAsOffline(Activity activity) {
         ThreadUtils.ensureMain();
         if (activity == null) {
             throw new IllegalArgumentException();
@@ -120,10 +120,11 @@ class PairAppClientInterface {
         if (backStack.isEmpty()) {
             PLog.d(YennkasaClient.TAG, "marking user as offline");
             statusManager.announceStatusChange(false);
+            // TODO: 1/3/17 initiate a timer to shutdown the persistent tcp socket to the server
         }
     }
 
-    void markUserAsOnline(Activity activity) {
+    synchronized void markUserAsOnline(Activity activity) {
         ThreadUtils.ensureMain();
         if (activity == null) {
             throw new IllegalArgumentException();
@@ -131,6 +132,7 @@ class PairAppClientInterface {
         if (backStack.isEmpty()) {
             Log.d(YennkasaClient.TAG, "marking user as online");
             statusManager.announceStatusChange(true);
+            // TODO: 1/3/17 try connecting to the server if we are disconnected.
         }
         backStack.add(activity);
     }
