@@ -11,6 +11,7 @@ import com.yennkasa.messenger.MessagePacker.MessagePackerException;
 import com.yennkasa.messenger.MessengerBus;
 import com.yennkasa.security.MessageEncryptor;
 import com.yennkasa.util.Config;
+import com.yennkasa.util.ConnectionUtils;
 import com.yennkasa.util.Event;
 import com.yennkasa.util.EventBus;
 import com.yennkasa.util.GenericUtils;
@@ -43,6 +44,7 @@ public class SenderImpl implements Sender {
     private final Authenticator authenticator;
     @Nullable
     private YennkasaSocket yennkasaSocket;
+    @NonNull
     private final MessageQueueImpl messageQueue;
     private volatile boolean started = false;
     @SuppressWarnings("FieldCanBeLocal")
@@ -77,8 +79,9 @@ public class SenderImpl implements Sender {
     public SenderImpl(Authenticator authenticator, MessageParser parser) {
         this.parser = parser;
         this.authenticator = authenticator;
-        String token = authenticator.getToken();
-        initialiseSocket(token);
+        this.authToken = authenticator.getToken();
+        GenericUtils.ensureNotEmpty(authToken);
+        initialiseSocket();
         MessageQueueItemDataSource queueDataSource = new MessageQueueItemDataSource(realmProvider);
         this.messageQueue = new MessageQueueImpl(queueDataSource, hooks, consumer/*are we letting this escape?*/);
     }
@@ -94,9 +97,8 @@ public class SenderImpl implements Sender {
                 .build();
     }
 
-    private void initialiseSocket(String token) {
-        GenericUtils.ensureNotEmpty(token);
-        yennkasaSocket = YennkasaSocket.create(Collections.singletonMap("Authorization", token), listener);
+    synchronized private void initialiseSocket() {
+        yennkasaSocket = YennkasaSocket.create(Collections.singletonMap("Authorization", authToken), listener);
     }
 
     public synchronized void start() {
@@ -176,7 +178,23 @@ public class SenderImpl implements Sender {
     }
 
     @Override
-    public void attemptReconnectIfRequired() {
+    synchronized public void attemptReconnectIfRequired() {
+        PLog.d(TAG, "re-attempting connection if required");
+        if (!ConnectionUtils.isConnected()) {
+            PLog.d(TAG, "not re-connecting because user has no internet connection");
+        }
+        if (Config.isAppOpen() || (messageQueue.isStarted() && messageQueue.getPending() > 0)) {
+            PLog.d(TAG, "re-attempting connection because " + (Config.isAppOpen() ? "app is opened" :
+                    "we have more messages to send and we were disconnected unaware user has internet access"));
+            if (yennkasaSocket == null) {
+                initialiseSocket();
+                yennkasaSocket.init();
+            } else {
+                if (!yennkasaSocket.isConnected()) {
+                    yennkasaSocket.reconnect();
+                }
+            }
+        }
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -304,6 +322,7 @@ public class SenderImpl implements Sender {
                             return;
                         }
                         yennkasaSocket = null;
+                        System.gc();
                         EventBus.getDefault().register(eventsListener, TokenRefreshJob.TOKEN_NEW_REFRESH);
                         refreshJob = TokenRefreshJob.create(authenticator);
                         TaskManager.runJob(refreshJob);
@@ -396,6 +415,9 @@ public class SenderImpl implements Sender {
         return Base64.encodeToString(data, Base64.DEFAULT);
     }
 
+    @Nullable
+    private String authToken;
+
     private final EventBus.EventsListener eventsListener = new EventBus.EventsListener() {
         @Override
         public int threadMode() {
@@ -407,9 +429,9 @@ public class SenderImpl implements Sender {
             synchronized (SenderImpl.this) {
                 if (TokenRefreshJob.TOKEN_NEW_REFRESH.equals(event.getTag())) {
                     if (SenderImpl.this.started) {
-                        String newToken = (String) event.getData();
-                        GenericUtils.ensureNotEmpty(newToken);
-                        initialiseSocket(newToken);
+                        SenderImpl.this.authToken = (String) event.getData();
+                        GenericUtils.ensureNotEmpty(authToken);
+                        initialiseSocket();
                         assert yennkasaSocket != null;
                         yennkasaSocket.init();
                         messageQueue.resumeProcessing();

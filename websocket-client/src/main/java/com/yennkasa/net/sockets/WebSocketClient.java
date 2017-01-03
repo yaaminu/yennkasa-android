@@ -1,5 +1,7 @@
 package com.yennkasa.net.sockets;
 
+import android.os.SystemClock;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.neovisionaries.ws.client.WebSocket;
@@ -25,6 +27,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static com.yennkasa.net.sockets.Logger.W;
+
 /**
  * @author aminu on 6/19/2016.
  */
@@ -36,6 +40,7 @@ public class WebSocketClient {
     private final Logger logger;
     private final ClientListener listener;
     private final NetworkProvider networkProvider;
+    @Nullable
     private IWebSocket internalWebSocket;
     private final AtomicBoolean selfClosed = new AtomicBoolean(false);
     private final Timer timer;
@@ -108,7 +113,7 @@ public class WebSocketClient {
             return;
         }
         if (internalWebSocket.isOpen() || internalWebSocket.getState() == WebSocketState.CONNECTING) {
-            logger.Log(Logger.W, TAG, "attempted to connect while we are connected or still connecting");
+            logger.Log(W, TAG, "attempted to connect while we are connected or still connecting");
             return;
         }
         setUpWebSocket();
@@ -311,11 +316,18 @@ public class WebSocketClient {
         @Override
         public void onPingFrame(WebSocket websocket, WebSocketFrame frame) throws Exception {
             //do nothing
+            logger.Log(Logger.D, "ping frame recived from server @ %s. Frame is %d long",
+                    websocket.getURI().toString(), frame.getPayloadLength());
         }
 
         @Override
         public void onPongFrame(WebSocket websocket, WebSocketFrame frame) throws Exception {
-            //do nothing
+            synchronized (WebSocketClient.this) {
+                //do nothing
+                logger.Log(Logger.D, "pong frame recived from server @ %s. Frame is %d long",
+                        websocket.getURI().toString(), frame.getPayloadLength());
+                pingCounter = 0;
+            }
         }
 
         @Override
@@ -332,9 +344,40 @@ public class WebSocketClient {
             listener.onMessage(binary);
         }
 
+        long lastSentPing = 0, pingCounter = 0;
+
         @Override
         public void onSendingFrame(WebSocket websocket, WebSocketFrame frame) throws Exception {
-            logger.Log(Logger.D, TAG, "Sending frame with %d bytes", frame.getPayloadLength());
+            synchronized (WebSocketClient.this) {
+                logger.Log(Logger.D, TAG, "Sending frame with %d bytes", frame.getPayloadLength());
+                if (frame.isPingFrame()) {
+                    logger.Log(Logger.D, TAG, "frame is a ping frame");
+                    //detect a broken connections.
+                    //algorithm::
+                    //increment a counter.
+                    //zero the counter  whenever the server pongs back
+                    //if the counter reaches 3. (it means we have pinged 3  times without a pong)
+                    //tear down the connection
+                    //if networkProvider returs true for NetworkProvider#connected()
+                    //rebuild the connection again.
+                    //otherwise stay idle until NetworkProvider says we have connection!!!!
+                    pingCounter++; //will be reset in onPongFrame()
+                    if (pingCounter > 3) { //broken connection. server is not responding
+                        logger.Log(Logger.D, TAG,
+                                " server @ %s has not ponged back after three pings, rebuilding connection if possible",
+                                websocket.getURI().toString());
+                        // TODO: 1/3/17 propagate this potentially critical error up.
+                        reconnectNow();
+                    } else {
+                        long now = SystemClock.uptimeMillis();
+                        if (lastSentPing != 0) {
+                            logger.Log(Logger.D, TAG, "we last sent ping about %d millis  ago",
+                                    now - lastSentPing);
+                        }
+                        lastSentPing = now;
+                    }
+                }
+            }
         }
 
         @Override
@@ -387,7 +430,7 @@ public class WebSocketClient {
 
         @Override
         public void handleCallbackError(WebSocket websocket, Throwable cause) throws Exception {
-            logger.Log(Logger.W, TAG, " call back threw an error", cause);
+            logger.Log(W, TAG, " call back threw an error", cause);
             if (BuildConfig.DEBUG) {
                 throw new RuntimeException(cause);
             }
@@ -430,22 +473,26 @@ public class WebSocketClient {
             logger.Log(Logger.V, TAG, " attempt reconnection after %s", reconnectDelay);
             timer.schedule(new ReconnectTimerTask(), reconnectDelay);
         } else {
+            internalWebSocket.removeListener(webSocketListener);
+            internalWebSocket = null; //free the socket
             logger.Log(Logger.V, TAG, " can't reconnect since network provider says we are not connected to the internet");
         }
     }
 
     private synchronized void reconnect() {
-        if (internalWebSocket.isOpen() || internalWebSocket.getState() == WebSocketState.CONNECTING) {
+        if (internalWebSocket != null && internalWebSocket.isOpen() || internalWebSocket.getState() == WebSocketState.CONNECTING) {
             logger.Log(Logger.V, TAG, "we are connecting or even connected ");
             return;
         }
 
         try {
-            internalWebSocket.removeListener(webSocketListener);
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
-                internalWebSocket.removeHeaders(entry.getKey());
+            if (internalWebSocket != null) {
+                internalWebSocket.removeListener(webSocketListener);
+                for (Map.Entry<String, String> entry : headers.entrySet()) {
+                    internalWebSocket.removeHeaders(entry.getKey());
+                }
+                internalWebSocket.sendClose(WebSocketCloseCode.ABNORMAL);
             }
-            internalWebSocket.sendClose(WebSocketCloseCode.ABNORMAL);
             internalWebSocket = new WebSocketImpl(uri, timeout);
             connectBlocking();
         } catch (IOException e) {
