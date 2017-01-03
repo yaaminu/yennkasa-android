@@ -107,7 +107,7 @@ public class StatusManager {
 
     synchronized void handleStatusAnnouncement(@NonNull final String userId, boolean isOnline) {
         GenericUtils.ensureNotEmpty(userId);
-        if (isOnline && !isOnline(userId)) {
+        if (isOnline) {
             updateAndMarkAsOnline(userId);
             if (userId.equals(typingWith)) {
                 //noinspection ConstantConditions //typingWith cannot be null
@@ -136,11 +136,9 @@ public class StatusManager {
 
     private synchronized void updateAndMarkAsOnline(@NonNull String userId) {
         if (onlineSet.add(userId)) {
-            PLog.d(TAG, "announcing that %s os online", userId);
-            broadcastBus.post(Event.create(ON_USER_ONLINE, null, userId));
-        } else {
-            PLog.d(TAG, "%s is already online not publishing", userId);
+            PLog.d(TAG, "user %s is now online", userId);
         }
+        broadcastBus.post(Event.create(ON_USER_ONLINE, null, userId));
     }
 
 
