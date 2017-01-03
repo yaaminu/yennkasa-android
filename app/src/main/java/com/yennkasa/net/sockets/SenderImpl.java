@@ -176,7 +176,7 @@ public class SenderImpl implements Sender {
     }
 
     @Override
-    public void attemptReconnect() {
+    public void attemptReconnectIfRequired() {
     }
 
     @SuppressWarnings("WeakerAccess")

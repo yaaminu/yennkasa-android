@@ -20,5 +20,5 @@ public interface Sender {
 
     byte[] stringToBytes(String data);
 
-    void attemptReconnect();
+    void attemptReconnectIfRequired();
 }

@@ -403,8 +403,8 @@ class PairAppClientInterface {
 
     public void onIncomingPushMessage(String dataBase64) {
         try {
-            //TODO notify the socket layer to reconnect immediatley
-            sender.attemptReconnect();
+            //TODO post this to the event bus
+            sender.attemptReconnectIfRequired();
             parser.feedBase64(dataBase64);
         } catch (MessageParser.MessageParserException e) {
             PLog.f(TAG, e.getMessage(), e);
