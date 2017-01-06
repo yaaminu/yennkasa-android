@@ -222,11 +222,13 @@ public class SenderImpl implements Sender {
         @Override
         public void onItemRemoved(Sendable item, int reason) {
             byte[] data = encodeToBytes(item.getData());
-            if (reason == PROCESSED) {
+            if (reason == PROCESSED || reason == WAITING_FOR_ACK) {
                 PLog.d(TAG, "successfully sent item %s", item.toString());
-                synchronized (sendListeners) {
-                    for (SendListener sendListener : sendListeners) {
-                        sendListener.onSentSucceeded(data);
+                if (reason == WAITING_FOR_ACK) {
+                    synchronized (sendListeners) {
+                        for (SendListener sendListener : sendListeners) {
+                            sendListener.onSentSucceeded(data);
+                        }
                     }
                 }
             } else {
@@ -354,6 +356,11 @@ public class SenderImpl implements Sender {
         }
 
         @Override
+        public synchronized void ackAllWaitingMessages() {
+            messageQueue.ackWaitingItems();
+        }
+
+        @Override
         public void onConnecting() {
             MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS)
                     .postSticky(Event.createSticky(SOCKET_CONNECTION, null, CONNECTING));
@@ -393,6 +400,7 @@ public class SenderImpl implements Sender {
         public void onDisConnectedUnexpectedly() {
             MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(SOCKET_CONNECTION, null, DISCONNECTED));
             if (messageQueue.isStarted()) {
+                messageQueue.reScheduleAllProcessingItemsForProcessing();
                 messageQueue.pauseProcessing();
             }
         }

@@ -16,10 +16,19 @@ public interface MessageQueue<T> {
 
     boolean clear();
 
+    void ackWaitingItems();
+
+    void reScheduleAllProcessingItemsForProcessing();
+
+
     interface Hooks {
         String TAG = "QueueDataSourceHooks";
 
-        int INVALID_REASON_FOR_TESTING = -1, PROCESSED = 1, FAILED_EXPIRED = 2, FAILED_RETRIES_EXCEEDED = 3, FORCEFULLY_REMOVED = 4;
+        int INVALID_REASON_FOR_TESTING = -1, PROCESSED = 1,
+                FAILED_EXPIRED = 2,
+                FAILED_RETRIES_EXCEEDED = 3,
+                FORCEFULLY_REMOVED = 4,
+                WAITING_FOR_ACK = 5;
 
         void onItemRemoved(Sendable item, int reason);
 

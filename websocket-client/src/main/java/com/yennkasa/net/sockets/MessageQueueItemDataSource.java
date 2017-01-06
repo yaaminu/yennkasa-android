@@ -123,13 +123,12 @@ class MessageQueueItemDataSource implements QueueDataSource {
         try {
             realm.beginTransaction();
             if (item.getIndex() == INVALID_INDEX) {
-                synchronized (MessageQueueItemDataSource.class) { //generatePublicPrivateKeyPair the id
+                synchronized (MessageQueueItemDataSource.class) {
                     Number highestIndex = realm.where(Sendable.class).max(FIELD_INDEX);
-                    if (highestIndex != null) {
-                        item.setIndex(highestIndex.longValue() + 1);
-                    }
+                    item.setIndex(highestIndex == null ? 0 : highestIndex.longValue() + 1);
                 }
             }
+            item.setWaitingForAck(false);
             item.setProcessing(false);
             realm.copyToRealmOrUpdate(item);
             realm.commitTransaction();
@@ -139,7 +138,31 @@ class MessageQueueItemDataSource implements QueueDataSource {
     }
 
     @Override
-    public List<Sendable> pending() {
+    public synchronized List<Sendable> waitingForAck() {
+        Realm realm = getRealm();
+        try {
+            RealmResults<Sendable> items = realm.where(Sendable.class)
+                    .equalTo(Sendable.FIELD_WAITING_FOR_ACK, true).findAll();
+            return realm.copyFromRealm(items);
+        } finally {
+            realm.close();
+        }
+    }
+
+    @Override
+    public synchronized void markWaitingForAck(Sendable item) {
+        Realm realm = getRealm();
+        try {
+            realm.beginTransaction();
+            item.setWaitingForAck(true);
+            realm.commitTransaction();
+        } finally {
+            realm.close();
+        }
+    }
+
+    @Override
+    public synchronized List<Sendable> pending() {
         ensureStateValid();
         Realm realm = getRealm();
         try {
@@ -152,7 +175,7 @@ class MessageQueueItemDataSource implements QueueDataSource {
     }
 
     @Override
-    public List<Sendable> processing() {
+    public synchronized List<Sendable> processing() {
         ensureStateValid();
         Realm realm = getRealm();
         try {

@@ -25,4 +25,6 @@ interface ClientListener {
     void onDisConnectedUnexpectedly();
 
     void onReconnectionTakingTooLong();
+
+    void ackAllWaitingMessages();
 }

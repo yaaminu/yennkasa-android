@@ -35,7 +35,7 @@ import static com.yennkasa.net.sockets.Logger.W;
 @SuppressWarnings("ALL")
 public class WebSocketClient {
     private static final String TAG = WebSocketClient.class.getSimpleName();
-    public static final int PING_INTERVAL = 1000 * 40; //heroku disconnects at 55 seconds
+    public static final int PING_INTERVAL = 20 * 1000;
     private final Map<String, String> headers;
     private final Logger logger;
     private final ClientListener listener;
@@ -327,6 +327,7 @@ public class WebSocketClient {
                 logger.Log(Logger.D, "pong frame recived from server @ %s. Frame is %d long",
                         websocket.getURI().toString(), frame.getPayloadLength());
                 pingCounter = 0;
+                listener.ackAllWaitingMessages();
             }
         }
 
@@ -352,22 +353,36 @@ public class WebSocketClient {
                 logger.Log(Logger.D, TAG, "Sending frame with %d bytes", frame.getPayloadLength());
                 if (frame.isPingFrame()) {
                     logger.Log(Logger.D, TAG, "frame is a ping frame");
-                    //detect a broken connections.
+                    //detect broken connections.
                     //algorithm::
                     //increment a counter.
                     //zero the counter  whenever the server pongs back
-                    //if the counter reaches 3. (it means we have pinged 3  times without a pong)
+                    //if the counter reaches 2. (it means we have pinged 2  times without a pong)
                     //tear down the connection
                     //if networkProvider returs true for NetworkProvider#connected()
                     //rebuild the connection again.
                     //otherwise stay idle until NetworkProvider says we have connection!!!!
                     pingCounter++; //will be reset in onPongFrame()
-                    if (pingCounter > 3) { //broken connection. server is not responding
+                    if (pingCounter > 2) { //broken connection. server is not responding
+
+                        //sever the listener from this broken websocket before we do any thing
+                        internalWebSocket.removeListener(webSocketListener);
+
                         logger.Log(Logger.D, TAG,
-                                " server @ %s has not ponged back after three pings, rebuilding connection if possible",
+                                " server @ %s has not ponged back after 2 pings, rebuilding connection if possible",
                                 websocket.getURI().toString());
                         // TODO: 1/3/17 propagate this potentially critical error up.
-                        reconnectNow();
+                        reconnectDelay = DEFAULT_DELAY;
+                        internalWebSocket.disconnect(WebSocketCloseCode.UNEXPECTED);
+                        internalWebSocket = null;
+
+                        // for the meantime lets tell our listner that we are disconnected.
+                        // the listener that it should re-insert all messages that
+                        // have not been acked into the message queue again for sending.!!!
+                        listener.onDisConnectedUnexpectedly();
+                        if (networkProvider.connected()) {
+                            reconnect();
+                        }
                     } else {
                         long now = SystemClock.uptimeMillis();
                         if (lastSentPing != 0) {

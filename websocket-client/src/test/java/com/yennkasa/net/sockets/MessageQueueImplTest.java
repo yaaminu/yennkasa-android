@@ -11,7 +11,7 @@ import java.util.List;
 
 import static com.yennkasa.net.sockets.MessageQueue.Hooks.FORCEFULLY_REMOVED;
 import static com.yennkasa.net.sockets.MessageQueue.Hooks.INVALID_REASON_FOR_TESTING;
-import static com.yennkasa.net.sockets.MessageQueue.Hooks.PROCESSED;
+import static com.yennkasa.net.sockets.MessageQueue.Hooks.WAITING_FOR_ACK;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -25,6 +25,36 @@ import static org.junit.Assert.fail;
 
 @SuppressWarnings("EmptyCatchBlock")
 public class MessageQueueImplTest {
+    @Test
+    public void reScheduleAllProcessingItemsForProcessing() throws Exception {
+        highWaterMark = -1; //tame next()
+        messageQueue.initBlocking();
+        messageQueue.start();
+        messageQueue.onProcessed(queueDataSource.nextItem(), true);
+        messageQueue.onProcessed(queueDataSource.nextItem(), true);
+        assertEquals(2, messageQueue.getWaitingForAck());
+        messageQueue.reScheduleAllProcessingItemsForProcessing();
+        assertEquals(0, messageQueue.getWaitingForAck());
+        assertEquals(2, messageQueue.getPending());
+    }
+
+    @Test
+    public void ackWaitingItems() throws Exception {
+        //check no. of  waiting messages
+        highWaterMark = -1; //tame next()
+        messageQueue.initBlocking();
+        messageQueue.start();
+        int waitingForAck = messageQueue.getWaitingForAck();
+        Sendable item = queueDataSource.nextItem();
+        messageQueue.onProcessed(item, true);
+        assertEquals("should call us with WAITING_FOR_ACK", Hooks.WAITING_FOR_ACK, onItemRemovedReason);
+        assertEquals("must mark message as waiting for ack ", waitingForAck + 1, messageQueue.getWaitingForAck());
+
+        //now lets test that no of messages waiting for acks are zero after successful call to messagequee#ackWaitingItems
+        assertTrue(messageQueue.getWaitingForAck() > 0);
+        messageQueue.ackWaitingItems();
+        assertEquals(0, messageQueue.getWaitingForAck());
+    }
 
     private MessageQueueImpl messageQueue;
     private QueueDataSourceMock queueDataSource;
@@ -186,7 +216,7 @@ public class MessageQueueImplTest {
         messageQueue.onProcessed(item, true);
         assertTrue(onItemRemovedCalled);
         assertNotNull(hooksCalledWithItem);
-        assertEquals(onItemRemovedReason, Hooks.PROCESSED);
+        assertEquals(onItemRemovedReason, Hooks.WAITING_FOR_ACK);
 
         resetCallbacksFlags();
 
@@ -422,7 +452,7 @@ public class MessageQueueImplTest {
         assertTrue(consumeCalled);
         assertNotNull(consumedCalledWith);
         assertTrue(onBeginProcessCalled);
-        assertEquals(onItemRemovedReason, PROCESSED);
+        assertEquals(onItemRemovedReason, WAITING_FOR_ACK);
         assertEquals(2, onItemRemovdCallTimes);
 
         resetCallbacksFlags();
@@ -438,7 +468,7 @@ public class MessageQueueImplTest {
         assertTrue(consumeCalled);
         assertNotNull(consumedCalledWith);
         assertTrue(onBeginProcessCalled);
-        assertEquals(onItemRemovedReason, PROCESSED);
+        assertEquals(onItemRemovedReason, WAITING_FOR_ACK);
         assertEquals(1, onItemRemovdCallTimes);
 
     }

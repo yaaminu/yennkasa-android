@@ -82,6 +82,11 @@ public class StatusManagerTest {
         public byte[] stringToBytes(String data) {
             return Base64.decode(data.getBytes());
         }
+
+        @Override
+        public void attemptReconnectIfRequired() {
+
+        }
     };
     private final MessagePacker encoder = MessagePacker.create("1234567890", new ZlibCompressor(), new MessagePackerTest.CryptoImplTest());
     private StatusManager manager;

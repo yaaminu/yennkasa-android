@@ -24,6 +24,10 @@ interface QueueDataSource {
 
     void init();
 
+    void markWaitingForAck(Sendable item);
+
+    List<Sendable> waitingForAck();
+
     interface QueueItemCleanedListener {
         void onExpiredItemsRemoved(List<Sendable> items);
     }

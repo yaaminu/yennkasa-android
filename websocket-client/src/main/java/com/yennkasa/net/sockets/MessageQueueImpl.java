@@ -75,7 +75,7 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
             PLog.w(TAG, "already initialised");
             return;
         }
-         this.asyncExecution = asyncExecution;
+        this.asyncExecution = asyncExecution;
         initialised = true;
         itemsStore.registerCallback(queueItemCleanedListener);
         itemsStore.init();
@@ -92,8 +92,8 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
     }
 
     private synchronized void initialiseExecutorIfRequired() {
-        if(executor  != null && executor instanceof ExecutorService && !((ExecutorService) executor).isShutdown()){
-            PLog.d(TAG,"executor already started");
+        if (executor != null && executor instanceof ExecutorService && !((ExecutorService) executor).isShutdown()) {
+            PLog.d(TAG, "executor already started");
             return;
         }
         shutDownExecutorIfRequired();
@@ -129,6 +129,14 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
     }
 
 
+    @Override
+    public synchronized void reScheduleAllProcessingItemsForProcessing() {
+        List<Sendable> processing = itemsStore.processing();
+        for (Sendable sendable : processing) {
+            itemsStore.addItem(sendable);
+        }
+    }
+
     synchronized void pauseProcessing() {
         ensureStateValid();
         if (runningState == STOPPED_PROCESSING) {
@@ -160,12 +168,12 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
     }
 
     private void shutDownExecutorIfRequired() {
-        if(executor != null && executor instanceof ExecutorService && !((ExecutorService) executor).isShutdown()){
+        if (executor != null && executor instanceof ExecutorService && !((ExecutorService) executor).isShutdown()) {
             ((ExecutorService) executor).shutdown();
             try {
                 ((ExecutorService) executor).awaitTermination(10, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
-                PLog.f(TAG,e.getMessage(),e);
+                PLog.f(TAG, e.getMessage(), e);
             }
         }
     }
@@ -191,7 +199,7 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
         PLog.v(TAG, "processed %s ", item.toString());
         currentlyProcessing--;
         if (succeeded) {
-            removeItem(item, Hooks.PROCESSED);
+            removeItem(item, Hooks.WAITING_FOR_ACK);
         } else { //failed to process
             if (item.exceededRetries() || item.isExpired()) {
                 removeItem(item, item.exceededRetries() ? MessageQueue.Hooks.FAILED_RETRIES_EXCEEDED : MessageQueue.Hooks.FAILED_EXPIRED);
@@ -202,6 +210,11 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
         if (isStarted() && runningState == PROCESSING) {
             processItems(); //enqueue other tasks
         }
+    }
+
+    public int getWaitingForAck() {
+        ensureStateValid();
+        return itemsStore.waitingForAck().size();
     }
 
     public int getPending() {
@@ -220,8 +233,21 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
     }
 
     private void removeItem(Sendable item, int reason) {
-        itemsStore.removeItem(item);
+        if (reason != Hooks.WAITING_FOR_ACK) {
+            itemsStore.removeItem(item);
+        } else {
+            itemsStore.markWaitingForAck(item);
+        }
         hooks.onItemRemoved(item, reason);
+    }
+
+    @Override
+    public synchronized void ackWaitingItems() {
+        List<Sendable> items = itemsStore.waitingForAck();
+        for (Sendable item : items) {
+            itemsStore.removeItem(item);
+            hooks.onItemRemoved(item, Hooks.PROCESSED);
+        }
     }
 
     @Override

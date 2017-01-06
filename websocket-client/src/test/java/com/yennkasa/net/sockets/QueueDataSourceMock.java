@@ -9,6 +9,17 @@ import java.util.List;
 public class QueueDataSourceMock implements QueueDataSource {
 
 
+    @Override
+    public List<Sendable> waitingForAck() {
+        List<Sendable> waiting = new ArrayList<>();
+        for (Sendable mock : mocks) {
+            if (mock.isWaitingForAck()) {
+                waiting.add(mock);
+            }
+        }
+        return waiting;
+    }
+
     final List<Sendable> mocks;
     QueueItemCleanedListener queueItemCleanedListener;
     boolean initialised = false;
@@ -47,6 +58,8 @@ public class QueueDataSourceMock implements QueueDataSource {
     @Override
     public void addItem(Sendable item) {
         item.setProcessing(false);
+        item.setWaitingForAck(false);
+        mocks.remove(item);
         mocks.add(item);
     }
 
@@ -79,12 +92,27 @@ public class QueueDataSourceMock implements QueueDataSource {
 
     @Override
     public boolean removeByCollpaseKey(String collapseKey) {
-        throw new RuntimeException();
+        for (Sendable mock : mocks) {
+            if (mock.getCollapseKey().equals(collapseKey)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
     public void init() {
         initialised = true;
+    }
+
+    @Override
+    public void markWaitingForAck(Sendable item) {
+        for (Sendable mock : mocks) {
+            if (mock.equals(item)) {
+                mock.setWaitingForAck(true);
+            }
+        }
     }
 
     boolean isInitialised() {

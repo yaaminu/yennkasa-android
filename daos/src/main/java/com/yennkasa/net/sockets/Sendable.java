@@ -30,6 +30,7 @@ public class Sendable extends RealmObject {
     public static final int DEFAULT_EXPIRY_DATE = 1000 * 60 * 15;
     public static final int DEFAULT_MAX_RETRIES = 1;
     public static final int RETRY_FOREVER = -1;
+    public static final String FIELD_WAITING_FOR_ACK = "waitingForAck";
 
     @Index
     private long index;
@@ -40,7 +41,7 @@ public class Sendable extends RealmObject {
     private int retries, maxRetries;
     private long startProcessingAt, validUntil;
     private boolean surviveRestarts, processing;
-
+    private boolean waitingForAck;
 
     public Sendable() {
     }
@@ -62,6 +63,7 @@ public class Sendable extends RealmObject {
         this.retries = 0;
         this.maxRetries = maxRetries;
         this.data = data;
+        this.waitingForAck = false;
     }
 
     public long getIndex() {
@@ -78,6 +80,14 @@ public class Sendable extends RealmObject {
 
     public String getData() {
         return data;
+    }
+
+    void setWaitingForAck(boolean waitingForAck) {
+        this.waitingForAck = waitingForAck;
+    }
+
+    public boolean isWaitingForAck() {
+        return waitingForAck;
     }
 
     public int getRetries() {
