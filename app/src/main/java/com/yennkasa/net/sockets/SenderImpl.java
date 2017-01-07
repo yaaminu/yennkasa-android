@@ -99,6 +99,7 @@ public class SenderImpl implements Sender {
 
     synchronized private void initialiseSocket() {
         yennkasaSocket = YennkasaSocket.create(Collections.singletonMap("Authorization", authToken), listener);
+        shuttingDown = false;
     }
 
     public synchronized void start() {
