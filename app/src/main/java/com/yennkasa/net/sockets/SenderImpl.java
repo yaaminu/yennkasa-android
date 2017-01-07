@@ -275,6 +275,7 @@ public class SenderImpl implements Sender {
             }
             synchronized (SenderImpl.this) {
                 if (shuttingDown && messageQueue.getPending() == 0) {
+                    shuttingDown = false;
                     if (yennkasaSocket != null && !yennkasaSocket.isConnected()) {
                         yennkasaSocket.disConnectBlocking();
                         yennkasaSocket = null;
