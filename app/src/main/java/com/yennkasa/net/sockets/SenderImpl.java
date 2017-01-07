@@ -46,7 +46,7 @@ public class SenderImpl implements Sender {
     private YennkasaSocket yennkasaSocket;
     @NonNull
     private final MessageQueueImpl messageQueue;
-    private volatile boolean started = false;
+    private volatile boolean started = false, shuttingDown = false;
     @SuppressWarnings("FieldCanBeLocal")
     private final MessageQueueImpl.Consumer consumer = new MessageQueueImpl.Consumer() {
         @Override
@@ -58,7 +58,7 @@ public class SenderImpl implements Sender {
 
         @Override
         public int highWaterMark() {
-            return yennkasaSocket != null && yennkasaSocket.isConnected() ? 1 : 0;
+            return !shuttingDown && yennkasaSocket != null && yennkasaSocket.isConnected() ? 1 : 0;
         }
     };
     @SuppressWarnings("FieldCanBeLocal")
@@ -114,8 +114,14 @@ public class SenderImpl implements Sender {
     }
 
     @Override
-    public void sendMessage(Sendable sendable) {
+    public synchronized void sendMessage(Sendable sendable) {
         ensureStarted();
+        if (yennkasaSocket == null) {
+            if (ConnectionUtils.isConnected()) {
+                initialiseSocket();
+                yennkasaSocket.init();
+            }
+        }
         messageQueue.add(sendable);
     }
 
@@ -126,8 +132,14 @@ public class SenderImpl implements Sender {
     }
 
     @Override
-    public boolean unsendMessage(Sendable sendable) {
+    public synchronized boolean unsendMessage(Sendable sendable) {
         ensureStarted();
+        if (yennkasaSocket == null) {
+            if (ConnectionUtils.isConnected()) {
+                initialiseSocket();
+                yennkasaSocket.init();
+            }
+        }
         if (messageQueue.remove(sendable)) {
             return true;
         } else {
@@ -139,6 +151,9 @@ public class SenderImpl implements Sender {
     @Override
     public void updateSentMessage(Sendable sendable) {
         ensureStarted();
+        if (BuildConfig.DEBUG) {
+            throw new UnsupportedOperationException();
+        }
     }
 
     @Override
@@ -151,19 +166,37 @@ public class SenderImpl implements Sender {
         hooks.unRegisterSendListener(sendListener);
     }
 
+    /**
+     * shuts down safely... all waiting messages if any will be sent across the wire before
+     * shutting down.
+     */
     @Override
-    public void shutdownSafely() {
+    public synchronized void shutdownSafely() {
         if (started) {
             started = false;
-            // TODO: 11/10/2016 why do we have to check if queue is start()ed before disconnecting?
-            if (messageQueue.isStarted()) {
-                if (yennkasaSocket != null && yennkasaSocket.isConnected()) {
-                    yennkasaSocket.disConnectBlocking();
+            if (yennkasaSocket != null && yennkasaSocket.isConnected()) {
+                if (messageQueue.isStarted() && messageQueue.getPending() > 0) {
+                    shuttingDown = true; //this will set highWaterMark to 0 effectively preventing any
+                    //messages to be enqueued onto the dispatch queue
+                    return;
                 }
+                yennkasaSocket.disConnectBlocking();
+            }
+            if (messageQueue.isStarted()) {
                 messageQueue.stopProcessing();
             }
-        } else {
-            throw new IllegalStateException("not started");
+        }
+    }
+
+    @Override
+    public synchronized void disconnectIfRequired() {
+        if (!Config.isAppOpen() && (!messageQueue.isStarted() || messageQueue.getPending() == 0)) {
+            if (yennkasaSocket != null) {
+                if (yennkasaSocket.isConnected()) {
+                    yennkasaSocket.disConnectBlocking();
+                }
+                yennkasaSocket = null;
+            }
         }
     }
 
@@ -239,6 +272,14 @@ public class SenderImpl implements Sender {
                     }
                 }
             }
+            synchronized (SenderImpl.this) {
+                if (shuttingDown && messageQueue.getPending() == 0) {
+                    if (yennkasaSocket != null && !yennkasaSocket.isConnected()) {
+                        yennkasaSocket.disConnectBlocking();
+                        yennkasaSocket = null;
+                    }
+                }
+            }
         }
 
         @Override
@@ -276,6 +317,7 @@ public class SenderImpl implements Sender {
                     }
                 }
             }
+            messageQueue.ackWaitingItems();
         }
 
         @Override

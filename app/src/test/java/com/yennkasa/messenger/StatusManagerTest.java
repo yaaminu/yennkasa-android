@@ -73,6 +73,11 @@ public class StatusManagerTest {
         }
 
         @Override
+        public void disconnectIfRequired() {
+
+        }
+
+        @Override
         public String bytesToString(byte[] data) {
             return new String(Base64.encode(data));
 
@@ -108,6 +113,25 @@ public class StatusManagerTest {
         sendArgs = null;
         listenerCalled = false;
         statusEvent = null;
+    }
+
+    @Test
+    public void testShouldMarkAllUsersAsOfflineWhenWeLoseConnectionToServer() throws Exception {
+        manager.handleTypingAnnouncement("12345", true);
+        manager.handleTypingAnnouncement("12342", true);
+        manager.handleStatusAnnouncement("1234982", true);
+        assertTrue(manager.isOnline("12345"));
+        assertTrue(manager.isTypingToUs("12345"));
+        assertTrue(manager.isOnline("12342"));
+        assertTrue(manager.isTypingToUs("12342"));
+        assertTrue(manager.isOnline("1234982"));
+        assertFalse(manager.isOnline("1234764644982"));
+        bus.post(Event.create(MessengerBus.SOCKET_CONNECTION, null, MessengerBus.DISCONNECTED));
+        assertFalse(manager.isOnline("12345"));
+        assertFalse(manager.isTypingToUs("12345"));
+        assertFalse(manager.isOnline("12342"));
+        assertFalse(manager.isTypingToUs("12342"));
+        assertFalse(manager.isOnline("1234982"));
     }
 
     EventBus.EventsListener listener = new EventBus.EventsListener() {
@@ -185,6 +209,9 @@ public class StatusManagerTest {
             //expected
         }
         StatusManager.create(sender, encoder, bus); //must be able to create the manager without exceptions
+        //must listen on MESSENGER_BUS#SOCKET_CONNECTION
+        Event event = Event.create(MessengerBus.SOCKET_CONNECTION);
+        assertTrue(bus.post(event));
     }
 
     @Test

@@ -377,7 +377,7 @@ public class WebSocketClient {
                         internalWebSocket = null;
 
                         // for the meantime lets tell our listner that we are disconnected.
-                        // the listener that it should re-insert all messages that
+                        // the listener should re-insert all messages that
                         // have not been acked into the message queue again for sending.!!!
                         listener.onDisConnectedUnexpectedly();
                         if (networkProvider.connected()) {
@@ -435,7 +435,8 @@ public class WebSocketClient {
 
         @Override
         public void onSendError(WebSocket websocket, WebSocketException cause, WebSocketFrame frame) throws Exception {
-            onSendFailed(frame);
+            if (frame.isDataFrame())
+                onSendFailed(frame);
         }
 
         @Override

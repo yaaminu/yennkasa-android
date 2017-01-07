@@ -42,6 +42,7 @@ import org.json.JSONObject;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -121,6 +122,16 @@ class PairAppClientInterface {
             PLog.d(YennkasaClient.TAG, "marking user as offline");
             statusManager.announceStatusChange(false);
             // TODO: 1/3/17 initiate a timer to shutdown the persistent tcp socket to the server
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (!Config.isAppOpen()) {
+                        synchronized (PairAppClientInterface.this) {
+                            sender.disconnectIfRequired();
+                        }
+                    }
+                }
+            }, TimeUnit.MINUTES.toMillis(1));
         }
     }
 
@@ -132,7 +143,7 @@ class PairAppClientInterface {
         if (backStack.isEmpty()) {
             Log.d(YennkasaClient.TAG, "marking user as online");
             statusManager.announceStatusChange(true);
-            // TODO: 1/3/17 try connecting to the server if we are disconnected.
+            sender.attemptReconnectIfRequired();
         }
         backStack.add(activity);
     }

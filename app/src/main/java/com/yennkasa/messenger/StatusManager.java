@@ -10,12 +10,13 @@ import com.yennkasa.util.Event;
 import com.yennkasa.util.EventBus;
 import com.yennkasa.util.GenericUtils;
 import com.yennkasa.util.PLog;
-import com.yennkasa.util.SimpleDateUtil;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import static com.yennkasa.messenger.MessengerBus.SOCKET_CONNECTION;
 
 /**
  * @author aminu on 6/29/2016.
@@ -29,9 +30,6 @@ public class StatusManager {
     public static final String ON_USER_TYPING = "onUserTyping";
     public static final String MONITORTYPING_COLLAPSE_KEY = "monitortyping";
     public static final String CURRENT_USER_STATUS_COLLAPSE_KEY = "currentUserStatus";
-    public static final int WAIT_MILLIS_TYPING_ANNOUNCEMENT = 0;
-    public static final int WAIT_MILLIS_STATUS_ANNOUNCMENT = 0;
-    public static final int WAIT_MILLIS_MONITOR_USER = 0;
     public static final int INACTIVITY_THRESHOLD = 35000; //35 seconds
     private static final long ONLINE_ANNOUNCEMENT_INTERVAL = 30000;//30 seconds
     private volatile boolean currentUserStatus = false;
@@ -47,6 +45,40 @@ public class StatusManager {
     private final EventBus broadcastBus;
     @NonNull
     private final Handler handler;
+    /*for testing*/ final EventBus.EventsListener listener = new EventBus.EventsListener() {
+        @Override
+        public int threadMode() {
+            return EventBus.BACKGROUND;
+        }
+
+        @Override
+        public void onEvent(EventBus yourBus, Event event) {
+            PLog.d(TAG, "Received event %s", event);
+            if (event.getTag().equals(MessengerBus.SOCKET_CONNECTION)) {
+                synchronized (StatusManager.this) {
+                    announceStatusChange(false);//we are offline
+                    Set<String> copy = new HashSet<>(onlineSet); //copy to avoid concurrent modification
+                    for (String user : copy) {
+                        handleStatusAnnouncement(user, false);
+                    }
+                    onlineSet.clear(); //clear just to be sure that everything is cleaned
+                    //when a user is announced to be offline, he/she is automatically
+                    //removed from the typing set too.
+//                    for (String userId : typingSet.keySet()) {
+//                        handleTypingAnnouncement(userId, false);
+//                    }
+//                    typingSet.clear();
+                }
+            } else {
+                throw new AssertionError("unknown event type");
+            }
+        }
+
+        @Override
+        public boolean sticky() {
+            return false;
+        }
+    };
 
     private StatusManager(@NonNull Sender sender, @NonNull MessagePacker encoder, @NonNull EventBus broadcastBus) {
         this.sender = sender;
@@ -57,30 +89,37 @@ public class StatusManager {
 
     static StatusManager create(@NonNull Sender sender, @NonNull MessagePacker encoder, @NonNull EventBus broadcastBus) {
         GenericUtils.ensureNotNull(sender, encoder, broadcastBus);
-        return new StatusManager(sender, encoder, broadcastBus);
+        StatusManager statusManager = new StatusManager(sender, encoder, broadcastBus);
+        statusManager.register();
+        return statusManager;
+    }
+
+    private void register() {
+        broadcastBus
+                .register(listener, SOCKET_CONNECTION);
     }
 
     synchronized void announceStatusChange(boolean currentUserStatus) {
         if (this.currentUserStatus == currentUserStatus) return; //bounce duplicate announcements
         this.currentUserStatus = currentUserStatus;
-        sender.sendMessage(createSendable(CURRENT_USER_STATUS_COLLAPSE_KEY, encoder.createStatusMessage(this.currentUserStatus), WAIT_MILLIS_STATUS_ANNOUNCMENT));
+        sender.sendMessage(createSendable(CURRENT_USER_STATUS_COLLAPSE_KEY, encoder.createStatusMessage(this.currentUserStatus)));
     }
 
     synchronized void announceStartTyping(@NonNull String userId) {
         GenericUtils.ensureNotEmpty(userId);
         typingWith = userId;
         if (onlineSet.contains(userId) || userId.split(":").length > 1 /*groups*/) { //only notify online users
-            sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createTypingMessage(userId, true), WAIT_MILLIS_TYPING_ANNOUNCEMENT));
+            sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createTypingMessage(userId, true)));
         }
     }
 
-    private Sendable createSendable(String collapseKey, byte[] data, int waitMillis) {
+    private Sendable createSendable(String collapseKey, byte[] data) {
         return new Sendable.Builder()
                 .collapseKey(collapseKey)
-                .startProcessingAt(System.currentTimeMillis() + waitMillis)
-                .maxRetries(Sendable.RETRY_FOREVER)
+                .startProcessingAt(System.currentTimeMillis())
+                .maxRetries(1)
                 .surviveRestarts(false)
-                .validUntil(System.currentTimeMillis() + SimpleDateUtil.ONE_HOUR)
+                .validUntil(System.currentTimeMillis() + 30000)
                 .data(sender.bytesToString(data))
                 .build();
     }
@@ -93,7 +132,7 @@ public class StatusManager {
         if (onlineSet.contains(userId) || userId.split(":").length > 1 /*groups*/) {
             //its hard to say this is a programmatic error. so we allow the masseage to pass through
             //even though we don't know whether this user is typing with "userId" or not.
-            sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createTypingMessage(userId, false), WAIT_MILLIS_TYPING_ANNOUNCEMENT));
+            sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createTypingMessage(userId, false)));
         }
     }
 
@@ -169,7 +208,7 @@ public class StatusManager {
     }
 
     void startMonitoringUser(@NonNull String userId) {
-        sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createMonitorMessage(userId, true), WAIT_MILLIS_MONITOR_USER));
+        sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createMonitorMessage(userId, true)));
         String tag;
         if (isTypingToUs(userId)) {
             tag = ON_USER_TYPING;
@@ -182,7 +221,7 @@ public class StatusManager {
     }
 
     void stopMonitoringUser(@NonNull String userId) {
-        sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createMonitorMessage(userId, false), WAIT_MILLIS_MONITOR_USER));
+        sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createMonitorMessage(userId, false)));
     }
 
     public synchronized boolean isOnline(@NonNull String userId) {
