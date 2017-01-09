@@ -16,6 +16,7 @@
         android:id="@+id/bt_answer_call"
         style="@style/circular_call_button.green"
         android:contentDescription="@string/speaker"
+        android:keepScreenOn="true"
         android:src="@drawable/ic_call_white_24dp" />
 
 
