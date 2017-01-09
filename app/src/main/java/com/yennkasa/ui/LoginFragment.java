@@ -24,6 +24,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.google.i18n.phonenumbers.NumberParseException;
 import com.yennkasa.BuildConfig;
 import com.yennkasa.R;
 import com.yennkasa.data.Country;
@@ -233,24 +234,14 @@ public class LoginFragment extends Fragment {
         return true;
     }
 
-    @OnClick({R.id.bt_loginButton, R.id.problems_logging_in, R.id.terms})
+    @OnClick({R.id.bt_loginButton, R.id.problems_logging_in})
     void onClick(View v) {
         if (v.getId() == R.id.bt_loginButton) {
             validateAndContinue();
         } else if (v.getId() == R.id.problems_logging_in) {
             // TODO: 12/23/2015 redirect user to my website
             Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse("http://yennkasa.com/support?p=login&p=android_" + Build.VERSION.SDK_INT + "&clientVersion=" + BuildConfig.VERSION_NAME + "&locale=" + Locale.getDefault().getCountry()));
-            try {
-                startActivity(intent);
-            } catch (ActivityNotFoundException e) {
-                PLog.d(TAG, "this is strange no browser");
-                UiHelpers.showErrorDialog(getActivity(), "You have no browser on you phone, you may install one from the play store");
-            }
-        } else if (v.getId() == R.id.terms) {
-            // TODO: 12/23/2015 redirect user to my website
-            Intent intent = new Intent(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse("http://yennkasa.com/terms"));
+            intent.setData(Uri.parse("http://yennkasa.com/support?p=login&platform=android_" + Build.VERSION.SDK_INT + "&clientVersion=" + BuildConfig.VERSION_NAME + "&locale=" + Locale.getDefault().getCountry()));
             try {
                 startActivity(intent);
             } catch (ActivityNotFoundException e) {
@@ -302,27 +293,15 @@ public class LoginFragment extends Fragment {
         if (phoneNumberEt.getText().toString().trim().isEmpty()) {
             phoneNumberEt.setText(PhoneNumberNormaliser.getUserPhoneNumber(getContext()));
         }
+        initialiseUserCountryCCC();
         version.setText(BuildConfig.VERSION_NAME);
-        showWelcomAlert();
         return view;
     }
 
     @Override
     public void onResume() {
         super.onResume();
-    }
-
-    private void showWelcomAlert() {
-        new AlertDialog.Builder(getContext())
-                .setMessage("Hi, There thanks for installing.\n" +
-                        "This is an early preview of the emerging Yennkasa IM. Kindly report all problems you encounter and your feedback at http://yennkasa.com/support. Thank you")
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        setUpCountriesAndContinue();
-                    }
-                }).setCancelable(false)
-                .create().show();
+        setUpCountriesAndContinue();
     }
 
     @SuppressLint("CommitPrefEdits")
@@ -454,7 +433,19 @@ public class LoginFragment extends Fragment {
     }
 
     private void doAttemptCLogin() {
-        callback.onSignUp(userName, phoneNumber, userCountry, city);
+        try {
+            new AlertDialog.Builder(getContext())
+                    .setMessage(getString(R.string.number_confirm, "+" + PhoneNumberNormaliser.toIEE(phoneNumber, userCountry)))
+                    .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            callback.onSignUp(userName, phoneNumber, userCountry, city);
+                        }
+                    }).setNegativeButton(android.R.string.no, null)
+                    .create().show();
+        } catch (NumberParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void showRequiredFieldDialog(String field) {

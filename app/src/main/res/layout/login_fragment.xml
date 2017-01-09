@@ -16,19 +16,13 @@
         android:layout_weight=".3" />
 
     <TextView
+        fontPath="Roboto-Light.ttf"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/app_name"
+        android:text="@string/app_name_cap"
+        android:textAppearance="@style/TextAppearance.AppCompat.Display1"
         android:textColor="@color/white"
-        android:textSize="@dimen/title_text_size_large" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/default_gap"
-        android:paddingBottom="@dimen/default_gap"
-        android:text="@string/slogan"
-        android:textColor="@color/white" />
+        tools:ignore="MissingPrefix" />
 
     <RelativeLayout
         android:id="@+id/login_sign_up_pane"
@@ -39,7 +33,6 @@
         android:layout_marginRight="@dimen/login_fragment_cardview_margin_right"
         android:layout_marginStart="@dimen/login_fragment_cardview_margin_left"
         android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
-        android:background="@drawable/jumbotron_login"
         android:paddingBottom="@dimen/padding_ll_login_fragment_bottom">
 
         <LinearLayout
@@ -57,7 +50,8 @@
                 android:id="@+id/et_username"
                 style="@style/username_editText_style"
                 android:layout_height="wrap_content"
-                android:paddingTop="@dimen/padding_ll_login_fragment_top" />
+                android:paddingTop="@dimen/padding_ll_login_fragment_top"
+                android:textColorHint="@color/faded_white" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -70,13 +64,8 @@
                     android:drawableRight="@drawable/ic_arrow_drop_down_black_24dp"
                     android:inputType="phone"
                     android:paddingTop="@dimen/padding_ll_login_fragment_top"
+                    android:textColor="@color/white"
                     tools:text="+233" />
-
-                <!--<View-->
-                <!--android:layout_width="1dp"-->
-                <!--android:layout_height="match_parent"-->
-                <!--android:layout_margin="@dimen/default_gap"-->
-                <!--android:background="@color/colorPrimary" />-->
 
                 <EditText
                     android:id="@+id/et_phone_number_field"
@@ -84,24 +73,27 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:paddingTop="@dimen/padding_ll_login_fragment_top" />
+                    android:paddingTop="@dimen/padding_ll_login_fragment_top"
+                    android:textColorHint="@color/faded_white" />
             </LinearLayout>
 
             <EditText
                 android:id="@+id/et_user_city"
                 style="@style/city_edittext_style"
                 android:layout_height="wrap_content"
-                android:paddingTop="@dimen/padding_ll_login_fragment_top" />
+
+                android:paddingTop="@dimen/padding_ll_login_fragment_top"
+                android:textColorHint="@color/faded_white" />
 
             <Button
                 android:id="@+id/bt_loginButton"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/big_button_height"
                 android:layout_marginTop="@dimen/padding_ll_login_fragment_top"
-                android:background="@drawable/round_corners"
+                android:background="@drawable/white_rect_back_ground"
                 android:gravity="center"
                 android:text="@string/get_started"
-                android:textColor="@color/white"
+                android:textColor="@color/black"
                 android:textSize="@dimen/login_signup_text_size" />
 
         </LinearLayout>
@@ -121,22 +113,19 @@
         android:textColor="@color/white"
         android:textSize="@dimen/signup_have_an_account_size" />
 
-    <TextView
-        android:id="@+id/terms"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:background="?attr/selectableItemBackground"
-        android:clickable="true"
-        android:gravity="center"
-        android:paddingTop="@dimen/padding_ll_login_fragment_top"
-        android:text="@string/terms"
-        android:textColor="@color/white" />
-
     <android.support.v4.widget.Space
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="0.7" />
 
-    <include layout="@layout/copyright_text_view" />
+
+    <TextView
+        android:id="@+id/tv_app_version"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
+        android:gravity="end"
+        android:padding="@dimen/default_gap"
+        android:textColor="@color/white"
+        tools:text="v0.9.8b20" />
 </LinearLayout>

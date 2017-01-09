@@ -396,5 +396,10 @@
     <string name="call_">call</string>
     <string name="undo">Undo</string>
     <string name="message_from_2">new message from</string>
-    <string name="terms">Terms And Agreement</string>
+    <string name="change_number">Change No.</string>
+    <string name="terms">By Proceeding, You Accept Our <a href="yennkasa.com/terms">Terms And Agreement</a></string>
+    <string name="welcome_text">This is an early preview of the emerging Yennkasa IM. Kindly report all problems you encounter and your feedback at http://yennkasa.com/support. Thank you</string>
+    <string name="welcome_text2">Hi,\n Thanks For Installing Yennkasa.\n Let\'s Get Started</string>
+    <string name="agree_and_continue">Agree And Continue</string>
+    <string name="number_confirm">Are you sure %s is your phone number?</string>
 </resources>

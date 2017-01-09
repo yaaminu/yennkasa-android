@@ -1,36 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="base_style">
+    <style name="base_style" parent="@style/Widget.AppCompat.EditText">
         <item name="android:ems">10</item>
-        <item name="android:textSize">@dimen/edit_text_size</item>
         <item name="android:singleLine">true</item>
         <item name="android:maxLength">20</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textColorHint">@color/light_gray</item>
         <item name="android:imeOptions">actionNext</item>
     </style>
 
     <style name="password_editText_style" parent="base_style">
         <item name="android:hint">@string/password_hint</item>
+        <item name="android:textColor">@color/white</item>
         <item name="android:inputType">textPassword</item>
     </style>
 
     <style name="username_editText_style" parent="base_style">
         <item name="android:hint">@string/username_hint</item>
         <item name="android:inputType">text</item>
+        <item name="android:textColor">@color/white</item>
         <item name="android:paddingLeft">@dimen/padding_ll_login_fragment_left</item>
     </style>
 
     <style name="city_edittext_style" parent="base_style">
         <item name="android:hint">@string/city_hint</item>
         <item name="android:inputType">text</item>
+        <item name="android:textColor">@color/white</item>
         <item name="android:paddingLeft">@dimen/padding_ll_login_fragment_left</item>
     </style>
 
     <style name="phone_number_editText_style" parent="base_style">
         <item name="android:hint">@string/phone_hint</item>
+        <item name="android:textColor">@color/white</item>
         <item name="android:inputType">phone</item>
     </style>
 
@@ -64,5 +66,5 @@
         <item name="android:padding">8dp</item>
     </style>
 
-    <string name="city_hint">Your town/city</string>
+    <string name="city_hint">town/city (optional)</string>
 </resources>

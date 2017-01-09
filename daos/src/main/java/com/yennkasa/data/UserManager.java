@@ -207,6 +207,23 @@ public final class UserManager {
         return INSTANCE;
     }
 
+    public void logOut(final CallBack callBack) {
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() {
+                Realm realm = User.Realm(Config.getApplicationContext());
+                try {
+                    String userId = getCurrentUser(realm).getUserId();
+                    userApi.resetUnverifiedAccount(userId);
+                    cleanUp();
+                    doNotify(null, callBack);
+                } finally {
+                    realm.close();
+                }
+            }
+        }, false);
+    }
+
     public static String getMainUserId(Realm realm) {
         // TODO: 10/25/2015 remove this in production
         if (!INSTANCE.isUserLoggedIn(realm)) {
@@ -1394,6 +1411,7 @@ public final class UserManager {
         if (isUserVerified(realm)) {
             throw new RuntimeException("use logout instead");
         }
+        final String userId = getMainUserId(realm);
         TaskManager.execute(new Runnable() {
             @Override
             public void run() {
@@ -1401,6 +1419,7 @@ public final class UserManager {
                     doNotify(NO_CONNECTION_ERROR, callBack);
                     return;
                 }
+                userApi.resetUnverifiedAccount(userId);
                 cleanUp();
                 doNotify(null, callBack);
             }

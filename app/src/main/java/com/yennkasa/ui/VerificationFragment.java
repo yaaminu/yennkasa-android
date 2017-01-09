@@ -4,8 +4,10 @@ package com.yennkasa.ui;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +29,8 @@ import com.yennkasa.util.TypeFaceUtil;
 import com.yennkasa.util.UiHelpers;
 import com.yennkasa.util.ViewUtils;
 
+import butterknife.ButterKnife;
+import butterknife.OnTextChanged;
 import io.realm.Realm;
 
 /**
@@ -42,19 +46,19 @@ public class VerificationFragment extends Fragment {
     private final View.OnClickListener listener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            if (v.getId() == R.id.bt_verify) {
-                boolean tokenSent = Config.getApplicationWidePrefs().getBoolean(KEY_TOKEN_SENT, false);
-                if (tokenSent) {
-                    doVerifyUser();
-                } else {
-                    sendToken();
-                }
-            } else if (v.getId() == R.id.bt_resend_token) {
-                resendToken();
+            if (v.getId() == R.id.bt_resend_token) {
+                sendToken();
+            } else if (v.getId() == R.id.bt_change_number) {
+                changeNumber();
             }
         }
     };
-    private TextView buttonVerify;
+
+    private void changeNumber() {
+        callback.onBackToCLogIn();
+    }
+
+    private TextView buttonChangeNumber;
     private TextView resendToken;
     private TextView notice;
 
@@ -68,7 +72,7 @@ public class VerificationFragment extends Fragment {
                     ErrorCenter.reportError(TAG, e.getMessage());
                 } else {
                     Config.getApplicationWidePrefs().edit().putBoolean(KEY_TOKEN_SENT, true).apply();
-                    setUpViews(buttonVerify, resendToken, notice);
+                    setUpViews(buttonChangeNumber, resendToken, notice);
                 }
             }
         });
@@ -93,9 +97,10 @@ public class VerificationFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_verification, container, false);
-        buttonVerify = (TextView) view.findViewById(R.id.bt_verify);
-        buttonVerify.setOnClickListener(listener);
-        ViewUtils.setTypeface(buttonVerify, TypeFaceUtil.ROBOTO_REGULAR_TTF);
+        ButterKnife.bind(this,view);
+        buttonChangeNumber = (TextView) view.findViewById(R.id.bt_change_number);
+        buttonChangeNumber.setOnClickListener(listener);
+        ViewUtils.setTypeface(buttonChangeNumber, TypeFaceUtil.ROBOTO_REGULAR_TTF);
 
         resendToken = (TextView) view.findViewById(R.id.bt_resend_token);
         resendToken.setOnClickListener(listener);
@@ -106,7 +111,7 @@ public class VerificationFragment extends Fragment {
 
         notice = (TextView) view.findViewById(R.id.tv_verification_notice);
         ViewUtils.setTypeface(notice, TypeFaceUtil.ROBOTO_LIGHT_TTF);
-        setUpViews(buttonVerify, resendToken, notice);
+        setUpViews(buttonChangeNumber, resendToken, notice);
         progressDialog = new ProgressDialog(getContext());
         progressDialog.setMessage(getString(R.string.st_please_wait));
         progressDialog.setCancelable(false);
@@ -117,6 +122,18 @@ public class VerificationFragment extends Fragment {
             }
         }
         return view;
+    }
+
+    @OnTextChanged(R.id.et_verification)
+    void onTextChanged(Editable text) {
+        if (text.toString().trim().length() == 5) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    doVerifyUser();
+                }
+            }, 500);
+        }
     }
 
     private final EventBus.EventsListener eventsListener = new EventBus.EventsListener() {
@@ -132,12 +149,6 @@ public class VerificationFragment extends Fragment {
                     String code = event.getData().toString().trim();
                     if (!TextUtils.isEmpty(code)) {
                         etVerification.setText(code);
-                        etVerification.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                doVerifyUser();
-                            }
-                        }, 2000);
                     }
                 }
                 if (event.isSticky()) {
@@ -168,14 +179,15 @@ public class VerificationFragment extends Fragment {
     }
 
     private void setUpViews(TextView buttonVerify, TextView resendToken, TextView notice) {
+
         boolean tokenSent = Config.getApplicationWidePrefs().getBoolean(KEY_TOKEN_SENT, false);
-        notice.setText(tokenSent ? R.string.st_send_verification_notice : R.string.send_token_notice);
         if (tokenSent) {
-            ViewUtils.showViews(resendToken, etVerification);
+            ViewUtils.showViews(etVerification);
         } else {
-            ViewUtils.hideViews(resendToken, etVerification);
+            ViewUtils.hideViews(etVerification);
         }
-        buttonVerify.setText(tokenSent ? R.string.verify : R.string.send_token);
+        notice.setText(tokenSent ? R.string.st_send_verification_notice : R.string.send_token_notice);
+        resendToken.setText(tokenSent ? R.string.st_send_again : R.string.send_token);
     }
 
     private void doVerifyUser() {

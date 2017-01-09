@@ -1,10 +1,12 @@
 package com.yennkasa.ui;
 
 import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
@@ -27,10 +29,13 @@ import com.yennkasa.messenger.SmsReciever;
 import com.yennkasa.messenger.YennkasaClient;
 import com.yennkasa.util.Config;
 import com.yennkasa.util.GcmUtils;
+import com.yennkasa.util.PLog;
 import com.yennkasa.util.TypeFaceUtil;
 import com.yennkasa.util.UiHelpers;
 import com.yennkasa.util.ViewUtils;
 
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import io.realm.Realm;
 
 import static android.Manifest.permission.ACCESS_NETWORK_STATE;
@@ -164,6 +169,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
             public void done(Exception e) {
                 progressDialog.dismiss();
                 if (e == null) {
+                    Yennkasa.disableComponent(SmsReciever.class);
                     stage = LOGIN_STAGE;
                     next();
                 } else {
@@ -275,12 +281,34 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
     public static class IntroFragment extends Fragment {
 
         long created = 0;
+        private String TAG = "IntroFragment";
+
+        @OnClick({R.id.agree_and_continue, R.id.terms})
+        void onclick(View v) {
+            switch (v.getId()) {
+                case R.id.agree_and_continue:
+                    goToNext();
+                    break;
+                case R.id.terms:
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse("http://yennkasa.com/terms"));
+                    try {
+                        startActivity(intent);
+                    } catch (ActivityNotFoundException e) {
+                        PLog.d(TAG, "this is strange no browser");
+                        UiHelpers.showErrorDialog(getActivity(), "You have no browser on you phone, you may install one from the play store");
+                    }
+                    break;
+                default:
+                    throw new AssertionError();
+            }
+        }
 
         @Nullable
         @Override
         public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
             View view = inflater.inflate(R.layout.fragment_splash, container, false);
-
+            ButterKnife.bind(this, view);
             view.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -299,8 +327,16 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
 
             TextView copyRight = ((TextView) view.findViewById(R.id.copy_right));
             ViewUtils.setTypeface(copyRight, TypeFaceUtil.two_d_font);
-
+            showWelcomAlert();
             return view;
+        }
+
+        private void showWelcomAlert() {
+            new AlertDialog.Builder(getContext())
+                    .setMessage(R.string.welcome_text)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .setCancelable(false)
+                    .create().show();
         }
 
         @Override
@@ -344,7 +380,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
                         if (grantResults[1] != PackageManager.PERMISSION_GRANTED) {
                             explainReason(RECEIVE_SMS);
                         } else {
-                            goToNext();
+                            showTermsView();
                         }
                     } else {
                         showDialogAndKillApp();
@@ -354,6 +390,12 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
                 default:
                     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
             }
+        }
+
+        private void showTermsView() {
+            // TODO: 1/9/17 animate
+            ViewUtils.hideViews(ButterKnife.findById(getView(), R.id.splash_view));
+            ViewUtils.showViews(ButterKnife.findById(getView(), R.id.terms_view));
         }
 
 
@@ -370,7 +412,7 @@ public class SetUpActivity extends PairAppBaseActivity implements VerificationFr
                         .setCancelable(false)
                         .show();
             } else {
-                goToNext();
+                showTermsView();
             }
         }
 

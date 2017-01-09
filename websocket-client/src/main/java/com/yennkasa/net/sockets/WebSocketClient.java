@@ -88,7 +88,7 @@ public class WebSocketClient {
 
 
     public boolean isConnected() {
-        return networkProvider.connected() && internalWebSocket.isOpen();
+        return networkProvider.connected() && internalWebSocket != null && internalWebSocket.isOpen();
     }
 
     public synchronized boolean send(byte[] bytes) {

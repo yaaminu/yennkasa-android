@@ -200,19 +200,20 @@ public abstract class BaseCallActivity extends PairAppActivity {
         super.setContentView(getLayout());
         ButterKnife.bind(this);
         handleIntent();
+        registerForEvent(MessengerBus.ON_CALL_EVENT);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        registerForEvent(MessengerBus.ON_CALL_EVENT);
         populateUserData();
         refreshDisplay();
     }
 
+
     @Override
-    protected void onPause() {
-        super.onPause();
+    protected void onDestroy() {
+        super.onDestroy();
         unRegister(MessengerBus.ON_CALL_EVENT);
         if (!subscriber.isUnsubscribed()) {
             subscriber.unsubscribe();
