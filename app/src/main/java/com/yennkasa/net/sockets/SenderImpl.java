@@ -81,7 +81,6 @@ public class SenderImpl implements Sender {
         this.authenticator = authenticator;
         this.authToken = authenticator.getToken();
         GenericUtils.ensureNotEmpty(authToken);
-        initialiseSocket();
         MessageQueueItemDataSource queueDataSource = new MessageQueueItemDataSource(realmProvider);
         this.messageQueue = new MessageQueueImpl(queueDataSource, hooks, consumer/*are we letting this escape?*/);
     }
@@ -104,18 +103,21 @@ public class SenderImpl implements Sender {
 
     public synchronized void start() {
         if (this.started) {
-            throw new IllegalStateException("can\'t use a stopped sender");
+            throw new IllegalStateException("can\'t use a started sender");
         }
         started = true;
-        if (yennkasaSocket != null) {
-            yennkasaSocket.init();
-        }
         this.messageQueue.initBlocking(true);
         this.messageQueue.start();
+        this.messageQueue.pauseProcessing();
+        if (Config.isAppOpen() || messageQueue.getPending() > 0) {
+            initialiseSocket();
+            GenericUtils.ensureNotNull(yennkasaSocket);
+            yennkasaSocket.init(); //can't be null
+        }
     }
 
     @Override
-    public synchronized void sendMessage(Sendable sendable) {
+    public synchronized void sendMessage(final Sendable sendable) {
         ensureStarted();
         if (yennkasaSocket == null) {
             if (ConnectionUtils.isConnected()) {
@@ -123,7 +125,12 @@ public class SenderImpl implements Sender {
                 yennkasaSocket.init();
             }
         }
-        messageQueue.add(sendable);
+        TaskManager.execute(new Runnable() {
+            @Override
+            public void run() {
+                messageQueue.add(sendable);
+            }
+        }, false);
     }
 
     private void ensureStarted() {

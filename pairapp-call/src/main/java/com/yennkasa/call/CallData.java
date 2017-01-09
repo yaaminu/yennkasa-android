@@ -7,22 +7,30 @@ import com.sinch.android.rtc.calling.Call;
 import com.sinch.android.rtc.calling.CallDetails;
 import com.sinch.android.rtc.calling.CallDirection;
 
+import java.util.Map;
+
+import static com.yennkasa.call.CallController.CALL_TYPE_CONFERENCE_VOICE;
+import static com.yennkasa.call.CallController.CALL_TYPE_VIDEO;
+import static com.yennkasa.call.CallController.CALL_TYPE_VOICE;
+
 /**
  * @author aminu on 7/14/2016.
  */
 public class CallData implements Parcelable {
+    private static final String HEADER_CONFERENCE_VOICE_CALL = "cvo";
     private final String peer;
     private final long callDate;
     private final boolean isOutGoing;
     private final int callType;
     private final String callId;
-    private final int callState;
+    private int callState;
 
     public static final int INITIATING = 0,
             PROGRESSING = 1,
             ESTABLISHED = 2,
             ENDED = 3,
-            TRANSFERRING = 4;
+            TRANSFERRING = 4,
+            CONNECTING_CALL = 5;
     private final long establishedTime;
     private final boolean loudSpeaker, muted;
 
@@ -81,6 +89,23 @@ public class CallData implements Parcelable {
         );
     }
 
+    static int getCallType(Call call) {
+        Map<String, String> headers = call.getHeaders();
+        if (headers == null || headers.isEmpty()) {
+            return call.getDetails().isVideoOffered() ? CALL_TYPE_VIDEO : CALL_TYPE_VOICE;
+        }
+        String callType = headers.get(CallCenter.CALL_TYPE);
+        if (CallCenter.HEADER_VOICE_CALL.equals(callType)) {
+            return CALL_TYPE_VOICE;
+        } else if (CallCenter.HEADER_VIDEO_CALL.equals(callType)) {
+            return CALL_TYPE_VIDEO;
+        } else if (HEADER_CONFERENCE_VOICE_CALL.equals(headers.get(CallCenter.CALL_TYPE))) {
+            return CALL_TYPE_CONFERENCE_VOICE;
+        } else {
+            return call.getDetails().isVideoOffered() ? CALL_TYPE_VIDEO : CALL_TYPE_VOICE;
+        }
+    }
+
     public String getPeer() {
         return peer;
     }
@@ -135,5 +160,11 @@ public class CallData implements Parcelable {
         dest.writeLong(establishedTime);
         dest.writeByte((byte) (loudSpeaker ? 1 : 0));
         dest.writeByte((byte) (muted ? 1 : 0));
+    }
+
+    public static CallData connectionCall(Call call, int callType) {
+        CallData callData = CallData.from(call, callType);
+        callData.callState = CONNECTING_CALL;
+        return callData;
     }
 }

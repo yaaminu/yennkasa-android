@@ -476,7 +476,7 @@ public class WebSocketClient {
     }
 
     private void attemptReconnect() {
-        WebSocketState state = internalWebSocket.getState();
+        WebSocketState state = internalWebSocket == null ? WebSocketState.CLOSED : internalWebSocket.getState();
         if (state == WebSocketState.CONNECTING
                 || state == WebSocketState.OPEN
                 || state == WebSocketState.CLOSING
@@ -489,14 +489,16 @@ public class WebSocketClient {
             logger.Log(Logger.V, TAG, " attempt reconnection after %s", reconnectDelay);
             timer.schedule(new ReconnectTimerTask(), reconnectDelay);
         } else {
-            internalWebSocket.removeListener(webSocketListener);
-            internalWebSocket = null; //free the socket
+            if (internalWebSocket != null) {
+                internalWebSocket.removeListener(webSocketListener);
+                internalWebSocket = null; //free the socket
+            }
             logger.Log(Logger.V, TAG, " can't reconnect since network provider says we are not connected to the internet");
         }
     }
 
     private synchronized void reconnect() {
-        if (internalWebSocket != null && internalWebSocket.isOpen() || internalWebSocket.getState() == WebSocketState.CONNECTING) {
+        if (internalWebSocket != null && (internalWebSocket.isOpen() || internalWebSocket.getState() == WebSocketState.CONNECTING)) {
             logger.Log(Logger.V, TAG, "we are connecting or even connected ");
             return;
         }
@@ -517,6 +519,10 @@ public class WebSocketClient {
     }
 
     private synchronized void calculateReconnectTimeout() {
+        if (reconnectDelay == 0) {
+            reconnectDelay = DEFAULT_DELAY;
+            return;
+        }
         if (random == null) {
             random = new SecureRandom();
         }
@@ -533,14 +539,14 @@ public class WebSocketClient {
         @Override
         public void notifyNetworkChanged(boolean connected) {
             logger.Log(Logger.D, TAG, "network: " + (connected ? "" : "dis") + "connected");
-            if (connected && !internalWebSocket.isOpen()) {
+            if (connected && (internalWebSocket == null || !internalWebSocket.isOpen())) {
                 reconnectDelay = DEFAULT_DELAY;
                 attemptReconnect();
             }
             if (!connected) {
                 listener.onDisConnectedUnexpectedly();
             } else {
-                if (internalWebSocket.isOpen()) listener.onOpen();
+                if (internalWebSocket != null && internalWebSocket.isOpen()) listener.onOpen();
             }
         }
     };

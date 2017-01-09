@@ -224,15 +224,15 @@ public class StatusManager {
         sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createMonitorMessage(userId, false)));
     }
 
-    public synchronized boolean isOnline(@NonNull String userId) {
+    public boolean isOnline(@NonNull String userId) {
         return onlineSet.contains(userId);
     }
 
-    public synchronized boolean isTypingToUs(@NonNull String userId) {
+    public boolean isTypingToUs(@NonNull String userId) {
         return typingSet.containsKey(userId);
     }
 
-    public synchronized boolean isTypingToGroup(@NonNull String userId, String groupId) {
+    public boolean isTypingToGroup(@NonNull String userId, String groupId) {
         return typingSet.containsKey(userId + ":" + groupId);
     }
 

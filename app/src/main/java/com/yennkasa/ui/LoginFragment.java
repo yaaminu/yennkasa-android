@@ -65,6 +65,8 @@ public class LoginFragment extends Fragment {
     public static final String USER_ID = "userId";
     public static final String COUNTRY = "country";
     private static final String SAVED_COUNTRY = "saved.country";
+    @Nullable
+    public static Intent results;
 
     @Bind(R.id.et_user_city)
     EditText userCity;
@@ -301,12 +303,16 @@ public class LoginFragment extends Fragment {
             phoneNumberEt.setText(PhoneNumberNormaliser.getUserPhoneNumber(getContext()));
         }
         version.setText(BuildConfig.VERSION_NAME);
+        showWelcomAlert();
         return view;
     }
 
     @Override
     public void onResume() {
         super.onResume();
+    }
+
+    private void showWelcomAlert() {
         new AlertDialog.Builder(getContext())
                 .setMessage("Hi, There thanks for installing.\n" +
                         "This is an early preview of the emerging Yennkasa IM. Kindly report all problems you encounter and your feedback at http://yennkasa.com/support. Thank you")
@@ -317,7 +323,6 @@ public class LoginFragment extends Fragment {
                     }
                 }).setCancelable(false)
                 .create().show();
-
     }
 
     @SuppressLint("CommitPrefEdits")
@@ -329,6 +334,11 @@ public class LoginFragment extends Fragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (results != null) { //quick fix for some platforms where result intent is not set.
+            resultCode = Activity.RESULT_OK;
+            requestCode = SetUpActivity.REQUEST_CODE_GET_COUNTRY;
+            data = results;
+        }
         if (requestCode == SetUpActivity.REQUEST_CODE_GET_COUNTRY) {
             selectingCountry = false;
             if (resultCode == Activity.RESULT_OK) {

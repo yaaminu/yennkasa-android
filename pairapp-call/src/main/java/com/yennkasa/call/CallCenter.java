@@ -28,7 +28,6 @@ import com.sinch.android.rtc.video.VideoController;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
-import java.util.Map;
 
 import io.realm.Realm;
 
@@ -47,7 +46,6 @@ class CallCenter implements CallClientListener, VideoCallListener {
     private static final String TAG = "callCenter";
     static final String CALL_TYPE = "ct";
     static final String HEADER_VIDEO_CALL = "vi";
-    private static final String HEADER_CONFERENCE_VOICE_CALL = "cvo";
     public static final String HEADER_VOICE_CALL = "vo";
     private final EventBus broadCastBus;
     private final String currentUserId;
@@ -90,7 +88,7 @@ class CallCenter implements CallClientListener, VideoCallListener {
             player.playRingtone();
             currentPeer = remoteUserId;
             call.addCallListener(this);
-            broadCastBus.postSticky(Event.createSticky(CallController.ON_IN_COMING_CALL, null, CallData.from(call, getCallType(call), System.currentTimeMillis())));
+            broadCastBus.postSticky(Event.createSticky(CallController.ON_IN_COMING_CALL, null, CallData.from(call, CallData.getCallType(call), System.currentTimeMillis())));
         }
     }
 
@@ -100,7 +98,7 @@ class CallCenter implements CallClientListener, VideoCallListener {
         isCallOngoing = true;
         currentCallId = call.getCallId();
         player.playProgressTone();
-        broadCastBus.postSticky(Event.createSticky(ON_CALL_PROGRESSING, null, CallData.from(call, getCallType(call), System.currentTimeMillis())));
+        broadCastBus.postSticky(Event.createSticky(ON_CALL_PROGRESSING, null, CallData.from(call, CallData.getCallType(call), System.currentTimeMillis())));
     }
 
     @Override
@@ -110,7 +108,7 @@ class CallCenter implements CallClientListener, VideoCallListener {
         player.stopProgressTone();
         player.stopRingtone();
         currentCallStart = System.currentTimeMillis();
-        boolean isVideoCall = getCallType(call) == CALL_TYPE_VIDEO;
+        boolean isVideoCall = CallData.getCallType(call) == CALL_TYPE_VIDEO;
         SinchClient sinchClient = clientWeakReference.get();
         //we'd rather crash. we will rather crash than check for nullablity
         if (isVideoCall) {
@@ -119,7 +117,7 @@ class CallCenter implements CallClientListener, VideoCallListener {
             sinchClient.getAudioController().disableSpeaker();
         }
         broadCastBus.postSticky(Event.createSticky(ON_CALL_ESTABLISHED, null,
-                CallData.from(call, getCallType(call), currentCallStart, false, isVideoCall)));
+                CallData.from(call, CallData.getCallType(call), currentCallStart, false, isVideoCall)));
     }
 
     @Override
@@ -135,7 +133,7 @@ class CallCenter implements CallClientListener, VideoCallListener {
         isCallOngoing = false;
         player.stopRingtone();
         player.stopProgressTone();
-        int callType = getCallType(call);
+        int callType = CallData.getCallType(call);
         Realm realm = Message.REALM(), userRealm = User.Realm(Config.getApplicationContext());
         Conversation conversation = Conversation.newConversation(realm, currentUserId, call.getRemoteUserId());
         try {
@@ -214,23 +212,6 @@ class CallCenter implements CallClientListener, VideoCallListener {
                 throw new AssertionError();
         }
         return callBodyCallType;
-    }
-
-    int getCallType(Call call) {
-        Map<String, String> headers = call.getHeaders();
-        if (headers == null || headers.isEmpty()) {
-            return call.getDetails().isVideoOffered() ? CALL_TYPE_VIDEO : CALL_TYPE_VOICE;
-        }
-        String callType = headers.get(CALL_TYPE);
-        if (HEADER_VOICE_CALL.equals(callType)) {
-            return CALL_TYPE_VOICE;
-        } else if (HEADER_VIDEO_CALL.equals(callType)) {
-            return CALL_TYPE_VIDEO;
-        } else if (HEADER_CONFERENCE_VOICE_CALL.equals(headers.get(CALL_TYPE))) {
-            return CALL_TYPE_CONFERENCE_VOICE;
-        } else {
-            return call.getDetails().isVideoOffered() ? CALL_TYPE_VIDEO : CALL_TYPE_VOICE;
-        }
     }
 
     @Override

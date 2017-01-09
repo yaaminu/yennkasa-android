@@ -45,6 +45,7 @@ class YennkasaSocket {
 
     public void reconnect() {
         if (!webSocketClient.isConnected()) {
+            ConnectionUtils.registerConnectivityListener(connectivityChangeListener);
             webSocketClient.reconnectNow();
         }
     }
@@ -54,6 +55,7 @@ class YennkasaSocket {
         if (!initialized.getAndSet(false)) {
             throw new IllegalStateException("not initialised");
         }
+        ConnectionUtils.unRegisterConnectivityListener(connectivityChangeListener);
         webSocketClient.closeConnectionBlocking();
     }
 

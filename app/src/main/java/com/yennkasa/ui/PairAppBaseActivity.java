@@ -54,7 +54,12 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
         NavigationManager.onStart(this);
         ErrorCenter.registerErrorShower(this);
         if (isUserVerified) {
-            get(PAIRAPP_CLIENT_POSTABLE_BUS).postSticky(Event.createSticky(ONLINE, null, this));
+            TaskManager.executeNow(new Runnable() {
+                @Override
+                public void run() {
+                    get(PAIRAPP_CLIENT_POSTABLE_BUS).postSticky(Event.createSticky(ONLINE, null, PairAppBaseActivity.this));
+                }
+            }, true);
         }
     }
 
@@ -120,7 +125,12 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
         NavigationManager.onStop(this);
         ErrorCenter.unRegisterErrorShower(this);
         if (isUserVerified) {
-            get(PAIRAPP_CLIENT_POSTABLE_BUS).postSticky(Event.createSticky(OFFLINE, null, this));
+            TaskManager.executeNow(new Runnable() {
+                @Override
+                public void run() {
+                    get(PAIRAPP_CLIENT_POSTABLE_BUS).postSticky(Event.createSticky(OFFLINE, null, PairAppBaseActivity.this));
+                }
+            }, false);
         }
     }
 

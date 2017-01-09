@@ -85,6 +85,8 @@ public class CountryLists extends AppCompatActivity {
             Intent intent = new Intent();
             intent.putExtra(Country.FIELD_CCC, adapter.getItem(position).getCcc());
             setResult(RESULT_OK, intent);
+            //quick fix for handling situations where result is null on some versions of android
+            LoginFragment.results = intent;
             finish();
         }
 

@@ -28,6 +28,7 @@ public interface CallController {
     String CALL_PUSH_PAYLOAD = "call.push.payload";
     String ERR_CANT_CALL_BLOCKED_USER = "EBLOCKED";
     String VIDEO_CALL_VIEW = "call.video.remote.view";
+    String ON_CALL_CONNECTING = "call_connecting";
 
     void hangUp(CallData data);
 

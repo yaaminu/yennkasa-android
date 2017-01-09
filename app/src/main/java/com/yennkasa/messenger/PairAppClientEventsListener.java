@@ -123,6 +123,10 @@ class PairAppClientEventsListener implements EventBus.EventsListener {
                     assert event.getData() != null;
                     pairAppClientInterface.onInComingCall(((CallData) event.getData()));
                     break;
+                case CallController.ON_CALL_CONNECTING:
+                    assert event.getData() != null;
+                    pairAppClientInterface.onCallProgressing((CallData) event.getData());
+                    break;
                 case VOICE_CALL_USER:
                     pairAppClientInterface.callUser((String) event.getData(), CallController.CALL_TYPE_VOICE);
                     break;

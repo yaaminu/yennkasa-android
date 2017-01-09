@@ -179,6 +179,7 @@ public class ParseClient implements UserApiV2 {
                 //update that one too
                 .getString(R.string.verification_code) + ":  " + verificationToken;
         String recipient = ParseUser.getCurrentUser().getString(FIELD_ID);
+//        EventBus.getDefault().post(Event.create(VERIFICATION_CODE_RECEIVED, null, verificationToken + ""));
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             SmsManager.getDefault().sendTextMessage(recipient,
                     null, message, null, null);

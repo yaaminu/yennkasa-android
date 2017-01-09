@@ -18,6 +18,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.rey.material.widget.SnackBar;
 import com.yennkasa.BuildConfig;
 import com.yennkasa.R;
 import com.yennkasa.call.CallData;
@@ -29,7 +30,6 @@ import com.yennkasa.messenger.YennkasaClient;
 import com.yennkasa.util.Event;
 import com.yennkasa.util.PLog;
 import com.yennkasa.util.ViewUtils;
-import com.rey.material.widget.SnackBar;
 
 import java.util.concurrent.TimeUnit;
 
@@ -127,6 +127,11 @@ public abstract class BaseCallActivity extends PairAppActivity {
                         tvCallState.setText(R.string.connecting);
                     }
                 }
+                break;
+            case CallData.CONNECTING_CALL:
+                tvCallState.setText(R.string.connecting);
+                ViewUtils.hideViews(declineCall, answerCall);
+                ViewUtils.showViews(endCall, mute, enableSpeaker);
                 break;
             case CallData.ESTABLISHED:
                 startTimer();
@@ -327,11 +332,17 @@ public abstract class BaseCallActivity extends PairAppActivity {
 
     @OnClick(R.id.bt_mute)
     public void muteCall(View view) {
+        if (callData.getCallState() == CallData.CONNECTING_CALL) {
+            return;
+        }
         postEvent(Event.create(MessengerBus.MUTE_CALL, null, callData));
     }
 
     @OnClick(R.id.bt_speaker)
     public void speaker(View view) {
+        if (callData.getCallState() == CallData.CONNECTING_CALL) {
+            return;
+        }
         postEvent(Event.create(MessengerBus.ENABLE_SPEAKER, null, callData));
     }
 

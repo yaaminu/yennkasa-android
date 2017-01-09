@@ -9,16 +9,16 @@ import android.support.annotation.StringRes;
 import android.support.v4.util.Pair;
 import android.widget.Toast;
 
-import com.yennkasa.data.UserManager;
-import com.yennkasa.util.ConnectionUtils;
-import com.yennkasa.util.Event;
-import com.yennkasa.util.EventBus;
-import com.yennkasa.util.PLog;
 import com.sinch.android.rtc.Sinch;
 import com.sinch.android.rtc.SinchClient;
 import com.sinch.android.rtc.calling.Call;
 import com.sinch.android.rtc.calling.CallState;
 import com.sinch.android.rtc.video.VideoScalingType;
+import com.yennkasa.data.UserManager;
+import com.yennkasa.util.ConnectionUtils;
+import com.yennkasa.util.Event;
+import com.yennkasa.util.EventBus;
+import com.yennkasa.util.PLog;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -135,6 +135,8 @@ public class CallManager implements CallController {
                     forceEndCallIfNotEnded(call);
                 } else {
                     call.answer();
+                    bus.post(Event.create(ON_CALL_CONNECTING, null,
+                            CallData.connectionCall(call, CallData.getCallType(call))));
                 }
             } else {
                 PLog.f(TAG, "call not found to answer");
