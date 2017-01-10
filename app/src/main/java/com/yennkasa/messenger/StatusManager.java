@@ -1,6 +1,7 @@
 package com.yennkasa.messenger;
 
 import android.os.Handler;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -11,8 +12,8 @@ import com.yennkasa.util.EventBus;
 import com.yennkasa.util.GenericUtils;
 import com.yennkasa.util.PLog;
 
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,7 +32,7 @@ public class StatusManager {
     public static final String MONITORTYPING_COLLAPSE_KEY = "monitortyping";
     public static final String CURRENT_USER_STATUS_COLLAPSE_KEY = "currentUserStatus";
     public static final int INACTIVITY_THRESHOLD = 35000; //35 seconds
-    private static final long ONLINE_ANNOUNCEMENT_INTERVAL = 30000;//30 seconds
+    public static final long ONLINE_ANNOUNCEMENT_INTERVAL = 25000;
     private volatile boolean currentUserStatus = false;
 
     @Nullable
@@ -56,18 +57,25 @@ public class StatusManager {
             PLog.d(TAG, "Received event %s", event);
             if (event.getTag().equals(MessengerBus.SOCKET_CONNECTION)) {
                 synchronized (StatusManager.this) {
-                    announceStatusChange(false);//we are offline
-                    Set<String> copy = new HashSet<>(onlineSet); //copy to avoid concurrent modification
-                    for (String user : copy) {
-                        handleStatusAnnouncement(user, false);
-                    }
-                    onlineSet.clear(); //clear just to be sure that everything is cleaned
-                    //when a user is announced to be offline, he/she is automatically
-                    //removed from the typing set too.
+                    switch (((int) event.getData())) {
+                        case MessengerBus.DISCONNECTED:
+                            announceStatusChange(false);//we are offline
+                            Set<String> copy = Collections.unmodifiableMap(onlineSet).keySet(); //copy to avoid concurrent modification exceptions
+                            for (String user : copy) {
+                                handleStatusAnnouncement(user, false);
+                            }
+                            onlineSet.clear(); //clear just to be sure that everything is cleaned
+                            //when a user is announced to be offline, he/she is automatically
+                            //removed from the typing set too.
 //                    for (String userId : typingSet.keySet()) {
 //                        handleTypingAnnouncement(userId, false);
 //                    }
 //                    typingSet.clear();
+                            break;
+                        default:
+                            //do nothing;
+                            break;
+                    }
                 }
             } else {
                 throw new AssertionError("unknown event type");
@@ -100,15 +108,24 @@ public class StatusManager {
     }
 
     synchronized void announceStatusChange(boolean currentUserStatus) {
-        if (this.currentUserStatus == currentUserStatus) return; //bounce duplicate announcements
         this.currentUserStatus = currentUserStatus;
         sender.sendMessage(createSendable(CURRENT_USER_STATUS_COLLAPSE_KEY, encoder.createStatusMessage(this.currentUserStatus)));
+        if (currentUserStatus) {
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() { //for every ONLINE_ANNOUNCEMENT_INTERVAL, repeat the process if we havn't gone offline
+                    if (StatusManager.this.currentUserStatus) {
+                        announceStatusChange(true);
+                    }
+                }
+            }, ONLINE_ANNOUNCEMENT_INTERVAL);
+        }
     }
 
     synchronized void announceStartTyping(@NonNull String userId) {
         GenericUtils.ensureNotEmpty(userId);
         typingWith = userId;
-        if (onlineSet.contains(userId) || userId.split(":").length > 1 /*groups*/) { //only notify online users
+        if (onlineSet.containsKey(userId) || userId.split(":").length > 1 /*groups*/) { //only notify online users
             sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createTypingMessage(userId, true)));
         }
     }
@@ -129,7 +146,7 @@ public class StatusManager {
         if (userId.equals(typingWith)) {
             typingWith = null;
         }
-        if (onlineSet.contains(userId) || userId.split(":").length > 1 /*groups*/) {
+        if (onlineSet.containsKey(userId) || userId.split(":").length > 1 /*groups*/) {
             //its hard to say this is a programmatic error. so we allow the masseage to pass through
             //even though we don't know whether this user is typing with "userId" or not.
             sender.sendMessage(createSendable(userId + MONITORTYPING_COLLAPSE_KEY, encoder.createTypingMessage(userId, false)));
@@ -141,7 +158,7 @@ public class StatusManager {
         return typingWith;
     }
 
-    private final Set<String> onlineSet = new HashSet<>(4);
+    private final Map<String, Long> onlineSet = new HashMap<>(4);
     private final Map<String, Long> typingSet = new HashMap<>(4);
 
     synchronized void handleStatusAnnouncement(@NonNull final String userId, boolean isOnline) {
@@ -173,11 +190,21 @@ public class StatusManager {
         }
     }
 
-    private synchronized void updateAndMarkAsOnline(@NonNull String userId) {
-        if (onlineSet.add(userId)) {
-            PLog.d(TAG, "user %s is now online", userId);
-        }
+    private synchronized void updateAndMarkAsOnline(@NonNull final String userId) {
+        PLog.d(TAG, "user %s is now online", userId);
+        onlineSet.put(userId, SystemClock.uptimeMillis());
         broadcastBus.post(Event.create(ON_USER_ONLINE, null, userId));
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (StatusManager.this) {
+                    Long lastAnnounced = onlineSet.get(userId);
+                    if (lastAnnounced == null || SystemClock.uptimeMillis() - lastAnnounced >= INACTIVITY_THRESHOLD) {
+                        handleStatusAnnouncement(userId, false);
+                    }
+                }
+            }
+        }, INACTIVITY_THRESHOLD);
     }
 
 
@@ -225,7 +252,7 @@ public class StatusManager {
     }
 
     public boolean isOnline(@NonNull String userId) {
-        return onlineSet.contains(userId);
+        return onlineSet.containsKey(userId);
     }
 
     public boolean isTypingToUs(@NonNull String userId) {
