@@ -261,6 +261,7 @@ public class WebSocketClient {
 
         @Override
         public void onConnected(WebSocket websocket, Map<String, List<String>> headers) throws Exception {
+            heartbeatCounter = 0;
             logger.Log(Logger.V, TAG, "connected to %s @ %s", websocket.getURI().toString(), new Date().toString());
             listener.onOpen();
             //start a timer that sends a keep alive message every 10 seconds
@@ -367,15 +368,15 @@ public class WebSocketClient {
 
         @Override
         public void onBinaryMessage(WebSocket websocket, byte[] binary) throws Exception {
+            synchronized (WebSocketClient.this) {
+                heartbeatCounter = 0;
+            }
             logger.Log(Logger.V, TAG, "binary message from server at %s", websocket.getURI().toString());
             logger.Log(Logger.V, TAG, "binary message is: \" %s \" bytes long", binary.length);
             if (binary.length == 1) { //control frame.
                 logger.Log(Logger.V, TAG, "message is a control frame");
                 if (binary[0] == HEART_BEAT) { //heartbeat frame
                     logger.Log(Logger.V, TAG, "message is a heartbeat message");
-                    synchronized (WebSocketClient.this) {
-                        heartbeatCounter = 0;
-                    }
                     listener.ackAllWaitingMessages();
                 } else {
                     logger.Log(Logger.W, TAG, "unknown control frame");
@@ -408,6 +409,10 @@ public class WebSocketClient {
                     heartbeatCounter++; //will be reset when we recieve the echo back()
                     if (heartbeatCounter > 2) { //broken connection. server is not responding
                         heartbeatCounter = 0;
+                        if (heartbeatTimerTask != null) {
+                            heartbeatTimerTask.cancel();
+                            heartbeatTimerTask = null;
+                        }
                         //sever the listener from this broken websocket before we do any thing
                         internalWebSocket.removeListener(webSocketListener);
 
