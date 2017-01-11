@@ -393,6 +393,7 @@ public class SenderImpl implements Sender {
                 messageQueue.removeAllEphemeralItems();
                 messageQueue.pauseProcessing();
             }
+            MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(SOCKET_CONNECTION, null, DISCONNECTED));
         }
 
         @Override
@@ -403,6 +404,7 @@ public class SenderImpl implements Sender {
                 messageQueue.removeAllEphemeralItems();
                 messageQueue.pauseProcessing();
             }
+            MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(SOCKET_CONNECTION, null, DISCONNECTED));
         }
 
         @Override
@@ -462,12 +464,12 @@ public class SenderImpl implements Sender {
 
         @Override
         public synchronized void onDisConnectedUnexpectedly() {
-            MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(SOCKET_CONNECTION, null, DISCONNECTED));
             if (messageQueue.isStarted()) {
                 messageQueue.reScheduleAllProcessingItemsForProcessing();
                 messageQueue.removeAllEphemeralItems();
                 messageQueue.pauseProcessing();
             }
+            MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(SOCKET_CONNECTION, null, DISCONNECTED));
         }
     };
 
