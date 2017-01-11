@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.yennkasa.net.sockets.Logger.W;
@@ -136,7 +135,7 @@ public class WebSocketClient {
 
 
     private void setUpWebSocket() {
-        internalWebSocket.setPingInterval((int) TimeUnit.DAYS.toMillis(1)); //disable ping
+        internalWebSocket.setPingInterval(0); //disable ping
         for (Map.Entry<String, String> header : headers.entrySet()) {
             internalWebSocket.addHeader(header.getKey(), header.getValue());
         }
@@ -242,6 +241,7 @@ public class WebSocketClient {
         }
     }
 
+    private long lastActivity;
     private final WebSocketListener webSocketListener = new WebSocketListener() {
         @Override
         public void onStateChanged(WebSocket websocket, WebSocketState newState) throws Exception {
@@ -297,6 +297,7 @@ public class WebSocketClient {
                     heartbeatTimerTask = null;
                 }
                 heartbeatCounter = 0;
+                lastSentHeartbeat = 0;
             }
             String reason = serverCloseFrame == null ? (clientCloseFrame == null ? "unknown" : clientCloseFrame.getCloseReason()) : serverCloseFrame.getCloseReason();
             logger.Log(Logger.I, TAG, "disconnected by %s, reason %s", closedByServer ? " server" : " client", reason);
@@ -361,14 +362,13 @@ public class WebSocketClient {
 
         @Override
         public void onTextMessage(WebSocket websocket, String text) throws Exception {
-            logger.Log(Logger.V, TAG, "text message from server at %s", websocket.getURI().toString());
-            logger.Log(Logger.V, TAG, "text message is: \" %s \"", text);
-            listener.onMessage(text);
+            throw new RuntimeException("only binary is supported");
         }
 
         @Override
         public void onBinaryMessage(WebSocket websocket, byte[] binary) throws Exception {
             synchronized (WebSocketClient.this) {
+                lastActivity = SystemClock.uptimeMillis();
                 heartbeatCounter = 0;
             }
             logger.Log(Logger.V, TAG, "binary message from server at %s", websocket.getURI().toString());
