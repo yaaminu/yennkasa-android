@@ -112,6 +112,7 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
     private void processItems() {
         Sendable item = next();
         while (item != null) {
+            PLog.d(TAG, "processing %s", item.toString());
             processNext(item);
             item = next();
         }
@@ -137,8 +138,17 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
         }
     }
 
+    @Override
+    public synchronized void removeAllEphemeralItems() {
+        itemsStore.removeAllEphemeralItems();
+    }
+
     synchronized void pauseProcessing() {
         ensureStateValid();
+        if (runningState == PAUSED_PROCESSING) {
+            PLog.d(TAG, "already paused");
+            return;
+        }
         if (runningState == STOPPED_PROCESSING) {
             throw new IllegalStateException("cannot pause a stopped queue");
         }
@@ -148,6 +158,10 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
 
     synchronized void resumeProcessing() {
         ensureStateValid();
+        if (runningState == PROCESSING) {
+            PLog.d(TAG, "already processing");
+            return;
+        }
         if (runningState == STOPPED_PROCESSING) {
             throw new IllegalStateException("cannot resume a stopped queue");
         }

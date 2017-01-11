@@ -202,4 +202,19 @@ public class Sendable extends RealmObject {
         }
 
     }
+
+    @Override
+    public String toString() {
+        return "Sendable{" +
+                "index=" + index +
+                ", collapseKey='" + collapseKey + '\'' +
+                ", retries=" + retries +
+                ", maxRetries=" + maxRetries +
+                ", startProcessingAt=" + startProcessingAt +
+                ", validUntil=" + validUntil +
+                ", surviveRestarts=" + surviveRestarts +
+                ", processing=" + processing +
+                ", waitingForAck=" + waitingForAck +
+                '}';
+    }
 }

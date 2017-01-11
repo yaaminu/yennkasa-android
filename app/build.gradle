@@ -45,8 +45,8 @@ android {
         dexOptions {
             jumboMode = true
             javaMaxHeapSize "4g"
-            additionalParameters += '--minimal-main-dex'
-            additionalParameters += '--set-max-idx-number=50000'
+//            additionalParameters += '--minimal-main-dex'
+//            additionalParameters += '--set-max-idx-number=55000'
             // additionalParameters += '--main-dex-list=$projectDir/<filename>'.toString()
             // additionalParameters += '--set-max-idx-number=55000'
         }

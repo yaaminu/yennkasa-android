@@ -1,6 +1,8 @@
 package com.yennkasa.net.sockets;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Base64;
@@ -129,6 +131,10 @@ public class SenderImpl implements Sender {
             @Override
             public void run() {
                 messageQueue.add(sendable);
+                if (!messageQueue.isStarted()) {
+                    messageQueue.start();
+                }
+                messageQueue.resumeProcessing();
             }
         }, false);
     }
@@ -304,14 +310,11 @@ public class SenderImpl implements Sender {
     @SuppressWarnings("FieldCanBeLocal")
     private final YennkasaSocket.YennkasaSocketListener listener = new YennkasaSocket.YennkasaSocketListener() {
         @Override
-        public void onMessage(byte[] bytes) {
+        public synchronized void onMessage(byte[] bytes) {
             try {
                 parser.feed(bytes);
             } catch (MessageParser.MessageParserException e) {
                 PLog.f(TAG, e.getMessage(), e);
-                if (BuildConfig.DEBUG) {
-                    throw new RuntimeException(e);
-                }
                 if (e.getCause() instanceof MessagePackerException) {
                     if (((MessagePackerException) e.getCause()).getErrorCode() == DECRYPTION_FAILED) {
                         //this is an encryptionException!!!
@@ -322,8 +325,12 @@ public class SenderImpl implements Sender {
                             //the sender must detect this by checking peridically from the server for
                             //changing public keys. and updating it's local cache, and resending dropped messages
                             //if possible
+                            return;
                         }
                     }
+                }
+                if (BuildConfig.DEBUG) {
+                    throw new RuntimeException(e);
                 }
             }
             messageQueue.ackWaitingItems();
@@ -335,7 +342,7 @@ public class SenderImpl implements Sender {
         }
 
         @Override
-        public void onOpen() {
+        public synchronized void onOpen() {
             ensureStarted();
             MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(SOCKET_CONNECTION, null, CONNECTED));
             //like this :
@@ -344,22 +351,18 @@ public class SenderImpl implements Sender {
 //            } else {
 //                messageQueue.resumeProcessing();
 //            }
-            if (messageQueue.isStarted()) {
-                messageQueue.resumeProcessing();
+            if (!messageQueue.isStarted()) {
+                messageQueue.start();
             }
+            messageQueue.resumeProcessing();
         }
 
         @SuppressWarnings("StatementWithEmptyBody")
         @Override
-        public void onClose(int code, String reason) {
+        public synchronized void onClose(int code, String reason) {
             // TODO: 11/10/2016  should we allow ourselves to be usable again?
-            // TODO: 11/10/2016 check for reasons why the connection was closed
-            // TODO: 11/10/2016 stop the message queue?
-            if (messageQueue.isStarted()) {
-                messageQueue.pauseProcessing();
-            }
             //if it's for authentication reasons, we will have to request it somehow, create a new connection
-            //and start processin again
+            //and start processing again
             switch (code) {
                 case StatusCodes.BAD_REQUEST:
                     if (BuildConfig.DEBUG) {
@@ -371,7 +374,7 @@ public class SenderImpl implements Sender {
                 case StatusCodes.UNAUTHORIZED:
                     synchronized (SenderImpl.this) {
                         if (refreshJob != null) {
-                            PLog.d(TAG, "another job already running");
+                            PLog.d(TAG, "a token refresh job already running");
                             return;
                         }
                         yennkasaSocket = null;
@@ -383,25 +386,33 @@ public class SenderImpl implements Sender {
                     break;
                 default:
                     PLog.d(TAG, "socket disconnected with reason %s and code %d", reason, code);
+                    break;
+            }
+            // TODO: 11/10/2016 stop the message queue?
+            if (messageQueue.isStarted()) {
+                messageQueue.removeAllEphemeralItems();
+                messageQueue.pauseProcessing();
             }
         }
 
         @Override
-        public void onClose() {
+        public synchronized void onClose() {
             // TODO: 11/10/2016 stop the message queue?
             // TODO: 11/10/2016  should we allow ourselves to be usable again?
             if (messageQueue.isStarted()) {
+                messageQueue.removeAllEphemeralItems();
                 messageQueue.pauseProcessing();
             }
         }
 
         @Override
         public void onError(Exception e) {
-
+            PLog.d(TAG, "error on yennkasa socket");
+            PLog.d(TAG, e.getMessage(), e);
         }
 
         @Override
-        public void onReconnectionTakingTooLong() {
+        public synchronized void onReconnectionTakingTooLong() {
             MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS)
                     .postSticky(Event.createSticky(SOCKET_CONNECTION, null, DISCONNECTED));
         }
@@ -412,13 +423,13 @@ public class SenderImpl implements Sender {
         }
 
         @Override
-        public void onConnecting() {
+        public synchronized void onConnecting() {
             MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS)
                     .postSticky(Event.createSticky(SOCKET_CONNECTION, null, CONNECTING));
         }
 
         @Override
-        public void onSendError(boolean isBinary, byte[] data) {
+        public synchronized void onSendError(boolean isBinary, byte[] data) {
             Realm realm = realmProvider.getRealm();
             try {
                 Sendable item = realm.where(Sendable.class).equalTo(Sendable.FIELD_DATA, bytesToString(data)).findFirst();
@@ -427,13 +438,14 @@ public class SenderImpl implements Sender {
                 } else {
                     PLog.w(TAG, "item removed from queue while it was being processed");
                 }
+                disconnectIfIdleForLong();
             } finally {
                 realm.close();
             }
         }
 
         @Override
-        public void onSendSuccess(boolean isBinary, byte[] data) {
+        public synchronized void onSendSuccess(boolean isBinary, byte[] data) {
             Realm realm = realmProvider.getRealm();
             try {
                 Sendable item = realm.where(Sendable.class).equalTo(Sendable.FIELD_DATA, encodeToString(data)).findFirst();
@@ -445,17 +457,32 @@ public class SenderImpl implements Sender {
             } finally {
                 realm.close();
             }
+            disconnectIfIdleForLong();
         }
 
         @Override
-        public void onDisConnectedUnexpectedly() {
+        public synchronized void onDisConnectedUnexpectedly() {
             MessengerBus.get(PAIRAPP_CLIENT_LISTENABLE_BUS).postSticky(Event.createSticky(SOCKET_CONNECTION, null, DISCONNECTED));
             if (messageQueue.isStarted()) {
                 messageQueue.reScheduleAllProcessingItemsForProcessing();
+                messageQueue.removeAllEphemeralItems();
                 messageQueue.pauseProcessing();
             }
         }
     };
+
+    private void disconnectIfIdleForLong() {
+        if (!Config.isAppOpen() && messageQueue.getPending() == 0) {
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (!Config.isAppOpen() && messageQueue.getPending() == 0) {
+                        disconnectIfRequired();
+                    }
+                }
+            }, 60000);
+        }
+    }
 
     public interface Authenticator {
 
@@ -490,10 +517,7 @@ public class SenderImpl implements Sender {
                     if (SenderImpl.this.started) {
                         SenderImpl.this.authToken = (String) event.getData();
                         GenericUtils.ensureNotEmpty(authToken);
-                        initialiseSocket();
-                        assert yennkasaSocket != null;
-                        yennkasaSocket.init();
-                        messageQueue.resumeProcessing();
+                        attemptReconnectIfRequired();
                     }
                 } else {
                     throw new AssertionError();

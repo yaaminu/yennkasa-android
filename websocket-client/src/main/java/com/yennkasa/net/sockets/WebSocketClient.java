@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.yennkasa.net.sockets.Logger.W;
@@ -34,8 +35,9 @@ import static com.yennkasa.net.sockets.Logger.W;
  */
 @SuppressWarnings("ALL")
 public class WebSocketClient {
+    private static final int HEART_BEAT = 0x01;
     private static final String TAG = WebSocketClient.class.getSimpleName();
-    public static final int PING_INTERVAL = 20 * 1000;
+    public static final int PING_INTERVAL = 15 * 1000;
     private final Map<String, String> headers;
     private final Logger logger;
     private final ClientListener listener;
@@ -46,6 +48,12 @@ public class WebSocketClient {
     private final Timer timer;
     private final URI uri;
     private final int timeout;
+    @Nullable
+    private ReconnectTimerTask reconnectTimerTask;
+    @Nullable
+    private HeartbeatTimerTask heartbeatTimerTask;
+
+    static final byte[] heartBeatPayload = new byte[]{HEART_BEAT};
 
     private WebSocketClient(URI uri, int timeout,
                             Logger logger, ClientListener clientListener,
@@ -128,7 +136,7 @@ public class WebSocketClient {
 
 
     private void setUpWebSocket() {
-        internalWebSocket.setPingInterval(PING_INTERVAL);
+        internalWebSocket.setPingInterval((int) TimeUnit.DAYS.toMillis(1)); //disable ping
         for (Map.Entry<String, String> header : headers.entrySet()) {
             internalWebSocket.addHeader(header.getKey(), header.getValue());
         }
@@ -213,7 +221,7 @@ public class WebSocketClient {
             );
             client.networkProvider.registerNetworkChangeListener(client.networkChangeListener);
             try {
-                client.internalWebSocket = new WebSocketImpl(client.uri, client.timeout);
+                client.internalWebSocket = new WebSocketImpl(client.uri, client.timeout, heartBeatPayload);
                 return client;
             } catch (IOException e) {
                 throw new AssertionError(e);
@@ -255,6 +263,23 @@ public class WebSocketClient {
         public void onConnected(WebSocket websocket, Map<String, List<String>> headers) throws Exception {
             logger.Log(Logger.V, TAG, "connected to %s @ %s", websocket.getURI().toString(), new Date().toString());
             listener.onOpen();
+            //start a timer that sends a keep alive message every 10 seconds
+            synchronized (WebSocketClient.this) {
+                if (heartbeatTimerTask != null) {
+                    heartbeatTimerTask.cancel(); //cancelfirst
+                    if (BuildConfig.DEBUG) {
+                        throw new IllegalStateException("must never happen");
+                    }
+                    logger.Log(Logger.W, TAG, "heartbeat timer task not null even when we were connected");
+                    heartbeatTimerTask = null;
+                }
+                heartbeatTimerTask = new HeartbeatTimerTask(internalWebSocket);
+                timer.scheduleAtFixedRate(heartbeatTimerTask, PING_INTERVAL, PING_INTERVAL);
+                if (reconnectTimerTask != null) {
+                    reconnectTimerTask.cancel();
+                    reconnectTimerTask = null;
+                }
+            }
         }
 
         @Override
@@ -265,6 +290,13 @@ public class WebSocketClient {
 
         @Override
         public void onDisconnected(WebSocket websocket, WebSocketFrame serverCloseFrame, WebSocketFrame clientCloseFrame, boolean closedByServer) throws Exception {
+            synchronized (WebSocketClient.this) {
+                if (heartbeatTimerTask != null) {
+                    heartbeatTimerTask.cancel();
+                    heartbeatTimerTask = null;
+                }
+                heartbeatCounter = 0;
+            }
             String reason = serverCloseFrame == null ? (clientCloseFrame == null ? "unknown" : clientCloseFrame.getCloseReason()) : serverCloseFrame.getCloseReason();
             logger.Log(Logger.I, TAG, "disconnected by %s, reason %s", closedByServer ? " server" : " client", reason);
             if (closedByServer) {
@@ -322,13 +354,8 @@ public class WebSocketClient {
 
         @Override
         public void onPongFrame(WebSocket websocket, WebSocketFrame frame) throws Exception {
-            synchronized (WebSocketClient.this) {
-                //do nothing
-                logger.Log(Logger.D, "pong frame recived from server @ %s. Frame is %d long",
-                        websocket.getURI().toString(), frame.getPayloadLength());
-                pingCounter = 0;
-                listener.ackAllWaitingMessages();
-            }
+            logger.Log(Logger.D, "pong frame recived from server @ %s. Frame is %d long",
+                    websocket.getURI().toString(), frame.getPayloadLength());
         }
 
         @Override
@@ -342,17 +369,33 @@ public class WebSocketClient {
         public void onBinaryMessage(WebSocket websocket, byte[] binary) throws Exception {
             logger.Log(Logger.V, TAG, "binary message from server at %s", websocket.getURI().toString());
             logger.Log(Logger.V, TAG, "binary message is: \" %s \" bytes long", binary.length);
-            listener.onMessage(binary);
+            if (binary.length == 1) { //control frame.
+                logger.Log(Logger.V, TAG, "message is a control frame");
+                if (binary[0] == HEART_BEAT) { //heartbeat frame
+                    logger.Log(Logger.V, TAG, "message is a heartbeat message");
+                    synchronized (WebSocketClient.this) {
+                        heartbeatCounter = 0;
+                    }
+                    listener.ackAllWaitingMessages();
+                } else {
+                    logger.Log(Logger.W, TAG, "unknown control frame");
+                    if (BuildConfig.DEBUG) {
+                        throw new RuntimeException();
+                    }
+                }
+            } else {
+                listener.onMessage(binary);
+            }
         }
 
-        long lastSentPing = 0, pingCounter = 0;
+        long lastSentHeartbeat = 0, heartbeatCounter = 0;
 
         @Override
         public void onSendingFrame(WebSocket websocket, WebSocketFrame frame) throws Exception {
             synchronized (WebSocketClient.this) {
                 logger.Log(Logger.D, TAG, "Sending frame with %d bytes", frame.getPayloadLength());
-                if (frame.isPingFrame()) {
-                    logger.Log(Logger.D, TAG, "frame is a ping frame");
+                if (frame.getPayloadLength() == 1) { //control frame
+                    logger.Log(Logger.D, TAG, "frame is a heartbeat frame");
                     //detect broken connections.
                     //algorithm::
                     //increment a counter.
@@ -362,9 +405,9 @@ public class WebSocketClient {
                     //if networkProvider returs true for NetworkProvider#connected()
                     //rebuild the connection again.
                     //otherwise stay idle until NetworkProvider says we have connection!!!!
-                    pingCounter++; //will be reset in onPongFrame()
-                    if (pingCounter > 2) { //broken connection. server is not responding
-
+                    heartbeatCounter++; //will be reset when we recieve the echo back()
+                    if (heartbeatCounter > 2) { //broken connection. server is not responding
+                        heartbeatCounter = 0;
                         //sever the listener from this broken websocket before we do any thing
                         internalWebSocket.removeListener(webSocketListener);
 
@@ -385,11 +428,11 @@ public class WebSocketClient {
                         }
                     } else {
                         long now = SystemClock.uptimeMillis();
-                        if (lastSentPing != 0) {
+                        if (lastSentHeartbeat != 0) {
                             logger.Log(Logger.D, TAG, "we last sent ping about %d millis  ago",
-                                    now - lastSentPing);
+                                    now - lastSentHeartbeat);
                         }
-                        lastSentPing = now;
+                        lastSentHeartbeat = now;
                     }
                 }
             }
@@ -487,7 +530,8 @@ public class WebSocketClient {
         if (networkProvider.connected()) {
             calculateReconnectTimeout();
             logger.Log(Logger.V, TAG, " attempt reconnection after %s", reconnectDelay);
-            timer.schedule(new ReconnectTimerTask(), reconnectDelay);
+            reconnectTimerTask = new ReconnectTimerTask();
+            timer.schedule(reconnectTimerTask, reconnectDelay);
         } else {
             if (internalWebSocket != null) {
                 internalWebSocket.removeListener(webSocketListener);
@@ -511,7 +555,7 @@ public class WebSocketClient {
                 }
                 internalWebSocket.sendClose(WebSocketCloseCode.ABNORMAL);
             }
-            internalWebSocket = new WebSocketImpl(uri, timeout);
+            internalWebSocket = new WebSocketImpl(uri, timeout, heartBeatPayload);
             connectBlocking();
         } catch (IOException e) {
             logger.Log(Logger.E, TAG, e.getMessage(), e);
@@ -555,4 +599,17 @@ public class WebSocketClient {
         void notifyNetworkChanged(boolean connected);
     }
 
+    static class HeartbeatTimerTask extends TimerTask {
+
+        private final IWebSocket webSocket;
+
+        public HeartbeatTimerTask(IWebSocket webSocket) {
+            this.webSocket = webSocket;
+        }
+
+        @Override
+        public void run() {
+            this.webSocket.sendHeartbeat();
+        }
+    }
 }

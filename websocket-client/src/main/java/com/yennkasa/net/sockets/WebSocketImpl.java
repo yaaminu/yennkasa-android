@@ -16,14 +16,16 @@ class WebSocketImpl implements IWebSocket {
     public static final WebSocketFactory SOCKET_FACTORY = new WebSocketFactory();
     public static final int QUEUE_SIZE = 3;
     private final WebSocket webSocket;
+    private final byte[] pingPayload;
 
-    public WebSocketImpl(URI uri, int timeout) throws IOException {
+    public WebSocketImpl(URI uri, int timeout, byte[] pingPayload) throws IOException {
         webSocket = SOCKET_FACTORY.createSocket(uri, timeout).setFrameQueueSize(QUEUE_SIZE);
+        this.pingPayload = pingPayload;
     }
 
     @Override
     public boolean send(byte[] message) {
-        if(webSocket.isOpen() && webSocket.getSocket() != null && webSocket.getSocket().isConnected()) {
+        if (webSocket.isOpen() && webSocket.getSocket() != null && webSocket.getSocket().isConnected()) {
             webSocket.sendBinary(message);
             return true;
         }
@@ -84,4 +86,10 @@ class WebSocketImpl implements IWebSocket {
     public void sendClose() {
         webSocket.sendClose();
     }
+
+    @Override
+    public void sendHeartbeat() {
+        webSocket.sendBinary(pingPayload);
+    }
+
 }

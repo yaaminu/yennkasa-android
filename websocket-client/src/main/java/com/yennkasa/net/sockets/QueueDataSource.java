@@ -28,6 +28,8 @@ interface QueueDataSource {
 
     List<Sendable> waitingForAck();
 
+    void removeAllEphemeralItems();
+
     interface QueueItemCleanedListener {
         void onExpiredItemsRemoved(List<Sendable> items);
     }

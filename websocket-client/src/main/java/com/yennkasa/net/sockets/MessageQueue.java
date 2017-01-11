@@ -20,6 +20,8 @@ public interface MessageQueue<T> {
 
     void reScheduleAllProcessingItemsForProcessing();
 
+    void removeAllEphemeralItems();
+
 
     interface Hooks {
         String TAG = "QueueDataSourceHooks";

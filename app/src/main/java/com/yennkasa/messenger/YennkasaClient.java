@@ -50,6 +50,7 @@ import io.realm.Realm;
 import vc908.stickerfactory.StickersManager;
 
 import static com.yennkasa.call.CallController.CALL_PUSH_PAYLOAD;
+import static com.yennkasa.call.CallController.ON_CALL_CONNECTING;
 import static com.yennkasa.call.CallController.ON_CALL_ESTABLISHED;
 import static com.yennkasa.call.CallController.ON_CALL_MUTED;
 import static com.yennkasa.call.CallController.ON_CALL_PROGRESSING;
@@ -240,6 +241,7 @@ public class YennkasaClient extends Service {
                         statusManager, WORKER_THREAD.handler, messageParser));
 
                 callManagerBus.register(eventsListener,
+                        ON_CALL_CONNECTING,
                         ON_CAL_ERROR, ON_IN_COMING_CALL, CALL_PUSH_PAYLOAD,
                         ON_CAL_ENDED, ON_CALL_ESTABLISHED, VIDEO_CALL_LOCAL_VIEW, VIDEO_CALL_REMOTE_VIEW,
                         ON_CALL_PROGRESSING, ON_CALL_MUTED, ON_LOUD_SPEAKER, SWITCH_CAMERA, VIDEO_CALL_VIEW);

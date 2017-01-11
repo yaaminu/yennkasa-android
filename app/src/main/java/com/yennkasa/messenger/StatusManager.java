@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 
 import com.yennkasa.net.sockets.Sendable;
 import com.yennkasa.net.sockets.Sender;
+import com.yennkasa.util.Config;
 import com.yennkasa.util.Event;
 import com.yennkasa.util.EventBus;
 import com.yennkasa.util.GenericUtils;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static com.yennkasa.messenger.MessengerBus.CONNECTED;
 import static com.yennkasa.messenger.MessengerBus.SOCKET_CONNECTION;
 
 /**
@@ -31,8 +33,8 @@ public class StatusManager {
     public static final String ON_USER_TYPING = "onUserTyping";
     public static final String MONITORTYPING_COLLAPSE_KEY = "monitortyping";
     public static final String CURRENT_USER_STATUS_COLLAPSE_KEY = "currentUserStatus";
-    public static final int INACTIVITY_THRESHOLD = 35000; //35 seconds
-    public static final long ONLINE_ANNOUNCEMENT_INTERVAL = 25000;
+    public static final int INACTIVITY_THRESHOLD = 60000; //60 seconds
+    public static final long ONLINE_ANNOUNCEMENT_INTERVAL = 45000;
     private volatile boolean currentUserStatus = false;
 
     @Nullable
@@ -59,7 +61,8 @@ public class StatusManager {
                 synchronized (StatusManager.this) {
                     switch (((int) event.getData())) {
                         case MessengerBus.DISCONNECTED:
-                            announceStatusChange(false);//we are offline
+                            //we are offline
+                            StatusManager.this.currentUserStatus = false;
                             Set<String> copy = Collections.unmodifiableMap(onlineSet).keySet(); //copy to avoid concurrent modification exceptions
                             for (String user : copy) {
                                 handleStatusAnnouncement(user, false);
@@ -71,6 +74,15 @@ public class StatusManager {
 //                        handleTypingAnnouncement(userId, false);
 //                    }
 //                    typingSet.clear();
+                            break;
+                        case CONNECTED:
+                            if (Config.isAppOpen()) {
+                                announceStatusChange(true);
+                                String currentActivePeer = Config.getCurrentActivePeer();
+                                if (currentActivePeer != null) {
+                                    startMonitoringUser(currentActivePeer);
+                                }
+                            }
                             break;
                         default:
                             //do nothing;
@@ -252,11 +264,11 @@ public class StatusManager {
     }
 
     public boolean isOnline(@NonNull String userId) {
-        return onlineSet.containsKey(userId);
+        return onlineSet.containsKey(userId) && SystemClock.uptimeMillis() - onlineSet.get(userId) < INACTIVITY_THRESHOLD;
     }
 
     public boolean isTypingToUs(@NonNull String userId) {
-        return typingSet.containsKey(userId);
+        return typingSet.containsKey(userId) && SystemClock.uptimeMillis() - typingSet.get(userId) < INACTIVITY_THRESHOLD;
     }
 
     public boolean isTypingToGroup(@NonNull String userId, String groupId) {

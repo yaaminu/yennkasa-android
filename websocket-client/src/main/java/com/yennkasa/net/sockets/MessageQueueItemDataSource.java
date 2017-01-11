@@ -117,6 +117,23 @@ class MessageQueueItemDataSource implements QueueDataSource {
     }
 
     @Override
+    public synchronized void removeAllEphemeralItems() {
+        Realm realm = getRealm();
+        try {
+            realm.beginTransaction();
+            RealmResults<Sendable> sendables =
+                    realm.where(Sendable.class).equalTo(Sendable.FIELD_SURVIVES_RESTART, true)
+                            .findAll();
+            List<Sendable> items = realm.copyFromRealm(sendables);
+            sendables.deleteAllFromRealm();
+            realm.commitTransaction();
+            hooks.onExpiredItemsRemoved(items);
+        } finally {
+            realm.close();
+        }
+    }
+
+    @Override
     public void addItem(Sendable item) {
         ensureStateValid();
         Realm realm = getRealm();

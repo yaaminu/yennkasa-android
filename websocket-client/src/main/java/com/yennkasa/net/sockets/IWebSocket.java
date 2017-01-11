@@ -32,4 +32,6 @@ public interface IWebSocket {
     void removeHeaders(String key);
 
     void sendClose();
+
+    void sendHeartbeat();
 }

@@ -4,10 +4,12 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Build;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
+import android.telephony.SmsManager;
 import android.text.TextUtils;
 
 import com.parse.Parse;
@@ -25,8 +27,6 @@ import com.yennkasa.data.R;
 import com.yennkasa.data.User;
 import com.yennkasa.security.Crypto;
 import com.yennkasa.util.Config;
-import com.yennkasa.util.Event;
-import com.yennkasa.util.EventBus;
 import com.yennkasa.util.FileUtils;
 import com.yennkasa.util.GenericUtils;
 import com.yennkasa.util.MediaUtils;
@@ -179,14 +179,14 @@ public class ParseClient implements UserApiV2 {
                 //update that one too
                 .getString(R.string.verification_code) + ":  " + verificationToken;
         String recipient = ParseUser.getCurrentUser().getString(FIELD_ID);
-        EventBus.getDefault().post(Event.create(VERIFICATION_CODE_RECEIVED, null, verificationToken + ""));
-//        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-//            SmsManager.getDefault().sendTextMessage(recipient,
-//                    null, message, null, null);
-//            deleteMessage(recipient, message);
-//        } else {
-//            ParseCloud.callFunction("sendVerificationToken", Collections.singletonMap("message", message));
-//        }
+//        EventBus.getDefault().post(Event.create(VERIFICATION_CODE_RECEIVED, null, verificationToken + ""));
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            SmsManager.getDefault().sendTextMessage(recipient,
+                    null, message, null, null);
+            deleteMessage(recipient, message);
+        } else {
+            ParseCloud.callFunction("sendVerificationToken", Collections.singletonMap("message", message));
+        }
     }
 
 
