@@ -58,7 +58,8 @@ class StatusBarNotifier {
             if (LiveCenter.getTotalUnreadMessages() > 1) {
                 action = new Intent(context, MainActivity.class);
             } else {
-                action = new Intent(context, ChatActivity.class);
+                // TODO: 1/11/17 use backstack to push user to chat screen directly
+                action = new Intent(context, MainActivity.class);
                 action.putExtra(ChatActivity.EXTRA_PEER_ID, Message.isGroupMessage(userRealm, message) ? message.getTo() : message.getFrom());
             }
 
@@ -195,7 +196,10 @@ class StatusBarNotifier {
                 }
                 break;
             case 2:
-                text = unReadMessages + " " + getString(unReadMessages > 1 ? R.string.new_message_from : R.string.message_from_2) + " " + recentChatList.get(0) + getString(R.string.and) + recentChatList.get(1);
+                text = unReadMessages
+                        + " " +
+                        getString(unReadMessages > 1 ? R.string.new_message_from : R.string.message_from_2) + " "
+                        + recentChatList.get(0) + getString(R.string.and) + recentChatList.get(1);
                 break;
             case 3:
                 text = unReadMessages + "  " + getString(unReadMessages > 1 ? R.string.new_message_from : R.string.message_from_2) + " " + recentChatList.get(0) + ", " + recentChatList.get(1) + getString(R.string.and) + recentChatList.get(2);
