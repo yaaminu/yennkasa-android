@@ -233,12 +233,12 @@ public class Config {
     }
 
     public static String getMessageEndpoint() {
-        if (isEmulator()) {
-            return MESSAGE_SOCKET_API_LOCAL;
-        } else {
-            return MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE;
-        }
-//        return LIVE_SOCKET_API_REMOTE;
+//        if (isEmulator()) {
+//            return MESSAGE_SOCKET_API_LOCAL;
+//        } else {
+//            return MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE;
+//        }
+        return LIVE_SOCKET_API_REMOTE;
     }
 
     private static final Map<String, String> properties = new HashMap<>();

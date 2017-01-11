@@ -32,6 +32,13 @@ import java.util.concurrent.Semaphore;
 import io.realm.Realm;
 import io.realm.exceptions.RealmPrimaryKeyConstraintException;
 
+import static com.yennkasa.data.Message.TYPE_BIN_MESSAGE;
+import static com.yennkasa.data.Message.TYPE_CALL;
+import static com.yennkasa.data.Message.TYPE_LOG_MESSAGE;
+import static com.yennkasa.data.Message.TYPE_PICTURE_MESSAGE;
+import static com.yennkasa.data.Message.TYPE_STICKER;
+import static com.yennkasa.data.Message.TYPE_TEXT_MESSAGE;
+import static com.yennkasa.data.Message.TYPE_VIDEO_MESSAGE;
 import static com.yennkasa.messenger.MessengerBus.MESSAGE_RECEIVED;
 import static com.yennkasa.messenger.MessengerBus.PAIRAPP_CLIENT_POSTABLE_BUS;
 import static com.yennkasa.messenger.MessengerBus.get;
@@ -249,14 +256,26 @@ public class MessageProcessor extends IntentService {
         } else {
             realm.beginTransaction();
             Conversation.newSession(realm, currentUserId, conversation);
+            realm.commitTransaction(); //force the transaction to be committed.
+            realm.beginTransaction();
         }
         ///////////////////////////////////////////////////////////////////////////////////////////
-        Message newestMessage = realm.where(Message.class)
+        Number newestMessage = realm.where(Message.class)
                 .equalTo(Message.FIELD_TO, peerId)
-                .greaterThan(Message.FIELD_DATE_COMPOSED, timestamp).findFirst();
+                .in(Message.FIELD_TYPE, new Integer[]{TYPE_BIN_MESSAGE, TYPE_STICKER, TYPE_VIDEO_MESSAGE, TYPE_TEXT_MESSAGE,
+                        TYPE_PICTURE_MESSAGE, TYPE_CALL, TYPE_LOG_MESSAGE})
+                .max(Message.FIELD_DATE_COMPOSED);
 
         //only use the server date for the message if there is no message on our side newer that it.
-        message.setDateComposed(newestMessage == null ? new Date(Math.min(System.currentTimeMillis(), timestamp)) : new Date());
+        //make it 10 seconds newer  to deal with situations where the
+        //session date can coincide with this date which can mess up sorting
+        long dateComposed;
+        if (newestMessage != null && newestMessage.longValue() >= timestamp) {
+            dateComposed = System.currentTimeMillis() + 10;
+        } else {
+            dateComposed = Math.min(System.currentTimeMillis(), timestamp);
+        }
+        message.setDateComposed(new Date(dateComposed));
 
         message.setState(Message.STATE_RECEIVED);
         if (message.hasAttachment()) {

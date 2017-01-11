@@ -7,19 +7,23 @@ import com.neovisionaries.ws.client.WebSocketListener;
 import com.neovisionaries.ws.client.WebSocketState;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.net.URI;
 
 /**
  * @author aminu on 7/11/2016.
  */
 class WebSocketImpl implements IWebSocket {
-    public static final WebSocketFactory SOCKET_FACTORY = new WebSocketFactory();
     public static final int QUEUE_SIZE = 3;
     private final WebSocket webSocket;
     private final byte[] pingPayload;
 
     public WebSocketImpl(URI uri, int timeout, byte[] pingPayload) throws IOException {
-        webSocket = SOCKET_FACTORY.createSocket(uri, timeout).setFrameQueueSize(QUEUE_SIZE);
+        webSocket = new WebSocketFactory()
+                .createSocket(uri, timeout).setFrameQueueSize(QUEUE_SIZE);
+        Socket socket = webSocket.getSocket();
+        socket.setKeepAlive(true);
+        socket.setTcpNoDelay(false);
         this.pingPayload = pingPayload;
     }
 
