@@ -185,7 +185,7 @@ public class StatusManager {
                     public void run() {
                         synchronized (StatusManager.this) {
                             Long then = typingSet.get(userId);
-                            if (then != null && System.currentTimeMillis() - then >= INACTIVITY_THRESHOLD) {
+                            if (then != null && SystemClock.uptimeMillis() - then >= INACTIVITY_THRESHOLD) {
                                 handleTypingAnnouncement(userId, false);
                             }
                         }
@@ -223,7 +223,7 @@ public class StatusManager {
     synchronized void handleTypingAnnouncement(@NonNull final String userId, boolean isTyping) {
         GenericUtils.ensureNotEmpty(userId);
         if (isTyping) {
-            typingSet.put(userId, System.currentTimeMillis());
+            typingSet.put(userId, SystemClock.uptimeMillis());
             String userIdPart = userId.split(":")[0]; //if the typing is to a group
             if (!isOnline(userIdPart)) {
                 updateAndMarkAsOnline(userId);
@@ -233,7 +233,7 @@ public class StatusManager {
                 public void run() {
                     synchronized (StatusManager.this) {
                         Long then = typingSet.get(userId);
-                        if (then != null && System.currentTimeMillis() - then >= INACTIVITY_THRESHOLD) {
+                        if (then != null && SystemClock.uptimeMillis() - then >= INACTIVITY_THRESHOLD) {
                             handleTypingAnnouncement(userId, false);
                         }
                     }
