@@ -589,10 +589,12 @@ class PairAppClientInterface {
                     .in(Message.FIELD_STATE, new Integer[]{STATE_PENDING, STATE_SENT})
                     .in(Message.FIELD_TYPE, new Integer[]{TYPE_BIN_MESSAGE, TYPE_STICKER, TYPE_VIDEO_MESSAGE, TYPE_TEXT_MESSAGE,
                             TYPE_PICTURE_MESSAGE})
-                    .greaterThanOrEqualTo(Message.FIELD_DATE_COMPOSED, System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5))
-                    .findAllSorted(Message.FIELD_DATE_COMPOSED);
-            for (Message message : messages) {
-                sendMessage(message);
+                    .greaterThanOrEqualTo(Message.FIELD_DATE_COMPOSED, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(24))
+                    .findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.DESCENDING);
+            int max = Math.min(5, messages.size()); //send at most last 5 messages.
+            for (int i = 0; i < max; i++) {
+                sendMessage(messages.get(i));
+
             }
         } finally {
             realm.close();

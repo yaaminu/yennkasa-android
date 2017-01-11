@@ -1046,7 +1046,7 @@ public final class UserManager {
         }
         if (GenericUtils.isEmpty(publicKey)) {
             publicKey = userApi.getPublicKeyForUserSync(userId);
-            if (publicKey != null) {
+            if (publicKey != null) { //only return the public key if the public key actually changed!!!
                 putSessionPref("user.rsa.public.key.encoded." + userId, publicKey);
             }
         }
@@ -1986,14 +1986,7 @@ public final class UserManager {
         TaskManager.executeNow(new Runnable() {
             @Override
             public void run() {
-                synchronized (UserManager.class) {
-                    if (ConnectionUtils.isConnected()) {
-                        if (publicKeyForUser(peerId, true) != null) {
-                            //resend all messages
-                            EventBus.getDefault().post(Event.create(ACTION_SEND_MESSAGE, null, peerId));
-                        }
-                    }
-                }
+                TaskManager.runJob(PublicKeyRefreshJob.create(peerId));
             }
         }, true);
     }
