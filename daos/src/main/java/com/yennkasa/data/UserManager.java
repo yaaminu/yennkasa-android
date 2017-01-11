@@ -1171,44 +1171,6 @@ public final class UserManager {
         }
     }
 
-    public void sendVerificationToken(Realm realm, final CallBack callback) {
-        if (!isUserLoggedIn(realm)) {
-            throw new IllegalStateException();
-        }
-        if (BuildConfig.DEBUG && isUserVerified(realm)) {
-            throw new IllegalStateException();
-        }
-        if (!ConnectionUtils.isConnected()) {
-            doNotify(NO_CONNECTION_ERROR, callback);
-            return;
-        }
-        userApi.sendVerificationToken(getMainUserId(realm), new UserApiV2.Callback<HttpResponse>() {
-            @Override
-            public void done(Exception e, HttpResponse aBoolean) {
-                doNotify(e, callback);
-            }
-        });
-    }
-
-    public void resendToken(Realm realm, final CallBack callBack) {
-        if (!isUserLoggedIn(realm)) {
-            throw new IllegalArgumentException(new Exception("no user logged for verification"));
-        }
-        if (isUserVerified(realm)) {
-            doNotify(null, callBack);
-            return;
-        }
-        if (!ConnectionUtils.isConnectedOrConnecting()) {
-            doNotify(NO_CONNECTION_ERROR, callBack);
-            return;
-        }
-        userApi.resendToken(getCurrentUser(realm).getUserId(), null, new UserApiV2.Callback<HttpResponse>() {
-            @Override
-            public void done(Exception e, HttpResponse response) {
-                doNotify(e, callBack);
-            }
-        });
-    }
 
 //    @SuppressWarnings("unused")
 //    public void logOut(Context context, final CallBack logOutCallback) {

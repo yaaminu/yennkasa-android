@@ -20,7 +20,7 @@ buildscript {
         projectCompileSdkVersion = 25
         projectBuildToolsVersion = "23.0.1"
         projectMinSdkVersion = 9
-        projectTargetSdkVersion = 23
+        projectTargetSdkVersion = 25
         projectVersionName = "${versionMajor}.${versionMinor}.${versionPatch}.${String.format("%d", versionBuild)}"
         projectVersionCode = versionBuild
         projectSplitEnabled = true
@@ -35,7 +35,6 @@ buildscript {
             url 'http://maven.stickerpipe.com/artifactory/stickerfactory'
         }
         mavenLocal()
-
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:2.2.2'

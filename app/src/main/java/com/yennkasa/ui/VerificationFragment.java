@@ -18,6 +18,7 @@ import android.widget.TextView;
 import com.yennkasa.Errors.ErrorCenter;
 import com.yennkasa.R;
 import com.yennkasa.data.UserManager;
+import com.yennkasa.data.VerificationHelper;
 import com.yennkasa.messenger.FireBaseInstantIDService;
 import com.yennkasa.util.Config;
 import com.yennkasa.util.Event;
@@ -32,6 +33,11 @@ import com.yennkasa.util.ViewUtils;
 import butterknife.ButterKnife;
 import butterknife.OnTextChanged;
 import io.realm.Realm;
+
+import static com.yennkasa.data.UserManager.VERIFICAITON_CODE_RECIEVED;
+import static com.yennkasa.data.VerificationHelper.VERIFICATION_FAILED;
+import static com.yennkasa.data.VerificationHelper.VERIFICATION_INITIATED;
+import static com.yennkasa.data.VerificationHelper.VERIFICATION_SUCCESS;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -55,6 +61,7 @@ public class VerificationFragment extends Fragment {
     };
 
     private void changeNumber() {
+        Config.getApplicationWidePrefs().edit().remove(KEY_TOKEN_SENT).apply();
         callback.onBackToCLogIn();
     }
 
@@ -63,19 +70,10 @@ public class VerificationFragment extends Fragment {
     private TextView notice;
 
     private void sendToken() {
+        etVerification.setText("");
         progressDialog.show();
-        UserManager.getInstance().sendVerificationToken(callback.getRealm(), new UserManager.CallBack() {
-            @Override
-            public void done(Exception e) {
-                progressDialog.dismiss();
-                if (e != null) {
-                    ErrorCenter.reportError(TAG, e.getMessage());
-                } else {
-                    Config.getApplicationWidePrefs().edit().putBoolean(KEY_TOKEN_SENT, true).apply();
-                    setUpViews(buttonChangeNumber, resendToken, notice);
-                }
-            }
-        });
+        helper = new VerificationHelper(UserManager.getMainUserId(callback.getRealm()));
+        helper.sendVerificationToken();
     }
 
     public VerificationFragment() {
@@ -94,10 +92,18 @@ public class VerificationFragment extends Fragment {
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(eventsListener, VERIFICAITON_CODE_RECIEVED,
+                VERIFICATION_FAILED, VERIFICATION_INITIATED,
+                VERIFICATION_SUCCESS);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_verification, container, false);
-        ButterKnife.bind(this,view);
+        ButterKnife.bind(this, view);
         buttonChangeNumber = (TextView) view.findViewById(R.id.bt_change_number);
         buttonChangeNumber.setOnClickListener(listener);
         ViewUtils.setTypeface(buttonChangeNumber, TypeFaceUtil.ROBOTO_REGULAR_TTF);
@@ -136,6 +142,8 @@ public class VerificationFragment extends Fragment {
         }
     }
 
+    @Nullable
+    VerificationHelper helper;
     private final EventBus.EventsListener eventsListener = new EventBus.EventsListener() {
         @Override
         public int threadMode() {
@@ -144,20 +152,56 @@ public class VerificationFragment extends Fragment {
 
         @Override
         public void onEvent(EventBus yourBus, Event event) {
-            if (UserManager.VERIFICAITON_CODE_RECIEVED.equals(event.getTag())) {
-                if (event.getData() != null) {
-                    String code = event.getData().toString().trim();
-                    if (!TextUtils.isEmpty(code)) {
-                        etVerification.setText(code);
+            String tag = event.getTag().toString();
+            switch (tag) {
+                case VERIFICAITON_CODE_RECIEVED:
+                    if (event.getData() != null) {
+                        String code = event.getData().toString().trim();
+                        if (!TextUtils.isEmpty(code)) {
+                            etVerification.setText(code);
+                        }
                     }
-                }
-                if (event.isSticky()) {
-                    yourBus.removeStickyEvent(event);
-                }
-                event.recycle();
-            } else {
-                throw new AssertionError("unknown event");
+                    break;
+                case VERIFICATION_INITIATED:
+                    if (progressDialog.isShowing()) {
+                        progressDialog.hide();
+                    }
+                    Config.getApplicationWidePrefs().edit().putBoolean(KEY_TOKEN_SENT, true).apply();
+                    setUpViews(buttonChangeNumber, resendToken, notice);
+                    break;
+                case VERIFICATION_FAILED:
+                    //noinspection ThrowableResultOfMethodCallIgnored,ConstantConditions
+                    UiHelpers.showErrorDialog(getActivity(), event.getError().getMessage());
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                    break;
+                case VERIFICATION_SUCCESS:
+                    progressDialog.setCancelable(false);
+                    if (!progressDialog.isShowing()) {
+                        progressDialog.show();
+                    }
+                    UserManager.getInstance().verifyUser(callback.getRealm(), "token-unused",
+                            FireBaseInstantIDService.getInstanceID(), new UserManager.CallBack() {
+                                @Override
+                                public void done(Exception e) {
+                                    progressDialog.dismiss();
+                                    if (e == null) {
+                                        callback.onVerified();
+                                    } else {
+                                        UiHelpers.showErrorDialog(getActivity(), e.getMessage());
+                                    }
+                                }
+                            });
+                    break;
+                default:
+                    throw new AssertionError();
             }
+
+            if (event.isSticky()) {
+                yourBus.removeStickyEvent(event);
+            }
+            event.recycle();
         }
 
         @Override
@@ -166,16 +210,14 @@ public class VerificationFragment extends Fragment {
         }
     };
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        EventBus.getDefault().register(UserManager.VERIFICAITON_CODE_RECIEVED, eventsListener);
-    }
 
     @Override
-    public void onPause() {
-        EventBus.getDefault().unregister(UserManager.VERIFICAITON_CODE_RECIEVED, eventsListener);
-        super.onPause();
+    public void onDestroy() {
+        EventBus.getDefault().unregister(VERIFICAITON_CODE_RECIEVED, eventsListener);
+        EventBus.getDefault().unregister(VERIFICATION_INITIATED, eventsListener);
+        EventBus.getDefault().unregister(VERIFICATION_FAILED, eventsListener);
+        EventBus.getDefault().unregister(VERIFICATION_SUCCESS, eventsListener);
+        super.onDestroy();
     }
 
     private void setUpViews(TextView buttonVerify, TextView resendToken, TextView notice) {
@@ -211,15 +253,13 @@ public class VerificationFragment extends Fragment {
                         });
                     } else {
                         updateProgress(getString(R.string.verifying_account_stage_2));
-                        UserManager.getInstance().verifyUser(callback.getRealm(), code, token, new UserManager.CallBack() {
+                        getActivity().runOnUiThread(new Runnable() {
                             @Override
-                            public void done(Exception e) {
-                                progressDialog.dismiss();
-                                if (e != null) {
-                                    ErrorCenter.reportError(TAG, e.getMessage());
-                                } else {
-                                    callback.onVerified();
+                            public void run() {
+                                if (helper == null) {
+                                    helper = new VerificationHelper(UserManager.getMainUserId(callback.getRealm()));
                                 }
+                                helper.verify(code);
                             }
                         });
                     }
@@ -264,19 +304,6 @@ public class VerificationFragment extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
         outState.putString(VERIFICATION_TOKEN, etVerification.getText().toString());
         super.onSaveInstanceState(outState);
-    }
-
-    private void resendToken() {
-        progressDialog.show();
-        UserManager.getInstance().resendToken(callback.getRealm(), new UserManager.CallBack() {
-            @Override
-            public void done(Exception e) {
-                progressDialog.dismiss();
-                if (e != null) {
-                    ErrorCenter.reportError(TAG, e.getMessage());
-                }
-            }
-        });
     }
 
     public interface Callbacks {

@@ -80,3 +80,21 @@
 -dontwarn org.spongycastle.jce.provider.X509LDAPCertStoreSpi
 -dontwarn org.spongycastle.x509.util.LDAPStoreHelper
 ##############################################
+
+# sinch verification library
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+-keepclassmembers class com.sinch.** extends android.os.AsyncTask {
+    *;
+}
+
+-keep,includedescriptorclasses class com.sinch.** {
+    *;
+}

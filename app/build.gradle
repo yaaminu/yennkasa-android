@@ -3,6 +3,9 @@ apply plugin: 'io.fabric'
 
 repositories {
     maven { url 'https://maven.fabric.io/public' }
+    flatDir {
+        dirs 'libs'
+    }
 }
 
 
@@ -100,6 +103,12 @@ dependencies {
     compile 'uk.co.chrisjenx:calligraphy:2.2.0'
     compile 'com.google.firebase:firebase-messaging:9.4.0'
     compile 'com.android.support:multidex:1.0.1'
+
+    compile(name: 'sinch-android-verification-1.4.0', ext: 'aar')
+//    compile('com.github.orangegangsters:lollipin:2.0.0@aar') {
+//        transitive = true
+//    }
+//    compile 'me.zhanghai.android.patternlock:library:2.0.4'
 }
 
 // map for the version code

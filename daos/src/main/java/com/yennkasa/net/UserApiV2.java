@@ -16,6 +16,7 @@ import java.util.Set;
  */
 public interface UserApiV2 {
 
+
     String getAuthToken();
 
     void sendVerificationToken(String userId, Callback<HttpResponse> callback);

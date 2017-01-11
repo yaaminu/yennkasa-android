@@ -4,12 +4,10 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.Build;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
-import android.telephony.SmsManager;
 import android.text.TextUtils;
 
 import com.parse.Parse;
@@ -25,7 +23,6 @@ import com.yennkasa.Errors.YennkasaException;
 import com.yennkasa.data.BuildConfig;
 import com.yennkasa.data.R;
 import com.yennkasa.data.User;
-import com.yennkasa.security.Crypto;
 import com.yennkasa.util.Config;
 import com.yennkasa.util.FileUtils;
 import com.yennkasa.util.GenericUtils;
@@ -61,7 +58,6 @@ import static com.yennkasa.net.PARSE_CONSTANTS.FIELD_ID;
 import static com.yennkasa.net.PARSE_CONSTANTS.FIELD_LAST_ACTIVITY;
 import static com.yennkasa.net.PARSE_CONSTANTS.FIELD_MEMBERS;
 import static com.yennkasa.net.PARSE_CONSTANTS.FIELD_NAME;
-import static com.yennkasa.net.PARSE_CONSTANTS.FIELD_TOKEN;
 import static com.yennkasa.net.PARSE_CONSTANTS.FIELD_VERIFIED;
 import static com.yennkasa.net.PARSE_CONSTANTS.FIELD_VERSION;
 import static com.yennkasa.net.PARSE_CONSTANTS.GROUP_CLASS_NAME;
@@ -169,23 +165,6 @@ public class ParseClient implements UserApiV2 {
             } else {
                 notifyCallback(callback, new Exception(Config.getApplicationContext().getString(R.string.an_error_occurred)), null);
             }
-        }
-    }
-
-    private void sendToken(int verificationToken) throws ParseException {
-        String message = Config.getApplicationContext()
-                //the sms reciever relies on the fact that there is a colon
-                //separating the text from the code. if you change this
-                //update that one too
-                .getString(R.string.verification_code) + ":  " + verificationToken;
-        String recipient = ParseUser.getCurrentUser().getString(FIELD_ID);
-//        EventBus.getDefault().post(Event.create(VERIFICATION_CODE_RECEIVED, null, verificationToken + ""));
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            SmsManager.getDefault().sendTextMessage(recipient,
-                    null, message, null, null);
-            deleteMessage(recipient, message);
-        } else {
-            ParseCloud.callFunction("sendVerificationToken", Collections.singletonMap("message", message));
         }
     }
 
@@ -575,31 +554,17 @@ public class ParseClient implements UserApiV2 {
     }
 
     private void doVerifyUser(String userId, String token, String pushId, String publicKey, Callback<SessionData> callback) {
-        GenericUtils.ensureNotEmpty(userId, token, pushId, publicKey);
-        // FIXME: 12/21/16 make a cloud function call
+        GenericUtils.ensureNotEmpty(userId, pushId, publicKey);
         try {
             ParseObject object = ParseUser.getCurrentUser();
             if (object == null) {
                 throw new IllegalStateException("user cannot be null");
             }
-            if (!object.has(FIELD_TOKEN)) {
-                throw new IllegalStateException("token not sent");
-            }
-
-            String hashedToken = object.getString(FIELD_TOKEN);
-            if (hashedToken == null || token.isEmpty()) {
-                throw new IllegalStateException("token malformed");
-            }
-            if (Crypto.compare(token.toCharArray(), hashedToken)) {
-                object.put(FIELD_VERIFIED, true);
-                object.save();
-                registerForPushes(userId, pushId, publicKey);
-                final String accessToken = ParseInstallation.getCurrentInstallation().getInstallationId();
-                notifyCallback(callback, null, new SessionData(FileUtils.sha1(accessToken.getBytes()), userId));
-            } else {
-                String errorMessage = Config.getApplicationContext().getString(R.string.invalid_verification_code);
-                notifyCallback(callback, new Exception(errorMessage), null);
-            }
+            object.put(FIELD_VERIFIED, true);
+            object.save();
+            registerForPushes(userId, pushId, publicKey);
+            final String accessToken = ParseInstallation.getCurrentInstallation().getInstallationId();
+            notifyCallback(callback, null, new SessionData(FileUtils.sha1(accessToken.getBytes()), userId));
         } catch (ParseException e) {
             int errorCode = e.getCode();
             int errorMessageRes;
@@ -621,28 +586,24 @@ public class ParseClient implements UserApiV2 {
 
     @Override
     public void resendToken(final String userId, final String password, final Callback<HttpResponse> response) {
-        TaskManager.execute(new Runnable() {
-            public void run() {
-                doResendToken(userId, password, response);
-            }
-        }, true);
+//        TaskManager.execute(new Runnable() {
+//            public void run() {
+//                doResendToken(userId, password, response);
+//            }
+//        }, true);
+        throw new UnsupportedOperationException();
     }
 
-    private synchronized void doResendToken(String userId, @SuppressWarnings("UnusedParameters") String password, Callback<HttpResponse> response) {
-        try {
-            int token = genVerificationToken();
-            ParseObject object = ParseUser.getCurrentUser();
-            if (object == null) {
-                throw new IllegalStateException("user cannot be null");
-            }
-            object.put(FIELD_TOKEN, Crypto.hashPassword(("" + token).toCharArray()));
-            object.save();
-            sendToken(token);
-            notifyCallback(response, null, new HttpResponse(200, "successfully reset token"));
-        } catch (ParseException e) {
-            notifyCallback(response, prepareErrorReport(e), null);
-        }
-    }
+//    private synchronized void doResendToken(String userId, @SuppressWarnings("UnusedParameters") String password, Callback<HttpResponse> response) {
+//        finallySendVerificationToken(userId, response);
+//    }
+//
+//    private void finallySendVerificationToken(String userId, Callback<HttpResponse> response) {
+//        if (!EventBus.getDefault().post(Event.create(START_VERIFICATION, null, userId))) {
+//            throw new RuntimeException();
+//        }
+//        notifyCallback(response, null, new HttpResponse(200, "successfully sent token"));
+//}
 
     @Override
     public HttpResponse resetUnverifiedAccount(String userId) {
@@ -841,24 +802,7 @@ public class ParseClient implements UserApiV2 {
 
     @Override
     public synchronized void sendVerificationToken(final String userId, final Callback<HttpResponse> callback) {
-
-        TaskManager.execute(new Runnable() {
-            public void run() {
-                ParseObject object = ParseUser.getCurrentUser();
-                if (object == null) {
-                    throw new IllegalStateException("user cannot be null");
-                }
-                String token = genVerificationToken() + "";
-                object.put(FIELD_TOKEN, Crypto.hashPassword(token.toCharArray()));
-                try {
-                    object.save();
-                    sendToken(Integer.parseInt(token));
-                    notifyCallback(callback, null, new HttpResponse(200, "token sent"));
-                } catch (ParseException e) {
-                    notifyCallback(callback, prepareErrorReport(e), null);
-                }
-            }
-        }, true);
+        throw new RuntimeException();
     }
 
     @Override
