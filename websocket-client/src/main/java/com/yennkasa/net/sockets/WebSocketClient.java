@@ -263,7 +263,6 @@ public class WebSocketClient {
         public void onConnected(WebSocket websocket, Map<String, List<String>> headers) throws Exception {
             heartbeatCounter = 0;
             logger.Log(Logger.V, TAG, "connected to %s @ %s", websocket.getURI().toString(), new Date().toString());
-            listener.onOpen();
             //start a timer that sends a keep alive message every 10 seconds
             synchronized (WebSocketClient.this) {
                 if (heartbeatTimerTask != null) {
@@ -281,6 +280,7 @@ public class WebSocketClient {
                     reconnectTimerTask = null;
                 }
             }
+            listener.onOpen();
         }
 
         @Override
