@@ -130,6 +130,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 snackBar = getSnackBar();
                 snackBar.applyStyle(getSnackBarStyle());
             }
+            handleConnectionEvent(currentStatus);
         }
     }
 
@@ -390,11 +391,16 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         unRegister(get(PAIRAPP_CLIENT_LISTENABLE_BUS), tag, otherTags);
     }
 
-    protected void unRegister(EventBus bus, Object tag, Object... otherTags) {
-        bus.unregister(tag, this);
-        for (Object otherTag : otherTags) {
-            bus.unregister(otherTag, this);
-        }
+    protected void unRegister(final EventBus bus, final Object tag, final Object... otherTags) {
+        TaskManager.executeNow(new Runnable() {
+            @Override
+            public void run() { //let's leak this activity at least for the time being
+                bus.unregister(tag, PairAppActivity.this);
+                for (Object otherTag : otherTags) {
+                    bus.unregister(otherTag, PairAppActivity.this);
+                }
+            }
+        }, false);
     }
 
     @Override
