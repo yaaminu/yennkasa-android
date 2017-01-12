@@ -41,6 +41,7 @@ import rx.Subscriber;
 import rx.android.schedulers.AndroidSchedulers;
 
 import static android.view.WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD;
+import static android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON;
 import static android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED;
 import static android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON;
 import static com.yennkasa.messenger.MessengerBus.ANSWER_CALL;
@@ -196,7 +197,7 @@ public abstract class BaseCallActivity extends PairAppActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getWindow().addFlags(FLAG_DISMISS_KEYGUARD |
-                FLAG_SHOW_WHEN_LOCKED | FLAG_TURN_SCREEN_ON);
+                FLAG_SHOW_WHEN_LOCKED | FLAG_TURN_SCREEN_ON | FLAG_KEEP_SCREEN_ON);
         super.setContentView(getLayout());
         ButterKnife.bind(this);
         handleIntent();
