@@ -1,5 +1,8 @@
 package com.yennkasa.data;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import com.sinch.verification.Config;
 import com.sinch.verification.InitiationResult;
 import com.sinch.verification.SinchVerification;
@@ -34,11 +37,24 @@ public class VerificationHelper implements VerificationListener {
     }
 
     public void sendVerificationToken() {
-        sinchVerification.initiate();
+
+        new Handler(Looper.getMainLooper())
+                .postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        sinchVerification.initiate();
+                    }
+                }, 45000);
     }
 
-    public void verify(String code) {
-        sinchVerification.verify(code);
+    public void verify(final String code) {
+        new Handler(Looper.getMainLooper())
+                .postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        sinchVerification.verify(code);
+                    }
+                }, 1000);
     }
 
     @Override

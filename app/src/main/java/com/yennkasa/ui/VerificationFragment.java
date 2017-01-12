@@ -72,7 +72,7 @@ public class VerificationFragment extends Fragment {
     private void sendToken() {
         etVerification.setText("");
         progressDialog.show();
-        helper = new VerificationHelper(UserManager.getMainUserId(callback.getRealm()));
+        helper = new VerificationHelper(UserManager.getInstance().getCurrentUser(callback.getRealm()).getUserId());
         helper.sendVerificationToken();
     }
 
@@ -132,7 +132,7 @@ public class VerificationFragment extends Fragment {
 
     @OnTextChanged(R.id.et_verification)
     void onTextChanged(Editable text) {
-        if (text.toString().trim().length() == 5) {
+        if (text.toString().trim().length() >= 4) {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
