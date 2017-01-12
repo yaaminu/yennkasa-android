@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static com.yennkasa.messenger.MessengerBus.CONNECTED;
 import static com.yennkasa.messenger.MessengerBus.SOCKET_CONNECTION;
@@ -33,8 +34,8 @@ public class StatusManager {
     public static final String ON_USER_TYPING = "onUserTyping";
     public static final String MONITORTYPING_COLLAPSE_KEY = "monitortyping";
     public static final String CURRENT_USER_STATUS_COLLAPSE_KEY = "currentUserStatus";
-    public static final int INACTIVITY_THRESHOLD = 60000; //60 seconds
-    public static final long ONLINE_ANNOUNCEMENT_INTERVAL = 45000;
+    public static final int INACTIVITY_THRESHOLD = ((int) TimeUnit.MINUTES.toMillis(2));
+    public static final long ONLINE_ANNOUNCEMENT_INTERVAL = TimeUnit.MINUTES.toMillis(1);
     private volatile boolean currentUserStatus = false;
 
     @Nullable
@@ -98,6 +99,14 @@ public class StatusManager {
         public boolean sticky() {
             return false;
         }
+    };//for every ONLINE_ANNOUNCEMENT_INTERVAL, repeat the process if we havn't gone offline
+    private final Runnable announceTypingRunnable = new Runnable() {
+        @Override
+        public void run() { //for every ONLINE_ANNOUNCEMENT_INTERVAL, repeat the process if we havn't gone offline
+            if (StatusManager.this.currentUserStatus) {
+                announceStatusChange(true);
+            }
+        }
     };
 
     private StatusManager(@NonNull Sender sender, @NonNull MessagePacker encoder, @NonNull EventBus broadcastBus) {
@@ -121,16 +130,11 @@ public class StatusManager {
 
     synchronized void announceStatusChange(boolean currentUserStatus) {
         this.currentUserStatus = currentUserStatus;
-        sender.sendMessage(createSendable(CURRENT_USER_STATUS_COLLAPSE_KEY, encoder.createStatusMessage(this.currentUserStatus)));
+        sender.sendMessage(createSendable(CURRENT_USER_STATUS_COLLAPSE_KEY,
+                encoder.createStatusMessage(this.currentUserStatus)));
         if (currentUserStatus) {
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() { //for every ONLINE_ANNOUNCEMENT_INTERVAL, repeat the process if we havn't gone offline
-                    if (StatusManager.this.currentUserStatus) {
-                        announceStatusChange(true);
-                    }
-                }
-            }, ONLINE_ANNOUNCEMENT_INTERVAL);
+            handler.removeCallbacks(announceTypingRunnable);
+            handler.postDelayed(announceTypingRunnable, ONLINE_ANNOUNCEMENT_INTERVAL);
         }
     }
 
