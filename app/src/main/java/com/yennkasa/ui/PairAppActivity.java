@@ -30,7 +30,6 @@ import com.yennkasa.data.User;
 import com.yennkasa.data.UserManager;
 import com.yennkasa.data.util.MessageUtils;
 import com.yennkasa.messenger.MessengerBus;
-import com.yennkasa.util.Config;
 import com.yennkasa.util.Event;
 import com.yennkasa.util.EventBus;
 import com.yennkasa.util.LiveCenter;
@@ -124,7 +123,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     protected void onResume() {
         super.onResume();
         if (isUserVerified()) {
-            Config.appOpen(true);
             registerForEvent(MessengerBus.SOCKET_CONNECTION, MessengerBus.UI_ON_NEW_MESSAGE_RECEIVED);
             if (snackBar == null) {
                 snackBar = getSnackBar();
@@ -138,7 +136,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     protected void onPause() {
         super.onPause();
         if (isUserVerified()) {
-            Config.appOpen(false);
             unRegister(MessengerBus.SOCKET_CONNECTION, MessengerBus.UI_ON_NEW_MESSAGE_RECEIVED);
         }
     }

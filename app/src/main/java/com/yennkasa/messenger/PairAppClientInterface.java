@@ -119,19 +119,10 @@ class PairAppClientInterface {
         }
         backStack.remove(activity);
         if (backStack.isEmpty()) {
+            Config.appOpen(false);
             PLog.d(YennkasaClient.TAG, "marking user as offline");
             statusManager.announceStatusChange(false);
-            // TODO: 1/3/17 initiate a timer to shutdown the persistent tcp socket to the server
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (!Config.isAppOpen()) {
-                        synchronized (PairAppClientInterface.this) {
-                            sender.disconnectIfRequired();
-                        }
-                    }
-                }
-            }, TimeUnit.MINUTES.toMillis(1));
+            sender.disconnectIfIdleForLong();
         }
     }
 
@@ -141,6 +132,7 @@ class PairAppClientInterface {
             throw new IllegalArgumentException();
         }
         if (backStack.isEmpty()) {
+            Config.appOpen(true);
             Log.d(YennkasaClient.TAG, "marking user as online");
             statusManager.announceStatusChange(true);
             sender.attemptReconnectIfRequired();

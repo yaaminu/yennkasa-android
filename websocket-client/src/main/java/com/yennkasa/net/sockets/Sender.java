@@ -16,11 +16,11 @@ public interface Sender {
 
     void shutdownSafely();
 
-    void disconnectIfRequired();
-
     String bytesToString(byte[] data);
 
     byte[] stringToBytes(String data);
 
     void attemptReconnectIfRequired();
+
+    void disconnectIfIdleForLong();
 }

@@ -48,6 +48,11 @@ public class StatusManagerTest {
         }
 
         @Override
+        public void disconnectIfIdleForLong() {
+
+        }
+
+        @Override
         public boolean unsendMessage(Sendable sendable) {
             return false;
         }
@@ -69,11 +74,6 @@ public class StatusManagerTest {
 
         @Override
         public void shutdownSafely() {
-
-        }
-
-        @Override
-        public void disconnectIfRequired() {
 
         }
 

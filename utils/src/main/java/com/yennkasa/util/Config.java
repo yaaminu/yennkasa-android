@@ -77,8 +77,8 @@ public class Config {
         return isAppOpen.get();
     }
 
-    public static void appOpen(boolean chatRoomOpen) {
-        isAppOpen.set(chatRoomOpen);
+    public static void appOpen(boolean appOpen) {
+        isAppOpen.set(appOpen);
     }
 
     public static Context getApplicationContext() {

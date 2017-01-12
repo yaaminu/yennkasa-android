@@ -20,6 +20,11 @@ public class QueueDataSourceMock implements QueueDataSource {
         return waiting;
     }
 
+    @Override
+    public void removeAllEphemeralItems() {
+
+    }
+
     final List<Sendable> mocks;
     QueueItemCleanedListener queueItemCleanedListener;
     boolean initialised = false;

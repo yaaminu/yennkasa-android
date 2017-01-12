@@ -10,6 +10,7 @@ import com.yennkasa.Errors.ErrorCenter;
 import com.yennkasa.R;
 import com.yennkasa.data.User;
 import com.yennkasa.data.UserManager;
+import com.yennkasa.util.Config;
 import com.yennkasa.util.Event;
 import com.yennkasa.util.GcmUtils;
 import com.yennkasa.util.NavigationManager;
@@ -75,6 +76,9 @@ public abstract class PairAppBaseActivity extends ActionBarActivity implements E
                     showMessage();
                 }
             }, false);
+        }
+        if (isUserVerified) {
+            Config.appOpen(true);
         }
     }
 

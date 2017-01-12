@@ -26,6 +26,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import io.realm.Realm;
 
@@ -202,8 +203,7 @@ public class SenderImpl implements Sender {
         }
     }
 
-    @Override
-    public synchronized void disconnectIfRequired() {
+    private synchronized void disconnectIfRequired() {
         if (!Config.isAppOpen() && (!messageQueue.isStarted() || messageQueue.getPending() == 0)) {
             if (yennkasaSocket != null) {
                 if (yennkasaSocket.isConnected()) {
@@ -473,7 +473,8 @@ public class SenderImpl implements Sender {
         }
     };
 
-    private void disconnectIfIdleForLong() {
+    @Override
+    public synchronized void disconnectIfIdleForLong() {
         if (!Config.isAppOpen() && messageQueue.getPending() == 0) {
             new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                 @Override
@@ -482,7 +483,7 @@ public class SenderImpl implements Sender {
                         disconnectIfRequired();
                     }
                 }
-            }, 60000);
+            }, TimeUnit.MINUTES.toMillis(15));
         }
     }
 
