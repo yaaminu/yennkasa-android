@@ -128,7 +128,6 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
                 snackBar = getSnackBar();
                 snackBar.applyStyle(getSnackBarStyle());
             }
-            handleConnectionEvent(currentStatus);
         }
     }
 
