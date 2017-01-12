@@ -246,20 +246,13 @@ public class MessageProcessor extends IntentService {
         //all other operations are deferred till we set up the conversation
         Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
 
-        //WATCH OUT! don't touch this block!
-        //////////////////////////////////////////////////////////////////////////////////////////
-        //ensure the conversation and session is set up
+        //ensure the conversation is set up
         // before persisting the message
         if (conversation == null) { //create a new one
-            conversation = Conversation.newConversation(realm, currentUserId, peerId);
-            realm.beginTransaction();
-        } else {
-            realm.beginTransaction();
-            Conversation.newSession(realm, currentUserId, conversation);
-            realm.commitTransaction(); //force the transaction to be committed.
-            realm.beginTransaction();
+            conversation = Conversation.newConversationWithoutSession(realm, peerId, false);
         }
-        ///////////////////////////////////////////////////////////////////////////////////////////
+
+        realm.beginTransaction();
         Number newestMessage = realm.where(Message.class)
                 .equalTo(Message.FIELD_TO, peerId)
                 .in(Message.FIELD_TYPE, new Integer[]{TYPE_BIN_MESSAGE, TYPE_STICKER, TYPE_VIDEO_MESSAGE, TYPE_TEXT_MESSAGE,
@@ -273,10 +266,12 @@ public class MessageProcessor extends IntentService {
         if (newestMessage != null && newestMessage.longValue() >= timestamp) {
             dateComposed = System.currentTimeMillis() + 10;
         } else {
+            //create a new session for this message if it's not today...
             dateComposed = Math.min(System.currentTimeMillis(), timestamp);
         }
+        //create the session.
+        Conversation.newSession(realm, currentUserId, conversation, dateComposed);
         message.setDateComposed(new Date(dateComposed));
-
         message.setState(Message.STATE_RECEIVED);
         if (message.hasAttachment()) {
             String size = Uri.parse(message.getMessageBody()).getQueryParameter("size");

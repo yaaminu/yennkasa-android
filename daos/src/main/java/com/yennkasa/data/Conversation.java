@@ -1,10 +1,13 @@
 package com.yennkasa.data;
 
 import android.content.Context;
+import android.support.annotation.NonNull;
 
 import com.yennkasa.util.SimpleDateUtil;
 
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import io.realm.Realm;
 import io.realm.RealmObject;
@@ -75,27 +78,7 @@ public class Conversation extends RealmObject {
 
     @SuppressWarnings("ConstantConditions")
     public synchronized static boolean newSession(Realm realm, String currentUserId, Conversation conversation) {
-        if (conversation == null) {
-            throw new IllegalArgumentException("conversation is null");
-        }
-
-        Date now = new Date();
-        String formatted = SimpleDateUtil.formatSessionDate(now);
-        String messageId = conversation.getPeerId() + formatted;
-        Message message = realm.where(Message.class)
-                .equalTo(Message.FIELD_ID, messageId)
-                .findFirst();
-        if (message == null) { //session not yet set up!
-            message = realm.createObject(Message.class, messageId);
-//            message.setId(messageId);
-            message.setMessageBody(formatted);
-            message.setTo(currentUserId);
-            message.setFrom(conversation.getPeerId());
-            message.setDateComposed(now);
-            message.setType(TYPE_DATE_MESSAGE);
-            return true;
-        }
-        return false;
+        return newSession(realm, currentUserId, conversation, System.currentTimeMillis());
     }
 
     public synchronized static void newConversation(Context context, String currentUserId, String peerId) {
@@ -158,5 +141,33 @@ public class Conversation extends RealmObject {
         clone.setSummary(conversation.getSummary());
         clone.setLastMessage(conversation.getLastMessage());
         return clone;
+    }
+
+    public static boolean newSession(@NonNull Realm realm, @NonNull String currentUserId,
+                                     @NonNull Conversation conversation, long timestamp) {
+
+        Calendar calendar = GregorianCalendar.getInstance();
+        calendar.setTime(new Date(timestamp));
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        Date time = calendar.getTime();
+        String formatted = SimpleDateUtil.formatSessionDate(time);
+        String messageId = conversation.getPeerId() + formatted;
+        Message message = realm.where(Message.class)
+                .equalTo(Message.FIELD_ID, messageId)
+                .findFirst();
+        if (message == null) { //session not yet set up!
+            message = realm.createObject(Message.class, messageId);
+//            message.setId(messageId);
+            message.setMessageBody(formatted);
+            message.setTo(currentUserId);
+            message.setFrom(conversation.getPeerId());
+            message.setDateComposed(time);
+            message.setType(TYPE_DATE_MESSAGE);
+            return true;
+        }
+        return false;
     }
 }
