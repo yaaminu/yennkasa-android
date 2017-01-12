@@ -64,18 +64,32 @@ public class VerificationHelper implements VerificationListener {
     }
 
     @Override
-    public void onInitiationFailed(Exception e) {
+    public void onInitiationFailed(final Exception e) {
         PLog.d(TAG, e.getMessage(), e);
-        EventBus.getDefault().postSticky(Event.createSticky(VERIFICATION_FAILED, e, null));
+        new Handler(Looper.getMainLooper())
+                .postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        EventBus.getDefault().postSticky(Event.createSticky(VERIFICATION_FAILED, e, null));
+                    }
+                }, 30000);
     }
 
     @Override
     public void onVerified() {
-        EventBus.getDefault().postSticky(Event.createSticky(VERIFICATION_SUCCESS, null, userId));
+        PLog.d(TAG, "verified %s", userId);
+        new Handler(Looper.getMainLooper())
+                .postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        EventBus.getDefault().postSticky(Event.createSticky(VERIFICATION_SUCCESS, null, userId));
+                    }
+                }, 1000);
     }
 
     @Override
     public void onVerificationFailed(Exception e) {
+        PLog.d(TAG, e.getMessage(), e);
         EventBus.getDefault().postSticky(Event.createSticky(VERIFICATION_FAILED, e, null));
     }
 }
