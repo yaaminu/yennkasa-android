@@ -210,13 +210,14 @@ public class ChatSettingsFragment extends BaseFragment {
                 case 1:
                 case 2:
 //                case 6:
-                case 8:
+//                case 8:
                 case 9:
                 case 11:
                 case 12:
                     return R.layout.list_list_item;
                 case 3:
                     return R.layout.true_or_false_list_item;
+                case 8:
                 case 4:
                 case 6:
                 case 5:
