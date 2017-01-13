@@ -11,6 +11,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.util.LruCache;
 import android.text.format.DateUtils;
 import android.util.SparseIntArray;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -195,6 +196,9 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         }
         holder = (ViewHolder) convertView.getTag();
 
+        if (holder.textMessage != null) {
+            holder.textMessage.setTextSize(TypedValue.COMPLEX_UNIT_PX, delegate.getMessageTextSize());
+        }
         Date messageDateComposed = message.getDateComposed();
         View.OnTouchListener touchListener = new View.OnTouchListener() {
             @Override
@@ -531,6 +535,8 @@ public class MessagesAdapter extends RealmBaseAdapter<Message> implements View.O
         int getProgress(Message message);
 
         void download(Message message);
+
+        float getMessageTextSize();
 
         PairAppBaseActivity getContext();
 

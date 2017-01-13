@@ -30,7 +30,7 @@ public class ChatSettingsAdapter extends YennkasaBaseAdapter<ChatSettingsItem> {
     }
 
     @Override
-    protected void doBindHolder(Holder holder, int position) {
+    protected void doBindHolder(final Holder holder, int position) {
         ChatSettingsItem item = getItem(position);
         ((ChatSettingsHolder) holder).title.setText(item.title);
         if (((ChatSettingsHolder) holder).summary != null) {
@@ -40,6 +40,12 @@ public class ChatSettingsAdapter extends YennkasaBaseAdapter<ChatSettingsItem> {
         if (((ChatSettingsHolder) holder).checkBox != null) {
             //noinspection ConstantConditions
             ((ChatSettingsHolder) holder).checkBox.setChecked(item.value == 1);
+            ((ChatSettingsHolder) holder).checkBox.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ((ChatSettingsHolder) holder).itemView.performClick();
+                }
+            });
         }
         if (((ChatSettingsHolder) holder).divider != null) {
             //noinspection ConstantConditions

@@ -2,6 +2,7 @@ package com.yennkasa.ui;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.media.RingtoneManager;
@@ -10,6 +11,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -100,15 +102,15 @@ public class ChatSettingsFragment extends BaseFragment {
                 summary = getString(R.string.background_image_summary);
                 break;
             case 9:
-                // TODO: 1/13/17 use real value;
+                value = currConversation.getTextSize();
                 summary = getString(R.string.message_text_size_summary);
                 break;
             case 11:
-                // TODO: 1/13/17 use real value;
+                value = currConversation.getAutoDownloadWifi();
                 summary = getString(R.string.auto_download_wifi_summary);
                 break;
             case 12:
-                // TODO: 1/13/17 use real value;
+                value = currConversation.getAutoDownloadMobile();
                 summary = getString(R.string.auto_download_mobile_summary);
                 break;
             default:
@@ -263,8 +265,76 @@ public class ChatSettingsFragment extends BaseFragment {
                 items.get(3).value = currConversation.isMute() ? 1 : 0;
                 refreshDisplay();
                 break;
+            case 9:
+                showTextSizeOptions(position);
+                break;
+            case 11:
+                showAutoDownloadOptions(position);
+                break;
+            case 12:
+                break;
             default:
                 throw new AssertionError();
+        }
+    }
+
+    private void showAutoDownloadOptions(int position) {
+        final String[] tmp = getResources().getStringArray(R.array.attachment_types);
+
+    }
+
+    private void showTextSizeOptions(final int position) {
+        final String[] tmp = getResources().getStringArray(R.array.text_size_options);
+        new AlertDialog.Builder(getContext())
+                .setSingleChoiceItems(tmp,
+                        getSelectedPosition(currConversation.getTextSize()),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                Realm realm = ((UserProvider) getActivity()).conversationRealm();
+                                realm.beginTransaction();
+                                currConversation.setTextSize(getSize(which));
+                                realm.commitTransaction();
+                                items.get(position).value = currConversation.getTextSize();
+                                refreshDisplay();
+                            }
+                        }).setPositiveButton(android.R.string.ok, null)
+                .setCancelable(false)
+                .create().show();
+    }
+
+    private int getSize(int position) {
+        //return 14+(2*position)??
+        switch (position) {
+            case 0:
+                return 75;
+            case 1:
+                return 100;
+            case 2:
+                return 125;
+            case 3:
+                return 150;
+            case 4:
+                return 200;
+            default:
+                return 100;
+        }
+    }
+
+    private int getSelectedPosition(int textSize) {
+        switch (textSize) {
+            case 75:
+                return 0;
+            case 100:
+                return 1;
+            case 125:
+                return 2;
+            case 150:
+                return 3;
+            case 200:
+                return 4;
+            default:
+                return 1;
         }
     }
 

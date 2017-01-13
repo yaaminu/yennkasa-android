@@ -31,6 +31,19 @@
         <item>Auto-Download On WIFI</item>
         <item>Auto-Download On Mobile</item>
     </string-array>
+    <string-array name="text_size_options">
+        <item>75%</item>
+        <item>100%</item>
+        <item>125%</item>
+        <item>150%</item>
+        <item>200%</item>
+    </string-array>
+    <string-array name="attachment_types">
+        <item>Audio</item>
+        <item>Image</item>
+        <item>Video</item>
+        <item>Others</item>
+    </string-array>
     <string name="use_default">Use system default</string>
     <string name="mute_chat_summary">Turn off all notification sounds for this conversation</string>
     <string name="hide_chat_summary">Hide this conversation from appearing the conversation list</string>

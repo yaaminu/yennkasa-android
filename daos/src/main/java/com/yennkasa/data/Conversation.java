@@ -47,15 +47,52 @@ public class Conversation extends RealmObject {
     private String summary;
     private Date lastActiveTime;
     private Message lastMessage;
-    private boolean active;
-    private int autoDownloadWifi, autoDownloadMobile, lockType;
+    private boolean active, hidden;
+    private int autoDownloadWifi, autoDownloadMobile, lockType, textSize;
     private String notificationSoundCall, notificationSoundMessage;
     private String notificationSoundMessageTitle;
     private String notificationSoundCallTitle;
     private boolean mute;
 
+    public Conversation() {
+        this.autoDownloadWifi = WIFI_AUDIO | WIFI_VID | WIFI_AUDIO | WIFI_OTHER;
+        this.autoDownloadMobile = 0; //all off.
+    }
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }
+
+    public int getAutoDownloadWifi() {
+        return this.autoDownloadWifi;
+    }
+
+    public void setAutoDownloadWifi(int autoDownloadWifi) {
+        this.autoDownloadWifi = autoDownloadWifi;
+    }
+
+    public int getAutoDownloadMobile() {
+        return autoDownloadMobile;
+    }
+
+    public void setAutoDownloadMobile(int autoDownloadMobile) {
+        this.autoDownloadMobile = autoDownloadMobile;
+    }
+
     public void setNotificationSoundCall(String notificationSoundCall) {
         this.notificationSoundCall = notificationSoundCall;
+    }
+
+    public void setTextSize(int textSize) {
+        this.textSize = textSize;
+    }
+
+    public int getTextSize() {
+        return textSize == 0 ? 100 : textSize;
     }
 
     public void setMute(boolean mute) {
