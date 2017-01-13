@@ -60,7 +60,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import butterknife.Bind;
-import butterknife.BindDimen;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import io.realm.Realm;
@@ -101,14 +100,13 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     public static final String EXTRA_HIDE_NUMBER = "HideNumber";
     private int cursor = -1;
     private boolean wasTyping = false;
-    @BindDimen(R.dimen.message_text_size)
-    float textSize;
+
 
     private final MessagesAdapter.Delegate delegate = new MessagesAdapter.Delegate() {
 
         @Override
         public float getMessageTextSize() {
-            return textSize * ((float) currConversation.getTextSize()) / 100;
+            return messageTextSize * ((float) currConversation.getTextSize()) / 100;
         }
 
         @Override
@@ -259,6 +257,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     };
     private boolean editingMessage = false;
     private MediaPlayer player;
+    private float messageTextSize;
 
 
     @Override
@@ -270,6 +269,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         peer = userManager.fetchUserIfRequired(userRealm, peerId, true, true);
         UserManager.getInstance().refreshPublicKeysIfRequired(peerId);
         setUpCurrentConversation();
+        messageTextSize = getResources().getDimension(R.dimen.message_text_size);
 
         setContentView(R.layout.activity_chat);
         ButterKnife.bind(this);

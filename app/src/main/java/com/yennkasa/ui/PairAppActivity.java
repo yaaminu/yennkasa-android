@@ -463,7 +463,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
         }
     }
 
-    private static int currentStatus = MessengerBus.CONNECTED;
+    private static volatile int currentStatus = MessengerBus.CONNECTED;
 
     private void handleConnectionEvent(int status) {
         ThreadUtils.ensureMain();
