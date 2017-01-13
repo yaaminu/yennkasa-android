@@ -53,6 +53,15 @@ public class Conversation extends RealmObject {
     private String notificationSoundMessageTitle;
     private String notificationSoundCallTitle;
     private boolean mute;
+    private String hashedPassword;
+
+    public void setHashedPassword(String hashedPassword) {
+        this.hashedPassword = hashedPassword;
+    }
+
+    public String getHashedPassword() {
+        return hashedPassword;
+    }
 
     public Conversation() {
         this.autoDownloadWifi = WIFI_AUDIO | WIFI_VID | WIFI_IMG | WIFI_OTHER;

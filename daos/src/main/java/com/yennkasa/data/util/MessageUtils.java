@@ -124,4 +124,9 @@ public class MessageUtils {
                 throw new AssertionError("Unknown message type");
         }
     }
+
+    public static boolean isAudio(String ext) {
+
+        return audioPattern.matcher(ext).find();
+    }
 }

@@ -19,6 +19,7 @@ import com.yennkasa.data.UserManager;
 import com.yennkasa.data.util.MessageUtils;
 import com.yennkasa.util.ConnectionUtils;
 import com.yennkasa.util.Event;
+import com.yennkasa.util.FileUtils;
 import com.yennkasa.util.GenericUtils;
 import com.yennkasa.util.LiveCenter;
 import com.yennkasa.util.PLog;
@@ -32,6 +33,14 @@ import java.util.concurrent.Semaphore;
 import io.realm.Realm;
 import io.realm.exceptions.RealmPrimaryKeyConstraintException;
 
+import static com.yennkasa.data.Conversation.MOBILE_AUDIO;
+import static com.yennkasa.data.Conversation.MOBILE_IMG;
+import static com.yennkasa.data.Conversation.MOBILE_OTHER;
+import static com.yennkasa.data.Conversation.MOBILE_VID;
+import static com.yennkasa.data.Conversation.WIFI_AUDIO;
+import static com.yennkasa.data.Conversation.WIFI_IMG;
+import static com.yennkasa.data.Conversation.WIFI_OTHER;
+import static com.yennkasa.data.Conversation.WIFI_VID;
 import static com.yennkasa.data.Message.TYPE_BIN_MESSAGE;
 import static com.yennkasa.data.Message.TYPE_CALL;
 import static com.yennkasa.data.Message.TYPE_LOG_MESSAGE;
@@ -300,10 +309,61 @@ public class MessageProcessor extends IntentService {
         if (message.hasAttachment() && Worker.getCurrentActiveDownloads() < Worker.MAX_PARRALLEL_DOWNLOAD) {
             if ((ConnectionUtils.isWifiConnected()
                     && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_WIFI, false))
-                    || (ConnectionUtils.isMobileConnected()
-                    && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_MOBILE, false))) {
-                Worker.download(this, message, true);
+                    ) {
+                autoDownloadWifi(message, conversation.getAutoDownloadWifi());
+            } else if (ConnectionUtils.isMobileConnected() && userManager.getBoolPref(UserManager.AUTO_DOWNLOAD_MESSAGE_MOBILE, false)) {
+                autoDownloadMobile(message, conversation.getAutoDownloadMobile());
             }
+        }
+    }
+
+    private void autoDownloadWifi(Message message, int options) {
+        int messageType = message.getType();
+        boolean canDownload = false;
+        switch (messageType) {
+            case Message.TYPE_PICTURE_MESSAGE:
+                canDownload = (options & WIFI_IMG) == WIFI_IMG;
+                break;
+            case Message.TYPE_VIDEO_MESSAGE:
+                canDownload = (options & WIFI_VID) == WIFI_VID;
+                break;
+            case Message.TYPE_BIN_MESSAGE:
+                String path = Uri.parse(message.getMessageBody()).getLastPathSegment();
+                if (MessageUtils.isAudio(FileUtils.getExtension(path))) {
+                    canDownload = (options & WIFI_AUDIO) == WIFI_AUDIO;
+                }
+                break;
+            default:
+                canDownload = (options & WIFI_OTHER) == WIFI_OTHER;
+                break;
+        }
+        if (canDownload) {
+            Worker.download(this, message, true);
+        }
+    }
+
+    private void autoDownloadMobile(Message message, int options) {
+        int messageType = message.getType();
+        boolean canDownload = false;
+        switch (messageType) {
+            case Message.TYPE_PICTURE_MESSAGE:
+                canDownload = (options & MOBILE_IMG) == MOBILE_IMG;
+                break;
+            case Message.TYPE_VIDEO_MESSAGE:
+                canDownload = (options & MOBILE_VID) == MOBILE_VID;
+                break;
+            case Message.TYPE_BIN_MESSAGE:
+                String path = Uri.parse(message.getMessageBody()).getLastPathSegment();
+                if (MessageUtils.isAudio(FileUtils.getExtension(path))) {
+                    canDownload = (options & MOBILE_AUDIO) == MOBILE_AUDIO;
+                }
+                break;
+            default:
+                canDownload = (options & MOBILE_OTHER) == MOBILE_OTHER;
+                break;
+        }
+        if (canDownload) {
+            Worker.download(this, message, true);
         }
     }
 
