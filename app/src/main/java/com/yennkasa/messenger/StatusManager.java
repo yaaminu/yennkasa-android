@@ -80,7 +80,7 @@ public class StatusManager {
                             if (Config.isAppOpen()) {
                                 announceStatusChange(true);
                                 String currentActivePeer = Config.getCurrentActivePeer();
-                                if (currentActivePeer != null) {
+                                if (!GenericUtils.isEmpty(currentActivePeer)) {
                                     startMonitoringUser(currentActivePeer);
                                 }
                             }

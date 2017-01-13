@@ -14,7 +14,7 @@ import com.yennkasa.adapter.YennkasaBaseAdapter;
 import butterknife.Bind;
 
 /**
- * Created by yaaminu on 1/12/17.
+ * @author by yaaminu on 1/12/17.
  */
 public class ChatSettingsAdapter extends YennkasaBaseAdapter<ChatSettingsItem> {
     private final Delegate delegate;
