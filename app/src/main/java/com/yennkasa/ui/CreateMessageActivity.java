@@ -369,6 +369,9 @@ public class CreateMessageActivity extends PairAppActivity
                 UiHelpers.enterChatRoom(this, userId, item.getInContacts());
             }
             finish();
+        } else if (adapter.getCount() == 1) {
+            selectedItems.add(userId);
+            onSendMenuItemClicked();
         }
     }
 
