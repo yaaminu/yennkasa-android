@@ -17,6 +17,7 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.text.TextUtils;
 
 import com.yennkasa.R;
+import com.yennkasa.data.Conversation;
 import com.yennkasa.data.Message;
 import com.yennkasa.data.User;
 import com.yennkasa.data.UserManager;
@@ -24,6 +25,7 @@ import com.yennkasa.data.util.MessageUtils;
 import com.yennkasa.ui.ChatActivity;
 import com.yennkasa.ui.MainActivity;
 import com.yennkasa.util.Config;
+import com.yennkasa.util.GenericUtils;
 import com.yennkasa.util.LiveCenter;
 import com.yennkasa.util.MediaUtils;
 import com.yennkasa.util.PLog;
@@ -103,27 +105,40 @@ class StatusBarNotifier {
     }
 
     void onNotified(Context context, String senderId) {
-        if (UserManager.getInstance().isMuted(senderId)) {
-            PLog.d(TAG, " %s is muted not playing tone", senderId);
-            return;
+        Realm realm = Conversation.Realm();
+        String uriString = "";
+        try {
+            Conversation conversation = realm.where(Conversation.class)
+                    .equalTo(Conversation.FIELD_PEER_ID, senderId).findFirst();
+            if (conversation != null) {
+                if (conversation.isMute()) {
+                    // TODO: 1/13/17 do more here. like if chat is hidden or locked don't notify
+                    PLog.d(TAG, "not notifying since user seems to be muted");
+                    return;
+                }
+                uriString = conversation.getNotificationSoundMessage();
+            }
+        } finally {
+            realm.close();
         }
-        vibrateIfAllowed(context);
-        playToneIfAllowed(context);
-
-    }
-
-    private static void playToneIfAllowed(Context context) {
-
-        String uriString = UserManager.getInstance().getStringPref(UserManager.NEW_MESSAGE_TONE, UserManager.SILENT);
+        if (GenericUtils.isEmpty(uriString)) {
+            uriString = UserManager.getInstance().getStringPref(UserManager.NEW_MESSAGE_TONE, UserManager.SILENT);
+        }
         if (uriString.equals(UserManager.SILENT)) {
             PLog.d(TAG, "silent, aborting ringtone playing");
             return;
         }
+        vibrateIfAllowed(context);
+        playTone(context, uriString);
+
+    }
+
+    private static void playTone(Context context, String uriString) {
         Uri uri;
         if (TextUtils.isEmpty(uriString) || uriString.equals(UserManager.DEFAULT)) {
             uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
             if (uri == null) {
-                PLog.e(TAG, " unable to play default notification tone");
+                PLog.e(TAG, "unable to play default notification tone");
                 return;
             }
         } else {

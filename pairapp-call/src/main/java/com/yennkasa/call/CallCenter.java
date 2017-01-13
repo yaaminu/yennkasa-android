@@ -5,6 +5,15 @@ import android.support.annotation.Nullable;
 import android.support.v4.util.Pair;
 import android.view.View;
 
+import com.sinch.android.rtc.PushPair;
+import com.sinch.android.rtc.SinchClient;
+import com.sinch.android.rtc.calling.Call;
+import com.sinch.android.rtc.calling.CallClient;
+import com.sinch.android.rtc.calling.CallClientListener;
+import com.sinch.android.rtc.calling.CallDirection;
+import com.sinch.android.rtc.calling.CallEndCause;
+import com.sinch.android.rtc.video.VideoCallListener;
+import com.sinch.android.rtc.video.VideoController;
 import com.yennkasa.data.BuildConfig;
 import com.yennkasa.data.CallBody;
 import com.yennkasa.data.Conversation;
@@ -16,15 +25,6 @@ import com.yennkasa.util.Event;
 import com.yennkasa.util.EventBus;
 import com.yennkasa.util.GenericUtils;
 import com.yennkasa.util.PLog;
-import com.sinch.android.rtc.PushPair;
-import com.sinch.android.rtc.SinchClient;
-import com.sinch.android.rtc.calling.Call;
-import com.sinch.android.rtc.calling.CallClient;
-import com.sinch.android.rtc.calling.CallClientListener;
-import com.sinch.android.rtc.calling.CallDirection;
-import com.sinch.android.rtc.calling.CallEndCause;
-import com.sinch.android.rtc.video.VideoCallListener;
-import com.sinch.android.rtc.video.VideoController;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -85,7 +85,7 @@ class CallCenter implements CallClientListener, VideoCallListener {
         } else {
             isCallOngoing = true;
             currentCallId = call.getCallId();
-            player.playRingtone();
+            player.playRingtone(remoteUserId);
             currentPeer = remoteUserId;
             call.addCallListener(this);
             broadCastBus.postSticky(Event.createSticky(CallController.ON_IN_COMING_CALL, null, CallData.from(call, CallData.getCallType(call), System.currentTimeMillis())));

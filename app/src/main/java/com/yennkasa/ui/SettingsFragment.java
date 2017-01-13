@@ -28,6 +28,7 @@ import com.yennkasa.adapter.SettingsAdapter;
 import com.yennkasa.data.PersistedSetting;
 import com.yennkasa.data.UserManager;
 import com.yennkasa.util.PLog;
+import com.yennkasa.util.UiHelpers;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -51,14 +52,9 @@ public class SettingsFragment extends ListFragment {
             final PersistedSetting item = (PersistedSetting) parent.getAdapter().getItem(position);
             key = item.getKey();
             if (key.equals(UserManager.NEW_MESSAGE_TONE)) {
-                Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
-                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
-                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, true);
-                intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
-                if (!item.getStringValue().equals(UserManager.DEFAULT)) {
-                    intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, Uri.parse(item.getStringValue()));
-                }
-                startActivityForResult(intent, PICK_RINGTONE_REQUEST_CODE);
+                String currentTone = item.getStringValue();
+                UiHelpers.pickRingtone(SettingsFragment.this, currentTone != null &&
+                        !currentTone.equals(UserManager.DEFAULT) ? currentTone : null, SettingsFragment.PICK_RINGTONE_REQUEST_CODE);
             } else if (key.equals(UserManager.DELETE_OLDER_MESSAGE)) {
                 final String[] options = getResources().getStringArray(R.array.deleteOldMessages_options);
                 new AlertDialog.Builder(getContext())

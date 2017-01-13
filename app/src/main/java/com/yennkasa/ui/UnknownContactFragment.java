@@ -13,7 +13,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.yennkasa.R;
-import com.yennkasa.data.User;
 import com.yennkasa.data.UserManager;
 import com.yennkasa.util.TaskManager;
 import com.yennkasa.util.ThreadUtils;
@@ -112,11 +111,4 @@ public class UnknownContactFragment extends Fragment {
         }
     }
 
-    public interface UserProvider {
-        User currentUser();
-
-        boolean hideNotice();
-
-        Realm realm();
-    }
 }

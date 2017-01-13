@@ -321,6 +321,14 @@
         <item name="android:background">@drawable/round_green_button</item>
     </style>
 
+    <style name="title_style">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:paddingBottom">@dimen/default_gap</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Title</item>
+        <item name="android:textSize">24sp</item>
+    </style>
+
     <dimen name="profile_fragment_round_icons_padding">8dp</dimen>
     <dimen name="tab_pager_indicator_height">4dp</dimen>
 </resources>

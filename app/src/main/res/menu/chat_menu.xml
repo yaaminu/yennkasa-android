@@ -15,4 +15,10 @@
         android:orderInCategory="101"
         android:title="@string/video_call"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/action_chat_settings"
+        android:icon="@drawable/ic_settings_white_18dp"
+        android:orderInCategory="101"
+        android:title="@string/chat_settings"
+        app:showAsAction="ifRoom" />
 </menu>

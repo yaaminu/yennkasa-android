@@ -10,6 +10,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.view.ActionMode;
 import android.support.v7.widget.Toolbar;
@@ -74,7 +76,6 @@ import static com.yennkasa.messenger.MessengerBus.ON_USER_TYPING;
 import static com.yennkasa.messenger.MessengerBus.START_MONITORING_USER;
 import static com.yennkasa.messenger.MessengerBus.STOP_MONITORING_USER;
 import static com.yennkasa.messenger.MessengerBus.TYPING;
-import static com.yennkasa.ui.UnknownContactFragment.UserProvider;
 
 
 @SuppressWarnings({"ConstantConditions"})
@@ -181,6 +182,9 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     @Bind(R.id.tv_log_message)
     TextView logTv;
 
+    @Bind(R.id.drawer)
+    DrawerLayout drawer;
+
     @Bind(R.id.ib_attach_more)
     View attachMoreView;
 
@@ -256,6 +260,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
         String peerId = bundle.getString(EXTRA_PEER_ID);
         peer = userManager.fetchUserIfRequired(userRealm, peerId, true, true);
         UserManager.getInstance().refreshPublicKeysIfRequired(peerId);
+        setUpCurrentConversation();
 
         setContentView(R.layout.activity_chat);
         ButterKnife.bind(this);
@@ -311,7 +316,6 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
                     .endGroup();
         }
         messages = messageQuery.findAllSorted(Message.FIELD_DATE_COMPOSED, Sort.ASCENDING, Message.FIELD_TYPE, Sort.DESCENDING);
-        setUpCurrentConversation();
         sendButton.setOnClickListener(this);
         setUpListView();
         if (!peer.getInContacts() && !User.isGroup(peer) && !getIntent().getBooleanExtra(EXTRA_HIDE_NUMBER, false)) {
@@ -369,6 +373,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
             callUser(MessengerBus.VOICE_CALL_USER, peer.getUserId());
         } else if (id == R.id.action_video_call_user) {
             callUser(MessengerBus.VIDEO_CALL_USER, peer.getUserId());
+        } else if (id == R.id.action_chat_settings) {
+            if (!drawer.isDrawerOpen(GravityCompat.END)) {
+                drawer.openDrawer(GravityCompat.END);
+            }
         }
         return super.onOptionsItemSelected(item);
     }
@@ -524,6 +532,10 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
 
     @Override
     public void onBackPressed() {
+        if (drawer.isDrawerOpen(GravityCompat.END)) {
+            drawer.closeDrawer(GravityCompat.END);
+            return;
+        }
         super.onBackPressed();
     }
 
@@ -905,6 +917,7 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     }
 
     @Override
+    @NonNull
     public User currentUser() {
         return peer;
     }
@@ -915,7 +928,24 @@ public class ChatActivity extends MessageActivity implements View.OnClickListene
     }
 
     @Override
+    @NonNull
     public Realm realm() {
         return userRealm;
+    }
+
+    @NonNull
+    @Override
+    public Conversation getConversation() {
+        if (currConversation == null) {
+            setUpCurrentConversation();
+        }
+        assert currConversation != null;
+        return currConversation;
+    }
+
+    @NonNull
+    @Override
+    public Realm conversationRealm() {
+        return messageConversationRealm;
     }
 }

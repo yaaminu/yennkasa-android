@@ -25,6 +25,7 @@ import android.widget.TextView;
 import com.rey.material.widget.SnackBar;
 import com.yennkasa.BuildConfig;
 import com.yennkasa.R;
+import com.yennkasa.data.Conversation;
 import com.yennkasa.data.Message;
 import com.yennkasa.data.User;
 import com.yennkasa.data.UserManager;
@@ -32,6 +33,7 @@ import com.yennkasa.data.util.MessageUtils;
 import com.yennkasa.messenger.MessengerBus;
 import com.yennkasa.util.Event;
 import com.yennkasa.util.EventBus;
+import com.yennkasa.util.GenericUtils;
 import com.yennkasa.util.LiveCenter;
 import com.yennkasa.util.MediaUtils;
 import com.yennkasa.util.PLog;
@@ -42,6 +44,7 @@ import com.yennkasa.util.ViewUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -148,7 +151,18 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     }
 
 
+    @Nullable
     private Pair<String, String> formatNotificationMessage(Message message, String sender) {
+        Realm realm = Conversation.Realm();
+        try {
+            Conversation conversation = realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, message.getFrom()).findFirst();
+            if (conversation != null && conversation.isMute()) {
+                PLog.d(TAG, "conversation muted, not notifying");
+                return null;
+            }
+        } finally {
+            realm.close();
+        }
         String text;
         List<String> recentChatList = new ArrayList<>(LiveCenter.getAllPeersWithUnreadMessages());
         Realm backgroundUserRealm = User.Realm(this);
@@ -284,6 +298,7 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
 
     private class notifyTask extends AsyncTask<Object, Void, Pair<String, String>> {
         @Override
+        @Nullable
         protected Pair<String, String> doInBackground(Object... params) {
             return formatNotificationMessage((Message) params[0], (String) params[1]);
         }
@@ -297,7 +312,29 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
     }
 
     private static void playNewMessageTone(Context context) {
-        String uriString = UserManager.getInstance().getStringPref(UserManager.NEW_MESSAGE_TONE, UserManager.SILENT);
+        Set<String> allPeersWithUnreadMessages = LiveCenter.getAllPeersWithUnreadMessages();
+        String uriString = "";
+        if (allPeersWithUnreadMessages.size() == 1) {
+            //check if it's a user with custom notification
+            String peerId = "";
+            for (String tmp : allPeersWithUnreadMessages) {
+                peerId = tmp;
+                break;
+            }
+            Realm realm = Conversation.Realm();
+            try {
+                Conversation conversation = realm.where(Conversation.class)
+                        .equalTo(Conversation.FIELD_PEER_ID, peerId).findFirst();
+                if (conversation.isMute()) return;
+                uriString = conversation.getNotificationSoundMessage();
+            } finally {
+                realm.close();
+
+            }
+        }
+        if (GenericUtils.isEmpty(uriString)) {
+            uriString = UserManager.getInstance().getStringPref(UserManager.NEW_MESSAGE_TONE, UserManager.SILENT);
+        }
         if (uriString.equals(UserManager.SILENT)) {
             PLog.d(TAG, "silent, aborting ringtone playing");
         }

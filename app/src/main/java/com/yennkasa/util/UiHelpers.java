@@ -10,10 +10,13 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
 import android.support.v4.util.Pair;
@@ -489,6 +492,17 @@ public class UiHelpers {
             // TODO: 8/23/2015 should we tell the user or is it that our intent was wrongly targeted?
             showPlainOlDialog(activity, activity.getString(R.string.no_contact_app_on_device));
         }
+    }
+
+    public static void pickRingtone(Fragment activity, @Nullable String current, int requestCode) {
+        Intent intent = new Intent(RingtoneManager.ACTION_RINGTONE_PICKER);
+        intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true);
+        intent.putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, true);
+        intent.putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_NOTIFICATION);
+        if (current != null) {
+            intent.putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, Uri.parse(current));
+        }
+        activity.startActivityForResult(intent, requestCode);
     }
 
     public interface Listener {

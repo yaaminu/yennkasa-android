@@ -16,4 +16,27 @@
         <item>Voice Call</item>
         <item>Video Call</item>
     </string-array>
+    <string-array name="chat_settings_titles">
+        <item>Notification &amp; Sound</item>
+        <item>New Message Sound</item>
+        <item>Incoming Call Tone</item>
+        <item>Mute Notifications</item>
+        <item>Security &amp; Privacy</item>
+        <item>Hide Chat</item>
+        <item>Lock Chat</item>
+        <item>Appearance</item>
+        <item>Chat Background</item>
+        <item>Message Text Size</item>
+        <item>Network</item>
+        <item>Auto-Download On WIFI</item>
+        <item>Auto-Download On Mobile</item>
+    </string-array>
+    <string name="use_default">Use system default</string>
+    <string name="mute_chat_summary">Turn off all notification sounds for this conversation</string>
+    <string name="hide_chat_summary">Hide this conversation from appearing the conversation list</string>
+    <string name="lock_chat_summary">Lock others out from seeing the messages in this conversation</string>
+    <string name="background_image_summary">Choose a different background image for this conversation</string>
+    <string name="message_text_size_summary">Choose the message text size that floats your boat :-)</string>
+    <string name="auto_download_wifi_summary">Choose which attachment type to automatically download when on WIFI</string>
+    <string name="auto_download_mobile_summary">Choose which attachment type to automatically download when on metered connections</string>
 </resources>

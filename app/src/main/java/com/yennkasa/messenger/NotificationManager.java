@@ -37,7 +37,6 @@ public final class NotificationManager {
     }
 
     private void notifyUser(final Context context, Realm userRealm, final Message message, final String sendersName) {
-
         if (UserManager.getInstance().isMuted(Message.isGroupMessage(userRealm, message) ? message.getTo() : message.getFrom())) {
             PLog.d(TAG, "user muted not notifying");
             return;

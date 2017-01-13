@@ -402,4 +402,10 @@
     <string name="welcome_text2">Hi,\n Thanks For Installing Yennkasa.\n Let\'s Get Started</string>
     <string name="agree_and_continue">Agree And Continue</string>
     <string name="number_confirm">Are you sure %s is your phone number?</string>
+    <string name="notification_sounds">Notification &amp; Sounds</string>
+    <string name="incoming_call_tone">Incoming Call Tone</string>
+    <string name="default_tone">System Default</string>
+    <string name="new_message_tone">New Message Tone</string>
+    <string name="chat_settings">Chat Settings</string>
+    <string name="phone_verificaiton_failed">Verification Failed. Ensure your number is correct and that you\'re connected to the internet</string>
 </resources>

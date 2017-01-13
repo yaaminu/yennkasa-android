@@ -1,185 +1,207 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/sp_primary_light">
-
-    <LinearLayout
-        android:id="@+id/parent_chat_activity_toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <android.support.v7.widget.Toolbar xmlns:app="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/main_toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/action_bar_height"
-            android:animateLayoutChanges="true"
-            android:background="?attr/colorPrimary"
-            android:gravity="start"
-            android:minHeight="?attr/actionBarSize"
-            android:title="@string/app_name"
-            app:popupTheme="@style/popup_theme"
-            app:theme="@style/AppBar"
-            tools:ignore="UnusedAttribute" />
-
-        <include layout="@layout/inline_notification_bar_layout" />
-    </LinearLayout>
-
-    <AbsoluteLayout
-        android:id="@+id/fragment_unknown_contact_fragment"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/parent_chat_activity_toolbar">
-
-    </AbsoluteLayout>
+    tools:openDrawer="right">
 
     <RelativeLayout
-        android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/fragment_unknown_contact_fragment"
-        android:layout_marginTop="2dp"
-        android:animateLayoutChanges="true"
-        android:background="#0000"
-        tools:ignore="UnusedAttribute">
+        android:background="@color/sp_primary_light">
 
         <LinearLayout
-            android:id="@+id/ll_list_view_container"
+            android:id="@+id/parent_chat_activity_toolbar"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_alignParentTop="true"
-            android:background="@color/transparent"
-            android:gravity="top"
+            android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <ListView
-                android:id="@+id/lv_messages"
+            <android.support.v7.widget.Toolbar xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/main_toolbar"
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
-                android:layout_marginLeft="@dimen/chat_activity_side_margin"
-                android:layout_marginRight="@dimen/chat_activity_side_margin"
-                android:layout_weight="1"
-                android:background="@color/transparent"
-                android:divider="@null"
-                android:dividerHeight="0dp"
-                android:drawSelectorOnTop="false"
-                android:fadingEdge="none"
-                android:listSelector="@null"
-                android:scrollbars="none"
-                android:scrollingCache="@bool/scrolling_cache_chat_activity"
-                android:transcriptMode="normal"
-                tools:ignore="UnusedAttribute"
-                tools:listitem="@layout/out_going_audio_message_list_item" />
+                android:layout_height="@dimen/action_bar_height"
+                android:animateLayoutChanges="true"
+                android:background="?attr/colorPrimary"
+                android:gravity="start"
+                android:minHeight="?attr/actionBarSize"
+                android:title="@string/app_name"
+                app:popupTheme="@style/popup_theme"
+                app:theme="@style/AppBar"
+                tools:ignore="UnusedAttribute" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:background="@drawable/compose_panel"
-                android:baselineAligned="false"
-                android:gravity="bottom"
-                android:paddingBottom="@dimen/padding_ll_login_fragment_right"
-                android:paddingLeft="@dimen/padding_ll_login_fragment_left"
-                android:paddingRight="@dimen/padding_ll_login_fragment_right"
-                android:paddingTop="@dimen/padding_ll_login_fragment_right"
-                tools:ignore="RtlHardcoded,UnusedAttribute">
-
-                <ImageButton
-                    android:id="@+id/ib_attach_emoji"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom"
-                    android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
-                    android:adjustViewBounds="true"
-                    android:background="@color/transparent"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/sp_ic_stickers" />
-
-
-                <EditText
-                    android:id="@+id/et_message"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom"
-                    android:layout_weight="1"
-                    android:background="@color/transparent"
-                    android:gravity="center_vertical"
-                    android:hint="@string/message_box_hint"
-                    android:inputType="textMultiLine|textLongMessage"
-                    android:maxHeight="@dimen/multiline_text_box_max_height"
-                    android:textSize="@dimen/edit_text_size" />
-
-                <ImageButton
-                    android:id="@+id/ib_attach_capture_photo"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom"
-                    android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
-                    android:adjustViewBounds="true"
-                    android:background="@color/transparent"
-                    android:contentDescription="@string/send_picture"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/ic_camera_black_24dp" />
-
-                <ImageButton
-                    android:id="@+id/ib_attach_record_audio"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom"
-                    android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
-                    android:adjustViewBounds="true"
-                    android:background="@color/transparent"
-                    android:contentDescription="@string/attach_audio"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/ic_record_voice_24dp" />
-
-                <ImageButton
-                    android:id="@+id/ib_attach_more"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom"
-                    android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
-                    android:adjustViewBounds="true"
-                    android:background="@color/transparent"
-                    android:contentDescription="@string/content_description_attach_more"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/ic_attach_more_24dp" />
-
-                <com.yennkasa.view.FrameLayout
-                    android:id="@+id/iv_send"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="bottom"
-                    android:visibility="visible">
-
-                    <ImageView
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
-                        android:adjustViewBounds="true"
-                        android:contentDescription="@string/send_message"
-                        android:scaleType="centerInside"
-                        android:src="@drawable/ic_send_24dp" />
-
-                </com.yennkasa.view.FrameLayout>
-
-            </LinearLayout>
-
-            <FrameLayout
-                android:id="@+id/emoji_pannel_slot"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/soft_input_height"
-                android:visibility="gone">
-
-            </FrameLayout>
+            <include layout="@layout/inline_notification_bar_layout" />
         </LinearLayout>
 
-        <include layout="@layout/message_item_log" />
+        <AbsoluteLayout
+            android:id="@+id/fragment_unknown_contact_fragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/parent_chat_activity_toolbar">
+
+        </AbsoluteLayout>
+
+        <RelativeLayout
+            android:id="@+id/container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/fragment_unknown_contact_fragment"
+            android:layout_marginTop="2dp"
+            android:animateLayoutChanges="true"
+            android:background="#0000"
+            tools:ignore="UnusedAttribute">
+
+            <LinearLayout
+                android:id="@+id/ll_list_view_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentTop="true"
+                android:background="@color/transparent"
+                android:gravity="top"
+                android:orientation="vertical">
+
+                <ListView
+                    android:id="@+id/lv_messages"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_marginBottom="@dimen/padding_ll_login_fragment_bottom"
+                    android:layout_marginLeft="@dimen/chat_activity_side_margin"
+                    android:layout_marginRight="@dimen/chat_activity_side_margin"
+                    android:layout_weight="1"
+                    android:background="@color/transparent"
+                    android:divider="@null"
+                    android:dividerHeight="0dp"
+                    android:drawSelectorOnTop="false"
+                    android:fadingEdge="none"
+                    android:listSelector="@null"
+                    android:scrollbars="none"
+                    android:scrollingCache="@bool/scrolling_cache_chat_activity"
+                    android:transcriptMode="normal"
+                    tools:ignore="UnusedAttribute"
+                    tools:listitem="@layout/out_going_audio_message_list_item" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:background="@drawable/compose_panel"
+                    android:baselineAligned="false"
+                    android:gravity="bottom"
+                    android:paddingBottom="@dimen/padding_ll_login_fragment_right"
+                    android:paddingLeft="@dimen/padding_ll_login_fragment_left"
+                    android:paddingRight="@dimen/padding_ll_login_fragment_right"
+                    android:paddingTop="@dimen/padding_ll_login_fragment_right"
+                    tools:ignore="RtlHardcoded,UnusedAttribute">
+
+                    <ImageButton
+                        android:id="@+id/ib_attach_emoji"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
+                        android:adjustViewBounds="true"
+                        android:background="@color/transparent"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/sp_ic_stickers" />
+
+
+                    <EditText
+                        android:id="@+id/et_message"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:layout_weight="1"
+                        android:background="@color/transparent"
+                        android:gravity="center_vertical"
+                        android:hint="@string/message_box_hint"
+                        android:inputType="textMultiLine|textLongMessage"
+                        android:maxHeight="@dimen/multiline_text_box_max_height"
+                        android:textSize="@dimen/edit_text_size" />
+
+                    <ImageButton
+                        android:id="@+id/ib_attach_capture_photo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:layout_marginRight="@dimen/padding_ll_login_fragment_bottom"
+                        android:adjustViewBounds="true"
+                        android:background="@color/transparent"
+                        android:contentDescription="@string/send_picture"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_camera_black_24dp" />
+
+                    <ImageButton
+                        android:id="@+id/ib_attach_record_audio"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
+                        android:adjustViewBounds="true"
+                        android:background="@color/transparent"
+                        android:contentDescription="@string/attach_audio"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_record_voice_24dp" />
+
+                    <ImageButton
+                        android:id="@+id/ib_attach_more"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
+                        android:adjustViewBounds="true"
+                        android:background="@color/transparent"
+                        android:contentDescription="@string/content_description_attach_more"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_attach_more_24dp" />
+
+                    <com.yennkasa.view.FrameLayout
+                        android:id="@+id/iv_send"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:visibility="visible">
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginLeft="@dimen/padding_ll_login_fragment_bottom"
+                            android:adjustViewBounds="true"
+                            android:contentDescription="@string/send_message"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_send_24dp" />
+
+                    </com.yennkasa.view.FrameLayout>
+
+                </LinearLayout>
+
+                <FrameLayout
+                    android:id="@+id/emoji_pannel_slot"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/soft_input_height"
+                    android:visibility="gone">
+
+                </FrameLayout>
+            </LinearLayout>
+
+            <include layout="@layout/message_item_log" />
+        </RelativeLayout>
+
+        <include layout="@layout/snack_bar" />
     </RelativeLayout>
 
-    <include layout="@layout/snack_bar" />
-</RelativeLayout>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="end"
+        android:background="@color/white">
+
+        <fragment
+            android:id="@+id/chat_settings_fragment"
+            android:name="com.yennkasa.ui.ChatSettingsFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:layout="@layout/chat_settings_layout" />
+
+    </FrameLayout>
+</android.support.v4.widget.DrawerLayout>

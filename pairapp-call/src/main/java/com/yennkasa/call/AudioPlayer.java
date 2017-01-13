@@ -1,5 +1,6 @@
 package com.yennkasa.call;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.media.AudioAttributes;
@@ -8,14 +9,17 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.yennkasa.data.Conversation;
 import com.yennkasa.data.UserManager;
 import com.yennkasa.util.Config;
+import com.yennkasa.util.GenericUtils;
 import com.yennkasa.util.PLog;
 
 import java.io.FileInputStream;
@@ -23,12 +27,14 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import io.realm.Realm;
+
 /**
  * @author aminu on 7/17/2016.
  */
 class AudioPlayer {
 
-    static final String LOG_TAG = AudioPlayer.class.getSimpleName();
+    static final String TAG = AudioPlayer.class.getSimpleName();
 
     @Nullable
     Timer timer = null;
@@ -57,7 +63,25 @@ class AudioPlayer {
         }
     };
 
-    synchronized void playRingtone() {
+    synchronized void playRingtone(String userId) {
+        Realm realm = Conversation.Realm();
+        Uri ringtoneUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+        try {
+            Conversation conversation =
+                    realm.where(Conversation.class).equalTo(Conversation.FIELD_PEER_ID, userId).findFirst();
+            if (conversation != null) {
+                if (conversation.isMute()) {
+                    PLog.d(ContentValues.TAG, "user is muted");
+                    return;
+                }
+                String uriString = conversation.getNotificationSoundCall();
+                if (!GenericUtils.isEmpty(uriString) && !UserManager.SILENT.equals(uriString)) {
+                    ringtoneUri = Uri.parse(uriString);
+                }
+            }
+        } finally {
+            realm.close();
+        }
         AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         int ringerMode = audioManager.getRingerMode();
         vibrateIfAllowed(ringerMode);
@@ -74,11 +98,11 @@ class AudioPlayer {
                 player.setAudioStreamType(AudioManager.STREAM_RING);
 
                 try {
-                    player.setDataSource(context, RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE));
+                    player.setDataSource(context, ringtoneUri);
                     player.prepare();
                 } catch (IOException e) {
-                    Log.e(LOG_TAG, "Coulds not setup media player for ringtone");
-                    Log.e(LOG_TAG, e.getMessage(), e);
+                    Log.e(TAG, "Coulds not setup media player for ringtone");
+                    Log.e(TAG, e.getMessage(), e);
                     player.release();
                     player = null;
                     return;
@@ -108,7 +132,7 @@ class AudioPlayer {
     }
 
     static void doVibrate() {
-        PLog.v(LOG_TAG, "vibrating....");
+        PLog.v(TAG, "vibrating....");
         Vibrator vibrator = (Vibrator) Config.getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             if (vibrator.hasVibrator()) {
@@ -140,7 +164,7 @@ class AudioPlayer {
             progressTone = createProgressTone(context);
             progressTone.play();
         } catch (Exception e) {
-            Log.e(LOG_TAG, "Could not play progress tone", e);
+            Log.e(TAG, "Could not play progress tone", e);
         }
     }
 

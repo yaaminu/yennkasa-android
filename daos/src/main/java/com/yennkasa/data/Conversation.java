@@ -28,13 +28,55 @@ public class Conversation extends RealmObject {
             FIELD_ACTIVE = "active",
             FIELD_LAST_MESSAGE = "lastMessage",
             FIELD_LAST_ACTIVE_TIME = "lastActiveTime",
-            FIELD_PEER_ID = "peerId";
+            FIELD_PEER_ID = "peerId",
+            FIELD_NOTIFICATION_SOUND = "notificationSoundMessage",
+            FIELD_NOTIFICATION_SOUND_CALL = "notificationSoundCall",
+            AUTO_DOWNLOAD_MOBILE = "autoDownloadMobile",
+            AUTO_DOWNLOAD_WIFI = "autoDownloadWifi",
+            CONVERSATION_LOCKED = "lockType";
+
+    private static final int WIFI_IMG = 0x1, WIFI_VID = 0x2, WIFI_AUDIO = 0x4, WIFI_OTHER = 0x8;
+    private static final int MOBILE_IMG = 0x1, MOBILE_VID = 0x2, MOBILE_AUDIO = 0x4, MOBILE_OTHER = 0x8;
+    private static final int LOCK_TYPE_NONE = 0x2,
+            LOCK_TYPE_FINGERPRINT = 0x1,
+            LOCK_TYPE_PIN = 0x2,
+            LOCK_TYPE_PATTERN = 0x4;
+
     @PrimaryKey
     private String peerId; //other peer in chat
     private String summary;
     private Date lastActiveTime;
     private Message lastMessage;
     private boolean active;
+    private int autoDownloadWifi, autoDownloadMobile, lockType;
+    private String notificationSoundCall, notificationSoundMessage;
+    private String notificationSoundMessageTitle;
+    private String notificationSoundCallTitle;
+    private boolean mute;
+
+    public void setNotificationSoundCall(String notificationSoundCall) {
+        this.notificationSoundCall = notificationSoundCall;
+    }
+
+    public void setMute(boolean mute) {
+        this.mute = mute;
+    }
+
+    public boolean isMute() {
+        return mute;
+    }
+
+    public String getNotificationSoundCall() {
+        return notificationSoundCall;
+    }
+
+    public void setNotificationSoundMessage(String notificationSoundMessage) {
+        this.notificationSoundMessage = notificationSoundMessage;
+    }
+
+    public String getNotificationSoundMessage() {
+        return notificationSoundMessage;
+    }
 
     public Message getLastMessage() {
         return lastMessage;
@@ -86,7 +128,7 @@ public class Conversation extends RealmObject {
     }
 
     public synchronized static void newConversation(Context context, String currentUserId, String peerId, boolean active) {
-        Realm realm = Realm(context);
+        Realm realm = Realm();
         newConversation(realm, currentUserId, peerId, active);
         realm.close();
     }
@@ -169,5 +211,21 @@ public class Conversation extends RealmObject {
             return true;
         }
         return false;
+    }
+
+    public void setNotificationSoundMessageTitle(String notificationSoundMessageTitle) {
+        this.notificationSoundMessageTitle = notificationSoundMessageTitle;
+    }
+
+    public String getNotificationSoundMessageTitle() {
+        return notificationSoundMessageTitle;
+    }
+
+    public void setNotificationSoundCallTitle(String notificationSoundCallTitle) {
+        this.notificationSoundCallTitle = notificationSoundCallTitle;
+    }
+
+    public String getNotificationSoundCallTitle() {
+        return notificationSoundCallTitle;
     }
 }
