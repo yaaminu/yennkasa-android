@@ -135,6 +135,7 @@ public class CallManager implements CallController {
                     forceEndCallIfNotEnded(call);
                 } else {
                     call.answer();
+                    callCenter.stopAudioPlayer();
                     bus.post(Event.create(ON_CALL_CONNECTING, null,
                             CallData.connectionCall(call, CallData.getCallType(call))));
                 }

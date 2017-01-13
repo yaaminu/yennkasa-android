@@ -249,7 +249,11 @@ class CallCenter implements CallClientListener, VideoCallListener {
         this.isCallOngoing = true;
     }
 
-    public synchronized boolean isCallOngoing() {
+    synchronized boolean isCallOngoing() {
         return isCallOngoing;
+    }
+
+    void stopAudioPlayer() {
+        player.stopRingtone();
     }
 }
