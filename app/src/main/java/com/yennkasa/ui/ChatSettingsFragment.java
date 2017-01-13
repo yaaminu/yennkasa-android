@@ -31,6 +31,14 @@ import butterknife.Bind;
 import io.realm.Realm;
 
 import static android.content.ContentValues.TAG;
+import static com.yennkasa.data.Conversation.MOBILE_AUDIO;
+import static com.yennkasa.data.Conversation.MOBILE_IMG;
+import static com.yennkasa.data.Conversation.MOBILE_OTHER;
+import static com.yennkasa.data.Conversation.MOBILE_VID;
+import static com.yennkasa.data.Conversation.WIFI_AUDIO;
+import static com.yennkasa.data.Conversation.WIFI_IMG;
+import static com.yennkasa.data.Conversation.WIFI_OTHER;
+import static com.yennkasa.data.Conversation.WIFI_VID;
 
 /**
  * Created by yaaminu on 1/12/17.
@@ -269,18 +277,85 @@ public class ChatSettingsFragment extends BaseFragment {
                 showTextSizeOptions(position);
                 break;
             case 11:
-                showAutoDownloadOptions(position);
+                showWifiAutoDownloadOptions(position);
                 break;
             case 12:
+                showMobileAutoDownloadOptions(position);
                 break;
             default:
                 throw new AssertionError();
         }
     }
 
-    private void showAutoDownloadOptions(int position) {
+    private void showWifiAutoDownloadOptions(final int position) {
         final String[] tmp = getResources().getStringArray(R.array.attachment_types);
+        final boolean[] selected = {
+                (currConversation.getAutoDownloadWifi() & WIFI_AUDIO) == WIFI_AUDIO,
+                (currConversation.getAutoDownloadWifi() & WIFI_IMG) == WIFI_IMG,
+                (currConversation.getAutoDownloadWifi() & WIFI_VID) == WIFI_VID,
+                (currConversation.getAutoDownloadWifi() & WIFI_OTHER) == WIFI_OTHER
+        };
+        new AlertDialog.Builder(getContext())
+                .setMultiChoiceItems(tmp,
+                        selected,
+                        new DialogInterface.OnMultiChoiceClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                                selected[which] = isChecked;
+                            }
+                        }).setPositiveButton(android.R.string.ok,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        int flag = 0x0;
+                        flag = (selected[0] ? flag | WIFI_AUDIO : flag & ~WIFI_AUDIO);
+                        flag = (selected[1] ? flag | WIFI_IMG : flag & ~WIFI_IMG);
+                        flag = (selected[2] ? flag | WIFI_VID : flag & ~WIFI_VID);
+                        flag = (selected[3] ? flag | WIFI_OTHER : flag & ~WIFI_OTHER);
+                        Realm realm = ((UserProvider) getActivity()).conversationRealm();
+                        realm.beginTransaction();
+                        currConversation.setAutoDownloadWifi(flag);
+                        realm.commitTransaction();
+                        items.get(position).value = currConversation.getAutoDownloadWifi();
+                        refreshDisplay();
+                    }
+                }).setCancelable(false)
+                .create().show();
+    }
 
+    private void showMobileAutoDownloadOptions(final int position) {
+        final String[] tmp = getResources().getStringArray(R.array.attachment_types);
+        final boolean[] selected = {
+                (currConversation.getAutoDownloadMobile() & MOBILE_AUDIO) == MOBILE_AUDIO,
+                (currConversation.getAutoDownloadMobile() & MOBILE_IMG) == MOBILE_IMG,
+                (currConversation.getAutoDownloadMobile() & MOBILE_VID) == MOBILE_VID,
+                (currConversation.getAutoDownloadMobile() & MOBILE_OTHER) == MOBILE_OTHER
+        };
+        new AlertDialog.Builder(getContext())
+                .setMultiChoiceItems(tmp,
+                        selected,
+                        new DialogInterface.OnMultiChoiceClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                                selected[which] = isChecked;
+                            }
+                        }).setPositiveButton(android.R.string.ok,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        int flag = 0x0;
+                        flag = (selected[0] ? flag | MOBILE_AUDIO : flag & ~MOBILE_AUDIO);
+                        flag = (selected[1] ? flag | MOBILE_IMG : flag & ~MOBILE_IMG);
+                        flag = (selected[2] ? flag | MOBILE_VID : flag & ~MOBILE_VID);
+                        flag = (selected[3] ? flag | MOBILE_OTHER : flag & ~MOBILE_OTHER);
+                        Realm realm = ((UserProvider) getActivity()).conversationRealm();
+                        realm.beginTransaction();
+                        currConversation.setAutoDownloadMobile(flag);
+                        realm.commitTransaction();
+                        items.get(position).value = currConversation.getAutoDownloadMobile();
+                    }
+                }).setCancelable(false)
+                .create().show();
     }
 
     private void showTextSizeOptions(final int position) {

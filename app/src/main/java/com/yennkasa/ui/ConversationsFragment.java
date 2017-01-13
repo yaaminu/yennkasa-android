@@ -162,7 +162,7 @@ public class ConversationsFragment extends ListFragment {
         getListView().setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent, View view, final int position, long id) {
-                String[] contextMenuOptions = new String[4];
+                String[] contextMenuOptions = new String[3];
 
                 contextMenuOptions[0] = getString(R.string.clear_messages);
                 contextMenuOptions[1] = getString(R.string.action_delete_conversation);
@@ -176,8 +176,6 @@ public class ConversationsFragment extends ListFragment {
                 contextMenuOptions[2] = userManager.isBlocked(peerId) ? getString(R.string.unblock, name) :
                         getString(R.string.block, name);
 
-                contextMenuOptions[3] = userManager.isMuted(peerId) ? getString(R.string.unmute, name) :
-                        getString(R.string.mute, name);
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                 builder.setAdapter(new ArrayAdapter<>(getActivity(),
@@ -215,15 +213,6 @@ public class ConversationsFragment extends ListFragment {
                                 } else {
                                     userManager.blockUser(peerId);
                                     UiHelpers.showToast(R.string.user_blocked);
-                                }
-                                break;
-                            case 3:
-                                if (userManager.isMuted(peerId)) {
-                                    userManager.unMuteUser(peerId);
-                                    UiHelpers.showToast(R.string.unmuted_user);
-                                } else {
-                                    userManager.muteUser(peerId);
-                                    UiHelpers.showToast(R.string.muted_user);
                                 }
                                 break;
                             default:

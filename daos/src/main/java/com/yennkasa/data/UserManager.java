@@ -1892,35 +1892,6 @@ public final class UserManager {
     }
 
 
-    public boolean isMuted(String peerId) {
-        ensureNotNull(peerId);
-        return Config.getPreferences(MUTED_USERS).contains(MUTED_USERS + peerId);
-    }
-
-    public boolean muteUser(String peerId) {
-        ensureNotNull(peerId);
-        try {
-            muteLock.lock();
-            SharedPreferences preferences = Config.getPreferences(MUTED_USERS);
-            preferences.edit().putString(MUTED_USERS + peerId, peerId).apply();
-        } finally {
-            muteLock.unlock();
-        }
-        return true;
-    }
-
-    public boolean unMuteUser(String peerId) {
-        ensureNotNull(peerId);
-        try {
-            muteLock.lock();
-            SharedPreferences preferences = Config.getPreferences(MUTED_USERS);
-            preferences.edit().remove(MUTED_USERS + peerId).apply();
-        } finally {
-            muteLock.unlock();
-        }
-        return true;
-    }
-
     public String getNewAuthTokenSync(Realm realm) throws YennkasaException {
         if (!isUserVerified(realm)) throw new YennkasaException("not registered");
         return userApi.newAuthToken();

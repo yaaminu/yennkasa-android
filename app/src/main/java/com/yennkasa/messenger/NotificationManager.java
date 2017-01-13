@@ -3,6 +3,7 @@ package com.yennkasa.messenger;
 import android.content.Context;
 import android.support.v4.util.Pair;
 
+import com.yennkasa.data.Conversation;
 import com.yennkasa.data.Message;
 import com.yennkasa.data.User;
 import com.yennkasa.data.UserManager;
@@ -37,9 +38,16 @@ public final class NotificationManager {
     }
 
     private void notifyUser(final Context context, Realm userRealm, final Message message, final String sendersName) {
-        if (UserManager.getInstance().isMuted(Message.isGroupMessage(userRealm, message) ? message.getTo() : message.getFrom())) {
-            PLog.d(TAG, "user muted not notifying");
-            return;
+        Realm realm = Conversation.Realm();
+        try {
+            Conversation conversation = realm.where(Conversation.class)
+                    .equalTo(Conversation.FIELD_PEER_ID, message.getFrom()).findFirst();
+            if (conversation != null && conversation.isMute()) {
+                PLog.d(TAG, "conversation with peer %s is muted", message.getFrom());
+                return;
+            }
+        } finally {
+            realm.close();
         }
         if (Config.isAppOpen() && UserManager.getInstance().getBoolPref(UserManager.IN_APP_NOTIFICATIONS, false)) {
             if (MessengerBus.get(MessengerBus.PAIRAPP_CLIENT_LISTENABLE_BUS)

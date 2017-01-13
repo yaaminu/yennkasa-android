@@ -35,12 +35,12 @@ public class Conversation extends RealmObject {
             AUTO_DOWNLOAD_WIFI = "autoDownloadWifi",
             CONVERSATION_LOCKED = "lockType";
 
-    private static final int WIFI_IMG = 0x1, WIFI_VID = 0x2, WIFI_AUDIO = 0x4, WIFI_OTHER = 0x8;
-    private static final int MOBILE_IMG = 0x1, MOBILE_VID = 0x2, MOBILE_AUDIO = 0x4, MOBILE_OTHER = 0x8;
+    public static final int WIFI_IMG = 0x1, WIFI_VID = 0x2, WIFI_AUDIO = 0x4, WIFI_OTHER = 0x8;
+    public static final int MOBILE_IMG = 0x1, MOBILE_VID = 0x2, MOBILE_AUDIO = 0x4, MOBILE_OTHER = 0x8;
     private static final int LOCK_TYPE_NONE = 0x2,
             LOCK_TYPE_FINGERPRINT = 0x1,
-            LOCK_TYPE_PIN = 0x2,
-            LOCK_TYPE_PATTERN = 0x4;
+            LOCK_TYPE_PIN = 0x4,
+            LOCK_TYPE_PATTERN = 0x8;
 
     @PrimaryKey
     private String peerId; //other peer in chat
@@ -55,7 +55,7 @@ public class Conversation extends RealmObject {
     private boolean mute;
 
     public Conversation() {
-        this.autoDownloadWifi = WIFI_AUDIO | WIFI_VID | WIFI_AUDIO | WIFI_OTHER;
+        this.autoDownloadWifi = WIFI_AUDIO | WIFI_VID | WIFI_IMG | WIFI_OTHER;
         this.autoDownloadMobile = 0; //all off.
     }
 
