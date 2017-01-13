@@ -203,21 +203,24 @@ public class ChatSettingsFragment extends BaseFragment {
         public int getViewLayout(int position) {
             switch (position) {
                 case 0:
-                case 4:
+//                case 4:
                 case 7:
                 case 10:
                     return R.layout.category_list_item;
                 case 1:
                 case 2:
-                case 6:
+//                case 6:
                 case 8:
                 case 9:
                 case 11:
                 case 12:
                     return R.layout.list_list_item;
                 case 3:
-                case 5:
                     return R.layout.true_or_false_list_item;
+                case 4:
+                case 6:
+                case 5:
+                    return R.layout.dummy_layout;
                 default:
                     throw new AssertionError();
             }
@@ -283,7 +286,7 @@ public class ChatSettingsFragment extends BaseFragment {
                 showMobileAutoDownloadOptions(position);
                 break;
             default:
-                throw new AssertionError();
+//                throw new AssertionError();
         }
     }
 
