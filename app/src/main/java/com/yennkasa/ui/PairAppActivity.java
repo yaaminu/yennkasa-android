@@ -481,6 +481,15 @@ public abstract class PairAppActivity extends PairAppBaseActivity implements Not
             case MessengerBus.CONNECTING:
                 ((TextView) notificationView.findViewById(R.id.inline_notification_text)).setText(getString(R.string.connecting));
                 notificationView.setBackgroundColor(getResources().getColor(R.color.orange));
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (currentStatus == MessengerBus.CONNECTED)
+                            hideConnectionView();
+                        else if (currentStatus == MessengerBus.CONNECTING)
+                            new Handler().postDelayed(this, 3000);
+                    }
+                }, 3000);
                 break;
             case MessengerBus.CONNECTED:
                 ((TextView) notificationView.findViewById(R.id.inline_notification_text)).setText(getString(R.string.connected));
