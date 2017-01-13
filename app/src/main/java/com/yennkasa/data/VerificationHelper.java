@@ -8,9 +8,11 @@ import com.sinch.verification.InitiationResult;
 import com.sinch.verification.SinchVerification;
 import com.sinch.verification.Verification;
 import com.sinch.verification.VerificationListener;
+import com.yennkasa.R;
 import com.yennkasa.call.CallManager;
 import com.yennkasa.util.Event;
 import com.yennkasa.util.EventBus;
+import com.yennkasa.util.GenericUtils;
 import com.yennkasa.util.PLog;
 
 import static android.content.ContentValues.TAG;
@@ -70,7 +72,9 @@ public class VerificationHelper implements VerificationListener {
                 .postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        EventBus.getDefault().postSticky(Event.createSticky(VERIFICATION_FAILED, e, null));
+                        EventBus.getDefault().postSticky(Event.createSticky(VERIFICATION_FAILED,
+                                new Exception(GenericUtils.getString(R.string.phone_verificaiton_failed))
+                                , null));
                     }
                 }, 30000);
     }
@@ -90,6 +94,6 @@ public class VerificationHelper implements VerificationListener {
     @Override
     public void onVerificationFailed(Exception e) {
         PLog.d(TAG, e.getMessage(), e);
-        EventBus.getDefault().postSticky(Event.createSticky(VERIFICATION_FAILED, e, null));
+        EventBus.getDefault().postSticky(Event.createSticky(VERIFICATION_FAILED, new Exception(GenericUtils.getString(R.string.phone_verificaiton_failed)), null));
     }
 }
