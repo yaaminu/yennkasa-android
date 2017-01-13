@@ -28,7 +28,7 @@ public class Config {
     private static final String MESSAGE_SOCKET_API_LOCAL_REAL_DEVICE = "http://192.168.43.115:3000";
     private static final String MESSAGE_SOCKET_API_LOCAL = "http://10.0.3.2:3000";
 
-    private static final String LIVE_SOCKET_API_REMOTE = "http://chat.yennkasa.com:3000";
+    private static final String LIVE_SOCKET_API_REMOTE = "https://chat.yennkasa.com:3000";
     private static final String ENV_PROD = "prod";
     private static final String ENV_DEV = "dev";
     public static final String PAIRAPP_ENV = getEnvironment();

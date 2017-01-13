@@ -268,7 +268,7 @@ public class SearchActivity extends PairAppActivity {
 
     private void checkUserAvailability(final User user) {
         final ProgressDialog dialog = new ProgressDialog(this);
-        dialog.setMessage(getString(R.string.check_user_availability, user.getName(), getString(R.string.app_name)));
+        dialog.setMessage(getString(R.string.st_please_wait));
         dialog.setCancelable(false);
         dialog.show();
         subscription = UserManager.getInstance().isRegistered(user.getUserId())

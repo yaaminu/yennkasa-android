@@ -105,7 +105,7 @@ public class ContactFragment extends Fragment implements RealmChangeListener<Rea
 
     private void checkUserAvailability(final int itemId, final Contact contact) {
         final ProgressDialog dialog = new ProgressDialog(getContext());
-        dialog.setMessage(getString(R.string.check_user_availability, contact.name, getString(R.string.app_name)));
+        dialog.setMessage(getString(R.string.st_please_wait));
         dialog.setCancelable(false);
         dialog.show();
         subscription = UserManager.getInstance().isRegistered(contact.numberInIEE_Format)

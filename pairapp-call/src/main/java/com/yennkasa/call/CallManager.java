@@ -29,7 +29,7 @@ import java.util.Map;
 public class CallManager implements CallController {
 
     static final String TAG = CallManager.class.getSimpleName();
-    public static final String APPLICATION_KEY = "c9058af2-3114-4f09-924c-a50c2a99cf75";
+    public static final String APPLICATION_KEY = "465fcda7-d6df-4b6c-981c-ff4d06879653";
 
     @NonNull
     private final Application application;
