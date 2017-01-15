@@ -9,6 +9,7 @@ import com.path.android.jobqueue.log.CustomLogger;
  *
  * @author http://www.liaohuqiu.net/
  */
+@SuppressWarnings("JavaDoc")
 public class PLog implements CustomLogger {
 
     public static final int LEVEL_VERBOSE = 0;

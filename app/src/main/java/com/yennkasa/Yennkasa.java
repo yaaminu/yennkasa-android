@@ -90,7 +90,7 @@ public class Yennkasa extends MultiDexApplication {
 //        }
 //        LeakCanary.install(this);
         Realm.init(this);
-        PLog.setLogLevel(BuildConfig.DEBUG ? PLog.LEVEL_VERBOSE : PLog.LEVEL_FATAL);
+        PLog.setLogLevel(BuildConfig.DEBUG ? PLog.LEVEL_VERBOSE : PLog.LEVEL_WARNING);
         Config.init(this);
         ConnectionUtils.init();
         CalligraphyConfig config = new CalligraphyConfig.Builder().setDefaultFontPath(null)
