@@ -45,6 +45,7 @@ public class SenderImpl implements Sender {
     public static final String TAG = "senderImpl";
     private final MessageParser parser;
     private final Authenticator authenticator;
+    private final Handler handler;
     @Nullable
     private YennkasaSocket yennkasaSocket;
     @NonNull
@@ -61,7 +62,7 @@ public class SenderImpl implements Sender {
 
         @Override
         public int highWaterMark() {
-            return !shuttingDown && yennkasaSocket != null && yennkasaSocket.isConnected() ? 1 : 0;
+            return !shuttingDown && yennkasaSocket != null && yennkasaSocket.isConnected() ? 5 : 0;
         }
     };
     @SuppressWarnings("FieldCanBeLocal")
@@ -79,12 +80,13 @@ public class SenderImpl implements Sender {
     @Nullable
     private Task refreshJob;
 
-    public SenderImpl(Authenticator authenticator, MessageParser parser) {
+    public SenderImpl(Authenticator authenticator, MessageParser parser, Handler handler) {
         this.parser = parser;
         this.authenticator = authenticator;
         this.authToken = authenticator.getToken();
         GenericUtils.ensureNotEmpty(authToken);
         MessageQueueItemDataSource queueDataSource = new MessageQueueItemDataSource(realmProvider);
+        this.handler = handler;
         this.messageQueue = new MessageQueueImpl(queueDataSource, hooks, consumer/*are we letting this escape?*/);
     }
 
@@ -204,7 +206,8 @@ public class SenderImpl implements Sender {
     }
 
     private synchronized void disconnectIfRequired() {
-        if (!Config.isAppOpen() && (!messageQueue.isStarted() || messageQueue.getPending() == 0)) {
+        if (!Config.isAppOpen() && (!messageQueue.isStarted() || (messageQueue.getProcessing() == 0
+                && messageQueue.getPending() == 0))) {
             if (yennkasaSocket != null) {
                 if (yennkasaSocket.isConnected()) {
                     yennkasaSocket.disConnectBlocking();
@@ -230,7 +233,7 @@ public class SenderImpl implements Sender {
         if (!ConnectionUtils.isConnected()) {
             PLog.d(TAG, "not re-connecting because user has no internet connection");
         }
-        if (Config.isAppOpen() || (messageQueue.isStarted() && messageQueue.getPending() > 0)) {
+        if (Config.isAppOpen() || (messageQueue.isStarted() && messageQueue.getProcessing() == 0 && messageQueue.getPending() > 0)) {
             PLog.d(TAG, "re-attempting connection because " + (Config.isAppOpen() ? "app is opened" :
                     "we have more messages to send and we were disconnected unaware user has internet access"));
             if (yennkasaSocket == null) {
@@ -439,6 +442,8 @@ public class SenderImpl implements Sender {
                     messageQueue.onProcessed(realm.copyFromRealm(item), false);
                 } else {
                     PLog.w(TAG, "item removed from queue while it was being processed");
+                    //notify the message queue for bookeeping purposes.
+                    messageQueue.onProcessed(null, false);
                 }
                 disconnectIfIdleForLong();
             } finally {
@@ -475,11 +480,11 @@ public class SenderImpl implements Sender {
 
     @Override
     public synchronized void disconnectIfIdleForLong() {
-        if (!Config.isAppOpen() && messageQueue.getPending() == 0) {
-            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+        if (!Config.isAppOpen() && messageQueue.getPending() == 0 && messageQueue.getProcessing() == 0) {
+            handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    if (!Config.isAppOpen() && messageQueue.getPending() == 0) {
+                    if (!Config.isAppOpen() && messageQueue.getPending() == 0 && messageQueue.getProcessing() == 0) {
                         disconnectIfRequired();
                     }
                 }

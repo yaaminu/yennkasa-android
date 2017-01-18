@@ -221,7 +221,7 @@ public class YennkasaClient extends Service {
                         new CryptoImpl(encryptor));
 
                 messageParser = new MessageParserImpl(messagePacker);
-                sender = new SenderImpl(authenticator, messageParser);
+                sender = new SenderImpl(authenticator, messageParser, new Handler(Looper.myLooper()));
                 statusManager = StatusManager.create(sender, messagePacker, listenableBus());
                 webSocketDispatcher = WebSocketDispatcher.create(new ParseFileClient(), monitor, sender,
                         new MessageEncoderImpl(messagePacker), encryptor);
