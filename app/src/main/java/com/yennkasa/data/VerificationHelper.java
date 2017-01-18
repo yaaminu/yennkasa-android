@@ -18,7 +18,7 @@ import com.yennkasa.util.PLog;
 import static android.content.ContentValues.TAG;
 
 /**
- * Created by yaaminu on 1/11/17.
+ * @author by yaaminu on 1/11/17.
  */
 
 public class VerificationHelper implements VerificationListener {
@@ -46,7 +46,7 @@ public class VerificationHelper implements VerificationListener {
                     public void run() {
                         sinchVerification.initiate();
                     }
-                }, 45000);
+                }, 10000);
     }
 
     public void verify(final String code) {
