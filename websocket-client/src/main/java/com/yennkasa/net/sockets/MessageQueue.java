@@ -1,6 +1,7 @@
 package com.yennkasa.net.sockets;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.yennkasa.util.PLog;
 
@@ -12,7 +13,7 @@ public interface MessageQueue<T> {
 
     void add(@NonNull T t);
 
-    void onProcessed(@NonNull T t, boolean succeeded);
+    void onProcessed(@Nullable T t, boolean succeeded);
 
     boolean clear();
 

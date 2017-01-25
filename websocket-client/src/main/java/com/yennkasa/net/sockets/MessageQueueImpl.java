@@ -208,18 +208,22 @@ class MessageQueueImpl implements MessageQueue<Sendable> {
     }
 
     @Override
-    public synchronized void onProcessed(@NonNull Sendable item, boolean succeeded) {
+    public synchronized void onProcessed(@Nullable Sendable item, boolean succeeded) {
         ensureStateValid();
-        PLog.v(TAG, "processed %s ", item.toString());
         currentlyProcessing--;
-        if (succeeded) {
-            removeItem(item, Hooks.WAITING_FOR_ACK);
-        } else { //failed to process
-            if (item.exceededRetries() || item.isExpired()) {
-                removeItem(item, item.exceededRetries() ? MessageQueue.Hooks.FAILED_RETRIES_EXCEEDED : MessageQueue.Hooks.FAILED_EXPIRED);
-            } else {
-                addItem(item, false); //retry
+        if (item != null) {
+            PLog.v(TAG, "processed %s ", item.toString());
+            if (succeeded) {
+                removeItem(item, Hooks.WAITING_FOR_ACK);
+            } else { //failed to process
+                if (item.exceededRetries() || item.isExpired()) {
+                    removeItem(item, item.exceededRetries() ? MessageQueue.Hooks.FAILED_RETRIES_EXCEEDED : MessageQueue.Hooks.FAILED_EXPIRED);
+                } else {
+                    addItem(item, false); //retry
+                }
             }
+        } else {
+            PLog.w(TAG, "processed item is null, is it missing from the queue?");
         }
         if (isStarted() && runningState == PROCESSING) {
             processItems(); //enqueue other tasks
