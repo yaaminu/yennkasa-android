@@ -12,8 +12,7 @@ anr.txt
 *.iml
 .idea/*
 
-version.properties
+/version.properties
 app/*.log
 *.apk
-version.properties
 app/release
