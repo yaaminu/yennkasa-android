@@ -33,6 +33,7 @@ class WebSocketImpl implements IWebSocket {
                 !webSocket.getSocket().isClosed() &&
                 webSocket.getSocket().isConnected()) {
             webSocket.sendBinary(message);
+            webSocket.flush();
             return true;
         }
         return false;
